@@ -2,16 +2,12 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.index.mappings.MappingsUtil;
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.Analyzer_;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
@@ -34,14 +30,13 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -224,43 +219,9 @@ public class DataIndexResource {
 		List<Long> docTypeIds, Mutiny.Session session,
 		boolean includeAnalyzerSubtypes) {
 
-		CriteriaBuilder cb = sf.getCriteriaBuilder();
-
-		CriteriaQuery<DocType> query = cb.createQuery(DocType.class);
-
-		Root<DocType> from = query.from(DocType.class);
-
-		Fetch<DocType, DocTypeField> docTypeFieldFetch = from
-			.fetch(DocType_.docTypeFields);
-
-		Fetch<DocTypeField, DocTypeField> subDocTypeFieldFetch =
-			docTypeFieldFetch.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
-
-		Fetch<DocTypeField, Analyzer> analyzerFetch =
-			docTypeFieldFetch
-				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
-
-		Fetch<DocTypeField, Analyzer> subAnalyzerFetch =
-			subDocTypeFieldFetch
-				.fetch(DocTypeField_.analyzer, JoinType.LEFT);
-
-		if (includeAnalyzerSubtypes) {
-			analyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
-			analyzerFetch.fetch(Analyzer_.tokenFilters, JoinType.LEFT);
-			analyzerFetch.fetch(Analyzer_.charFilters, JoinType.LEFT);
-			subAnalyzerFetch.fetch(Analyzer_.tokenizer, JoinType.LEFT);
-			subAnalyzerFetch.fetch(Analyzer_.tokenFilters, JoinType.LEFT);
-			subAnalyzerFetch.fetch(Analyzer_.charFilters, JoinType.LEFT);
-		}
-
-		query.where(from.get(DocType_.id).in(docTypeIds));
-
-		query.distinct(true);
-
-		return session
-			.createQuery(query)
-			.setCacheable(true)
-			.getResultList();
+		return docTypeService
+			.getDocTypesAndDocTypeFields(docTypeIds)
+			.map(LinkedList::new);
 	}
 
 	@Data
@@ -293,5 +254,8 @@ public class DataIndexResource {
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	DocTypeService docTypeService;
 
 }

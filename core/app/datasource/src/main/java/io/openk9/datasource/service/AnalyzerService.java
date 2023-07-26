@@ -16,6 +16,8 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 ;
@@ -230,6 +232,20 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			}));
 	}
 
+	public Uni<Void> load(Analyzer analyzer) {
+		return em.withTransaction(s -> {
+
+			List<Uni<?>> unis = new ArrayList<>();
+
+			unis.add(Mutiny2.fetch(s, analyzer.getTokenizer()));
+			unis.add(Mutiny2.fetch(s, analyzer.getCharFilters()));
+			unis.add(Mutiny2.fetch(s, analyzer.getTokenFilters()));
+
+			return Uni.combine().all().unis(unis).collectFailures().discardItems();
+
+		});
+	}
+
 
 	@Inject
 	TokenFilterService _tokenFilterService;
@@ -237,5 +253,6 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	TokenizerService _tokenizerService;
 	@Inject
 	CharFilterService _charFilterService;
+
 
 }

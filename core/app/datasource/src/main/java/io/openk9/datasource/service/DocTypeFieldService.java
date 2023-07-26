@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
@@ -31,7 +32,13 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 ;
 
@@ -140,6 +147,131 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					});
 
 			}));
+
+	}
+
+	public Uni<Collection<DocType>> expandDocTypes(Collection<DocType> docTypes) {
+
+		 return em.withTransaction(s -> {
+
+			 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
+
+			 for (DocType docType : docTypes) {
+				 docTypeField.add(Mutiny2.fetch(docType.getDocTypeFields()));
+			 }
+
+			 return Uni
+				 .combine()
+				 .all()
+				 .unis(docTypeField)
+				 .collectFailures()
+				 .combinedWith(e -> (List<Set<DocTypeField>>)e)
+				 .flatMap(list -> {
+
+					 Set<Uni<Set<DocTypeField>>> innerDTFs = new LinkedHashSet<>();
+
+					 for (Set<DocTypeField> docTypeFields : list) {
+						 innerDTFs.add(expandDocTypeFields(docTypeFields));
+					 }
+
+					 return Uni
+						 .combine()
+						 .all()
+						 .unis(innerDTFs)
+						 .collectFailures()
+						 .discardItems();
+
+				 })
+				 .replaceWith(docTypes);
+
+
+		 });
+
+
+	}
+
+	public Uni<Set<DocTypeField>> expandDocTypeFields(Collection<DocTypeField> docTypeFields) {
+
+		if (docTypeFields == null || docTypeFields.isEmpty()) {
+			return Uni.createFrom().item(Set.of());
+		}
+
+		return em.withTransaction(s -> {
+
+			List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
+
+			for (DocTypeField docTypeField : docTypeFields) {
+
+				subDocTypeFieldUnis.add(
+					Mutiny2.fetch(docTypeField.getSubDocTypeFields()));
+
+			}
+
+			return Uni
+				.combine()
+				.all()
+				.unis(subDocTypeFieldUnis)
+				.collectFailures()
+				.combinedWith(e -> (List<Set<DocTypeField>>)e)
+				.flatMap(list -> {
+
+					List<Uni<Void>> loadedDTFs = new LinkedList<>();
+
+					for (Set<DocTypeField> typeFields : list) {
+						loadedDTFs.add(loadDocTypeField(typeFields));
+					}
+
+					return Uni
+						.combine()
+						.all()
+						.unis(loadedDTFs)
+						.collectFailures()
+						.discardItems()
+						.chain(() -> {
+
+							List<Uni<Set<DocTypeField>>> inner = new LinkedList<>();
+
+							for (Set<DocTypeField> typeFields : list) {
+								inner.add(expandDocTypeFields(typeFields));
+							}
+
+							return Uni
+								.combine()
+								.all()
+								.unis(inner)
+								.collectFailures()
+								.combinedWith(e -> {
+									List<Set<DocTypeField>> expandInner = (List<Set<DocTypeField>>) e;
+									return expandInner.stream()
+										.flatMap(Collection::stream)
+										.collect(Collectors.toSet());
+								});
+
+						});
+
+				});
+
+		});
+
+
+
+	}
+
+	public Uni<Void> loadDocTypeField(Set<DocTypeField> typeFields) {
+
+		return em.withTransaction(s -> {
+
+			List<Uni<?>> unis = new ArrayList<>();
+
+			for (DocTypeField typeField : typeFields) {
+				unis.add(Mutiny2.fetch(s, typeField.getAnalyzer()).flatMap(_analyzerService::load));
+				unis.add(Mutiny2.fetch(s, typeField.getAclMappings()));
+			}
+
+			return Uni.combine().all().unis(unis).collectFailures().discardItems();
+
+		});
+
 
 	}
 

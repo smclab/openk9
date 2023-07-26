@@ -41,6 +41,7 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -215,6 +216,10 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				.map(count -> count > 0);
 
 		});
+	}
+
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(Collection<Long> ids) {
+		return findByIds(Set.copyOf(ids)).chain(dts -> docTypeFieldService.expandDocTypes(dts));
 	}
 
 	@Inject
