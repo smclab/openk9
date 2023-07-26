@@ -66,16 +66,9 @@ public class Utils {
 			return Stream.empty();
 		}
 
-		Stream.Builder<DocTypeField> builder = Stream.builder();
-
-		for (DocTypeField docTypeField : docType.getDocTypeFields()) {
-			builder.accept(docTypeField);
-			for (DocTypeField docTypeFieldAndChild : docTypeField.getChildren()) {
-				builder.accept(docTypeFieldAndChild);
-			}
-		}
-
-		return builder.build();
+		return docType
+			.getDocTypeFields()
+			.stream();
 
 	}
 

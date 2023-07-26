@@ -32,7 +32,6 @@ import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.common.io.stream.OutputStreamStreamOutput;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -148,7 +147,7 @@ public abstract class BaseSearchService {
 
 		docTypeFetch
 			.fetch(DocType_.docTypeFields, JoinType.LEFT)
-			.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+			.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
 		expressions.add(
 			criteriaBuilder.equal(
