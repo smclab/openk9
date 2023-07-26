@@ -389,12 +389,13 @@ function FilterCategory({
                   display: flex;
                   align-items: center;
                   gap: 10px;
+                  cursor: pointer;
                 `}
                 onClick={() => {
                   suggestions.fetchNextPage();
                 }}
               >
-                Load More
+                {t("load-more") || "Load More"}
                 <ArrowDownSvg />
               </button>
             </div>

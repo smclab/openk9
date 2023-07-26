@@ -78,17 +78,19 @@ export function Main({
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
   });
-  const defaultLanguage = "en";
-  const language = useQuery(["language", {}], async () => {
+  const languageQuery = useQuery(["language", {}], async () => {
     return await client.getLanguageDefault();
   });
-  const { i18n } = useTranslation();
-  React.useEffect(() => {
-    i18n.changeLanguage(
-      remappingLanguage({ language: language.data?.value || defaultLanguage }),
-    );
-  }, []);
 
+  const { i18n } = useTranslation();
+
+  React.useEffect(() => {
+    if (languageQuery.data?.value) {
+      i18n.changeLanguage(
+        remappingLanguage({ language: languageQuery.data.value }),
+      );
+    }
+  }, [languageQuery.data, i18n]);
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -651,7 +653,7 @@ function remappingLanguage({ language }: { language: string }) {
     case "it_IT":
       return "it";
     case "es_ES":
-      return "es;";
+      return "es";
     case "en_US":
       return "en";
     case "fr_FR":
