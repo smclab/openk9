@@ -33,6 +33,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -40,6 +41,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 @ApplicationScoped
@@ -155,8 +157,18 @@ public class DataIndexService
 			.onItem()
 			.transformToUni(dataIndex -> Uni.createFrom()
 				.<AcknowledgedResponse>emitter(emitter -> {
+
 					DeleteIndexRequest deleteIndexRequest =
 						new DeleteIndexRequest(dataIndex.getName());
+
+					deleteIndexRequest
+						.indicesOptions(
+							IndicesOptions.fromMap(
+								Map.of("ignore_unavailable", true),
+								deleteIndexRequest.indicesOptions()
+							)
+						);
+
 					try {
 						AcknowledgedResponse delete = client.indices().delete(
 							deleteIndexRequest,
