@@ -19,27 +19,22 @@ import { SelectionsAction, SelectionsState } from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
 
 type SearchProps = {
   configuration: Configuration;
-  onConfigurationChange: ConfigurationUpdateFunction;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
   selectionsState: SelectionsState;
   selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
-  dateRange: SearchDateRange;
-  onDateRangeChange(dateRange: SearchDateRange): void;
   isMobile: boolean;
-  setSortResult: (sortResultNew: SortField) => void;
-  searchQuery: SearchToken[];
-  onAddFilterToken: (searchToken: SearchToken) => void;
-  onRemoveFilterToken: (searchToken: SearchToken) => void;
   filtersSelect: SearchToken[];
-  sort: SortField[];
-  dynamicFilters: boolean;
   isVisibleFilters: boolean;
-  setIsVisibleFilters: React.Dispatch<React.SetStateAction<boolean>>;
+  mobileVersion?: boolean;
+  actionCloseMobileVersion?:
+    | React.Dispatch<React.SetStateAction<boolean>>
+    | undefined;
 };
 export function Search({
   configuration,
@@ -49,13 +44,8 @@ export function Search({
   onDetail,
   showSyntax,
   isMobile,
-  setSortResult,
-  onDateRangeChange,
-  dateRange,
-  setIsVisibleFilters,
-  onConfigurationChange,
-  onRemoveFilterToken,
-  searchQuery,
+  mobileVersion = false,
+  actionCloseMobileVersion,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -91,6 +81,7 @@ export function Search({
           width: 100%;
           @media (max-width: 480px) {
             flex-direction: column;
+            margin-top: 15px;
           }
         `}
       >
@@ -112,6 +103,7 @@ export function Search({
             max-height: 50px;
             @media (max-width: 480px) {
               width: 100%;
+              max-height: 40px;
             }
           `}
         >
@@ -142,8 +134,7 @@ export function Search({
                 position: absolute;
               `}
             >
-              {!isMobile &&
-                showSyntax &&
+              {showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
                     openedDropdown !== null &&
@@ -365,6 +356,10 @@ export function Search({
                 className="openk9--search-delete-span-icon"
                 css={css`
                   cursor: pointer;
+                  @media (max-width: 480px) {
+                    margin-top: 7px;
+                    display: none;
+                  }
                 `}
                 onClick={() => {
                   selectionsDispatch({

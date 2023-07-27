@@ -170,6 +170,12 @@ type FiltersLiveMobileConfiguration = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type SearchMobileConfiguration = {
+  search: Element | string | null;
+  isVisible: boolean;
+  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -177,6 +183,7 @@ export type Configuration = {
   tabs: Element | string | null;
   filters: Element | string | null;
   calendarMobile: Element | string | null;
+  searchMobile: SearchMobileConfiguration | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: Element | string | null;
@@ -204,6 +211,7 @@ const defaultConfiguration: Configuration = {
   search: null,
   activeFilters: null,
   tabs: null,
+  searchMobile: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
   dataRangePicker: null,
