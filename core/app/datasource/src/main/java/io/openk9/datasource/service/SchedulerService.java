@@ -120,8 +120,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
 				}
-
-				return Uni.createFrom().nothing();
+				return Uni.createFrom().voidItem();
 			});
 	}
 
