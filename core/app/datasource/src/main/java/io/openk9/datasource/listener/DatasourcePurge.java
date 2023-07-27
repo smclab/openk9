@@ -12,6 +12,7 @@ import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.ActorActionListener;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -23,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -187,6 +189,14 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
 
+		deleteIndexRequest
+			.indicesOptions(
+				IndicesOptions.fromMap(
+					Map.of("ignore_unavailable", true),
+					deleteIndexRequest.indicesOptions()
+				)
+			);
+
 		getContext().getLog().info(
 			"Deleting ElasticSearch orphans indices for datasource {}-{}",
 			tenantName, datasourceId);
@@ -240,7 +250,9 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private Behavior<Command> onEsDeleteError(EsDeleteError ede) {
 		getContext().getLog().error("ElasticSearch DeleteIndexRequest went wrong.", ede.error);
 
-		return Behaviors.stopped();
+		getContext().getSelf().tell(WorkNextChunk.INSTANCE);
+
+		return Behaviors.same();
 	}
 
 
