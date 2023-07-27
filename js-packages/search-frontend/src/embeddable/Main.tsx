@@ -37,7 +37,7 @@ import { ActiveFilter } from "../components/ActiveFilters";
 import { FiltersMobileMemo } from "../components/FiltersMobile";
 import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
 import { DataRangePicker } from "../components/DateRangePicker";
-
+import { SearchMobile } from "../components/SearchMobile";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -115,24 +115,14 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <Search
             configuration={configuration}
-            onConfigurationChange={onConfigurationChange}
             spans={spans}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
             onDetail={setDetail}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
             isMobile={isMobile}
-            setSortResult={setSortResult}
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            onRemoveFilterToken={removeFilterToken}
             filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             isVisibleFilters={isVisibleFilters}
-            setIsVisibleFilters={setIsVisibleFilters}
           />
         </I18nextProvider>,
         configuration.search,
@@ -281,6 +271,34 @@ export function Main({
           <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
         </I18nextProvider>,
         configuration.dataRangePicker,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SearchMobile
+            configuration={configuration}
+            onConfigurationChange={onConfigurationChange}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
+            onDetail={setDetail}
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            isMobile={isMobile}
+            setSortResult={setSortResult}
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            isVisible={configuration.searchMobile?.isVisible || false}
+            setIsVisible={configuration.searchMobile?.setIsVisible}
+          />
+        </I18nextProvider>,
+        configuration.searchMobile?.search !== undefined
+          ? configuration.searchMobile?.search
+          : null,
       )}
     </React.Fragment>
   );

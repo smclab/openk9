@@ -242,6 +242,53 @@ export function OpenK9Client({
     async fetchQueryAnalysis(
       request: AnalysisRequest,
     ): Promise<AnalysisResponse> {
+      const mock = false;
+      if (mock)
+        return {
+          searchText: "Questo è un esempio di testo per l'analisi",
+          analysis: [
+            {
+              text: "Questo è un nuovo",
+              start: 0,
+              end: 5,
+              tokens: [
+                {
+                  label: "",
+                  tokenType: "TEXT",
+                  value: "ciao",
+                  score: 0.8,
+                },
+              ],
+            },
+            {
+              text: "ancora",
+              start: 0,
+              end: 5,
+              tokens: [
+                {
+                  label: "test di prova",
+                  tokenType: "TEXT",
+                  value: "bella",
+                  score: 0.8,
+                },
+              ],
+            },
+            {
+              text: "Questo",
+              start: 0,
+              end: 5,
+              tokens: [
+                {
+                  label: "",
+                  tokenType: "TEXT",
+                  value: "prova",
+                  keywordKey: "test",
+                  score: 0.8,
+                },
+              ],
+            },
+          ],
+        };
       const response = await authFetch("/api/searcher/v1/query-analysis", {
         method: "POST",
         body: JSON.stringify(request),

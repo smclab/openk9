@@ -20,6 +20,14 @@ export function App() {
     return <MaintenancePage />;
   }
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
+  const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
+    React.useState(false);
+  const handleClick = (event: any) => {
+    const elementWidth = window.innerWidth;
+    if (elementWidth < 480) {
+      setIsVisibleSearchMobile(true);
+    }
+  };
   return (
     <div
       className="openk9-body"
@@ -163,6 +171,7 @@ export function App() {
             css={css`
               width: 100%;
             `}
+            onClick={handleClick}
             className="openk9-update-configuration"
             ref={(element) => openk9.updateConfiguration({ search: element })}
           ></div>
@@ -272,6 +281,18 @@ export function App() {
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
+      ></div>
+      <div
+        className="openk9-results-container openk9-box"
+        ref={(element) =>
+          openk9.updateConfiguration({
+            searchMobile: {
+              search: element,
+              isVisible: isVisibleSearchMobile,
+              setIsVisible: setIsVisibleSearchMobile,
+            },
+          })
+        }
       ></div>
       <div
         className="openk9-preview-container openk9-box"
