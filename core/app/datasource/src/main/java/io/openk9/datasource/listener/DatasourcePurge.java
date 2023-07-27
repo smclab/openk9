@@ -129,9 +129,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		if (dataIndices != null && !dataIndices.isEmpty()) {
 			int chunkSize = 10;
 
-			int listSize = dataIndices.size();
-
-			int lastIndex = listSize - 1;
+			int lastIndex = dataIndices.size();
 
 			boolean lastChunk = false;
 
@@ -149,7 +147,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 			getContext().getLog().info(
 				"DataIndex orphans found for datasource {}-{}: {}",
-				tenantName, datasourceId, listSize);
+				tenantName, datasourceId, lastIndex);
 
 			getContext().getLog().info("Chunks to work for datasource {}-{}: {}",
 				tenantName, datasourceId, i);
