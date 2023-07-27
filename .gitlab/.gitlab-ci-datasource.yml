@@ -1,3 +1,29 @@
+Build Tagged Datasource Docker Images:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  only:
+    refs:
+      - tags
+    changes:
+      - core/app/datasource/ci.properties
+  except:
+    - schedules
+  script:
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+  cache:
+    key: datasource
+    paths:
+      - .m2/repository
+
 Build Latest Datasource Docker Images:
   image: eclipse-temurin:17-jdk
   services:
@@ -12,11 +38,8 @@ Build Latest Datasource Docker Images:
   only:
     refs:
       - main
-      - tags
-    changes:
-      - core/app/datasource/ci.properties
-  except:
-    - schedules
+  when:
+    manual
   script:
     - cd core
     - ./mvnw package $MAVEN_CLI_OPTS -pl app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
