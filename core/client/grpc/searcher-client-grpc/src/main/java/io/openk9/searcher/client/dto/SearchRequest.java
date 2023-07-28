@@ -19,4 +19,5 @@ public class SearchRequest {
 	private String order = "asc";
 	private List<Map<String, Map<String, String>>> sort;
 	private String sortAfterKey;
+	private String language;
 }

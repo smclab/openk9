@@ -328,6 +328,7 @@ public class SearchResource {
 		}
 
 		String sortAfterKey = searchRequest.getSortAfterKey();
+		String language = searchRequest.getLanguage();
 
 		return searcherMapper
 			.toQueryParserRequest(searchRequest)
@@ -337,6 +338,7 @@ public class SearchResource {
 			.putAllExtra(extra)
 			.addAllSort(mapToGrpc(searchRequest.getSort()))
 			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
+			.setLanguage(language == null ? "" : language)
 			.build();
 
 	}

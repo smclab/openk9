@@ -33,6 +33,7 @@ import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -123,7 +124,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					applySort(docTypeFieldList, request.getSortList(), request.getSortAfterKey(), searchSourceBuilder);
 
-					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList);
+					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, request.getLanguage());
 
 					List<SearchTokenRequest> searchQuery =
 						request.getSearchQueryList();
@@ -713,21 +714,66 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
-		List<DocTypeField> docTypeFieldList) {
+		List<DocTypeField> docTypeFieldList, String language) {
 		Set<String> includes = new HashSet<>();
 		Set<String> excludes = new HashSet<>();
 		Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
+		Map<DocTypeField, Tuple2<Set<DocTypeField>, Set<DocTypeField>>> i18nMap = new HashMap<>();
 
 		for (DocTypeField docTypeField : docTypeFieldList) {
-			String name = docTypeField.getFieldName();
-			if (docTypeField.isDefaultExclude()) {
-				excludes.add(name);
+			DocTypeField i18nParent = getI18nParent(docTypeField);
+			if (i18nParent != null) {
+
+				i18nMap.compute(i18nParent, (k, v) -> {
+					String fieldName = docTypeField.getFieldName();
+					if (v == null) {
+						v = Tuple2.of(new HashSet<>(), new HashSet<>());
+					}
+
+					if (fieldName.contains("." + language)){
+						v.getItem2().add(docTypeField);
+					}
+					else if (fieldName.contains(".base")) {
+						v.getItem1().add(docTypeField);
+					}
+
+					return v;
+				});
+
 			}
 			else {
-				includes.add(name);
-				if (docTypeField.isSearchableAndText()) {
-					highlightFields.add(new HighlightBuilder.Field(name));
+				String name = docTypeField.getFieldName();
+				if (docTypeField.isDefaultExclude()) {
+					excludes.add(name);
 				}
+				else {
+					includes.add(name);
+					if (docTypeField.isSearchableAndText()) {
+						highlightFields.add(new HighlightBuilder.Field(name));
+					}
+				}
+			}
+		}
+
+		for (Map.Entry<DocTypeField, Tuple2<Set<DocTypeField>, Set<DocTypeField>>> entry
+			: i18nMap.entrySet()) {
+
+			Tuple2<Set<DocTypeField>, Set<DocTypeField>> tuple = entry.getValue();
+			Set<DocTypeField> docTypeFields =
+				!tuple.getItem2().isEmpty() ? tuple.getItem2() : tuple.getItem1();
+
+			for (DocTypeField docTypeField : docTypeFields) {
+				String name = docTypeField.getFieldName();
+				if (docTypeField.isDefaultExclude()) {
+					excludes.add(name);
+				}
+				else {
+					includes.add(name);
+					if (docTypeField.isSearchableAndText()) {
+						highlightFields.add(new HighlightBuilder.Field(name));
+					}
+				}
+
 			}
 
 		}
@@ -747,6 +793,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			excludes.toArray(String[]::new)
 		);
 
+	}
+
+	private static DocTypeField getI18nParent(DocTypeField docTypeField) {
+		if (docTypeField == null) {
+			return null;
+		}
+
+		DocTypeField parent = docTypeField.getParentDocTypeField();
+		return parent != null &&
+				(parent.getFieldType() != null && parent.getFieldType() == FieldType.I18N) ?
+				parent : getI18nParent(parent);
 	}
 
 	private static void applyMinScore(

@@ -52,6 +52,7 @@ message QueryParserRequest {
   map<string, Value> extra = 8;
   repeated Sort sort = 9;
   optional string sortAfterKey = 10;
+  optional string language = 11;
 }
 
 message Sort {
