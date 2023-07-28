@@ -120,6 +120,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					List<DocTypeField> docTypeFieldList =
 						Utils
 							.getDocTypeFieldsFrom(tenant)
+							.filter(docTypeField -> !docTypeField.isI18N())
 							.toList();
 
 					applySort(docTypeFieldList, request.getSortList(), request.getSortAfterKey(), searchSourceBuilder);
