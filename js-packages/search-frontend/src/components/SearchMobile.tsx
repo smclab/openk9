@@ -74,6 +74,11 @@ export function SearchMobile({
     }
   }, [adjustedSelection]);
   const { t } = useTranslation();
+  console.log(spans, onselect);
+  selectionsState.selection.forEach((selection) => {
+    console.log(selection.token);
+  });
+
   const componet = (
     <React.Fragment>
       <div
@@ -191,8 +196,15 @@ export function SearchMobile({
                   font-size: inherit;
                   font-family: inherit;
                   background-color: inherit;
-                  color: black;
+                  color: ${autoSelect ? "black" : "blue"};
                 `}
+                //              const status: Status = isInteractive
+                // ? selected !== null
+                //   ? isAutoSlected
+                //     ? "auto-selected"
+                //     : "has-selected"
+                //   : "can-select"
+                // : "not-interactive";
                 spellCheck="false"
                 onSelect={(event) => {
                   if (
@@ -397,7 +409,7 @@ export function SearchMobile({
   document.body.style.overflow = "hidden";
   return <ModalDetail padding="0px" background="white" content={componet} />;
 }
-export const FiltersMobileMemo = React.memo(SearchMobile);
+export const SearchMobileMemo = React.memo(SearchMobile);
 
 type TokenSelectMobileProps = {
   span: AnalysisResponseEntry;

@@ -38,6 +38,7 @@ import { FiltersMobileMemo } from "../components/FiltersMobile";
 import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
 import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
+import { CalendarMobile } from "../components/CalendarModal";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -271,6 +272,16 @@ export function Main({
           <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
         </I18nextProvider>,
         configuration.dataRangePicker,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <CalendarMobile
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            isVisibleCalendar={true}
+          />
+        </I18nextProvider>,
+        configuration.calendarMobile,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
