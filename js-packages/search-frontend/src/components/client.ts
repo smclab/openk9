@@ -35,6 +35,13 @@ export function OpenK9Client({
   const setToken = (newToken: string) => {
     appendToBody.token = newToken;
   };
+  async function waitForToken() {
+    let count = 0;
+    while (appendToBody.token === "" || count < 5) {
+      count++;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
   const keycloakInit = useKeycloack
     ? keycloak.init({
         onLoad: "check-sso",
@@ -49,6 +56,9 @@ export function OpenK9Client({
     await keycloakInit;
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
+    }
+    if (!keycloak.authenticated && !useKeycloack && appendToBody.token === "") {
+      await waitForToken();
     }
     return fetch(tenant + route, {
       ...init,
