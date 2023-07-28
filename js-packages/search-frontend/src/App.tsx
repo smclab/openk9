@@ -15,7 +15,7 @@ export const openk9 = new OpenK9({
 });
 
 export function App() {
-  openk9.authenticate({ token: "token custom" });
+  // openk9.authenticate({ token: "token custom" });
   const serviceStatus = useServiceStatus();
   if (serviceStatus === "down") {
     return <MaintenancePage />;
