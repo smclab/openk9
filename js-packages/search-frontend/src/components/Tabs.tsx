@@ -53,6 +53,7 @@ function Tabs({
               tabIndex={0}
               css={css`
                 border: none;
+                background: none;
               `}
             >
               <span

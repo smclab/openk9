@@ -23,6 +23,8 @@ import { SelectionsState } from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { CalendarLogo } from "./CalendarLogo";
 import { DataRangePicker } from "./DateRangePicker";
+import { DateRangePicker } from "react-dates";
+import { CalendarMobileSvg } from "../svgElement/CalendarMobileSvg";
 
 export function CalendarMobile({
   onChange,
@@ -33,6 +35,22 @@ export function CalendarMobile({
   calendarDate: SearchDateRange;
   isVisibleCalendar: boolean;
 }) {
+  const [startDate, setStartDate] = React.useState<any | null>(null);
+  const [endDate, setEndDate] = React.useState<any | null>(null);
+  const [focusedInput, setFocusedInput] = React.useState(null);
+  const handleDatesChange = ({
+    startDate,
+    endDate,
+  }: {
+    startDate: any;
+    endDate: any;
+  }) => {
+    setStartDate(startDate || undefined);
+    setEndDate(endDate || undefined);
+  };
+  const handleFocusChange = (focusedInput: any) => {
+    setFocusedInput(focusedInput);
+  };
   const componet = (
     <React.Fragment>
       <div
@@ -61,7 +79,7 @@ export function CalendarMobile({
             `}
           >
             <span>
-              <CalendarLogo />
+              <CalendarMobileSvg />
             </span>
             <span className="openk9-filters-list-title title">
               <h2
@@ -82,7 +100,6 @@ export function CalendarMobile({
             </span>
           </div>
         </div>
-        <DataRangePicker calendarDate={calendarDate} onChange={onChange} />
         <button
           css={css`
             color: var(--openk9-grey-stone-600);
@@ -96,13 +113,48 @@ export function CalendarMobile({
             margin-right: 21px;
           `}
           onClick={() => {
-            if (setIsVisibleFilters) setIsVisibleFilters(false);
+            // if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
           Chiudi <DeleteLogo heightParam={8} widthParam={8} />
         </button>
       </div>
+      <div style={{ width: "100%" }}>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onDatesChange={handleDatesChange}
+          focusedInput={focusedInput}
+          onFocusChange={handleFocusChange}
+          keepOpenOnDateSelect={true}
+          startDateId="startDate"
+          hideKeyboardShortcutsPanel={true}
+          numberOfMonths={1}
+          isOutsideRange={() => false}
+          endDateId="endDate"
+          openDirection="down"
+        />
+      </div>
+      {/* <button
+          css={css`
+            color: var(--openk9-grey-stone-600);
+            font-size: 10px;
+            font-family: Nunito Sans;
+            font-weight: 700;
+            line-height: 12px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-right: 21px;
+          `}
+          onClick={() => {
+            if (setIsVisibleCa) setIsVisibleFilters(false);
+          }}
+          style={{ backgroundColor: "#FAFAFA", border: "none" }}
+        >
+          Chiudi <DeleteLogo heightParam={8} widthParam={8} />
+        </button> */}
     </React.Fragment>
   );
   if (!isVisibleCalendar) return null;

@@ -295,6 +295,14 @@ export function App() {
         }
       ></div>
       <div
+        className="openk9-results-container openk9-box"
+        ref={(element) =>
+          openk9.updateConfiguration({
+            calendarMobile: element,
+          })
+        }
+      ></div>
+      <div
         className="openk9-preview-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ details: element })}
         css={css`

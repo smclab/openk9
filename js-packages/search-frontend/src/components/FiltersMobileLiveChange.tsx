@@ -55,6 +55,7 @@ function FiltersMobileLiveChange<E>({
           display: flex;
           justify-content: space-beetween;
           background: #fafafa;
+          justify-content: baseline;
         `}
       >
         <div
@@ -100,7 +101,7 @@ function FiltersMobileLiveChange<E>({
         <button
           css={css`
             color: var(--openk9-grey-stone-600);
-            font-size: 10px;
+            font-size: 15px;
             font-family: Nunito Sans;
             font-weight: 700;
             line-height: 12px;
@@ -122,7 +123,7 @@ function FiltersMobileLiveChange<E>({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "71%",
+          height: "68%",
           borderRadius: "8px",
         }}
       >

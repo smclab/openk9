@@ -15,6 +15,12 @@
 
 }
 
+.DayPicker__withBorder{
+  @media (max-width:480px){
+    width: 360px !important;
+  }
+}
+
 .DateRangePickerInput__withBorder {
   @media (max-width: 480px) {
     margin: 26px !important;
@@ -33,6 +39,16 @@
   width: 110px !important;
   border-top-left-radius: 50px !important;
   border-bottom-left-radius: 50px !important;
+  @media(max-width:480px){
+    width: 125px !important;
+    border-top-left-radius: 50px !important;
+    border-top-right-radius: 50px !important;
+    border-radius: 50px;
+    border-bottom-left-radius: 50px !important;
+    border: 1px solid black;
+
+
+  }
 }
 
 
