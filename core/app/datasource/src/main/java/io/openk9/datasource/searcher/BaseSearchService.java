@@ -101,6 +101,10 @@ public abstract class BaseSearchService {
 			.fetch(Bucket_.searchConfig, JoinType.LEFT)
 			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
 
+		tenantRoot.fetch(Bucket_.defaultLanguage, JoinType.LEFT);
+
+		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
+
 		Predicate disjunction = criteriaBuilder.conjunction();
 
 		List<Expression<Boolean>> expressions = disjunction.getExpressions();

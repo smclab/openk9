@@ -1,9 +1,11 @@
 package io.openk9.datasource.searcher;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
@@ -125,7 +127,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					applySort(docTypeFieldList, request.getSortList(), request.getSortAfterKey(), searchSourceBuilder);
 
-					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, request.getLanguage());
+					String language = getLanguage(request, tenant);
+
+					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, language);
 
 					List<SearchTokenRequest> searchQuery =
 						request.getSearchQueryList();
@@ -984,6 +988,21 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		else {
 			return -1.0;
 		}
+	}
+
+	private static String getLanguage(QueryParserRequest request, Bucket tenant) {
+		String requestLanguage = request.getLanguage();
+		String language = tenant.getDefaultLanguage().getValue();
+
+		if (requestLanguage != null && !requestLanguage.isBlank()) {
+			for (Language available : tenant.getAvailableLanguages()) {
+				if (available.getValue().equals(requestLanguage)) {
+					return requestLanguage;
+				}
+			}
+		}
+
+		return language;
 	}
 
 }
