@@ -20,11 +20,11 @@ declare global {
 export function OpenK9Client({
   onAuthenticated,
   tenant,
-  useKeycloack = true,
+  useKeycloak = true,
 }: {
   onAuthenticated(): void;
   tenant: string;
-  useKeycloack?: boolean;
+  useKeycloak?: boolean;
 }) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
@@ -42,7 +42,7 @@ export function OpenK9Client({
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
-  const keycloakInit = useKeycloack
+  const keycloakInit = useKeycloak
     ? keycloak.init({
         onLoad: "check-sso",
         checkLoginIframe: false,
@@ -57,7 +57,7 @@ export function OpenK9Client({
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
     }
-    if (!keycloak.authenticated && !useKeycloack && appendToBody.token === "") {
+    if (!keycloak.authenticated && !useKeycloak && appendToBody.token === "") {
       await waitForToken();
     }
     return fetch(tenant + route, {
@@ -67,7 +67,7 @@ export function OpenK9Client({
             Authorization: `Bearer ${keycloak.token}`,
             ...init.headers,
           }
-        : !useKeycloack
+        : !useKeycloak
         ? {
             Authorization: `Bearer ${appendToBody.token}`,
             ...init.headers,
@@ -78,7 +78,7 @@ export function OpenK9Client({
   return {
     authInit: keycloakInit,
     async authenticate({ token = "" }: { token?: string }) {
-      if (useKeycloack) {
+      if (useKeycloak) {
         await keycloak.login();
       } else {
         setToken(token || "");
