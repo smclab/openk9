@@ -203,16 +203,42 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					String suggestKeyword = request.getSuggestKeyword();
 
+					List<DocTypeField> docTypeFieldList =
+						Utils
+							.getDocTypeFieldsFrom(tenant)
+							.filter(docTypeField -> !docTypeField.isI18N())
+							.toList();
+
+					String language = getLanguage(request, tenant);
+
+					List<Tuple2<Long, DocTypeField>> suggestionDocTypeFields = new ArrayList<>();
+
+					for (SuggestionCategory suggestionCategory : suggestionCategories) {
+						Set<DocTypeField> docTypeFields = suggestionCategory.getDocTypeFields();
+						for (DocTypeField docTypeField : docTypeFields) {
+							if (docTypeField.isI18N()) {
+								DocTypeField field = getI18nDocTypeField(docTypeField, language, docTypeFieldList);
+								if (field != null) {
+									suggestionDocTypeFields.add(
+										Tuple2.of(suggestionCategory.getId(), field));
+								}
+							}
+							else if (docTypeField.isKeyword()) {
+								suggestionDocTypeFields.add(
+									Tuple2.of(suggestionCategory.getId(), docTypeField));
+							}
+						}
+					}
+
 					if (!suggestionCategories.isEmpty()) {
 
-						for (SuggestionCategory suggestionCategory : suggestionCategories) {
-							for (DocTypeField docTypeField : suggestionCategory.getDocTypeFields()) {
-								String name = docTypeField.getFieldName();
-								compositeValuesSourceBuilders.add(
-									new TermsValuesSourceBuilder(name)
-										.field(name)
-										.missingBucket(true));
-							}
+						for (Tuple2<Long, DocTypeField> tuple2 : suggestionDocTypeFields) {
+							DocTypeField docTypeField = tuple2.getItem2();
+							String name = docTypeField.getFieldName();
+							compositeValuesSourceBuilders.add(
+								new TermsValuesSourceBuilder(name)
+									.field(name)
+									.missingBucket(true));
 						}
 
 						CompositeAggregationBuilder compositeAggregation =
@@ -242,18 +268,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							request.getSuggestionCategoryId() != 0 &&
 							StringUtils.isNotBlank(suggestKeyword)) {
 
-							SuggestionCategory suggestionCategory =
-								suggestionCategories.iterator().next();
-
-							String[] fields =
-								suggestionCategory
-									.getDocTypeFields()
-									.stream()
-									.map(DocTypeField::getParentDocTypeField)
-									.filter(dtf -> dtf != null && dtf.getFieldType() == FieldType.TEXT)
-									.map(DocTypeField::getFieldName)
-									.distinct()
-									.toArray(String[]::new);
+							String[] fields = suggestionDocTypeFields
+								.stream()
+								.map(Tuple2::getItem2)
+								.map(DocTypeField::getParentDocTypeField)
+								.filter(dtf -> dtf != null && dtf.getFieldType() == FieldType.TEXT)
+								.map(DocTypeField::getFieldName)
+								.distinct()
+								.toArray(String[]::new);
 
 							if (fields.length > 0) {
 
@@ -327,22 +349,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							}
 
 							Map<String, Long> fieldNameCategoryIdMap =
-								suggestionCategories
+								suggestionDocTypeFields
 									.stream()
-									.flatMap(e -> e
-										.getDocTypeFields()
-										.stream()
-										.map(dtf ->
-											Map.entry(
-												dtf.getFieldName(),
-												e.getId()
-											)
-										)
-									)
 									.collect(
 										Collectors.toMap(
-											Map.Entry::getKey,
-											Map.Entry::getValue
+											t -> t.getItem2().getFieldName(),
+											Tuple2::getItem1
 										)
 									);
 
@@ -433,6 +445,25 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				});
 
 		});
+	}
+
+	private static DocTypeField getI18nDocTypeField(DocTypeField docTypeField, String language, List<DocTypeField> docTypeFieldList) {
+		DocTypeField docTypeFieldBase = null;
+
+		for (DocTypeField e : docTypeFieldList) {
+
+			if (e.isKeyword() && e.getFieldName().startsWith(docTypeField.getFieldName())) {
+				if (e.getFieldName().contains(language)) {
+					return e;
+				}
+				else if (e.getFieldName().contains(".base")) {
+					docTypeFieldBase = e;
+				}
+			}
+		}
+
+		return docTypeFieldBase;
+
 	}
 
 	@Override

@@ -119,9 +119,6 @@ public abstract class BaseSearchService {
 					.fetch(SuggestionCategory_.docTypeFields);
 
 			categoryDocTypeFieldFetch
-				.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
-
-			categoryDocTypeFieldFetch
 				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
 			if (suggestionCategoryId > 0) {
