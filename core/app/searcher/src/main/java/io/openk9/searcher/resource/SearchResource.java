@@ -64,6 +64,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Path("/v1")
 @RequestScoped
@@ -432,6 +434,8 @@ public class SearchResource {
 
 			sourceMap.putAll(sourceAsMap);
 
+			mapI18nFields(sourceMap);
+
 			sourceMap.put("id", hit.getId());
 
 			Map<String, HighlightField> highlightFields =
@@ -442,7 +446,7 @@ public class SearchResource {
 
 			for (HighlightField value : highlightFields.values()) {
 				highlightMap.put(
-					value.getName(),
+					getHighlightName(value.getName()),
 					Arrays
 						.stream(value.getFragments())
 						.map(Text::string)
@@ -473,6 +477,38 @@ public class SearchResource {
 		TotalHits totalHits = hits.getTotalHits();
 
 		return new Response(result, totalHits.value);
+	}
+
+	private static void mapI18nFields(Map<String, Object> sourceAsMap) {
+
+		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+			Object value = entry.getValue();
+			if (value instanceof Map) {
+				Map<String, Object> objectMap = (Map<String, Object>) value;
+				if (objectMap.containsKey("i18n")) {
+					Map<String, Object> i18nMap = (Map<String, Object>) objectMap.get("i18n");
+					String i18nString = (String) i18nMap.values().iterator().next();
+					entry.setValue(i18nString);
+				}
+				else if (objectMap.containsKey("base")) {
+					entry.setValue(objectMap.get("base"));
+				}
+				else {
+					mapI18nFields((Map<String, Object>) value);
+				}
+			}
+		}
+
+	}
+
+	private static String getHighlightName(String highlightName) {
+		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
+		if (matcher.find()) {
+			return matcher.replaceFirst("");
+		}
+		else  {
+			return highlightName;
+		}
 	}
 
 	private void _printShardFailures(SearchResponse searchResponse) {
@@ -516,4 +552,6 @@ public class SearchResource {
 		Collections.synchronizedMap(new IdentityHashMap<>());
 
 	private static final Object namedXContentRegistryKey = new Object();
+	private static final Pattern i18nHighlithKeyPattern = Pattern.compile("\\.i18n\\..{5,}$|\\.base$");
+
 }
