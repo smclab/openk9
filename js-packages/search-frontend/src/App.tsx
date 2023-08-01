@@ -212,28 +212,6 @@ export function App() {
               <FilterHorizontalSvg />
             </button>
           </div>
-          {/* <div
-            css={css`
-              display: flex;
-              gap: 10px;
-              width: 100%;
-              justify-content: center;
-              align-items: center;
-              @media (min-width: 480px) {
-                display: none;
-              }
-            `}
-          >
-            <div
-              className="openk9-filters-container openk9-box"
-              css={css`
-                width: 100%;
-              `}
-              ref={(element) =>
-                openk9.updateConfiguration({ sortable: element })
-              }
-            />
-          </div> */}
           <div
             css={css`
               @media (max-width: 480px) {
