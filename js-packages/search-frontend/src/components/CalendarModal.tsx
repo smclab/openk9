@@ -241,11 +241,56 @@ export function CalendarMobile({
           verticalHeight={32}
         />
       </div>
-
+      <div
+        css={css`
+          display: flex;
+          gap: 2%;
+          padding-inline: 28px;
+          justify-content: center;
+          margin-top: -20px;
+        `}
+      >
+        <div>
+          <input
+            readOnly
+            css={css`
+              border-radius: 50px;
+              height: 28px;
+              text-align: center;
+              opacity: 0.699999988079071;
+              border: 1px solid
+                var(--openk9-embeddable-search--secondary-active-color);
+            `}
+            value={
+              moment(startDate).format("DD MMMM YYYY") === "Invalid date"
+                ? "Start Date"
+                : moment(startDate).format("DD MMMM YYYY")
+            }
+          ></input>
+        </div>
+        <div>
+          <input
+            readOnly
+            css={css`
+              border-radius: 50px;
+              height: 28px;
+              text-align: center;
+              opacity: 0.699999988079071;
+              border: 1px solid
+                var(--openk9-embeddable-search--secondary-active-color);
+            `}
+            value={
+              moment(endDate).format("DD MMMM YYYY") === "Invalid date"
+                ? "End Date"
+                : moment(endDate).format("DD MMMM YYYY")
+            }
+          ></input>
+        </div>
+      </div>
       <div
         css={css`
           border: 0.5px solid #d4d4d8;
-          margin-top: 10px;
+          margin-top: 20px;
         `}
       ></div>
       <div
@@ -360,26 +405,14 @@ export function CalendarMobile({
           </div>
         </button>
       </div>
-
-      {/* <button
-          css={css`
-            color: var(--openk9-grey-stone-600);
-            font-size: 10px;
-            font-family: Nunito Sans;
-            font-weight: 700;
-            line-height: 12px;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin-right: 21px;
-          `}
-          onClick={() => {
-            if (setIsVisibleCa) setIsVisibleFilters(false);
-          }}
-          style={{ backgroundColor: "#FAFAFA", border: "none" }}
-        >
-          Chiudi <DeleteLogo heightParam={8} widthParam={8} />
-        </button> */}
+      <style type="text/css">
+        {`
+        .DateInput {
+          position: static !important;
+          display: none !important;
+        }
+    `}
+      </style>
     </React.Fragment>
   );
   if (!isVisibleCalendar) return null;
