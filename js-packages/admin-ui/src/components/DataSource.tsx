@@ -284,7 +284,7 @@ export function DataSource() {
             description={"If datasource is automatically schedulable"}
           />
           <BooleanInput label="Reindex" {...form.inputProps("reindex")} />
-          <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
+          {!datasourceQuery.loading && <CronInput label="Scheduling" {...form.inputProps("scheduling")} />}
           {datasourceId !== "new" && (
             <React.Fragment>
               <SearchSelect
