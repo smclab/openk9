@@ -53,7 +53,6 @@ export function DocumentTypeFields() {
         id={documentTypeId}
         columns={[
           { header: "Name", content: (documentTypeField) => formatName(documentTypeField) },
-          { header: "Description", content: (documentTypeField) => documentTypeField?.description },
           { header: "Field Type", content: (documentTypeField) => documentTypeField?.fieldType },
           { header: "Boost", content: (documentTypeField) => documentTypeField?.boost },
           {
