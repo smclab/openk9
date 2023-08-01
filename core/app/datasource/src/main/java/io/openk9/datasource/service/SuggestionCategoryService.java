@@ -67,7 +67,7 @@ public class SuggestionCategoryService extends
 
 		if (notEqual) {
 			return joinConnection
-				.map(connection -> connection.filter(DocTypeField::isKeyword));
+				.map(connection -> connection.filter(dtf -> dtf.isKeyword() || dtf.isI18N()));
 		}
 
 		return joinConnection;
