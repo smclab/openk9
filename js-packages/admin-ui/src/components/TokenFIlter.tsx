@@ -250,6 +250,27 @@ const Filters = [
     }`,
   },
   {
+    title: "stop",
+    description: "Removes stop words from a token stream.",
+    Json: `
+    {
+        "type":"stop",
+        "stopwords":[ "and", "is", "the" ],
+        "stopwords_path":"",
+        "ignore_case":false,
+        "remove_trailing":true
+    }`,
+    visible: "false",
+    descriptionAttribute: `
+    {
+        "type":"type of filter",
+        "stopwords":"(Optional, string or array of strings) Language value, such as _arabic_ or _thai_. Defaults to _english_.",
+        "stopwords_path":"Path to a file that contains a list of stop words to remove.",
+        "ignore_case":"If true, stop word matching is case insensitive. For example, if true, a stop word of the matches and removes The, THE, or the. Defaults to false.",
+        "remove_trailing":"If true, the last token of a stream is removed if it s a stop word. Defaults to true."
+    }`,
+  },
+  {
     title: "ngram",
     description: "Forms n-grams of specified lengths from a token.",
     Json: `
