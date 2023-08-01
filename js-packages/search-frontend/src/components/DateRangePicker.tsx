@@ -14,9 +14,13 @@ import { css } from "styled-components/macro";
 export function DataRangePicker({
   onChange,
   calendarDate,
+  start,
+  end,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
+  start?: any;
+  end?: any;
 }) {
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [endDate, setEndDate] = React.useState<any | null>(null);
@@ -139,8 +143,8 @@ export function DataRangePicker({
           <CalendarLogo size={"20px"} />
         </div>
         <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
+          startDate={start || startDate}
+          endDate={end || endDate}
           onDatesChange={handleDatesChange}
           focusedInput={focusedInput}
           onFocusChange={handleFocusChange}

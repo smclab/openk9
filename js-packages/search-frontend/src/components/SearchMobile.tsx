@@ -168,6 +168,7 @@ export function SearchMobile({
                 className="openk9--input-search"
                 autoComplete="off"
                 ref={inputRef}
+                enterKeyHint="search"
                 id="search-openk9"
                 aria-label={
                   t(

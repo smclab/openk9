@@ -269,19 +269,35 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
+          <DataRangePicker
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            start={configuration.dataRangePicker?.start}
+            end={configuration.dataRangePicker?.end}
+          />
         </I18nextProvider>,
-        configuration.dataRangePicker,
+        configuration.dataRangePicker?.element !== undefined
+          ? configuration.dataRangePicker?.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <CalendarMobile
             onChange={setDateRange}
             calendarDate={dateRange}
-            isVisibleCalendar={true}
+            isVisibleCalendar={configuration.calendarMobile?.isVisible || false}
+            setIsVisibleCalendar={configuration.calendarMobile?.setIsVisible}
+            startDate={configuration.calendarMobile?.startDate}
+            endDate={configuration.calendarMobile?.endDate}
+            focusedInput={configuration.calendarMobile?.focusedInput}
+            setStartDate={configuration.calendarMobile?.setStartDate}
+            setEndDate={configuration.calendarMobile?.setEndDate}
+            setFocusedInput={configuration.calendarMobile?.setFocusedInput}
           />
         </I18nextProvider>,
-        configuration.calendarMobile,
+        configuration.calendarMobile?.element !== undefined
+          ? configuration.calendarMobile?.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

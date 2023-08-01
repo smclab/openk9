@@ -177,17 +177,35 @@ type SearchMobileConfiguration = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type CalendarMobileConfiguration = {
+  element: Element | string | null;
+  isVisible: boolean;
+  setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  startDate: any;
+  setStartDate: any;
+  endDate: any;
+  setEndDate: any;
+  focusedInput: any;
+  setFocusedInput: any;
+};
+
+type DataRangePickerProps = {
+  element: Element | string | null;
+  start?: any;
+  end?: any;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
-  calendarMobile: Element | string | null;
+  calendarMobile: CalendarMobileConfiguration | null;
   searchMobile: SearchMobileConfiguration | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
-  dataRangePicker: Element | string | null;
+  dataRangePicker: DataRangePickerProps | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
