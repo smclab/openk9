@@ -7,7 +7,7 @@ import "./app.css";
 import { MaintenancePage } from "./components/MaintenancePage";
 import "./ScrollBar.css";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
-
+import "./components/dataRangePicker.css";
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
@@ -22,12 +22,24 @@ export function App() {
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
+  const [isVisibleCalendar, setIsVisibleCalendar] = React.useState(false);
+
+  React.useState(false);
   const handleClick = (event: any) => {
     const elementWidth = window.innerWidth;
     if (elementWidth < 480) {
       setIsVisibleSearchMobile(true);
     }
   };
+  const mobileCalendarClick = (event: any) => {
+    const elementWidth = window.innerWidth;
+    if (elementWidth < 480) {
+      setIsVisibleCalendar(true);
+    }
+  };
+  const [startDate, setStartDate] = React.useState<any | null>(null);
+  const [endDate, setEndDate] = React.useState<any | null>(null);
+  const [focusedInput, setFocusedInput] = React.useState(null);
   return (
     <div
       className="openk9-body"
@@ -216,9 +228,16 @@ export function App() {
                 width: 100%;
               }
             `}
+            onClick={mobileCalendarClick}
             className="openk9-update-configuration"
             ref={(element) =>
-              openk9.updateConfiguration({ dataRangePicker: element })
+              openk9.updateConfiguration({
+                dataRangePicker: {
+                  element: element,
+                  start: startDate,
+                  end: endDate,
+                },
+              })
             }
           ></div>
         </div>
@@ -298,7 +317,17 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            calendarMobile: element,
+            calendarMobile: {
+              element: element,
+              isVisible: isVisibleCalendar,
+              setIsVisible: setIsVisibleCalendar,
+              startDate: startDate,
+              setStartDate: setStartDate,
+              endDate: endDate,
+              setEndDate: setEndDate,
+              focusedInput: focusedInput,
+              setFocusedInput: setFocusedInput,
+            },
           })
         }
       ></div>
