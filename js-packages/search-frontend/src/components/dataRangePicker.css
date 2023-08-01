@@ -12,27 +12,42 @@
   justify-content: space-between;
   align-items: center;
   padding-block: 4px !important;
-
+  @media (max-width:480px) {
+    justify-content: baseline;
+  padding-inline: 7%;
+  gap: 8px;
+  } 
 }
 
 .DayPicker__withBorder{
-  @media (max-width:480px){
-    width: 360px !important;
-  }
+   @media (max-width:480px){ 
+    width: 77vw !important;
+    box-shadow: none !important;
+   } 
 }
 
 .DateRangePickerInput__withBorder {
   @media (max-width: 480px) {
-    margin: 26px !important;
+    /* margin: 26px !important; */
   }
 }
 
 .DateRangePicker {
   width: 96%;
 }
-
+#DayPicker div{
+  @media (max-width:480px) {
+  width: 100% !important;
+  }
+}
 .DateRangePickerInput_arrow {
   display: none !important;
+}
+
+.CalendarMonthGrid_month__horizontal{
+  @media (max-width:480px) {
+  padding-left: 10px !important;  
+  }
 }
 
 .DateInput.DateInput_1:first-child {
@@ -45,12 +60,28 @@
     border-top-right-radius: 50px !important;
     border-radius: 50px;
     border-bottom-left-radius: 50px !important;
-    border: 1px solid black;
 
 
   }
 }
 
+.DayPicker_transitionContainer__horizontal{
+  @media (max-width:480px) {
+    /* height: 50vh!important; */
+ min-height: 343px;   
+  }
+}
+
+.DayPicker{
+  @media (max-width:480px) {
+  margin-left:5vw !important
+  }
+}
+.DateRangePicker_picker{
+  @media (max-width:480px) {
+  bottom: 30px !important;
+  }
+}
 
 .DateInput.DateInput_1:last-child {
   width: 110px !important;
@@ -76,6 +107,9 @@
 .DateInput_input.DateInput_input_1:focus-visible {
   outline: black 2px solid !important;
   border: none !important;
+  @media (max-width:480px) {
+    outline: none !important;
+  }
   
 }
 
