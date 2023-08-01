@@ -181,13 +181,38 @@ export function App() {
         >
           <div
             css={css`
+              display: flex;
+              gap: 18px;
+              align-items: flex-end;
               width: 100%;
             `}
-            onClick={handleClick}
-            className="openk9-update-configuration"
-            ref={(element) => openk9.updateConfiguration({ search: element })}
-          ></div>
-          <div
+          >
+            <div
+              css={css`
+                width: 100%;
+              `}
+              onClick={handleClick}
+              className="openk9-update-configuration"
+              ref={(element) => openk9.updateConfiguration({ search: element })}
+            ></div>
+            <button
+              css={css`
+                padding: 6px 10px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                background: white;
+                border-radius: 50px;
+                @media (min-width: 480px) {
+                  display: none;
+                }
+              `}
+              onClick={() => {
+                setIsVisibleFilters(true);
+              }}
+            >
+              <FilterHorizontalSvg />
+            </button>
+          </div>
+          {/* <div
             css={css`
               display: flex;
               gap: 10px;
@@ -208,20 +233,7 @@ export function App() {
                 openk9.updateConfiguration({ sortable: element })
               }
             />
-            <button
-              css={css`
-                padding: 6px 10px;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                background: white;
-                border-radius: 50px;
-              `}
-              onClick={() => {
-                setIsVisibleFilters(true);
-              }}
-            >
-              <FilterHorizontalSvg />
-            </button>
-          </div>
+          </div> */}
           <div
             css={css`
               @media (max-width: 480px) {
