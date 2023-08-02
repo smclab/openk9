@@ -20,6 +20,7 @@ import { FiltersMemo } from "./Filters";
 import { useInfiniteResults } from "./ResultList";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
+import { useTranslation } from "react-i18next";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -47,6 +48,7 @@ function FiltersMobileLiveChange<E>({
   setIsVisibleFilters,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(searchQuery, sort);
+  const { t } = useTranslation();
 
   const componet = (
     <React.Fragment>
@@ -93,7 +95,7 @@ function FiltersMobileLiveChange<E>({
                   margin: 0;
                 `}
               >
-                Filtri
+                {t("filters")}
               </h2>
             </span>
           </div>
@@ -115,7 +117,7 @@ function FiltersMobileLiveChange<E>({
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
-          Chiudi <DeleteLogo heightParam={8} widthParam={8} />
+          {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
       </div>
       <OverlayScrollbarsComponent
@@ -156,7 +158,7 @@ function FiltersMobileLiveChange<E>({
       >
         <button
           className="openk9-filter-horizontal-submit"
-          aria-label="rimuovi filtri"
+          aria-label={t("remove-filters") || "remove filters"}
           css={css`
             font-size: smaller;
             height: 52px;
@@ -195,7 +197,7 @@ function FiltersMobileLiveChange<E>({
             if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
         >
-          <div>Rimuovi filtri </div>
+          <div>{t("remove-filters")} </div>
           <div>
             <TrashSvg size="18px" />
           </div>
@@ -238,7 +240,9 @@ function FiltersMobileLiveChange<E>({
             if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
         >
-          <div>Mostra i {results.data?.pages[0].total} risultati</div>
+          <div>
+            {t("result-view")} {results.data?.pages[0].total} {t("result")}
+          </div>
           <div>
             <AddFiltersSvg size="21px" />
           </div>

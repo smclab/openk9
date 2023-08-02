@@ -8,6 +8,10 @@ import { MaintenancePage } from "./components/MaintenancePage";
 import "./ScrollBar.css";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import "./components/dataRangePicker.css";
+import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
+import moment from "moment";
+import { DeleteLogo } from "./components/DeleteLogo";
+import { useTranslation } from "react-i18next";
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
@@ -40,6 +44,10 @@ export function App() {
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedInput, setFocusedInput] = React.useState(null);
+  const [isCLickReset, setIsClickReset] = React.useState(false);
+
+  const { t } = useTranslation();
+
   return (
     <div
       className="openk9-body"
@@ -215,10 +223,9 @@ export function App() {
           <div
             css={css`
               @media (max-width: 480px) {
-                width: 100%;
+                display: none;
               }
             `}
-            onClick={mobileCalendarClick}
             className="openk9-update-configuration"
             ref={(element) =>
               openk9.updateConfiguration({
@@ -230,6 +237,79 @@ export function App() {
               })
             }
           ></div>
+          <div
+            css={css`
+              width: 100%;
+              @media (min-width: 480px) {
+                display: none;
+              }
+            `}
+            className="openk9-update-configuration"
+          >
+            <div
+              css={css`
+                display: flex;
+                background-color: white;
+                border-radius: 50px;
+                border: 1px solid #ced4da;
+                justify-content: space-between;
+                align-items: center;
+              `}
+            >
+              <div
+                css={css`
+                  padding: 7px 10px;
+                  display: flex;
+                  gap: ${startDate === null ? "43px" : "23px"};
+                `}
+              >
+                <CalendarMobileSvg />
+                <div
+                  onClick={() => {
+                    setIsVisibleCalendar(true);
+                  }}
+                  css={css`
+                    white-space: nowrapp;
+                  `}
+                >
+                  {startDate === null
+                    ? t("start-day")
+                    : moment(startDate).format("DD MMMM YYYY")}
+                </div>
+                <div
+                  css={css`
+                    border: 1px solid #ced4da;
+                  `}
+                ></div>
+                <div
+                  css={css`
+                    white-space: nowrap;
+                  `}
+                  onClick={() => {
+                    setIsVisibleCalendar(true);
+                  }}
+                >
+                  {endDate === null
+                    ? t("end-day")
+                    : moment(endDate).format("DD MMMM YYYY")}
+                </div>
+              </div>
+              {startDate !== null && (
+                <div
+                  onClick={() => {
+                    setStartDate(null);
+                    setEndDate(null);
+                    setIsClickReset(true);
+                  }}
+                  css={css`
+                    margin-right: 10px;
+                  `}
+                >
+                  <DeleteLogo />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         <div
           className="openk9-container-active-filters"
@@ -317,6 +397,8 @@ export function App() {
               setEndDate: setEndDate,
               focusedInput: focusedInput,
               setFocusedInput: setFocusedInput,
+              isCLickReset: isCLickReset,
+              setIsCLickReset: setIsClickReset,
             },
           })
         }

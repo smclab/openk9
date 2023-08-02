@@ -61,9 +61,9 @@ export function SortResultList({
         >
           {t("relevance")}
         </option>
-        {options.data?.map((option) => {
+        {options.data?.map((option, index: number) => {
           return (
-            <React.Fragment key={option.id + "fragment"}>
+            <React.Fragment key={"fragment " + index}>
               <option
                 key={option.id + "asc"}
                 value={JSON.stringify({

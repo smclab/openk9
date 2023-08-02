@@ -187,6 +187,8 @@ type CalendarMobileConfiguration = {
   setEndDate: any;
   focusedInput: any;
   setFocusedInput: any;
+  isCLickReset: boolean;
+  setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 type DataRangePickerProps = {
