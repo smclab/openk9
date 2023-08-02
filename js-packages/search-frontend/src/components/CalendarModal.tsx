@@ -28,6 +28,11 @@ import { CalendarMobileSvg } from "../svgElement/CalendarMobileSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import moment from "moment";
+import "moment/locale/it";
+import "moment/locale/es";
+import "moment/locale/fr";
+import { useTranslation } from "react-i18next";
+
 // import "./CalendarModal.css";
 export function CalendarMobile({
   onChange,
@@ -40,6 +45,9 @@ export function CalendarMobile({
   setStartDate,
   setEndDate,
   setFocusedInput,
+  activeLanguage,
+  isCLickReset,
+  setIsCLickReset,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -53,6 +61,9 @@ export function CalendarMobile({
   setStartDate: any;
   setEndDate: any;
   setFocusedInput: any;
+  activeLanguage?: string;
+  isCLickReset: boolean;
+  setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>> | undefined;
 }) {
   const handleDatesChange = ({
     startDate,
@@ -68,6 +79,18 @@ export function CalendarMobile({
     setFocusedInput(focusedInput);
   };
 
+  const { t } = useTranslation();
+  React.useEffect(() => {
+    onChange({
+      startDate: undefined,
+      endDate: undefined,
+      keywordKey: undefined,
+    });
+    if (setIsCLickReset) setIsCLickReset(false);
+  }, [isCLickReset]);
+  moment.locale("en");
+  // const dataFormat = formatterLanguage();
+
   const componet = (
     <React.Fragment>
       <div
@@ -76,6 +99,7 @@ export function CalendarMobile({
           justify-content: space-beetween;
           background: #fafafa;
           padding-inline: 8px;
+          align-items: center;
         `}
       >
         <div
@@ -87,6 +111,7 @@ export function CalendarMobile({
             padding-top: 20px;
             padding-bottom: 13px;
             display: flex;
+            align-items: center;
           `}
         >
           <div
@@ -94,6 +119,7 @@ export function CalendarMobile({
             css={css`
               display: flex;
               gap: 5px;
+              align-items: center;
             `}
           >
             <span>
@@ -113,7 +139,7 @@ export function CalendarMobile({
                   margin: 0;
                 `}
               >
-                Calendario
+                {t("filter-for-data")}
               </h2>
             </span>
           </div>
@@ -121,21 +147,22 @@ export function CalendarMobile({
         <button
           css={css`
             color: var(--openk9-grey-stone-600);
-            font-size: 10px;
+            font-size: 16px;
             font-family: Nunito Sans;
             font-weight: 700;
-            line-height: 12px;
+            line-height: 15px;
             display: flex;
             align-items: center;
             gap: 9px;
             margin-right: 21px;
+            align-items: baseline;
           `}
           onClick={() => {
             if (setIsVisibleCalendar) setIsVisibleCalendar(false);
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
-          Chiudi <DeleteLogo heightParam={8} widthParam={8} />
+          {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
       </div>
       <div
@@ -145,6 +172,7 @@ export function CalendarMobile({
           gap: 5px;
           overflow: scroll;
           margin-top: 10px;
+          padding-inline: 25px;
           ::-webkit-scrollbar {
             display: none;
           }
@@ -166,7 +194,7 @@ export function CalendarMobile({
             setEndDate(moment());
           }}
         >
-          Oggi
+          {t("today")}
         </button>
         <button
           css={css`
@@ -184,7 +212,7 @@ export function CalendarMobile({
             setEndDate(moment().endOf("week"));
           }}
         >
-          Questa settimana
+          {t("this-week")}
         </button>
         <button
           css={css`
@@ -202,7 +230,7 @@ export function CalendarMobile({
             setEndDate(moment().endOf("month"));
           }}
         >
-          Questo mese
+          {t("this-month")}
         </button>
         <button
           css={css`
@@ -220,7 +248,7 @@ export function CalendarMobile({
             setEndDate(moment().endOf("year"));
           }}
         >
-          Questo anno
+          {t("this-year")}
         </button>
       </div>
       <div style={{ width: "100%", marginTop: "360px" }}>
@@ -263,7 +291,7 @@ export function CalendarMobile({
             `}
             value={
               moment(startDate).format("DD MMMM YYYY") === "Invalid date"
-                ? "Start Date"
+                ? t("start-day") || "Start day"
                 : moment(startDate).format("DD MMMM YYYY")
             }
           ></input>
@@ -281,7 +309,7 @@ export function CalendarMobile({
             `}
             value={
               moment(endDate).format("DD MMMM YYYY") === "Invalid date"
-                ? "End Date"
+                ? t("end-day") || "End day"
                 : moment(endDate).format("DD MMMM YYYY")
             }
           ></input>
@@ -351,14 +379,14 @@ export function CalendarMobile({
             setEndDate(null);
           }}
         >
-          <div>Non filtrare per data </div>
+          <div>{t("don-t-filter-for-date")} </div>
           <div>
             <TrashSvg size="18px" />
           </div>
         </button>
         <button
           className="openk9-filter-horizontal-submit"
-          aria-label="applica filtri"
+          aria-label={t("filter-for-data") || "filter for data"}
           css={css`
             font-size: smaller;
             height: 52px;
@@ -399,7 +427,7 @@ export function CalendarMobile({
             });
           }}
         >
-          <div>Mostra i risultati</div>
+          <div>{t("filter-for-data")}</div>
           <div>
             <AddFiltersSvg size="21px" />
           </div>
@@ -418,5 +446,17 @@ export function CalendarMobile({
   if (!isVisibleCalendar) return null;
   document.body.style.overflow = "hidden";
   return <ModalDetail padding="0px" background="white" content={componet} />;
+}
+function formatterLanguage(language: string) {
+  switch (language) {
+    case "it":
+      return "";
+    case "es":
+      return "";
+    case "fr":
+      return "";
+    default:
+      return "DD MMMM YYYY";
+  }
 }
 export const CalendarMobileMemo = React.memo(CalendarMobile);

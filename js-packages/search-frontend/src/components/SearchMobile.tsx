@@ -18,6 +18,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
 import { SearchSvg } from "../svgElement/SearchSvg";
+import { DeleteLogo } from "./DeleteLogo";
 
 type SearchMobileProps = {
   configuration: Configuration;
@@ -74,10 +75,12 @@ export function SearchMobile({
     }
   }, [adjustedSelection]);
   const { t } = useTranslation();
-  console.log(spans, onselect);
-  selectionsState.selection.forEach((selection) => {
-    console.log(selection.token);
-  });
+
+  //utili durante l'implementazione del cambio dei colori del query analisys
+  // console.log(spans, onselect);
+  // selectionsState.selection.forEach((selection) => {
+  //   console.log(selection.token);
+  // });
 
   const componet = (
     <React.Fragment>
@@ -169,6 +172,10 @@ export function SearchMobile({
                 autoComplete="off"
                 ref={inputRef}
                 enterKeyHint="search"
+                onKeyUp={(event) => {
+                  if (setIsVisible && event.key === "Enter")
+                    setIsVisible(false);
+                }}
                 id="search-openk9"
                 aria-label={
                   t(
@@ -199,13 +206,6 @@ export function SearchMobile({
                   background-color: inherit;
                   color: ${autoSelect ? "black" : "blue"};
                 `}
-                //              const status: Status = isInteractive
-                // ? selected !== null
-                //   ? isAutoSlected
-                //     ? "auto-selected"
-                //     : "has-selected"
-                //   : "can-select"
-                // : "not-interactive";
                 spellCheck="false"
                 onSelect={(event) => {
                   if (
@@ -296,7 +296,37 @@ export function SearchMobile({
             <button
               className="openk9--search-delete-container-icon"
               title="remove text"
-              aria-label={t("remove-text") || "Remove text"}
+              aria-label="remove-text"
+              style={{
+                alignItems: "center",
+                background: "inherit",
+                border: "none",
+              }}
+              onClick={() => {
+                selectionsDispatch({
+                  type: "set-text",
+                  text: "",
+                });
+              }}
+            >
+              <div>
+                <span
+                  className="openk9--search-delete-span-icon"
+                  css={css`
+                    cursor: pointer;
+                    @media (max-width: 480px) {
+                      margin-top: 7px;
+                    }
+                  `}
+                >
+                  <DeleteLogo />
+                </span>
+              </div>
+            </button>
+            <button
+              className="openk9--search-delete-container-icon"
+              title="search"
+              aria-label="search"
               style={{
                 paddingRight: "16px",
                 display: "flex",

@@ -155,13 +155,7 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
           >
             {children?.toLocaleString("it")}
           </span>
-          <span
-            css={css`
-              @media (max-width: 480px) {
-                display: none;
-              }
-            `}
-          >
+          <span>
             <SortResultList setSortResult={setSortResult} />
           </span>
         </div>

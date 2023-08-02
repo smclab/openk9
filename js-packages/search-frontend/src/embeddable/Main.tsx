@@ -97,6 +97,7 @@ export function Main({
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
+  const activeLanguage = i18next.language;
   return (
     <React.Fragment>
       {renderPortal(
@@ -280,6 +281,9 @@ export function Main({
             setStartDate={configuration.calendarMobile?.setStartDate}
             setEndDate={configuration.calendarMobile?.setEndDate}
             setFocusedInput={configuration.calendarMobile?.setFocusedInput}
+            activeLanguage={activeLanguage}
+            isCLickReset={configuration.calendarMobile?.isCLickReset || false}
+            setIsCLickReset={configuration.calendarMobile?.setIsCLickReset}
           />
         </I18nextProvider>,
         configuration.calendarMobile?.element !== undefined
