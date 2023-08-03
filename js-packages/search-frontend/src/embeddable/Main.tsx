@@ -283,6 +283,12 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
+        </I18nextProvider>,
+        configuration.calendar,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <CalendarMobile
             onChange={setDateRange}
             calendarDate={dateRange}

@@ -212,6 +212,7 @@ export type Configuration = {
   sortable: Element | string | null;
   results: Element | string | null;
   details: Element | string | null;
+  calendar: Element | string | null;
   login: Element | string | null;
   detailMobile: Element | string | null;
   searchAutoselect: boolean;
@@ -249,6 +250,7 @@ const defaultConfiguration: Configuration = {
   login: null,
   tenant: null,
   token: null,
+  calendar: null,
   useKeycloak: true,
   searchAutoselect: true,
   searchReplaceText: true,
