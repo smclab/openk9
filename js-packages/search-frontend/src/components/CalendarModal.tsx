@@ -159,6 +159,13 @@ export function CalendarMobile({
           `}
           onClick={() => {
             if (setIsVisibleCalendar) setIsVisibleCalendar(false);
+            onChange({
+              startDate: undefined,
+              endDate: undefined,
+              keywordKey: undefined,
+            });
+            setStartDate(null);
+            setEndDate(null);
           }}
           style={{ backgroundColor: "#FAFAFA", border: "none" }}
         >
