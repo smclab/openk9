@@ -2,7 +2,14 @@ import React from "react";
 
 export function AddFiltersSvg({ size = "18px" }: { size?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 25 24" fill="none">
+    <svg
+      className="openk9-logo-add-filter"
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 25 24"
+      fill="none"
+    >
       <mask
         id="mask0_1113_7109"
         maskUnits="userSpaceOnUse"
@@ -11,7 +18,13 @@ export function AddFiltersSvg({ size = "18px" }: { size?: string }) {
         width="18"
         height="18"
       >
-        <rect x="0.5" width="18" height="18" fill="#D9D9D9" />
+        <rect
+          className="openk9-logo-add-filter-color"
+          x="0.5"
+          width="18"
+          height="18"
+          fill="#D9D9D9"
+        />
       </mask>
       <g mask="url(#mask0_1113_7109)">
         <path

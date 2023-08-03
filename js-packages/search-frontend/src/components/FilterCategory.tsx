@@ -252,7 +252,11 @@ function FilterCategory({
                           {multiSelect ? (
                             <React.Fragment>
                               <input
-                                className="form-check-input"
+                                className={`form-check-input ${
+                                  isChecked
+                                    ? "is-checked-fliter-category"
+                                    : "not-is-cheched"
+                                }`}
                                 id={
                                   "" +
                                   index +
@@ -513,6 +517,11 @@ function SingleSelect({
     <React.Fragment>
       <div>
         <input
+          className={`radio-button ${
+            isChecked
+              ? "filter-category-radio-checked"
+              : "not-checked-filter-category"
+          }`}
           id={index}
           type="radio"
           checked={false}
@@ -530,17 +539,17 @@ function SingleSelect({
               onRemove(asSearchToken);
             }
           }}
-          style={{
-            appearance: "none",
-            width: "17px",
-            height: "16px",
-            borderRadius: "50%",
-            border: "2px solid #ccc",
-            backgroundColor: isChecked
-              ? "var(--openk9-embeddable-search--secondary-active-color)"
-              : "#fff",
-            cursor: "pointer",
-          }}
+          css={css`
+            appearance: none !important;
+            width: 17px !important;
+            height: 16px !important;
+            border-radius: 50% !important;
+            border: 2px solid #ccc !important;
+            background-color: ${isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+              : "#fff !important"};
+            cursor: pointer !important;
+          `}
           onMouseOver={(event) => {
             if (!isChecked) {
               const target = event.target as HTMLInputElement;
