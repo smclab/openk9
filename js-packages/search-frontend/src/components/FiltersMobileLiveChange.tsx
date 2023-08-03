@@ -125,7 +125,7 @@ function FiltersMobileLiveChange<E>({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "68%",
+          height: "50%",
           borderRadius: "8px",
         }}
       >
