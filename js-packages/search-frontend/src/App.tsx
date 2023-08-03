@@ -269,7 +269,7 @@ export function App() {
                     setIsVisibleCalendar(true);
                   }}
                   css={css`
-                    white-space: nowrapp;
+                    white-space: nowrap;
                   `}
                 >
                   {startDate === null
