@@ -249,7 +249,11 @@ function FilterCategoryDynamic({
                     {multiSelect ? (
                       <React.Fragment>
                         <input
-                          className="form-check-input"
+                          className={`form-check-input ${
+                            isChecked
+                              ? "checked-checkbox filter-dynamic-check"
+                              : "not-checked-checkbox filter-dynamic-not-check"
+                          }`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={(event) => {
@@ -445,6 +449,11 @@ function SingleSelect({
       <div>
         <input
           id="radio-button"
+          className={`radio-button ${
+            isChecked
+              ? "is-checked-dynamic-radio"
+              : "is-not-checked-dynamic-radio"
+          }`}
           type="radio"
           checked={false}
           onChange={(event) => {
@@ -461,17 +470,17 @@ function SingleSelect({
               onRemove(asSearchToken);
             }
           }}
-          style={{
-            appearance: "none",
-            width: "17px",
-            height: "16px",
-            borderRadius: "50%",
-            border: "2px solid #ccc",
-            backgroundColor: isChecked
-              ? "var(--openk9-embeddable-search--secondary-active-color)"
-              : "#fff",
-            cursor: "pointer",
-          }}
+          css={css`
+            appearance: none !important;
+            width: 17px !important;
+            height: 16px !important;
+            border-radius: 50% !important;
+            border: 2px solid #ccc !important;
+            background-color: ${isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+              : "#fff !important"};
+            cursor: pointer !important;
+          `}
           onMouseOver={(event) => {
             if (!isChecked) {
               const target = event.target as HTMLInputElement;

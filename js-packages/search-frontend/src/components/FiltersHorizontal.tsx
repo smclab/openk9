@@ -291,7 +291,9 @@ function FiltersHorizontal({
                 return (
                   <React.Fragment key={index}>
                     <div
-                      className="openk9-filter-horizontal-container-input-value"
+                      className={`openk9-filter-horizontal-container-input-value ${
+                        checked ? "check-container" : "not-check-container"
+                      }`}
                       css={css`
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -308,7 +310,9 @@ function FiltersHorizontal({
                         id={
                           "filter-horizontal " + index + " " + suggestion.name
                         }
-                        className="custom-checkbox openk9-filter-horizontal-input"
+                        className={`custom-checkbox openk9-filter-horizontal-input  ${
+                          checked ? "checked-checkbox" : "not-checked-checkbox"
+                        }`}
                         type="checkbox"
                         checked={checked}
                         onChange={(event) =>
