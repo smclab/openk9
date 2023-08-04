@@ -148,21 +148,21 @@ public class TabGraphqlResource {
 
 	@Mutation
 	public Uni<Tuple2<String, String>> addTabTranslation(
-		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		@Id @Name("tabId") long tabId,
 		String language, String key, String value) {
 
 		return translationService
-			.addTranslation(SuggestionCategory.class, suggestionCategoryId, language, key, value)
+			.addTranslation(Tab.class, tabId, language, key, value)
 			.map((__) -> Tuple2.of("ok", null));
 	}
 
 	@Mutation
 	public Uni<Tuple2<String, String>> deleteTabTranslation(
-		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		@Id @Name("tabId") long tabId,
 		String language, String key) {
 
 		return translationService
-			.deleteTranslation(SuggestionCategory.class, suggestionCategoryId, language, key)
+			.deleteTranslation(Tab.class, tabId, language, key)
 			.map((__) -> Tuple2.of("ok", null));
 	}
 
