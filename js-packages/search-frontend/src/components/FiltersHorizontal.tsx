@@ -73,6 +73,7 @@ function FiltersHorizontal({
       );
     }
   };
+  const { t } = useTranslation();
 
   return (
     <React.Fragment>
@@ -154,7 +155,7 @@ function FiltersHorizontal({
             onConfigurationChangeExt && onConfigurationChangeExt();
           }}
         >
-          <div>Rimuovi filtri</div>
+          <div>{t("remove-filters")}</div>
           <TrashSvg size="18px" />
         </button>
         <button
@@ -196,7 +197,7 @@ function FiltersHorizontal({
             onConfigurationChangeExt && onConfigurationChangeExt();
           }}
         >
-          <div>Applica i Filtri</div>
+          <div>{t("add-filters") || "Add Filters"}</div>
           <div>
             <AddFiltersSvg size="22px" />
           </div>
