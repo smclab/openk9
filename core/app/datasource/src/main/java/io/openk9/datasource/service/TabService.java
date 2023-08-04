@@ -7,6 +7,8 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
+import io.openk9.datasource.model.dto.TranslationDTO;
+import io.openk9.datasource.model.dto.TranslationKeyDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -178,10 +180,22 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	}
 
+	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
+		return translationService.addTranslation(
+			Tab.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
+	}
+
+	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
+		return translationService.deleteTranslation(
+			Tab.class, id, dto.getLanguage(), dto.getKey());
+	}
 
 
 	@Inject
 	TokenTabService _tokenTabService;
+
+	@Inject
+	TranslationService translationService;
 
 	@Override
 	public Class<Tab> getEntityClass() {

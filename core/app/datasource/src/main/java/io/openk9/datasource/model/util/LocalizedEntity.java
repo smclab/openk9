@@ -10,5 +10,5 @@ public interface LocalizedEntity<T extends K9Entity> {
 	@JsonIgnore
 	Class<T> getWrappeeClass();
 
-	Map<TranslationKey, String> getTranslationMap();
+	Map<String, String> getTranslationMap();
 }

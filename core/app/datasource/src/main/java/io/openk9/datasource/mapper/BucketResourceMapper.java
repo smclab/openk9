@@ -3,13 +3,17 @@ package io.openk9.datasource.mapper;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.TranslationKey;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Mapper(
 	componentModel = "cdi"
@@ -22,7 +26,31 @@ public interface BucketResourceMapper {
 	TemplateResponseDTO toTemplateResponseDto(
 		DocTypeTemplate docTypeTemplate);
 
-	List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList);
+	default List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList) {
+		return toTabResponseDtoList(tabList, null);
+	}
+
+	default List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList, Map<Long, Map<String, String>> translations) {
+		if (translations != null) {
+			return tabList
+				.stream()
+				.map(tab -> new TabResponseDTO(
+					tab.getName(),
+					tab.getTokenTabs()
+						.stream()
+						.map(this::toTokenTabResponseDto)
+						.toList(),
+					translations.get(tab.getId()))
+				)
+				.toList();
+		}
+		else {
+			return tabList
+				.stream()
+				.map(this::toTabResponseDto)
+				.toList();
+		}
+	}
 
 	@Mapping(
 		target = "label", source = "name"

@@ -22,8 +22,10 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Translation;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.service.SuggestionCategoryService;
+import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
@@ -41,6 +43,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.Set;
 
 @GraphQLApi
@@ -76,6 +79,11 @@ public class SuggestionCategoryGraphqlResource {
 	public Uni<SuggestionCategory> getSuggestionCategory(@Id long id) {
 		return suggestionCategoryService.findById(id);
 	}
+
+	public Uni<Map<String, String>> getTranslationMap(@Source SuggestionCategory suggestionCategory) {
+		return translationService.getTranslationMap(SuggestionCategory.class, suggestionCategory.getId());
+	}
+
 
 	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
 		return suggestionCategoryService.getValidator().patch(id, suggestionCategoryDTO);
@@ -125,6 +133,26 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.setMultiSelect(suggestionCategoryId, multiSelect);
 	}
 
+	@Mutation
+	public Uni<Tuple2<String, String>> addSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key, String value) {
+
+		return translationService
+			.addTranslation(SuggestionCategory.class, suggestionCategoryId, language, key, value)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> deleteSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key) {
+
+		return translationService
+			.deleteTranslation(SuggestionCategory.class, suggestionCategoryId, language, key)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
 	@Subscription
 	public Multi<SuggestionCategory> suggestionCategoryCreated() {
 		return suggestionCategoryService
@@ -152,4 +180,6 @@ public class SuggestionCategoryGraphqlResource {
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
 
+	@Inject
+	TranslationService translationService;
 }

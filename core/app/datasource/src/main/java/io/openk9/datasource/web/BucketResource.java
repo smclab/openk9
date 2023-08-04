@@ -12,12 +12,15 @@ import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.LocalizedSuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
@@ -34,8 +37,10 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.stream.Stream;
@@ -55,14 +60,18 @@ public class BucketResource {
 
 	@Path("/current/tabs")
 	@GET
-	public Uni<List<TabResponseDTO>> getTabs() {
-		return getTabList(request.host());
+	public Uni<List<TabResponseDTO>> getTabs(
+			@QueryParam("translated") @DefaultValue("true") boolean translated) {
+
+		return getTabList(request.host(), translated);
 	}
 
 	@Path("/current/suggestionCategories")
 	@GET
-	public Uni<List<SuggestionCategory>> getSuggestionCategories() {
-		return getSuggestionCategoryList(request.host());
+	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
+			@QueryParam("translated") @DefaultValue("true") boolean translated) {
+
+		return getSuggestionCategoryList(request.host(), translated);
 	}
 
 	@Path("/current/doc-type-fields-sortable")
@@ -231,7 +240,7 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<TabResponseDTO>> getTabList(String virtualhost) {
+	private Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -264,13 +273,33 @@ public class BucketResource {
 				.createQuery(query)
 				.setCacheable(true)
 				.getResultList()
-				.map(mapper::toTabResponseDtoList);
+				.chain(tabs -> {
+					if (translated) {
+						return translationService
+							.getTranslationMaps(
+								Tab.class,
+								tabs.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toTabResponseDtoList(tabs, maps));
+					}
+					else {
+						return translationService
+							.getTranslationMaps(
+								Tab.class,
+								tabs.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toTabResponseDtoList(tabs));
+					}
+					}
+				);
 
 		});
 
 	}
 
-	private Uni<List<SuggestionCategory>> getSuggestionCategoryList(String virtualhost) {
+	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost, boolean translated) {
 		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
@@ -298,7 +327,20 @@ public class BucketResource {
 			return session
 				.createQuery(query)
 				.setCacheable(true)
-				.getResultList();
+				.getResultList()
+				.chain(categories -> {
+						if (translated) {
+							return translationService
+								.getLocalizedEntities(
+									SuggestionCategory.class,
+									categories,
+									LocalizedSuggestionCategory::new);
+						}
+						else {
+							return Uni.createFrom().item(categories);
+						}
+					}
+				);
 		});
 
 	}
@@ -371,6 +413,8 @@ public class BucketResource {
 
 	@Inject
 	TransactionInvoker transactionInvoker;
+	@Inject
+	TranslationService translationService;
 
 	public record BucketResponse(boolean handleDynamicFilters) {}
 

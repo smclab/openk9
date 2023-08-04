@@ -22,7 +22,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 	public  <T extends K9Entity, S extends LocalizedEntity<T>>  Uni<S> getLocalizedEntity(
 		Class<T> entityClass,
 		T entity,
-		BiFunction<? super T, Map<TranslationKey, String>, ? extends S> localizedEntityFactory) {
+		BiFunction<? super T, Map<String, String>, ? extends S> localizedEntityFactory) {
 
 		return this
 			.getTranslationMap(
@@ -37,7 +37,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 	public  <T extends K9Entity, S extends LocalizedEntity<T>>  Uni<List<S>> getLocalizedEntities(
 		Class<T> entityClass,
 		List<T> entities,
-		BiFunction<? super T, Map<TranslationKey, String>, ? extends S> localizedEntityFactory) {
+		BiFunction<? super T, Map<String, String>, ? extends S> localizedEntityFactory) {
 
 		return this
 			.getTranslationMaps(
@@ -55,7 +55,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 			);
 	}
 
-	public <T extends K9Entity> Uni<Map<TranslationKey, String>> getTranslationMap(
+	public <T extends K9Entity> Uni<Map<String, String>> getTranslationMap(
 		Class<T> entityClass, Long id) {
 
 		String className = entityClass.getName();
@@ -74,14 +74,14 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 				.stream()
 				.collect(Collectors
 					.toMap(
-						Translation::getPk,
+						t -> t.getPk().toString(),
 						Translation::getValue)
 				)
 			)
 		);
 	}
 
-	public <T extends K9Entity> Uni<Map<Long, Map<TranslationKey, String>>> getTranslationMaps(
+	public <T extends K9Entity> Uni<Map<Long, Map<String, String>>> getTranslationMaps(
 		Class<T> entityClass, List<Long> ids) {
 
 		String className = entityClass.getName();
@@ -101,10 +101,10 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 				.collect(Collectors
 					.toMap(
 						Translation::getClassPK,
-						t -> Map.of(t.getPk(), t.getValue()),
+						t -> Map.of(t.getPk().toString(), t.getValue()),
 						(m1, m2) -> Map.ofEntries(Stream
 							.concat(m1.entrySet().stream(), m2.entrySet().stream())
-							.<Map.Entry<TranslationKey, String>>toArray(Map.Entry[]::new)
+							.<Map.Entry<String, String>>toArray(Map.Entry[]::new)
 						)
 					)
 				)

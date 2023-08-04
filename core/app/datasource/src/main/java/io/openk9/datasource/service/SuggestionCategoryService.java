@@ -24,6 +24,8 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.TranslationDTO;
+import io.openk9.datasource.model.dto.TranslationKeyDTO;
 import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -154,8 +156,21 @@ public class SuggestionCategoryService extends
 				}))));
 	}
 
+	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
+		return translationService.addTranslation(
+			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
+	}
+
+	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
+		return translationService.deleteTranslation(
+			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey());
+	}
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	TranslationService translationService;
 
 	@Override
 	public Class<SuggestionCategory> getEntityClass() {

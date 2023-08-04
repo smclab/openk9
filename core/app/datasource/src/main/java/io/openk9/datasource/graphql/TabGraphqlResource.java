@@ -4,11 +4,13 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TokenTabMapper;
+import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
+import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -22,11 +24,13 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.Set;
 
 @GraphQLApi
@@ -94,6 +98,10 @@ public class TabGraphqlResource {
 		return _tokenTabService.findById(id);
 	}
 
+	public Uni<Map<String, String>> getTranslationMap(@Source Tab tab) {
+		return translationService.getTranslationMap(Tab.class, tab.getId());
+	}
+
 	public Uni<Response<Tab>> patchTab(@Id long id, TabDTO tabDTO) {
 		return _tabService.getValidator().patch(id, tabDTO);
 	}
@@ -138,6 +146,25 @@ public class TabGraphqlResource {
 		return _tabService.removeTokenTabToTab(id, tokenTabId);
 	}
 
+	@Mutation
+	public Uni<Tuple2<String, String>> addSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key, String value) {
+
+		return translationService
+			.addTranslation(SuggestionCategory.class, suggestionCategoryId, language, key, value)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> deleteSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key) {
+
+		return translationService
+			.deleteTranslation(SuggestionCategory.class, suggestionCategoryId, language, key)
+			.map((__) -> Tuple2.of("ok", null));
+	}
 
 	@Subscription
 	public Multi<Tab> tabCreated() {
@@ -174,5 +201,8 @@ public class TabGraphqlResource {
 
 	@Inject
 	TokenTabMapper _tokenTabMapper;
+
+	@Inject
+	TranslationService translationService;
 
 }
