@@ -4,6 +4,7 @@ import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.Embedded;
@@ -35,6 +36,7 @@ public class Translation extends K9Entity {
 	@NaturalId
 	private TranslationKey pk;
 
+	@Nationalized
 	private String value;
 
 	@Transient

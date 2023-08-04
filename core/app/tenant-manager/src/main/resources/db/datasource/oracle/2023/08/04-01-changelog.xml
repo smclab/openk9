@@ -28,7 +28,7 @@
 			<column name="key" type="VARCHAR(50)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="value" type="VARCHAR(255)"/>
+			<column name="value" type="NVARCHAR(255)"/>
 		</createTable>
 	</changeSet>
 
