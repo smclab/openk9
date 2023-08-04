@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2023/08/04-01-changelog.xml">
+
+
+	<changeSet id="1691144835465-1" author="openk9">
+		<createTable tableName="translation">
+			<column name="id" type="NUMBER(38)" autoIncrement="true">
+				<constraints nullable="false" primaryKey="true"
+							 primaryKeyName="translation_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="language" type="VARCHAR(10)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="class_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="class_pk" type="NUMBER(38)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="key" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="value" type="VARCHAR(255)"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1691144835465-2" author="openk9">
+		<createIndex indexName="idx_translation_key" tableName="translation" unique="true">
+			<column name="language"/>
+			<column name="class_name"/>
+			<column name="class_pk"/>
+			<column name="key"/>
+		</createIndex>
+		<createIndex indexName="idx_translation_entities" tableName="translation" unique="true">
+			<column name="class_name"/>
+			<column name="class_pk"/>
+		</createIndex>
+	</changeSet>
+
+</databaseChangeLog>
