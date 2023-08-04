@@ -147,7 +147,7 @@ public class TabGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<String, String>> addSuggestionCategoryTranslation(
+	public Uni<Tuple2<String, String>> addTabTranslation(
 		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
 		String language, String key, String value) {
 
@@ -157,7 +157,7 @@ public class TabGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<String, String>> deleteSuggestionCategoryTranslation(
+	public Uni<Tuple2<String, String>> deleteTabTranslation(
 		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
 		String language, String key) {
 
