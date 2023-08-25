@@ -256,7 +256,9 @@ public final class MappingsUtil {
 				String currentFieldName = fieldNamesArray[i];
 
 				boolean isLast = i == fieldNamesArray.length - 1;
-				boolean isFields = isKeyword && i == fieldNamesArray.length - 2;
+				boolean isFields =
+					(fieldType == FieldType.KEYWORD || fieldType == FieldType.SEARCH_AS_YOU_TYPE)
+					&& i == fieldNamesArray.length - 2;
 
 				current = (Map<MappingsKey, Object>) current.computeIfAbsent(
 					new MappingsKey(currentFieldName), k -> new LinkedHashMap<>());

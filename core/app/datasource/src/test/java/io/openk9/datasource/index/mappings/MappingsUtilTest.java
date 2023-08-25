@@ -8,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +65,13 @@ class MappingsUtilTest {
 		streetKeyword.setFieldType(FieldType.KEYWORD);
 		streetKeyword.setParentDocTypeField(street);
 
-		street.setSubDocTypeFields(Set.of(streetKeyword));
+		DocTypeField streetSearchAsYouType = new DocTypeField();
+		streetSearchAsYouType.setDocType(docType);
+		streetSearchAsYouType.setFieldName("address.street.search_as_you_type");
+		streetSearchAsYouType.setFieldType(FieldType.SEARCH_AS_YOU_TYPE);
+		streetSearchAsYouType.setParentDocTypeField(street);
+
+		street.setSubDocTypeFields(Set.of(streetKeyword, streetSearchAsYouType));
 
 		DocTypeField number = new DocTypeField();
 		number.setDocType(docType);
@@ -168,6 +173,11 @@ class MappingsUtilTest {
 		streetKeyword.setFieldName("address.street.keyword");
 		streetKeyword.setFieldType(FieldType.KEYWORD);
 
+		DocTypeField streetSearchAsYouType = new DocTypeField();
+		streetSearchAsYouType.setDocType(docType);
+		streetSearchAsYouType.setFieldName("address.street.search_as_you_type");
+		streetSearchAsYouType.setFieldType(FieldType.SEARCH_AS_YOU_TYPE);
+
 		DocTypeField number = new DocTypeField();
 		number.setDocType(docType);
 		number.setFieldName("address.number");
@@ -219,6 +229,7 @@ class MappingsUtilTest {
 			address,
 			street,
 			streetKeyword,
+			streetSearchAsYouType,
 			number,
 			description,
 			descriptionBase,
@@ -233,50 +244,42 @@ class MappingsUtilTest {
 
 	private static Object expectedJson() {
 		return Json.decodeValue("""
-		 {
-		  "properties": {
-		  	"complexNumber": {
-		  	  "properties": {
-		  	  	"realPart": {
-		  	  	  "type": "integer"
-		  	  	},
-		  	  	"imaginaryPart": {
-		  	  	  "type": "integer"
-		  	  	}
-		  	  }
-		  	},
-			"title": {
-			  "type": "text"
-			},
-			"address": {
+			 {
 			  "properties": {
-				"street": {
-				  "type": "text",
-				  "fields": {
-					"keyword": {
-					  "type": "keyword"
-					}
-				  }
+			  	"complexNumber": {
+			  	  "properties": {
+			  	  	"realPart": {
+			  	  	  "type": "integer"
+			  	  	},
+			  	  	"imaginaryPart": {
+			  	  	  "type": "integer"
+			  	  	}
+			  	  }
+			  	},
+				"title": {
+				  "type": "text"
 				},
-				"number": {
-				  "type": "integer"
-				}
-			  }
-			},
-			"description": {
-			  "properties": {
-				"base": {
-				  "type": "text",
-				  "fields": {
-					"keyword": {
-					  "type": "keyword",
-					  "ignore_above": 256
-					}
-				  }
-				},
-				"i18n": {
+				"address": {
 				  "properties": {
-					"en_US": {
+					"street": {
+					  "type": "text",
+					  "fields": {
+						"keyword": {
+						  "type": "keyword"
+						},
+						"search_as_you_type": {
+						  "type": "search_as_you_type"
+				        }
+					  }
+					},
+					"number": {
+					  "type": "integer"
+					}
+				  }
+				},
+				"description": {
+				  "properties": {
+					"base": {
 					  "type": "text",
 					  "fields": {
 						"keyword": {
@@ -285,12 +288,25 @@ class MappingsUtilTest {
 						}
 					  }
 					},
-					"de_DE": {
-					  "type": "text",
-					  "fields": {
-						"keyword": {
-						  "type": "keyword",
-						  "ignore_above": 256
+					"i18n": {
+					  "properties": {
+						"en_US": {
+						  "type": "text",
+						  "fields": {
+							"keyword": {
+							  "type": "keyword",
+							  "ignore_above": 256
+							}
+						  }
+						},
+						"de_DE": {
+						  "type": "text",
+						  "fields": {
+							"keyword": {
+							  "type": "keyword",
+							  "ignore_above": 256
+							}
+						  }
 						}
 					  }
 					}
@@ -298,9 +314,7 @@ class MappingsUtilTest {
 				}
 			  }
 			}
-		  }
-		}
-		""");
+			""");
 	}
 
 }
