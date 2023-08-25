@@ -201,15 +201,104 @@ public final class MappingsUtil {
 			);
 	}
 
+	public static Map<MappingsKey, Object> docTypesHierarchicalToMappings(
+		Collection<DocType> docTypes) {
+
+		return docTypes
+			.stream()
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.collect(
+				Collectors.collectingAndThen(
+					Collectors.toCollection(LinkedList::new),
+					MappingsUtil::docTypeFieldsHierarchicalToMappings)
+			);
+	}
+
 	public static Map<MappingsKey, Object> docTypeFieldToMappings(DocTypeField docTypeField) {
 		return docTypeFieldsToMappings(Set.of(docTypeField));
 	}
 
-	public static Map<MappingsKey, Object> docTypeFieldsToMappings(Collection<DocTypeField> docTypeFields) {
-		return createMappings_(docTypeFields, new LinkedHashMap<>(), "", new MappingsKey("properties"));
+	public static Map<MappingsKey, Object> docTypeFieldsToMappings(
+		Collection<DocTypeField> docTypeFields) {
+
+		return createMappingsFlat_(docTypeFields);
 	}
 
-	private static Map<MappingsKey, Object> createMappings_(
+	public static Map<MappingsKey, Object> docTypeFieldsHierarchicalToMappings(
+		Collection<DocTypeField> docTypeFields) {
+
+		return createMappingsHierachical_(
+			docTypeFields, new LinkedHashMap<>(), "", new MappingsKey("properties"));
+	}
+
+	private static Map<MappingsKey, Object> createMappingsFlat_(
+		Collection<DocTypeField> docTypeFields) {
+
+		LinkedHashMap<MappingsKey, Object> acc = new LinkedHashMap<>();
+
+		for (DocTypeField docTypeField : docTypeFields) {
+
+			String fieldName = docTypeField.getFieldName();
+
+			FieldType fieldType = docTypeField.getFieldType();
+
+			boolean isObject = fieldType == FieldType.OBJECT || fieldType == FieldType.I18N;
+			boolean isKeyword = fieldType == FieldType.KEYWORD;
+
+			String[] fieldNamesArray = fieldName.split("\\.");
+
+			Map<MappingsKey, Object> current = (Map<MappingsKey, Object>)
+				acc.computeIfAbsent(new MappingsKey("properties"), k -> new LinkedHashMap<>());
+
+			for (int i = 0; i < fieldNamesArray.length; i++) {
+
+				String currentFieldName = fieldNamesArray[i];
+
+				boolean isLast = i == fieldNamesArray.length - 1;
+				boolean isFields = isKeyword && i == fieldNamesArray.length - 2;
+
+				current = (Map<MappingsKey, Object>) current.computeIfAbsent(
+					new MappingsKey(currentFieldName), k -> new LinkedHashMap<>());
+
+				if (!isLast) {
+					current = (Map<MappingsKey, Object>) current.computeIfAbsent(
+						new MappingsKey(isFields ? "fields" : "properties"),
+						k -> new LinkedHashMap<>());
+				}
+
+				if (isLast) {
+
+					if (!isObject) {
+						current.put(new MappingsKey("type"), fieldType.getType());
+
+						Analyzer analyzer = docTypeField.getAnalyzer();
+
+						if (analyzer != null) {
+							current.put(new MappingsKey("analyzer"), analyzer.getName());
+						}
+
+						String fieldConfig = docTypeField.getJsonConfig();
+
+						if (fieldConfig != null) {
+							JsonObject fieldConfigJson = new JsonObject(fieldConfig);
+							for (Map.Entry<String, Object> entry : fieldConfigJson) {
+								current.putIfAbsent(
+									new MappingsKey(entry.getKey()), entry.getValue());
+							}
+						}
+					}
+
+				}
+
+			}
+
+		}
+
+		return acc;
+	}
+
+	private static Map<MappingsKey, Object> createMappingsHierachical_(
 		Collection<DocTypeField> docTypeFields,
 		Map<MappingsKey, Object> acc, String accPath, MappingsKey nextKey) {
 
@@ -264,7 +353,7 @@ public final class MappingsUtil {
 					Set<DocTypeField> subDocTypeFields = docTypeField.getSubDocTypeFields();
 
 					if (subDocTypeFields != null) {
-						createMappings_(
+						createMappingsHierachical_(
 							subDocTypeFields,
 							current,
 							accPath.isEmpty()
