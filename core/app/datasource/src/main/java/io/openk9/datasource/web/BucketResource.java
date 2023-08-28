@@ -284,17 +284,11 @@ public class BucketResource {
 							.map(maps -> mapper.toTabResponseDtoList(tabs, maps));
 					}
 					else {
-						return translationService
-							.getTranslationMaps(
-								Tab.class,
-								tabs.stream()
-									.map(K9Entity::getId)
-									.toList())
-							.map(maps -> mapper.toTabResponseDtoList(tabs));
+						return Uni
+							.createFrom()
+							.item(mapper.toTabResponseDtoList(tabs));
 					}
-					}
-				);
-
+				});
 		});
 
 	}
@@ -337,7 +331,9 @@ public class BucketResource {
 									LocalizedSuggestionCategory::new);
 						}
 						else {
-							return Uni.createFrom().item(categories);
+							return Uni
+								.createFrom()
+								.item(categories);
 						}
 					}
 				);
