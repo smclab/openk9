@@ -2,10 +2,12 @@
   "translation": {
     "after-days": "days forward",
     "active-filters": "Active Filters",
+    "asc": "asc",
     "add-filters": "Apply Filters",
     "any": "Any",
     "category-collapsable-toggle": "Category collapsable toggle",
     "close": "Close",
+    "desc": "desc",
     "don-t-filter-for-date": "Don't filter by date",
     "end-day": "End Day",
     "filter": "Filter",

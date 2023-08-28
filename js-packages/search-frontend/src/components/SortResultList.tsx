@@ -71,7 +71,7 @@ export function SortResultList({
                   sort: "asc",
                 })}
               >
-                {option.label} asc
+                {option.label} {t("asc")}
               </option>
               <option
                 key={option.id + "desc"}
@@ -80,7 +80,7 @@ export function SortResultList({
                   sort: "desc",
                 })}
               >
-                {option.label} desc
+                {option.label} {t("desc")}
               </option>
             </React.Fragment>
           );
