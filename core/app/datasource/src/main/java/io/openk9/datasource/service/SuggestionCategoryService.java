@@ -122,7 +122,7 @@ public class SuggestionCategoryService extends
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
 				.onItem()
 				.ifNotNull()
-				.transform(docTypeField -> docTypeField.isKeyword()
+				.transform(docTypeField -> (docTypeField.isKeyword() || docTypeField.isI18N())
 					? docTypeField
 					: null
 				)
