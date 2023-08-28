@@ -64,6 +64,7 @@ export function SearchMobile({
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
     selectionEnd: number;
@@ -81,6 +82,12 @@ export function SearchMobile({
   // selectionsState.selection.forEach((selection) => {
   //   console.log(selection.token);
   // });
+
+  React.useEffect(() => {
+    if (isVisible && inputRef.current) {
+      inputRef.current?.focus();
+    }
+  }, [isVisible]);
 
   const componet = (
     <React.Fragment>
@@ -164,7 +171,7 @@ export function SearchMobile({
                   position: absolute;
                 `}
               ></div>
-              <label htmlFor="search-openk9" className="visually-hidden">
+              <label htmlFor="search-openk9-modal" className="visually-hidden">
                 Search
               </label>
               <input
@@ -176,7 +183,7 @@ export function SearchMobile({
                   if (setIsVisible && event.key === "Enter")
                     setIsVisible(false);
                 }}
-                id="search-openk9"
+                id="search-openk9-modal"
                 aria-label={
                   t(
                     "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
@@ -204,6 +211,7 @@ export function SearchMobile({
                   font-size: inherit;
                   font-family: inherit;
                   background-color: inherit;
+                  width: 100%;
                   color: ${autoSelect ? "black" : "blue"};
                 `}
                 spellCheck="false"
@@ -293,66 +301,72 @@ export function SearchMobile({
                 }}
               ></input>
             </div>
-            <button
-              className="openk9--search-delete-container-icon"
-              title="remove text"
-              aria-label="remove-text"
-              style={{
-                alignItems: "center",
-                background: "inherit",
-                border: "none",
-              }}
-              onClick={() => {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: "",
-                });
-              }}
+            <div
+              css={css`
+                display: flex;
+              `}
             >
-              <div>
-                <span
-                  className="openk9--search-delete-span-icon"
-                  css={css`
-                    cursor: pointer;
-                    @media (max-width: 480px) {
-                      margin-top: 7px;
-                    }
-                  `}
-                >
-                  <DeleteLogo />
-                </span>
-              </div>
-            </button>
-            <button
-              className="openk9--search-delete-container-icon"
-              title="search"
-              aria-label="search"
-              style={{
-                paddingRight: "16px",
-                display: "flex",
-                flexDirection: "row",
-                padding: "4px 8px",
-                gap: "4px",
-                alignItems: "center",
-                marginRight: "8px",
-                background: "inherit",
-                border: "none",
-              }}
-            >
-              <div>
-                <span
-                  className="openk9--search-delete-span-icon"
-                  css={css`
-                    cursor: pointer;
-                    @media (max-width: 480px) {
-                      margin-top: 7px;
-                    }
-                  `}
-                >
-                  <SearchSvg />
-                </span>
-              </div>
-            </button>
+              <button
+                className="openk9--search-delete-container-icon"
+                title="remove text"
+                aria-label="remove-text"
+                style={{
+                  alignItems: "center",
+                  background: "inherit",
+                  border: "none",
+                }}
+                onClick={() => {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: "",
+                  });
+                }}
+              >
+                <div>
+                  <span
+                    className="openk9--search-delete-span-icon"
+                    css={css`
+                      cursor: pointer;
+                      @media (max-width: 480px) {
+                        margin-top: 7px;
+                      }
+                    `}
+                  >
+                    <DeleteLogo />
+                  </span>
+                </div>
+              </button>
+              <button
+                className="openk9--search-delete-container-icon"
+                title="search"
+                aria-label="search"
+                style={{
+                  paddingRight: "16px",
+                  display: "flex",
+                  flexDirection: "row",
+                  padding: "4px 8px",
+                  gap: "4px",
+                  alignItems: "center",
+                  marginRight: "8px",
+                  background: "inherit",
+                  border: "none",
+                }}
+              >
+                <div>
+                  <span
+                    className="openk9--search-delete-span-icon"
+                    css={css`
+                      cursor: pointer;
+                      @media (max-width: 480px) {
+                        margin-top: 7px;
+                      }
+                    `}
+                  >
+                    <SearchSvg />
+                  </span>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
         <div>

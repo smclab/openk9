@@ -125,7 +125,7 @@ function FiltersMobileLiveChange<E>({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "50%",
+          height: "100%",
           borderRadius: "8px",
         }}
       >
@@ -145,11 +145,14 @@ function FiltersMobileLiveChange<E>({
           border: 0.5px solid #d4d4d8;
         `}
       ></div>
-      <div
+      <footer
         className="openk9-filter-horizontal-container-submit"
         css={css`
-          display: flex;
-          justify-content: flex-end;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 10px;
           @media (max-width: 480px) {
             padding-inline: 20px;
             flex-direction: column;
@@ -247,7 +250,7 @@ function FiltersMobileLiveChange<E>({
             <AddFiltersSvg size="21px" />
           </div>
         </button>
-      </div>
+      </footer>
     </React.Fragment>
   );
   if (!isVisibleFilters) return null;
