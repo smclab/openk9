@@ -21,6 +21,10 @@ import { useInfiniteResults } from "./ResultList";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { Tab } from "./Tabs";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -32,9 +36,12 @@ export type FiltersMobileProps<E> = {
   onConfigurationChange: ConfigurationUpdateFunction;
   configuration: Configuration;
   isVisibleFilters: boolean;
+  tabs: Array<Tab>;
   setIsVisibleFilters:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
+  onSelectedTabIndexChange(index: number): void;
+  selectedTabIndex: number;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -46,10 +53,13 @@ function FiltersMobileLiveChange<E>({
   configuration,
   isVisibleFilters,
   setIsVisibleFilters,
+  tabs,
+  onSelectedTabIndexChange,
+  selectedTabIndex,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(searchQuery, sort);
   const { t } = useTranslation();
-
+  const viewTabs = true;
   const componet = (
     <React.Fragment>
       <div
@@ -137,6 +147,15 @@ function FiltersMobileLiveChange<E>({
           filtersSelect={configuration.filterTokens}
           sort={sort}
           dynamicFilters={dynamicFilters}
+          preFilters={
+            viewTabs ? (
+              <ViewAllTabs
+                tabs={tabs}
+                onSelectedTabIndexChange={onSelectedTabIndexChange}
+                selectedTabIndex={selectedTabIndex}
+              />
+            ) : null
+          }
         />
       </OverlayScrollbarsComponent>
       <div
@@ -257,4 +276,126 @@ function FiltersMobileLiveChange<E>({
   document.body.style.overflow = "hidden";
   return <ModalDetail padding="0px" background="white" content={componet} />;
 }
+
+function ViewAllTabs({
+  tabs,
+  onSelectedTabIndexChange,
+  selectedTabIndex,
+}: {
+  tabs: Array<Tab>;
+  onSelectedTabIndexChange(index: number): void;
+  selectedTabIndex: number;
+}) {
+  const [isOpen, setIsOpen] = React.useState(true);
+  const isCollapsable = true;
+  const { t } = useTranslation();
+
+  return (
+    <div
+      css={css`
+        margin-left: 16px;
+      `}
+    >
+      <div
+        className="openk9-filter-category-title"
+        css={css`
+          user-select: none;
+          display: flex;
+          align-items: center;
+          width: 100% !important;
+        `}
+        onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
+      >
+        <div
+          css={css`
+            flex-grow: 1;
+            :first-letter {
+              text-transform: uppercase;
+            }
+          `}
+        >
+          <strong>Tabs</strong>
+        </div>
+        {isCollapsable && (
+          <button
+            aria-label={
+              t("openk9-collapsable-filter") || "openk9 collapsable filter"
+            }
+            style={{
+              background: "inherit",
+              border: "none",
+              margin: "1px -9px",
+            }}
+          >
+            <FontAwesomeIcon
+              icon={isOpen ? faChevronDown : faChevronUp}
+              style={{
+                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                fontSize: "15px",
+              }}
+            />
+          </button>
+        )}
+      </div>
+      <div
+        css={css`
+          margin: 10px 0px;
+        `}
+      >
+        {isOpen &&
+          tabs.map((tab, index) => {
+            return (
+              <div
+                css={css`
+                  display: flex;
+                  gap: 10px;
+                `}
+              >
+                <input
+                  className={`radio-button ${
+                    selectedTabIndex === index
+                      ? "filter-category-radio-checked"
+                      : "not-checked-filter-category"
+                  }`}
+                  id={"tabs " + index}
+                  type="radio"
+                  checked={selectedTabIndex === index}
+                  onClick={() => {
+                    onSelectedTabIndexChange(index);
+                  }}
+                  css={css`
+                    appearance: none !important;
+                    width: 17px !important;
+                    height: 16px !important;
+                    border-radius: 50% !important;
+                    border: 2px solid #ccc !important;
+                    background-color: ${selectedTabIndex === index
+                      ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+                      : "#fff !important"};
+                    cursor: pointer !important;
+                  `}
+                />
+
+                <div>
+                  <label
+                    htmlFor={"tabs " + index}
+                    css={css`
+                      text-overflow: ellipsis;
+                      font-style: normal;
+                      font-weight: 600;
+                      line-height: 22px;
+                      color: #000000;
+                    `}
+                  >
+                    {tab.label}
+                  </label>
+                </div>
+              </div>
+            );
+          })}
+      </div>
+    </div>
+  );
+}
+
 export const FiltersMobileLiveChangeMemo = React.memo(FiltersMobileLiveChange);

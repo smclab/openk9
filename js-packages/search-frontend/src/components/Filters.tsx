@@ -21,6 +21,7 @@ type FiltersProps = {
   filtersSelect: SearchToken[];
   sort: SortField[];
   dynamicFilters: boolean;
+  preFilters?: React.ReactNode;
 };
 function Filters({
   searchQuery,
@@ -30,6 +31,7 @@ function Filters({
   filtersSelect,
   sort,
   dynamicFilters,
+  preFilters,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -181,6 +183,7 @@ function Filters({
             <h4>No Filters </h4>
           </div>
         )}
+        {preFilters}
         {suggestionCategories.data?.map((suggestionCategory) => {
           return dynamicFilters ? (
             <FilterCategoryDynamicMemo

@@ -164,6 +164,9 @@ export function App() {
           grid-area: tabs;
           padding: 8px 16px 0px 0px;
           margin-bottom: -16px;
+          @media (max-width: 480px) {
+            display: none;
+          }
         `}
       ></div>
       <div

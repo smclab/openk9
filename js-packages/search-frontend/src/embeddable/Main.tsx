@@ -262,6 +262,9 @@ export function Main({
             setIsVisibleFilters={
               configuration.filtersMobileLiveChange?.setIsVisible
             }
+            tabs={tabs}
+            onSelectedTabIndexChange={setSelectedTabIndex}
+            selectedTabIndex={selectedTabIndex}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
