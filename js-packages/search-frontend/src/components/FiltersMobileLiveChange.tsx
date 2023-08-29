@@ -25,6 +25,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { Tab } from "./Tabs";
+import { capitalize } from "lodash";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -387,7 +388,7 @@ function ViewAllTabs({
                       color: #000000;
                     `}
                   >
-                    {tab.label}
+                    {capitalize(tab.label)}
                   </label>
                 </div>
               </div>

@@ -12,6 +12,7 @@ import { CreateLabel } from "./Filters";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
 import { useTranslation } from "react-i18next";
+import { capitalize } from "lodash";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -335,7 +336,7 @@ function FilterCategoryDynamic({
                             : {suggestion.entityValue}
                           </>
                         ) : (
-                          suggestion.value
+                          capitalize(suggestion.value)
                         )}
                       </label>
                     </span>

@@ -5,6 +5,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
+import { capitalize } from "lodash";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 export function ActiveFilter({
   searchQuery,
@@ -67,7 +68,7 @@ export function ActiveFilter({
                         white-space: nowrap;
                       `}
                     >
-                      {selectToken.values?.[0]}
+                      {capitalize(selectToken.values?.[0])}
                       <span
                         css={css`
                           cursor: pointer;

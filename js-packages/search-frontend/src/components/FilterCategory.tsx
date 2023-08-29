@@ -14,6 +14,7 @@ import { CreateLabel } from "./Filters";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import { useTranslation } from "react-i18next";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
+import { capitalize } from "lodash";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -354,7 +355,7 @@ function FilterCategory({
                                   : {suggestion.entityValue}
                                 </>
                               ) : (
-                                suggestion.value
+                                capitalize(suggestion.value)
                               )}
                             </label>
                           </span>
