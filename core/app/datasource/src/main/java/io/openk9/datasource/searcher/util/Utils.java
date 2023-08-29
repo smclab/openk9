@@ -42,7 +42,7 @@ public class Utils {
 		Collection<Datasource> datasources) {
 		return datasources.stream()
 			.flatMap(Utils::getDocTypesFrom)
-			.flatMap(Utils::getDocTypeFieldsAndChildrenFrom);
+			.flatMap(Utils::getDocTypeFieldsFrom);
 	}
 
 	public static Stream<DocType> getDocTypesFrom(Datasource datasource) {
@@ -60,7 +60,7 @@ public class Utils {
 
 	}
 
-	public static Stream<DocTypeField> getDocTypeFieldsAndChildrenFrom(DocType docType) {
+	public static Stream<DocTypeField> getDocTypeFieldsFrom(DocType docType) {
 
 		if (docType == null) {
 			return Stream.empty();

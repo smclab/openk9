@@ -29,7 +29,7 @@ public final class MappingsUtil {
 		List<Analyzer> analyzers =
 			docTypes
 				.stream()
-				.flatMap(Utils::getDocTypeFieldsAndChildrenFrom)
+				.flatMap(Utils::getDocTypeFieldsFrom)
 				.map(DocTypeField::getAnalyzer)
 				.filter(Objects::nonNull)
 				.distinct()
