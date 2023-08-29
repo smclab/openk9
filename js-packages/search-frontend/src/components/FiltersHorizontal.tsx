@@ -287,7 +287,11 @@ function FiltersHorizontal({
               (token: any, index: number) => {
                 const asSearchToken = mapSuggestionToSearchToken(token, true);
                 const checked = filterSelect.some((element) => {
-                  return element.values && element.values[0] === token.value;
+                  return (
+                    element.values &&
+                    element.values[0] === token.value &&
+                    "goToSuggestion" in element
+                  );
                 });
                 return (
                   <React.Fragment key={index}>
