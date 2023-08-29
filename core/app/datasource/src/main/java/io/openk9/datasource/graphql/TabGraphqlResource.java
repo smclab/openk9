@@ -32,6 +32,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @GraphQLApi
 @ApplicationScoped
@@ -98,8 +99,15 @@ public class TabGraphqlResource {
 		return _tokenTabService.findById(id);
 	}
 
-	public Uni<Map<String, String>> getTranslationMap(@Source Tab tab) {
-		return translationService.getTranslationMap(Tab.class, tab.getId());
+	public Uni<Set<Tuple2<String, String>>> getTranslationMap(@Source Tab tab) {
+		return translationService
+			.getTranslationMap(Tab.class, tab.getId())
+			.map(translationMap -> translationMap
+				.entrySet()
+				.stream()
+				.map(entry -> Tuple2.of(entry.getKey(), entry.getValue()))
+				.collect(Collectors.toSet())
+			);
 	}
 
 	public Uni<Response<Tab>> patchTab(@Id long id, TabDTO tabDTO) {

@@ -45,6 +45,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @GraphQLApi
 @ApplicationScoped
@@ -80,8 +81,17 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.findById(id);
 	}
 
-	public Uni<Map<String, String>> getTranslationMap(@Source SuggestionCategory suggestionCategory) {
-		return translationService.getTranslationMap(SuggestionCategory.class, suggestionCategory.getId());
+	public Uni<Set<Tuple2<String, String>>> getTranslationMap(
+		@Source SuggestionCategory suggestionCategory) {
+
+		return translationService
+			.getTranslationMap(SuggestionCategory.class, suggestionCategory.getId())
+			.map(translationMap -> translationMap
+				.entrySet()
+				.stream()
+				.map(entry -> Tuple2.of(entry.getKey(), entry.getValue()))
+				.collect(Collectors.toSet())
+			);
 	}
 
 
