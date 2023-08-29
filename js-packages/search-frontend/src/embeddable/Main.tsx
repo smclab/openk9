@@ -195,6 +195,7 @@ export function Main({
             sort={completelySort}
             setSortResult={setSortResult}
             isMobile={isMobile}
+            overChangeCard={false}
           />
         </I18nextProvider>,
         configuration.results,

@@ -14,16 +14,22 @@ type ResultProps<E> = {
   onDetail(result: GenericResultItem<E> | null): void;
   isMobile: boolean;
   setDetailMobile(result: GenericResultItem<E> | null): void;
+  overChangeCard: boolean;
 };
 function Result<E>(props: ResultProps<E>) {
   const result = props.result as any;
   const { onDetail, renderers } = props;
   const isMobile = props.isMobile;
   const setDetailMobile = props.setDetailMobile;
+  const overChangeCard = props.overChangeCard;
   return (
     <div
       className="openk9-embeddable-search--result-container"
-      onMouseEnter={() => !isMobile && onDetail(result)}
+      onMouseEnter={() => overChangeCard && !isMobile && onDetail(result)}
+      onClick={() => !overChangeCard && !isMobile && onDetail(result)}
+      css={css`
+        cursor: ${!overChangeCard ? "pointer" : "auto"};
+      `}
     >
       {(() => {
         const Renderer: React.FC<ResultRendererProps<E>> =

@@ -27,6 +27,7 @@ type ResultsProps<E> = {
   setSortResult: (sortResultNew: SortField) => void;
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
+  overChangeCard?: boolean;
 };
 function Results<E>({
   displayMode,
@@ -36,6 +37,7 @@ function Results<E>({
   setSortResult,
   isMobile,
   setDetailMobile,
+  overChangeCard = false,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -51,6 +53,7 @@ function Results<E>({
           sort={sort}
           setSortResult={setSortResult}
           isMobile={isMobile}
+          overChangeCard={overChangeCard}
         />
       );
     case "infinite":
@@ -63,6 +66,7 @@ function Results<E>({
           sort={sort}
           setSortResult={setSortResult}
           isMobile={isMobile}
+          overChangeCard={overChangeCard}
         />
       );
     case "virtual":
@@ -75,6 +79,7 @@ function Results<E>({
           sort={sort}
           setSortResult={setSortResult}
           isMobile={isMobile}
+          overChangeCard={overChangeCard}
         />
       );
   }
@@ -172,6 +177,7 @@ type ResulListProps<E> = {
   sort: SortField[];
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
+  overChangeCard?: boolean;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {};
@@ -183,6 +189,7 @@ export function FiniteResults<E>({
   sort,
   setSortResult,
   isMobile,
+  overChangeCard = false,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   return (
@@ -210,6 +217,7 @@ export function FiniteResults<E>({
                 onDetail={onDetail}
                 setDetailMobile={setDetailMobile}
                 isMobile={isMobile}
+                overChangeCard={overChangeCard}
               />
             );
           })}
@@ -230,6 +238,7 @@ export function InfiniteResults<E>({
   sort,
   setSortResult,
   isMobile,
+  overChangeCard = false,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   const { t } = useTranslation();
@@ -271,6 +280,7 @@ export function InfiniteResults<E>({
                       onDetail={onDetail}
                       setDetailMobile={setDetailMobile}
                       isMobile={isMobile}
+                      overChangeCard={overChangeCard}
                     />
                   );
                 })}
@@ -350,6 +360,7 @@ export function VirtualResults<E>({
   sort,
   setSortResult,
   isMobile,
+  overChangeCard = false,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(searchQuery, sort);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
@@ -384,6 +395,7 @@ export function VirtualResults<E>({
                 onDetail={onDetail}
                 setDetailMobile={setDetailMobile}
                 isMobile={isMobile}
+                overChangeCard={overChangeCard}
               />
             );
           }
