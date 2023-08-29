@@ -141,6 +141,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 						DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
 						docTypeField.setParentDocTypeField(parentDocTypeField);
+						docTypeField.setDocType(parentDocTypeField.getDocType());
 						subList.add(docTypeField);
 						return persist(docTypeField);
 
