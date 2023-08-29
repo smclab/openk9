@@ -153,41 +153,45 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	public Uni<Collection<DocType>> expandDocTypes(Collection<DocType> docTypes) {
 
-		 return em.withTransaction(s -> {
+		 if (docTypes != null && !docTypes.isEmpty()) {
+			 return em.withTransaction(s -> {
 
-			 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
+				 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
 
-			 for (DocType docType : docTypes) {
-				 docTypeField.add(Mutiny2.fetch(docType.getDocTypeFields()));
-			 }
+				 for (DocType docType : docTypes) {
+					 docTypeField.add(Mutiny2.fetch(docType.getDocTypeFields()));
+				 }
 
-			 return Uni
-				 .combine()
-				 .all()
-				 .unis(docTypeField)
-				 .collectFailures()
-				 .combinedWith(e -> (List<Set<DocTypeField>>)e)
-				 .flatMap(list -> {
+				 return Uni
+					 .combine()
+					 .all()
+					 .unis(docTypeField)
+					 .collectFailures()
+					 .combinedWith(e -> (List<Set<DocTypeField>>) e)
+					 .flatMap(list -> {
 
-					 Set<Uni<Set<DocTypeField>>> innerDTFs = new LinkedHashSet<>();
+						 Set<Uni<Set<DocTypeField>>> innerDTFs = new LinkedHashSet<>();
 
-					 for (Set<DocTypeField> docTypeFields : list) {
-						 innerDTFs.add(expandDocTypeFields(docTypeFields));
-					 }
+						 for (Set<DocTypeField> docTypeFields : list) {
+							 innerDTFs.add(expandDocTypeFields(docTypeFields));
+						 }
 
-					 return Uni
-						 .combine()
-						 .all()
-						 .unis(innerDTFs)
-						 .collectFailures()
-						 .discardItems();
+						 return Uni
+							 .combine()
+							 .all()
+							 .unis(innerDTFs)
+							 .collectFailures()
+							 .discardItems();
 
-				 })
-				 .replaceWith(docTypes);
+					 })
+					 .replaceWith(docTypes);
 
 
-		 });
-
+			 });
+		 }
+		 else {
+			 return Uni.createFrom().item(List.of());
+		 }
 
 	}
 
