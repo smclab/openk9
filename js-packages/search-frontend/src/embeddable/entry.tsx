@@ -197,6 +197,11 @@ type DataRangePickerProps = {
   end?: any;
 };
 
+type ResultListProps = {
+  element: Element | string | null;
+  changeOnOver: boolean;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -204,6 +209,7 @@ export type Configuration = {
   tabs: Element | string | null;
   filters: Element | string | null;
   calendarMobile: CalendarMobileConfiguration | null;
+  resultList: ResultListProps | null;
   searchMobile: SearchMobileConfiguration | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
@@ -251,6 +257,7 @@ const defaultConfiguration: Configuration = {
   tenant: null,
   token: null,
   calendar: null,
+  resultList: null,
   useKeycloak: true,
   searchAutoselect: true,
   searchReplaceText: true,

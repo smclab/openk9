@@ -202,6 +202,21 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <ResultsMemo
+            displayMode={configuration.resultsDisplayMode}
+            searchQuery={searchQuery}
+            onDetail={setDetail}
+            setDetailMobile={setDetailMobile}
+            sort={completelySort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={configuration.resultList?.changeOnOver || false}
+          />
+        </I18nextProvider>,
+        configuration.resultList ? configuration.resultList.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <DetailMemo result={detail} />
         </I18nextProvider>,
         configuration.details,

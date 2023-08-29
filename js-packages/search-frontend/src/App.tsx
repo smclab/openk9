@@ -363,7 +363,11 @@ export function App() {
       ></div>
       <div
         className="openk9-results-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ results: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            resultList: { element: element, changeOnOver: false },
+          })
+        }
         css={css`
           grid-area: result;
           overflow-y: auto;
