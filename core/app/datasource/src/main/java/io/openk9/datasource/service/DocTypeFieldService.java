@@ -280,7 +280,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		return findConnection(
 			query, root,
 			parentId > 0
-				? criteriaBuilder.equal(parentField, parentId)
+				? criteriaBuilder.equal(parentField.get(DocTypeField_.id), parentId)
 				: criteriaBuilder.isNull(parentField),
 			getSearchFields(),
 			after, before, first, last, searchText, sortByList
