@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.model.dto.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -38,7 +36,6 @@ public class K9EntityDTO {
 	private String name;
 
 	@Length(max = 4096)
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private String description;
 
 }
