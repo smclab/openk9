@@ -22,8 +22,8 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.Translation;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -43,9 +43,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @GraphQLApi
 @ApplicationScoped
@@ -81,17 +79,11 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.findById(id);
 	}
 
-	public Uni<Set<Tuple2<String, String>>> getTranslationMap(
+	public Uni<Set<TranslationDTO>> getTranslations(
 		@Source SuggestionCategory suggestionCategory) {
 
 		return translationService
-			.getTranslationMap(SuggestionCategory.class, suggestionCategory.getId())
-			.map(translationMap -> translationMap
-				.entrySet()
-				.stream()
-				.map(entry -> Tuple2.of(entry.getKey(), entry.getValue()))
-				.collect(Collectors.toSet())
-			);
+			.getTranslationDTOs(SuggestionCategory.class, suggestionCategory.getId());
 	}
 
 

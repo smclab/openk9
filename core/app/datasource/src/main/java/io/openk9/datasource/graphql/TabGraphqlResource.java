@@ -4,10 +4,10 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TokenTabMapper;
-import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
+import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.TranslationService;
@@ -30,9 +30,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @GraphQLApi
 @ApplicationScoped
@@ -99,15 +97,8 @@ public class TabGraphqlResource {
 		return _tokenTabService.findById(id);
 	}
 
-	public Uni<Set<Tuple2<String, String>>> getTranslationMap(@Source Tab tab) {
-		return translationService
-			.getTranslationMap(Tab.class, tab.getId())
-			.map(translationMap -> translationMap
-				.entrySet()
-				.stream()
-				.map(entry -> Tuple2.of(entry.getKey(), entry.getValue()))
-				.collect(Collectors.toSet())
-			);
+	public Uni<Set<TranslationDTO>> getTranslations(@Source Tab tab) {
+		return translationService.getTranslationDTOs(Tab.class, tab.getId());
 	}
 
 	public Uni<Response<Tab>> patchTab(@Id long id, TabDTO tabDTO) {
