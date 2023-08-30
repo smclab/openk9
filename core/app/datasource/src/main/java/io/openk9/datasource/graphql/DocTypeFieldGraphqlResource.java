@@ -41,7 +41,7 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFields(
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsByParent(
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
