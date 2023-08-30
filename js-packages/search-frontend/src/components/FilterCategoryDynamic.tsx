@@ -25,6 +25,7 @@ type FilterCategoryDynamicallyProps = {
   isCollapsable?: boolean;
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
+  language: string;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
@@ -40,6 +41,7 @@ function FilterCategoryDynamic({
   isCollapsable = true,
   isUniqueLoadMore = false,
   loadAll = false,
+  language,
   setHasMoreSuggestionsCategories = undefined,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
@@ -48,6 +50,7 @@ function FilterCategoryDynamic({
     suggestionCategoryId,
     useDebounce(text, 600),
     loadAll,
+    language,
   );
 
   const { t } = useTranslation();
@@ -382,6 +385,7 @@ function useInfiniteSuggestions(
   activeSuggestionCategory: number,
   suggestKeyword: string,
   loadAll: boolean,
+  language: string,
 ) {
   const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
   const client = useOpenK9Client();
@@ -405,6 +409,7 @@ function useInfiniteSuggestions(
         suggestionCategoryId: activeSuggestionCategory,
         suggestKeyword,
         order: suggestKeyword ? "desc" : "asc",
+        language: language,
       });
       return {
         result: result.result,

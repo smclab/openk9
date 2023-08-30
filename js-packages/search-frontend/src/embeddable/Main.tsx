@@ -39,6 +39,7 @@ import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChan
 import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
+import { ChangeLanguage } from "../components/ChangeLanguage";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -85,13 +86,6 @@ export function Main({
 
   const { i18n } = useTranslation();
 
-  React.useEffect(() => {
-    if (languageQuery.data?.value) {
-      i18n.changeLanguage(
-        remappingLanguage({ language: languageQuery.data.value }),
-      );
-    }
-  }, [languageQuery.data, i18n]);
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -111,6 +105,19 @@ export function Main({
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const activeLanguage = i18next.language;
+  const languages = useQuery(["date-label-languages", {}], async () => {
+    return await client.getLanguages();
+  });
+  const [languageSelect, setLanguageSelect] = React.useState("");
+
+  React.useEffect(() => {
+    if (languageQuery.data?.value) {
+      i18n.changeLanguage(
+        remappingLanguage({ language: languageQuery.data.value }),
+      );
+      setLanguageSelect(languageQuery.data.value);
+    }
+  }, [languageQuery.data, i18n]);
   return (
     <React.Fragment>
       {renderPortal(
@@ -150,6 +157,7 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filters,
@@ -179,6 +187,7 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filtersHorizontal
@@ -196,6 +205,7 @@ export function Main({
             setSortResult={setSortResult}
             isMobile={isMobile}
             overChangeCard={false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.results,
@@ -211,6 +221,7 @@ export function Main({
             setSortResult={setSortResult}
             isMobile={isMobile}
             overChangeCard={configuration.resultList?.changeOnOver || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -232,6 +243,16 @@ export function Main({
           <SortResultList setSortResult={setSortResult} />
         </I18nextProvider>,
         configuration.sortable,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ChangeLanguage
+            setChangeLanguage={setLanguageSelect}
+            languages={languages.data}
+            activeLanguage={languageSelect}
+          />
+        </I18nextProvider>,
+        configuration.changeLanguage,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -281,6 +302,7 @@ export function Main({
             tabs={tabs}
             onSelectedTabIndexChange={setSelectedTabIndex}
             selectedTabIndex={selectedTabIndex}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
@@ -734,5 +756,20 @@ function remappingLanguage({ language }: { language: string }) {
       return "fr";
     default:
       return "en";
+  }
+}
+
+function remappingLanguageToBack({ language }: { language: string }) {
+  switch (language) {
+    case "it":
+      return "it_IT";
+    case "es":
+      return "es_ES";
+    case "en":
+      return "en_US";
+    case "fr":
+      return "fr_FR";
+    default:
+      return "en_US";
   }
 }

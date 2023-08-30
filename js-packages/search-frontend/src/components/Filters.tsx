@@ -22,6 +22,7 @@ type FiltersProps = {
   sort: SortField[];
   dynamicFilters: boolean;
   preFilters?: React.ReactNode;
+  language: string;
 };
 function Filters({
   searchQuery,
@@ -32,12 +33,17 @@ function Filters({
   sort,
   dynamicFilters,
   preFilters,
+  language,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
+  const { data, isPreviousData } = useInfiniteResults(
+    searchQuery,
+    sort,
+    language,
+  );
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
@@ -195,6 +201,7 @@ function Filters({
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
+              language={language}
             />
           ) : (
             <FilterCategoryMemo
@@ -207,6 +214,7 @@ function Filters({
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
               dynamicFilters={dynamicFilters}
+              language={language}
             />
           );
         })}

@@ -221,6 +221,7 @@ export type Configuration = {
   calendar: Element | string | null;
   login: Element | string | null;
   detailMobile: Element | string | null;
+  changeLanguage: Element | string | null;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
@@ -250,6 +251,7 @@ const defaultConfiguration: Configuration = {
   detailMobile: null,
   sort: [],
   filters: null,
+  changeLanguage: null,
   filtersHorizontal: null,
   results: null,
   details: null,

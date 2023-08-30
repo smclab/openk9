@@ -12,6 +12,7 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { ChangeLanguage } from "./components/ChangeLanguage";
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
@@ -148,14 +149,25 @@ export function App() {
           </span>
         </div>
         <div
-          className="openk9-navbar-login"
-          ref={(element) => openk9.updateConfiguration({ login: element })}
           css={css`
             flex-grow: 1;
             display: flex;
+            gap: 10px;
             justify-content: flex-end;
+            align-items: center;
           `}
-        ></div>
+        >
+          <div
+            className="openk9-navbar-login"
+            ref={(element) => openk9.updateConfiguration({ login: element })}
+          ></div>
+          <div
+            className="openk9-navbar-change-language"
+            ref={(element) =>
+              openk9.updateConfiguration({ changeLanguage: element })
+            }
+          ></div>{" "}
+        </div>
       </div>
       <div
         ref={(element) => openk9.updateConfiguration({ tabs: element })}

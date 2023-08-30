@@ -43,6 +43,7 @@ export type FiltersMobileProps<E> = {
     | undefined;
   onSelectedTabIndexChange(index: number): void;
   selectedTabIndex: number;
+  language: string;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -57,8 +58,9 @@ function FiltersMobileLiveChange<E>({
   tabs,
   onSelectedTabIndexChange,
   selectedTabIndex,
+  language,
 }: FiltersMobileProps<E>) {
-  const results = useInfiniteResults<any>(searchQuery, sort);
+  const results = useInfiniteResults<any>(searchQuery, sort, language);
   const { t } = useTranslation();
   const viewTabs = true;
   const componet = (
@@ -148,6 +150,7 @@ function FiltersMobileLiveChange<E>({
           filtersSelect={configuration.filterTokens}
           sort={sort}
           dynamicFilters={dynamicFilters}
+          language={language}
           preFilters={
             viewTabs ? (
               <ViewAllTabs
