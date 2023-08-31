@@ -41,7 +41,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
         padding="15px 8px"
         fontWeightLabel="700"
         action={() => {
-          client.authenticate();
+          client.authenticate({});
         }}
       />
     );

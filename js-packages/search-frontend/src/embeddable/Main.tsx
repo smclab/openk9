@@ -50,9 +50,6 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
-    configuration.overrideTabs,
-  );
   const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
@@ -62,20 +59,7 @@ export function Main({
     onConfigurationChange,
   });
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
-  const {
-    searchQuery,
-    spans,
-    selectionsState,
-    selectionsDispatch,
-    isQueryAnalysisComplete,
-    completelySort,
-  } = useSearch({
-    configuration,
-    tabTokens,
-    filterTokens,
-    dateTokens,
-    onQueryStateChange,
-  });
+
   const client = useOpenK9Client();
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
@@ -101,15 +85,33 @@ export function Main({
       window.removeEventListener("resize", checkIfMobile);
     };
   }, []);
-  const { detail, setDetail } = useDetails(searchQuery);
-  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
+
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const activeLanguage = i18next.language;
   const languages = useQuery(["date-label-languages", {}], async () => {
     return await client.getLanguages();
   });
   const [languageSelect, setLanguageSelect] = React.useState("");
-
+  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
+    configuration.overrideTabs,
+    languageSelect,
+  );
+  const {
+    searchQuery,
+    spans,
+    selectionsState,
+    selectionsDispatch,
+    isQueryAnalysisComplete,
+    completelySort,
+  } = useSearch({
+    configuration,
+    tabTokens,
+    filterTokens,
+    dateTokens,
+    onQueryStateChange,
+  });
+  const { detail, setDetail } = useDetails(searchQuery);
+  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -143,6 +145,7 @@ export function Main({
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
             onConfigurationChange={onConfigurationChange}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.tabs,
@@ -250,6 +253,7 @@ export function Main({
             setChangeLanguage={setLanguageSelect}
             languages={languages.data}
             activeLanguage={languageSelect}
+            i18nElement={i18n}
           />
         </I18nextProvider>,
         configuration.changeLanguage,
@@ -486,16 +490,20 @@ function useSearch({
   };
 }
 
-function useTabs(overrideTabs: (tabs: Array<Tab>) => Array<Tab>) {
+function useTabs(
+  overrideTabs: (tabs: Array<Tab>) => Array<Tab>,
+  language: string,
+) {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
-  const tenantTabs = useTabTokens();
+  const tenantTabs = useTabTokens(language);
+
   const tabs = React.useMemo(
     () => overrideTabs(tenantTabs),
-    [tenantTabs, overrideTabs],
+    [tenantTabs, overrideTabs, language],
   );
   const tabTokens = React.useMemo(
     () => tabs[selectedTabIndex]?.tokens ?? [],
-    [selectedTabIndex, tabs],
+    [selectedTabIndex, tabs, language],
   );
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }
@@ -744,7 +752,7 @@ function fixQueryAnalysisResult(data: AnalysisResponse) {
   };
 }
 
-function remappingLanguage({ language }: { language: string }) {
+export function remappingLanguage({ language }: { language: string }) {
   switch (language) {
     case "it_IT":
       return "it";

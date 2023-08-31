@@ -36,12 +36,6 @@ export function App() {
       setIsVisibleSearchMobile(true);
     }
   };
-  const mobileCalendarClick = (event: any) => {
-    const elementWidth = window.innerWidth;
-    if (elementWidth < 480) {
-      setIsVisibleCalendar(true);
-    }
-  };
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedInput, setFocusedInput] = React.useState(null);
@@ -185,7 +179,7 @@ export function App() {
         css={css`
           grid-area: search;
           padding: 16px 0px 16px 0px;
-          @media (max-width: 480px) {
+          @media (min-width: 377px) and (max-width: 480px) {
             padding-inline: 16px;
           }
         `}

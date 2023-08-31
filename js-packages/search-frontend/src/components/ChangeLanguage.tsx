@@ -6,6 +6,8 @@ import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import { GloboSvg } from "../svgElement/Globo";
 import Select, { components } from "react-select";
+import { i18n } from "i18next";
+import { remappingLanguage } from "../embeddable/Main";
 
 export function ChangeLanguage({
   setChangeLanguage,
@@ -14,12 +16,14 @@ export function ChangeLanguage({
   color = "#7e7e7e",
   languages,
   activeLanguage,
+  i18nElement,
 }: {
   setChangeLanguage: (sortResultNew: string) => void;
   background?: string;
   minHeight?: string;
   color?: string;
   activeLanguage: string;
+  i18nElement: i18n;
   languages:
     | {
         createDate: any;
@@ -43,6 +47,7 @@ export function ChangeLanguage({
     : null;
 
   const handleChange = (e: any) => {
+    i18nElement.changeLanguage(remappingLanguage({ language: e.value }));
     setChangeLanguage(e.value);
   };
   const customStyles = {
@@ -89,7 +94,7 @@ export function ChangeLanguage({
     <components.SingleValue {...props}>
       <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
         <GloboSvg /> {/* Icona SVG */}
-        {remappingLanguage({ language: activeLanguage })}
+        {remappingLanguageToBack({ language: activeLanguage })}
       </div>
     </components.SingleValue>
   );
@@ -109,7 +114,7 @@ export function ChangeLanguage({
   );
 }
 
-function remappingLanguage({ language }: { language: string }) {
+function remappingLanguageToBack({ language }: { language: string }) {
   switch (language) {
     case "it_IT":
       return "ITA";

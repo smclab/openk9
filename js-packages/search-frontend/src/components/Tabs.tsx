@@ -12,12 +12,14 @@ type TabsProps = {
   selectedTabIndex: number;
   onSelectedTabIndexChange(index: number): void;
   onConfigurationChange: ConfigurationUpdateFunction;
+  language: string;
 };
 function Tabs({
   tabs,
   selectedTabIndex,
   onSelectedTabIndexChange,
   onConfigurationChange,
+  language,
 }: TabsProps) {
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -38,7 +40,7 @@ function Tabs({
           padding: 8px 12px;
           width: fit-content;
           height: fit-content;
-          gap: 20px;
+          gap: 16px;
           @media (max-width: 480px) {
             gap: 10px;
           }
@@ -102,10 +104,10 @@ export const TabsMemo = React.memo(Tabs);
 
 export type Tab = { label: string; tokens: Array<SearchToken> };
 
-export function useTabTokens(): Array<Tab> {
+export function useTabTokens(language: string): Array<Tab> {
   const client = useOpenK9Client();
   const tabsByVirtualHostQuery = useQuery(
-    ["tabs-by-virtualhost"] as const,
+    ["tabs-by-virtualhost", language] as const,
     ({ queryKey }) => {
       return client.getTabsByVirtualHost();
     },
