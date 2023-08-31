@@ -281,6 +281,7 @@ export function Main({
             tabs={tabs}
             onSelectedTabIndexChange={setSelectedTabIndex}
             selectedTabIndex={selectedTabIndex}
+            viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
