@@ -110,6 +110,7 @@ function FiltersHorizontal({
           @media (max-width: 480px) {
             padding-inline: 20px;
             flex-direction: column;
+            gap: 15px;
           }
         `}
       >
