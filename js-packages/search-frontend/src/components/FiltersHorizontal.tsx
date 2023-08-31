@@ -82,7 +82,6 @@ function FiltersHorizontal({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "70%",
           borderRadius: "8px",
         }}
       >
