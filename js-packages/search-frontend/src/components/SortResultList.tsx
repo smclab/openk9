@@ -10,11 +10,13 @@ export function SortResultList({
   background = "white",
   minHeight = "40px",
   color = "#7e7e7e",
+  relevance = "relevance",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
   background?: string;
   minHeight?: string;
   color?: string;
+  relevance?: string;
 }) {
   const client = useOpenK9Client();
   const options = useQuery(["date-label-sort-options", {}], async () => {
@@ -59,7 +61,7 @@ export function SortResultList({
             label: "relevance",
           })}
         >
-          {t("relevance")}
+          {relevance === "relevance" ? t("relevance") : relevance}
         </option>
         {options.data?.map((option, index: number) => {
           return (

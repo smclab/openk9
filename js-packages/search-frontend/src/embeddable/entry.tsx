@@ -203,6 +203,11 @@ type ResultListProps = {
   changeOnOver: boolean;
 };
 
+type SortResultConfigurableProps = {
+  sort: Element | string | null;
+  relevance: string;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -226,6 +231,7 @@ export type Configuration = {
   searchReplaceText: boolean;
   filterTokens: Array<SearchToken>;
   sort: Array<RestApi.SortField>;
+  sortResultConfigurable: SortResultConfigurableProps | null;
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
@@ -254,6 +260,7 @@ const defaultConfiguration: Configuration = {
   filtersHorizontal: null,
   results: null,
   details: null,
+  sortResultConfigurable: null,
   login: null,
   tenant: null,
   token: null,

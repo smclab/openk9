@@ -229,6 +229,19 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <SortResultList
+            setSortResult={setSortResult}
+            relevance={
+              configuration.sortResultConfigurable?.relevance || "relevance"
+            }
+          />
+        </I18nextProvider>,
+        configuration.sortResultConfigurable
+          ? configuration.sortResultConfigurable.sort
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <SortResultList setSortResult={setSortResult} />
         </I18nextProvider>,
         configuration.sortable,
