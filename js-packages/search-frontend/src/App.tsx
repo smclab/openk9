@@ -371,7 +371,7 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            resultList: { element: element, changeOnOver: false },
+            resultList: { element: element, changeOnOver: true },
           })
         }
         css={css`

@@ -194,7 +194,11 @@ function Filters({
           return dynamicFilters ? (
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryName={translateSuggesionCategoryName({
+                names: suggestionCategory.translationMap,
+                language: language,
+                defaultValue: suggestionCategory.name,
+              })}
               suggestionCategoryId={suggestionCategory.id}
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
@@ -206,7 +210,11 @@ function Filters({
           ) : (
             <FilterCategoryMemo
               key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryName={translateSuggesionCategoryName({
+                names: suggestionCategory.translationMap,
+                language: language,
+                defaultValue: suggestionCategory.name,
+              })}
               suggestionCategoryId={suggestionCategory.id}
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
@@ -329,4 +337,21 @@ function mergeAndSortArrays(
   }
   mergedArray.sort((a, b) => a.localeCompare(b));
   return mergedArray;
+}
+
+function translateSuggesionCategoryName({
+  names,
+  language,
+  defaultValue,
+}: {
+  names: { [key: string]: string };
+  language: string;
+  defaultValue: string;
+}): string {
+  const desiredKey = "name." + language;
+  if (names && names.hasOwnProperty(desiredKey)) {
+    return names[desiredKey];
+  }
+  return defaultValue;
+  return "";
 }

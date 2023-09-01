@@ -228,7 +228,11 @@ export function OpenK9Client({
       return data;
     },
     async getTabsByVirtualHost(): Promise<
-      Array<{ label: string; tokens: Array<SearchToken> }>
+      Array<{
+        label: string;
+        tokens: Array<SearchToken>;
+        translationMap: { [key: string]: string };
+      }>
     > {
       const response = await authFetch(`/api/datasource/buckets/current/tabs`, {
         headers: {
@@ -558,4 +562,5 @@ type SuggestionsCategoriesResult = Array<{
   name: string;
   id: number;
   multiSelect: boolean;
+  translationMap: { [key: string]: string };
 }>;

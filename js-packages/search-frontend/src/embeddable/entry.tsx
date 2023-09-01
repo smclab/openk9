@@ -202,6 +202,11 @@ type ResultListProps = {
   changeOnOver: boolean;
 };
 
+type SortableProps = {
+  element: Element | string | null;
+  relevance: string;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -211,6 +216,7 @@ export type Configuration = {
   calendarMobile: CalendarMobileConfiguration | null;
   resultList: ResultListProps | null;
   searchMobile: SearchMobileConfiguration | null;
+  sortableConfigurable: SortableProps | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
@@ -259,6 +265,7 @@ const defaultConfiguration: Configuration = {
   tenant: null,
   token: null,
   calendar: null,
+  sortableConfigurable: null,
   resultList: null,
   useKeycloak: true,
   searchAutoselect: true,

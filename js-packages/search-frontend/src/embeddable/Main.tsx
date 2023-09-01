@@ -249,6 +249,17 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <SortResultList
+            setSortResult={setSortResult}
+            relevance={configuration.sortableConfigurable?.relevance}
+          />
+        </I18nextProvider>,
+        configuration.sortableConfigurable
+          ? configuration.sortableConfigurable.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ChangeLanguage
             setChangeLanguage={setLanguageSelect}
             languages={languages.data}
@@ -495,12 +506,13 @@ function useTabs(
   language: string,
 ) {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
-  const tenantTabs = useTabTokens(language);
+  const tenantTabs = useTabTokens();
 
   const tabs = React.useMemo(
     () => overrideTabs(tenantTabs),
     [tenantTabs, overrideTabs, language],
   );
+
   const tabTokens = React.useMemo(
     () => tabs[selectedTabIndex]?.tokens ?? [],
     [selectedTabIndex, tabs, language],
