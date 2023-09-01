@@ -39,6 +39,7 @@ import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChan
 import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
+import { ChangeLanguage } from "../components/ChangeLanguage";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -49,9 +50,6 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
-    configuration.overrideTabs,
-  );
   const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
@@ -61,20 +59,7 @@ export function Main({
     onConfigurationChange,
   });
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
-  const {
-    searchQuery,
-    spans,
-    selectionsState,
-    selectionsDispatch,
-    isQueryAnalysisComplete,
-    completelySort,
-  } = useSearch({
-    configuration,
-    tabTokens,
-    filterTokens,
-    dateTokens,
-    onQueryStateChange,
-  });
+
   const client = useOpenK9Client();
   const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
@@ -85,13 +70,6 @@ export function Main({
 
   const { i18n } = useTranslation();
 
-  React.useEffect(() => {
-    if (languageQuery.data?.value) {
-      i18n.changeLanguage(
-        remappingLanguage({ language: languageQuery.data.value }),
-      );
-    }
-  }, [languageQuery.data, i18n]);
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -107,10 +85,41 @@ export function Main({
       window.removeEventListener("resize", checkIfMobile);
     };
   }, []);
-  const { detail, setDetail } = useDetails(searchQuery);
-  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
+
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const activeLanguage = i18next.language;
+  const languages = useQuery(["date-label-languages", {}], async () => {
+    return await client.getLanguages();
+  });
+  const [languageSelect, setLanguageSelect] = React.useState("");
+  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
+    configuration.overrideTabs,
+    languageSelect,
+  );
+  const {
+    searchQuery,
+    spans,
+    selectionsState,
+    selectionsDispatch,
+    isQueryAnalysisComplete,
+    completelySort,
+  } = useSearch({
+    configuration,
+    tabTokens,
+    filterTokens,
+    dateTokens,
+    onQueryStateChange,
+  });
+  const { detail, setDetail } = useDetails(searchQuery);
+  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
+  React.useEffect(() => {
+    if (languageQuery.data?.value) {
+      i18n.changeLanguage(
+        remappingLanguage({ language: languageQuery.data.value }),
+      );
+      setLanguageSelect(languageQuery.data.value);
+    }
+  }, [languageQuery.data, i18n]);
   return (
     <React.Fragment>
       {renderPortal(
@@ -136,6 +145,7 @@ export function Main({
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
             onConfigurationChange={onConfigurationChange}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.tabs,
@@ -150,6 +160,7 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filters,
@@ -179,6 +190,7 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filtersHorizontal
@@ -196,6 +208,7 @@ export function Main({
             setSortResult={setSortResult}
             isMobile={isMobile}
             overChangeCard={false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.results,
@@ -211,6 +224,7 @@ export function Main({
             setSortResult={setSortResult}
             isMobile={isMobile}
             overChangeCard={configuration.resultList?.changeOnOver || false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -245,6 +259,28 @@ export function Main({
           <SortResultList setSortResult={setSortResult} />
         </I18nextProvider>,
         configuration.sortable,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SortResultList
+            setSortResult={setSortResult}
+            relevance={configuration.sortableConfigurable?.relevance}
+          />
+        </I18nextProvider>,
+        configuration.sortableConfigurable
+          ? configuration.sortableConfigurable.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ChangeLanguage
+            setChangeLanguage={setLanguageSelect}
+            languages={languages.data}
+            activeLanguage={languageSelect}
+            i18nElement={i18n}
+          />
+        </I18nextProvider>,
+        configuration.changeLanguage,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -295,6 +331,7 @@ export function Main({
             onSelectedTabIndexChange={setSelectedTabIndex}
             selectedTabIndex={selectedTabIndex}
             viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
@@ -478,16 +515,21 @@ function useSearch({
   };
 }
 
-function useTabs(overrideTabs: (tabs: Array<Tab>) => Array<Tab>) {
+function useTabs(
+  overrideTabs: (tabs: Array<Tab>) => Array<Tab>,
+  language: string,
+) {
   const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
   const tenantTabs = useTabTokens();
+
   const tabs = React.useMemo(
     () => overrideTabs(tenantTabs),
-    [tenantTabs, overrideTabs],
+    [tenantTabs, overrideTabs, language],
   );
+
   const tabTokens = React.useMemo(
     () => tabs[selectedTabIndex]?.tokens ?? [],
-    [selectedTabIndex, tabs],
+    [selectedTabIndex, tabs, language],
   );
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }
@@ -736,7 +778,7 @@ function fixQueryAnalysisResult(data: AnalysisResponse) {
   };
 }
 
-function remappingLanguage({ language }: { language: string }) {
+export function remappingLanguage({ language }: { language: string }) {
   switch (language) {
     case "it_IT":
       return "it";
@@ -748,5 +790,20 @@ function remappingLanguage({ language }: { language: string }) {
       return "fr";
     default:
       return "en";
+  }
+}
+
+function remappingLanguageToBack({ language }: { language: string }) {
+  switch (language) {
+    case "it":
+      return "it_IT";
+    case "es":
+      return "es_ES";
+    case "en":
+      return "en_US";
+    case "fr":
+      return "fr_FR";
+    default:
+      return "en_US";
   }
 }

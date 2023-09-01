@@ -134,6 +134,26 @@ export function OpenK9Client({
         await response.json();
       return data;
     },
+    async getLanguages() {
+      const response = await authFetch(
+        "/api/datasource/buckets/current/availableLanguage",
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        },
+      );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: Array<{
+        createDate: any;
+        modifiedDate: any;
+        id: number;
+        name: string;
+        value: "value";
+      }> = await response.json();
+      return data;
+    },
     async getLanguageDefault() {
       const response = await authFetch(
         `/api/datasource/buckets/current/defaultLanguage`,
@@ -155,6 +175,7 @@ export function OpenK9Client({
       afterKey,
       suggestKeyword,
       order,
+      language,
     }: {
       searchQuery: SearchToken[];
       suggestionCategoryId?: number;
@@ -162,6 +183,7 @@ export function OpenK9Client({
       afterKey?: string; // for pagination
       suggestKeyword?: string; // to source by text in suggestions
       order: "desc" | "asc";
+      language: string;
     }): Promise<{ result: SuggestionResult[]; afterKey: string }> {
       const request = await authFetch(`/api/searcher/v1/suggestions`, {
         method: "POST",
@@ -172,6 +194,7 @@ export function OpenK9Client({
           suggestionCategoryId,
           suggestKeyword,
           order,
+          language,
         }),
         headers: {
           Accept: "application/json",
@@ -205,7 +228,11 @@ export function OpenK9Client({
       return data;
     },
     async getTabsByVirtualHost(): Promise<
-      Array<{ label: string; tokens: Array<SearchToken> }>
+      Array<{
+        label: string;
+        tokens: Array<SearchToken>;
+        translationMap: { [key: string]: string };
+      }>
     > {
       const response = await authFetch(`/api/datasource/buckets/current/tabs`, {
         headers: {
@@ -426,6 +453,7 @@ type SearchRequest = {
   searchQuery: Array<SearchToken>;
   range: [number, number];
   sort: SortField[];
+  language: string;
 };
 
 type SearchResult<E> = {
@@ -534,4 +562,5 @@ type SuggestionsCategoriesResult = Array<{
   name: string;
   id: number;
   multiSelect: boolean;
+  translationMap: { [key: string]: string };
 }>;

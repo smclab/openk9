@@ -12,6 +12,7 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { ChangeLanguage } from "./components/ChangeLanguage";
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
@@ -33,12 +34,6 @@ export function App() {
     const elementWidth = window.innerWidth;
     if (elementWidth < 480) {
       setIsVisibleSearchMobile(true);
-    }
-  };
-  const mobileCalendarClick = (event: any) => {
-    const elementWidth = window.innerWidth;
-    if (elementWidth < 480) {
-      setIsVisibleCalendar(true);
     }
   };
   const [startDate, setStartDate] = React.useState<any | null>(null);
@@ -148,14 +143,25 @@ export function App() {
           </span>
         </div>
         <div
-          className="openk9-navbar-login"
-          ref={(element) => openk9.updateConfiguration({ login: element })}
           css={css`
             flex-grow: 1;
             display: flex;
+            gap: 10px;
             justify-content: flex-end;
+            align-items: center;
           `}
-        ></div>
+        >
+          <div
+            className="openk9-navbar-login"
+            ref={(element) => openk9.updateConfiguration({ login: element })}
+          ></div>
+          <div
+            className="openk9-navbar-change-language"
+            ref={(element) =>
+              openk9.updateConfiguration({ changeLanguage: element })
+            }
+          ></div>{" "}
+        </div>
       </div>
       <div
         ref={(element) => openk9.updateConfiguration({ tabs: element })}
@@ -173,7 +179,7 @@ export function App() {
         css={css`
           grid-area: search;
           padding: 16px 0px 16px 0px;
-          @media (max-width: 480px) {
+          @media (min-width: 377px) and (max-width: 480px) {
             padding-inline: 16px;
           }
         `}
@@ -366,7 +372,7 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            resultList: { element: element, changeOnOver: false },
+            resultList: { element: element, changeOnOver: true },
           })
         }
         css={css`

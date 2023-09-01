@@ -28,6 +28,7 @@ type ResultsProps<E> = {
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
   overChangeCard?: boolean;
+  language: string;
 };
 function Results<E>({
   displayMode,
@@ -38,6 +39,7 @@ function Results<E>({
   isMobile,
   setDetailMobile,
   overChangeCard = false,
+  language,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -54,6 +56,7 @@ function Results<E>({
           setSortResult={setSortResult}
           isMobile={isMobile}
           overChangeCard={overChangeCard}
+          language={language}
         />
       );
     case "infinite":
@@ -67,6 +70,7 @@ function Results<E>({
           setSortResult={setSortResult}
           isMobile={isMobile}
           overChangeCard={overChangeCard}
+          language={language}
         />
       );
     case "virtual":
@@ -80,6 +84,7 @@ function Results<E>({
           setSortResult={setSortResult}
           isMobile={isMobile}
           overChangeCard={overChangeCard}
+          language={language}
         />
       );
   }
@@ -178,6 +183,7 @@ type ResulListProps<E> = {
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
   overChangeCard?: boolean;
+  language: string;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {};
@@ -190,8 +196,9 @@ export function FiniteResults<E>({
   setSortResult,
   isMobile,
   overChangeCard = false,
+  language,
 }: FiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery, sort);
+  const results = useInfiniteResults<E>(searchQuery, sort, language);
   return (
     <div
       className="openk9-finite-result-container"
@@ -239,8 +246,9 @@ export function InfiniteResults<E>({
   setSortResult,
   isMobile,
   overChangeCard = false,
+  language,
 }: InfiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery, sort);
+  const results = useInfiniteResults<E>(searchQuery, sort, language);
   const { t } = useTranslation();
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -361,8 +369,9 @@ export function VirtualResults<E>({
   setSortResult,
   isMobile,
   overChangeCard = false,
+  language,
 }: VirtualResultsProps<E>) {
-  const results = useInfiniteResults<E>(searchQuery, sort);
+  const results = useInfiniteResults<E>(searchQuery, sort, language);
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,
@@ -456,15 +465,17 @@ function NoResults() {
 export function useInfiniteResults<E>(
   searchQuery: Array<SearchToken>,
   sort: SortField[],
+  language: string,
 ) {
   const pageSize = 25;
   const client = useOpenK9Client();
 
   return useInfiniteQuery(
-    ["results", searchQuery, sort] as const,
+    ["results", searchQuery, sort, language] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       return client.doSearch<E>({
         range: [pageParam * pageSize, pageParam * pageSize + pageSize],
+        language,
         searchQuery,
         sort,
       });

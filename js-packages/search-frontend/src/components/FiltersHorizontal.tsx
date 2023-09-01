@@ -22,6 +22,7 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
+import { Language } from "@mui/icons-material";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -32,6 +33,7 @@ type FiltersProps = {
   filtersSelect: SearchToken[];
   sort: SortField[];
   dynamicFilters: boolean;
+  language: string;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -42,11 +44,16 @@ function FiltersHorizontal({
   filtersSelect,
   sort,
   dynamicFilters,
+  language,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
+  const { data, isPreviousData } = useInfiniteResults(
+    searchQuery,
+    sort,
+    language,
+  );
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
@@ -90,6 +97,7 @@ function FiltersHorizontal({
             lastSearchQueryWithResults,
             dynamicFilters,
             suggestion.id,
+            language,
           );
           return CreateSuggestion(index, suggestion, suggestions);
         })}
@@ -400,6 +408,7 @@ export function useInfiniteSuggestions(
   searchQueryParams: SearchToken[] | null,
   dynamicFilters: boolean,
   suggestionCategoryId: number,
+  language: string,
 ) {
   const pageSize = 30;
   const client = useOpenK9Client();
@@ -422,6 +431,7 @@ export function useInfiniteSuggestions(
         order: "desc",
         suggestionCategoryId: suggestionCategoryId,
         range: [0, 50],
+        language: language,
       });
       return {
         result: result.result,

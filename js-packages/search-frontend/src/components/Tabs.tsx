@@ -5,6 +5,7 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { SearchToken } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
+import _ from "lodash";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -12,12 +13,14 @@ type TabsProps = {
   selectedTabIndex: number;
   onSelectedTabIndexChange(index: number): void;
   onConfigurationChange: ConfigurationUpdateFunction;
+  language: string;
 };
 function Tabs({
   tabs,
   selectedTabIndex,
   onSelectedTabIndexChange,
   onConfigurationChange,
+  language,
 }: TabsProps) {
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -38,7 +41,7 @@ function Tabs({
           padding: 8px 12px;
           width: fit-content;
           height: fit-content;
-          gap: 20px;
+          gap: 16px;
           @media (max-width: 480px) {
             gap: 10px;
           }
@@ -46,6 +49,11 @@ function Tabs({
       >
         {tabs.map((tab, index) => {
           const isSelected = index === selectedTabIndex;
+          const tabTraslation = translationTab({
+            language: language,
+            tabLanguages: tab.translationMap,
+            defaultValue: tab.label,
+          });
           return (
             <button
               className="openk9-single-tab-container"
@@ -89,7 +97,7 @@ function Tabs({
                   onConfigurationChange({ filterTokens: [] });
                 }}
               >
-                {tab.label.toUpperCase()}
+                {tabTraslation.toUpperCase()}
               </span>
             </button>
           );
@@ -100,7 +108,11 @@ function Tabs({
 }
 export const TabsMemo = React.memo(Tabs);
 
-export type Tab = { label: string; tokens: Array<SearchToken> };
+export type Tab = {
+  label: string;
+  tokens: Array<SearchToken>;
+  translationMap: { [key: string]: string };
+};
 
 export function useTabTokens(): Array<Tab> {
   const client = useOpenK9Client();
@@ -111,4 +123,46 @@ export function useTabTokens(): Array<Tab> {
     },
   );
   return tabsByVirtualHostQuery.data ?? [];
+}
+
+export function translationTab({
+  language,
+  tabLanguages,
+  defaultValue,
+}: {
+  language: string;
+  tabLanguages: { [key: string]: string };
+  defaultValue: string;
+}): string {
+  const desiredKey = "label." + language;
+  if (tabLanguages && tabLanguages.hasOwnProperty(desiredKey)) {
+    return tabLanguages[desiredKey];
+  }
+  return defaultValue;
+}
+
+//utile nel caso bisogna tradurre i tab da inviare nella search query
+export function translationTabValue({
+  language,
+  tabLanguages,
+  defaultValue,
+  selectedTabIndex,
+}: {
+  language: string;
+  tabLanguages: { [key: string]: string };
+  defaultValue: SearchToken[];
+  selectedTabIndex: number;
+}): SearchToken[] {
+  if (selectedTabIndex === 0) return defaultValue;
+  const desiredKey = "label." + language;
+  let tabClick: SearchToken[] | null = null;
+  if (tabLanguages && tabLanguages.hasOwnProperty(desiredKey)) {
+    tabClick = _.cloneDeep(defaultValue);
+    tabClick[0] = {
+      ...tabClick[0],
+      values: [tabLanguages[desiredKey]],
+    };
+  }
+
+  return tabClick || defaultValue;
 }

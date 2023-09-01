@@ -18,7 +18,7 @@ export function ActiveFilter({
   onRemoveFilterToken: (searchToken: SearchToken) => void;
   onConfigurationChange: ConfigurationUpdateFunction;
 }) {
-const { t } = useTranslation();
+  const { t } = useTranslation();
   if (searchQuery.length === 0) return null;
   const activeFilters = searchQuery.filter(
     (search) => "goToSuggestion" in search,

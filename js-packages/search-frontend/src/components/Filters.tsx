@@ -22,6 +22,7 @@ type FiltersProps = {
   sort: SortField[];
   dynamicFilters: boolean;
   preFilters?: React.ReactNode;
+  language: string;
 };
 function Filters({
   searchQuery,
@@ -32,12 +33,17 @@ function Filters({
   sort,
   dynamicFilters,
   preFilters,
+  language,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(searchQuery, sort);
+  const { data, isPreviousData } = useInfiniteResults(
+    searchQuery,
+    sort,
+    language,
+  );
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
@@ -188,18 +194,27 @@ function Filters({
           return dynamicFilters ? (
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryName={translateSuggesionCategoryName({
+                names: suggestionCategory.translationMap,
+                language: language,
+                defaultValue: suggestionCategory.name,
+              })}
               suggestionCategoryId={suggestionCategory.id}
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
               onRemove={onRemoveFilterToken}
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
+              language={language}
             />
           ) : (
             <FilterCategoryMemo
               key={suggestionCategory.id}
-              suggestionCategoryName={suggestionCategory.name}
+              suggestionCategoryName={translateSuggesionCategoryName({
+                names: suggestionCategory.translationMap,
+                language: language,
+                defaultValue: suggestionCategory.name,
+              })}
               suggestionCategoryId={suggestionCategory.id}
               tokens={lastSearchQueryWithResults}
               onAdd={onAddFilterToken}
@@ -207,6 +222,7 @@ function Filters({
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
               dynamicFilters={dynamicFilters}
+              language={language}
             />
           );
         })}
@@ -321,4 +337,21 @@ function mergeAndSortArrays(
   }
   mergedArray.sort((a, b) => a.localeCompare(b));
   return mergedArray;
+}
+
+function translateSuggesionCategoryName({
+  names,
+  language,
+  defaultValue,
+}: {
+  names: { [key: string]: string };
+  language: string;
+  defaultValue: string;
+}): string {
+  const desiredKey = "name." + language;
+  if (names && names.hasOwnProperty(desiredKey)) {
+    return names[desiredKey];
+  }
+  return defaultValue;
+  return "";
 }
