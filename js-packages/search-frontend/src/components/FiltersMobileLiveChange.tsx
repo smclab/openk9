@@ -43,6 +43,7 @@ export type FiltersMobileProps<E> = {
     | undefined;
   onSelectedTabIndexChange(index: number): void;
   selectedTabIndex: number;
+  viewTabs?: boolean;
   language: string;
 };
 function FiltersMobileLiveChange<E>({
@@ -59,13 +60,14 @@ function FiltersMobileLiveChange<E>({
   onSelectedTabIndexChange,
   selectedTabIndex,
   language,
+  viewTabs = false,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(searchQuery, sort, language);
   const { t } = useTranslation();
-  const viewTabs = true;
   const componet = (
     <React.Fragment>
       <div
+        className="openk9-filter-list-container-first-title container-openk9-filter-mobile-live-change live-change"
         css={css`
           display: flex;
           justify-content: space-beetween;
@@ -74,7 +76,7 @@ function FiltersMobileLiveChange<E>({
         `}
       >
         <div
-          className="openk9-filter-list-container-title box-title"
+          className="openk9-filter-list-container-title box-title live-change-box"
           css={css`
             padding: 0px 16px;
             width: 100%;
@@ -85,7 +87,7 @@ function FiltersMobileLiveChange<E>({
           `}
         >
           <div
-            className="openk9-filter-list-container-internal-title "
+            className="openk9-filter-list-container-internal-title live-change-title"
             css={css`
               display: flex;
               gap: 5px;
@@ -94,7 +96,7 @@ function FiltersMobileLiveChange<E>({
             <span>
               <FilterSvg />
             </span>
-            <span className="openk9-filters-list-title title">
+            <span className="openk9-filters-list-title title  live-change-title-span">
               <h2
                 css={css`
                   font-style: normal;

@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.model.Analyzer;
@@ -32,6 +33,10 @@ import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -39,9 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-;
-
 
 @ApplicationScoped
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {
@@ -259,8 +261,31 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		});
 
 
-
 	}
+
+	public Uni<Connection<DocTypeField>> findConnection(
+		long parentId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList) {
+
+
+		CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+
+		CriteriaQuery<DocTypeField> query =
+			criteriaBuilder.createQuery(getEntityClass());
+
+		Path<DocTypeField> root = query.from(getEntityClass());
+
+		Path<DocTypeField> parentField = root.get(DocTypeField_.parentDocTypeField);
+
+		return findConnection(
+			query, root,
+			parentId > 0
+				? criteriaBuilder.equal(parentField.get(DocTypeField_.id), parentId)
+				: criteriaBuilder.isNull(parentField),
+			getSearchFields(),
+			after, before, first, last, searchText, sortByList
+		);
+	 }
 
 	public Uni<Void> loadDocTypeField(Set<DocTypeField> typeFields) {
 

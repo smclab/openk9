@@ -12,6 +12,7 @@ import org.hibernate.reactive.common.Identifier;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,6 +80,25 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 				)
 			)
 		);
+	}
+
+	public <T extends K9Entity> Uni<Set<TranslationDTO>> getTranslationDTOs(
+		Class<T> entityClass, Long id) {
+
+		return getTranslationMap(entityClass, id)
+			.map(translationMap -> translationMap
+				.entrySet()
+				.stream()
+				.map(entry -> {
+					String[] keys = entry.getKey().split("\\.");
+					return TranslationDTO.builder()
+						.language(keys[1])
+						.key(keys[0])
+						.value(entry.getValue())
+						.build();
+				})
+				.collect(Collectors.toSet())
+			);
 	}
 
 	public <T extends K9Entity> Uni<Map<Long, Map<String, String>>> getTranslationMaps(

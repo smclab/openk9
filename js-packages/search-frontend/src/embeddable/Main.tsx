@@ -317,6 +317,7 @@ export function Main({
             tabs={tabs}
             onSelectedTabIndexChange={setSelectedTabIndex}
             selectedTabIndex={selectedTabIndex}
+            viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
             language={languageSelect}
           />
         </I18nextProvider>,

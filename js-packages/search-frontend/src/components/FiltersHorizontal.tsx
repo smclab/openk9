@@ -89,7 +89,6 @@ function FiltersHorizontal({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "70%",
           borderRadius: "8px",
         }}
       >
@@ -119,6 +118,7 @@ function FiltersHorizontal({
           @media (max-width: 480px) {
             padding-inline: 20px;
             flex-direction: column;
+            gap: 15px;
           }
         `}
       >

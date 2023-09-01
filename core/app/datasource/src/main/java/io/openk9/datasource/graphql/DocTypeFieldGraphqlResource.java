@@ -40,6 +40,17 @@ public class DocTypeFieldGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
+	@Query
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsByParent(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		long parentId, String searchText, Set<SortBy> sortByList) {
+		return docTypeFieldService.findConnection(
+			parentId, after, before, first, last, searchText, sortByList);
+	}
+
 	public Uni<DocTypeField> parent(
 		@Source DocTypeField docTypeField) {
 		return docTypeFieldService.getParent(docTypeField);

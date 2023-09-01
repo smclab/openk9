@@ -345,6 +345,7 @@ export function App() {
               element: element,
               isVisible: isVisibleFilters,
               setIsVisible: setIsVisibleFilters,
+              viewTabs: true,
             },
           })
         }

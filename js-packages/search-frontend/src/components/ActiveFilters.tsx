@@ -6,6 +6,8 @@ import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { capitalize } from "lodash";
+import { useTranslation } from "react-i18next";
+
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 export function ActiveFilter({
   searchQuery,
@@ -16,6 +18,7 @@ export function ActiveFilter({
   onRemoveFilterToken: (searchToken: SearchToken) => void;
   onConfigurationChange: ConfigurationUpdateFunction;
 }) {
+  const { t } = useTranslation();
   if (searchQuery.length === 0) return null;
   const activeFilters = searchQuery.filter(
     (search) => "goToSuggestion" in search,
@@ -110,7 +113,7 @@ export function ActiveFilter({
             `}
             onClick={() => onConfigurationChange({ filterTokens: [] })}
           >
-            Remove Filters
+            {t("remove-filters")}
           </button>
         )}
       </div>
