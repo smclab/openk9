@@ -53,7 +53,7 @@ export function ChangeLanguage({
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
-      borderRadius: "50px", // Applica il border radius
+      borderRadius: "50px",
       backgroundColor: "#FAFAFA",
       border:
         !state.isFocused || !state.isHovered
@@ -61,26 +61,28 @@ export function ChangeLanguage({
           : "1px solid var(--openk9-embeddable-search--active-color)",
       boxShadow: "0 0 0 1px var(--openk9-embeddable-search--active-color)",
       ":hover": {
-        border: "1px solid var(--openk9-embeddable-search--active-color)", // Cambia colore quando l'opzione è in hover
+        border: "1px solid var(--openk9-embeddable-search--active-color)",
       },
     }),
     menu: (provided: any, state: any) => ({
       ...provided,
-      zIndex: state.selectProps.menuIsOpen ? "1000" : "1", // Imposta lo z-index più alto quando il menu è aperto
+      zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
     }),
     option: (provided: any, state: any) => ({
       ...provided,
       backgroundColor: state.isFocused ? "#your-option-focus-color" : "white",
       color: "black",
       ":hover": {
-        backgroundColor: state.isSelected
-          ? "var(--openk9-embeddable-search--active-color)"
-          : "#e836362e",
+        backgroundColor: state.isSelected ? "#d54949" : "#e836362e",
         cursor: "pointer",
       },
       ...(state.isSelected && {
-        backgroundColor: "var(--openk9-embeddable-search--active-color)", // Cambia colore per l'opzione attiva
+        backgroundColor: "#d54949",
+        color: "white",
       }),
+    }),
+    indicatorSeparator: () => ({
+      display: "none", // Nasconde la linea separatoria
     }),
   };
 
@@ -121,12 +123,12 @@ function remappingLanguageToBack({ language }: { language: string }) {
     case "es_ES":
       return "ESP";
     case "en_US":
-      return "ENG";
+      return "GBR";
     case "de_DE":
-      return "DE";
+      return "DEU";
     case "fr_FR":
-      return "FRE";
+      return "FRA";
     default:
-      return "ENG";
+      return "GBR";
   }
 }

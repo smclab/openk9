@@ -32,7 +32,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
     return (
       <CreateLabel
         svgIcon={<LoginLogo colorFill="#000000" />}
-        label={t("login")}
+        label={"Login"}
         marginOfSvg="10px"
         sizeFont="16px"
         colorLabel={"black"}
