@@ -12,7 +12,10 @@ import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
-import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
+import {
+  FilterCategoryDynamicMemo,
+  mergeAndSortObjects,
+} from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
 import { capitalize } from "lodash";
@@ -23,6 +26,7 @@ import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { Language } from "@mui/icons-material";
+import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -99,6 +103,7 @@ function FiltersHorizontal({
             suggestion.id,
             language,
           );
+
           return CreateSuggestion(index, suggestion, suggestions);
         })}
       </OverlayScrollbarsComponent>
@@ -226,6 +231,13 @@ function FiltersHorizontal({
     >,
   ): JSX.Element {
     const [isOpen, setIsOpen] = React.useState(true);
+    const resultValue = suggestions.data?.pages || [];
+
+    const filters = mergeAndSortObjects(
+      resultValue,
+      searchQuery,
+      suggestion.id,
+    );
     return (
       <React.Fragment key={index}>
         {index !== 0 && (
@@ -291,77 +303,111 @@ function FiltersHorizontal({
         </div>
         <GridContainer>
           {isOpen &&
-            suggestions.data?.pages[0].result.map(
-              (token: any, index: number) => {
-                const asSearchToken = mapSuggestionToSearchToken(token, true);
-                const checked = filterSelect.some((element) => {
-                  return (
-                    element.values &&
-                    element.values[0] === token.value &&
-                    "goToSuggestion" in element
-                  );
-                });
+            filters.map((token: any, index: number) => {
+              const asSearchToken = mapSuggestionToSearchToken(token, true);
+              const checked = filterSelect.some((element) => {
                 return (
-                  <React.Fragment key={index}>
-                    <div
-                      className={`openk9-filter-horizontal-container-input-value ${
-                        checked ? "check-container" : "not-check-container"
-                      }`}
-                      css={css`
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        color: ${checked ? "#d6012e" : "black"};
-                        display: flex;
-                        align-items: flex-start;
-                        @media (max-width: 480px) {
-                          margin-left: 15px;
-                          margin-right: 15px;
-                        }
-                      `}
-                    >
-                      <input
-                        id={
-                          "filter-horizontal " + index + " " + suggestion.name
-                        }
-                        className={`custom-checkbox openk9-filter-horizontal-input  ${
-                          checked ? "checked-checkbox" : "not-checked-checkbox"
-                        }`}
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) =>
-                          handleCheckboxChange(event, asSearchToken)
-                        }
-                        css={css`
-                          width: 14px;
-                          appearance: none;
-                          min-width: 15px;
-                          min-height: 15px;
-                          border-radius: 4px;
-                          border: 2px solid #ccc;
-                          background-color: ${checked
-                            ? "var(--openk9-embeddable-search--secondary-active-color)"
-                            : "#fff"};
-                          background-size: 100%;
-                          background-position: center;
-                          background-repeat: no-repeat;
-                          cursor: pointer;
-                          margin-right: 10px;
-                        `}
-                      />
-                      <label
-                        htmlFor={
-                          "filter-horizontal " + index + " " + suggestion.name
-                        }
-                      >
-                        {asSearchToken?.values &&
-                          capitalize(asSearchToken?.values[0])}
-                      </label>
-                    </div>
-                  </React.Fragment>
+                  element.values &&
+                  element.values[0] === token.value &&
+                  "goToSuggestion" in element
                 );
-              },
-            )}
+              });
+              return (
+                <React.Fragment key={index}>
+                  <div
+                    className={`openk9-filter-horizontal-container-input-value ${
+                      checked ? "check-container" : "not-check-container"
+                    }`}
+                    css={css`
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      color: ${checked ? "#d6012e" : "black"};
+                      display: flex;
+                      align-items: flex-start;
+                      @media (max-width: 480px) {
+                        margin-left: 15px;
+                        margin-right: 15px;
+                      }
+                    `}
+                  >
+                    <input
+                      id={"filter-horizontal " + index + " " + suggestion.name}
+                      className={`custom-checkbox openk9-filter-horizontal-input  ${
+                        checked ? "checked-checkbox" : "not-checked-checkbox"
+                      }`}
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(event) =>
+                        handleCheckboxChange(event, asSearchToken)
+                      }
+                      css={css`
+                        width: 14px;
+                        appearance: none;
+                        min-width: 15px;
+                        min-height: 15px;
+                        border-radius: 4px;
+                        border: 2px solid #ccc;
+                        background-color: ${checked
+                          ? "var(--openk9-embeddable-search--secondary-active-color)"
+                          : "#fff"};
+                        background-size: 100%;
+                        background-position: center;
+                        background-repeat: no-repeat;
+                        cursor: pointer;
+                        margin-right: 10px;
+                      `}
+                    />
+                    <label
+                      htmlFor={
+                        "filter-horizontal " + index + " " + suggestion.name
+                      }
+                    >
+                      {asSearchToken?.values &&
+                        capitalize(asSearchToken?.values[0])}
+                    </label>
+                  </div>
+                </React.Fragment>
+              );
+            })}
         </GridContainer>
+        {suggestions.hasNextPage && (
+          <div
+            className="openk9-container-load-more"
+            css={css`
+              text-align: center;
+              width: 100%;
+              display: flex;
+              margin-left: 12px;
+              margin-top: 10px;
+              justify-content: center;
+              @media (max-width: 480px) {
+                margin-top: 15px;
+              }
+            `}
+          >
+            <button
+              css={css`
+                border: none;
+                background: inherit;
+                color: var(--openk9-embeddable-search--primary-color);
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                cursor: pointer;
+              `}
+              onClick={() => {
+                suggestions.fetchNextPage();
+              }}
+            >
+              {t("load-more") || "Load More"}
+              <ArrowDownSvg />
+            </button>
+          </div>
+        )}
       </React.Fragment>
     );
   }
@@ -410,27 +456,18 @@ export function useInfiniteSuggestions(
   suggestionCategoryId: number,
   language: string,
 ) {
-  const pageSize = 30;
+  const pageSize = 8;
   const client = useOpenK9Client();
-  let searchQuery: SearchToken[] | null = [];
-  if (searchQueryParams && searchQueryParams?.length > 0) {
-    searchQueryParams.forEach((singleSearchQuery) => {
-      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
-    });
-  } else {
-    searchQuery = searchQueryParams;
-  }
-
   const suggestionCategories = useInfiniteQuery(
-    ["suggestions", searchQuery, suggestionCategoryId] as const,
-    async ({ queryKey: [_, searchQuery], pageParam }) => {
+    ["suggestions", searchQueryParams, suggestionCategoryId, false] as const,
+    async ({ queryKey: [_, searchQuery, suggestionCategoryId], pageParam }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
         searchQuery,
+        range: [0, pageSize + 1],
         afterKey: pageParam,
-        order: "desc",
         suggestionCategoryId: suggestionCategoryId,
-        range: [0, 50],
+        order: "desc",
         language: language,
       });
       return {
@@ -439,7 +476,7 @@ export function useInfiniteSuggestions(
       };
     },
     {
-      enabled: searchQuery !== null,
+      enabled: searchQueryParams !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
         if (!lastPage.afterKey) return undefined;

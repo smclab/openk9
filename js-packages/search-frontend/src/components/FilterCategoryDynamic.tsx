@@ -506,7 +506,7 @@ function SingleSelect({
 }
 
 //da modificare non appena si deciderà di mettere l'opzionalità (end/or) all'interno di una stessa categoria
-function mergeAndSortObjects(
+export function mergeAndSortObjects(
   sortedArra: { result: SuggestionResult[]; afterKey: string }[],
   unsortedArray: SearchToken[],
   suggestionCategoryId: number,
