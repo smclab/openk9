@@ -267,8 +267,9 @@ export function App() {
             >
               <div
                 css={css`
-                  padding: 7px 10px;
+                  padding: ${startDate === null ? " 7px 10px;" : "7px 0px"};
                   display: flex;
+                  max-width: 100px;
                   gap: ${startDate === null ? "43px" : "23px"};
                 `}
               >

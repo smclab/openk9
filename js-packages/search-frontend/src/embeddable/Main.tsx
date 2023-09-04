@@ -345,6 +345,7 @@ export function Main({
             calendarDate={dateRange}
             start={configuration.dataRangePicker?.start}
             end={configuration.dataRangePicker?.end}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.dataRangePicker?.element !== undefined
@@ -353,7 +354,11 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DataRangePicker onChange={setDateRange} calendarDate={dateRange} />
+          <DataRangePicker
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+          />
         </I18nextProvider>,
         configuration.calendar,
       )}
@@ -373,6 +378,7 @@ export function Main({
             activeLanguage={activeLanguage}
             isCLickReset={configuration.calendarMobile?.isCLickReset || false}
             setIsCLickReset={configuration.calendarMobile?.setIsCLickReset}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.calendarMobile?.element !== undefined

@@ -10,22 +10,30 @@ import moment from "moment";
 import { DeleteLogo } from "./DeleteLogo";
 import { CalendarLogo } from "./CalendarLogo";
 import { css } from "styled-components/macro";
+import "moment/locale/de";
+import "moment/locale/it";
+import "moment/locale/es";
+import { mappingNameLanguage } from "./CalendarModal";
 
 export function DataRangePicker({
   onChange,
   calendarDate,
   start,
   end,
+  language,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
   start?: any;
   end?: any;
+  language: string;
 }) {
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedInput, setFocusedInput] = React.useState(null);
   const { t } = useTranslation();
+  const languageCalendar = mappingNameLanguage(language);
+  moment.locale(languageCalendar);
 
   const handleDatesChange = ({
     startDate,

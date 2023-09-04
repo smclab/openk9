@@ -32,8 +32,10 @@ import "moment/locale/it";
 import "moment/locale/es";
 import "moment/locale/fr";
 import { useTranslation } from "react-i18next";
+import "moment/locale/de";
+import "moment/locale/it";
+import "moment/locale/es";
 
-// import "./CalendarModal.css";
 export function CalendarMobile({
   onChange,
   calendarDate,
@@ -48,6 +50,7 @@ export function CalendarMobile({
   activeLanguage,
   isCLickReset,
   setIsCLickReset,
+  language,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -64,6 +67,7 @@ export function CalendarMobile({
   activeLanguage?: string;
   isCLickReset: boolean;
   setIsCLickReset: React.Dispatch<React.SetStateAction<boolean>> | undefined;
+  language: string;
 }) {
   const handleDatesChange = ({
     startDate,
@@ -88,8 +92,8 @@ export function CalendarMobile({
     });
     if (setIsCLickReset) setIsCLickReset(false);
   }, [isCLickReset]);
-  moment.locale("en");
-  // const dataFormat = formatterLanguage();
+  const languageCalendar = mappingNameLanguage(language);
+  moment.locale(languageCalendar);
 
   const componet = (
     <React.Fragment>
@@ -299,7 +303,7 @@ export function CalendarMobile({
             value={
               moment(startDate).format("DD MMMM YYYY") === "Invalid date"
                 ? t("start-day") || "Start day"
-                : moment(startDate).format("DD MMMM YYYY")
+                : moment(startDate).format(formatterLanguage(language))
             }
           ></input>
         </div>
@@ -317,7 +321,7 @@ export function CalendarMobile({
             value={
               moment(endDate).format("DD MMMM YYYY") === "Invalid date"
                 ? t("end-day") || "End day"
-                : moment(endDate).format("DD MMMM YYYY")
+                : moment(endDate).format(formatterLanguage(language))
             }
           ></input>
         </div>
@@ -454,16 +458,32 @@ export function CalendarMobile({
   document.body.style.overflow = "hidden";
   return <ModalDetail padding="0px" background="white" content={componet} />;
 }
-function formatterLanguage(language: string) {
+export function formatterLanguage(language: string) {
   switch (language) {
-    case "it":
-      return "";
-    case "es":
-      return "";
-    case "fr":
-      return "";
+    case "it_IT":
+      return "DD MMMM YYYY"; // Formato italiano
+    case "es_ES":
+      return "DD [de] MMMM [de] YYYY"; // Formato spagnolo
+    case "fr_FR":
+      return "DD MMMM YYYY"; // Formato francese
+    case "de_DE":
+      return "DD.MMMM.YYYY"; // Formato tedesco
     default:
-      return "DD MMMM YYYY";
+      return "MMMM DD, YYYY"; // Formato predefinito (inglese)
+  }
+}
+export function mappingNameLanguage(language: string) {
+  switch (language) {
+    case "it_IT":
+      return "it";
+    case "es_ES":
+      return "es";
+    case "fr_FR":
+      return "fr";
+    case "de_DE":
+      return "de";
+    default:
+      return "en";
   }
 }
 export const CalendarMobileMemo = React.memo(CalendarMobile);
