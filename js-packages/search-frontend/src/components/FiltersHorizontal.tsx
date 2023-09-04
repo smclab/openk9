@@ -386,6 +386,7 @@ function FiltersHorizontal({
             `}
           >
             <button
+              className="openk9-load-more-button"
               css={css`
                 border: none;
                 background: inherit;
