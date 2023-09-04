@@ -63,7 +63,9 @@ public class IndexerEvents {
 			.plug(docTypeFields -> Uni
 				.combine()
 				.all()
-				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName())).asTuple())
+				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName()))
+				.asTuple()
+			)
 			.map(_toDocTypeFieldMap())
 			.call(_persistDocType(dataIndex))
 			.replaceWithVoid();
