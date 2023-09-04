@@ -459,8 +459,18 @@ export function useInfiniteSuggestions(
 ) {
   const pageSize = 8;
   const client = useOpenK9Client();
+
+  let searchQuery: SearchToken[] | null = [];
+  if (searchQueryParams && searchQueryParams?.length > 0) {
+    searchQueryParams.forEach((singleSearchQuery) => {
+      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
+    });
+  } else {
+    searchQuery = searchQueryParams;
+  }
+
   const suggestionCategories = useInfiniteQuery(
-    ["suggestions", searchQueryParams, suggestionCategoryId, false] as const,
+    ["suggestions", searchQuery, suggestionCategoryId, false] as const,
     async ({ queryKey: [_, searchQuery, suggestionCategoryId], pageParam }) => {
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
@@ -477,7 +487,7 @@ export function useInfiniteSuggestions(
       };
     },
     {
-      enabled: searchQueryParams !== null,
+      enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
         if (!lastPage.afterKey) return undefined;
