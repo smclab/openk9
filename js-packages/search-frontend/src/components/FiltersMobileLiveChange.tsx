@@ -140,7 +140,7 @@ function FiltersMobileLiveChange<E>({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "calc(100vh - 182px)",
+          height: "calc(100vh - 230px)",
           borderRadius: "8px",
         }}
       >
@@ -164,12 +164,7 @@ function FiltersMobileLiveChange<E>({
           }
         />
       </OverlayScrollbarsComponent>
-      <div
-        css={css`
-          margin-top: 10px;
-          border: 0.5px solid #d4d4d8;
-        `}
-      ></div>
+
       <footer
         className="openk9-filter-horizontal-container-submit"
         css={css`
@@ -184,6 +179,12 @@ function FiltersMobileLiveChange<E>({
           }
         `}
       >
+        <div
+          css={css`
+            margin-top: 10px;
+            border: 0.5px solid #d4d4d8;
+          `}
+        ></div>
         <button
           className="openk9-filter-horizontal-submit"
           aria-label={t("remove-filters") || "remove filters"}
