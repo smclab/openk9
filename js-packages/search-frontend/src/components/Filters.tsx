@@ -266,11 +266,13 @@ type createLabel = {
   ariaLabel?: string;
   padding?: string;
   fontWeightLabel?: string;
+  gap?: string;
 };
 export function CreateLabel({
   label,
   action,
   svgIcon,
+  gap = "4px",
   sizeHeight = "15px",
   sizeFont = "12px",
   marginOfSvg = "0px",
@@ -294,7 +296,7 @@ export function CreateLabel({
         justify-content: center;
         align-items: center;
         padding: ${padding};
-        gap: 4px;
+        gap: ${gap};
         height: ${sizeHeight};
         background: #ffffff;
         border: ${hasBorder

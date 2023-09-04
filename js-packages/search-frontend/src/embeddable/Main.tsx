@@ -86,6 +86,20 @@ export function Main({
     };
   }, []);
 
+  const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
+  React.useEffect(() => {
+    const checkIfMobile = () => {
+      const isMobileMinWidth = window.innerWidth <= 380;
+      setIsMobileMinWIdth(isMobileMinWidth);
+    };
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
+
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const activeLanguage = i18next.language;
   const languages = useQuery(["date-label-languages", {}], async () => {
@@ -237,7 +251,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <LoginInfoComponentMemo />
+          <LoginInfoComponentMemo isMobile={isMobileMinWidth} />
         </I18nextProvider>,
         configuration.login,
       )}

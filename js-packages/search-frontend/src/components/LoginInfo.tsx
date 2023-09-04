@@ -12,8 +12,10 @@ import { LoginLogo } from "./LogoLogin";
 import { CreateLabel } from "./Filters";
 import { useTranslation } from "react-i18next";
 
-type LoginInfoProps = {};
-function LoginInfoComponent({}: LoginInfoProps) {
+type LoginInfoProps = {
+  isMobile?: boolean;
+};
+function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
   const client = useOpenK9Client();
   const [authenticated, setAuthenticated] = React.useState(false);
   React.useEffect(() => {
@@ -28,7 +30,7 @@ function LoginInfoComponent({}: LoginInfoProps) {
   useClickAway([dropdownRef], () => {
     setIsOpen(false);
   });
-  if (!authenticated) {
+  if (!authenticated && !isMobile) {
     return (
       <CreateLabel
         svgIcon={<LoginLogo colorFill="#000000" />}
@@ -40,6 +42,25 @@ function LoginInfoComponent({}: LoginInfoProps) {
         align={"center"}
         padding="15px 8px"
         fontWeightLabel="700"
+        action={() => {
+          client.authenticate({});
+        }}
+      />
+    );
+  }
+  if (!authenticated && isMobile) {
+    return (
+      <CreateLabel
+        svgIcon={<LoginLogo colorFill="#000000" />}
+        label={""}
+        marginOfSvg=""
+        sizeFont="16px"
+        colorLabel={"black"}
+        sizeHeight={"24px"}
+        align={"center"}
+        padding="15px 8px"
+        fontWeightLabel="700"
+        gap="0px"
         action={() => {
           client.authenticate({});
         }}
@@ -83,6 +104,9 @@ function LoginInfoComponent({}: LoginInfoProps) {
               width: 245px;
               height: 95px;
               overflow: hidden;
+              @media (max-width: 380px) {
+                width: 160px;
+              }
             `}
           >
             <div
