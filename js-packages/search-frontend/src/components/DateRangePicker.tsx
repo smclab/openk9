@@ -52,31 +52,36 @@ export function DataRangePicker({
   const renderCalendarInfo = () => (
     <div
       className="custom-calendar-info"
-      style={{ display: "flex", gap: "20px", padding: "15px 20px" }}
+      style={{
+        display: "flex",
+        gap: "20px",
+        padding: "15px 20px",
+        overflow: "auto",
+      }}
     >
       <CreateLabel
-        label="today"
+        label={t("today")}
         action={() => {
           setStartDate(moment());
           setEndDate(moment());
         }}
       />
       <CreateLabel
-        label="this weak"
+        label={t("this-week")}
         action={() => {
           setStartDate(moment().startOf("week"));
           setEndDate(moment().endOf("week"));
         }}
       />
       <CreateLabel
-        label="this month"
+        label={t("this-month")}
         action={() => {
           setStartDate(moment().startOf("month"));
           setEndDate(moment().endOf("month"));
         }}
       />
       <CreateLabel
-        label="this year"
+        label={t("this-year")}
         action={() => {
           setStartDate(moment().startOf("year"));
           setEndDate(moment().endOf("year"));
@@ -101,7 +106,7 @@ export function DataRangePicker({
             setStartDate(null);
             setEndDate(null);
           }}
-          label="Rimuovi Filtri"
+          label={t("remove-filters")}
         />
         <CreateLabel
           action={() =>
@@ -111,13 +116,13 @@ export function DataRangePicker({
               keywordKey: undefined,
             })
           }
-          label="Applica Filtro"
+          label={t("add-filters")}
         />
         <CreateLabel
           action={() => {
             document.getElementById("search-openk9")?.focus();
           }}
-          label="Chiudi"
+          label={t("close")}
         />
       </div>
     </div>
@@ -164,6 +169,8 @@ export function DataRangePicker({
           customInputIcon={null}
           keepOpenOnDateSelect={true}
           isOutsideRange={() => false}
+          startDatePlaceholderText={t("start-day") || "Start day"}
+          endDatePlaceholderText={t("end-day") || "Start day"}
           onClose={() => {
             if (calendarDate.startDate && calendarDate.endDate) {
               setStartDate(moment(calendarDate.startDate));

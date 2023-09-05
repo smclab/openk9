@@ -278,6 +278,8 @@ export function CalendarMobile({
           openDirection="up"
           noBorder={true}
           verticalHeight={32}
+          startDatePlaceholderText={t("start-day") || "Start day"}
+          endDatePlaceholderText={t("end-day") || "Start day"}
         />
       </div>
       <div
