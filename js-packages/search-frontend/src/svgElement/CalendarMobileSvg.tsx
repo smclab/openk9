@@ -10,7 +10,7 @@ export function CalendarMobileSvg({ size = "24" }: { size?: string }) {
       viewBox="0 0 24 24"
       fill="none"
     >
-      <g clip-path="url(#clip0_1481_6854)">
+      <g clipPath="url(#clip0_1481_6854)">
         <mask
           id="mask0_1481_6854"
           maskUnits="userSpaceOnUse"

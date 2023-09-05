@@ -235,7 +235,7 @@ function FilterCategoryDynamic({
               });
 
               return (
-                <React.Fragment>
+                <React.Fragment key={"fragment-filter-dynamic " + index}>
                   <div
                     key={index}
                     className="form-check"
