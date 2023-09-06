@@ -19,6 +19,8 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
+import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -33,6 +35,7 @@ import javax.inject.Inject;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
@@ -252,11 +255,13 @@ public class BucketResource {
 			Join<Bucket, TenantBinding> tenantBindingJoin =
 				from.join(Bucket_.tenantBinding);
 
-			Join<Bucket, Tab> fetch = from.join(Bucket_.tabs);
+			Join<Bucket, Tab> tabs = from.join(Bucket_.tabs);
 
-			fetch.fetch(Tab_.tokenTabs, JoinType.LEFT);
+			Fetch<Tab, TokenTab> tokenTabFetch = tabs.fetch(Tab_.tokenTabs, JoinType.LEFT);
 
-			query.select(fetch);
+			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
+
+			query.select(tabs);
 
 			query.where(
 				cb.equal(
@@ -265,7 +270,7 @@ public class BucketResource {
 				)
 			);
 
-			query.orderBy(cb.desc(fetch.get(Tab_.priority)));
+			query.orderBy(cb.desc(tabs.get(Tab_.priority)));
 
 			query.distinct(true);
 
