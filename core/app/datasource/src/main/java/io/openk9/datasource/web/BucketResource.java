@@ -255,13 +255,13 @@ public class BucketResource {
 			Join<Bucket, TenantBinding> tenantBindingJoin =
 				from.join(Bucket_.tenantBinding);
 
-			Join<Bucket, Tab> tabs = from.join(Bucket_.tabs);
+			Join<Bucket, Tab> tabsJoin = from.join(Bucket_.tabs);
 
-			Fetch<Tab, TokenTab> tokenTabFetch = tabs.fetch(Tab_.tokenTabs, JoinType.LEFT);
+			Fetch<Tab, TokenTab> tokenTabFetch = tabsJoin.fetch(Tab_.tokenTabs, JoinType.LEFT);
 
 			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
 
-			query.select(tabs);
+			query.select(tabsJoin);
 
 			query.where(
 				cb.equal(
@@ -270,7 +270,7 @@ public class BucketResource {
 				)
 			);
 
-			query.orderBy(cb.desc(tabs.get(Tab_.priority)));
+			query.orderBy(cb.desc(tabsJoin.get(Tab_.priority)));
 
 			query.distinct(true);
 
