@@ -241,7 +241,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
-		return transactionInvoker.withTransaction(session -> {
+		return transactionInvoker.withStatelessTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
@@ -294,7 +294,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost, boolean translated) {
-		return transactionInvoker.withTransaction(session -> {
+		return transactionInvoker.withStatelessTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
