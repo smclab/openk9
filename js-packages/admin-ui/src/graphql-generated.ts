@@ -1322,7 +1322,9 @@ export type Mutation = {
   addLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   addRuleToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
   addSuggestionCategoryToBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
+  addSuggestionCategoryTranslation?: Maybe<Tuple2_String_String>;
   addTabToBucket?: Maybe<Tuple2_Bucket_Tab>;
+  addTabTranslation?: Maybe<Tuple2_String_String>;
   addTokenFilterToAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
   addTokenTabToTab?: Maybe<Tuple2_Tab_TokenTab>;
   analyzer?: Maybe<Response_Analyzer>;
@@ -1360,7 +1362,9 @@ export type Mutation = {
   deleteRule?: Maybe<Rule>;
   deleteSearchConfig?: Maybe<SearchConfig>;
   deleteSuggestionCategory?: Maybe<SuggestionCategory>;
+  deleteSuggestionCategoryTranslation?: Maybe<Tuple2_String_String>;
   deleteTab?: Maybe<Tab>;
+  deleteTabTranslation?: Maybe<Tuple2_String_String>;
   deleteTokenFilter?: Maybe<TokenFilter>;
   deleteTokenTab?: Maybe<TokenTab>;
   deleteTokenizer?: Maybe<Tokenizer>;
@@ -1488,9 +1492,27 @@ export type MutationAddSuggestionCategoryToBucketArgs = {
 
 
 /** Mutation root */
+export type MutationAddSuggestionCategoryTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  suggestionCategoryId: Scalars['ID'];
+  value?: InputMaybe<Scalars['String']>;
+};
+
+
+/** Mutation root */
 export type MutationAddTabToBucketArgs = {
   id: Scalars['ID'];
   tabId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddTabTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  tabId: Scalars['ID'];
+  value?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1744,7 +1766,23 @@ export type MutationDeleteSuggestionCategoryArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteSuggestionCategoryTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  suggestionCategoryId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeleteTabArgs = {
+  tabId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationDeleteTabTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
   tabId: Scalars['ID'];
 };
 
@@ -2189,6 +2227,7 @@ export type Query = {
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldNotInAnnotator?: Maybe<Connection_DocTypeField>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
+  docTypeFieldsByParent?: Maybe<Connection_DocTypeField>;
   docTypeFieldsFromDocType?: Maybe<Connection_DocTypeField>;
   docTypeFieldsNotInTokenTab?: Maybe<Connection_DocTypeField>;
   docTypeTemplate?: Maybe<DocTypeTemplate>;
@@ -2365,6 +2404,18 @@ export type QueryDocTypeFieldsArgs = {
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
   last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryDocTypeFieldsByParentArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  parentId: Scalars['BigInteger'];
   searchText?: InputMaybe<Scalars['String']>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
@@ -2937,6 +2988,7 @@ export type Scheduler = {
 };
 
 export enum SchedulerStatus {
+  Cancelled = 'CANCELLED',
   Finished = 'FINISHED',
   Started = 'STARTED'
 }
@@ -3059,6 +3111,7 @@ export type SuggestionCategory = {
   multiSelect: Scalars['Boolean'];
   name?: Maybe<Scalars['String']>;
   priority?: Maybe<Scalars['Float']>;
+  translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
 
@@ -3091,6 +3144,7 @@ export type Tab = {
   priority?: Maybe<Scalars['Int']>;
   searchTokens?: Maybe<Connection_SearchTokenDto>;
   tokenTabs?: Maybe<Connection_TokenTab>;
+  translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
 
@@ -3207,6 +3261,15 @@ export type TokenizerDtoInput = {
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   type: Scalars['String'];
+};
+
+export type TranslationDto = {
+  __typename?: 'TranslationDTO';
+  description?: Maybe<Scalars['String']>;
+  key?: Maybe<Scalars['String']>;
+  language?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  value?: Maybe<Scalars['String']>;
 };
 
 export type Tuple2_Analyzer_CharFilter = {
@@ -3339,6 +3402,12 @@ export type Tuple2_SearchConfig_BigInteger = {
   __typename?: 'Tuple2_SearchConfig_BigInteger';
   left?: Maybe<SearchConfig>;
   right?: Maybe<Scalars['BigInteger']>;
+};
+
+export type Tuple2_String_String = {
+  __typename?: 'Tuple2_String_String';
+  left?: Maybe<Scalars['String']>;
+  right?: Maybe<Scalars['String']>;
 };
 
 export type Tuple2_SuggestionCategory_DocTypeField = {
@@ -4051,6 +4120,13 @@ export type DeleteDocumentTypeFieldMutationVariables = Exact<{
 
 
 export type DeleteDocumentTypeFieldMutation = { __typename?: 'Mutation', removeDocTypeField?: { __typename?: 'Tuple2_DocType_BigInteger', right?: any | null } | null };
+
+export type DocTypeFieldsByParentQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, fieldName?: string | null, searchable: boolean, exclude?: boolean | null, sortable: boolean } | null } | null> | null } | null };
 
 export type DocumentTypeTemplateQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -8493,6 +8569,50 @@ export function useDeleteDocumentTypeFieldMutation(baseOptions?: Apollo.Mutation
 export type DeleteDocumentTypeFieldMutationHookResult = ReturnType<typeof useDeleteDocumentTypeFieldMutation>;
 export type DeleteDocumentTypeFieldMutationResult = Apollo.MutationResult<DeleteDocumentTypeFieldMutation>;
 export type DeleteDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
+export const DocTypeFieldsByParentDocument = gql`
+    query DocTypeFieldsByParent($searchText: String) {
+  docTypeFieldsByParent(parentId: 0, searchText: $searchText, first: 10) {
+    edges {
+      node {
+        id
+        name
+        fieldName
+        searchable
+        exclude
+        sortable
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDocTypeFieldsByParentQuery__
+ *
+ * To run a query within a React component, call `useDocTypeFieldsByParentQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocTypeFieldsByParentQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocTypeFieldsByParentQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *   },
+ * });
+ */
+export function useDocTypeFieldsByParentQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(DocTypeFieldsByParentDocument, options);
+      }
+export function useDocTypeFieldsByParentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(DocTypeFieldsByParentDocument, options);
+        }
+export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentQuery>;
+export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
+export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
 export const DocumentTypeTemplateDocument = gql`
     query DocumentTypeTemplate($id: ID!) {
   docTypeTemplate(id: $id) {
@@ -12604,4 +12724,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-07-24T16:47:12+02:00
+// Generated on 2023-09-08T16:53:01+02:00
