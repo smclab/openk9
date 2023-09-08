@@ -95,8 +95,11 @@ export function DataSources() {
             </React.Fragment>
           ),
         },
-        { header: "Last Ingestion Date", content: (dataSource) => formatDate(dataSource?.lastIngestionDate) },
-        { header: "Scheduling", content: (dataSource) => dataSource?.scheduling },
+        {
+          header: "Last Ingestion Date",
+          content: (dataSource) => (dataSource?.lastIngestionDate ? formatDate(dataSource.lastIngestionDate) : null),
+        },
+        { header: "Scheduling", content: (dataSource) => dataSource?.scheduling || "" },
       ]}
       rowActions={(dataSource) => {
         const dataSourceId = dataSource?.id;
