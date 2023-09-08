@@ -358,6 +358,7 @@ export type GenericResultItem<E = {}> = {
   highlight: {
     [field in GenericResultItemFields<E>]?: string[];
   };
+  sortAfterKey: string;
 };
 
 export type GenericResultItemFields<E> = DeepKeys<
@@ -454,6 +455,7 @@ type SearchRequest = {
   range: [number, number];
   sort: SortField[];
   language: string;
+  sortAfterKey: string;
 };
 
 type SearchResult<E> = {

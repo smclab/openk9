@@ -23,6 +23,7 @@ type FiltersProps = {
   dynamicFilters: boolean;
   preFilters?: React.ReactNode;
   language: string;
+  sortAfterKey: string;
 };
 function Filters({
   searchQuery,
@@ -34,6 +35,7 @@ function Filters({
   dynamicFilters,
   preFilters,
   language,
+  sortAfterKey,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -43,6 +45,7 @@ function Filters({
     searchQuery,
     sort,
     language,
+    sortAfterKey,
   );
   React.useEffect(() => {
     if (!isPreviousData) {

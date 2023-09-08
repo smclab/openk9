@@ -134,6 +134,7 @@ export function Main({
       setLanguageSelect(languageQuery.data.value);
     }
   }, [languageQuery.data, i18n]);
+  const [sortAfterKey, setSortAfterKey] = React.useState("");
   return (
     <React.Fragment>
       {renderPortal(
@@ -173,6 +174,7 @@ export function Main({
             onConfigurationChange={onConfigurationChange}
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
+            sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
           />
@@ -194,6 +196,7 @@ export function Main({
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
             onConfigurationChangeExt={
@@ -223,6 +226,8 @@ export function Main({
             isMobile={isMobile}
             overChangeCard={false}
             language={languageSelect}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
           />
         </I18nextProvider>,
         configuration.results,
@@ -239,6 +244,8 @@ export function Main({
             isMobile={isMobile}
             overChangeCard={configuration.resultList?.changeOnOver || false}
             language={languageSelect}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -331,6 +338,7 @@ export function Main({
             onAddFilterToken={addFilterToken}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
+            sortAfterKey={sortAfterKey}
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}

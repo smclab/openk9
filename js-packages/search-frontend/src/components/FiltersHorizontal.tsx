@@ -38,6 +38,7 @@ type FiltersProps = {
   sort: SortField[];
   dynamicFilters: boolean;
   language: string;
+  sortAfterKey: string;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -49,6 +50,7 @@ function FiltersHorizontal({
   sort,
   dynamicFilters,
   language,
+  sortAfterKey,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -57,6 +59,7 @@ function FiltersHorizontal({
     searchQuery,
     sort,
     language,
+    sortAfterKey,
   );
   React.useEffect(() => {
     if (!isPreviousData) {

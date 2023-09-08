@@ -45,6 +45,7 @@ export type FiltersMobileProps<E> = {
   selectedTabIndex: number;
   viewTabs?: boolean;
   language: string;
+  sortAfterKey: string;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -61,8 +62,14 @@ function FiltersMobileLiveChange<E>({
   selectedTabIndex,
   language,
   viewTabs = false,
+  sortAfterKey,
 }: FiltersMobileProps<E>) {
-  const results = useInfiniteResults<any>(searchQuery, sort, language);
+  const results = useInfiniteResults<any>(
+    searchQuery,
+    sort,
+    language,
+    sortAfterKey,
+  );
   const { t } = useTranslation();
   const componet = (
     <React.Fragment>
@@ -153,6 +160,7 @@ function FiltersMobileLiveChange<E>({
           sort={sort}
           dynamicFilters={dynamicFilters}
           language={language}
+          sortAfterKey={sortAfterKey}
           preFilters={
             viewTabs ? (
               <ViewAllTabs
