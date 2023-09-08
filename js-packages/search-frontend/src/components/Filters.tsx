@@ -270,11 +270,13 @@ type createLabel = {
   padding?: string;
   fontWeightLabel?: string;
   gap?: string;
+  classN?: string;
 };
 export function CreateLabel({
   label,
   action,
   svgIcon,
+  classN = "",
   gap = "4px",
   sizeHeight = "15px",
   sizeFont = "12px",
@@ -293,7 +295,7 @@ export function CreateLabel({
     <button
       aria-label={ariaLabel || ""}
       disabled={false}
-      className="openk9-create-label-container-wrapper"
+      className={`openk9-create-label-container-wrapper ${classN}`}
       css={css`
         display: flex;
         justify-content: center;

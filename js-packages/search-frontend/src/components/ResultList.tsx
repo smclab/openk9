@@ -322,28 +322,46 @@ export function InfiniteResults<E>({
             );
           })}
           {results.hasNextPage && (
-            <button
-              onClick={() => {
-                if (!results.isFetching) {
-                  results.fetchNextPage();
-                  setSortAfterKey(
-                    results.data?.pages[0].result[result.length - 1]
-                      .sortAfterKey || "",
-                  );
-                }
-              }}
-              className="openk9-embeddable-search--result-container"
+            <div
+              className="openk9-container-embeddable-result-button"
               css={css`
-                background-color: inherit;
-                color: inherit;
-                font-family: inherit;
-                font-size: inherit;
-                width: calc(100% - 32px);
-                display: block;
+                position: absolute;
+                left: 16px;
+                right: 16px;
+                margin-top: 10px;
+                padding-bottom: 16px;
               `}
             >
-              {results.isFetching ? t("loading-more-results") : t("load-more")}
-            </button>
+              <button
+                className="openk9-embeddable-result-list-button-load-more"
+                onClick={() => {
+                  if (!results.isFetching) {
+                    results.fetchNextPage();
+                    setSortAfterKey(
+                      results.data?.pages[0].result[result.length - 1]
+                        .sortAfterKey || "",
+                    );
+                  }
+                }}
+                css={css`
+                  border: 1px solid
+                    var(--openk9-embeddable-search--secondary-active-color);
+                  padding: 8px 16px;
+                  background: inherit;
+                  width: 100%;
+                  padding-inline: 16px;
+                  border-radius: 20px;
+                  color: var(
+                    --openk9-embeddable-search--secondary-active-color
+                  );
+                  cursor: pointer;
+                `}
+              >
+                {results.isFetching
+                  ? t("loading-more-results")
+                  : t("load-more")}
+              </button>
+            </div>
           )}
         </div>
       ) : (
