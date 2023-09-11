@@ -69,6 +69,8 @@ function FiltersHorizontal({
 
   const [filterSelect, setFilterSelect] =
     React.useState<Array<SearchToken>>(searchQuery);
+  const [haveValue, setHaveValue] = React.useState(false);
+
   const handleCheckboxChange = (event: any, token: SearchToken) => {
     const isChecked = event.target.checked;
     const newFilter = {
@@ -88,7 +90,6 @@ function FiltersHorizontal({
     }
   };
   const { t } = useTranslation();
-
   return (
     <React.Fragment>
       <OverlayScrollbarsComponent
@@ -106,8 +107,13 @@ function FiltersHorizontal({
             suggestion.id,
             language,
           );
-
-          return CreateSuggestion(index, suggestion, suggestions);
+          return CreateSuggestion(
+            index,
+            suggestion,
+            suggestions,
+            haveValue,
+            setHaveValue,
+          );
         })}
       </OverlayScrollbarsComponent>
       <div
@@ -118,107 +124,110 @@ function FiltersHorizontal({
           }
         `}
       ></div>
-      <div
-        className="openk9-filter-horizontal-container-submit"
-        css={css`
-          display: flex;
-          justify-content: flex-end;
-          @media (max-width: 480px) {
-            padding-inline: 20px;
-            flex-direction: column;
-            gap: 15px;
-          }
-        `}
-      >
-        <button
-          className="openk9-filter-horizontal-submit"
-          aria-label="rimuovi filtri"
+      {!haveValue && <NoFilters />}
+      {haveValue && (
+        <div
+          className="openk9-filter-horizontal-container-submit"
           css={css`
-            font-size: smaller;
-            height: 52px;
-            padding: 8px 12px;
-            white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
             display: flex;
-            align-items: center;
-            gap: 3px;
+            justify-content: flex-end;
             @media (max-width: 480px) {
-              background: white;
-              border: 1px solid #d6012e;
-              width: 100%;
-              height: auto;
-              margin-top: 20px;
-              color: black;
-              border-radius: 50px;
-              display: flex;
-              justify-content: center;
-              color: var(--red-tones-500, #c0272b);
-              text-align: center;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 700;
-              line-height: normal;
-              align-items: center;
+              padding-inline: 20px;
+              flex-direction: column;
+              gap: 15px;
             }
           `}
-          onClick={() => {
-            onConfigurationChange({ filterTokens: [] });
-            onConfigurationChangeExt && onConfigurationChangeExt();
-          }}
         >
-          <div>{t("remove-filters")}</div>
-          <TrashSvg size="18px" />
-        </button>
-        <button
-          className="openk9-filter-horizontal-submit"
-          aria-label="applica filtri"
-          css={css`
-            font-size: smaller;
-            height: 52px;
-            padding: 8px 12px;
-            white-space: nowrap;
-            border: 1px solid #d6012e;
-            background-color: #d6012e;
-            border-radius: 5px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            @media (max-width: 480px) {
-              background: #d6012e;
+          <button
+            className="openk9-filter-horizontal-submit"
+            aria-label="rimuovi filtri"
+            css={css`
+              font-size: smaller;
+              height: 52px;
+              padding: 8px 12px;
+              white-space: nowrap;
               border: 1px solid #d6012e;
-              width: 100%;
-              height: auto;
-              margin-top: 20px;
+              background-color: #d6012e;
+              border-radius: 5px;
               color: white;
-              border-radius: 50px;
+              font-weight: 600;
+              cursor: pointer;
               display: flex;
-              justify-content: center;
-              text-align: center;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 700;
-              line-height: normal;
-            }
-          `}
-          onClick={() => {
-            onConfigurationChange({ filterTokens: filterSelect });
-            onConfigurationChangeExt && onConfigurationChangeExt();
-          }}
-        >
-          <div>{t("add-filters") || "Add Filters"}</div>
-          <div>
-            <AddFiltersSvg size="22px" />
-          </div>
-        </button>
-      </div>
+              align-items: center;
+              gap: 3px;
+              @media (max-width: 480px) {
+                background: white;
+                border: 1px solid #d6012e;
+                width: 100%;
+                height: auto;
+                margin-top: 20px;
+                color: black;
+                border-radius: 50px;
+                display: flex;
+                justify-content: center;
+                color: var(--red-tones-500, #c0272b);
+                text-align: center;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
+                align-items: center;
+              }
+            `}
+            onClick={() => {
+              onConfigurationChange({ filterTokens: [] });
+              onConfigurationChangeExt && onConfigurationChangeExt();
+            }}
+          >
+            <div>{t("remove-filters")}</div>
+            <TrashSvg size="18px" />
+          </button>
+          <button
+            className="openk9-filter-horizontal-submit"
+            aria-label="applica filtri"
+            css={css`
+              font-size: smaller;
+              height: 52px;
+              padding: 8px 12px;
+              white-space: nowrap;
+              border: 1px solid #d6012e;
+              background-color: #d6012e;
+              border-radius: 5px;
+              color: white;
+              font-weight: 600;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 3px;
+              @media (max-width: 480px) {
+                background: #d6012e;
+                border: 1px solid #d6012e;
+                width: 100%;
+                height: auto;
+                margin-top: 20px;
+                color: white;
+                border-radius: 50px;
+                display: flex;
+                justify-content: center;
+                text-align: center;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
+              }
+            `}
+            onClick={() => {
+              onConfigurationChange({ filterTokens: filterSelect });
+              onConfigurationChangeExt && onConfigurationChangeExt();
+            }}
+          >
+            <div>{t("add-filters") || "Add Filters"}</div>
+            <div>
+              <AddFiltersSvg size="22px" />
+            </div>
+          </button>
+        </div>
+      )}
     </React.Fragment>
   );
 
@@ -232,6 +241,8 @@ function FiltersHorizontal({
       },
       unknown
     >,
+    haveValue: boolean,
+    setHaveValue: any,
   ): JSX.Element {
     const [isOpen, setIsOpen] = React.useState(true);
     const resultValue = suggestions.data?.pages || [];
@@ -241,176 +252,179 @@ function FiltersHorizontal({
       searchQuery,
       suggestion.id,
     );
+    if (filters.length === 0) return <div></div>;
+    React.useEffect(() => {
+      setHaveValue(true);
+    }, []);
     return (
       <React.Fragment key={index}>
-        {index !== 0 && (
-          <div
-            style={{
-              border: "0.5px solid #8080807a",
-              marginTop: "0px",
-              marginBottom: "20px",
-              marginInline: "16px",
-            }}
-          ></div>
-        )}
-        <div
-          css={css`
-            margin-top: 20px;
-            margin-bottom: 20px;
-            @media (max-width: 480px) {
-              display: flex;
-              justify-content: space-between;
-              margin-left: 16px;
-              margin-bottom: 20px;
-            }
-          `}
-        >
-          <div
-            className="openk9-filters-horizontal-category"
-            css={css`
-              color: #525258;
-              font-weight: 600;
-              ::first-letter {
-                text-transform: capitalize;
-              }
-              @media (max-width: 480px) {
-                color: var(--openk9-embeddable-tabs--primary-color);
-                font-weight: 700;
-              }
-            `}
-          >
-            {suggestion.name}
-          </div>
-          <button
-            aria-label={isOpen ? "chiudi i filtri" : "apri i filtri"}
-            css={css`
-              margin-right: 16px;
-              background: inherit;
-              border: none;
-              @media (min-width: 480px) {
-                display: none;
-              }
-            `}
-            onClick={() => {
-              setIsOpen(!isOpen);
-            }}
-          >
-            <FontAwesomeIcon
-              icon={isOpen ? faChevronDown : faChevronUp}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                marginRight: "6px",
-              }}
-            />
-          </button>
-        </div>
-        <GridContainer>
-          {isOpen &&
-            filters.map((token: any, index: number) => {
-              const asSearchToken = mapSuggestionToSearchToken(token, true);
-              const checked = filterSelect.some((element) => {
-                return (
-                  element.values &&
-                  element.values[0] === token.value &&
-                  "goToSuggestion" in element
-                );
-              });
-              return (
-                <React.Fragment key={index}>
-                  <div
-                    className={`openk9-filter-horizontal-container-input-value ${
-                      checked ? "check-container" : "not-check-container"
-                    }`}
-                    css={css`
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      color: ${checked ? "#d6012e" : "black"};
-                      display: flex;
-                      align-items: flex-start;
-                      @media (max-width: 480px) {
-                        margin-left: 15px;
-                        margin-right: 15px;
-                      }
-                    `}
-                  >
-                    <input
-                      id={"filter-horizontal " + index + " " + suggestion.name}
-                      className={`custom-checkbox openk9-filter-horizontal-input  ${
-                        checked ? "checked-checkbox" : "not-checked-checkbox"
-                      }`}
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(event) =>
-                        handleCheckboxChange(event, asSearchToken)
-                      }
-                      css={css`
-                        width: 14px;
-                        appearance: none;
-                        min-width: 15px;
-                        min-height: 15px;
-                        border-radius: 4px;
-                        border: 2px solid #ccc;
-                        background-color: ${checked
-                          ? "var(--openk9-embeddable-search--secondary-active-color)"
-                          : "#fff"};
-                        background-size: 100%;
-                        background-position: center;
-                        background-repeat: no-repeat;
-                        cursor: pointer;
-                        margin-right: 10px;
-                      `}
-                    />
-                    <label
-                      htmlFor={
-                        "filter-horizontal " + index + " " + suggestion.name
-                      }
-                    >
-                      {asSearchToken?.values &&
-                        capitalize(asSearchToken?.values[0])}
-                    </label>
-                  </div>
-                </React.Fragment>
-              );
-            })}
-        </GridContainer>
-        {suggestions.hasNextPage && (
-          <div
-            className="openk9-container-load-more"
-            css={css`
-              text-align: center;
-              width: 100%;
-              display: flex;
-              margin-left: 12px;
-              margin-top: 10px;
-              justify-content: center;
-              @media (max-width: 480px) {
-                margin-top: 15px;
-              }
-            `}
-          >
-            <button
-              className="openk9-load-more-button"
+        {filters.length !== 0 && (
+          <React.Fragment>
+            <div
               css={css`
-                border: none;
-                background: inherit;
-                color: var(--openk9-embeddable-search--primary-color);
-                font-size: 14px;
-                font-style: normal;
-                font-weight: 700;
-                line-height: normal;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                cursor: pointer;
+                margin-top: 20px;
+                margin-bottom: 20px;
+                @media (max-width: 480px) {
+                  display: flex;
+                  justify-content: space-between;
+                  margin-left: 16px;
+                  margin-bottom: 20px;
+                }
               `}
-              onClick={() => {
-                suggestions.fetchNextPage();
-              }}
             >
-              {t("load-more") || "Load More"}
-              <ArrowDownSvg />
-            </button>
-          </div>
+              <div
+                className="openk9-filters-horizontal-category"
+                css={css`
+                  color: #525258;
+                  font-weight: 600;
+                  ::first-letter {
+                    text-transform: capitalize;
+                  }
+                  @media (max-width: 480px) {
+                    color: var(--openk9-embeddable-tabs--primary-color);
+                    font-weight: 700;
+                  }
+                `}
+              >
+                {suggestion.name}
+              </div>
+              <button
+                aria-label={isOpen ? "chiudi i filtri" : "apri i filtri"}
+                css={css`
+                  margin-right: 16px;
+                  background: inherit;
+                  border: none;
+                  @media (min-width: 480px) {
+                    display: none;
+                  }
+                `}
+                onClick={() => {
+                  setIsOpen(!isOpen);
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={isOpen ? faChevronDown : faChevronUp}
+                  style={{
+                    color:
+                      "var(--openk9-embeddable-search--secondary-text-color)",
+                    marginRight: "6px",
+                  }}
+                />
+              </button>
+            </div>
+            <GridContainer>
+              {isOpen &&
+                filters.map((token: any, index: number) => {
+                  const asSearchToken = mapSuggestionToSearchToken(token, true);
+                  const checked = filterSelect.some((element) => {
+                    return (
+                      element.values &&
+                      element.values[0] === token.value &&
+                      "goToSuggestion" in element
+                    );
+                  });
+                  return (
+                    <React.Fragment key={index}>
+                      <div
+                        className={`openk9-filter-horizontal-container-input-value ${
+                          checked ? "check-container" : "not-check-container"
+                        }`}
+                        css={css`
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          color: ${checked ? "#d6012e" : "black"};
+                          display: flex;
+                          align-items: flex-start;
+                          @media (max-width: 480px) {
+                            margin-left: 15px;
+                            margin-right: 15px;
+                          }
+                        `}
+                      >
+                        <input
+                          id={
+                            "filter-horizontal " + index + " " + suggestion.name
+                          }
+                          className={`custom-checkbox openk9-filter-horizontal-input  ${
+                            checked
+                              ? "checked-checkbox"
+                              : "not-checked-checkbox"
+                          }`}
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) =>
+                            handleCheckboxChange(event, asSearchToken)
+                          }
+                          css={css`
+                            width: 14px;
+                            appearance: none;
+                            min-width: 15px;
+                            min-height: 15px;
+                            border-radius: 4px;
+                            border: 2px solid #ccc;
+                            background-color: ${checked
+                              ? "var(--openk9-embeddable-search--secondary-active-color)"
+                              : "#fff"};
+                            background-size: 100%;
+                            background-position: center;
+                            background-repeat: no-repeat;
+                            cursor: pointer;
+                            margin-right: 10px;
+                          `}
+                        />
+                        <label
+                          htmlFor={
+                            "filter-horizontal " + index + " " + suggestion.name
+                          }
+                        >
+                          {asSearchToken?.values &&
+                            capitalize(asSearchToken?.values[0])}
+                        </label>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+            </GridContainer>
+            {suggestions.hasNextPage && (
+              <div
+                className="openk9-container-load-more"
+                css={css`
+                  text-align: center;
+                  width: 100%;
+                  display: flex;
+                  margin-left: 12px;
+                  margin-top: 10px;
+                  justify-content: center;
+                  @media (max-width: 480px) {
+                    margin-top: 15px;
+                  }
+                `}
+              >
+                <button
+                  className="openk9-load-more-button"
+                  css={css`
+                    border: none;
+                    background: inherit;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 700;
+                    line-height: normal;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                  `}
+                  onClick={() => {
+                    suggestions.fetchNextPage();
+                  }}
+                >
+                  {t("load-more") || "Load More"}
+                  <ArrowDownSvg />
+                </button>
+              </div>
+            )}
+          </React.Fragment>
         )}
       </React.Fragment>
     );
@@ -502,4 +516,29 @@ export function useInfiniteSuggestions(
   );
 
   return suggestionCategories;
+}
+
+function NoFilters() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <div
+        className="openk9-filter-category-no-results-is-open"
+        css={css`
+          color: var(--openk9-embeddable-search--secondary-text-color);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          margin-top: 18px;
+          margin-left: 10px;
+        `}
+      >
+        <Logo size={100} />
+        <h4>{t("no-filters")} </h4>
+      </div>
+    </div>
+  );
 }

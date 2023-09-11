@@ -24,6 +24,8 @@ export type FiltersMobileProps<E> = {
   setIsVisibleFilters:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
+  language: string;
+  sortAfterKey: string;
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -35,6 +37,8 @@ function FiltersMobile<E>({
   configuration,
   isVisibleFilters,
   setIsVisibleFilters,
+  language,
+  sortAfterKey,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -116,6 +120,8 @@ function FiltersMobile<E>({
         filtersSelect={configuration.filterTokens}
         sort={sort}
         dynamicFilters={dynamicFilters}
+        language={language}
+        sortAfterKey={sortAfterKey}
       />
     </React.Fragment>
   );

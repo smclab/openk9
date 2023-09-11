@@ -325,6 +325,8 @@ export function Main({
             configuration={configuration}
             isVisibleFilters={configuration.filtersMobile?.isVisible || false}
             setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
+            language={languageSelect}
+            sortAfterKey={sortAfterKey}
           />
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
