@@ -5,6 +5,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.sql.TransactionInvoker;
@@ -147,8 +148,8 @@ public class IndexerEvents {
 				boolean retained = true;
 				for (DocTypeField existingField : persistedFields) {
 
-					if ((docType.getName() + "." + DocTypeField.fieldPath(docTypeField))
-						.equals(DocTypeField.fieldPath(existingField))) {
+					if ((DocTypeFieldUtils.fieldPath(docTypeName, docTypeField))
+						.equals(existingField.getPath())) {
 
 						retained = false;
 						break;

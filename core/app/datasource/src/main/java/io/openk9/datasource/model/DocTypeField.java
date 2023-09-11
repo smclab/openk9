@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -124,14 +125,6 @@ public class DocTypeField extends BaseDocTypeField {
 		return docTypeFields;
 	}
 
-	public static String fieldPath(DocTypeField docTypeField) {
-		DocType docType = docTypeField.getDocType();
-		String docTypePath = docType != null ? docType.getName() + "." : "";
-		return docTypeField.getParentDocTypeField() != null
-			? fieldPath(docTypeField.parentDocTypeField) + "." + docTypeField.getFieldName()
-			: docTypePath + docTypeField.getFieldName();
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -149,4 +142,9 @@ public class DocTypeField extends BaseDocTypeField {
 	public int hashCode() {
 		return getClass().hashCode();
 	}
+
+	public String getPath() {
+		return DocTypeFieldUtils.fieldPath(this);
+	}
+
 }

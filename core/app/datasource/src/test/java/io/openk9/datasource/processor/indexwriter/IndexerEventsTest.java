@@ -8,8 +8,6 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -37,7 +35,7 @@ public class IndexerEventsTest {
 		DocTypeField field = optField.get();
 		assertSame(field.getFieldType(), FieldType.BOOLEAN);
 		assertEquals("public", field.getFieldName());
-		assertEquals(DocTypeField.fieldPath(field), "acl.public");
+		assertEquals(field.getPath(), "acl.public");
 
 
 		Map<String, List<DocTypeField>> docTypeAndFieldsGroup =
@@ -330,12 +328,11 @@ public class IndexerEventsTest {
 				+ " fieldName: " + docTypeField.getFieldName()
 				+ " name: " + docTypeField.getName()
 				+ " description: " + docTypeField.getDescription()
-				+ " path: " + DocTypeField.fieldPath(docTypeField)
+				+ " path: " + docTypeField.getPath()
 		);
 		for (DocTypeField child : docTypeField.getSubDocTypeFields()) {
 			_printDocTypeField(child, depth + "-");
 		}
 	}
 
-	private final static Logger log = LoggerFactory.getLogger(IndexerEventsTest.class);
 }
