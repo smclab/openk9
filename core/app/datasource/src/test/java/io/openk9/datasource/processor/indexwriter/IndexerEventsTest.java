@@ -8,7 +8,10 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +64,23 @@ public class IndexerEventsTest {
 		Set<DocType> docTypes =
 			IndexerEvents.mergeDocTypes(docTypeAndFieldsGroup, List.of(docType));
 
+		assertTrue(docTypes
+			.stream()
+			.filter(dt -> dt.getName().equals("web"))
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.anyMatch(f -> f.equals(title))
+		);
+
+		assertTrue(docTypes
+			.stream()
+			.filter(dt -> dt.getName().equals("web"))
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.noneMatch(f -> f.getFieldName().equals("title")
+				&& f.getDescription().equals("auto-generated"))
+		);
+
 		docTypes.forEach(docType1 -> docType1
 			.getDocTypeFields()
 			.forEach(docTypeField ->
@@ -104,24 +124,6 @@ public class IndexerEventsTest {
 			  }
 			},
 			"contentType" : {
-			  "type" : "text",
-			  "fields" : {
-				"keyword" : {
-				  "type" : "keyword",
-				  "ignore_above" : 256
-				}
-			  }
-			},
-			"relativeUrl" : {
-			  "type" : "text",
-			  "fields" : {
-				"keyword" : {
-				  "type" : "keyword",
-				  "ignore_above" : 256
-				}
-			  }
-			},
-			"summary" : {
 			  "type" : "text",
 			  "fields" : {
 				"keyword" : {
@@ -190,87 +192,6 @@ public class IndexerEventsTest {
 			}
 		  }
 		},
-		"last" : {
-		  "type" : "boolean"
-		},
-		"parsingDate" : {
-		  "type" : "long"
-		},
-		"rawContent" : {
-		  "type" : "text",
-		  "fields" : {
-			"keyword" : {
-			  "type" : "keyword",
-			  "ignore_above" : 256
-			}
-		  }
-		},
-		"resources" : {
-		  "properties" : {
-			"binaries" : {
-			  "properties" : {
-				"id" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				},
-				"name" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				},
-				"resourceId" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				}
-			  }
-			}
-		  }
-		},
-		"scheduleId" : {
-		  "type" : "text",
-		  "fields" : {
-			"keyword" : {
-			  "type" : "keyword",
-			  "ignore_above" : 256
-			}
-		  }
-		},
-		"tenantId" : {
-		  "type" : "text",
-		  "fields" : {
-			"keyword" : {
-			  "type" : "keyword",
-			  "ignore_above" : 256
-			}
-		  }
-		},
-		"topic" : {
-		  "properties" : {
-			"topics" : {
-			  "type" : "text",
-			  "fields" : {
-				"keyword" : {
-				  "type" : "keyword",
-				  "ignore_above" : 256
-				}
-			  }
-			}
-		  }
-		},
 		"web" : {
 		  "properties" : {
 			"content" : {
@@ -330,15 +251,6 @@ public class IndexerEventsTest {
 				},
 				"i18n" : {
 				  "properties" : {
-					"de_DE" : {
-					  "type" : "text",
-					  "fields" : {
-						"keyword" : {
-						  "type" : "keyword",
-						  "ignore_above" : 256
-						}
-					  }
-					},
 					"en_US" : {
 					  "type" : "text",
 					  "fields" : {
@@ -371,6 +283,47 @@ public class IndexerEventsTest {
 	private static final DocType docType;
 	private static final DocTypeField title, titleKeyword, titleTrigram;
 
+	static {
+		docType = new DocType();
+		docType.setName("web");
+		docType.setId(1L);
+
+		title = new DocTypeField();
+		title.setId(2L);
+		title.setDocType(docType);
+		title.setFieldName("title");
+		title.setName("web.title");
+		title.setDescription("persisted");
+		title.setFieldType(FieldType.TEXT);
+
+		titleKeyword = new DocTypeField();
+		titleKeyword.setId(3L);
+		titleKeyword.setDocType(docType);
+		titleKeyword.setDescription("persisted");
+		titleKeyword.setFieldName("keyword");
+		titleKeyword.setName("web.title.keyword");
+		titleKeyword.setFieldType(FieldType.KEYWORD);
+		titleKeyword.setParentDocTypeField(title);
+
+		titleTrigram = new DocTypeField();
+		titleTrigram.setId(4L);
+		Analyzer trigram = new Analyzer();
+		trigram.setId(5L);
+		trigram.setName("trigram");
+		trigram.setType("custom");
+		titleTrigram.setDocType(docType);
+		titleTrigram.setDescription("persisted");
+		titleTrigram.setFieldName("trigram");
+		titleTrigram.setName("web.title.trigram");
+		titleTrigram.setFieldType(FieldType.TEXT);
+		titleTrigram.setAnalyzer(trigram);
+		titleTrigram.setParentDocTypeField(title);
+
+		title.setSubDocTypeFields(new LinkedHashSet<>(List.of(titleKeyword, titleTrigram)));
+
+		docType.setDocTypeFields(new LinkedHashSet<>(List.of(title)));
+	}
+
 	private static void _printDocTypeField(DocTypeField docTypeField, String depth) {
 		System.out.println(
 			depth
@@ -384,44 +337,5 @@ public class IndexerEventsTest {
 		}
 	}
 
-	static {
-		docType = new DocType();
-		docType.setName("web");
-		docType.setId(1L);
-
-		title = new DocTypeField();
-		title.setId(2L);
-		title.setDocType(docType);
-		title.setFieldName("title");
-		title.setDescription("persisted");
-		title.setFieldType(FieldType.TEXT);
-
-		titleKeyword = new DocTypeField();
-		title.setId(3L);
-		titleKeyword.setDocType(docType);
-		titleKeyword.setDescription("persisted");
-		titleKeyword.setFieldName("keyword");
-		titleKeyword.setFieldType(FieldType.KEYWORD);
-		titleKeyword.setParentDocTypeField(title);
-
-		titleTrigram = new DocTypeField();
-		title.setId(4L);
-		Analyzer trigram = new Analyzer();
-		trigram.setId(5L);
-		trigram.setName("trigram");
-		trigram.setType("custom");
-		titleTrigram.setDocType(docType);
-		titleTrigram.setFieldName("trigram");
-		titleTrigram.setFieldType(FieldType.TEXT);
-		titleTrigram.setAnalyzer(trigram);
-		titleTrigram.setParentDocTypeField(title);
-
-		title.setSubDocTypeFields(new LinkedHashSet<>(List.of(titleKeyword, titleTrigram)));
-
-		docType.setDocTypeFields(new LinkedHashSet<>(List.of(
-			title,
-			titleKeyword,
-			titleTrigram)));
-	}
-
+	private final static Logger log = LoggerFactory.getLogger(IndexerEventsTest.class);
 }

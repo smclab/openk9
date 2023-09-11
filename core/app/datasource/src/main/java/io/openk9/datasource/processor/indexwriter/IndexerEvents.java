@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -137,26 +136,33 @@ public class IndexerEvents {
 						return newDocType;
 					});
 
-			List<DocTypeField> mappedDocTypeFields =
+			List<DocTypeField> generatedFields =
 				mappedDocTypeAndFields.getOrDefault(docTypeName, List.of());
 
-			Set<DocTypeField> docTypeFields = docType.getDocTypeFields();
+			Set<DocTypeField> persistedFields = docType.getDocTypeFields();
 
-			for (DocTypeField docTypeField : mappedDocTypeFields) {
-				for (DocTypeField existingField : docTypeFields) {
+			List<DocTypeField> retainedFields = new ArrayList<>();
+
+			for (DocTypeField docTypeField : generatedFields) {
+				boolean retained = true;
+				for (DocTypeField existingField : persistedFields) {
 
 					if ((docType.getName() + "." + DocTypeField.fieldPath(docTypeField))
 						.equals(DocTypeField.fieldPath(existingField))) {
 
-						docTypeField.setId(existingField.getId());
+						retained = false;
 						break;
 					}
 				}
+				if (retained) {
+					retainedFields.add(docTypeField);
+				}
 			}
 
-			docTypeFields.addAll(mappedDocTypeFields);
 
-			_setDocTypeToDocTypeFields(docType, docTypeFields);
+			persistedFields.addAll(retainedFields);
+
+			_setDocTypeToDocTypeFields(docType, persistedFields);
 
 			docTypes.add(docType);
 		}
@@ -169,23 +175,22 @@ public class IndexerEvents {
 		for (String docTypeName : grouped.keySet()) {
 			if (!docTypeName.equals("default")) {
 				List<DocTypeField> groupedDocTypeFields = grouped.get(docTypeName);
-				Optional<DocTypeField> optRoot = groupedDocTypeFields
+				groupedDocTypeFields
 					.stream()
 					.filter(docTypeField -> docTypeField
 						.getFieldName().equals(docTypeName)
 					)
-					.findFirst();
-				if (optRoot.isPresent()) {
-					DocTypeField root = optRoot.get();
-					Set<DocTypeField> subFields = root.getSubDocTypeFields();
-					if (subFields != null && !subFields.isEmpty()) {
-						groupedDocTypeFields.remove(root);
-						for (DocTypeField subField : subFields) {
-							subField.setParentDocTypeField(null);
+					.findFirst()
+					.ifPresent(root -> {
+						Set<DocTypeField> subFields = root.getSubDocTypeFields();
+						if (subFields != null && !subFields.isEmpty()) {
+							groupedDocTypeFields.remove(root);
+							for (DocTypeField subField : subFields) {
+								subField.setParentDocTypeField(null);
+							}
+							groupedDocTypeFields.addAll(subFields);
 						}
-						groupedDocTypeFields.addAll(subFields);
-					}
-				}
+					});
 			}
 		}
 	}
