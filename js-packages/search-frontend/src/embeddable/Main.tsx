@@ -202,6 +202,25 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <FiltersMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            sortAfterKey={sortAfterKey}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
+            isCollapsable={configuration.filtersConfigurable?.isCollapsable ?? true}
+          />
+        </I18nextProvider>,
+        configuration.filtersConfigurable
+        ? configuration.filtersConfigurable.element
+        : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ActiveFilter
             searchQuery={searchQuery}
             onRemoveFilterToken={removeFilterToken}

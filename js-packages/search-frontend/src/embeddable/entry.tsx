@@ -213,18 +213,24 @@ type SortableProps = {
   relevance: string;
 };
 
-type searchProps = {
+type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
+}
+
+type FilterProps = {
+  element: Element | string | null;
+  isCollapsable?: boolean;
 }
 
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
-  searchConfigurable: searchProps | null;
+  searchConfigurable: SearchProps | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  filtersConfigurable: FilterProps | null;
   calendarMobile: CalendarMobileConfiguration | null;
   resultList: ResultListProps | null;
   searchMobile: SearchMobileConfiguration | null;
@@ -271,6 +277,7 @@ const defaultConfiguration: Configuration = {
   detailMobile: null,
   sort: [],
   filters: null,
+  filtersConfigurable: null,
   changeLanguage: null,
   filtersHorizontal: null,
   results: null,

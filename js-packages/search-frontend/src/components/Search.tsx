@@ -389,8 +389,7 @@ export function Search({
           <div className="openk9-search-btn-external-container">
             <button
               className="openk9-search-btn-external"
-              onClick={(event) => {
-                console.log("clicco");
+              onClick={() => {
                 selectionsDispatch({
                   type: "set-text",
                   text: textBtn,
@@ -400,6 +399,7 @@ export function Search({
               }}
             >
               <svg
+                aria-hidden="true"
                 className="openk9-search-btn-external-icon"
                 height="1em"
                 viewBox="0 0 512 512"

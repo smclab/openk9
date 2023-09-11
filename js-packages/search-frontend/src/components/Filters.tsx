@@ -24,6 +24,7 @@ type FiltersProps = {
   preFilters?: React.ReactNode;
   language: string;
   sortAfterKey: string;
+  isCollapsable?: boolean;
 };
 function Filters({
   searchQuery,
@@ -36,6 +37,7 @@ function Filters({
   preFilters,
   language,
   sortAfterKey,
+  isCollapsable = true,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -209,6 +211,7 @@ function Filters({
               multiSelect={suggestionCategory?.multiSelect}
               searchQuery={searchQuery}
               language={language}
+              isCollapsable={isCollapsable}
             />
           ) : (
             <FilterCategoryMemo
@@ -226,6 +229,7 @@ function Filters({
               searchQuery={searchQuery}
               dynamicFilters={dynamicFilters}
               language={language}
+              isCollapsable={isCollapsable}
             />
           );
         })}
