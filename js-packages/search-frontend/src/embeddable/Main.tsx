@@ -155,6 +155,25 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <Search
+            configuration={configuration}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
+            onDetail={setDetail}
+            isMobile={isMobile}
+            filtersSelect={configuration.filterTokens}
+            isVisibleFilters={isVisibleFilters}
+            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+          />
+        </I18nextProvider>,
+        configuration.searchConfigurable
+        ? configuration.searchConfigurable.element
+        : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <TabsMemo
             tabs={tabs}
             selectedTabIndex={selectedTabIndex}

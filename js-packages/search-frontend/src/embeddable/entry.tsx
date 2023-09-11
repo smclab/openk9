@@ -213,9 +213,15 @@ type SortableProps = {
   relevance: string;
 };
 
+type searchProps = {
+  element: Element | string | null;
+  btnSearch: boolean;
+}
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
+  searchConfigurable: searchProps | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
@@ -253,6 +259,7 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
+  searchConfigurable: null,
   activeFilters: null,
   tabs: null,
   searchMobile: null,

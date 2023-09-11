@@ -20,6 +20,7 @@ import { SearchDateRange } from "../embeddable/Main";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
+import { divide } from "lodash";
 
 type SearchProps = {
   configuration: Configuration;
@@ -32,6 +33,7 @@ type SearchProps = {
   filtersSelect: SearchToken[];
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
+  btnSearch?: boolean;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
@@ -45,6 +47,7 @@ export function Search({
   showSyntax,
   isMobile,
   mobileVersion = false,
+  btnSearch = false,
   actionCloseMobileVersion,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -57,6 +60,7 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
+  const [textBtn, setTextBtn] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -228,14 +232,18 @@ export function Search({
               }
               type="text"
               placeholder={t("search") || "search..."}
-              value={selectionsState.text}
+              value={btnSearch ? textBtn : selectionsState.text}
               onChange={(event) => {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: event.currentTarget.value,
-                });
-                onDetail(null);
-                setOpenedDropdown(null);
+                if (!btnSearch) {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: event.currentTarget.value,
+                  });
+                  onDetail(null);
+                  setOpenedDropdown(null);
+                } else {
+                  setTextBtn(event.currentTarget.value);
+                }
               }}
               css={css`
                 position: relative;
@@ -247,7 +255,11 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${showSyntax ? "transparent" : "inherit"};
+                color: ${textBtn
+                  ? "black"
+                  : showSyntax
+                  ? "transparent"
+                  : "inherit"};
               `}
               spellCheck="false"
               onSelect={(event) => {
@@ -373,6 +385,30 @@ export function Search({
             </div>
           </button>
         </div>
+        {btnSearch && (
+          <div className="openk9-search-btn-external-container">
+            <button
+              className="openk9-search-btn-external"
+              onClick={(event) => {
+                console.log("clicco");
+                selectionsDispatch({
+                  type: "set-text",
+                  text: textBtn,
+                });
+                onDetail(null);
+                setOpenedDropdown(null);
+              }}
+            >
+              <svg
+                className="openk9-search-btn-external-icon"
+                height="1em"
+                viewBox="0 0 512 512"
+              >
+                <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </React.Fragment>
   );
