@@ -389,6 +389,14 @@ export function Search({
           <div className="openk9-search-btn-external-container">
             <button
               className="openk9-search-btn-external"
+              css={css`
+                min-height: 50px;
+                min-width: 50px;
+                fill: var(--openk9-embeddable-search--primary-background-tab-color);
+                border: 1px solid var(--openk9-embeddable-search--primary-background-tab-color);
+                border-radius: 30px;
+                cursor: pointer;
+              `}
               onClick={() => {
                 selectionsDispatch({
                   type: "set-text",
