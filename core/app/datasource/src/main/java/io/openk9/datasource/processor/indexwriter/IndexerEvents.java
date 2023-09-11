@@ -58,22 +58,21 @@ public class IndexerEvents {
 		}
 
 		return indexService.getMappings(dataIndex.getName())
-			.map(IndexerEvents::_toFlatFields)
-			.map(IndexerEvents::_toDocTypeFields)
+			.map(IndexerEvents::toDocTypeFields)
 			.plug(docTypeFields -> Uni
 				.combine()
 				.all()
 				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName()))
 				.asTuple()
 			)
-			.map(_toDocTypeFieldMap())
+			.map(IndexerEvents::toDocTypeAndFieldsGroup)
 			.call(_persistDocType(dataIndex))
 			.replaceWithVoid();
 	}
 
 	@ConsumeEvent("createOrUpdateDataIndex")
 	@ActivateRequestContext
-	Uni<Void> createOrUpdateDataIndex(JsonObject jsonObject) {
+	public Uni<Void> createOrUpdateDataIndex(JsonObject jsonObject) {
 
 		return Uni.createFrom().deferred(() -> {
 
@@ -84,6 +83,113 @@ public class IndexerEvents {
 		});
 	}
 
+	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
+		return _toDocTypeFields(_toFlatFields(mappings));
+	}
+
+	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
+		Tuple2<List<DocTypeField>, List<String>> t2) {
+
+		List<DocTypeField> docTypeFields = t2.getItem1();
+
+		List<String> documentTypes = t2.getItem2();
+
+		Map<String, List<DocTypeField>> grouped = docTypeFields
+			.stream()
+			.collect(
+				Collectors.groupingBy(
+					e ->
+						documentTypes
+							.stream()
+							.filter(dt -> e.getFieldName().startsWith(dt + ".")
+								|| e.getFieldName().equals(dt))
+							.findFirst()
+							.orElse("default"),
+					Collectors.toList()
+				)
+			);
+
+		_explodeDocTypeFirstLevel(grouped);
+
+		return grouped;
+	}
+
+	protected static Set<DocType> mergeDocTypes(
+		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
+		Collection<DocType> existingDocTypes) {
+
+		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
+
+		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
+
+		for (String docTypeName : mappedDocTypeNames) {
+
+			DocType docType =
+				existingDocTypes
+					.stream()
+					.filter(d -> d.getName().equals(docTypeName))
+					.findFirst()
+					.orElseGet(() -> {
+						DocType newDocType = new DocType();
+						newDocType.setName(docTypeName);
+						newDocType.setDescription("auto-generated");
+						newDocType.setDocTypeFields(new LinkedHashSet<>());
+						return newDocType;
+					});
+
+			List<DocTypeField> mappedDocTypeFields =
+				mappedDocTypeAndFields.getOrDefault(docTypeName, List.of());
+
+			Set<DocTypeField> docTypeFields = docType.getDocTypeFields();
+
+			for (DocTypeField docTypeField : mappedDocTypeFields) {
+				for (DocTypeField existingField : docTypeFields) {
+
+					if ((docType.getName() + "." + DocTypeField.fieldPath(docTypeField))
+						.equals(DocTypeField.fieldPath(existingField))) {
+
+						docTypeField.setId(existingField.getId());
+						break;
+					}
+				}
+			}
+
+			docTypeFields.addAll(mappedDocTypeFields);
+
+			_setDocTypeToDocTypeFields(docType, docTypeFields);
+
+			docTypes.add(docType);
+		}
+
+		return docTypes;
+
+	}
+
+	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
+		for (String docTypeName : grouped.keySet()) {
+			if (!docTypeName.equals("default")) {
+				List<DocTypeField> groupedDocTypeFields = grouped.get(docTypeName);
+				Optional<DocTypeField> optRoot = groupedDocTypeFields
+					.stream()
+					.filter(docTypeField -> docTypeField
+						.getFieldName().equals(docTypeName)
+					)
+					.findFirst();
+				if (optRoot.isPresent()) {
+					DocTypeField root = optRoot.get();
+					Set<DocTypeField> subFields = root.getSubDocTypeFields();
+					if (subFields != null && !subFields.isEmpty()) {
+						groupedDocTypeFields.remove(root);
+						for (DocTypeField subField : subFields) {
+							subField.setParentDocTypeField(null);
+						}
+						groupedDocTypeFields.addAll(subFields);
+					}
+				}
+			}
+		}
+	}
+
 	private Function<Map<String, List<DocTypeField>>, Uni<?>> _persistDocType(
 		DataIndex dataIndex) {
 
@@ -92,91 +198,7 @@ public class IndexerEvents {
 			Set<String> docTypeNames = m.keySet();
 
 			return docTypeService.getDocTypesAndDocTypeFieldsByNames(docTypeNames)
-				.map(results -> {
-
-					Set<DocType> docTypes = new LinkedHashSet<>(docTypeNames.size());
-
-					for (String docTypeName : docTypeNames) {
-
-						Optional<DocType> first =
-							results
-								.stream()
-								.filter(docType -> docType.getName().equals(
-									docTypeName))
-								.findFirst();
-
-						DocType docType;
-
-						if (first.isPresent()) {
-							docType = first.get();
-						}
-						else {
-							docType = new DocType();
-							docType.setName(docTypeName);
-							docType.setDescription("auto-generated");
-							docType.setDocTypeFields(new LinkedHashSet<>());
-						}
-
-						List<DocTypeField> docTypeFieldList =
-							m.getOrDefault(docTypeName, List.of());
-
-						for (DocTypeField docTypeField : docTypeFieldList) {
-							for (DocTypeField typeField : docType.getDocTypeFields()) {
-
-								if (typeField.getFieldName().equals(docTypeField.getFieldName())) {
-									docTypeField.setId(typeField.getId());
-									break;
-								}
-
-								DocTypeField parentDocTypeField =
-									typeField.getParentDocTypeField();
-
-								if (parentDocTypeField != null) {
-									if (parentDocTypeField.getFieldName().equals(
-										docTypeField.getFieldName())) {
-										docTypeField.setId(
-											parentDocTypeField.getId());
-										break;
-									}
-								}
-
-								Set<DocTypeField> subDocTypeFields =
-									typeField.getSubDocTypeFields();
-
-								if (subDocTypeFields != null) {
-									Optional<DocTypeField> subDocTypeField =
-										subDocTypeFields
-											.stream()
-											.filter(
-												subTypeField -> subTypeField
-													.getFieldName()
-													.equals(docTypeField.getFieldName()))
-											.findFirst();
-
-									if (subDocTypeField.isPresent()) {
-										docTypeField.setId(
-											subDocTypeField.get().getId());
-										break;
-									}
-								}
-
-							}
-						}
-
-						Set<DocTypeField> docTypeFields =
-							docType.getDocTypeFields();
-
-						docTypeFields.addAll(docTypeFieldList);
-
-						_setDocTypeToDocTypeFields(docType, docTypeFields);
-
-						docTypes.add(docType);
-
-					}
-
-					return docTypes;
-
-				})
+				.map(docTypes -> mergeDocTypes(m, docTypes))
 				.flatMap(docTypes -> {
 					dataIndex.setDocTypes(docTypes);
 					return session.merge(dataIndex)
@@ -199,30 +221,7 @@ public class IndexerEvents {
 
 	}
 
-	private Function<Tuple2<List<DocTypeField>, List<String>>, Map<String, List<DocTypeField>>> _toDocTypeFieldMap() {
-		return t2 -> {
-
-			List<DocTypeField> list = t2.getItem1();
-
-			List<String> documentTypes = t2.getItem2();
-
-			return list
-				.stream()
-				.collect(
-					Collectors.groupingBy(
-						e ->
-							documentTypes
-								.stream()
-								.filter(dc -> e.getFieldName().startsWith(dc + ".") || e.getFieldName().equals(dc))
-								.findFirst()
-								.orElse("default"),
-						Collectors.toList()
-					)
-				);
-		};
-	}
-
-	public Uni<List<String>> _getDocumentTypes(String indexName) {
+	private Uni<List<String>> _getDocumentTypes(String indexName) {
 		return Uni
 			.createFrom()
 			.item(() -> {
@@ -347,125 +346,70 @@ public class IndexerEvents {
 
 		List<DocTypeField> docTypeFields = new ArrayList<>();
 
-		_toDocTypeFields(root, new ArrayList<>(), null, docTypeFields);
+		for (Field subField : root.getSubFields()) {
+			if (!subField.isRoot()) {
+				_toDocTypeFields(subField, new ArrayList<>(), null, docTypeFields);
+			}
+		}
 
 		return docTypeFields;
 
 	}
 
 	private static void _toDocTypeFields(
-		Field root, List<String> acc, DocTypeField parent,
+		Field field, List<String> acc, DocTypeField parent,
 		Collection<DocTypeField> docTypeFields) {
 
-		String name = root.getName();
+		String name = field.getName();
+		acc.add(name);
 
-		if (!root.isRoot()) {
-			acc.add(name);
-		}
-
-		String type = root.getType();
+		String type = field.getType();
 
 		boolean isI18NField =
-			root
+			field
 				.getSubFields()
 				.stream()
 				.map(Field::getName)
 				.anyMatch(fieldName -> fieldName.equals("i18n"));
 
-		if (type != null || isI18NField) {
+		String fieldName = String.join(".", acc);
 
-			String fieldName = String.join(".", acc);
-
-			DocTypeField docTypeField = new DocTypeField();
-			docTypeField.setName(fieldName);
-			docTypeField.setFieldName(fieldName);
-			docTypeField.setBoost(1.0);
-			FieldType fieldType =
-				isI18NField
-					? FieldType.I18N
-					: FieldType.fromString(type);
-			docTypeField.setFieldType(fieldType);
-			docTypeField.setDescription("auto-generated");
-			docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
-			if (root.getExtra() != null && !root.getExtra().isEmpty()) {
-				docTypeField.setJsonConfig(
-					new JsonObject(root.getExtra()).toString());
-			}
-
-			if (parent != null) {
-				docTypeField.setParentDocTypeField(parent);
-			}
-
-			docTypeFields.add(docTypeField);
-
-			switch (fieldType) {
-				case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N -> docTypeField.setSearchable(true);
-				default -> docTypeField.setSearchable(false);
-			}
-
-			for (Field subField : root.getSubFields()) {
-
-				_toDocTypeFields(
-					subField, new ArrayList<>(acc), docTypeField,
-					docTypeField.getSubDocTypeFields());
-
-			}
-
+		DocTypeField docTypeField = new DocTypeField();
+		docTypeField.setName(fieldName);
+		docTypeField.setFieldName(name);
+		docTypeField.setBoost(type != null ? 1.0 : null);
+		FieldType fieldType = isI18NField
+			? FieldType.I18N
+			: type != null
+			? FieldType.fromString(type)
+			: FieldType.OBJECT;
+		docTypeField.setFieldType(fieldType);
+		docTypeField.setDescription("auto-generated");
+		docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
+		if (field.getExtra() != null && !field.getExtra().isEmpty()) {
+			docTypeField.setJsonConfig(
+				new JsonObject(field.getExtra()).toString());
 		}
-		else {
-			for (Field subField : root.getSubFields()) {
-				_toDocTypeFields(
-					subField, new ArrayList<>(acc), parent, docTypeFields);
-			}
+
+		if (parent != null) {
+			docTypeField.setParentDocTypeField(parent);
+		}
+
+		docTypeFields.add(docTypeField);
+
+		switch (fieldType) {
+			case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N -> docTypeField.setSearchable(true);
+			default -> docTypeField.setSearchable(false);
+		}
+
+		for (Field subField : field.getSubFields()) {
+			_toDocTypeFields(
+				subField, new ArrayList<>(acc), docTypeField,
+				docTypeField.getSubDocTypeFields());
+
 		}
 
 	}
-
-	public static void main(String[] args) {
-
-		String json = "{\n" +
-					  "    \"properties\" : {\n" +
-					  "      \"web\" : {\n" +
-					  "        \"properties\" : {\n" +
-					  "          \"title\" : {\n" +
-					  "            \"properties\" : {\n" +
-					  "              \"i18n\" : {\n" +
-					  "                \"properties\" : {\n" +
-					  "                  \"en\" : {\n" +
-					  "                    \"type\" : \"text\",\n" +
-					  "                    \"fields\" : {\n" +
-					  "                      \"keyword\" : {\n" +
-					  "                        \"type\" : \"keyword\"\n" +
-					  "                      }\n" +
-					  "                    }\n" +
-					  "                  }\n" +
-					  "                }\n" +
-					  "              },\n" +
-					  "              \"base\" : {\n" +
-					  "                \"type\" : \"text\",\n" +
-					  "                \"fields\" : {\n" +
-					  "                  \"keyword\" : {\n" +
-					  "                    \"type\" : \"keyword\"\n" +
-					  "                  }\n" +
-					  "                }\n" +
-					  "              }\n" +
-					  "            }\n" +
-					  "          }\n" +
-					  "        }\n" +
-					  "      }\n" +
-					  "    }\n" +
-					  "  }";
-
-		;
-
-		Field field = _toFlatFields(new JsonObject(json).getMap());
-
-		List<DocTypeField> docTypeFields = _toDocTypeFields(field);
-
-		System.out.println(docTypeFields);
-
-	}
-
 
 	@Inject
 	RestHighLevelClient client;

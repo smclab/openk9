@@ -124,6 +124,14 @@ public class DocTypeField extends BaseDocTypeField {
 		return docTypeFields;
 	}
 
+	public static String fieldPath(DocTypeField docTypeField) {
+		DocType docType = docTypeField.getDocType();
+		String docTypePath = docType != null ? docType.getName() + "." : "";
+		return docTypeField.getParentDocTypeField() != null
+			? fieldPath(docTypeField.parentDocTypeField) + "." + docTypeField.getFieldName()
+			: docTypePath + docTypeField.getFieldName();
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
