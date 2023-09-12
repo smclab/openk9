@@ -75,7 +75,7 @@ export function DocumentTypeFields() {
     refetchQueries: [{ query: DocumentTypeFieldsQuery, variables: { documentTypeId: documentTypeId! } }],
   });
 
-  async function addElement({ parentId }: { parentId: number }) {
+  async function addElement({ parentId, level }: { parentId: number; level: number }) {
     try {
       const { data } = await apolloClient.query({
         query: DocumentTypeFieldsParentQuery,
@@ -86,7 +86,7 @@ export function DocumentTypeFields() {
         {
           idParent: parentId,
           queryData: data,
-          level: parentId,
+          level: level,
         },
       ]);
     } catch (error) {
@@ -210,8 +210,8 @@ export function DocumentTypeFields() {
                         aria-label="View sub doc type fields"
                         title="View sub doc type fields"
                         onClick={() => {
-                          addElement({ parentId: Number(documentType?.node?.parent?.id || 0) });
-                          findLevel({ docTypes: allDocTypes, addedId: Number(documentType?.node?.parent?.id || 0) });
+                          const level = findLevel({ docTypes: allDocTypes, addedId: Number(documentType?.node?.parent?.id || 0) });
+                          addElement({ parentId: Number(documentType?.node?.parent?.id || 0), level });
                         }}
                         symbol="angle-right"
                       />
@@ -251,7 +251,7 @@ function removeElementsByLevels(elements: DocTypesType[], levelSelect: number): 
 
 function findLevel({ docTypes, addedId }: { docTypes: Array<DocTypesQueryType>; addedId: number }): number {
   const docElement = docTypes.find((document) => document.idParent === addedId);
-  console.log(docElement);
-
-  return docElement?.level || -1;
+  let nextLevel = 0;
+  if (docElement?.level === undefined) nextLevel = docTypes.reduce((max, doc) => (doc.level > max ? doc.level : max), 0);
+  return docElement?.level || nextLevel;
 }
