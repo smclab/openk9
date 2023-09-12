@@ -9,7 +9,7 @@ import { StyleToggle } from "./Form";
 
 export const DataSourcesQuery = gql`
   query DataSources($searchText: String, $cursor: String) {
-    datasources(searchText: $searchText, first: 25, after: $cursor) {
+    datasources(searchText: $searchText, first: 50, after: $cursor) {
       edges {
         node {
           id
