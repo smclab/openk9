@@ -11,7 +11,7 @@ import {
   useDocumentTypeFieldsQuery,
 } from "../graphql-generated";
 import { formatName, TableWithSubFields } from "./Table";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
 import { ContainerFluid, StyleToggle } from "./Form";
@@ -127,12 +127,9 @@ export function DocumentTypeFields() {
           </ClayList.ItemField>
           <ClayList.ItemField>
             <ClayList.Item flex style={{ border: "none" }}>
-              <ClayList.QuickActionMenu.Item
-                aria-label="Plus doc type fields"
-                title="Plus doc type fields"
-                onClick={() => alert("Clicked the trash!")}
-                symbol="plus"
-              />
+              <Link to={`newSubFields/${documentType?.node?.id}/new`}>
+                <ClayList.QuickActionMenu.Item aria-label="Plus doc type fields" title="Plus doc type fields" symbol="plus" />
+              </Link>
 
               <DropDown
                 trigger={
