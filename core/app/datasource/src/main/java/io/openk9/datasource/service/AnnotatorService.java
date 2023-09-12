@@ -90,6 +90,6 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 	}
 
 	@Inject
-	private DocTypeFieldService docTypeFieldService;
+	DocTypeFieldService docTypeFieldService;
 
 }
