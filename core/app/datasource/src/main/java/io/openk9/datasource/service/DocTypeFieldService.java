@@ -122,32 +122,19 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		return withTransaction((s, tr) -> findById(parentDocTypeFieldId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(parentDocTypeField -> {
+			.transformToUni(parentDocTypeField -> Mutiny2
+				.fetch(s, parentDocTypeField.getSubDocTypeFields())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(subList -> {
 
-				String fieldName = docTypeFieldDTO.getFieldName();
-				String parentFieldName = parentDocTypeField.getFieldName();
+					DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
+					docTypeField.setParentDocTypeField(parentDocTypeField);
+					docTypeField.setDocType(parentDocTypeField.getDocType());
+					subList.add(docTypeField);
+					return persist(docTypeField);
 
-				if (!fieldName.startsWith(parentFieldName)) {
-					return Uni.createFrom().failure(
-						new IllegalArgumentException(
-							"fieldName must start with parentFieldName: " + parentFieldName));
-				}
-
-				return Mutiny2
-					.fetch(s, parentDocTypeField.getSubDocTypeFields())
-					.onItem()
-					.ifNotNull()
-					.transformToUni(subList -> {
-
-						DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
-						docTypeField.setParentDocTypeField(parentDocTypeField);
-						docTypeField.setDocType(parentDocTypeField.getDocType());
-						subList.add(docTypeField);
-						return persist(docTypeField);
-
-					});
-
-			}));
+				})));
 
 	}
 
