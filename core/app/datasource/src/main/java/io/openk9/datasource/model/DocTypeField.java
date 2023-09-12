@@ -32,6 +32,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -68,7 +69,7 @@ public class DocTypeField extends BaseDocTypeField {
 	private String fieldName;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "doc_type_id")
 	@JsonIgnore
 	private DocType docType;
