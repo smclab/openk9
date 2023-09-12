@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -35,7 +36,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -112,6 +117,11 @@ public class DocTypeField extends BaseDocTypeField {
 	@JsonIgnore
 	private Set<AclMapping> aclMappings = new LinkedHashSet<>();
 
+	@Transient
+	@Getter(AccessLevel.NONE)
+	@Setter(AccessLevel.NONE)
+	private String path;
+
 	public Set<DocTypeField> getChildren() {
 		return subDocTypeFields;
 	}
@@ -123,6 +133,14 @@ public class DocTypeField extends BaseDocTypeField {
 			docTypeFields.addAll(subDocTypeFields);
 		}
 		return docTypeFields;
+	}
+
+	public String getPath() {
+		if (path == null) {
+			refreshPath();
+		}
+
+		return path;
 	}
 
 	@Override
@@ -143,8 +161,11 @@ public class DocTypeField extends BaseDocTypeField {
 		return getClass().hashCode();
 	}
 
-	public String getPath() {
-		return DocTypeFieldUtils.fieldPath(this);
+	@PostLoad
+	@PostPersist
+	@PostUpdate
+	protected void refreshPath() {
+		this.path = DocTypeFieldUtils.fieldPath(this);
 	}
 
 }

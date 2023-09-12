@@ -12,11 +12,13 @@ public class DocTypeFieldUtils {
 
 	public static String fieldPath(String docTypeName, DocTypeField docTypeField) {
 
-		String docTypePath =
+		String rootPath =
 			docTypeName != null && !docTypeName.equals("default") ? docTypeName + "." : "";
 
-		return docTypeField.getParentDocTypeField() != null
-			? fieldPath(docTypeField.getParentDocTypeField()) + "." + docTypeField.getFieldName()
-			: docTypePath + docTypeField.getFieldName();
+		DocTypeField parent = docTypeField.getParentDocTypeField();
+
+		String fieldName = docTypeField.getFieldName();
+
+		return parent != null ? fieldPath(parent) + "." + fieldName : rootPath + fieldName;
 	}
 }

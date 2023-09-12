@@ -160,7 +160,6 @@ public class IndexerEvents {
 				}
 			}
 
-
 			persistedFields.addAll(retainedFields);
 
 			_setDocTypeToDocTypeFields(docType, persistedFields);
