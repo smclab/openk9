@@ -234,7 +234,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 						for (Tuple2<Long, DocTypeField> tuple2 : suggestionDocTypeFields) {
 							DocTypeField docTypeField = tuple2.getItem2();
-							String name = docTypeField.getFieldName();
+							String name = docTypeField.getPath();
 							compositeValuesSourceBuilders.add(
 								new TermsValuesSourceBuilder(name)
 									.field(name)
@@ -273,7 +273,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								.map(Tuple2::getItem2)
 								.map(DocTypeField::getParentDocTypeField)
 								.filter(dtf -> dtf != null && dtf.getFieldType() == FieldType.TEXT)
-								.map(DocTypeField::getFieldName)
+								.map(DocTypeField::getPath)
 								.distinct()
 								.toArray(String[]::new);
 
@@ -353,7 +353,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									.stream()
 									.collect(
 										Collectors.toMap(
-											t -> t.getItem2().getFieldName(),
+											t -> t.getItem2().getPath(),
 											Tuple2::getItem1
 										)
 									);
@@ -452,11 +452,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		for (DocTypeField e : docTypeFieldList) {
 
-			if (e.isKeyword() && e.getFieldName().startsWith(docTypeField.getFieldName())) {
-				if (e.getFieldName().contains(language)) {
+			if (e.isKeyword() && e.getPath().startsWith(docTypeField.getPath())) {
+				if (e.getPath().contains(language)) {
 					return e;
 				}
-				else if (e.getFieldName().contains(".base")) {
+				else if (e.getPath().contains(".base")) {
 					docTypeFieldBase = e;
 				}
 			}
@@ -761,7 +761,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			if (i18nParent != null) {
 
 				i18nMap.compute(i18nParent, (k, v) -> {
-					String fieldName = docTypeField.getFieldName();
+					String fieldName = docTypeField.getPath();
 					if (v == null) {
 						v = Tuple2.of(new HashSet<>(), new HashSet<>());
 					}
@@ -778,7 +778,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			}
 			else {
-				String name = docTypeField.getFieldName();
+				String name = docTypeField.getPath();
 				if (docTypeField.isDefaultExclude()) {
 					excludes.add(name);
 				}
@@ -799,7 +799,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				!tuple.getItem2().isEmpty() ? tuple.getItem2() : tuple.getItem1();
 
 			for (DocTypeField docTypeField : docTypeFields) {
-				String name = docTypeField.getFieldName();
+				String name = docTypeField.getPath();
 				if (docTypeField.isDefaultExclude()) {
 					excludes.add(name);
 				}
@@ -877,7 +877,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			docTypeFieldList
 				.stream()
 				.filter(DocTypeField::isSortable)
-				.map(DocTypeField::getFieldName)
+				.map(DocTypeField::getPath)
 				.toList();
 
 		if (docTypeFieldNameSortable.isEmpty()) {

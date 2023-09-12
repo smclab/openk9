@@ -25,18 +25,18 @@ public class AnnotatorFactory {
 			case DOCTYPE -> new DocTypeAnnotator(
 				bucket, annotator, stopWords, client);
 			case AGGREGATOR -> new AggregatorAnnotator(
-				annotator.getDocTypeField().getFieldName(),
+				annotator.getDocTypeField().getPath(),
 				bucket, annotator, stopWords, client);
 			case AUTOCOMPLETE -> new BaseAutoCompleteAnnotator(
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
-				annotator.getDocTypeField().getFieldName());
+				annotator.getDocTypeField().getPath());
 			case NER_AUTOCOMPLETE -> new BaseAutoCompleteNerAnnotator(
 				bucket, annotator, stopWords, annotator.getFieldName(), client, tenantResolver);
 			case AUTOCORRECT -> new BaseAutoCorrectAnnotator(
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
-				annotator.getDocTypeField().getFieldName());
+				annotator.getDocTypeField().getPath());
 		};
 	}
 

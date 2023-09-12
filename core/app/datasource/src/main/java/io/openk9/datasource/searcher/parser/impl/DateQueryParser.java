@@ -63,7 +63,7 @@ public class DateQueryParser implements QueryParser {
 
 						}
 
-						if (searchToken.getKeywordKey().equals(docTypeField.getFieldName())) {
+						if (searchToken.getKeywordKey().equals(docTypeField.getPath())) {
 							return Stream.of(Tuple2.of(docTypeField, searchToken));
 						}
 					}
@@ -97,7 +97,7 @@ public class DateQueryParser implements QueryParser {
 
 						RangeQueryBuilder rangeQueryBuilder =
 							QueryBuilders.rangeQuery(
-								docTypeField.getFieldName());
+								docTypeField.getPath());
 
 						if (values.size() == 1) {
 							gte = values.get(0);
@@ -134,7 +134,7 @@ public class DateQueryParser implements QueryParser {
 
 					RangeQueryBuilder rangeQueryBuilder =
 						QueryBuilders.rangeQuery(
-							docTypeField.getFieldName());
+							docTypeField.getPath());
 
 					if (gte != null) {
 						rangeQueryBuilder.gte(gte);
