@@ -4123,10 +4123,11 @@ export type DeleteDocumentTypeFieldMutation = { __typename?: 'Mutation', removeD
 
 export type DocTypeFieldsByParentQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
+  parentId: Scalars['BigInteger'];
 }>;
 
 
-export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, fieldName?: string | null, searchable: boolean, exclude?: boolean | null, sortable: boolean } | null } | null> | null } | null };
+export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, fieldName?: string | null, searchable: boolean, exclude?: boolean | null, sortable: boolean, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
 
 export type DocumentTypeTemplateQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -8570,8 +8571,8 @@ export type DeleteDocumentTypeFieldMutationHookResult = ReturnType<typeof useDel
 export type DeleteDocumentTypeFieldMutationResult = Apollo.MutationResult<DeleteDocumentTypeFieldMutation>;
 export type DeleteDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
 export const DocTypeFieldsByParentDocument = gql`
-    query DocTypeFieldsByParent($searchText: String) {
-  docTypeFieldsByParent(parentId: 0, searchText: $searchText, first: 10) {
+    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!) {
+  docTypeFieldsByParent(parentId: $parentId, searchText: $searchText, first: 10) {
     edges {
       node {
         id
@@ -8580,6 +8581,10 @@ export const DocTypeFieldsByParentDocument = gql`
         searchable
         exclude
         sortable
+        parent {
+          id
+          fieldName
+        }
       }
     }
   }
@@ -8599,10 +8604,11 @@ export const DocTypeFieldsByParentDocument = gql`
  * const { data, loading, error } = useDocTypeFieldsByParentQuery({
  *   variables: {
  *      searchText: // value for 'searchText'
+ *      parentId: // value for 'parentId'
  *   },
  * });
  */
-export function useDocTypeFieldsByParentQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
+export function useDocTypeFieldsByParentQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(DocTypeFieldsByParentDocument, options);
       }
@@ -12724,4 +12730,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-09-08T16:53:01+02:00
+// Generated on 2023-09-12T09:58:38+02:00
