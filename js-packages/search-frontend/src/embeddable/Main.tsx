@@ -160,7 +160,11 @@ export function Main({
             spans={spans}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
-            showSyntax={isQueryAnalysisComplete}
+            showSyntax={
+              configuration.searchConfigurable?.btnSearch
+                ? configuration.searchConfigurable?.btnSearch
+                : isQueryAnalysisComplete
+            }
             onDetail={setDetail}
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
@@ -169,8 +173,8 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.searchConfigurable
-        ? configuration.searchConfigurable.element
-        : null,
+          ? configuration.searchConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -212,12 +216,14 @@ export function Main({
             sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
-            isCollapsable={configuration.filtersConfigurable?.isCollapsable ?? true}
+            isCollapsable={
+              configuration.filtersConfigurable?.isCollapsable ?? true
+            }
           />
         </I18nextProvider>,
         configuration.filtersConfigurable
-        ? configuration.filtersConfigurable.element
-        : null,
+          ? configuration.filtersConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

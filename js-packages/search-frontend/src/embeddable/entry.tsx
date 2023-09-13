@@ -176,6 +176,7 @@ type SearchMobileConfiguration = {
   search: Element | string | null;
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  isShowSyntax?: boolean | undefined | null;
 };
 
 type CalendarMobileConfiguration = {
@@ -216,12 +217,12 @@ type SortableProps = {
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
-}
+};
 
 type FilterProps = {
   element: Element | string | null;
   isCollapsable?: boolean;
-}
+};
 
 export type Configuration = {
   enabled: boolean;
