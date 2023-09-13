@@ -217,6 +217,7 @@ type SortableProps = {
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
+  isShowSyntax?: boolean | undefined | null;
 };
 
 type FilterProps = {

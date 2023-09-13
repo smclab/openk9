@@ -161,8 +161,8 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={
-              configuration.searchConfigurable?.btnSearch
-                ? configuration.searchConfigurable?.btnSearch
+              configuration.searchConfigurable?.isShowSyntax
+                ? false
                 : isQueryAnalysisComplete
             }
             onDetail={setDetail}
