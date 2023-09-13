@@ -87,15 +87,11 @@ export function Search({
             flex-direction: column;
             margin-top: 15px;
           }
+          .openk9-focusable:has(input:focus) {
+            border: 1px solid #c22525;
+          }
         `}
       >
-        <style type="text/css">
-          {`
-        .openk9-focusable:has(input:focus){
-          border:1px solid  var(--openk9-embeddable-search--active-color);
-        }
-    `}
-        </style>
         <div
           ref={clickAwayRef}
           className="openk9-embeddable-search--input-container openk9-focusable"
