@@ -53,17 +53,17 @@ module.exports = {
     },
     proxy: {
       "/api/searcher": {
-        target: "https://test.openk9.io",
+        target: "https://sogei.openk9.io",
         changeOrigin: true,
         secure: false,
       },
       "/api/datasource": {
-        target: "https://test.openk9.io",
+        target: "https://sogei.openk9.io",
         changeOrigin: true,
         secure: false,
       },
 	 	"/api/file-manager": {
-	   target: "https://test.openk9.io",
+	   target: "https://sogei.openk9.io",
 	   changeOrigin: true,
 	   secure: false,
 	 }

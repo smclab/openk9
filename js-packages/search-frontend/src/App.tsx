@@ -346,6 +346,23 @@ export function App() {
             }
           />
         </div>
+        <div
+            css={css`
+              @media (max-width: 480px) {
+                display: none;
+              }
+            `}
+            className="openk9-update-configuration"
+            ref={(element) =>
+              openk9.updateConfiguration({
+                dataRangePickerVertical: {
+                  element: element,
+                  start: startDate,
+                  end: endDate,
+                },
+              })
+            }
+          ></div>
       </div>
       <div
         className="openk9-results-container openk9-box"

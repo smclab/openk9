@@ -40,6 +40,7 @@ import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
+import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -419,6 +420,19 @@ export function Main({
         </I18nextProvider>,
         configuration.dataRangePicker?.element !== undefined
           ? configuration.dataRangePicker?.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePickerVertical
+            /* onChange={setDateRange}
+            calendarDate={dateRange} */
+            start={configuration.dataRangePickerVertical?.start}
+            end={configuration.dataRangePickerVertical?.end}
+          />
+        </I18nextProvider>,
+        configuration.dataRangePickerVertical?.element !== undefined
+          ? configuration.dataRangePickerVertical?.element
           : null,
       )}
       {renderPortal(

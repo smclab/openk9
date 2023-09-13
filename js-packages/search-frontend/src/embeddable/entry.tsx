@@ -199,6 +199,12 @@ type DataRangePickerProps = {
   end?: any;
 };
 
+type DataRangePickerVerticalProps = {
+  element: Element | string | null;
+  start?: any;
+  end?: any;
+};
+
 type ResultListProps = {
   element: Element | string | null;
   changeOnOver: boolean;
@@ -241,6 +247,7 @@ export type Configuration = {
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
+  dataRangePickerVertical: DataRangePickerVerticalProps | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
@@ -276,6 +283,7 @@ const defaultConfiguration: Configuration = {
   filtersMobile: null,
   filtersMobileLiveChange: null,
   dataRangePicker: null,
+  dataRangePickerVertical: null,
   calendarMobile: null,
   sortable: null,
   detailMobile: null,
