@@ -46,6 +46,8 @@ import java.util.Set;
 @Cacheable
 public class DocType extends K9Entity {
 
+	public static final String DEFAULT_NAME = "default";
+
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 
