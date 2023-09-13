@@ -216,9 +216,8 @@ export function Main({
             sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
-            isCollapsable={
-              configuration.filtersConfigurable?.isCollapsable ?? true
-            }
+            isCollapsable={configuration.filtersConfigurable?.isCollapsable ?? true}
+            numberItems={configuration.filtersConfigurable?.numberItems}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable

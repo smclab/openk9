@@ -222,6 +222,7 @@ type SearchProps = {
 type FilterProps = {
   element: Element | string | null;
   isCollapsable?: boolean;
+  numberItems?: number | null | undefined;
 };
 
 export type Configuration = {
