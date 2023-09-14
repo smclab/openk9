@@ -1,0 +1,22 @@
+.SingleDatePickerInput_1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.SingleDatePickerInput_calendarIcon_1 {
+  display: flex;
+}
+
+.DateRangePickerVertical-date-title {
+  text-overflow: ellipsis;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 22px;
+  color: #000000;
+  margin: 5px 0;
+}
+
+.DateRangePickerVertical-startDate-container {
+  margin: 0 0 10px 0;
+}

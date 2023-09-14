@@ -425,8 +425,9 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <DataRangePickerVertical
-            /* onChange={setDateRange}
-            calendarDate={dateRange} */
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
             start={configuration.dataRangePickerVertical?.start}
             end={configuration.dataRangePickerVertical?.end}
           />
