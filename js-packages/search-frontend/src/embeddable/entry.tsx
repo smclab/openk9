@@ -216,12 +216,14 @@ type SortableProps = {
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
-}
+  isShowSyntax?: boolean | undefined | null;
+  isActiveQueryAnaylysis: boolean | undefined | null;
+};
 
 type FilterProps = {
   element: Element | string | null;
   isCollapsable?: boolean;
-}
+};
 
 export type Configuration = {
   enabled: boolean;
@@ -254,6 +256,7 @@ export type Configuration = {
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
+  isQueryAnalysis: boolean | null;
   token: string | null;
   useKeycloak: boolean;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
@@ -292,6 +295,7 @@ const defaultConfiguration: Configuration = {
   useKeycloak: true,
   searchAutoselect: true,
   searchReplaceText: true,
+  isQueryAnalysis: false,
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },

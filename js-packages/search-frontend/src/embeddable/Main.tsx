@@ -169,8 +169,8 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.searchConfigurable
-        ? configuration.searchConfigurable.element
-        : null,
+          ? configuration.searchConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -212,12 +212,18 @@ export function Main({
             sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
-            isCollapsable={configuration.filtersConfigurable?.isCollapsable ?? true}
+            isCollapsable={
+              configuration.filtersConfigurable?.isCollapsable ?? true
+            }
+            // numberItems={configuration.filtersConfigurable?.numberItems}
+            // isCollapsable={
+            //   configuration.filtersConfigurable?.isCollapsable ?? true
+            // }
           />
         </I18nextProvider>,
         configuration.filtersConfigurable
-        ? configuration.filtersConfigurable.element
-        : null,
+          ? configuration.filtersConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -496,12 +502,20 @@ function useSearch({
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
   const debounced = useDebounce(selectionsState, 600);
-  const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.text,
-    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-      token ? [{ text, start, end, token }] : [],
-    ),
-  });
+  // const [isActiveQueryAnalysis] = React.useState(
+  //   configuration.searchConfigurable?.isActiveQueryAnaylysis ?? true,
+  // );
+
+  const isActiveQueryAnalysis = configuration.isQueryAnalysis || false;
+  const queryAnalysis = useQueryAnalysis(
+    {
+      searchText: debounced.text,
+      tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
+      ),
+    },
+    isActiveQueryAnalysis,
+  );
   const spans = React.useMemo(
     () => calculateSpans(selectionsState.text, queryAnalysis.data?.analysis),
     [queryAnalysis.data?.analysis, selectionsState.text],
@@ -815,35 +829,41 @@ function calculateSpans(
   return spans.filter((span) => span.text);
 }
 
-function useQueryAnalysis(request: AnalysisRequest) {
+function useQueryAnalysis(
+  request: AnalysisRequest,
+  isActiveQueryAnalysis: boolean,
+) {
   const client = useOpenK9Client();
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
-      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+      fixQueryAnalysisResult(
+        await client.fetchQueryAnalysis(request, isActiveQueryAnalysis),
+      ),
   );
 }
 // TODO: togliere una volta implementata gestione sugestion sovrapposte
-function fixQueryAnalysisResult(data: AnalysisResponse) {
-  return {
-    ...data,
-    analysis: data.analysis
-      .reverse()
-      .filter((entry, index, array) =>
-        array
-          .slice(0, index)
-          .every((previous) => !isOverlapping(previous, entry)),
-      )
-      .reverse()
-      .filter((entry) => {
-        // togliere validazione quando fixato lato be
-        const isValidEntry = entry.start >= 0;
-        if (!isValidEntry) {
-          console.warn(`Invalid entry: `, entry);
-        }
-        return isValidEntry;
-      }),
-  };
+function fixQueryAnalysisResult(data: AnalysisResponse | null) {
+  if (data)
+    return {
+      ...data,
+      analysis: data.analysis
+        .reverse()
+        .filter((entry, index, array) =>
+          array
+            .slice(0, index)
+            .every((previous) => !isOverlapping(previous, entry)),
+        )
+        .reverse()
+        .filter((entry) => {
+          // togliere validazione quando fixato lato be
+          const isValidEntry = entry.start >= 0;
+          if (!isValidEntry) {
+            console.warn(`Invalid entry: `, entry);
+          }
+          return isValidEntry;
+        }),
+    };
 }
 
 export function remappingLanguage({ language }: { language: string }) {

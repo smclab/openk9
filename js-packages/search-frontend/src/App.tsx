@@ -17,6 +17,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
+  isQueryAnalysis: false,
 });
 
 export function App() {
@@ -210,7 +211,16 @@ export function App() {
               `}
               onClick={handleClick}
               className="openk9-update-configuration"
-              ref={(element) => openk9.updateConfiguration({ search: element })}
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  searchConfigurable: {
+                    element: element,
+                    isShowSyntax: false,
+                    btnSearch: false,
+                    isActiveQueryAnaylysis: false,
+                  },
+                })
+              }
             ></div>
             <button
               css={css`
