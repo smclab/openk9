@@ -17,7 +17,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
-  isQueryAnalysis: false,
+  isQueryAnalysis: true,
 });
 
 export function App() {
@@ -217,7 +217,6 @@ export function App() {
                     element: element,
                     isShowSyntax: false,
                     btnSearch: false,
-                    isActiveQueryAnaylysis: false,
                   },
                 })
               }

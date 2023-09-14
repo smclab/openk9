@@ -217,7 +217,6 @@ type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
   isShowSyntax?: boolean | undefined | null;
-  isActiveQueryAnaylysis: boolean | undefined | null;
 };
 
 type FilterProps = {
@@ -295,7 +294,7 @@ const defaultConfiguration: Configuration = {
   useKeycloak: true,
   searchAutoselect: true,
   searchReplaceText: true,
-  isQueryAnalysis: false,
+  isQueryAnalysis: true,
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },

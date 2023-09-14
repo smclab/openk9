@@ -268,9 +268,10 @@ export function OpenK9Client({
     },
     async fetchQueryAnalysis(
       request: AnalysisRequest,
-      isActiveQueryAnalysis: boolean,
+      isActiveQueryAnalysis: boolean | null,
     ): Promise<AnalysisResponse | null> {
       const mock = false;
+
       if (!isActiveQueryAnalysis) return null;
       if (mock)
         return {

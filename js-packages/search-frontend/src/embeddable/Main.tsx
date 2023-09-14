@@ -506,7 +506,7 @@ function useSearch({
   //   configuration.searchConfigurable?.isActiveQueryAnaylysis ?? true,
   // );
 
-  const isActiveQueryAnalysis = configuration.isQueryAnalysis || false;
+  const isActiveQueryAnalysis = configuration.isQueryAnalysis;
   const queryAnalysis = useQueryAnalysis(
     {
       searchText: debounced.text,
@@ -831,7 +831,7 @@ function calculateSpans(
 
 function useQueryAnalysis(
   request: AnalysisRequest,
-  isActiveQueryAnalysis: boolean,
+  isActiveQueryAnalysis: boolean | null,
 ) {
   const client = useOpenK9Client();
   return useQuery(
