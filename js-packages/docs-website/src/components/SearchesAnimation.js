@@ -246,7 +246,7 @@ export function SearchesAnimation() {
           linear={true}
           camera={{ position: [3, 4, 9], fov: 20 }}
           shadows
-          frameloop="demand"
+          frameloop="always"
           dpr={[1, 2]}
           onCreated={({ camera }) => {
             camera.lookAt(0, 1, 0);
