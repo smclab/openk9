@@ -63,10 +63,12 @@ export function DataRangePickerVertical({
           onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
           hideKeyboardShortcutsPanel
           id="startDate"
+          showClearDate
           showDefaultInputIcon
           inputIconPosition="after"
           isOutsideRange={() => false}
           placeholder={t("start-day") || "Start day"}
+          openDirection="up"
         />
       </div>
       <div className="DateRangePickerVertical-endDate-container">
@@ -81,11 +83,13 @@ export function DataRangePickerVertical({
           onFocusChange={(focus) => setFocusedEndInput(focus.focused)}
           hideKeyboardShortcutsPanel
           id="endDate"
+          showClearDate
           showDefaultInputIcon
           inputIconPosition="after"
           disabled={startDate ? false : true}
           isOutsideRange={() => false}
           placeholder={t("end-day") || "End day"}
+          openDirection="up"
         />
       </div>
     </div>

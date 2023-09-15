@@ -378,7 +378,7 @@ export function App() {
           }
         `}
       >
-        {/* <div
+        <div
           css={css`
             @media (max-width: 480px) {
               display: none;
@@ -394,7 +394,7 @@ export function App() {
               },
             })
           }
-        ></div> */}
+        ></div>
       </div>
       <div
         className="openk9-results-container openk9-box"

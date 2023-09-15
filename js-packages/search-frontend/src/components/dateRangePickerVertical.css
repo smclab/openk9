@@ -20,3 +20,28 @@
 .DateRangePickerVertical-startDate-container {
   margin: 0 0 10px 0;
 }
+
+.SingleDatePickerInput__showClearDate {
+  padding-right: 0;
+}
+
+.SingleDatePickerInput_clearDate {
+  margin: 0px 0px 0px 0px;
+  top: 47%;
+  right: 10%;
+  background-color: #fff;
+  padding: 0;
+}
+
+.SingleDatePickerInput_clearDate__default:focus, .SingleDatePickerInput_clearDate__default:hover {
+  background-color: #fff;
+  border-radius: 0;
+}
+
+.SingleDatePickerInput_clearDate__default:focus, .SingleDatePickerInput_clearDate__default:hover svg {
+  fill: red;
+}
+
+.SingleDatePickerInput__disabled .SingleDatePickerInput_clearDate {
+  background-color: #f2f2f2;
+}
