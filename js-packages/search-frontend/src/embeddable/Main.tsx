@@ -502,10 +502,6 @@ function useSearch({
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
   const debounced = useDebounce(selectionsState, 600);
-  // const [isActiveQueryAnalysis] = React.useState(
-  //   configuration.searchConfigurable?.isActiveQueryAnaylysis ?? true,
-  // );
-
   const isActiveQueryAnalysis = configuration.isQueryAnalysis;
   const queryAnalysis = useQueryAnalysis(
     {
