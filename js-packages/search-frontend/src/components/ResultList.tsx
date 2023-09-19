@@ -32,6 +32,7 @@ type ResultsProps<E> = {
   language: string;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
+  setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
 };
 function Results<E>({
   displayMode,
@@ -45,6 +46,7 @@ function Results<E>({
   language,
   setSortAfterKey,
   sortAfterKey,
+  setTotalResult,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -53,6 +55,7 @@ function Results<E>({
     case "finite":
       return (
         <FiniteResults
+          setTotalResult={setTotalResult}
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -68,6 +71,7 @@ function Results<E>({
     case "infinite":
       return (
         <InfiniteResults
+          setTotalResult={setTotalResult}
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -84,6 +88,7 @@ function Results<E>({
     case "virtual":
       return (
         <VirtualResults
+          setTotalResult={setTotalResult}
           renderers={renderers}
           searchQuery={searchQuery}
           onDetail={onDetail}
@@ -193,6 +198,7 @@ type ResulListProps<E> = {
   isMobile: boolean;
   overChangeCard?: boolean;
   language: string;
+  setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
@@ -207,6 +213,7 @@ export function FiniteResults<E>({
   overChangeCard = false,
   language,
   sortAfterKey,
+  setTotalResult,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -214,6 +221,9 @@ export function FiniteResults<E>({
     language,
     sortAfterKey,
   );
+
+  setTotalResult(results.data?.pages[0].total ?? null)
+  
   return (
     <div
       className="openk9-finite-result-container"
@@ -267,6 +277,7 @@ export function InfiniteResults<E>({
   language,
   setSortAfterKey,
   sortAfterKey,
+  setTotalResult,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -276,6 +287,7 @@ export function InfiniteResults<E>({
   );
 
   const { t } = useTranslation();
+  setTotalResult(results.data?.pages[0].total ?? null)
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -422,6 +434,7 @@ export function VirtualResults<E>({
   overChangeCard = false,
   language,
   sortAfterKey,
+  setTotalResult,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -433,6 +446,7 @@ export function VirtualResults<E>({
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,
   );
+  setTotalResult(results.data?.pages[0].total ?? null)
   return (
     <div
       className="openk9-virtual-results-container"

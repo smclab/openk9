@@ -41,6 +41,7 @@ import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
+import { TotalResults } from "../components/TotalResults";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -136,6 +137,8 @@ export function Main({
     }
   }, [languageQuery.data, i18n]);
   const [sortAfterKey, setSortAfterKey] = React.useState("");
+  const [totalResult, setTotalResult] = React.useState<number | null>(null);
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -263,6 +266,7 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -280,7 +284,16 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <TotalResults
+          totalResult={totalResult}
+          />
+        </I18nextProvider>,
+        configuration.totalResult,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}

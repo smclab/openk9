@@ -266,6 +266,7 @@ export type Configuration = {
   tenant: string | null;
   isQueryAnalysis: boolean | null;
   token: string | null;
+  totalResult: Element | string | null;
   useKeycloak: boolean;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
   changeSortResult: (
@@ -298,6 +299,7 @@ const defaultConfiguration: Configuration = {
   login: null,
   tenant: null,
   token: null,
+  totalResult: null,
   calendar: null,
   sortableConfigurable: null,
   resultList: null,
