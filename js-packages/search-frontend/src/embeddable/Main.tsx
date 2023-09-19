@@ -502,17 +502,25 @@ function useSearch({
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
+  // console.log(selectionsState);
+
   const debounced = useDebounce(selectionsState, 600);
+
   const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.text,
+    searchText: debounced.textOnChange || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
     ),
   });
   const spans = React.useMemo(
-    () => calculateSpans(selectionsState.text, queryAnalysis.data?.analysis),
-    [queryAnalysis.data?.analysis, selectionsState.text],
+    () =>
+      calculateSpans(
+        debounced.textOnChange || "",
+        queryAnalysis.data?.analysis,
+      ),
+    [queryAnalysis.data?.analysis, debounced.textOnChange],
   );
+
   const searchTokens = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -521,8 +529,9 @@ function useSearch({
           token ? [{ text, start, end, token }] : [],
         ),
       ),
-    [spans, selectionsState.selection],
+    [debounced.text],
   );
+
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
@@ -532,7 +541,7 @@ function useSearch({
       ...searchTokens,
       ...dateTokens,
     ],
-    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
+    [defaultTokens, tabTokens, filterTokens, dateTokens, searchTokens],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
@@ -568,7 +577,14 @@ function useSearch({
         selectionsDispatch({
           type: "set-selection",
           replaceText: false,
-          selection,
+          selection: {
+            token: selection.token,
+            end: selection.end,
+            isAuto: selection.isAuto,
+            start: selection.start,
+            text: selection.text,
+            textOnChange: selection.text,
+          },
         });
       }
     }
@@ -745,10 +761,9 @@ function deriveSearchQuery(
     .filter((span) => span.text)
     .map((span): SearchToken => {
       const token =
-        selection.find(
-          (selection) =>
-            selection.start === span.start && selection.end === span.end,
-        )?.token ?? null;
+        selection.find((selection) => {
+          return selection.start === span.start && selection.end === span.end;
+        })?.token ?? null;
       return (
         (token && analysisTokenToSearchToken(token)) ?? {
           tokenType: "TEXT",

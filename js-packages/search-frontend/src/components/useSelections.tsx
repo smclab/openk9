@@ -29,25 +29,29 @@ export function useSelections() {
 }
 
 export type SelectionsState = {
-  text: string;
+  text?: string;
   selection: Array<Selection>;
+  textOnChange?: string;
 };
 
 const initial: SelectionsState = {
   text: "",
   selection: [],
+  textOnChange: "",
 };
 
 export type SelectionsAction =
-  | { type: "set-text"; text: string }
+  | { type: "set-text"; text?: string; textOnchange?: string }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: Selection;
     };
+// | { type: "onChange-text"; textOnchange: string };
 
 type Selection = {
   text: string;
+  textOnChange: string;
   start: number;
   end: number;
   token: AnalysisToken | null;
@@ -61,8 +65,13 @@ function reducer(
   switch (action.type) {
     case "set-text": {
       return {
-        text: action.text,
-        selection: shiftSelection(state.text, action.text, state.selection),
+        text: action.text || state.text,
+        textOnChange: action.textOnchange || state.textOnChange,
+        selection: shiftSelection(
+          state.textOnChange || "",
+          action.textOnchange || state.textOnChange || "",
+          state.selection,
+        ),
       };
     }
     case "set-selection": {
@@ -71,18 +80,21 @@ function reducer(
           action.replaceText ||
           action.selection.token?.tokenType === "AUTOCORRECT"
         ) {
+          // const textOnchange = action.selection.textOnChange;
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
-            : state.text.slice(action.selection.start, action.selection.end);
+            : state.text ||
+              "".slice(action.selection.start, action.selection.end);
           const text =
-            state.text.slice(0, action.selection.start) +
-            tokenText +
-            state.text.slice(action.selection.end);
+            state.text ||
+            "".slice(0, action.selection.start) + tokenText + state.text ||
+            "".slice(action.selection.end);
           const selection: Selection | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
               ? null
               : {
                   text: tokenText,
+                  textOnChange: tokenText,
                   start: action.selection.start,
                   end: action.selection.start + tokenText.length,
                   token: action.selection.token,
@@ -99,8 +111,8 @@ function reducer(
       return {
         text,
         selection: shiftSelection(
-          state.text,
-          text,
+          state.text || "",
+          text || "",
           selection
             ? state.selection.filter((s) => !isOverlapping(s, selection))
             : state.selection,

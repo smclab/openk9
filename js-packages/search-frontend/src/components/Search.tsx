@@ -153,6 +153,7 @@ export function Search({
                       replaceText,
                       selection: {
                         text: span.text,
+                        textOnChange: span.text,
                         start: span.start,
                         end: span.end,
                         token,
@@ -234,11 +235,16 @@ export function Search({
                   selectionsDispatch({
                     type: "set-text",
                     text: event.currentTarget.value,
+                    textOnchange: event.currentTarget.value,
                   });
                   onDetail(null);
                   setOpenedDropdown(null);
                 } else {
                   setTextBtn(event.currentTarget.value);
+                  selectionsDispatch({
+                    type: "set-text",
+                    textOnchange: event.currentTarget.value,
+                  });
                 }
               }}
               css={css`
@@ -251,11 +257,7 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${textBtn
-                  ? "black"
-                  : showSyntax
-                  ? "transparent"
-                  : "inherit"};
+                color: ${"black"};
               `}
               spellCheck="false"
               onSelect={(event) => {
@@ -309,6 +311,7 @@ export function Search({
                       replaceText,
                       selection: {
                         text: span.text,
+                        textOnChange: span.text,
                         start: span.start,
                         end: span.end,
                         token: option ?? null,
@@ -373,7 +376,7 @@ export function Search({
                   if (!btnSearch) {
                     selectionsDispatch({
                       type: "set-text",
-                      text: "",
+                      textOnchange: "",
                     });
                   } else {
                     setTextBtn("");

@@ -507,6 +507,7 @@ export type AnalysisRequest = {
 
 export type AnalysisRequestEntry = {
   text: string;
+  // textOnChange: string;
   start: number;
   end: number;
   token: AnalysisToken;

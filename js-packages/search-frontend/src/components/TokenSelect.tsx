@@ -168,7 +168,11 @@ export function TokenSelect({
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {
-                    onSelect(option);
+                    // onSelect(option);
+                    selectionsDispatch({
+                      type: "set-text",
+                      text: option.label,
+                    });
                   }
                 }}
                 onMouseEnter={() => {
@@ -208,15 +212,18 @@ type Status =
   | "not-interactive";
 const statusStyles: Record<Status, any> = {
   "can-select": css`
-    color: var(--openk9-embeddable-search--primary-color);
+    display: none;
   `,
   "auto-selected": css`
+    display: none;
     color: lightseagreen;
   `,
   "has-selected": css`
+    display: none;
     color: dodgerblue;
   `,
   "not-interactive": css`
+    display: none;
     color: black;
   `,
 };
