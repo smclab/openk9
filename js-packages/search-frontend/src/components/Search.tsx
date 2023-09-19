@@ -34,6 +34,7 @@ type SearchProps = {
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
   btnSearch?: boolean;
+  saveSearchQuery: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
@@ -49,6 +50,7 @@ export function Search({
   mobileVersion = false,
   btnSearch = false,
   actionCloseMobileVersion,
+  saveSearchQuery,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -148,6 +150,8 @@ export function Search({
                   );
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
+                    console.log(token, span.text, span.start, span.end);
+
                     selectionsDispatch({
                       type: "set-selection",
                       replaceText,
@@ -209,6 +213,7 @@ export function Search({
                       isAutoSlected={isAutoSelected}
                       setOpenedDropdown={setOpenedDropdown}
                       selectionsDispatch={selectionsDispatch}
+                      saveSearchQuery={saveSearchQuery}
                     />
                   );
                 })}

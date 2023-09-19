@@ -16,6 +16,7 @@ type TokenSelectProps = {
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
+  saveSearchQuery: React.Dispatch<React.SetStateAction<boolean>>;
   setOpenedDropdown: React.Dispatch<
     React.SetStateAction<{
       textPosition: number;
@@ -34,6 +35,7 @@ export function TokenSelect({
   setOpenedDropdown,
   onSelectText,
   selectionsDispatch,
+  saveSearchQuery,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
@@ -168,11 +170,8 @@ export function TokenSelect({
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {
-                    // onSelect(option);
-                    selectionsDispatch({
-                      type: "set-text",
-                      text: option.label,
-                    });
+                    saveSearchQuery((save) => !save);
+                    setOpenedDropdown(null);
                   }
                 }}
                 onMouseEnter={() => {

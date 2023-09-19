@@ -83,11 +83,13 @@ function reducer(
           // const textOnchange = action.selection.textOnChange;
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
-            : state.text ||
+            : state.textOnChange ||
               "".slice(action.selection.start, action.selection.end);
           const text =
-            state.text ||
-            "".slice(0, action.selection.start) + tokenText + state.text ||
+            state.textOnChange ||
+            "".slice(0, action.selection.start) +
+              tokenText +
+              state.textOnChange ||
             "".slice(action.selection.end);
           const selection: Selection | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
@@ -105,14 +107,14 @@ function reducer(
             selection,
           };
         } else {
-          return { text: state.text, selection: action.selection };
+          return { text: state.textOnChange, selection: action.selection };
         }
       })();
       return {
         text,
         selection: shiftSelection(
-          state.text || "",
-          text || "",
+          state.textOnChange || "",
+          state.textOnChange || "",
           selection
             ? state.selection.filter((s) => !isOverlapping(s, selection))
             : state.selection,

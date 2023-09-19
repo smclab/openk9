@@ -117,6 +117,7 @@ export function Main({
     selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
+    setIsSaveQuery,
   } = useSearch({
     configuration,
     tabTokens,
@@ -149,6 +150,7 @@ export function Main({
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
+            saveSearchQuery={setIsSaveQuery}
           />
         </I18nextProvider>,
         configuration.search,
@@ -158,6 +160,7 @@ export function Main({
           <Search
             configuration={configuration}
             spans={spans}
+            saveSearchQuery={setIsSaveQuery}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={
@@ -502,8 +505,8 @@ function useSearch({
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
-  // console.log(selectionsState);
-
+  console.log(selectionsState);
+  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
   const debounced = useDebounce(selectionsState, 600);
 
   const queryAnalysis = useQueryAnalysis({
@@ -520,17 +523,14 @@ function useSearch({
       ),
     [queryAnalysis.data?.analysis, debounced.textOnChange],
   );
-
-  const searchTokens = React.useMemo(
-    () =>
-      deriveSearchQuery(
-        spans,
-        selectionsState.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
-        ),
+  const searchTokens = React.useMemo(() => {
+    return deriveSearchQuery(
+      spans,
+      selectionsState.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
       ),
-    [debounced.text],
-  );
+    );
+  }, [isSvaleQuery, debounced.text]);
 
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
@@ -603,6 +603,7 @@ function useSearch({
     selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
+    setIsSaveQuery,
   };
 }
 
