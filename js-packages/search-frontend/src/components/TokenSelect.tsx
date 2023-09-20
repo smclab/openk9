@@ -171,6 +171,7 @@ export function TokenSelect({
                     onSelectText(option);
                   } else {
                     saveSearchQuery((save) => !save);
+                    onSelect(option);
                     setOpenedDropdown(null);
                   }
                 }}

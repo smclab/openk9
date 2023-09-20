@@ -505,7 +505,6 @@ function useSearch({
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [selectionsState, selectionsDispatch] = useSelections();
-  console.log(selectionsState);
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
   const debounced = useDebounce(selectionsState, 600);
 
@@ -515,6 +514,8 @@ function useSearch({
       token ? [{ text, start, end, token }] : [],
     ),
   });
+  console.log(selectionsState);
+
   const spans = React.useMemo(
     () =>
       calculateSpans(
@@ -757,6 +758,8 @@ function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
   selection: AnalysisRequestEntry[],
 ) {
+  console.log(spans, selection);
+
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)

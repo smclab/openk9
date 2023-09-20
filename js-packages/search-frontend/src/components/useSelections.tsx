@@ -85,6 +85,7 @@ function reducer(
             ? getTokenText(action.selection.token)
             : state.textOnChange ||
               "".slice(action.selection.start, action.selection.end);
+
           const text =
             state.textOnChange ||
             "".slice(0, action.selection.start) +
@@ -107,11 +108,14 @@ function reducer(
             selection,
           };
         } else {
+          console.log(state.textOnChange, action.selection);
+
           return { text: state.textOnChange, selection: action.selection };
         }
       })();
       return {
         text,
+        textOnChange: state.textOnChange || "",
         selection: shiftSelection(
           state.textOnChange || "",
           state.textOnChange || "",
