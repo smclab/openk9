@@ -25,6 +25,7 @@ type FiltersProps = {
   language: string;
   sortAfterKey: string;
   isCollapsable?: boolean;
+  numberItems?: number | null | undefined;
 };
 function Filters({
   searchQuery,
@@ -38,6 +39,7 @@ function Filters({
   language,
   sortAfterKey,
   isCollapsable = true,
+  numberItems,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -212,6 +214,7 @@ function Filters({
               searchQuery={searchQuery}
               language={language}
               isCollapsable={isCollapsable}
+              numberItems={numberItems}
             />
           ) : (
             <FilterCategoryMemo
@@ -230,6 +233,7 @@ function Filters({
               dynamicFilters={dynamicFilters}
               language={language}
               isCollapsable={isCollapsable}
+              numberItems={numberItems}
             />
           );
         })}

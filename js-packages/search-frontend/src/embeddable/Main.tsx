@@ -160,7 +160,11 @@ export function Main({
             spans={spans}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
-            showSyntax={isQueryAnalysisComplete}
+            showSyntax={
+              configuration.searchConfigurable?.isShowSyntax === false
+                ? false
+                : isQueryAnalysisComplete
+            }
             onDetail={setDetail}
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
@@ -215,10 +219,7 @@ export function Main({
             isCollapsable={
               configuration.filtersConfigurable?.isCollapsable ?? true
             }
-            // numberItems={configuration.filtersConfigurable?.numberItems}
-            // isCollapsable={
-            //   configuration.filtersConfigurable?.isCollapsable ?? true
-            // }
+            numberItems={configuration.filtersConfigurable?.numberItems}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable

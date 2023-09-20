@@ -4,6 +4,14 @@ public class MappingsKey {
 	private final String key;
 	private final String hashKey;
 
+	public static MappingsKey of(String key) {
+		return new MappingsKey(key);
+	}
+
+	public static MappingsKey of(String key, String hashKey) {
+		return new MappingsKey(key, hashKey);
+	}
+
 	public MappingsKey(String key) {
 		this(key, key);
 	}
