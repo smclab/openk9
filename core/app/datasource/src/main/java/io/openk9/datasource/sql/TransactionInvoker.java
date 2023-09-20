@@ -118,11 +118,7 @@ public abstract class TransactionInvoker {
 			.createFrom()
 			.deferred(() -> fun.apply((s, t) -> {
 
-				Context context = Vertx.currentContext();
-
-				String currentSchema = context.getLocal("currentSchema");
-
-				if (!multiTenancyConfig.isEnabled() || currentSchema != null) {
+				if (!multiTenancyConfig.isEnabled()) {
 					return fun2.apply(s, t);
 				}
 
@@ -152,7 +148,6 @@ public abstract class TransactionInvoker {
 
 				return createNativeQuery.apply(s, alterSchemaSession(newSchema))
 					.executeUpdate()
-					.invoke(() -> context.putLocal("currentSchema", newSchema))
 					.flatMap((ignore) -> {
 						try {
 							return fun2.apply(s, t);
