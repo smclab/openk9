@@ -365,10 +365,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return withTransaction((s) -> s.find(getEntityClass(), id));
 	}
 
-	public Uni<ENTITY> findById(Mutiny.Session session, long id) {
-		return session.find(getEntityClass(), id);
-	}
-
 	@Override
 	public Uni<List<ENTITY>> findByIds(Set<Long> ids) {
 		return withTransaction(

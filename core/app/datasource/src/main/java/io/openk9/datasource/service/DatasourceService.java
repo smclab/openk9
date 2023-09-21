@@ -60,8 +60,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return withTransaction(
-			s -> findById(s, datasourceId).flatMap(this::getDataIndex));
+		return findById(datasourceId).flatMap(this::getDataIndex);
 	}
 
 
@@ -97,7 +96,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
 		return withTransaction(
-			(s) -> findById(s, datasourceId).flatMap(this::getEnrichPipeline));
+			() -> findById(datasourceId).flatMap(this::getEnrichPipeline));
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
