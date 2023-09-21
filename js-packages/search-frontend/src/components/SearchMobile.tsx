@@ -15,6 +15,7 @@ import {
 import { useClickAway } from "./useClickAway";
 import {
   SelectionsAction,
+  SelectionsActionOnClick,
   SelectionsState,
   SelectionsStateOnClick,
 } from "./useSelections";
@@ -30,7 +31,7 @@ type SearchMobileProps = {
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
   selectionsState: SelectionsState | SelectionsStateOnClick;
-  selectionsDispatch(action: SelectionsAction | SelectionsStateOnClick): void;
+  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
   showSyntax: boolean;
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;

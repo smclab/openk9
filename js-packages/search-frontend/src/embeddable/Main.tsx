@@ -161,7 +161,6 @@ export function Main({
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
-            // saveSearchQuery={setIsSaveQuery}
             isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
@@ -172,7 +171,6 @@ export function Main({
           <Search
             configuration={configuration}
             spans={spans}
-            // saveSearchQuery={setIsSaveQuery}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={
@@ -470,7 +468,7 @@ export function Main({
           ? configuration.calendarMobile?.element
           : null,
       )}
-      {/* {renderPortal(
+      {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SearchMobile
             configuration={configuration}
@@ -497,7 +495,7 @@ export function Main({
         configuration.searchMobile?.search !== undefined
           ? configuration.searchMobile?.search
           : null,
-      )} */}
+      )}
     </React.Fragment>
   );
 }

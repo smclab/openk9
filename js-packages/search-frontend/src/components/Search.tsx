@@ -428,7 +428,14 @@ export function Search({
                       text: "",
                     });
                   } else {
-                    setTextBtn(" ");
+                    selectionsDispatch({
+                      type: "set-text",
+                      textOnchange: " ",
+                      text: " ",
+                    });
+                    setTextBtn("");
+                    onDetail(null);
+                    setOpenedDropdown(null);
                   }
                 }}
               >
