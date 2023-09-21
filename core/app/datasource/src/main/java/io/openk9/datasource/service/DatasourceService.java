@@ -60,8 +60,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return withTransaction(
-			() -> findById(datasourceId).flatMap(this::getDataIndex));
+		return findById(datasourceId).flatMap(this::getDataIndex);
 	}
 
 
