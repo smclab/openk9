@@ -6,7 +6,7 @@ public record PartialDocTypeFieldDTO(String field, Long id, String label) {
 
 	public static PartialDocTypeFieldDTO of(DocTypeField docTypeField) {
 		return new PartialDocTypeFieldDTO(
-			docTypeField.getFieldName(),
+			docTypeField.getPath(),
 			docTypeField.getId(),
 			docTypeField.getName()
 		);
