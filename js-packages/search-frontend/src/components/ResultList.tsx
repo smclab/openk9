@@ -222,8 +222,8 @@ export function FiniteResults<E>({
     sortAfterKey,
   );
 
-  setTotalResult(results.data?.pages[0].total ?? null)
-  
+  setTotalResult(results.data?.pages[0].total ?? null);
+
   return (
     <div
       className="openk9-finite-result-container"
@@ -287,7 +287,7 @@ export function InfiniteResults<E>({
   );
 
   const { t } = useTranslation();
-  setTotalResult(results.data?.pages[0].total ?? null)
+  setTotalResult(results.data?.pages[0].total ?? null);
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -446,7 +446,7 @@ export function VirtualResults<E>({
   const thereAreResults = Boolean(
     results.data?.pages[0].total && results.data.pages[0].total > 0,
   );
-  setTotalResult(results.data?.pages[0].total ?? null)
+  setTotalResult(results.data?.pages[0].total ?? null);
   return (
     <div
       className="openk9-virtual-results-container"
@@ -545,9 +545,7 @@ export function useInfiniteResults<E>(
     ["results", searchQuery, sort, language, sortAfterKey] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       const RangePage: [number, number] =
-        sortAfterKey === ""
-          ? [pageParam * pageSize, pageParam * pageSize + pageSize]
-          : [0, pageSize];
+        sortAfterKey === "" ? [pageParam * pageSize, pageSize] : [0, pageSize];
       return client.doSearch<E>({
         range: RangePage,
         language,
