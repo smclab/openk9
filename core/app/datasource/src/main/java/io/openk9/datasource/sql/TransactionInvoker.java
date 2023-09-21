@@ -148,6 +148,7 @@ public abstract class TransactionInvoker {
 
 				return createNativeQuery.apply(s, alterSchemaSession(newSchema))
 					.executeUpdate()
+					.invoke(() -> {})
 					.flatMap((ignore) -> {
 						try {
 							return stmt.apply(s, t);
