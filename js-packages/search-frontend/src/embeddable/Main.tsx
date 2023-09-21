@@ -7,6 +7,7 @@ import {
   getAutoSelections,
   isOverlapping,
   useSelections,
+  useSelectionsOnClick,
 } from "../components/useSelections";
 import { LoginInfoComponentMemo } from "../components/LoginInfo";
 import {
@@ -110,6 +111,8 @@ export function Main({
     configuration.overrideTabs,
     languageSelect,
   );
+  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
+
   const {
     searchQuery,
     spans,
@@ -118,13 +121,21 @@ export function Main({
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
-  } = useSearch({
-    configuration,
-    tabTokens,
-    filterTokens,
-    dateTokens,
-    onQueryStateChange,
-  });
+  } = isSearchOnInputChange
+    ? useSearchOnClick({
+        configuration,
+        tabTokens,
+        filterTokens,
+        dateTokens,
+        onQueryStateChange,
+      })
+    : useSearch({
+        configuration,
+        tabTokens,
+        filterTokens,
+        dateTokens,
+        onQueryStateChange,
+      });
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
   React.useEffect(() => {
@@ -150,7 +161,8 @@ export function Main({
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
-            saveSearchQuery={setIsSaveQuery}
+            // saveSearchQuery={setIsSaveQuery}
+            isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
         configuration.search,
@@ -160,7 +172,7 @@ export function Main({
           <Search
             configuration={configuration}
             spans={spans}
-            saveSearchQuery={setIsSaveQuery}
+            // saveSearchQuery={setIsSaveQuery}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={
@@ -173,6 +185,7 @@ export function Main({
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
             btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+            isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
         configuration.searchConfigurable
@@ -457,7 +470,7 @@ export function Main({
           ? configuration.calendarMobile?.element
           : null,
       )}
-      {renderPortal(
+      {/* {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SearchMobile
             configuration={configuration}
@@ -484,9 +497,117 @@ export function Main({
         configuration.searchMobile?.search !== undefined
           ? configuration.searchMobile?.search
           : null,
-      )}
+      )} */}
     </React.Fragment>
   );
+}
+
+function useSearchOnClick({
+  configuration,
+  tabTokens,
+  filterTokens,
+  dateTokens,
+  onQueryStateChange,
+}: {
+  configuration: Configuration;
+  tabTokens: SearchToken[];
+  filterTokens: SearchToken[];
+  dateTokens: SearchToken[];
+  onQueryStateChange(queryState: QueryState): void;
+}) {
+  const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
+    configuration;
+  const [selectionsState, selectionsDispatch] = useSelectionsOnClick();
+  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
+
+  const debounced = useDebounce(selectionsState, 600);
+  const queryAnalysis = useQueryAnalysis({
+    searchText: debounced.text || "",
+    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+      token ? [{ text, start, end, token }] : [],
+    ),
+  });
+  const spans = React.useMemo(
+    () =>
+      calculateSpans(selectionsState.text || "", queryAnalysis.data?.analysis),
+    [queryAnalysis.data?.analysis, selectionsState.text],
+  );
+  const searchTokens = React.useMemo(
+    () =>
+      deriveSearchQuery(
+        spans,
+        selectionsState.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      ),
+    [spans, selectionsState.selection],
+  );
+  const completelySort = React.useMemo(() => sort, [sort]);
+  const searchQueryMemo = React.useMemo(
+    () => [
+      ...defaultTokens,
+      ...tabTokens,
+      ...filterTokens,
+      ...searchTokens,
+      ...dateTokens,
+    ],
+    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
+  );
+  const searchQuery = useDebounce(searchQueryMemo, 600);
+  const isQueryAnalysisComplete =
+    selectionsState.text === debounced.text &&
+    queryAnalysis.data !== undefined &&
+    !queryAnalysis.isPreviousData;
+
+  React.useEffect(() => {
+    onQueryStateChange({
+      defaultTokens,
+      tabTokens,
+      filterTokens,
+      searchTokens,
+    });
+  }, [
+    onQueryStateChange,
+    defaultTokens,
+    tabTokens,
+    filterTokens,
+    searchTokens,
+  ]);
+  React.useEffect(() => {
+    if (
+      searchAutoselect &&
+      queryAnalysis.data &&
+      queryAnalysis.data.searchText === selectionsState.text
+    ) {
+      const autoSelections = getAutoSelections(
+        selectionsState.selection,
+        queryAnalysis.data.analysis,
+      );
+      for (const selection of autoSelections) {
+        selectionsDispatch({
+          type: "set-selection",
+          replaceText: false,
+          selection,
+        });
+      }
+    }
+  }, [
+    searchAutoselect,
+    searchReplaceText,
+    selectionsDispatch,
+    queryAnalysis.data,
+    selectionsState.selection,
+    selectionsState.text,
+  ]);
+  return {
+    searchQuery,
+    spans,
+    selectionsState,
+    selectionsDispatch,
+    isQueryAnalysisComplete,
+    completelySort,
+    setIsSaveQuery,
+  };
 }
 
 function useSearch({
@@ -514,7 +635,6 @@ function useSearch({
       token ? [{ text, start, end, token }] : [],
     ),
   });
-  console.log(selectionsState);
 
   const spans = React.useMemo(
     () =>
@@ -758,8 +878,6 @@ function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
   selection: AnalysisRequestEntry[],
 ) {
-  console.log(spans, selection);
-
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)
@@ -839,6 +957,15 @@ function calculateSpans(
     }
   }
   return spans.filter((span) => span.text);
+}
+
+function useQueryAnalysisOnCLick(request: AnalysisRequest) {
+  const client = useOpenK9Client();
+  return useQuery(
+    ["query-anaylis", request] as const,
+    async ({ queryKey: [, request] }) =>
+      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+  );
 }
 
 function useQueryAnalysis(request: AnalysisRequest) {

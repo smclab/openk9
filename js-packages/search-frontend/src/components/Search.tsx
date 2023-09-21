@@ -15,7 +15,12 @@ import {
   SearchToken,
   SortField,
 } from "./client";
-import { SelectionsAction, SelectionsState } from "./useSelections";
+import {
+  SelectionsAction,
+  SelectionsActionOnClick,
+  SelectionsState,
+  SelectionsStateOnClick,
+} from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -26,15 +31,16 @@ type SearchProps = {
   configuration: Configuration;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState;
-  selectionsDispatch(action: SelectionsAction): void;
+  selectionsState: SelectionsState | SelectionsStateOnClick;
+  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
   showSyntax: boolean;
   isMobile: boolean;
   filtersSelect: SearchToken[];
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
   btnSearch?: boolean;
-  saveSearchQuery: React.Dispatch<React.SetStateAction<boolean>>;
+  isSearchOnInputChange?: boolean;
+  saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
@@ -50,6 +56,7 @@ export function Search({
   mobileVersion = false,
   btnSearch = false,
   actionCloseMobileVersion,
+  isSearchOnInputChange = false,
   saveSearchQuery,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -150,18 +157,32 @@ export function Search({
                   );
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        textOnChange: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token,
-                        isAuto: false,
-                      },
-                    });
+                    if (isSearchOnInputChange) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token,
+                          isAuto: false,
+                        },
+                      });
+                    } else {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          textOnChange: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token,
+                          isAuto: false,
+                        },
+                      });
+                    }
                     if (
                       inputRef.current?.selectionStart &&
                       inputRef.current?.selectionEnd
@@ -211,7 +232,7 @@ export function Search({
                       isAutoSlected={isAutoSelected}
                       setOpenedDropdown={setOpenedDropdown}
                       selectionsDispatch={selectionsDispatch}
-                      saveSearchQuery={saveSearchQuery}
+                      isColorSearch={isSearchOnInputChange}
                     />
                   );
                 })}
@@ -244,10 +265,17 @@ export function Search({
                   setOpenedDropdown(null);
                 } else {
                   setTextBtn(event.currentTarget.value);
-                  selectionsDispatch({
-                    type: "set-text",
-                    textOnchange: event.currentTarget.value,
-                  });
+                  if (isSearchOnInputChange) {
+                    selectionsDispatch({
+                      type: "set-text",
+                      text: event.currentTarget.value,
+                    });
+                  } else {
+                    selectionsDispatch({
+                      type: "set-text",
+                      textOnchange: event.currentTarget.value,
+                    });
+                  }
                 }
               }}
               css={css`
@@ -260,7 +288,11 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${"black"};
+                color: ${textBtn
+                  ? "black"
+                  : showSyntax
+                  ? "transparent"
+                  : "inherit"};
               `}
               spellCheck="false"
               onSelect={(event) => {
@@ -309,18 +341,32 @@ export function Search({
                 } else if (event.key === "Enter") {
                   event.preventDefault();
                   if (span) {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        textOnChange: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token: option ?? null,
-                        isAuto: false,
-                      },
-                    });
+                    if (isSearchOnInputChange) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                    } else {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span?.text || "",
+                          textOnChange: span?.text || "",
+                          start: span?.start || 0,
+                          end: span?.end || 0,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                    }
                     if (replaceText) {
                       const text =
                         option &&
@@ -379,10 +425,10 @@ export function Search({
                   if (!btnSearch) {
                     selectionsDispatch({
                       type: "set-text",
-                      textOnchange: "",
+                      text: "",
                     });
                   } else {
-                    setTextBtn("");
+                    setTextBtn(" ");
                   }
                 }}
               >

@@ -13,7 +13,11 @@ import {
   SortField,
 } from "./client";
 import { useClickAway } from "./useClickAway";
-import { SelectionsAction, SelectionsState } from "./useSelections";
+import {
+  SelectionsAction,
+  SelectionsState,
+  SelectionsStateOnClick,
+} from "./useSelections";
 import React from "react";
 import { css } from "styled-components/macro";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
@@ -25,8 +29,8 @@ type SearchMobileProps = {
   onConfigurationChange: ConfigurationUpdateFunction;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState;
-  selectionsDispatch(action: SelectionsAction): void;
+  selectionsState: SelectionsState | SelectionsStateOnClick;
+  selectionsDispatch(action: SelectionsAction | SelectionsStateOnClick): void;
   showSyntax: boolean;
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
@@ -263,6 +267,7 @@ export function SearchMobile({
                         replaceText,
                         selection: {
                           text: span.text,
+                          textOnChange: span.text,
                           start: span.start,
                           end: span.end,
                           token: option ?? null,
@@ -383,6 +388,7 @@ export function SearchMobile({
                 replaceText,
                 selection: {
                   text: span.text,
+                  textOnChange: span.text,
                   start: span.start,
                   end: span.end,
                   token,

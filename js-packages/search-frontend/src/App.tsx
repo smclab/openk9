@@ -213,7 +213,7 @@ export function App() {
               ref={(element) =>
                 openk9.updateConfiguration({
                   searchConfigurable: {
-                    btnSearch: true,
+                    btnSearch: false,
                     isShowSyntax: true,
                     element,
                   },
