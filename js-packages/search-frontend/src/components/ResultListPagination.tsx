@@ -53,7 +53,7 @@ function ResultsPagination<E>({
   pagination,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
-  const [currentPage, setCurrentPage] = React.useState<number>(1);
+  const [currentPage, setCurrentPage] = React.useState<number>(0);
   const changePage = (page: number) => {
     setCurrentPage(page);
   };
@@ -183,66 +183,6 @@ type ResulListProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
-type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
-// export function FiniteResults<E>({
-//   renderers,
-//   searchQuery,
-//   onDetail,
-//   setDetailMobile,
-//   sort,
-//   setSortResult,
-//   isMobile,
-//   overChangeCard = false,
-//   language,
-//   sortAfterKey,
-//   setTotalResult,
-// }: FiniteResultsProps<E>) {
-//   const results = useInfiniteResults<E>(
-//     searchQuery,
-//     sort,
-//     language,
-//     sortAfterKey,
-//   );
-
-//   setTotalResult(results.data?.pages[0].total ?? null);
-
-//   return (
-//     <div
-//       className="openk9-finite-result-container"
-//       style={{ height: "100%", overflowY: "auto", position: "relative" }}
-//     >
-//       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-//         <div
-//           className="openk9-finite-result"
-//           css={css`
-//             position: absolute;
-//             width: 100%;
-//           `}
-//         >
-//           <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
-//             {results.data?.pages[0].total}
-//           </ResultCount>
-//           {results.data?.pages[0].result.map((result, index) => {
-//             return (
-//               <ResultMemo<E>
-//                 renderers={renderers}
-//                 key={index}
-//                 result={result}
-//                 onDetail={onDetail}
-//                 setDetailMobile={setDetailMobile}
-//                 isMobile={isMobile}
-//                 overChangeCard={overChangeCard}
-//               />
-//             );
-//           })}
-//         </div>
-//       ) : (
-//         <NoResults />
-//       )}
-//     </div>
-//   );
-// }
-
 type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
@@ -271,26 +211,25 @@ export function InfiniteResults<E>({
   elementForPage,
   setCurrentPage,
 }: InfiniteResultsProps<E>) {
+  const result = currentPage * elementForPage;
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
-    currentPage,
-    numberOfResults,
     elementForPage,
-    currentPage,
+    result,
   );
 
+  const { t } = useTranslation();
   const itemsPerPage = 3; // Numero di elementi per pagina
   const pagesToShow = 3; // Numero di pagine da mostrare per volta
-
+  const partialResult = numberOfResults / elementForPage;
+  const numberOfPage = Math.ceil(partialResult);
   const [viewButton, setViewButton] = React.useState({
     start: 0,
     end: itemsPerPage,
   });
-
-  const numberOfPage = Math.ceil(numberOfResults / itemsPerPage);
 
   const handlePrevClick = () => {
     setViewButton((view) => ({
@@ -323,9 +262,9 @@ export function InfiniteResults<E>({
       end: Math.min(view.end + pagesToShow, numberOfPage),
     }));
   };
-  const { t } = useTranslation();
+
   setTotalResult(results.data?.pages[0].total ?? null);
-  const numberOfPageT = Math.ceil(numberOfResults / elementForPage);
+
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -372,40 +311,57 @@ export function InfiniteResults<E>({
             );
           })}
           <React.Fragment>
-            <button disabled={viewButton.start === 0} onClick={resetClick}>
-              {"<<"}
-            </button>
-            <button disabled={viewButton.start === 0} onClick={handlePrevClick}>
-              {"<"}
-            </button>
-            {Array.from({ length: numberOfPage }).map(
-              (_, index) =>
-                index >= viewButton.start &&
-                index < viewButton.end && (
-                  <button
-                    onClick={() => {
-                      results.fetchNextPage();
-                      setCurrentPage(index);
-                    }}
-                    key={index}
-                  >
-                    {index + 1}
-                  </button>
-                ),
-            )}
-
-            <button
-              disabled={viewButton.end >= numberOfPage}
-              onClick={handleNextClick}
+            <div
+              css={css`
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 10px;
+                gap: 10px;
+              `}
             >
-              {">"}
-            </button>
-            <button
-              disabled={viewButton.end >= numberOfPage}
-              onClick={() => resetEndClick(numberOfPage)}
-            >
-              {">>"}
-            </button>
+              <CreateButton
+                action={resetClick}
+                value="<<"
+                disable={viewButton.start === 0}
+                ariaL="bottone per mostrare le prime pagine"
+              />
+              <CreateButton
+                action={handlePrevClick}
+                value="<"
+                disable={viewButton.start === 0}
+                ariaL="bottone per mostrare le tre pagine precedenti"
+              />
+              {Array.from({ length: numberOfPage }).map(
+                (_, index) =>
+                  index >= viewButton.start &&
+                  index < viewButton.end && (
+                    <CreateButton
+                      action={() => {
+                        results.fetchNextPage();
+                        setCurrentPage(index);
+                      }}
+                      key={index}
+                      value={"" + (index + 1)}
+                      isCurrent={currentPage === index}
+                      disable={viewButton.end >= numberOfPage}
+                      ariaL={"clicca per vedere la " + (index + 1) + " pagina"}
+                    />
+                  ),
+              )}
+              <CreateButton
+                action={handleNextClick}
+                value=">"
+                disable={viewButton.end >= numberOfPage}
+                ariaL="bottone per mostrare le tre pagine successive "
+              />
+              <CreateButton
+                action={() => resetEndClick(numberOfPage)}
+                value=">>"
+                disable={viewButton.end >= numberOfPage}
+                ariaL="bottone per mostrare le ultime tre pagine"
+              />
+            </div>
           </React.Fragment>
         </div>
       ) : (
@@ -472,20 +428,16 @@ function NoResults() {
   );
 }
 
-export function useInfiniteResults<E>(
+function useInfiniteResults<E>(
   searchQuery: Array<SearchToken>,
   sort: SortField[],
   language: string,
   sortAfterKey: string,
-  pagination: number,
-  numberOfResults: number,
   elementForPage: number,
-  currentPage: number,
+  result: number,
 ) {
   const pageSize = elementForPage;
   const client = useOpenK9Client();
-
-  const result = elementForPage * (currentPage + 1);
 
   return useInfiniteQuery(
     ["results", searchQuery, sort, language, sortAfterKey, result] as const,
@@ -502,17 +454,44 @@ export function useInfiniteResults<E>(
     },
     {
       keepPreviousData: false,
-      getNextPageParam(lastPage, pages) {
-        const totalDownloaded = pages.reduce(
-          (total, page) => total + page.result.length,
-          0,
-        );
-        if (totalDownloaded < lastPage.total) {
-          return pages.length;
-        }
-      },
       suspense: true,
       notifyOnChangeProps: ["isFetching"],
     },
+  );
+}
+
+function CreateButton({
+  value,
+  action,
+  ariaL,
+  disable,
+  isCurrent = false,
+}: {
+  value: string;
+  action: () => void;
+  ariaL: string;
+  disable: boolean;
+  isCurrent?: boolean;
+}) {
+  return (
+    <button
+      disabled={disable}
+      className={`openk9-result-list-pagination-button ${
+        isCurrent ? "select" : "not select"
+      }`}
+      aria-label={ariaL}
+      onClick={action}
+      css={css`
+        padding: 4px 8px !important;
+        background: ${isCurrent ? "#c83939" : "white"};
+        border-radius: 50px;
+        border: 1px solid #c83939;
+        font-size: 15px;
+        cursor: pointer;
+        color: ${isCurrent ? "white" : "#c83939"};
+      `}
+    >
+      {value}
+    </button>
   );
 }
