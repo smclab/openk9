@@ -109,21 +109,21 @@ public abstract class TransactionInvoker {
 
 	private <S, T> Uni<T> withTransaction(
 		String schema,
-		Function<BiFunction<S, Mutiny.Transaction, Uni<T>>, Uni<T>> fun,
+		Function<BiFunction<S, Mutiny.Transaction, Uni<T>>, Uni<T>> withTx,
 		java.util.function.Predicate<S> isOpen,
 		BiFunction<S, String, Mutiny.Query<?>> createNativeQuery,
-		BiFunction<S, Mutiny.Transaction, Uni<T>> fun2) {
+		BiFunction<S, Mutiny.Transaction, Uni<T>> stmt) {
 
 		return Uni
 			.createFrom()
-			.deferred(() -> fun.apply((s, t) -> {
+			.deferred(() -> withTx.apply((s, t) -> {
 
 				Context context = Vertx.currentContext();
 
 				String currentSchema = context.getLocal("currentSchema");
 
 				if (!multiTenancyConfig.isEnabled() || currentSchema != null) {
-					return fun2.apply(s, t);
+					return stmt.apply(s, t);
 				}
 
 				if (!isOpen.test(s)) {
@@ -155,7 +155,7 @@ public abstract class TransactionInvoker {
 					.invoke(() -> context.putLocal("currentSchema", newSchema))
 					.flatMap((ignore) -> {
 						try {
-							return fun2.apply(s, t);
+							return stmt.apply(s, t);
 						} catch (Exception e) {
 							if (e instanceof K9Error) {
 								return Uni.createFrom().failure(e);

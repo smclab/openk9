@@ -19,6 +19,7 @@ package io.openk9.datasource.model.dto;
 
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.validation.Alnum;
 import io.openk9.datasource.validation.json.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,6 +56,7 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 	private Boolean exclude;
 
 	@NotNull
+	@Alnum
 	private String fieldName;
 
 	@Json

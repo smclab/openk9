@@ -33,8 +33,10 @@ type ResultsProps<E> = {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
+  numberOfResults: number;
+  pagination: number;
 };
-function Results<E>({
+function ResultsPagination<E>({
   displayMode,
   onDetail,
   searchQuery,
@@ -47,27 +49,18 @@ function Results<E>({
   setSortAfterKey,
   sortAfterKey,
   setTotalResult,
+  numberOfResults,
+  pagination,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
-
+  const [currentPage, setCurrentPage] = React.useState<number>(0);
+  const changePage = (page: number) => {
+    setCurrentPage(page);
+  };
   if (!renderers) return null;
   switch (displayMode.type) {
     case "finite":
-      return (
-        <FiniteResults
-          setTotalResult={setTotalResult}
-          renderers={renderers}
-          searchQuery={searchQuery}
-          onDetail={onDetail}
-          setDetailMobile={setDetailMobile}
-          sort={sort}
-          setSortResult={setSortResult}
-          isMobile={isMobile}
-          overChangeCard={overChangeCard}
-          language={language}
-          sortAfterKey={sortAfterKey}
-        />
-      );
+    case "virtual":
     case "infinite":
       return (
         <InfiniteResults
@@ -83,28 +76,17 @@ function Results<E>({
           language={language}
           setSortAfterKey={setSortAfterKey}
           sortAfterKey={sortAfterKey}
-        />
-      );
-    case "virtual":
-      return (
-        <VirtualResults
-          setTotalResult={setTotalResult}
-          renderers={renderers}
-          searchQuery={searchQuery}
-          onDetail={onDetail}
-          setDetailMobile={setDetailMobile}
-          sort={sort}
-          setSortResult={setSortResult}
-          isMobile={isMobile}
-          overChangeCard={overChangeCard}
-          language={language}
-          sortAfterKey={sortAfterKey}
+          numberOfResults={numberOfResults}
+          currentPage={currentPage}
+          changePage={changePage}
+          elementForPage={pagination}
+          setCurrentPage={setCurrentPage}
         />
       );
   }
 }
 
-export const ResultsMemo = React.memo(Results);
+export const ResultsPaginationMemo = React.memo(ResultsPagination);
 
 type ResultCountProps = {
   children: number | undefined;
@@ -201,69 +183,14 @@ type ResulListProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
-type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
-export function FiniteResults<E>({
-  renderers,
-  searchQuery,
-  onDetail,
-  setDetailMobile,
-  sort,
-  setSortResult,
-  isMobile,
-  overChangeCard = false,
-  language,
-  sortAfterKey,
-  setTotalResult,
-}: FiniteResultsProps<E>) {
-  const results = useInfiniteResults<E>(
-    searchQuery,
-    sort,
-    language,
-    sortAfterKey,
-  );
-
-  setTotalResult(results.data?.pages[0].total ?? null);
-
-  return (
-    <div
-      className="openk9-finite-result-container"
-      style={{ height: "100%", overflowY: "auto", position: "relative" }}
-    >
-      {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-        <div
-          className="openk9-finite-result"
-          css={css`
-            position: absolute;
-            width: 100%;
-          `}
-        >
-          <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
-            {results.data?.pages[0].total}
-          </ResultCount>
-          {results.data?.pages[0].result.map((result, index) => {
-            return (
-              <ResultMemo<E>
-                renderers={renderers}
-                key={index}
-                result={result}
-                onDetail={onDetail}
-                setDetailMobile={setDetailMobile}
-                isMobile={isMobile}
-                overChangeCard={overChangeCard}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        <NoResults />
-      )}
-    </div>
-  );
-}
-
 type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
+  numberOfResults: number;
+  currentPage: number;
+  elementForPage: number;
+  changePage: (page: number) => void;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -278,16 +205,66 @@ export function InfiniteResults<E>({
   setSortAfterKey,
   sortAfterKey,
   setTotalResult,
+  currentPage,
+  numberOfResults,
+  changePage,
+  elementForPage,
+  setCurrentPage,
 }: InfiniteResultsProps<E>) {
+  const result = currentPage * elementForPage;
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
+    elementForPage,
+    result,
   );
 
   const { t } = useTranslation();
+  const itemsPerPage = 3; // Numero di elementi per pagina
+  const pagesToShow = 3; // Numero di pagine da mostrare per volta
+  const partialResult = numberOfResults / elementForPage;
+  const numberOfPage = Math.ceil(partialResult);
+  const [viewButton, setViewButton] = React.useState({
+    start: 0,
+    end: itemsPerPage,
+  });
+
+  const handlePrevClick = () => {
+    setViewButton((view) => ({
+      ...view,
+      start: Math.max(view.start - pagesToShow, 0),
+      end: Math.max(view.end - pagesToShow, itemsPerPage),
+    }));
+  };
+
+  const resetClick = () => {
+    setViewButton((view) => ({
+      ...view,
+      start: 0,
+      end: pagesToShow,
+    }));
+  };
+
+  const resetEndClick = (paginationMax: number) => {
+    setViewButton((view) => ({
+      ...view,
+      start: paginationMax - pagesToShow,
+      end: paginationMax,
+    }));
+  };
+
+  const handleNextClick = () => {
+    setViewButton((view) => ({
+      ...view,
+      start: Math.min(view.start + pagesToShow, numberOfPage - pagesToShow),
+      end: Math.min(view.end + pagesToShow, numberOfPage),
+    }));
+  };
+
   setTotalResult(results.data?.pages[0].total ?? null);
+
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -333,49 +310,60 @@ export function InfiniteResults<E>({
               </React.Fragment>
             );
           })}
-          {results.hasNextPage && (
+          <React.Fragment>
             <div
-              className="openk9-container-embeddable-result-button"
+              className="openk9-container-button-for-pagination"
               css={css`
-                position: absolute;
-                left: 16px;
-                right: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 margin-top: 10px;
-                padding-bottom: 16px;
+                gap: 10px;
               `}
             >
-              <button
-                className="openk9-embeddable-result-list-button-load-more"
-                aria-label={t("load-more-results") || "load more results"}
-                onClick={() => {
-                  if (!results.isFetching) {
-                    results.fetchNextPage();
-                    setSortAfterKey(
-                      results.data?.pages[0].result[result.length - 1]
-                        .sortAfterKey || "",
-                    );
-                  }
-                }}
-                css={css`
-                  border: 1px solid
-                    var(--openk9-embeddable-search--secondary-active-color);
-                  padding: 8px 16px;
-                  background: inherit;
-                  width: 100%;
-                  padding-inline: 16px;
-                  border-radius: 20px;
-                  color: var(
-                    --openk9-embeddable-search--secondary-active-color
-                  );
-                  cursor: pointer;
-                `}
-              >
-                {results.isFetching
-                  ? t("loading-more-results")
-                  : t("load-more")}
-              </button>
+              <CreateButton
+                action={resetClick}
+                value="<<"
+                disable={viewButton.start === 0}
+                ariaL="bottone per mostrare le prime pagine"
+              />
+              <CreateButton
+                action={handlePrevClick}
+                value="<"
+                disable={viewButton.start === 0}
+                ariaL="bottone per mostrare le tre pagine precedenti"
+              />
+              {Array.from({ length: numberOfPage }).map(
+                (_, index) =>
+                  index >= viewButton.start &&
+                  index < viewButton.end && (
+                    <CreateButton
+                      action={() => {
+                        results.fetchNextPage();
+                        setCurrentPage(index);
+                      }}
+                      key={index}
+                      value={"" + (index + 1)}
+                      isCurrent={currentPage === index}
+                      disable={viewButton.end >= numberOfPage}
+                      ariaL={"clicca per vedere la " + (index + 1) + " pagina"}
+                    />
+                  ),
+              )}
+              <CreateButton
+                action={handleNextClick}
+                value=">"
+                disable={viewButton.end >= numberOfPage}
+                ariaL="bottone per mostrare le tre pagine successive "
+              />
+              <CreateButton
+                action={() => resetEndClick(numberOfPage)}
+                value=">>"
+                disable={viewButton.end >= numberOfPage}
+                ariaL="bottone per mostrare le ultime tre pagine"
+              />
             </div>
-          )}
+          </React.Fragment>
         </div>
       ) : (
         <React.Fragment>
@@ -420,98 +408,6 @@ export function InfiniteResults<E>({
   );
 }
 
-type VirtualResultsProps<E> = ResulListProps<E> & {
-  sortAfterKey: string;
-};
-export function VirtualResults<E>({
-  renderers,
-  searchQuery,
-  onDetail,
-  setDetailMobile,
-  sort,
-  setSortResult,
-  isMobile,
-  overChangeCard = false,
-  language,
-  sortAfterKey,
-  setTotalResult,
-}: VirtualResultsProps<E>) {
-  const results = useInfiniteResults<E>(
-    searchQuery,
-    sort,
-    language,
-    sortAfterKey,
-  );
-  const resultsFlat = results.data?.pages.flatMap((page) => page.result);
-  const thereAreResults = Boolean(
-    results.data?.pages[0].total && results.data.pages[0].total > 0,
-  );
-  setTotalResult(results.data?.pages[0].total ?? null);
-  return (
-    <div
-      className="openk9-virtual-results-container"
-      css={css`
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      `}
-    >
-      {thereAreResults && (
-        <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
-          {results.data?.pages[0].total}
-        </ResultCount>
-      )}
-      <Virtuoso
-        hidden={!thereAreResults}
-        style={{ flexGrow: 1 }}
-        totalCount={resultsFlat?.length ?? 0}
-        itemContent={(index) => {
-          const result = resultsFlat?.[index];
-          if (result) {
-            return (
-              <ResultMemo
-                renderers={renderers}
-                result={result}
-                onDetail={onDetail}
-                setDetailMobile={setDetailMobile}
-                isMobile={isMobile}
-                overChangeCard={overChangeCard}
-              />
-            );
-          }
-          return null;
-        }}
-        endReached={() => {
-          if (results.hasNextPage) {
-            results.fetchNextPage();
-          }
-        }}
-        components={{
-          Scroller: CustomVirtualScrollbar as any,
-          Footer() {
-            return (
-              <div
-                className="openk9-virtual-results-footer"
-                css={css`
-                  padding: 16px;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                `}
-              >
-                {results.hasNextPage
-                  ? "loading more results..."
-                  : "all results loaded"}
-              </div>
-            );
-          },
-        }}
-      />
-      {!thereAreResults && <NoResults />}
-    </div>
-  );
-}
-
 function NoResults() {
   const { t } = useTranslation();
   return (
@@ -533,19 +429,22 @@ function NoResults() {
   );
 }
 
-export function useInfiniteResults<E>(
+function useInfiniteResults<E>(
   searchQuery: Array<SearchToken>,
   sort: SortField[],
   language: string,
   sortAfterKey: string,
+  elementForPage: number,
+  result: number,
 ) {
-  const pageSize = 25;
+  const pageSize = elementForPage;
   const client = useOpenK9Client();
+
   return useInfiniteQuery(
-    ["results", searchQuery, sort, language, sortAfterKey] as const,
+    ["results", searchQuery, sort, language, sortAfterKey, result] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       const RangePage: [number, number] =
-        sortAfterKey === "" ? [pageParam * pageSize, pageSize] : [0, pageSize];
+        sortAfterKey === "" ? [result, pageSize] : [0, pageSize];
       return client.doSearch<E>({
         range: RangePage,
         language,
@@ -555,18 +454,45 @@ export function useInfiniteResults<E>(
       });
     },
     {
-      keepPreviousData: true,
-      getNextPageParam(lastPage, pages) {
-        const totalDownloaded = pages.reduce(
-          (total, page) => total + page.result.length,
-          0,
-        );
-        if (totalDownloaded < lastPage.total) {
-          return pages.length;
-        }
-      },
+      keepPreviousData: false,
       suspense: true,
       notifyOnChangeProps: ["isFetching"],
     },
+  );
+}
+
+function CreateButton({
+  value,
+  action,
+  ariaL,
+  disable,
+  isCurrent = false,
+}: {
+  value: string;
+  action: () => void;
+  ariaL: string;
+  disable: boolean;
+  isCurrent?: boolean;
+}) {
+  return (
+    <button
+      disabled={disable}
+      className={`openk9-result-list-pagination-button ${
+        isCurrent ? "select" : "not select"
+      }`}
+      aria-label={ariaL}
+      onClick={action}
+      css={css`
+        padding: 4px 8px !important;
+        background: ${isCurrent ? "#c83939" : "white"};
+        border-radius: 50px;
+        border: 1px solid #c83939;
+        font-size: 15px;
+        cursor: pointer;
+        color: ${isCurrent ? "white" : "#c83939"};
+      `}
+    >
+      {value}
+    </button>
   );
 }

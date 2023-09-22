@@ -41,6 +41,9 @@ import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
+import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
+import { TotalResults } from "../components/TotalResults";
+import { ResultsPaginationMemo } from "../components/ResultListPagination";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -147,6 +150,8 @@ export function Main({
     }
   }, [languageQuery.data, i18n]);
   const [sortAfterKey, setSortAfterKey] = React.useState("");
+  const [totalResult, setTotalResult] = React.useState<number | null>(null);
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -276,6 +281,7 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -293,7 +299,14 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <TotalResults totalResult={totalResult} />
+        </I18nextProvider>,
+        configuration.totalResult,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -308,6 +321,27 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ResultsPaginationMemo
+            setTotalResult={setTotalResult}
+            displayMode={configuration.resultsDisplayMode}
+            searchQuery={searchQuery}
+            onDetail={setDetail}
+            setDetailMobile={setDetailMobile}
+            sort={completelySort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={false}
+            language={languageSelect}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
+            numberOfResults={totalResult || 0}
+            pagination={7}
+          />
+        </I18nextProvider>,
+        configuration.resultListPagination,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -433,6 +467,20 @@ export function Main({
         </I18nextProvider>,
         configuration.dataRangePicker?.element !== undefined
           ? configuration.dataRangePicker?.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePickerVertical
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+            start={configuration.dataRangePickerVertical?.start}
+            end={configuration.dataRangePickerVertical?.end}
+          />
+        </I18nextProvider>,
+        configuration.dataRangePickerVertical?.element !== undefined
+          ? configuration.dataRangePickerVertical?.element
           : null,
       )}
       {renderPortal(
@@ -975,26 +1023,27 @@ function useQueryAnalysis(request: AnalysisRequest) {
   );
 }
 // TODO: togliere una volta implementata gestione sugestion sovrapposte
-function fixQueryAnalysisResult(data: AnalysisResponse) {
-  return {
-    ...data,
-    analysis: data.analysis
-      .reverse()
-      .filter((entry, index, array) =>
-        array
-          .slice(0, index)
-          .every((previous) => !isOverlapping(previous, entry)),
-      )
-      .reverse()
-      .filter((entry) => {
-        // togliere validazione quando fixato lato be
-        const isValidEntry = entry.start >= 0;
-        if (!isValidEntry) {
-          console.warn(`Invalid entry: `, entry);
-        }
-        return isValidEntry;
-      }),
-  };
+function fixQueryAnalysisResult(data: AnalysisResponse | null) {
+  if (data)
+    return {
+      ...data,
+      analysis: data.analysis
+        .reverse()
+        .filter((entry, index, array) =>
+          array
+            .slice(0, index)
+            .every((previous) => !isOverlapping(previous, entry)),
+        )
+        .reverse()
+        .filter((entry) => {
+          // togliere validazione quando fixato lato be
+          const isValidEntry = entry.start >= 0;
+          if (!isValidEntry) {
+            console.warn(`Invalid entry: `, entry);
+          }
+          return isValidEntry;
+        }),
+    };
 }
 
 export function remappingLanguage({ language }: { language: string }) {

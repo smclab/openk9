@@ -149,6 +149,7 @@ export function CalendarMobile({
           </div>
         </div>
         <button
+        className="openk9-calendar-modal-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 16px;

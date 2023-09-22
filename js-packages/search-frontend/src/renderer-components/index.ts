@@ -21,6 +21,7 @@ export * from "./ResultFavicon";
 export * from "./ResultLink";
 export * from "./ResultTextContent";
 export * from "./ResultTextContentTwo";
+export * from "./ResultTextContentThree";
 export * from "./ResultTitle";
 export * from "./ResultTitleTwo";
 export * from "./ImagesViewer";
