@@ -42,6 +42,7 @@ import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
+import { ResultsPaginationMemo } from "../components/ResultListPagination";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -284,9 +285,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <TotalResults
-          totalResult={totalResult}
-          />
+          <TotalResults totalResult={totalResult} />
         </I18nextProvider>,
         configuration.totalResult,
       )}
@@ -308,6 +307,27 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ResultsPaginationMemo
+            setTotalResult={setTotalResult}
+            displayMode={configuration.resultsDisplayMode}
+            searchQuery={searchQuery}
+            onDetail={setDetail}
+            setDetailMobile={setDetailMobile}
+            sort={completelySort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={false}
+            language={languageSelect}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
+            numberOfResults={totalResult || 0}
+            pagination={7}
+          />
+        </I18nextProvider>,
+        configuration.resultListPagination,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

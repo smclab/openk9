@@ -251,6 +251,7 @@ export type Configuration = {
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
+  resultListPagination: Element | string | null;
   details: Element | string | null;
   calendar: Element | string | null;
   login: Element | string | null;
@@ -294,6 +295,7 @@ const defaultConfiguration: Configuration = {
   changeLanguage: null,
   filtersHorizontal: null,
   results: null,
+  resultListPagination: null,
   details: null,
   sortResultConfigurable: null,
   login: null,

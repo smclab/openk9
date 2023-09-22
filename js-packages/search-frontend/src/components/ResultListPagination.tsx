@@ -312,6 +312,7 @@ export function InfiniteResults<E>({
           })}
           <React.Fragment>
             <div
+              className="openk9-container-button-for-pagination"
               css={css`
                 display: flex;
                 align-items: center;
