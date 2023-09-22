@@ -345,7 +345,6 @@ export function InfiniteResults<E>({
                       key={index}
                       value={"" + (index + 1)}
                       isCurrent={currentPage === index}
-                      disable={viewButton.end >= numberOfPage}
                       ariaL={"clicca per vedere la " + (index + 1) + " pagina"}
                     />
                   ),
@@ -465,21 +464,21 @@ function CreateButton({
   value,
   action,
   ariaL,
-  disable,
+  disable = false,
   isCurrent = false,
 }: {
   value: string;
   action: () => void;
   ariaL: string;
-  disable: boolean;
+  disable?: boolean;
   isCurrent?: boolean;
 }) {
   return (
     <button
-      disabled={disable}
       className={`openk9-result-list-pagination-button ${
-        isCurrent ? "select" : "not select"
+        isCurrent ? "select" : "not-select"
       }`}
+      disabled={disable}
       aria-label={ariaL}
       onClick={action}
       css={css`
