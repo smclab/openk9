@@ -2,10 +2,6 @@ import React, { Children } from "react";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const {
-  ResultTitle
-} = rendererComponents;
-
 type ResultTitleExternalLinkProps = { href: string; children: React.ReactNode };
 export function ResultTitleExternalLink({
   href,
