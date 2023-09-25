@@ -272,21 +272,28 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
               style={{ cursor: "pointer", padding: "8px 8px" }}
               className={node.id === selectedChildDocumentId ? "selected" : ""}
             >
-              {node?.id && (
-                <Link
-                  style={{
-                    color: "#da1414",
-                    textDecoration: "none",
-                    font: "Helvetica",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                    lineHeight: "44px",
-                  }}
-                  to={node.id}
-                >
-                  {node.name}
-                </Link>
-              )}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                {node?.id && (
+                  <Link
+                    style={{
+                      color: "#da1414",
+                      textDecoration: "none",
+                      font: "Helvetica",
+                      fontWeight: "700",
+                      fontSize: "15px",
+                      lineHeight: "44px",
+                    }}
+                    to={node.id}
+                  >
+                    {node.name}
+                  </Link>
+                )}
+                <div>
+                  <button style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}>
+                    <ClayIcon symbol={"angle-right"} />
+                  </button>
+                </div>
+              </div>
             </ClayList.Item>
           ))}
         </ClayList>
