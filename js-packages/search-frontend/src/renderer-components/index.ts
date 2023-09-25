@@ -1,5 +1,6 @@
 export * from "./Badge";
 export * from "./BadgeContainer";
+export * from "./Chip";
 export * from "./DateCard";
 export * from "./DetailAttribute";
 export * from "./DetailContainer";
