@@ -37,9 +37,13 @@ export const DocumentTypeFieldsParentQuery = gql`
         node {
           id
           name
-          fieldName
+          description
+          fieldType
+          boost
           searchable
           exclude
+          fieldName
+          jsonConfig
           sortable
           parent {
             id
@@ -86,7 +90,18 @@ export function DocumentTypeFields() {
               ({
                 node,
               }: {
-                node: { id: string; name: string; fieldName: string; searchable: boolean; exclude: boolean; sortable: boolean };
+                node: {
+                  id: string;
+                  name: string;
+                  description: string;
+                  fieldType: FieldType.Text;
+                  boost: number;
+                  searchable: boolean;
+                  exclude: boolean;
+                  fieldName: string;
+                  jsonConfig: string;
+                  sortable: boolean;
+                };
               }) => (
                 <ClayList.Item key={node.id} style={{ padding: "8px 8px" }} className={node.id === selectedDocumentId ? "selected" : ""}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -107,14 +122,15 @@ export function DocumentTypeFields() {
                     )}
                     <div style={{ display: "flex", gap: "3px" }}>
                       <div>
-                        <button
-                          style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
-                          aria-label="Plus doc type fields"
-                          title="Plus doc type fields"
-                          onClick={() => alert("Clicked the add!")}
-                        >
-                          <ClayIcon symbol={"plus"} />
-                        </button>
+                        <Link to={`newSubFields/${node?.id}/new`}>
+                          <button
+                            style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                            aria-label="Plus doc type fields"
+                            title="Plus doc type fields"
+                          >
+                            <ClayIcon symbol={"plus"} />
+                          </button>
+                        </Link>
                       </div>
                       <div>
                         <DropDown
@@ -138,16 +154,24 @@ export function DocumentTypeFields() {
                                   <ClayToggle
                                     toggled={node?.searchable ?? false}
                                     onToggle={(searchable) => {
-                                      //  if (node && node.id && node.name && node.exclude && node.fieldName && node.name)
-                                      //    updateDoctype({
-                                      //      variables: {
-                                      //        documentTypeId:node.id,
-                                      //        name:node.name,
-                                      //        fieldName:node.fieldName,
-                                      //        searchable:node.searchable,
-                                      //        sortable:node.sortable,
-                                      //      },
-                                      //    });
+                                      console.log(searchable);
+                                      console.log(node);
+                                      // if (node && node.id && node.name && node.fieldName && node.fieldType)
+                                      //   updateDoctype({
+                                      //     variables: {
+                                      //       documentTypeId: node.id,
+                                      //       documentTypeFieldId: node.id,
+                                      //       name: node.name,
+                                      //       description: node.description,
+                                      //       fieldType: node.fieldType,
+                                      //       boost: node.boost,
+                                      //       searchable: searchable,
+                                      //       exclude: node.exclude,
+                                      //       fieldName: node.fieldName,
+                                      //       jsonConfig: node.jsonConfig,
+                                      //       sortable: node.sortable,
+                                      //     },
+                                      //   });
                                     }}
                                   />
                                 </div>
@@ -162,7 +186,7 @@ export function DocumentTypeFields() {
                                 <div>
                                   <ClayToggle
                                     toggled={node?.exclude ?? false}
-                                    onToggle={(schedulable) => {
+                                    onToggle={(exclude) => {
                                       // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
                                       //   updateDataSourceMutate({
                                       //     variables: {
@@ -190,7 +214,7 @@ export function DocumentTypeFields() {
                                 <div>
                                   <ClayToggle
                                     toggled={node?.sortable ?? false}
-                                    onToggle={(schedulable) => {
+                                    onToggle={(sortable) => {
                                       // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
                                       //   updateDataSourceMutate({
                                       //     variables: {
@@ -265,37 +289,161 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
     <div>
       <div style={{ display: "flex" }}>
         <ClayList>
-          {childDocuments.map(({ node }: { node: { id: string; name: string } }) => (
-            <ClayList.Item
-              key={node.id}
-              onClick={() => handleChildClick(node.id)}
-              style={{ cursor: "pointer", padding: "8px 8px" }}
-              className={node.id === selectedChildDocumentId ? "selected" : ""}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                {node?.id && (
-                  <Link
-                    style={{
-                      color: "#da1414",
-                      textDecoration: "none",
-                      font: "Helvetica",
-                      fontWeight: "700",
-                      fontSize: "15px",
-                      lineHeight: "44px",
-                    }}
-                    to={node.id}
-                  >
-                    {node.name}
-                  </Link>
-                )}
-                <div>
-                  <button style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}>
-                    <ClayIcon symbol={"angle-right"} />
-                  </button>
+          {childDocuments.map(
+            ({
+              node,
+            }: {
+              node: {
+                id: string;
+                name: string;
+                description: string;
+                fieldType: FieldType.Text;
+                boost: number;
+                searchable: boolean;
+                exclude: boolean;
+                fieldName: string;
+                jsonConfig: string;
+                sortable: boolean;
+              };
+            }) => (
+              <ClayList.Item
+                key={node.id}
+                style={{ cursor: "pointer", padding: "8px 8px" }}
+                className={node.id === selectedChildDocumentId ? "selected" : ""}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  {node?.id && (
+                    <Link
+                      style={{
+                        color: "#da1414",
+                        textDecoration: "none",
+                        font: "Helvetica",
+                        fontWeight: "700",
+                        fontSize: "15px",
+                        lineHeight: "44px",
+                      }}
+                      to={node.id}
+                    >
+                      {node.name}
+                    </Link>
+                  )}
+                  <div style={{ display: "flex", gap: "3px" }}>
+                    <div>
+                      <Link to={`newSubFields/${node?.id}/new`}>
+                        <button
+                          style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                          aria-label="Plus doc type fields"
+                          title="Plus doc type fields"
+                        >
+                          <ClayIcon symbol={"plus"} />
+                        </button>
+                      </Link>
+                    </div>
+                    <div>
+                      <DropDown
+                        trigger={
+                          <button
+                            style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                            aria-label="Open Drop Down for more option"
+                            title="Open Drop Down"
+                          >
+                            <ClayIcon symbol={"angle-down"} />
+                          </button>
+                        }
+                      >
+                        <DropDown.ItemList>
+                          <DropDown.Item>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Searchable</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.searchable ?? false}
+                                  onToggle={(searchable) => {
+                                    //  if (node && node.id && node.name && node.exclude && node.fieldName && node.name)
+                                    //    updateDoctype({
+                                    //      variables: {
+                                    //        documentTypeId:node.id,
+                                    //        name:node.name,
+                                    //        fieldName:node.fieldName,
+                                    //        searchable:node.searchable,
+                                    //        sortable:node.sortable,
+                                    //      },
+                                    //    });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                          <DropDown.Divider />
+                          <DropDown.Item>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Exclude</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.exclude ?? false}
+                                  onToggle={(schedulable) => {
+                                    // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
+                                    //   updateDataSourceMutate({
+                                    //     variables: {
+                                    //       id: dataSource.id,
+                                    //       schedulable,
+                                    //       name: dataSource.name,
+                                    //       scheduling: dataSource.scheduling,
+                                    //       jsonConfig: dataSource.jsonConfig ?? "{}",
+                                    //       description: dataSource.description ?? "",
+                                    //       reindex: dataSource.reindex || false,
+                                    //     },
+                                    //   });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                          <DropDown.Divider />
+                          <DropDown.Item>
+                            {" "}
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Sortable</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.sortable ?? false}
+                                  onToggle={(schedulable) => {
+                                    // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
+                                    //   updateDataSourceMutate({
+                                    //     variables: {
+                                    //       id: dataSource.id,
+                                    //       schedulable,
+                                    //       name: dataSource.name,
+                                    //       scheduling: dataSource.scheduling,
+                                    //       jsonConfig: dataSource.jsonConfig ?? "{}",
+                                    //       description: dataSource.description ?? "",
+                                    //       reindex: dataSource.reindex || false,
+                                    //     },
+                                    //   });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                        </DropDown.ItemList>
+                      </DropDown>
+                    </div>
+                    <div>
+                      <button style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}>
+                        <ClayIcon symbol={"angle-right"} onClick={() => handleChildClick(node.id)} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </ClayList.Item>
-          ))}
+              </ClayList.Item>
+            )
+          )}
         </ClayList>
         {selectedChildDocumentId && <ChildListComponent documentId={selectedChildDocumentId} />}
       </div>
