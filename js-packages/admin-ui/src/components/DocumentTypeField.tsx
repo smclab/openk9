@@ -133,6 +133,7 @@ export function DocumentTypeField() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateDocumentTypeFieldMutation.data?.docTypeField?.fieldValidators),
   });
+
   return (
     <React.Fragment>
       <ClayToolbar light>

@@ -14,13 +14,17 @@ import { formatName, TableWithSubFields } from "./Table";
 import { Link, useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
-import { ContainerFluid, StyleToggle } from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, StyleToggle } from "./Form";
 import { ClayTooltipProvider } from "@clayui/tooltip";
 import { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
 import ClayIcon from "@clayui/icon";
 import ClayList from "@clayui/list";
 import DropDown from "@clayui/drop-down";
 import { apolloClient } from "./apolloClient";
+import ClayToolbar from "@clayui/toolbar";
+import { ClayButtonWithIcon } from "@clayui/button";
+import { ClassNameButton } from "../App";
+import useDebounced from "./useDebounced";
 
 gql`
   mutation DeleteDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID!) {
@@ -59,10 +63,12 @@ export function DocumentTypeFields() {
   const { documentTypeId } = useParams();
 
   const [selectedDocumentId, setSelectedDocumentId] = React.useState<string | null>(null);
+  const [searchText, setSearchText] = React.useState("");
 
   const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
     variables: {
       searchText: "",
+      // parentId: Number(documentTypeId || "0"),
       parentId: 0,
     },
   });
@@ -83,9 +89,44 @@ export function DocumentTypeFields() {
 
   return (
     <div>
+      <ClayToolbar light>
+        <ContainerFluidWithoutView>
+          <ClayToolbar.Nav>
+            <ClayToolbar.Item expand>
+              <div style={{ position: "relative" }}>
+                <ClayToolbar.Input
+                  placeholder="Search..."
+                  sizing="sm"
+                  value={searchText}
+                  onChange={(event) => {
+                    setSearchText(event.currentTarget.value);
+                  }}
+                />
+                {searchText !== "" && (
+                  <ClayButtonWithIcon
+                    aria-label=""
+                    symbol="times"
+                    className="component-action"
+                    onClick={() => {
+                      setSearchText("");
+                    }}
+                    style={{ position: "absolute", right: "10px", top: "0px" }}
+                  />
+                )}
+              </div>
+            </ClayToolbar.Item>
+            <ClayToolbar.Item>
+              <Link to={"/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText}>
+                <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="plus" aria-label="search" small />
+              </Link>
+            </ClayToolbar.Item>
+          </ClayToolbar.Nav>
+        </ContainerFluidWithoutView>
+      </ClayToolbar>
+
       <ContainerFluid>
-        <div style={{ display: "flex", background: "white" }}>
-          <ClayList style={{ marginBottom: "0" }}>
+        <div style={{ display: "flex", background: "white", overflowX: "auto" }}>
+          <ClayList style={{ marginBottom: "0", width: "400px" }}>
             {data.docTypeFieldsByParent.edges.map(
               ({
                 node,
@@ -154,24 +195,22 @@ export function DocumentTypeFields() {
                                   <ClayToggle
                                     toggled={node?.searchable ?? false}
                                     onToggle={(searchable) => {
-                                      console.log(searchable);
-                                      console.log(node);
-                                      // if (node && node.id && node.name && node.fieldName && node.fieldType)
-                                      //   updateDoctype({
-                                      //     variables: {
-                                      //       documentTypeId: node.id,
-                                      //       documentTypeFieldId: node.id,
-                                      //       name: node.name,
-                                      //       description: node.description,
-                                      //       fieldType: node.fieldType,
-                                      //       boost: node.boost,
-                                      //       searchable: searchable,
-                                      //       exclude: node.exclude,
-                                      //       fieldName: node.fieldName,
-                                      //       jsonConfig: node.jsonConfig,
-                                      //       sortable: node.sortable,
-                                      //     },
-                                      //   });
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: searchable,
+                                            exclude: node.exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: node.sortable,
+                                          },
+                                        });
                                     }}
                                   />
                                 </div>
@@ -187,18 +226,22 @@ export function DocumentTypeFields() {
                                   <ClayToggle
                                     toggled={node?.exclude ?? false}
                                     onToggle={(exclude) => {
-                                      // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
-                                      //   updateDataSourceMutate({
-                                      //     variables: {
-                                      //       id: dataSource.id,
-                                      //       schedulable,
-                                      //       name: dataSource.name,
-                                      //       scheduling: dataSource.scheduling,
-                                      //       jsonConfig: dataSource.jsonConfig ?? "{}",
-                                      //       description: dataSource.description ?? "",
-                                      //       reindex: dataSource.reindex || false,
-                                      //     },
-                                      //   });
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: node.searchable,
+                                            exclude: exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: node.sortable,
+                                          },
+                                        });
                                     }}
                                   />
                                 </div>
@@ -206,7 +249,6 @@ export function DocumentTypeFields() {
                             </DropDown.Item>
                             <DropDown.Divider />
                             <DropDown.Item>
-                              {" "}
                               <div style={{ display: "flex", justifyContent: "space-between" }}>
                                 <div>
                                   <label>Sortable</label>
@@ -215,18 +257,22 @@ export function DocumentTypeFields() {
                                   <ClayToggle
                                     toggled={node?.sortable ?? false}
                                     onToggle={(sortable) => {
-                                      // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
-                                      //   updateDataSourceMutate({
-                                      //     variables: {
-                                      //       id: dataSource.id,
-                                      //       schedulable,
-                                      //       name: dataSource.name,
-                                      //       scheduling: dataSource.scheduling,
-                                      //       jsonConfig: dataSource.jsonConfig ?? "{}",
-                                      //       description: dataSource.description ?? "",
-                                      //       reindex: dataSource.reindex || false,
-                                      //     },
-                                      //   });
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: node.searchable,
+                                            exclude: node.exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: sortable,
+                                          },
+                                        });
                                     }}
                                   />
                                 </div>
@@ -246,7 +292,7 @@ export function DocumentTypeFields() {
               )
             )}
           </ClayList>
-          {selectedDocumentId && <ChildListComponent documentId={selectedDocumentId} />}
+          {selectedDocumentId && <ChildListComponent documentId={selectedDocumentId} documentTypeId={documentTypeId} />}
         </div>
       </ContainerFluid>
     </div>
@@ -255,14 +301,19 @@ export function DocumentTypeFields() {
 
 interface ChildListComponentProps {
   documentId: string;
+  documentTypeId: string | undefined;
 }
 
-const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) => {
+const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, documentTypeId }) => {
   const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
     variables: {
       searchText: "",
       parentId: Number(documentId),
     },
+  });
+
+  const [updateDoctype] = useCreateOrUpdateDocumentTypeFieldMutation({
+    refetchQueries: [DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
   });
 
   const [selectedChildDocumentId, setSelectedChildDocumentId] = React.useState<string | null>(null);
@@ -288,7 +339,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
   return (
     <div>
       <div style={{ display: "flex" }}>
-        <ClayList>
+        <ClayList style={{ width: "400px" }}>
           {childDocuments.map(
             ({
               node,
@@ -361,16 +412,22 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
                                 <ClayToggle
                                   toggled={node?.searchable ?? false}
                                   onToggle={(searchable) => {
-                                    //  if (node && node.id && node.name && node.exclude && node.fieldName && node.name)
-                                    //    updateDoctype({
-                                    //      variables: {
-                                    //        documentTypeId:node.id,
-                                    //        name:node.name,
-                                    //        fieldName:node.fieldName,
-                                    //        searchable:node.searchable,
-                                    //        sortable:node.sortable,
-                                    //      },
-                                    //    });
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: searchable,
+                                          exclude: node.exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: node.sortable,
+                                        },
+                                      });
                                   }}
                                 />
                               </div>
@@ -385,19 +442,23 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
                               <div>
                                 <ClayToggle
                                   toggled={node?.exclude ?? false}
-                                  onToggle={(schedulable) => {
-                                    // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
-                                    //   updateDataSourceMutate({
-                                    //     variables: {
-                                    //       id: dataSource.id,
-                                    //       schedulable,
-                                    //       name: dataSource.name,
-                                    //       scheduling: dataSource.scheduling,
-                                    //       jsonConfig: dataSource.jsonConfig ?? "{}",
-                                    //       description: dataSource.description ?? "",
-                                    //       reindex: dataSource.reindex || false,
-                                    //     },
-                                    //   });
+                                  onToggle={(exclude) => {
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: node.searchable,
+                                          exclude: exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: node.sortable,
+                                        },
+                                      });
                                   }}
                                 />
                               </div>
@@ -405,7 +466,6 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
                           </DropDown.Item>
                           <DropDown.Divider />
                           <DropDown.Item>
-                            {" "}
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                               <div>
                                 <label>Sortable</label>
@@ -413,19 +473,23 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
                               <div>
                                 <ClayToggle
                                   toggled={node?.sortable ?? false}
-                                  onToggle={(schedulable) => {
-                                    // if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
-                                    //   updateDataSourceMutate({
-                                    //     variables: {
-                                    //       id: dataSource.id,
-                                    //       schedulable,
-                                    //       name: dataSource.name,
-                                    //       scheduling: dataSource.scheduling,
-                                    //       jsonConfig: dataSource.jsonConfig ?? "{}",
-                                    //       description: dataSource.description ?? "",
-                                    //       reindex: dataSource.reindex || false,
-                                    //     },
-                                    //   });
+                                  onToggle={(sortable) => {
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: node.searchable,
+                                          exclude: node.exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: sortable,
+                                        },
+                                      });
                                   }}
                                 />
                               </div>
@@ -445,7 +509,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId }) =
             )
           )}
         </ClayList>
-        {selectedChildDocumentId && <ChildListComponent documentId={selectedChildDocumentId} />}
+        {selectedChildDocumentId && <ChildListComponent documentId={selectedChildDocumentId} documentTypeId={documentTypeId} />}
       </div>
     </div>
   );
