@@ -23,6 +23,7 @@ import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.DocTypeDTO;
@@ -40,6 +41,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import java.util.Collection;
 import java.util.List;
@@ -61,10 +63,28 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
 		return findJoinConnection(
 			id, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
 			docTypeFieldService.getSearchFields(), after, before, first, last,
 			searchText, sortByList, notEqual);
+	}
+
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnectionByParent(
+		long docTypeId, long parentId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			docTypeId, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual,
+			(criteriaBuilder, join) -> {
+				Path<DocTypeField> parentField = join.get(DocTypeField_.parentDocTypeField);
+
+				return parentId > 0
+					? criteriaBuilder.equal(parentField.get(DocTypeField_.id), parentId)
+					: criteriaBuilder.isNull(parentField);
+			});
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
