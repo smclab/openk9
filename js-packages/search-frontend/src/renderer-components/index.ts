@@ -32,3 +32,4 @@ export * from "./SortResultList";
 export * from "./WrapperContainer";
 export * from "./DetailTitleExternalLink"
 export * from "./ResultTitleExternalLink"
+export * from "./CustomFontAwesomeIcon)"

@@ -53,6 +53,7 @@
     "@fortawesome/fontawesome-svg-core": "6.2.0",
     "@fortawesome/free-solid-svg-icons": "6.2.0",
     "@fortawesome/react-fontawesome": "0.2.0",
+    "@fortawesome/free-brands-svg-icons": "6.2.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
     "@types/keycloak-js": "^3.4.1",
     "@types/lodash": "^4.14.178",
