@@ -233,6 +233,7 @@ export function Search({
                       setOpenedDropdown={setOpenedDropdown}
                       selectionsDispatch={selectionsDispatch}
                       isColorSearch={isSearchOnInputChange}
+                      setTextBtn={setTextBtn}
                     />
                   );
                 })}

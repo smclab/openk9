@@ -24,6 +24,7 @@ type TokenSelectProps = {
       optionPosition: number;
     } | null>
   >;
+  setTextBtn: React.Dispatch<React.SetStateAction<string>>;
 };
 export function TokenSelect({
   span,
@@ -38,6 +39,7 @@ export function TokenSelect({
   selectionsDispatch,
   saveSearchQuery,
   isColorSearch = true,
+  setTextBtn,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
@@ -191,6 +193,7 @@ export function TokenSelect({
               <div
                 key={index}
                 onClick={() => {
+                  setTextBtn(getTokenLabel(option) || '')
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {
