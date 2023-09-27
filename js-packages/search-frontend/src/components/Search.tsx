@@ -69,7 +69,7 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
-  const [textBtn, setTextBtn] = React.useState("");
+  const [textBtn, setTextBtn] = React.useState<string | undefined>();
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -254,7 +254,7 @@ export function Search({
               }
               type="text"
               placeholder={t("search") || "search..."}
-              value={btnSearch ? textBtn : selectionsState.text}
+              value={btnSearch ? textBtn ?? '' : selectionsState.text}
               onChange={(event) => {
                 if (!btnSearch) {
                   selectionsDispatch({
@@ -461,10 +461,18 @@ export function Search({
                 cursor: pointer;
               `}
               onClick={() => {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: textBtn,
-                });
+                if(textBtn === '') {
+                  selectionsDispatch({
+                    type: "reset-search"
+                  });
+                } else {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: textBtn,
+                    textOnchange: textBtn,
+                  });
+                }
+                
                 onDetail(null);
                 setOpenedDropdown(null);
               }}

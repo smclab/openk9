@@ -24,7 +24,7 @@ type TokenSelectProps = {
       optionPosition: number;
     } | null>
   >;
-  setTextBtn: React.Dispatch<React.SetStateAction<string>>;
+  setTextBtn: React.Dispatch<React.SetStateAction<string | undefined>>;
 };
 export function TokenSelect({
   span,
@@ -248,7 +248,10 @@ function getTokenLabel(token: AnalysisToken) {
       return token.entityName;
     case "TEXT":
       return token.value;
+    case "AUTOCOMPLETE":
+      return token.value;
   }
+  return token.value;
 }
 
 function FactoryTokenType({

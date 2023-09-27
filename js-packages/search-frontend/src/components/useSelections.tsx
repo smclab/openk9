@@ -65,6 +65,7 @@ const initial: SelectionsState = {
 
 export type SelectionsAction =
   | { type: "set-text"; text?: string; textOnchange?: string }
+  | { type: "reset-search" }
   | {
       type: "set-selection";
       replaceText: boolean;
@@ -116,11 +117,18 @@ function reducer(
         text: action.text || state.text || "",
         textOnChange: action.textOnchange || state.textOnChange || "",
         selection: shiftSelection(
-          state.textOnChange || "",
+          state.textOnChange ?? "",
           action.textOnchange || state.textOnChange || "",
           state.selection,
         ),
       };
+    }
+    case "reset-search" : {
+      return {
+        text: '',
+        textOnChange: '',
+        selection: []
+      }
     }
     case "set-selection": {
       const { text, selection } = (() => {
