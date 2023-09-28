@@ -39,6 +39,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.Instance;
@@ -67,7 +68,7 @@ public abstract class BaseSearchService {
 		return tenantManager
 			.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
 			.flatMap(tenantResponse -> sf
-				.withStatelessTransaction(tenantResponse.getSchemaName(), s -> {
+				.withStatelessTransaction(tenantResponse.getSchemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -312,7 +313,7 @@ public abstract class BaseSearchService {
 	}
 
 	@Inject
-	TransactionInvoker sf;
+	Mutiny.SessionFactory sf;
 
 	@Inject
 	Instance<QueryParser> queryParserInstance;
