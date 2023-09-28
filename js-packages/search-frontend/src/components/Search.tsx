@@ -254,7 +254,7 @@ export function Search({
               }
               type="text"
               placeholder={t("search") || "search..."}
-              value={btnSearch ? textBtn ?? '' : selectionsState.text}
+              value={btnSearch ? textBtn ?? "" : selectionsState.text}
               onChange={(event) => {
                 if (!btnSearch) {
                   selectionsDispatch({
@@ -341,6 +341,7 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
+                  setTextBtn(option?.value);
                   if (span) {
                     if (isSearchOnInputChange) {
                       selectionsDispatch({
@@ -461,9 +462,9 @@ export function Search({
                 cursor: pointer;
               `}
               onClick={() => {
-                if(textBtn === '') {
+                if (textBtn === "") {
                   selectionsDispatch({
-                    type: "reset-search"
+                    type: "reset-search",
                   });
                 } else {
                   selectionsDispatch({
@@ -472,7 +473,6 @@ export function Search({
                     textOnchange: textBtn,
                   });
                 }
-                
                 onDetail(null);
                 setOpenedDropdown(null);
               }}
