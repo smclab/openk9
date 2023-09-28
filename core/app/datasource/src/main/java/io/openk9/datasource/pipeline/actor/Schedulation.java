@@ -310,7 +310,16 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			VertxUtil.runOnContext(() -> txInvoker
 				.withTransaction(
 					tenantId,
-					s -> datasourceService.setDataIndex(datasourceId, newDataIndexId)
+					s -> s
+						.find(Datasource.class, datasourceId)
+						.onItem()
+						.transformToUni(ds -> s
+							.find(DataIndex.class, newDataIndexId)
+							.onItem()
+							.transformToUni(di -> {
+								ds.setDataIndex(di);
+								return s.persist(ds);
+							}))
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
