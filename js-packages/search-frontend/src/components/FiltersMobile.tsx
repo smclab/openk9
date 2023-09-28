@@ -90,6 +90,7 @@ function FiltersMobile<E>({
           </div>
         </div>
         <button
+          className="openk9-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 10px;

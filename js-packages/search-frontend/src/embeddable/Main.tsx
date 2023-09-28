@@ -454,6 +454,9 @@ export function Main({
             selectedTabIndex={selectedTabIndex}
             viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
             language={languageSelect}
+            isCollapsable={
+              configuration.filtersMobileLiveChange?.isCollapsable ?? true
+            }
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined

@@ -46,6 +46,7 @@ export type FiltersMobileProps<E> = {
   viewTabs?: boolean;
   language: string;
   sortAfterKey: string;
+  isCollapsable?: boolean;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -63,6 +64,7 @@ function FiltersMobileLiveChange<E>({
   language,
   viewTabs = false,
   sortAfterKey,
+  isCollapsable = true,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -123,7 +125,7 @@ function FiltersMobileLiveChange<E>({
           </div>
         </div>
         <button
-        className="openk9-filters-list-button-close"
+          className="openk9-filters-list-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 15px;
@@ -162,6 +164,7 @@ function FiltersMobileLiveChange<E>({
           dynamicFilters={dynamicFilters}
           language={language}
           sortAfterKey={sortAfterKey}
+          isCollapsable={isCollapsable}
           preFilters={
             viewTabs ? (
               <ViewAllTabs
@@ -297,13 +300,14 @@ function ViewAllTabs({
   tabs,
   onSelectedTabIndexChange,
   selectedTabIndex,
+  isCollapsable = true,
 }: {
   tabs: Array<Tab>;
   onSelectedTabIndexChange(index: number): void;
   selectedTabIndex: number;
+  isCollapsable?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
-  const isCollapsable = true;
   const { t } = useTranslation();
 
   return (
