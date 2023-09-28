@@ -1,21 +1,20 @@
 package io.openk9.datasource.sql;
 
-import io.quarkus.arc.Unremovable;
+import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import io.quarkus.hibernate.orm.runtime.tenant.TenantResolver;
-import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-@RequestScoped
-@Unremovable
+@ApplicationScoped
+@PersistenceUnitExtension
 public class SchemaTenantResolver implements TenantResolver {
 
 	private static final Logger LOG = Logger.getLogger(SchemaTenantResolver.class);
 
 	@Inject
-	RoutingContext routingContext;
+	io.openk9.auth.tenant.TenantResolver tenantResolver;
 
 	@Override
 	public String getDefaultTenantId() {
@@ -24,7 +23,7 @@ public class SchemaTenantResolver implements TenantResolver {
 
 	@Override
 	public String resolveTenantId() {
-		String tenantId = routingContext.get("_tenantId", getDefaultTenantId());
+		String tenantId = tenantResolver.getTenantName();
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("tenant resolved: %s", tenantId));
 		}
