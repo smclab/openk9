@@ -47,6 +47,7 @@ export type FiltersMobileProps<E> = {
   language: string;
   sortAfterKey: string;
   isCollapsable?: boolean;
+  numberOfResults: number;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -65,12 +66,14 @@ function FiltersMobileLiveChange<E>({
   viewTabs = false,
   sortAfterKey,
   isCollapsable = true,
+  numberOfResults,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
+    numberOfResults,
   );
   const { t } = useTranslation();
   const componet = (
@@ -165,6 +168,7 @@ function FiltersMobileLiveChange<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           isCollapsable={isCollapsable}
+          numberOfResults={numberOfResults}
           preFilters={
             viewTabs ? (
               <ViewAllTabs

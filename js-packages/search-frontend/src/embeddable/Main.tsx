@@ -154,7 +154,7 @@ export function Main({
   }, [languageQuery.data, i18n]);
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
-
+  const numberOfResults = configuration.numberResult || 7;
   return (
     <React.Fragment>
       {renderPortal(
@@ -215,6 +215,7 @@ export function Main({
           <FiltersMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            numberOfResults={numberOfResults}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
             filtersSelect={configuration.filterTokens}
@@ -242,6 +243,7 @@ export function Main({
               configuration.filtersConfigurable?.isCollapsable ?? true
             }
             numberItems={configuration.filtersConfigurable?.numberItems}
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable
@@ -263,6 +265,7 @@ export function Main({
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            numberOfResults={numberOfResults}
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
@@ -296,6 +299,7 @@ export function Main({
             language={languageSelect}
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.results,
@@ -321,6 +325,7 @@ export function Main({
             language={languageSelect}
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -341,7 +346,7 @@ export function Main({
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
             numberOfResults={totalResult || 0}
-            pagination={7}
+            pagination={numberOfResults}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
           />
@@ -457,6 +462,7 @@ export function Main({
             isCollapsable={
               configuration.filtersMobileLiveChange?.isCollapsable ?? true
             }
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined

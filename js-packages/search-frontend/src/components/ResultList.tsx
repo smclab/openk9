@@ -33,6 +33,7 @@ type ResultsProps<E> = {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
+  numberOfResults: number;
 };
 function Results<E>({
   displayMode,
@@ -47,6 +48,7 @@ function Results<E>({
   setSortAfterKey,
   sortAfterKey,
   setTotalResult,
+  numberOfResults,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -66,6 +68,7 @@ function Results<E>({
           overChangeCard={overChangeCard}
           language={language}
           sortAfterKey={sortAfterKey}
+          numberOfResults={numberOfResults}
         />
       );
     case "infinite":
@@ -83,6 +86,7 @@ function Results<E>({
           language={language}
           setSortAfterKey={setSortAfterKey}
           sortAfterKey={sortAfterKey}
+          numberOfResults={numberOfResults}
         />
       );
     case "virtual":
@@ -99,6 +103,7 @@ function Results<E>({
           overChangeCard={overChangeCard}
           language={language}
           sortAfterKey={sortAfterKey}
+          numberOfResults={numberOfResults}
         />
       );
   }
@@ -199,6 +204,7 @@ type ResulListProps<E> = {
   overChangeCard?: boolean;
   language: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
+  numberOfResults: number;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
@@ -214,12 +220,14 @@ export function FiniteResults<E>({
   language,
   sortAfterKey,
   setTotalResult,
+  numberOfResults,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
+    numberOfResults,
   );
 
   setTotalResult(results.data?.pages[0].total ?? null);
@@ -278,12 +286,14 @@ export function InfiniteResults<E>({
   setSortAfterKey,
   sortAfterKey,
   setTotalResult,
+  numberOfResults,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
+    numberOfResults,
   );
 
   const { t } = useTranslation();
@@ -435,12 +445,14 @@ export function VirtualResults<E>({
   language,
   sortAfterKey,
   setTotalResult,
+  numberOfResults,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
+    numberOfResults,
   );
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
@@ -538,8 +550,9 @@ export function useInfiniteResults<E>(
   sort: SortField[],
   language: string,
   sortAfterKey: string,
+  numberOfResults: number,
 ) {
-  const pageSize = 25;
+  const pageSize = numberOfResults;
   const client = useOpenK9Client();
   return useInfiniteQuery(
     ["results", searchQuery, sort, language, sortAfterKey] as const,

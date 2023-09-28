@@ -266,6 +266,7 @@ export type Configuration = {
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
+  numberResult: number | null | undefined;
   isQueryAnalysis: boolean | null;
   token: string | null;
   totalResult: Element | string | null;
@@ -310,6 +311,7 @@ const defaultConfiguration: Configuration = {
   searchAutoselect: true,
   searchReplaceText: true,
   isQueryAnalysis: true,
+  numberResult: null,
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },
