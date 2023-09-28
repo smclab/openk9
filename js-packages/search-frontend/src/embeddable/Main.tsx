@@ -114,6 +114,7 @@ export function Main({
     configuration.overrideTabs,
     languageSelect,
   );
+  const [currentPage, setCurrentPage] = React.useState<number>(0);
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
 
   const {
@@ -131,6 +132,7 @@ export function Main({
         filterTokens,
         dateTokens,
         onQueryStateChange,
+        setCurrentPage,
       })
     : useSearch({
         configuration,
@@ -138,6 +140,7 @@ export function Main({
         filterTokens,
         dateTokens,
         onQueryStateChange,
+        setCurrentPage,
       });
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
@@ -339,6 +342,8 @@ export function Main({
             sortAfterKey={sortAfterKey}
             numberOfResults={totalResult || 0}
             pagination={7}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
           />
         </I18nextProvider>,
         configuration.resultListPagination,
@@ -554,11 +559,13 @@ function useSearchOnClick({
   filterTokens,
   dateTokens,
   onQueryStateChange,
+  setCurrentPage,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
@@ -612,6 +619,7 @@ function useSearchOnClick({
       filterTokens,
       searchTokens,
     });
+    setCurrentPage(0);
   }, [
     onQueryStateChange,
     defaultTokens,
@@ -662,10 +670,12 @@ function useSearch({
   filterTokens,
   dateTokens,
   onQueryStateChange,
+  setCurrentPage,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
   filterTokens: SearchToken[];
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
 }) {
@@ -723,6 +733,7 @@ function useSearch({
       filterTokens,
       searchTokens,
     });
+    setCurrentPage(0);
   }, [
     onQueryStateChange,
     defaultTokens,

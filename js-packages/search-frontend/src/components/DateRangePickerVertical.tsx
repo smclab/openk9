@@ -86,7 +86,7 @@ export function DataRangePickerVertical({
           showClearDate
           showDefaultInputIcon
           inputIconPosition="after"
-          disabled={startDate ? false : true}
+          disabled={startDate || endDate !== null ? false : true}
           isOutsideRange={() => false}
           placeholder={t("end-day") || "End day"}
           openDirection="up"

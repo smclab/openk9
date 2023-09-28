@@ -36,6 +36,8 @@ type ResultsProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
   pagination: number;
+  currentPage: number;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
 };
 function ResultsPagination<E>({
   displayMode,
@@ -52,9 +54,11 @@ function ResultsPagination<E>({
   setTotalResult,
   numberOfResults,
   pagination,
+  currentPage,
+  setCurrentPage,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
-  const [currentPage, setCurrentPage] = React.useState<number>(0);
+
   const changePage = (page: number) => {
     setCurrentPage(page);
   };
@@ -228,9 +232,15 @@ export function InfiniteResults<E>({
   const partialResult = numberOfResults / elementForPage;
   const numberOfPage = Math.ceil(partialResult);
   const [viewButton, setViewButton] = React.useState({
-    start: 0,
+    start: currentPage,
     end: itemsPerPage,
   });
+
+  React.useEffect(() => {
+    if (currentPage === 0) {
+      resetClick();
+    }
+  }, [currentPage]);
 
   const overlayRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -356,8 +366,9 @@ export function InfiniteResults<E>({
                 />
                 {Array.from({ length: numberOfPage }).map(
                   (_, index) =>
-                    index >= viewButton.start &&
-                    index < viewButton.end && (
+                    ((index === viewButton.start && index === viewButton.end) ||
+                      (index >= viewButton.start &&
+                        index < viewButton.end)) && (
                       <CreateButton
                         action={() => {
                           results.fetchNextPage();
