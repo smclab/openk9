@@ -21,10 +21,12 @@ public class OIDCTenantResolver implements TenantConfigResolver {
         RoutingContext context,
         OidcRequestContext<OidcTenantConfig> requestContext) {
 
-        return createTenantConfig(context.request().host());
+        return createTenantConfig(context);
     }
 
-    private Uni<OidcTenantConfig> createTenantConfig(String tenantName) {
+    private Uni<OidcTenantConfig> createTenantConfig(RoutingContext routingContext) {
+
+        String tenantName = routingContext.request().host();
 
         return tenantRegistry
             .getTenantByVirtualHost(tenantName)
@@ -53,6 +55,8 @@ public class OIDCTenantResolver implements TenantConfigResolver {
                     credentials.setSecret(tenant.clientSecret());
                     config.setCredentials(credentials);
                 }
+
+                routingContext.put("_tenantId", tenant.schemaName());
 
                 tenantResolver.setTenant(tenant.schemaName());
 
