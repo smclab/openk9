@@ -234,6 +234,7 @@ export function Search({
                       selectionsDispatch={selectionsDispatch}
                       isColorSearch={isSearchOnInputChange}
                       setTextBtn={setTextBtn}
+                      isBtnSearch={btnSearch}
                     />
                   );
                 })}
@@ -341,7 +342,21 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
-                  setTextBtn(option?.value);
+                  if(btnSearch) {
+                    if (textBtn === "" ) {
+                      selectionsDispatch({
+                        type: "reset-search",
+                      })
+                    } else {
+                      selectionsDispatch({
+                        type: "set-text",
+                        text: option?.value,
+                        textOnchange: option?.value,
+                      });
+                    }
+                  }
+                  option?.value ? setTextBtn(option?.value) : null;
+                  
                   if (span) {
                     if (isSearchOnInputChange) {
                       selectionsDispatch({

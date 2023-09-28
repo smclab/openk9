@@ -18,6 +18,7 @@ type TokenSelectProps = {
   isAutoSlected: boolean;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   isColorSearch?: boolean;
+  isBtnSearch: boolean;
   setOpenedDropdown: React.Dispatch<
     React.SetStateAction<{
       textPosition: number;
@@ -39,6 +40,7 @@ export function TokenSelect({
   selectionsDispatch,
   saveSearchQuery,
   isColorSearch = true,
+  isBtnSearch = false,
   setTextBtn,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
@@ -194,6 +196,11 @@ export function TokenSelect({
                 key={index}
                 onClick={() => {
                   setTextBtn(getTokenLabel(option) || '')
+                  isBtnSearch ?  selectionsDispatch({
+                    type: "set-text",
+                    text: option?.value,
+                    textOnchange: option?.value,
+                  }) : null
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {
