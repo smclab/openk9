@@ -124,9 +124,7 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private Set<Language> availableLanguages = new LinkedHashSet<>();
 
-	@OneToOne(
-		fetch = FetchType.LAZY
-	)
+	@OneToOne
 	@JoinColumn(name = "language_id")
 	@JsonIgnore
 	@ToString.Exclude
