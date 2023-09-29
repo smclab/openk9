@@ -92,7 +92,7 @@ public class GrammarProvider {
 		return
 			tenantManager
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
-				.flatMap(tenantResponse -> sf.withStatelessTransaction(tenantResponse.getSchemaName(), s -> {
+				.flatMap(tenantResponse -> sf.withTransaction(tenantResponse.getSchemaName(), s -> {
 
 					CriteriaBuilder cb = sf.getCriteriaBuilder();
 

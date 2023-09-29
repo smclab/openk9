@@ -102,7 +102,7 @@ public class BucketResource {
 	}
 
 	private Uni<BucketResponse> getBucket(String host) {
-		return transactionInvoker.withStatelessTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
@@ -130,7 +130,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
-		return transactionInvoker.withStatelessTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
@@ -244,7 +244,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
-		return transactionInvoker.withStatelessTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 
@@ -299,7 +299,7 @@ public class BucketResource {
 	}
 
 	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost, boolean translated) {
-		return transactionInvoker.withStatelessTransaction(session -> {
+		return transactionInvoker.withTransaction(session -> {
 
 			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
 

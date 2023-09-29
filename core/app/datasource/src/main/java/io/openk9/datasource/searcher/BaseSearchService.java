@@ -70,7 +70,7 @@ public abstract class BaseSearchService {
 			.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
 			.invoke((tenantResponse) -> tenantResolver.setTenant(tenantResponse.getSchemaName()))
 			.flatMap(tenantResponse -> sf
-				.withStatelessTransaction(tenantResponse.getSchemaName(), (s, t) -> {
+				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 

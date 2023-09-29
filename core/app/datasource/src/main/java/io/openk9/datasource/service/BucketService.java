@@ -522,7 +522,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>,
 			Uni<? extends T>> mapper) {
 
-		return withStatelessTransaction(s -> getDataIndexNames(bucketId, s))
+		return withTransaction(s -> getDataIndexNames(bucketId, s))
 			.flatMap(indexService::getExistsAndIndexNames)
 			.flatMap(mapper);
 
@@ -547,7 +547,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return mapper.apply(existIndexName);
 	}
 
-	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.StatelessSession s) {
+	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.Session s) {
 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
