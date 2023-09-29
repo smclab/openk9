@@ -26,7 +26,10 @@ public class SchemaTenantResolver implements TenantResolver {
 		String tenantId = tenantResolver.getTenantName();
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("tenant resolved: %s", tenantId));
+			if (tenantId == null) {
+				LOG.debug("fallback to default tenant");
+			}
 		}
-		return tenantId;
+		return tenantId != null ? tenantId : getDefaultTenantId();
 	}
 }
