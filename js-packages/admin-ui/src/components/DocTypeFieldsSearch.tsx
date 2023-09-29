@@ -1,5 +1,5 @@
 import ClayToolbar from "@clayui/toolbar";
-import { ContainerFluidWithoutView, EmptySpace } from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, EmptySpace } from "./Form";
 import { ClayButtonWithIcon } from "@clayui/button";
 import ClayTable from "@clayui/table";
 import React from "react";
@@ -51,68 +51,66 @@ export function DocTypeFieldsSearch() {
           </ClayToolbar.Nav>
         </ContainerFluidWithoutView>
       </ClayToolbar>
-      <TableVirtuoso
-        totalCount={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.length}
-        style={{ height: "80vh" }}
-        data={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges as any}
-        components={{
-          Table: (props) => (
-            <table
-              {...props}
-              style={{ ...props.style, tableLayout: "fixed" }}
-              className="table table-hover show-quick-actions-on-Hover table-list"
-            />
-          ),
-          EmptyPlaceholder: () => (
-            <tbody>
-              <tr>
-                <td colSpan={2} style={{ backgroundColor: "white" }}>
-                  <EmptySpace
-                    description="There are no matching entities"
-                    title="No entities"
-                    extraClass="c-empty-state-animation"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          ),
-        }}
-        fixedHeaderContent={() => (
-          <ClayTable.Row>
-            <ClayTable.Cell headingCell headingTitle>
-              <span className="text-truncate">Name</span>
-            </ClayTable.Cell>
-            <ClayTable.Cell headingCell headingTitle>
-              <span className="text-truncate">Description</span>
-            </ClayTable.Cell>
-          </ClayTable.Row>
-        )}
-        itemContent={(index) => {
-          const row = documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.[index]?.node ?? undefined;
-          return (
-            <React.Fragment>
-              <ClayTable.Cell>
-                {row?.id && (
-                  <Link
-                    style={{
-                      color: "#da1414",
-                      textDecoration: "none",
-                      font: "Helvetica",
-                      fontWeight: "700",
-                      fontSize: "15px",
-                      lineHeight: "44px",
-                    }}
-                    to={"/document-types/" + documentTypeId + "/document-type-fields/" + row.id}
-                  >
-                    {row.name}
-                  </Link>
-                )}
+      <ContainerFluid>
+        <TableVirtuoso
+          totalCount={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.length}
+          style={{ height: "80vh" }}
+          data={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges as any}
+          components={{
+            Table: (props) => (
+              <table
+                {...props}
+                style={{ ...props.style, tableLayout: "fixed" }}
+                className="table table-hover show-quick-actions-on-Hover table-list"
+              />
+            ),
+            EmptyPlaceholder: () => (
+              <tbody>
+                <tr>
+                  <td colSpan={2} style={{ backgroundColor: "white" }}>
+                    <EmptySpace description="There are no matching entities" title="No entities" extraClass="c-empty-state-animation" />
+                  </td>
+                </tr>
+              </tbody>
+            ),
+          }}
+          fixedHeaderContent={() => (
+            <ClayTable.Row>
+              <ClayTable.Cell headingCell headingTitle>
+                <span className="text-truncate">Name</span>
               </ClayTable.Cell>
-              <ClayTable.Cell>{row?.description}</ClayTable.Cell>
-            </React.Fragment>
-          );
-        }}
-      />
+              <ClayTable.Cell headingCell headingTitle>
+                <span className="text-truncate">Description</span>
+              </ClayTable.Cell>
+            </ClayTable.Row>
+          )}
+          itemContent={(index) => {
+            const row = documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.[index]?.node ?? undefined;
+            return (
+              <React.Fragment>
+                <ClayTable.Cell>
+                  {row?.id && (
+                    <Link
+                      style={{
+                        color: "#da1414",
+                        textDecoration: "none",
+                        font: "Helvetica",
+                        fontWeight: "700",
+                        fontSize: "15px",
+                        lineHeight: "44px",
+                      }}
+                      to={"/document-types/" + documentTypeId + "/document-type-fields/" + row.id}
+                    >
+                      {row.name}
+                    </Link>
+                  )}
+                </ClayTable.Cell>
+                <ClayTable.Cell>{row?.description}</ClayTable.Cell>
+              </React.Fragment>
+            );
+          }}
+        />
+      </ContainerFluid>
     </div>
   );
 }
