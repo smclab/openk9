@@ -34,7 +34,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -99,7 +101,7 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private List<Tab> tabs = new LinkedList<>();
 
-	@OneToOne(mappedBy = "bucket", cascade = CascadeType.ALL)
+	@OneToOne
 	@JsonIgnore
 	private TenantBinding tenantBinding;
 
@@ -123,6 +125,9 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private Language defaultLanguage;
+
+	@Transient
+	private boolean enabled = false;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
@@ -203,4 +208,10 @@ public class Bucket extends K9Entity {
 		return false;
 
 	}
+
+	@PostLoad
+	void postLoad() {
+		this.enabled = tenantBinding != null;
+	}
+
 }

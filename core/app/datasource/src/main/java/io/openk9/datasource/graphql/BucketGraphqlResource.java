@@ -126,10 +126,6 @@ public class BucketGraphqlResource {
 		return bucketService.getLanguage(bucket.getId());
 	}
 
-	public Uni<Boolean> enabled(@Source Bucket bucket) {
-		return Uni.createFrom().item(bucket.getTenantBinding() != null);
-	}
-
 	public Uni<QueryAnalysis> queryAnalysis(@Source Bucket bucket) {
 		return bucketService.getQueryAnalysis(bucket.getId());
 	}
