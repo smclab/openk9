@@ -28,7 +28,6 @@ import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -80,17 +79,12 @@ public class Bucket extends K9Entity {
 	private Set<SuggestionCategory> suggestionCategories
 		= new LinkedHashSet<>();
 
-	@ManyToOne(
-		fetch = FetchType.LAZY
-	)
+	@ManyToOne
 	@JoinColumn(name = "query_analysis_id")
 	@ToString.Exclude
 	private QueryAnalysis queryAnalysis;
 
-	@ManyToOne(
-		cascade = CascadeType.ALL,
-		fetch = FetchType.LAZY
-	)
+	@ManyToOne
 	@JoinColumn(name = "search_config_id")
 	@ToString.Exclude
 	private SearchConfig searchConfig;
