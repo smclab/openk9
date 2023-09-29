@@ -117,7 +117,7 @@ export function DocumentTypeFields() {
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               <Link to={"/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText}>
-                <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="plus" aria-label="search" small />
+                <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="search" aria-label="search" small />
               </Link>
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
@@ -126,7 +126,7 @@ export function DocumentTypeFields() {
 
       <ContainerFluid>
         <div style={{ display: "flex", background: "white", overflowX: "auto" }}>
-          <ClayList style={{ marginBottom: "0", width: "400px" }}>
+          <ClayList style={{ marginBottom: "0", width: "400px", borderRight: "3px solid #00000017" }}>
             {data.docTypeFieldsByParent.edges.map(
               ({
                 node,
@@ -144,7 +144,23 @@ export function DocumentTypeFields() {
                   sortable: boolean;
                 };
               }) => (
-                <ClayList.Item key={node.id} style={{ padding: "8px 8px" }} className={node.id === selectedDocumentId ? "selected" : ""}>
+                <ClayList.Item
+                  key={node.id}
+                  style={{ padding: "8px 8px" }}
+                  className={node.id === selectedDocumentId ? "active selected" : ""}
+                  onMouseOver={(event) => {
+                    const currentTarget = event.currentTarget as any;
+                    if (!currentTarget.classList.contains('active')) {
+                      currentTarget.classList.add('active');
+                    }    
+                  }}
+                  onMouseOut={(event) => {
+                    const currentTarget = event.currentTarget as any;
+                    if (currentTarget.classList.contains('active') && !currentTarget.classList.contains('selected')) {
+                      currentTarget.classList.remove('active');
+                    }
+                  }}
+                >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     {node?.id && (
                       <Link
@@ -339,7 +355,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
   return (
     <div>
       <div style={{ display: "flex" }}>
-        <ClayList style={{ width: "400px" }}>
+        <ClayList style={{ width: "400px", borderRight: "3px solid #00000017" }}>
           {childDocuments.map(
             ({
               node,
@@ -360,7 +376,19 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
               <ClayList.Item
                 key={node.id}
                 style={{ cursor: "pointer", padding: "8px 8px" }}
-                className={node.id === selectedChildDocumentId ? "selected" : ""}
+                className={node.id === selectedChildDocumentId ? "active selected" : ""}
+                onMouseOver={(event) => {
+                  const currentTarget = event.currentTarget as any;
+                  if (!currentTarget.classList.contains('active')) {
+                    currentTarget.classList.add('active');
+                  }    
+                }}
+                onMouseOut={(event) => {
+                  const currentTarget = event.currentTarget as any;
+                  if (currentTarget.classList.contains('active') && !currentTarget.classList.contains('selected')) {
+                    currentTarget.classList.remove('active');
+                  }
+                }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   {node?.id && (
