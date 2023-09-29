@@ -50,7 +50,7 @@ public class EnrichPipelineItem
 	private EnrichPipelineItemKey key;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
+	@ManyToOne
 	@MapsId("enrichPipelineId")
 	@JoinColumn(name = "enrich_pipeline_id")
 	private EnrichPipeline enrichPipeline;

@@ -86,7 +86,7 @@ public class Datasource extends K9Entity {
 	private Set<DataIndex> dataIndexes;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+	@ManyToOne(cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,
@@ -96,7 +96,7 @@ public class Datasource extends K9Entity {
 	private EnrichPipeline enrichPipeline;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+	@ManyToOne(cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,

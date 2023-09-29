@@ -91,14 +91,14 @@ public class DocTypeField extends BaseDocTypeField {
 	private Boolean exclude;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+	@ManyToOne(cascade = {
 		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
 		CascadeType.DETACH})
 	@JoinColumn(name = "analyzer")
 	@JsonIgnore
 	private Analyzer analyzer;
 
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "parent_doc_type_field_id", updatable = false)
 	@JsonIgnore
 	@ToString.Exclude

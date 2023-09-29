@@ -71,7 +71,6 @@ public class SuggestionCategory extends K9Entity {
 
 	@ToString.Exclude
 	@ManyToOne(
-		fetch = javax.persistence.FetchType.LAZY,
 		cascade = {
 			javax.persistence.CascadeType.PERSIST,
 			javax.persistence.CascadeType.MERGE,

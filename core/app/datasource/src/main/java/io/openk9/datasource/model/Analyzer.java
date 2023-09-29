@@ -64,7 +64,7 @@ public class Analyzer extends K9Entity {
 	private Set<CharFilter> charFilters = new LinkedHashSet<>();
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+	@ManyToOne(cascade = {
 		javax.persistence.CascadeType.PERSIST,
 		javax.persistence.CascadeType.MERGE,
 		javax.persistence.CascadeType.REFRESH,

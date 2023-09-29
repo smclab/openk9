@@ -33,7 +33,7 @@ public class AclMapping {
 	private PluginDriverDocTypeFieldKey key;
 
 	@ToString.Exclude
-	@ManyToOne(fetch = javax.persistence.FetchType.LAZY)
+	@ManyToOne
 	@MapsId("pluginDriverId")
 	@JoinColumn(name = "plugin_driver_id")
 	private PluginDriver pluginDriver;

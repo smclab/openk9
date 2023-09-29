@@ -54,7 +54,7 @@ public class DataIndex extends K9Entity {
 
 	@JsonIgnore
 	@ToString.Exclude
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@ManyToOne(optional = false)
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
 
