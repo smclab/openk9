@@ -491,6 +491,7 @@ export function Main({
             language={languageSelect}
             start={configuration.dataRangePickerVertical?.start}
             end={configuration.dataRangePickerVertical?.end}
+            classTab={tabs[selectedTabIndex]?.label}
           />
         </I18nextProvider>,
         configuration.dataRangePickerVertical?.element !== undefined
