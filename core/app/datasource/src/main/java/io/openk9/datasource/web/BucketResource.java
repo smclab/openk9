@@ -64,7 +64,7 @@ public class BucketResource {
 	@Path("/current/tabs")
 	@GET
 	public Uni<List<TabResponseDTO>> getTabs(
-			@QueryParam("translated") @DefaultValue("true") boolean translated) {
+			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
 		return getTabList(request.host(), translated);
 	}
@@ -72,7 +72,7 @@ public class BucketResource {
 	@Path("/current/suggestionCategories")
 	@GET
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
-			@QueryParam("translated") @DefaultValue("true") boolean translated) {
+			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
 		return getSuggestionCategoryList(request.host(), translated);
 	}
