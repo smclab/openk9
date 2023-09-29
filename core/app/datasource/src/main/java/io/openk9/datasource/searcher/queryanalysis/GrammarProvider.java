@@ -45,6 +45,7 @@ public class GrammarProvider {
 		Uni<Tuple2<String, Bucket>> getTenantUni = _getTenant(virtualHost);
 
 		return getTenantUni
+			.invoke(t2 -> tenantResolver.setTenant(t2.getItem1()))
 			.emitOn(Infrastructure.getDefaultWorkerPool())
 			.map(t2 -> {
 
