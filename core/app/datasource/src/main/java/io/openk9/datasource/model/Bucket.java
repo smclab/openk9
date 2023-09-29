@@ -50,7 +50,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
+@Cacheable(value = false)
 public class Bucket extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)
