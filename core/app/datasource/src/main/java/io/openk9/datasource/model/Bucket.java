@@ -101,7 +101,7 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private List<Tab> tabs = new LinkedList<>();
 
-	@OneToOne
+	@OneToOne(mappedBy = "bucket")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
 
