@@ -38,7 +38,7 @@ enum TokenType {
     DOCTYPE = 2;
     AUTOCORRECT = 3;
     AUTOCOMPLETE = 4;
-
+    KEYWORD_AUTOCOMPLETE = 5;
 }
 
 message QueryParserRequest {
