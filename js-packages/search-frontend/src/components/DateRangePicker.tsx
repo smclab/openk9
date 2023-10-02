@@ -204,6 +204,11 @@ export function DataRangePicker({
             background: "none",
           }}
           onClick={() => {
+            setFocusedInput(null);
+            const inputElement = document.getElementById("endDate");
+            if (inputElement instanceof HTMLInputElement) {
+              inputElement.value = "";
+            }
             onChange({
               keywordKey: undefined,
               startDate: undefined,
