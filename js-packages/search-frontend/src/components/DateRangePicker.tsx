@@ -54,33 +54,40 @@ export function DataRangePicker({
       className="custom-calendar-info"
       style={{
         display: "flex",
-        gap: "20px",
+        gap: "5px",
         padding: "15px 20px",
         overflow: "auto",
       }}
     >
       <CreateLabel
+        padding="10px 6px"
         label={t("today")}
         action={() => {
           setStartDate(moment());
           setEndDate(moment());
         }}
       />
+
       <CreateLabel
+        padding="10px 6px"
         label={t("this-week")}
         action={() => {
           setStartDate(moment().startOf("week"));
           setEndDate(moment().endOf("week"));
         }}
       />
+
       <CreateLabel
+        padding="10px 6px"
         label={t("this-month")}
         action={() => {
           setStartDate(moment().startOf("month"));
           setEndDate(moment().endOf("month"));
         }}
       />
+
       <CreateLabel
+        padding="10px 6px"
         label={t("this-year")}
         action={() => {
           setStartDate(moment().startOf("year"));
@@ -97,18 +104,21 @@ export function DataRangePicker({
         }}
       >
         <CreateLabel
+          padding="10px 6px"
           action={() => {
             onChange({
               startDate: undefined,
               endDate: undefined,
               keywordKey: undefined,
             });
+
             setStartDate(null);
             setEndDate(null);
           }}
           label={t("remove-filters")}
         />
         <CreateLabel
+          padding="10px 6px"
           action={() =>
             onChange({
               startDate: startDate?._d || undefined,
@@ -119,6 +129,7 @@ export function DataRangePicker({
           label={t("add-filters")}
         />
         <CreateLabel
+          padding="10px 6px"
           action={() => {
             document.getElementById("search-openk9")?.focus();
           }}
