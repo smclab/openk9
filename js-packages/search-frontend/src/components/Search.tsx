@@ -89,9 +89,10 @@ export function Search({
     if (defaultValue && btnSearch) {
       selectionsDispatch({
         type: "set-text",
-        text: textBtn,
-        textOnchange: textBtn,
+        text: defaultValue,
+        textOnchange: defaultValue,
       });
+      setTextBtn(defaultValue);
     }
   }, [defaultValue]);
 
