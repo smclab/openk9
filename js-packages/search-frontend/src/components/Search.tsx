@@ -39,6 +39,7 @@ type SearchProps = {
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
   btnSearch?: boolean;
+  defaultValue?: string;
   isSearchOnInputChange?: boolean;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
@@ -58,6 +59,7 @@ export function Search({
   actionCloseMobileVersion,
   isSearchOnInputChange = false,
   saveSearchQuery,
+  defaultValue,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -69,7 +71,9 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
-  const [textBtn, setTextBtn] = React.useState<string | undefined>();
+  const [textBtn, setTextBtn] = React.useState<string | undefined>(
+    defaultValue,
+  );
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -81,6 +85,16 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
+  React.useEffect(() => {
+    if (defaultValue && btnSearch) {
+      selectionsDispatch({
+        type: "set-text",
+        text: textBtn,
+        textOnchange: textBtn,
+      });
+    }
+  }, [defaultValue]);
+
   const { t } = useTranslation();
   return (
     <React.Fragment>
@@ -342,11 +356,11 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
-                  if(btnSearch) {
-                    if (textBtn === "" ) {
+                  if (btnSearch) {
+                    if (textBtn === "") {
                       selectionsDispatch({
                         type: "reset-search",
-                      })
+                      });
                     } else {
                       selectionsDispatch({
                         type: "set-text",
@@ -356,7 +370,7 @@ export function Search({
                     }
                   }
                   option?.value ? setTextBtn(option?.value) : null;
-                  
+
                   if (span) {
                     if (isSearchOnInputChange) {
                       selectionsDispatch({

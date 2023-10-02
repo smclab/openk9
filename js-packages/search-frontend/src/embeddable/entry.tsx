@@ -225,6 +225,7 @@ type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
   isShowSyntax?: boolean | undefined | null;
+  defaultValue?: string | undefined | null;
 };
 
 type FilterProps = {

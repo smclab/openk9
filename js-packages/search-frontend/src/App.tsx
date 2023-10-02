@@ -377,19 +377,23 @@ export function App() {
           }
         `}
       ></div>
-		<div
-		  className="openk9-results-container openk9-box"
-		  ref={(element) => openk9.updateConfiguration({ resultList: {element:element, changeOnOver:true} })}
-		  css={css`
-			grid-area: result;
-			overflow-y: auto;
-			background-color: var(
-			  --openk9-embeddable-search--primary-background-color
-			);
-			border-radius: 8px;
-			border: 1px solid var(--openk9-embeddable-search--border-color);
-		  `}
-		></div>
+      <div
+        className="openk9-results-container openk9-box"
+        ref={(element) =>
+          openk9.updateConfiguration({
+            resultList: { element: element, changeOnOver: true },
+          })
+        }
+        css={css`
+          grid-area: result;
+          overflow-y: auto;
+          background-color: var(
+            --openk9-embeddable-search--primary-background-color
+          );
+          border-radius: 8px;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
+        `}
+      ></div>
       <div
         className="openk9-results-container openk9-box"
         ref={(element) =>
