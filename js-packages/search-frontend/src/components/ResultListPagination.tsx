@@ -474,14 +474,6 @@ function useInfiniteResults<E>(
 ) {
   const pageSize = elementForPage;
   const client = useOpenK9Client();
-  console.log(
-    searchQuery,
-    sort,
-    language,
-    sortAfterKey,
-    elementForPage,
-    result,
-  );
 
   return useInfiniteQuery(
     ["results", searchQuery, sort, language, sortAfterKey] as const,

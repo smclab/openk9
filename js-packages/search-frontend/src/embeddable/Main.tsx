@@ -154,7 +154,7 @@ export function Main({
   }, [languageQuery.data, i18n]);
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
-  const numberOfResults = configuration.numberResult || 7;
+  const numberOfResults = configuration.numberResult || 10;
   return (
     <React.Fragment>
       {renderPortal(
