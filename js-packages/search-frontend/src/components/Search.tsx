@@ -86,12 +86,18 @@ export function Search({
     }
   }, [adjustedSelection]);
   React.useEffect(() => {
-    if (defaultValue && btnSearch) {
-      selectionsDispatch({
-        type: "set-text",
-        text: defaultValue,
-        textOnchange: defaultValue,
-      });
+    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
+      if (defaultValue === "") {
+        selectionsDispatch({
+          type: "reset-search",
+        });
+      } else {
+        selectionsDispatch({
+          type: "set-text",
+          text: defaultValue,
+          textOnchange: defaultValue,
+        });
+      }
       setTextBtn(defaultValue);
     }
   }, [defaultValue]);
