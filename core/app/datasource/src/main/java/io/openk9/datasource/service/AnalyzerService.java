@@ -233,7 +233,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	}
 
 	public Uni<Void> load(Analyzer analyzer) {
-		return em.withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			List<Uni<?>> unis = new ArrayList<>();
 

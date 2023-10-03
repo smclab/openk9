@@ -57,8 +57,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-;
-
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	 BucketService(BucketMapper mapper) {
@@ -457,7 +455,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				TenantBinding bucketBinding = bucket.getTenantBinding();
 
 				if (bucketBinding == null) {
-					CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+					CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
 
 					CriteriaQuery<TenantBinding> query =
 						criteriaBuilder.createQuery(TenantBinding.class);
@@ -549,7 +547,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.Session s) {
 
-		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 		CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
 
 		Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);

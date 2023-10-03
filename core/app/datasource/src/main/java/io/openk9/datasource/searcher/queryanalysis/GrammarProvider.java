@@ -15,13 +15,12 @@ import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Tuple2;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -92,62 +91,61 @@ public class GrammarProvider {
 		return
 			tenantManager
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
-				.flatMap(tenantResponse -> sf.withTransaction(tenantResponse.getSchemaName(), s -> {
+				.flatMap(tenantResponse -> sessionFactory
+						.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
+						CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-					CriteriaBuilder cb = sf.getCriteriaBuilder();
+						CriteriaQuery<Bucket> query = cb.createQuery(Bucket.class);
 
-					CriteriaQuery<Bucket> query = cb.createQuery(Bucket.class);
+						Root<Bucket> tenantRoot = query.from(Bucket.class);
 
-					Root<Bucket> tenantRoot = query.from(Bucket.class);
+						Join<Bucket, TenantBinding> tenantBindingJoin =
+							tenantRoot.join(Bucket_.tenantBinding);
 
-					Join<Bucket, TenantBinding> tenantBindingJoin =
-						tenantRoot.join(Bucket_.tenantBinding);
+						tenantRoot
+							.fetch(Bucket_.datasources)
+							.fetch(Datasource_.dataIndex);
 
-					tenantRoot
-						.fetch(Bucket_.datasources)
-						.fetch(Datasource_.dataIndex);
+						Fetch<Bucket, QueryAnalysis> queryAnalysisFetch =
+							tenantRoot.fetch(Bucket_.queryAnalysis);
 
-					Fetch<Bucket, QueryAnalysis> queryAnalysisFetch =
-						tenantRoot.fetch(Bucket_.queryAnalysis);
+						queryAnalysisFetch.fetch(QueryAnalysis_.rules);
 
-					queryAnalysisFetch.fetch(QueryAnalysis_.rules);
+						Join<QueryAnalysis, Annotator> annotatorJoin1 =
+							(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
+								QueryAnalysis_.annotators, JoinType.INNER);
 
-					Join<QueryAnalysis, Annotator> annotatorJoin1 =
-						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
-							QueryAnalysis_.annotators, JoinType.INNER);
+						Fetch<Annotator, DocTypeField> docTypeFieldFetch =
+							annotatorJoin1.fetch(Annotator_.docTypeField);
 
-					Fetch<Annotator, DocTypeField> docTypeFieldFetch =
-						annotatorJoin1.fetch(Annotator_.docTypeField);
+						docTypeFieldFetch
+							.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
-					docTypeFieldFetch
-						.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
+						docTypeFieldFetch
+							.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
-					docTypeFieldFetch
-						.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
+						Join<QueryAnalysis, Annotator> annotatorJoin2 =
+							(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
+								QueryAnalysis_.annotators, JoinType.INNER);
 
-					Join<QueryAnalysis, Annotator> annotatorJoin2 =
-						(Join<QueryAnalysis, Annotator>)queryAnalysisFetch.fetch(
-							QueryAnalysis_.annotators, JoinType.INNER);
-
-					query.where(
-						cb.and(
-							cb.equal(
-								tenantBindingJoin.get(TenantBinding_.virtualHost),
-								virtualHost
-							),
-							cb.or(
-								createAnnotatorTypePredicate(annotatorJoin1),
-								createAnnotatorTypePredicate(annotatorJoin2).not()
+						query.where(
+							cb.and(
+								cb.equal(
+									tenantBindingJoin.get(TenantBinding_.virtualHost),
+									virtualHost
+								),
+								cb.or(
+									createAnnotatorTypePredicate(annotatorJoin1),
+									createAnnotatorTypePredicate(annotatorJoin2).not()
+								)
 							)
-						)
-					);
+						);
 
-					return s
-						.createQuery(query)
-						.setCacheable(true)
-						.getSingleResult()
-						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b));
-
+						return s
+							.createQuery(query)
+							.setCacheable(true)
+							.getSingleResult()
+							.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b));
 				}));
 	}
 
@@ -163,7 +161,7 @@ public class GrammarProvider {
 	}
 
 	@Inject
-	TransactionInvoker sf;
+	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	AnnotatorFactory annotatorFactory;

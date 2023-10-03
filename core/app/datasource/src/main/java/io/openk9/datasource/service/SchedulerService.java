@@ -65,19 +65,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<Datasource> getDatasource(Scheduler scheduler) {
-		return em.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getDatasource()));
+		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getDatasource()));
 	}
 
 	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
-		return em.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getOldDataIndex()));
+		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getOldDataIndex()));
 	}
 
 	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
-		return em.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getNewDataIndex()));
+		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getNewDataIndex()));
 	}
 
 	public Uni<List<String>> getDeletedContentIds(String tenant, String schedulerId) {
-		return em.withStatelessTransaction(tenant, s -> s.createQuery(
+		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s.createQuery(
 					"select s " +
 					"from Scheduler s " +
 					"join fetch s.oldDataIndex " +
@@ -93,7 +93,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<List<String>> getDeletedContentIds(long id) {
-		return em.withStatelessTransaction(s -> s.createQuery(
+		return sessionFactory.withStatelessTransaction(s -> s.createQuery(
 			"select s " +
 				"from Scheduler s " +
 				"join fetch s.oldDataIndex " +

@@ -174,7 +174,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
 		return withStatelessTransaction((s) -> {
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
 			Root<DocType> root = cq.from(DocType.class);
 			cq.select(root.join(DocType_.docTypeFields));
@@ -185,7 +185,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<DocType> findByName(String name) {
 		return withStatelessTransaction((s) -> {
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
 			Root<DocType> root = cq.from(DocType.class);
 			cq.where(cb.equal(root.get(DocType_.name), name));
@@ -198,7 +198,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<List<DocType>> getDocTypeListByNames(String[] docTypeNames) {
 		return withTransaction(s -> {
 
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			Class<DocType> entityClass = getEntityClass();
 
@@ -218,7 +218,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<Boolean> existsByName(String name) {
 		return withTransaction(s -> {
 
-			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			Class<DocType> entityClass = getEntityClass();
 

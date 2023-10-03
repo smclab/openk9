@@ -13,7 +13,6 @@ import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.web.SearchTokenDto;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
@@ -194,9 +193,6 @@ public class TabGraphqlResource {
 
 	@Inject
 	TokenTabService _tokenTabService;
-
-	@Inject
-	TransactionInvoker transactionInvoker;
 
 	@Inject
 	TokenTabMapper _tokenTabMapper;

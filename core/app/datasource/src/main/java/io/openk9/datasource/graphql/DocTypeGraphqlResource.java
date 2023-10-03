@@ -31,7 +31,6 @@ import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -44,6 +43,7 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -117,12 +117,12 @@ public class DocTypeGraphqlResource {
 	}
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
-		return transactionInvoker.withTransaction(
+		return sessionFactory.withTransaction(
 			(s) -> Mutiny2.fetch(s, docTypeField.getDocType()));
 	}
 
 	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
-		return transactionInvoker.withTransaction(
+		return sessionFactory.withTransaction(
 			(s) -> Mutiny2.fetch(s, docType.getDocTypeTemplate()));
 	}
 
@@ -235,7 +235,7 @@ public class DocTypeGraphqlResource {
 	DocTypeService docTypeService;
 
 	@Inject
-	TransactionInvoker transactionInvoker;
+	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;

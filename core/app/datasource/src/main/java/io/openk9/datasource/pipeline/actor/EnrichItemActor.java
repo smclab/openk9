@@ -6,7 +6,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.sql.TransactionInvoker;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.inject.spi.CDI;
 
@@ -17,13 +17,14 @@ public class EnrichItemActor {
 	public record EnrichItemCallbackResponse(EnrichItem enrichItem) implements Response {}
 
 	public static Behavior<Command> create() {
-		TransactionInvoker transactionInvoker =
-			CDI.current().select(TransactionInvoker.class).get();
-		return Behaviors.setup(ctx -> initial(ctx, transactionInvoker));
+
+		Mutiny.SessionFactory sessionFactory =
+			CDI.current().select(Mutiny.SessionFactory.class).get();
+		return Behaviors.setup(ctx -> initial(ctx, sessionFactory));
 	}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> ctx, TransactionInvoker transactionInvoker) {
+		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory) {
 
 		return Behaviors
 			.receive(Command.class)
@@ -34,8 +35,8 @@ public class EnrichItemActor {
 				ActorRef<EnrichItemCallbackResponse> replyTo = enrichItemCallback.replyTo;
 
 				VertxUtil.runOnContext(
-					() -> transactionInvoker.withStatelessTransaction(
-						tenantId, s -> s.get(EnrichItem.class, enrichItemId)),
+					() -> sessionFactory.withStatelessTransaction(
+						tenantId, (s, t) -> s.get(EnrichItem.class, enrichItemId)),
 					ei -> replyTo.tell(new EnrichItemCallbackResponse(ei))
 				);
 

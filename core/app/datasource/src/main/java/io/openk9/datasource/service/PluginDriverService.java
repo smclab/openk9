@@ -136,7 +136,7 @@ public class PluginDriverService
 		return withTransaction(
 			s -> {
 
-				CriteriaBuilder cb = em.getCriteriaBuilder();
+				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 				CriteriaQuery<DocTypeField> query =
 					cb.createQuery(DocTypeField.class);
@@ -257,7 +257,7 @@ public class PluginDriverService
 		long docTypeFieldId, UserField userField){
 
 		return withTransaction(s-> {
-			CriteriaBuilder criteria= em.getCriteriaBuilder();
+			CriteriaBuilder criteria= sessionFactory.getCriteriaBuilder();
 
 			CriteriaUpdate<AclMapping> query =
 				criteria.createCriteriaUpdate(AclMapping.class);

@@ -22,7 +22,6 @@ import io.openk9.auth.tenant.MultiTenancyConfig;
 import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
@@ -32,6 +31,7 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -152,9 +152,9 @@ public class SchedulerInitializer {
 	public Uni<Void> performTask(
 		String schemaName, Long datasourceId, boolean startFromFirst) {
 
-		return transactionInvoker.withTransaction(
+		return sessionFactory.withTransaction(
 			schemaName,
-			s -> datasourceService
+			(s, t) -> datasourceService
 				.findDatasourceByIdWithPluginDriver(datasourceId)
 				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d.getId(), startFromFirst))
 				.replaceWithVoid()
@@ -183,7 +183,7 @@ public class SchedulerInitializer {
 	EventBus eventBus;
 
 	@Inject
-	TransactionInvoker transactionInvoker;
+	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	SchedulerInitializerActor schedulerInitializerActor;

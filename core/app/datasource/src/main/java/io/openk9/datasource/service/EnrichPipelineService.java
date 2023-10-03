@@ -129,7 +129,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return withTransaction(
 			s -> {
 
-				CriteriaBuilder cb = em.getCriteriaBuilder();
+				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 				CriteriaQuery<EnrichItem> query =
 					cb.createQuery(EnrichItem.class);

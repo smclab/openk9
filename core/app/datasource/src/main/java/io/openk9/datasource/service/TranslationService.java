@@ -61,7 +61,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		String className = entityClass.getName();
 
-		return em.withStatelessTransaction(session -> session
+		return sessionFactory.withStatelessTransaction(session -> session
 			.createQuery(
 				"select t " +
 				"from io.openk9.datasource.model.Translation t " +
@@ -106,7 +106,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		String className = entityClass.getName();
 
-		return em.withStatelessTransaction(session -> session
+		return sessionFactory.withStatelessTransaction(session -> session
 			.createQuery(
 				"select t " +
 					"from io.openk9.datasource.model.Translation t " +
@@ -137,7 +137,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		TranslationKey pkValue = new TranslationKey(language, entityClass.getName(), id, key);
 
-		return em.withTransaction((session, transaction) -> session
+		return sessionFactory.withTransaction((session, transaction) -> session
 			.find(Translation.class, Identifier.id("pk", pkValue))
 			.chain(entity -> {
 				if (entity != null) {
@@ -158,7 +158,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 
 		TranslationKey pkValue = new TranslationKey(language, entityClass.getName(), id, key);
 
-		return em.withTransaction((session, transaction) -> session
+		return sessionFactory.withTransaction((session, transaction) -> session
 			.find(Translation.class, Identifier.id("pk", pkValue))
 			.chain(entity -> {
 				if (entity != null) {

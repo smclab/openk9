@@ -27,7 +27,6 @@ import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.AnnotatorService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -39,6 +38,7 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -91,7 +91,7 @@ public class AnnotatorGraphqlResource {
 	}
 
 	public Uni<DocTypeField> docTypeField(@Source Annotator annotator) {
-		return transactionInvoker.withTransaction(s -> Mutiny2.fetch(s, annotator.getDocTypeField()));
+		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, annotator.getDocTypeField()));
 	}
 
 	public Uni<Response<Annotator>> patchAnnotator(@Id long id, AnnotatorDTO annotatorDTO) {
@@ -163,7 +163,7 @@ public class AnnotatorGraphqlResource {
 	}
 
 	@Inject
-	TransactionInvoker transactionInvoker;
+	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	AnnotatorService annotatorService;

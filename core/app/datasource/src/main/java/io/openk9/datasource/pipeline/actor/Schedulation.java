@@ -20,11 +20,11 @@ import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -75,7 +75,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private final SchedulationKey key;
-	private final TransactionInvoker txInvoker;
+	private final Mutiny.SessionFactory sessionFactory;
 	private final DatasourceService datasourceService;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Duration timeout;
@@ -87,12 +87,12 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	public Schedulation(
 		ActorContext<Command> context,
 		SchedulationKey key,
-		TransactionInvoker txInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		DatasourceService datasourceService) {
 
 		super(context);
 		this.key = key;
-		this.txInvoker = txInvoker;
+		this.sessionFactory = sessionFactory;
 		this.datasourceService = datasourceService;
 		this.timeout = getTimeout(context);
 
@@ -100,13 +100,13 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey, TransactionInvoker txInvoker,
+		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory,
 		DatasourceService datasourceService) {
 
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Schedulation(
-					ctx, schedulationKey, txInvoker, datasourceService)))
+					ctx, schedulationKey, sessionFactory, datasourceService)))
 			.onFailure(SupervisorStrategy.resume());
 	}
 
@@ -176,8 +176,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onStart(Start start) {
-		VertxUtil.runOnContext(() -> txInvoker
-			.withStatelessTransaction(key.tenantId, s -> s
+		VertxUtil.runOnContext(() -> sessionFactory
+			.withStatelessTransaction(key.tenantId, (s, t) -> s
 				.createQuery("select s " +
 					"from Scheduler s " +
 					"join fetch s.datasource d " +
@@ -250,8 +250,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onCancel() {
 
-		VertxUtil.runOnContext(() -> txInvoker
-			.withTransaction(key.tenantId, s -> s
+		VertxUtil.runOnContext(() -> sessionFactory
+			.withTransaction(key.tenantId, (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(scheduler -> {
 					scheduler.setStatus(Scheduler.SchedulerStatus.CANCELLED);
@@ -307,10 +307,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			log.info(
 				"replacing dataindex {} for datasource {} on tenant {}",
 				newDataIndexId, datasourceId, tenantId);
-			VertxUtil.runOnContext(() -> txInvoker
+			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
 					tenantId,
-					s -> s
+					(s, t) -> s
 						.find(Datasource.class, datasourceId)
 						.onItem()
 						.transformToUni(ds -> s
@@ -332,8 +332,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onPersistStatusFinished() {
-		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
-			key.tenantId, s -> s
+		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
+			key.tenantId, (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(entity -> {
 					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
@@ -382,8 +382,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
 		Long datasourceId = scheduler.getDatasource().getId();
-		VertxUtil.runOnContext(() -> txInvoker.withTransaction(
-			key.tenantId, s -> s
+		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
+			key.tenantId, (s, tx) -> s
 				.find(Datasource.class, datasourceId)
 				.chain(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);

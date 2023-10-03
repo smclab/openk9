@@ -141,7 +141,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	public Uni<Collection<DocType>> expandDocTypes(Collection<DocType> docTypes) {
 
 		 if (docTypes != null && !docTypes.isEmpty()) {
-			 return em.withTransaction(s -> {
+			 return sessionFactory.withTransaction(s -> {
 
 				 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
 
@@ -234,7 +234,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			return Uni.createFrom().item(Set.of());
 		}
 
-		return em.withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
 
@@ -259,7 +259,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	private Uni<Void> loadDocTypeField(Set<DocTypeField> typeFields) {
 
-		return em.withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			List<Uni<?>> unis = new ArrayList<>();
 

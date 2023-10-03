@@ -9,12 +9,12 @@ import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.ActorActionListener;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -55,29 +55,29 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private final String tenantName;
 	private final long datasourceId;
 	private final RestHighLevelClient esClient;
-	private final TransactionInvoker txInvoker;
+	private final Mutiny.SessionFactory sessionFactory;
 	private final Duration maxAge;
 	private final Deque<List<DataIndex>> chunks = new ArrayDeque<>();
 	private List<DataIndex> currentChunk;
 
 	public DatasourcePurge(
 		ActorContext<Command> context, String tenantName, long datasourceId,
-		RestHighLevelClient esClient, TransactionInvoker txInvoker) {
+		RestHighLevelClient esClient, Mutiny.SessionFactory sessionFactory) {
 		super(context);
 		this.tenantName = tenantName;
 		this.datasourceId = datasourceId;
 		this.esClient = esClient;
-		this.txInvoker = txInvoker;
+		this.sessionFactory = sessionFactory;
 		this.maxAge = getMaxAge(context);
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
 		String tenantName, long datasourceId, RestHighLevelClient esClient,
-		TransactionInvoker txInvoker) {
+		Mutiny.SessionFactory sessionFactory) {
 
 		return Behaviors.setup(ctx ->
-			new DatasourcePurge(ctx, tenantName, datasourceId, esClient, txInvoker));
+			new DatasourcePurge(ctx, tenantName, datasourceId, esClient, sessionFactory));
 	}
 
 	@Override
@@ -111,8 +111,8 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			"Fetching DataIndex orphans for datasource {}-{}, older than {}",
 			tenantName, datasourceId, maxAgeDate);
 
-		VertxUtil.runOnContext(() -> txInvoker.withStatelessTransaction(
-			tenantName, s -> s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
+		VertxUtil.runOnContext(() -> sessionFactory.withStatelessTransaction(
+			tenantName, (s, t) -> s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
 				.setParameter("id", datasourceId)
 				.setParameter("maxAgeDate", maxAgeDate
 				)
@@ -229,8 +229,8 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			.map(K9Entity::getId)
 			.collect(Collectors.toSet());
 
-		VertxUtil.runOnContext(() -> txInvoker
-			.withTransaction(tenantName, s ->  s
+		VertxUtil.runOnContext(() -> sessionFactory
+			.withTransaction(tenantName, (s,t ) ->  s
 				.createNativeQuery(BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP)
 				.setParameter("ids", ids)
 				.executeUpdate()

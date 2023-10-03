@@ -22,10 +22,8 @@ import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.util.ActorActionListener;
 import io.openk9.datasource.util.CborSerializable;
-import io.openk9.datasource.util.UniActionListener;
 import io.vavr.Function3;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -40,11 +38,11 @@ import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
 import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.cluster.metadata.Template;
 import org.elasticsearch.rest.RestStatus;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Option;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -81,7 +79,7 @@ public class JobScheduler {
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient) {
 
 		return Behaviors.setup(ctx -> {
@@ -100,7 +98,7 @@ public class JobScheduler {
 				.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
 
 			return start(
-				httpPluginDriverClient, transactionInvoker, restHighLevelClient,
+				httpPluginDriverClient, sessionFactory, restHighLevelClient,
 				ctx, quartzSchedulerTypedExtension);
 
 
@@ -109,7 +107,7 @@ public class JobScheduler {
 
 	private static Behavior<Command> start(
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker, RestHighLevelClient restHighLevelClient,
+		Mutiny.SessionFactory sessionFactory, RestHighLevelClient restHighLevelClient,
 		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension) {
 
@@ -118,7 +116,7 @@ public class JobScheduler {
 			.onMessage(Start.class, start ->
 				initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					transactionInvoker, restHighLevelClient,
+					sessionFactory, restHighLevelClient,
 					start.channelManagerRef,
 					new ArrayList<>()
 				)
@@ -133,24 +131,24 @@ public class JobScheduler {
 		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient,
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(InitialSubscribeResponse.class, isr -> onInitialSubscribeResponse(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, jobNames, isr))
+			.onMessage(InitialSubscribeResponse.class, isr -> onInitialSubscribeResponse(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, jobNames, isr))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
-			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, transactionInvoker))
-			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, transactionInvoker))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(UnScheduleJobInternal.class, rd -> onUnscheduleJobInternal(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, transactionInvoker, messageGateway))
+			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
+			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, sessionFactory))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(UnScheduleJobInternal.class, rd -> onUnscheduleJobInternal(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, sessionFactory, messageGateway))
 			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(ctx, httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
-			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, transactionInvoker, messageGateway, ssi))
+			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, sessionFactory, messageGateway, ssi))
 			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
-			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, transactionInvoker, messageGateway, pndi))
+			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, sessionFactory, messageGateway, pndi))
 			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
 			.build();
 
@@ -159,7 +157,7 @@ public class JobScheduler {
 	private static Behavior<Command> onUnscheduleJobInternal(
 		UnScheduleJobInternal msg, ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient, TransactionInvoker transactionInvoker,
+		HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient, ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
@@ -175,7 +173,7 @@ public class JobScheduler {
 
 			return initial(
 				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				transactionInvoker, restHighLevelClient, messageGateway, newJobNames);
+				sessionFactory, restHighLevelClient, messageGateway, newJobNames);
 		}
 
 		log.info("Job not found: {}", jobName);
@@ -203,7 +201,7 @@ public class JobScheduler {
 
 	private static Behavior<Command> onInitialSubscribeResponse(
 		ActorContext<Command> ctx, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient, TransactionInvoker transactionInvoker,
+		HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient, List<String> jobNames,
 		InitialSubscribeResponse isr) {
 
@@ -216,7 +214,7 @@ public class JobScheduler {
 			.orElseThrow();
 
 		return initial(
-			ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, transactionInvoker,
+			ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory,
 			restHighLevelClient, messageGateway, jobNames);
 
 	}
@@ -225,7 +223,7 @@ public class JobScheduler {
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
-		TransactionInvoker transactionInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		ActorRef<MessageGateway.Command> messageGateway) {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
@@ -244,9 +242,9 @@ public class JobScheduler {
 		}
 
 		VertxUtil.runOnContext(() ->
-			transactionInvoker.withStatelessTransaction(
+			sessionFactory.withStatelessTransaction(
 				tenantName,
-				s -> s.createQuery(
+				(s, t) -> s.createQuery(
 					"select s " +
 						"from Scheduler s " +
 						"where s.datasource.id = :datasourceId " +
@@ -326,7 +324,7 @@ public class JobScheduler {
 		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		HttpPluginDriverClient httpPluginDriverClient,
-		TransactionInvoker transactionInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient,
 		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
@@ -396,7 +394,7 @@ public class JobScheduler {
 
 				return initial(
 					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					transactionInvoker, restHighLevelClient, messageGatewayService, newJobNames);
+					sessionFactory, restHighLevelClient, messageGatewayService, newJobNames);
 
 			}
 		}
@@ -414,14 +412,14 @@ public class JobScheduler {
 
 	private static Behavior<Command> onTriggerDatasource(
 		TriggerDatasource jobMessage, ActorContext<Command> ctx,
-		TransactionInvoker transactionInvoker) {
+		Mutiny.SessionFactory sessionFactory) {
 
 		long datasourceId = jobMessage.datasourceId;
 		String tenantName = jobMessage.tenantName;
 		Boolean startFromFirst = jobMessage.startFromFirst;
 
 		loadDatasourceAndCreateSelfMessage(
-			tenantName, datasourceId, transactionInvoker, ctx, startFromFirst,
+			tenantName, datasourceId, sessionFactory, ctx, startFromFirst,
 			TriggerDatasourceInternal::new
 		);
 
@@ -431,12 +429,13 @@ public class JobScheduler {
 
 	private static Behavior<Command> onTriggerDatasourcePurge(
 		TriggerDatasourcePurge tdp, ActorContext<Command> ctx,
-		RestHighLevelClient esClient, TransactionInvoker txInvoker) {
+		RestHighLevelClient esClient, Mutiny.SessionFactory sessionFactory) {
 
 		String tenantName = tdp.tenantName();
 		long datasourceId = tdp.datasourceId;
 
-		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId, esClient, txInvoker));
+		ctx.spawnAnonymous(
+			DatasourcePurge.create(tenantName, datasourceId, esClient, sessionFactory));
 
 		return Behaviors.same();
 	}
@@ -474,11 +473,11 @@ public class JobScheduler {
 
 	private static void loadDatasourceAndCreateSelfMessage(
 		String tenantName, long datasourceId,
-		TransactionInvoker transactionInvoker,
+		Mutiny.SessionFactory sessionFactory,
 		ActorContext<Command> ctx, Boolean startFromFirst,
 		Function3<String, Datasource, Boolean, Command> selfMessageCreator) {
 		VertxUtil.runOnContext(() ->
-			transactionInvoker.withStatelessTransaction(tenantName, s ->
+			sessionFactory.withStatelessTransaction(tenantName, (s, t) ->
 				s.createQuery(
 						"select d " +
 						"from Datasource d " +
@@ -507,7 +506,7 @@ public class JobScheduler {
 
 
 	private static Behavior<Command> onStartScheduler(
-		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
 		ActorRef<MessageGateway.Command> messageGateway,
 		StartSchedulerInternal startSchedulerInternal) {
 
@@ -540,15 +539,18 @@ public class JobScheduler {
 					ctx.getSelf().tell(new CopyIndexTemplate(tenantName, scheduler));
 				}
 				else {
-					persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+					persistScheduler(
+						ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
 				}
 			}
 			else {
-				persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+				persistScheduler(
+					ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
 			}
 		}
 		else {
-			persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, false);
+			persistScheduler(
+				ctx, sessionFactory, messageGateway, tenantName, scheduler, false);
 		}
 
 		return Behaviors.same();
@@ -623,7 +625,7 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onPersistSchedulerInternal(
-		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
 		ActorRef<MessageGateway.Command> messageGateway, PersistSchedulerInternal pndi) {
 
 		String tenantName = pndi.tenantName;
@@ -635,19 +637,19 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		persistScheduler(ctx, transactionInvoker, messageGateway, tenantName, scheduler, true);
+		persistScheduler(ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
 
 		return Behaviors.same();
 	}
 
 	private static void persistScheduler(
-		ActorContext<Command> ctx, TransactionInvoker transactionInvoker,
+		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
 		ActorRef<MessageGateway.Command> messageGateway, String tenantName, Scheduler scheduler,
 		boolean startFromFirst) {
 
 		VertxUtil.runOnContext(() ->
-			transactionInvoker
-				.withTransaction(tenantName, (s) ->  {
+			sessionFactory
+				.withTransaction(tenantName, (s, t) ->  {
 					DataIndex oldDataIndex = scheduler.getOldDataIndex();
 					DataIndex newDataIndex = scheduler.getNewDataIndex();
 

@@ -29,7 +29,6 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
@@ -71,7 +70,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<List<ENTITY>> findAll() {
 		return withTransaction(s -> {
 
-			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<ENTITY> query =
 				criteriaBuilder.createQuery(getEntityClass());
@@ -136,7 +135,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return Uni.createFrom().deferred(() -> {
 
-			CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<T> joinEntityQuery =
 				builder.createQuery(joinType);
@@ -176,7 +175,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return Uni.createFrom().deferred(() -> {
 
-			CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<ENTITY> criteriaQuery =
 				builder.createQuery(getEntityClass());
@@ -480,7 +479,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected <T> Uni<T> withTransaction(
 		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> fun) {
 
-		return em.withTransaction(fun);
+		return sessionFactory.withTransaction(fun);
 
 	}
 
@@ -499,7 +498,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected <T> Uni<T> withStatelessTransaction(
 		BiFunction<Mutiny.StatelessSession, Mutiny.Transaction, Uni<T>> fun) {
 
-		return em.withStatelessTransaction(fun);
+		return sessionFactory.withStatelessTransaction(fun);
 
 	}
 
@@ -510,7 +509,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Override
 	public final CriteriaBuilder getCriteriaBuilder() {
-		return em.getCriteriaBuilder();
+		return sessionFactory.getCriteriaBuilder();
 	}
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>>
@@ -520,7 +519,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected K9EntityMapper<ENTITY, DTO> mapper;
 
 	@Inject
-	protected TransactionInvoker em;
+	protected Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	Logger logger;

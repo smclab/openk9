@@ -23,12 +23,12 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -102,9 +102,9 @@ public class BucketResource {
 	}
 
 	private Uni<BucketResponse> getBucket(String host) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
 
@@ -130,9 +130,9 @@ public class BucketResource {
 	}
 
 	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 
@@ -207,9 +207,9 @@ public class BucketResource {
 	}
 
 	private Uni<List<TemplateResponseDTO>> getDocTypeTemplateList(String virtualhost) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<DocTypeTemplate> query = cb.createQuery(DocTypeTemplate.class);
 
@@ -244,9 +244,9 @@ public class BucketResource {
 	}
 
 	private Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Tab> query = cb.createQuery(Tab.class);
 
@@ -299,9 +299,9 @@ public class BucketResource {
 	}
 
 	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost, boolean translated) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<SuggestionCategory> query = cb.createQuery(SuggestionCategory.class);
 
@@ -347,9 +347,9 @@ public class BucketResource {
 	}
 
 	private Uni<Language> getDefaultLanguage(String virtualhost) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Language> query = cb.createQuery(Language.class);
 
@@ -378,9 +378,9 @@ public class BucketResource {
 	}
 
 	private Uni<List<Language>> getAvailableLanguageList(String virtualhost) {
-		return transactionInvoker.withTransaction(session -> {
+		return sessionFactory.withTransaction(session -> {
 
-			CriteriaBuilder cb = transactionInvoker.getCriteriaBuilder();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Language> query = cb.createQuery(Language.class);
 
@@ -413,7 +413,7 @@ public class BucketResource {
 	BucketResourceMapper mapper;
 
 	@Inject
-	TransactionInvoker transactionInvoker;
+	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	TranslationService translationService;
 

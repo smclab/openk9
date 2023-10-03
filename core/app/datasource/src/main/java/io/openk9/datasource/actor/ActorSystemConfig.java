@@ -11,9 +11,9 @@ import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.sql.TransactionInvoker;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -64,7 +64,7 @@ public class ActorSystemConfig {
 					new Schedulation.SchedulationKey(strings[0], strings[1]);
 				return Schedulation.create(
 					key,
-					transactionInvoker,
+					sessionFactory,
 					datasourceService
 				);
 			}));
@@ -90,7 +90,7 @@ public class ActorSystemConfig {
 	@Inject
 	Logger logger;
 	@Inject
-	TransactionInvoker transactionInvoker;
+	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	DatasourceService datasourceService;
     @Inject

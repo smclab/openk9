@@ -27,7 +27,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
     public Uni<FileResource> findByDatasourceAndFile(String datasourceId, String fileId) {
         return withTransaction((s) -> {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
             Predicate predicateResult = cb.and(
@@ -43,7 +43,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
     public Uni<FileResource> findByResourceId(String resourceId) {
         return withTransaction((s) -> {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
             CriteriaQuery<FileResource> cq = cb.createQuery(FileResource.class);
             Root<FileResource> root = cq.from(FileResource.class);
             cq.where(cb.equal(root.get(FileResource_.resourceId), resourceId));
@@ -54,7 +54,7 @@ public class FileResourceService extends BaseK9EntityService<FileResource, FileR
 
     public Uni<com.google.protobuf.Empty> deleteFileResource(String resourceId) {
         return withTransaction((s) -> {
-            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
             CriteriaDelete<FileResource> delete = cb.
                 createCriteriaDelete(FileResource.class);
             Root<FileResource> root = delete.from(FileResource.class);
