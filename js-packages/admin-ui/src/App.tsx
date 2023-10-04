@@ -118,7 +118,7 @@ export default function App() {
                               tabs={[
                                 { label: "Attributes", path: "" },
                                 {
-                                  label: "Label Metrics",
+                                  label: "Monitoring",
                                   path: "label-metrics-data-source",
                                 },
                               ]}
@@ -188,7 +188,7 @@ export default function App() {
                                   path: "languages",
                                 },
                                 { label: "Associated Tabs", path: "tabs" },
-                                { label: "Label Metrics", path: "label-metrics-buckets" },
+                                { label: "Monitoring", path: "label-metrics-buckets" },
                               ]}
                             />
                             <Outlet />
