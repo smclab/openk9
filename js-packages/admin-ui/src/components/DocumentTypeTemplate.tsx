@@ -7,6 +7,7 @@ import { CodeInput } from "./CodeInput";
 import { useToast } from "./ToastProvider";
 import { DocumentTypeTemplatesQuery } from "./DocumentTypeTemplates";
 import { transform, availablePresets } from "@babel/standalone";
+import { DocumentTemplateOption } from "./DocumentType";
 
 const DocumentTypeTemplateQuery = gql`
   query DocumentTypeTemplate($id: ID!) {
@@ -56,7 +57,7 @@ export function DocumentTypeTemplate() {
   });
   const [createOrUpdateDocumentTypeTemplateMutate, createOrUpdateDocumentTypeTempalteMutation] =
     useCreateOrUpdateDocumentTypeTemplateMutation({
-      refetchQueries: [DocumentTypeTemplateQuery, DocumentTypeTemplatesQuery],
+      refetchQueries: [DocumentTypeTemplateQuery, DocumentTypeTemplatesQuery, DocumentTemplateOption],
       onCompleted(data) {
         if (data.docTypeTemplate?.entity) {
           if (documentTypeTemplateId === "new") {
@@ -74,7 +75,7 @@ export function DocumentTypeTemplate() {
       () => ({
         name: "",
         description: "",
-        templateType: TemplateType.JavascriptCompiled,
+        templateType: TemplateType.TypescriptSource,
         source: "",
         compiled: "",
       }),

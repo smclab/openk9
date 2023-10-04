@@ -116,7 +116,7 @@ export function DocumentType() {
   );
 }
 
-gql`
+export const DocumentTemplateOption = gql`
   query DocumentTypeTemplateOptions($searchText: String, $cursor: String) {
     options: docTypeTemplates(searchText: $searchText, after: $cursor) {
       edges {
