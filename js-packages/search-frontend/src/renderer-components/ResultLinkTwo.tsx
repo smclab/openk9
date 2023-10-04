@@ -15,6 +15,8 @@ export function ResultLinkTwo({
   return (
     <a
       href={href}
+      target="_blank"
+      rel="noreferrer"
       css={css`
         display: flex;
         justify-content: center;
