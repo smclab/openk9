@@ -126,8 +126,8 @@ export function DocumentTypeFields() {
       </ClayToolbar>
 
       <ContainerFluid>
-        <div style={{ display: "flex", background: "white", overflowX: "auto" }}>
-          <ClayList style={{ marginBottom: "0", width: "400px", borderRight: "3px solid #00000017" }}>
+        <div style={{ display: "flex", background: "white", overflowX: "auto", borderRight: "3px solid #00000017", alignItems: "stretch" }}>
+          <ClayList style={{ marginBottom: "0", width: "400px" }}>
             {data.docTypeFieldsFromDocTypeByParent.edges.map(
               ({
                 node,
@@ -162,6 +162,7 @@ export function DocumentTypeFields() {
                     }
                   }}
                 >
+                  <style type="text/css">{StyleToggle}</style>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     {node?.id && (
                       <Link
@@ -357,7 +358,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
   return (
     <div>
       <div style={{ display: "flex" }}>
-        <ClayList style={{ width: "400px", borderRight: "3px solid #00000017" }}>
+        <ClayList style={{ width: "400px" }}>
           {childDocuments.map(
             ({
               node,
