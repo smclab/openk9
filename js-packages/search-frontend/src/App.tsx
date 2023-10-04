@@ -16,7 +16,7 @@ import { ChangeLanguage } from "./components/ChangeLanguage";
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
-  searchReplaceText: false,
+  searchReplaceText: true,
 });
 
 export function App() {
