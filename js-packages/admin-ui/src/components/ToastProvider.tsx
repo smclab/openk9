@@ -24,13 +24,19 @@ export function ToastProvider({ children }: ToastProviderProps) {
   return (
     <ToastContext.Provider value={addToast}>
       {children}
-      <div className="toast-container" style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: "1" }}>
+      <div className="toast-container alert-notifications" style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: "1" }}>
         {toastItems.map(({ key, displayType, title, content }) => {
-          const classNames = `alert alert-${displayType}`;
+          const classNames = `alert alert-dismissible alert-${displayType}`;
           return (
             <div className={classNames} role={displayType} style={{ minWidth: "250px" }} key={key}>
-              <strong className="lead">{title}</strong>
-              {content}
+              <div role="alert" className="alert-autofit-row autofit-row">
+                <div className="autofit-col autofit-col-expand">
+                  <div className="autofit-section">
+                    <strong className="lead">{title}</strong>
+                    {content}
+                  </div>
+                </div>
+              </div>
               <button
                 aria-label="Close"
                 className="close"
