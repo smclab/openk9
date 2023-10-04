@@ -116,7 +116,7 @@ function Presentation({ user }: { user: string }) {
     <React.Fragment>
       <Card
         title={`Welcome ${user}`}
-        description="When working on a Machine learning project flexibility and reusability are very important to make your life easier while developing the solution. Find the best way to structure your project files can be difficult when you are a beginner or when the project becomes big. Sometime you may end up duplicate or rewrite some part of your project which is not professional as a Data Scientist or Machine learning Engineer."
+        description="OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and Flexible, it employs Machine Learning to enrich your data and give the best experience possible."
       />
     </React.Fragment>
   );
