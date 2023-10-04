@@ -213,7 +213,7 @@ export function SearchMobile({
                   font-family: inherit;
                   background-color: inherit;
                   width: 100%;
-                  color: ${autoSelect ? "black" : "blue"};
+                  color: ${autoSelect ? "black" : "black"};
                 `}
                 spellCheck="false"
                 onSelect={(event) => {

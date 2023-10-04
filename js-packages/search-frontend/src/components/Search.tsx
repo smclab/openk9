@@ -143,7 +143,8 @@ export function Search({
                 position: absolute;
               `}
             >
-              {showSyntax &&
+              {!isMobile &&
+                showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
                     openedDropdown !== null &&
@@ -290,7 +291,9 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${textBtn
+                color: ${isMobile
+                  ? "black"
+                  : textBtn
                   ? "black"
                   : showSyntax
                   ? "transparent"
@@ -342,11 +345,11 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
-                  if(btnSearch) {
-                    if (textBtn === "" ) {
+                  if (btnSearch) {
+                    if (textBtn === "") {
                       selectionsDispatch({
                         type: "reset-search",
-                      })
+                      });
                     } else {
                       selectionsDispatch({
                         type: "set-text",
@@ -356,7 +359,7 @@ export function Search({
                     }
                   }
                   option?.value ? setTextBtn(option?.value) : null;
-                  
+
                   if (span) {
                     if (isSearchOnInputChange) {
                       selectionsDispatch({
