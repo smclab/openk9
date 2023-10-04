@@ -170,12 +170,14 @@ type FiltersLiveMobileConfiguration = {
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   viewTabs?: boolean | null;
+  isCollapsable?: boolean | null;
 };
 
 type SearchMobileConfiguration = {
   search: Element | string | null;
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  isShowSyntax?: boolean | undefined | null;
 };
 
 type CalendarMobileConfiguration = {
@@ -198,6 +200,12 @@ type DataRangePickerProps = {
   end?: any;
 };
 
+type DataRangePickerVerticalProps = {
+  element: Element | string | null;
+  start?: any;
+  end?: any;
+};
+
 type ResultListProps = {
   element: Element | string | null;
   changeOnOver: boolean;
@@ -213,12 +221,27 @@ type SortableProps = {
   relevance: string;
 };
 
+type SearchProps = {
+  element: Element | string | null;
+  btnSearch: boolean;
+  isShowSyntax?: boolean | undefined | null;
+  defaultValue?: string | undefined | null;
+};
+
+type FilterProps = {
+  element: Element | string | null;
+  isCollapsable?: boolean;
+  numberItems?: number | null | undefined;
+};
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
+  searchConfigurable: SearchProps | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
   filters: Element | string | null;
+  filtersConfigurable: FilterProps | null;
   calendarMobile: CalendarMobileConfiguration | null;
   resultList: ResultListProps | null;
   searchMobile: SearchMobileConfiguration | null;
@@ -226,9 +249,11 @@ export type Configuration = {
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
+  dataRangePickerVertical: DataRangePickerVerticalProps | null;
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
+  resultListPagination: Element | string | null;
   details: Element | string | null;
   calendar: Element | string | null;
   login: Element | string | null;
@@ -242,7 +267,10 @@ export type Configuration = {
   defaultTokens: Array<SearchToken>;
   resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
+  numberResult: number | null | undefined;
+  isQueryAnalysis: boolean | null;
   token: string | null;
+  totalResult: Element | string | null;
   useKeycloak: boolean;
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
   changeSortResult: (
@@ -253,31 +281,38 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
+  searchConfigurable: null,
   activeFilters: null,
   tabs: null,
   searchMobile: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
   dataRangePicker: null,
+  dataRangePickerVertical: null,
   calendarMobile: null,
   sortable: null,
   detailMobile: null,
   sort: [],
   filters: null,
+  filtersConfigurable: null,
   changeLanguage: null,
   filtersHorizontal: null,
   results: null,
+  resultListPagination: null,
   details: null,
   sortResultConfigurable: null,
   login: null,
   tenant: null,
   token: null,
+  totalResult: null,
   calendar: null,
   sortableConfigurable: null,
   resultList: null,
   useKeycloak: true,
   searchAutoselect: true,
   searchReplaceText: true,
+  isQueryAnalysis: true,
+  numberResult: null,
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },

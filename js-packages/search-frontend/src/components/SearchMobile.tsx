@@ -13,7 +13,12 @@ import {
   SortField,
 } from "./client";
 import { useClickAway } from "./useClickAway";
-import { SelectionsAction, SelectionsState } from "./useSelections";
+import {
+  SelectionsAction,
+  SelectionsActionOnClick,
+  SelectionsState,
+  SelectionsStateOnClick,
+} from "./useSelections";
 import React from "react";
 import { css } from "styled-components/macro";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
@@ -25,8 +30,8 @@ type SearchMobileProps = {
   onConfigurationChange: ConfigurationUpdateFunction;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState;
-  selectionsDispatch(action: SelectionsAction): void;
+  selectionsState: SelectionsState | SelectionsStateOnClick;
+  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
   showSyntax: boolean;
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
@@ -115,15 +120,11 @@ export function SearchMobile({
               flex-direction: column;
               margin-top: 15px;
             }
+            .openk9-focusable:has(input:focus) {
+              border: 1px solid #c22525;
+            }
           `}
         >
-          <style type="text/css">
-            {`
-        .openk9-focusable:has(input:focus){
-          border:1px solid  var(--openk9-embeddable-search--active-color);
-        }
-    `}
-          </style>
           <div
             ref={clickAwayRef}
             className="openk9-embeddable-search--input-container openk9-focusable"
@@ -267,6 +268,7 @@ export function SearchMobile({
                         replaceText,
                         selection: {
                           text: span.text,
+                          textOnChange: span.text,
                           start: span.start,
                           end: span.end,
                           token: option ?? null,
@@ -387,6 +389,7 @@ export function SearchMobile({
                 replaceText,
                 selection: {
                   text: span.text,
+                  textOnChange: span.text,
                   start: span.start,
                   end: span.end,
                   token,

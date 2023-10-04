@@ -16,12 +16,16 @@ type TokenSelectProps = {
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
+  saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
+  isColorSearch?: boolean;
+  isBtnSearch: boolean;
   setOpenedDropdown: React.Dispatch<
     React.SetStateAction<{
       textPosition: number;
       optionPosition: number;
     } | null>
   >;
+  setTextBtn: React.Dispatch<React.SetStateAction<string | undefined>>;
 };
 export function TokenSelect({
   span,
@@ -34,10 +38,34 @@ export function TokenSelect({
   setOpenedDropdown,
   onSelectText,
   selectionsDispatch,
+  saveSearchQuery,
+  isColorSearch = true,
+  isBtnSearch = false,
+  setTextBtn,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
   const { t } = useTranslation();
+  const statusStyles: Record<Status, any> = {
+    "can-select": css`
+      display: ${isColorSearch ? "default" : "none"};
+      color: ${isColorSearch
+        ? "var(--openk9-embeddable-search--primary-color)"
+        : "inerith"};
+    `,
+    "auto-selected": css`
+      display: ${isColorSearch ? "default" : "none"};
+      color: lightseagreen;
+    `,
+    "has-selected": css`
+      display: ${isColorSearch ? "default" : "none"};
+      color: dodgerblue;
+    `,
+    "not-interactive": css`
+      display: ${isColorSearch ? "default" : "none"};
+      color: black;
+    `,
+  };
   const status: Status = isInteractive
     ? selected !== null
       ? isAutoSlected
@@ -66,6 +94,7 @@ export function TokenSelect({
     background-color: ${"var(--openk9-embeddable-search--secondary-background-color)"};
     cursor: ${!isSelected ? "" : "not-allowed"};
   `;
+
   return (
     <div
       className="openk9-token-select-container"
@@ -93,6 +122,7 @@ export function TokenSelect({
           css={css`
             position: absolute;
             top: 100%;
+            margin-top: ${isColorSearch ? "0px" : "20px"};
             left: 0px;
             width: 330px;
             background-color: var(
@@ -165,10 +195,18 @@ export function TokenSelect({
               <div
                 key={index}
                 onClick={() => {
+                  setTextBtn(getTokenLabel(option) || '')
+                  isBtnSearch ?  selectionsDispatch({
+                    type: "set-text",
+                    text: option?.value,
+                    textOnchange: option?.value,
+                  }) : null
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {
+                    if (saveSearchQuery) saveSearchQuery((save) => !save);
                     onSelect(option);
+                    setOpenedDropdown(null);
                   }
                 }}
                 onMouseEnter={() => {
@@ -206,20 +244,7 @@ type Status =
   | "has-selected"
   | "auto-selected"
   | "not-interactive";
-const statusStyles: Record<Status, any> = {
-  "can-select": css`
-    color: var(--openk9-embeddable-search--primary-color);
-  `,
-  "auto-selected": css`
-    color: lightseagreen;
-  `,
-  "has-selected": css`
-    color: dodgerblue;
-  `,
-  "not-interactive": css`
-    color: black;
-  `,
-};
+
 function getTokenLabel(token: AnalysisToken) {
   switch (token.tokenType) {
     case "DATASOURCE":
@@ -230,7 +255,10 @@ function getTokenLabel(token: AnalysisToken) {
       return token.entityName;
     case "TEXT":
       return token.value;
+    case "AUTOCOMPLETE":
+      return token.value;
   }
+  return token.value;
 }
 
 function FactoryTokenType({

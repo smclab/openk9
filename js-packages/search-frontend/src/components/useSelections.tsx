@@ -28,18 +28,44 @@ export function useSelections() {
   return [state, dispatch] as const;
 }
 
+export function useSelectionsOnClick() {
+  const [state, dispatch] = React.useReducer(
+    reducerOnClick,
+    initialOnClick,
+    (initialOnClick) =>
+      loadQueryString<SelectionsStateOnClick>() || initialOnClick,
+  );
+  const [canSave, setCanSave] = React.useState(false);
+  const client = useOpenK9Client();
+  React.useEffect(() => {
+    if (client.authInit)
+      client.authInit.then(() => {
+        setCanSave(true);
+      });
+  }, []);
+  React.useEffect(() => {
+    if (canSave) {
+      saveQueryString(state);
+    }
+  }, [canSave, state]);
+  return [state, dispatch] as const;
+}
+
 export type SelectionsState = {
-  text: string;
+  text?: string;
   selection: Array<Selection>;
+  textOnChange?: string;
 };
 
 const initial: SelectionsState = {
   text: "",
   selection: [],
+  textOnChange: "",
 };
 
 export type SelectionsAction =
-  | { type: "set-text"; text: string }
+  | { type: "set-text"; text?: string; textOnchange?: string }
+  | { type: "reset-search" }
   | {
       type: "set-selection";
       replaceText: boolean;
@@ -47,6 +73,33 @@ export type SelectionsAction =
     };
 
 type Selection = {
+  text: string;
+  textOnChange: string;
+  start: number;
+  end: number;
+  token: AnalysisToken | null;
+  isAuto: boolean;
+};
+
+export type SelectionsStateOnClick = {
+  text: string;
+  selection: Array<SelectionOnClick>;
+};
+
+const initialOnClick: SelectionsStateOnClick = {
+  text: "",
+  selection: [],
+};
+
+export type SelectionsActionOnClick =
+  | { type: "set-text"; text: string }
+  | {
+      type: "set-selection";
+      replaceText: boolean;
+      selection: SelectionOnClick;
+    };
+
+type SelectionOnClick = {
   text: string;
   start: number;
   end: number;
@@ -61,8 +114,87 @@ function reducer(
   switch (action.type) {
     case "set-text": {
       return {
+        text: action.text || state.text || "",
+        textOnChange: action.textOnchange || state.textOnChange || "",
+        selection: shiftSelection(
+          state.textOnChange ?? "",
+          action.textOnchange || state.textOnChange || "",
+          state.selection,
+        ),
+      };
+    }
+    case "reset-search" : {
+      return {
+        text: '',
+        textOnChange: '',
+        selection: []
+      }
+    }
+    case "set-selection": {
+      const { text, selection } = (() => {
+        if (
+          action.replaceText ||
+          action.selection.token?.tokenType === "AUTOCORRECT"
+        ) {
+          // const textOnchange = action.selection.textOnChange;
+          const tokenText = action.selection.token
+            ? getTokenText(action.selection.token)
+            : state.textOnChange ||
+              "".slice(action.selection.start, action.selection.end);
+
+          const text =
+            state.textOnChange ||
+            "".slice(0, action.selection.start) +
+              tokenText +
+              state.textOnChange ||
+            "".slice(action.selection.end);
+          const selection: Selection | null =
+            action.selection.token?.tokenType === "AUTOCORRECT"
+              ? null
+              : {
+                  text: tokenText,
+                  textOnChange: tokenText,
+                  start: action.selection.start,
+                  end: action.selection.start + tokenText.length,
+                  token: action.selection.token,
+                  isAuto: action.selection.isAuto,
+                };
+          return {
+            text,
+            selection,
+          };
+        } else {
+          return { text: state.textOnChange, selection: action.selection };
+        }
+      })();
+      return {
+        text,
+        textOnChange: state.textOnChange || "",
+        selection: shiftSelection(
+          state.textOnChange || "",
+          state.textOnChange || "",
+          selection
+            ? state.selection.filter((s) => !isOverlapping(s, selection))
+            : state.selection,
+        ).concat(selection ? [selection] : []),
+      };
+    }
+  }
+}
+
+function reducerOnClick(
+  state: SelectionsStateOnClick,
+  action: SelectionsActionOnClick,
+): SelectionsStateOnClick {
+  switch (action.type) {
+    case "set-text": {
+      return {
         text: action.text,
-        selection: shiftSelection(state.text, action.text, state.selection),
+        selection: shiftSelectionOnCLick(
+          state.text,
+          action.text,
+          state.selection,
+        ),
       };
     }
     case "set-selection": {
@@ -78,7 +210,7 @@ function reducer(
             state.text.slice(0, action.selection.start) +
             tokenText +
             state.text.slice(action.selection.end);
-          const selection: Selection | null =
+          const selection: SelectionOnClick | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
               ? null
               : {
@@ -98,7 +230,7 @@ function reducer(
       })();
       return {
         text,
-        selection: shiftSelection(
+        selection: shiftSelectionOnCLick(
           state.text,
           text,
           selection
@@ -115,6 +247,43 @@ function shiftSelection(
   nextText: string,
   prevSelection: Array<Selection>,
 ): Array<Selection> {
+  if (prevText === nextText) {
+    return prevSelection;
+  }
+  const commonPrefixLength = findCommonPrefixLength(prevText, nextText);
+  const commonSuffixLength = findCommonSuffixLength(
+    prevText,
+    nextText,
+    commonPrefixLength,
+  );
+  const changeStart = commonPrefixLength;
+  const changePrevEnd = prevText.length - commonSuffixLength;
+  const changeNextEnd = nextText.length - commonSuffixLength;
+  const changeDelta = changeNextEnd - changePrevEnd;
+  const prefixAttributes = prevSelection.filter(
+    (attribute) =>
+      attribute.start <= changeStart && attribute.end <= changeStart,
+  );
+  // const deletedAttributes = prevSelection.filter(
+  //   (attribute) =>
+  //     !(attribute.start <= changeStart && attribute.end <= changeStart) &&
+  //     !(attribute.start >= changePrevEnd),
+  // );
+  const suffixAttributes = prevSelection
+    .filter((attribute) => attribute.start >= changePrevEnd)
+    .map((attribute) => ({
+      ...attribute,
+      start: attribute.start + changeDelta,
+      end: attribute.end + changeDelta,
+    }));
+  return prefixAttributes.concat(suffixAttributes);
+}
+
+function shiftSelectionOnCLick(
+  prevText: string,
+  nextText: string,
+  prevSelection: Array<SelectionOnClick>,
+): Array<SelectionOnClick> {
   if (prevText === nextText) {
     return prevSelection;
   }

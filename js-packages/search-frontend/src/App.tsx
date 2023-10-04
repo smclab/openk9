@@ -15,8 +15,8 @@ import { useTranslation } from "react-i18next";
 import { ChangeLanguage } from "./components/ChangeLanguage";
 export const openk9 = new OpenK9({
   enabled: true,
-  searchAutoselect: true,
-  searchReplaceText: true,
+  searchAutoselect: false,
+  searchReplaceText: false,
 });
 
 export function App() {
@@ -210,7 +210,15 @@ export function App() {
               `}
               onClick={handleClick}
               className="openk9-update-configuration"
-              ref={(element) => openk9.updateConfiguration({ search: element })}
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  searchConfigurable: {
+                    btnSearch: false,
+                    isShowSyntax: true,
+                    element,
+                  },
+                })
+              }
             ></div>
             <button
               css={css`

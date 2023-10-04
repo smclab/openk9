@@ -28,6 +28,7 @@ type FilterCategoryProps = {
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   dynamicFilters: boolean;
+  numberItems?: number | null | undefined;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
@@ -46,6 +47,7 @@ function FilterCategory({
   loadAll = false,
   dynamicFilters,
   language,
+  numberItems,
   setHasMoreSuggestionsCategories = undefined,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
@@ -56,6 +58,7 @@ function FilterCategory({
     loadAll,
     dynamicFilters,
     language,
+    numberItems,
   );
   const { t } = useTranslation();
   React.useEffect(() => {
@@ -444,8 +447,10 @@ export function useInfiniteSuggestions(
   loadAll: boolean,
   dynamicFilters: boolean,
   language: string,
+  numberItems: number | null | undefined,
 ) {
   const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
+  const NPageSize = numberItems ? numberItems : pageSize;
   const client = useOpenK9Client();
   let searchQuery: SearchToken[] | null = [];
   if (searchQueryParams && searchQueryParams?.length > 0) {
@@ -472,7 +477,7 @@ export function useInfiniteSuggestions(
       if (!searchQuery) throw new Error();
       const result = await client.getSuggestions({
         searchQuery,
-        range: [0, pageSize + 1],
+        range: [0, NPageSize + 1],
         afterKey: pageParam,
         suggestionCategoryId: activeSuggestionCategory,
         suggestKeyword,

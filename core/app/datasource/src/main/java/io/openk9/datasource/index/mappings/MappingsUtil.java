@@ -214,84 +214,79 @@ public final class MappingsUtil {
 				.filter(docTypeField -> docTypeField.getParentDocTypeField() == null)
 				.collect(Collectors.toList()),
 			new LinkedHashMap<>(),
-			"",
-			new MappingsKey("properties")
+			MappingsKey.of("properties")
 		);
 	}
 
 	private static Map<MappingsKey, Object> createMappings_(
 		Collection<DocTypeField> docTypeFields,
-		Map<MappingsKey, Object> acc, String accPath, MappingsKey nextKey) {
+		Map<MappingsKey, Object> acc,
+		MappingsKey nextKey) {
 
 		for (DocTypeField docTypeField : docTypeFields) {
 
-			String fieldName = docTypeField
-				.getFieldName()
-				.replace(accPath.isEmpty() ? "" : accPath + ".", "");
+			Map<MappingsKey, Object> current = acc;
+
+			current = visit(nextKey, current);
+
+			if (docTypeField.getParentDocTypeField() == null) {
+				DocType docType = docTypeField.getDocType();
+				String docTypeName = docType.getName();
+				if (!docTypeName.equals("default")) {
+					current = visit(MappingsKey.of(docTypeName), current);
+
+					current = visit(MappingsKey.of("properties"), current);
+				}
+			}
+
+			String fieldName = docTypeField.getFieldName();
 
 			FieldType fieldType = docTypeField.getFieldType();
 
 			boolean isObject = fieldType == FieldType.OBJECT || fieldType == FieldType.I18N;
 
-			String[] fieldNamesArray = fieldName.split("\\.");
+			current = visit(MappingsKey.of(fieldName), current);
 
-			Map<MappingsKey, Object> current = acc;
+			if (!isObject) {
+				current.put(MappingsKey.of("type"), fieldType.getType());
 
-			for (int i = 0; i < fieldNamesArray.length; i++) {
+				Analyzer analyzer = docTypeField.getAnalyzer();
 
-				String currentFieldName = fieldNamesArray[i];
-
-				boolean isLast = i == fieldNamesArray.length - 1;
-
-				current = (Map<MappingsKey, Object>) current.computeIfAbsent(
-					nextKey, k -> new LinkedHashMap<>());
-
-
-				current = (Map<MappingsKey, Object>) current.computeIfAbsent(
-					new MappingsKey(currentFieldName), k -> new LinkedHashMap<>());
-
-				if (isLast) {
-
-					if (!isObject) {
-						current.put(new MappingsKey("type"), fieldType.getType());
-
-						Analyzer analyzer = docTypeField.getAnalyzer();
-
-						if (analyzer != null) {
-							current.put(new MappingsKey("analyzer"), analyzer.getName());
-						}
-
-						String fieldConfig = docTypeField.getJsonConfig();
-
-						if (fieldConfig != null) {
-							JsonObject fieldConfigJson = new JsonObject(fieldConfig);
-							for (Map.Entry<String, Object> entry : fieldConfigJson) {
-								current.putIfAbsent(new MappingsKey(entry.getKey()), entry.getValue());
-							}
-						}
-					}
-
-					Set<DocTypeField> subDocTypeFields = docTypeField.getSubDocTypeFields();
-
-					if (subDocTypeFields != null) {
-						createMappings_(
-							subDocTypeFields,
-							current,
-							accPath.isEmpty()
-								? fieldName
-								: String.join(".", accPath, fieldName),
-							isObject
-								? new MappingsKey("properties")
-								: new MappingsKey("fields"));
-					}
+				if (analyzer != null) {
+					current.put(MappingsKey.of("analyzer"), analyzer.getName());
 				}
 
+				String fieldConfig = docTypeField.getJsonConfig();
+
+				if (fieldConfig != null) {
+					JsonObject fieldConfigJson = new JsonObject(fieldConfig);
+					for (Map.Entry<String, Object> entry : fieldConfigJson) {
+						current.putIfAbsent(new MappingsKey(entry.getKey()), entry.getValue());
+					}
+				}
 			}
+
+			Set<DocTypeField> subDocTypeFields = docTypeField.getSubDocTypeFields();
+
+			if (subDocTypeFields != null) {
+				createMappings_(
+					subDocTypeFields,
+					current,
+					isObject
+						? MappingsKey.of("properties")
+						: MappingsKey.of("fields"));
+			}
+
 
 		}
 
 		return acc;
 
+	}
+
+	private static Map<MappingsKey, Object> visit(MappingsKey nextKey, Map<MappingsKey, Object> current) {
+		return (Map<MappingsKey, Object>) current.computeIfAbsent(
+			nextKey, k -> new LinkedHashMap<>());
 	}
 
 }

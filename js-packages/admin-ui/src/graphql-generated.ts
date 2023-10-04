@@ -7958,7 +7958,7 @@ export type UnbindDataIndexToDataSourceMutationResult = Apollo.MutationResult<Un
 export type UnbindDataIndexToDataSourceMutationOptions = Apollo.BaseMutationOptions<UnbindDataIndexToDataSourceMutation, UnbindDataIndexToDataSourceMutationVariables>;
 export const DataSourcesDocument = gql`
     query DataSources($searchText: String, $cursor: String) {
-  datasources(searchText: $searchText, first: 25, after: $cursor) {
+  datasources(searchText: $searchText, first: 50, after: $cursor) {
     edges {
       node {
         id
@@ -12760,4 +12760,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-04T11:36:52+02:00
+// Generated on 2023-10-04T14:09:21+02:00

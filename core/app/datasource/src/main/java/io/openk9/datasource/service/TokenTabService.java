@@ -83,6 +83,6 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	}
 
 	@Inject
-	private DocTypeFieldService docTypeFieldService;
+	DocTypeFieldService docTypeFieldService;
 
 }

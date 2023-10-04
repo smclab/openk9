@@ -7,6 +7,7 @@ import {
   getAutoSelections,
   isOverlapping,
   useSelections,
+  useSelectionsOnClick,
 } from "../components/useSelections";
 import { LoginInfoComponentMemo } from "../components/LoginInfo";
 import {
@@ -40,6 +41,9 @@ import { DataRangePicker } from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
+import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
+import { TotalResults } from "../components/TotalResults";
+import { ResultsPaginationMemo } from "../components/ResultListPagination";
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -110,6 +114,9 @@ export function Main({
     configuration.overrideTabs,
     languageSelect,
   );
+  const [currentPage, setCurrentPage] = React.useState<number>(0);
+  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
+
   const {
     searchQuery,
     spans,
@@ -117,13 +124,24 @@ export function Main({
     selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
-  } = useSearch({
-    configuration,
-    tabTokens,
-    filterTokens,
-    dateTokens,
-    onQueryStateChange,
-  });
+    setIsSaveQuery,
+  } = isSearchOnInputChange
+    ? useSearchOnClick({
+        configuration,
+        tabTokens,
+        filterTokens,
+        dateTokens,
+        onQueryStateChange,
+        setCurrentPage,
+      })
+    : useSearch({
+        configuration,
+        tabTokens,
+        filterTokens,
+        dateTokens,
+        onQueryStateChange,
+        setCurrentPage,
+      });
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
   React.useEffect(() => {
@@ -135,6 +153,8 @@ export function Main({
     }
   }, [languageQuery.data, i18n]);
   const [sortAfterKey, setSortAfterKey] = React.useState("");
+  const [totalResult, setTotalResult] = React.useState<number | null>(null);
+  const numberOfResults = configuration.numberResult || 7;
   return (
     <React.Fragment>
       {renderPortal(
@@ -149,9 +169,35 @@ export function Main({
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
+            isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
         configuration.search,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <Search
+            configuration={configuration}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={
+              configuration.searchConfigurable?.isShowSyntax === false
+                ? false
+                : isQueryAnalysisComplete
+            }
+            onDetail={setDetail}
+            isMobile={isMobile}
+            filtersSelect={configuration.filterTokens}
+            isVisibleFilters={isVisibleFilters}
+            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+            isSearchOnInputChange={isSearchOnInputChange}
+            defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
+          />
+        </I18nextProvider>,
+        configuration.searchConfigurable
+          ? configuration.searchConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -170,6 +216,7 @@ export function Main({
           <FiltersMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            numberOfResults={numberOfResults}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
             filtersSelect={configuration.filterTokens}
@@ -180,6 +227,29 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.filters,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <FiltersMemo
+            searchQuery={searchQuery}
+            onAddFilterToken={addFilterToken}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            filtersSelect={configuration.filterTokens}
+            sort={completelySort}
+            sortAfterKey={sortAfterKey}
+            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
+            language={languageSelect}
+            isCollapsable={
+              configuration.filtersConfigurable?.isCollapsable ?? true
+            }
+            numberItems={configuration.filtersConfigurable?.numberItems}
+            numberOfResults={numberOfResults}
+          />
+        </I18nextProvider>,
+        configuration.filtersConfigurable
+          ? configuration.filtersConfigurable.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -196,6 +266,7 @@ export function Main({
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            numberOfResults={numberOfResults}
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
@@ -217,6 +288,7 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -228,13 +300,21 @@ export function Main({
             language={languageSelect}
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.results,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <TotalResults totalResult={totalResult} />
+        </I18nextProvider>,
+        configuration.totalResult,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ResultsMemo
+            setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}
             searchQuery={searchQuery}
             onDetail={setDetail}
@@ -246,9 +326,33 @@ export function Main({
             language={languageSelect}
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ResultsPaginationMemo
+            setTotalResult={setTotalResult}
+            displayMode={configuration.resultsDisplayMode}
+            searchQuery={searchQuery}
+            onDetail={setDetail}
+            setDetailMobile={setDetailMobile}
+            sort={completelySort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={false}
+            language={languageSelect}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
+            numberOfResults={totalResult || 0}
+            pagination={numberOfResults}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+          />
+        </I18nextProvider>,
+        configuration.resultListPagination,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -325,6 +429,8 @@ export function Main({
             configuration={configuration}
             isVisibleFilters={configuration.filtersMobile?.isVisible || false}
             setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
+            language={languageSelect}
+            sortAfterKey={sortAfterKey}
           />
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
@@ -354,6 +460,10 @@ export function Main({
             selectedTabIndex={selectedTabIndex}
             viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
             language={languageSelect}
+            isCollapsable={
+              configuration.filtersMobileLiveChange?.isCollapsable ?? true
+            }
+            numberOfResults={numberOfResults}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
@@ -372,6 +482,21 @@ export function Main({
         </I18nextProvider>,
         configuration.dataRangePicker?.element !== undefined
           ? configuration.dataRangePicker?.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePickerVertical
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+            start={configuration.dataRangePickerVertical?.start}
+            end={configuration.dataRangePickerVertical?.end}
+            classTab={tabs[selectedTabIndex]?.label}
+          />
+        </I18nextProvider>,
+        configuration.dataRangePickerVertical?.element !== undefined
+          ? configuration.dataRangePickerVertical?.element
           : null,
       )}
       {renderPortal(
@@ -439,31 +564,36 @@ export function Main({
   );
 }
 
-function useSearch({
+function useSearchOnClick({
   configuration,
   tabTokens,
   filterTokens,
   dateTokens,
   onQueryStateChange,
+  setCurrentPage,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
-  const [selectionsState, selectionsDispatch] = useSelections();
+  const [selectionsState, selectionsDispatch] = useSelectionsOnClick();
+  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
+
   const debounced = useDebounce(selectionsState, 600);
   const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.text,
+    searchText: debounced.text || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
     ),
   });
   const spans = React.useMemo(
-    () => calculateSpans(selectionsState.text, queryAnalysis.data?.analysis),
+    () =>
+      calculateSpans(selectionsState.text || "", queryAnalysis.data?.analysis),
     [queryAnalysis.data?.analysis, selectionsState.text],
   );
   const searchTokens = React.useMemo(
@@ -500,6 +630,7 @@ function useSearch({
       filterTokens,
       searchTokens,
     });
+    setCurrentPage(0);
   }, [
     onQueryStateChange,
     defaultTokens,
@@ -540,6 +671,128 @@ function useSearch({
     selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
+    setIsSaveQuery,
+  };
+}
+
+function useSearch({
+  configuration,
+  tabTokens,
+  filterTokens,
+  dateTokens,
+  onQueryStateChange,
+  setCurrentPage,
+}: {
+  configuration: Configuration;
+  tabTokens: SearchToken[];
+  filterTokens: SearchToken[];
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  dateTokens: SearchToken[];
+  onQueryStateChange(queryState: QueryState): void;
+}) {
+  const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
+    configuration;
+  const [selectionsState, selectionsDispatch] = useSelections();
+  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
+  const debounced = useDebounce(selectionsState, 600);
+
+  const queryAnalysis = useQueryAnalysis({
+    searchText: debounced.textOnChange || "",
+    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+      token ? [{ text, start, end, token }] : [],
+    ),
+  });
+
+  const spans = React.useMemo(
+    () =>
+      calculateSpans(
+        debounced.textOnChange || "",
+        queryAnalysis.data?.analysis,
+      ),
+    [queryAnalysis.data?.analysis, debounced.textOnChange],
+  );
+  const searchTokens = React.useMemo(() => {
+    return deriveSearchQuery(
+      spans,
+      selectionsState.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
+      ),
+    );
+  }, [isSvaleQuery, debounced.text]);
+
+  const completelySort = React.useMemo(() => sort, [sort]);
+  const searchQueryMemo = React.useMemo(
+    () => [
+      ...defaultTokens,
+      ...tabTokens,
+      ...filterTokens,
+      ...searchTokens,
+      ...dateTokens,
+    ],
+    [defaultTokens, tabTokens, filterTokens, dateTokens, searchTokens],
+  );
+  const searchQuery = useDebounce(searchQueryMemo, 600);
+  const isQueryAnalysisComplete =
+    selectionsState.text === debounced.text &&
+    queryAnalysis.data !== undefined &&
+    !queryAnalysis.isPreviousData;
+
+  React.useEffect(() => {
+    onQueryStateChange({
+      defaultTokens,
+      tabTokens,
+      filterTokens,
+      searchTokens,
+    });
+    setCurrentPage(0);
+  }, [
+    onQueryStateChange,
+    defaultTokens,
+    tabTokens,
+    filterTokens,
+    searchTokens,
+  ]);
+  React.useEffect(() => {
+    if (
+      searchAutoselect &&
+      queryAnalysis.data &&
+      queryAnalysis.data.searchText === selectionsState.text
+    ) {
+      const autoSelections = getAutoSelections(
+        selectionsState.selection,
+        queryAnalysis.data.analysis,
+      );
+      for (const selection of autoSelections) {
+        selectionsDispatch({
+          type: "set-selection",
+          replaceText: false,
+          selection: {
+            token: selection.token,
+            end: selection.end,
+            isAuto: selection.isAuto,
+            start: selection.start,
+            text: selection.text,
+            textOnChange: selection.text,
+          },
+        });
+      }
+    }
+  }, [
+    searchAutoselect,
+    searchReplaceText,
+    selectionsDispatch,
+    queryAnalysis.data,
+    selectionsState.selection,
+    selectionsState.text,
+  ]);
+  return {
+    searchQuery,
+    spans,
+    selectionsState,
+    selectionsDispatch,
+    isQueryAnalysisComplete,
+    completelySort,
+    setIsSaveQuery,
   };
 }
 
@@ -698,10 +951,9 @@ function deriveSearchQuery(
     .filter((span) => span.text)
     .map((span): SearchToken => {
       const token =
-        selection.find(
-          (selection) =>
-            selection.start === span.start && selection.end === span.end,
-        )?.token ?? null;
+        selection.find((selection) => {
+          return selection.start === span.start && selection.end === span.end;
+        })?.token ?? null;
       return (
         (token && analysisTokenToSearchToken(token)) ?? {
           tokenType: "TEXT",
@@ -775,6 +1027,15 @@ function calculateSpans(
   return spans.filter((span) => span.text);
 }
 
+function useQueryAnalysisOnCLick(request: AnalysisRequest) {
+  const client = useOpenK9Client();
+  return useQuery(
+    ["query-anaylis", request] as const,
+    async ({ queryKey: [, request] }) =>
+      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+  );
+}
+
 function useQueryAnalysis(request: AnalysisRequest) {
   const client = useOpenK9Client();
   return useQuery(
@@ -784,26 +1045,27 @@ function useQueryAnalysis(request: AnalysisRequest) {
   );
 }
 // TODO: togliere una volta implementata gestione sugestion sovrapposte
-function fixQueryAnalysisResult(data: AnalysisResponse) {
-  return {
-    ...data,
-    analysis: data.analysis
-      .reverse()
-      .filter((entry, index, array) =>
-        array
-          .slice(0, index)
-          .every((previous) => !isOverlapping(previous, entry)),
-      )
-      .reverse()
-      .filter((entry) => {
-        // togliere validazione quando fixato lato be
-        const isValidEntry = entry.start >= 0;
-        if (!isValidEntry) {
-          console.warn(`Invalid entry: `, entry);
-        }
-        return isValidEntry;
-      }),
-  };
+function fixQueryAnalysisResult(data: AnalysisResponse | null) {
+  if (data)
+    return {
+      ...data,
+      analysis: data.analysis
+        .reverse()
+        .filter((entry, index, array) =>
+          array
+            .slice(0, index)
+            .every((previous) => !isOverlapping(previous, entry)),
+        )
+        .reverse()
+        .filter((entry) => {
+          // togliere validazione quando fixato lato be
+          const isValidEntry = entry.start >= 0;
+          if (!isValidEntry) {
+            console.warn(`Invalid entry: `, entry);
+          }
+          return isValidEntry;
+        }),
+    };
 }
 
 export function remappingLanguage({ language }: { language: string }) {

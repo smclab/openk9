@@ -52,7 +52,7 @@ export function ActiveFilter({
         >
           {searchQuery.map((selectToken, index) => {
             return (
-              <React.Fragment>
+              <React.Fragment key={index}>
                 {"goToSuggestion" in selectToken && (
                   <div key={index} className="openk9-container-active-filter">
                     <button

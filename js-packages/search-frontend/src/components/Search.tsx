@@ -15,23 +15,33 @@ import {
   SearchToken,
   SortField,
 } from "./client";
-import { SelectionsAction, SelectionsState } from "./useSelections";
+import {
+  SelectionsAction,
+  SelectionsActionOnClick,
+  SelectionsState,
+  SelectionsStateOnClick,
+} from "./useSelections";
 import { SearchDateRange } from "../embeddable/Main";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
+import { divide } from "lodash";
 
 type SearchProps = {
   configuration: Configuration;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState;
-  selectionsDispatch(action: SelectionsAction): void;
+  selectionsState: SelectionsState | SelectionsStateOnClick;
+  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
   showSyntax: boolean;
   isMobile: boolean;
   filtersSelect: SearchToken[];
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
+  btnSearch?: boolean;
+  defaultValue?: string;
+  isSearchOnInputChange?: boolean;
+  saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
     | undefined;
@@ -45,7 +55,11 @@ export function Search({
   showSyntax,
   isMobile,
   mobileVersion = false,
+  btnSearch = false,
   actionCloseMobileVersion,
+  isSearchOnInputChange = false,
+  saveSearchQuery,
+  defaultValue,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -57,6 +71,9 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
+  const [textBtn, setTextBtn] = React.useState<string | undefined>(
+    defaultValue,
+  );
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -68,6 +85,23 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
+  React.useEffect(() => {
+    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
+      if (defaultValue === "") {
+        selectionsDispatch({
+          type: "reset-search",
+        });
+      } else {
+        selectionsDispatch({
+          type: "set-text",
+          text: defaultValue,
+          textOnchange: defaultValue,
+        });
+      }
+      setTextBtn(defaultValue);
+    }
+  }, [defaultValue]);
+
   const { t } = useTranslation();
   return (
     <React.Fragment>
@@ -83,15 +117,11 @@ export function Search({
             flex-direction: column;
             margin-top: 15px;
           }
+          .openk9-focusable:has(input:focus) {
+            border: 1px solid #c22525;
+          }
         `}
       >
-        <style type="text/css">
-          {`
-        .openk9-focusable:has(input:focus){
-          border:1px solid  var(--openk9-embeddable-search--active-color);
-        }
-    `}
-        </style>
         <div
           ref={clickAwayRef}
           className="openk9-embeddable-search--input-container openk9-focusable"
@@ -148,17 +178,32 @@ export function Search({
                   );
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token,
-                        isAuto: false,
-                      },
-                    });
+                    if (isSearchOnInputChange) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token,
+                          isAuto: false,
+                        },
+                      });
+                    } else {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          textOnChange: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token,
+                          isAuto: false,
+                        },
+                      });
+                    }
                     if (
                       inputRef.current?.selectionStart &&
                       inputRef.current?.selectionEnd
@@ -208,6 +253,9 @@ export function Search({
                       isAutoSlected={isAutoSelected}
                       setOpenedDropdown={setOpenedDropdown}
                       selectionsDispatch={selectionsDispatch}
+                      isColorSearch={isSearchOnInputChange}
+                      setTextBtn={setTextBtn}
+                      isBtnSearch={btnSearch}
                     />
                   );
                 })}
@@ -228,14 +276,30 @@ export function Search({
               }
               type="text"
               placeholder={t("search") || "search..."}
-              value={selectionsState.text}
+              value={btnSearch ? textBtn ?? "" : selectionsState.text}
               onChange={(event) => {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: event.currentTarget.value,
-                });
-                onDetail(null);
-                setOpenedDropdown(null);
+                if (!btnSearch) {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: event.currentTarget.value,
+                    textOnchange: event.currentTarget.value,
+                  });
+                  onDetail(null);
+                  setOpenedDropdown(null);
+                } else {
+                  setTextBtn(event.currentTarget.value);
+                  if (isSearchOnInputChange) {
+                    selectionsDispatch({
+                      type: "set-text",
+                      text: event.currentTarget.value,
+                    });
+                  } else {
+                    selectionsDispatch({
+                      type: "set-text",
+                      textOnchange: event.currentTarget.value,
+                    });
+                  }
+                }
               }}
               css={css`
                 position: relative;
@@ -247,7 +311,11 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${showSyntax ? "transparent" : "inherit"};
+                color: ${textBtn
+                  ? "black"
+                  : showSyntax
+                  ? "transparent"
+                  : "inherit"};
               `}
               spellCheck="false"
               onSelect={(event) => {
@@ -295,18 +363,48 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
+                  if (btnSearch) {
+                    if (textBtn === "") {
+                      selectionsDispatch({
+                        type: "reset-search",
+                      });
+                    } else {
+                      selectionsDispatch({
+                        type: "set-text",
+                        text: option?.value,
+                        textOnchange: option?.value,
+                      });
+                    }
+                  }
+                  option?.value ? setTextBtn(option?.value) : null;
+
                   if (span) {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token: option ?? null,
-                        isAuto: false,
-                      },
-                    });
+                    if (isSearchOnInputChange) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                    } else {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span?.text || "",
+                          textOnChange: span?.text || "",
+                          start: span?.start || 0,
+                          end: span?.end || 0,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                    }
                     if (replaceText) {
                       const text =
                         option &&
@@ -362,10 +460,21 @@ export function Search({
                   }
                 `}
                 onClick={() => {
-                  selectionsDispatch({
-                    type: "set-text",
-                    text: "",
-                  });
+                  if (!btnSearch) {
+                    selectionsDispatch({
+                      type: "set-text",
+                      text: "",
+                    });
+                  } else {
+                    selectionsDispatch({
+                      type: "set-text",
+                      textOnchange: " ",
+                      text: " ",
+                    });
+                    setTextBtn("");
+                    onDetail(null);
+                    setOpenedDropdown(null);
+                  }
                 }}
               >
                 <DeleteLogo />
@@ -373,6 +482,48 @@ export function Search({
             </div>
           </button>
         </div>
+        {btnSearch && (
+          <div className="openk9-search-btn-external-container">
+            <button
+              className="openk9-search-btn-external"
+              css={css`
+                min-height: 50px;
+                min-width: 50px;
+                fill: var(
+                  --openk9-embeddable-search--primary-background-tab-color
+                );
+                border: 1px solid
+                  var(--openk9-embeddable-search--primary-background-tab-color);
+                border-radius: 30px;
+                cursor: pointer;
+              `}
+              onClick={() => {
+                if (textBtn === "") {
+                  selectionsDispatch({
+                    type: "reset-search",
+                  });
+                } else {
+                  selectionsDispatch({
+                    type: "set-text",
+                    text: textBtn,
+                    textOnchange: textBtn,
+                  });
+                }
+                onDetail(null);
+                setOpenedDropdown(null);
+              }}
+            >
+              <svg
+                aria-hidden="true"
+                className="openk9-search-btn-external-icon"
+                height="1em"
+                viewBox="0 0 512 512"
+              >
+                <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </React.Fragment>
   );

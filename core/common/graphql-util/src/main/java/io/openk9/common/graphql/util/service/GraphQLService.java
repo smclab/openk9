@@ -85,8 +85,42 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		String[] searchFields, String after,
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList, boolean not,
+		BiFunction<CriteriaBuilder, Path<T>, Predicate> whereFun) {
+
+		return findJoinConnection(
+			entityId, joinField, joinType, searchFields, after, before, first,
+			last, searchText, sortByList, not,
+			entityRoot -> entityRoot.join(joinField),
+			(i1, i2) -> List.of(),
+			whereFun);
+
+	}
+
+	public <T extends GraphqlId> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType,
+		String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList, boolean not,
 		Function<Root<ENTITY>, Path<T>> mapper,
 		BiFunction<CriteriaBuilder, Root<ENTITY>, List<Order>> defaultOrderFun) {
+
+		return findJoinConnection(
+			entityId, joinField, joinType, searchFields, after, before, first,
+			last, searchText, sortByList, not,
+			mapper,
+			defaultOrderFun,
+			(criteriaBuilder, tPath) -> criteriaBuilder.conjunction());
+
+	}
+
+	public <T extends GraphqlId> Uni<Connection<T>> findJoinConnection(
+		long entityId, String joinField, Class<T> joinType,
+		String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList, boolean not,
+		Function<Root<ENTITY>, Path<T>> mapper,
+		BiFunction<CriteriaBuilder, Root<ENTITY>, List<Order>> defaultOrderFun,
+		BiFunction<CriteriaBuilder, Path<T>, Predicate> whereFun) {
 
 		CriteriaBuilder builder = getCriteriaBuilder();
 
@@ -110,7 +144,9 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 			return findConnection(
 				joinEntityQuery, upperRoot,
-				builder.in(upperRoot.get(getIdAttribute())).value(subquery).not(),
+				builder.and(
+					whereFun.apply(builder, subJoin),
+					builder.in(upperRoot.get(getIdAttribute())).value(subquery).not()),
 				searchFields, after, before, first, last, searchText, sortByList);
 
 		}
@@ -124,7 +160,9 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 			return findConnection(
 				joinEntityQuery.select(join), join,
-				builder.equal(entityRoot.get(getIdAttribute()), entityId),
+				builder.and(
+					whereFun.apply(builder, join),
+					builder.equal(entityRoot.get(getIdAttribute()), entityId)),
 				searchFields, after, before, first, last, searchText, sortByList);
 		}
 

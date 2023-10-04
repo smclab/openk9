@@ -93,7 +93,7 @@ public enum UserField {
 
 		if (value != null && !value.isBlank()) {
 			boolQueryBuilder.should(
-				QueryBuilders.termQuery(docTypeField.getFieldName(), value));
+				QueryBuilders.termQuery(docTypeField.getPath(), value));
 		}
 
 	}
@@ -105,7 +105,7 @@ public enum UserField {
 
 		if (values != null && !values.isEmpty()) {
 			boolQueryBuilder.should(
-				QueryBuilders.termsQuery(docTypeField.getFieldName(), values));
+				QueryBuilders.termsQuery(docTypeField.getPath(), values));
 		}
 
 	}

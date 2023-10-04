@@ -63,12 +63,12 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 						(
 							keywordKey == null ||
 							keywordKey.isEmpty() ||
-							searchKeyword.getFieldName().equals(keywordKey)
+							searchKeyword.getPath().equals(keywordKey)
 						)
 				)
 				.collect(
 					Collectors.toMap(
-						DocTypeField::getFieldName,
+						DocTypeField::getPath,
 						DocTypeField::getFloatBoost,
 						Math::max,
 						HashMap::new

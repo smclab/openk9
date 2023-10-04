@@ -268,8 +268,10 @@ export function OpenK9Client({
     },
     async fetchQueryAnalysis(
       request: AnalysisRequest,
-    ): Promise<AnalysisResponse> {
+    ): Promise<AnalysisResponse | null> {
       const mock = false;
+      const isActiveQueryAnalysis = true;
+      if (!isActiveQueryAnalysis) return null;
       if (mock)
         return {
           searchText: "Questo è un esempio di testo per l'analisi",

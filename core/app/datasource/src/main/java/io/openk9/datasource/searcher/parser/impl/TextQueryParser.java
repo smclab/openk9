@@ -64,10 +64,10 @@ public class TextQueryParser implements QueryParser {
 				docTypeFieldList
 					.stream()
 					.filter(docTypeField ->
-						!keywordKeyIsPresent || docTypeField.getFieldName().equals(keywordKey))
+						!keywordKeyIsPresent || docTypeField.getPath().equals(keywordKey))
 					.collect(
 						Collectors.toMap(
-							DocTypeField::getFieldName,
+							DocTypeField::getPath,
 							DocTypeField::getFloatBoost,
 							Math::max,
 							HashMap::new

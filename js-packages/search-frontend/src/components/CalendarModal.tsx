@@ -149,6 +149,7 @@ export function CalendarMobile({
           </div>
         </div>
         <button
+          className="openk9-calendar-modal-button-close"
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 16px;
@@ -294,6 +295,7 @@ export function CalendarMobile({
         <div>
           <input
             readOnly
+            className="openk9-input-data openk9-first-input-for-data"
             css={css`
               border-radius: 50px;
               height: 28px;
@@ -312,6 +314,7 @@ export function CalendarMobile({
         <div>
           <input
             readOnly
+            className="openk9-input-data openk9-second-input-for-data"
             css={css`
               border-radius: 50px;
               height: 28px;
@@ -346,7 +349,7 @@ export function CalendarMobile({
         `}
       >
         <button
-          className="openk9-filter-horizontal-submit"
+          className="openk9-filter-horizontal-submit remove-filter remove-filter-data"
           aria-label="rimuovi filtri"
           css={css`
             font-size: smaller;
@@ -398,7 +401,7 @@ export function CalendarMobile({
           </div>
         </button>
         <button
-          className="openk9-filter-horizontal-submit"
+          className="openk9-filter-horizontal-submit filter-for-data"
           aria-label={t("filter-for-data") || "filter for data"}
           css={css`
             font-size: smaller;
