@@ -9,11 +9,11 @@ import { useDocumentTypeFieldsQuery } from "../graphql-generated";
 import { TableVirtuoso } from "react-virtuoso";
 
 export function DocTypeFieldsSearch() {
-  const { documentTypeId = "new", searchText = "" } = useParams();
+  const { documentTypeId = "new", searchText = "", parentId = "" } = useParams();
   const [searchTextDoc, setSearchTextDoc] = React.useState(searchText);
   const searchTextDebounced = useDebounced(searchTextDoc);
   const documentTypeFieldsQuery = useDocumentTypeFieldsQuery({
-    variables: { documentTypeId: documentTypeId, searchText: searchTextDebounced },
+    variables: { documentTypeId: documentTypeId, searchText: searchTextDebounced, parentId: parentId },
   });
 
   React.useEffect(() => {
@@ -53,9 +53,9 @@ export function DocTypeFieldsSearch() {
       </ClayToolbar>
       <ContainerFluid>
         <TableVirtuoso
-          totalCount={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.length}
+          totalCount={documentTypeFieldsQuery.data?.docTypeFieldsFromDocTypeByParent?.edges?.length}
           style={{ height: "80vh" }}
-          data={documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges as any}
+          data={documentTypeFieldsQuery.data?.docTypeFieldsFromDocTypeByParent?.edges as any}
           components={{
             Table: (props) => (
               <table
@@ -85,7 +85,7 @@ export function DocTypeFieldsSearch() {
             </ClayTable.Row>
           )}
           itemContent={(index) => {
-            const row = documentTypeFieldsQuery.data?.docTypeFieldsFromDocType?.edges?.[index]?.node ?? undefined;
+            const row = documentTypeFieldsQuery.data?.docTypeFieldsFromDocTypeByParent?.edges?.[index]?.node ?? undefined;
             return (
               <React.Fragment>
                 <ClayTable.Cell>

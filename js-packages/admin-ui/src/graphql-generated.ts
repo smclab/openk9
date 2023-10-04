@@ -879,6 +879,7 @@ export type DocTypeField = {
   name?: Maybe<Scalars['String']>;
   numeric: Scalars['Boolean'];
   parent?: Maybe<DocTypeField>;
+  path?: Maybe<Scalars['String']>;
   searchable: Scalars['Boolean'];
   searchableAndAutocomplete: Scalars['Boolean'];
   searchableAndDate: Scalars['Boolean'];
@@ -2229,6 +2230,7 @@ export type Query = {
   docTypeFields?: Maybe<Connection_DocTypeField>;
   docTypeFieldsByParent?: Maybe<Connection_DocTypeField>;
   docTypeFieldsFromDocType?: Maybe<Connection_DocTypeField>;
+  docTypeFieldsFromDocTypeByParent?: Maybe<Connection_DocTypeField>;
   docTypeFieldsNotInTokenTab?: Maybe<Connection_DocTypeField>;
   docTypeTemplate?: Maybe<DocTypeTemplate>;
   docTypeTemplates?: Maybe<Connection_DocTypeTemplate>;
@@ -2429,6 +2431,20 @@ export type QueryDocTypeFieldsFromDocTypeArgs = {
   first?: InputMaybe<Scalars['Int']>;
   last?: InputMaybe<Scalars['Int']>;
   notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryDocTypeFieldsFromDocTypeByParentArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  docTypeId: Scalars['ID'];
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  parentId: Scalars['BigInteger'];
   searchText?: InputMaybe<Scalars['String']>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
@@ -4124,10 +4140,11 @@ export type DeleteDocumentTypeFieldMutation = { __typename?: 'Mutation', removeD
 export type DocTypeFieldsByParentQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   parentId: Scalars['BigInteger'];
+  docTypeId: Scalars['ID'];
 }>;
 
 
-export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, fieldName?: string | null, searchable: boolean, exclude?: boolean | null, sortable: boolean, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
+export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable: boolean, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
 
 export type DocumentTypeTemplateQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -4620,10 +4637,11 @@ export type DocumentTypeFieldsQueryVariables = Exact<{
   documentTypeId: Scalars['ID'];
   searchText?: InputMaybe<Scalars['String']>;
   cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars['BigInteger'];
 }>;
 
 
-export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocType?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocumentTypeFieldsQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, sortable: boolean } | null } | null> | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   documentTypeId: Scalars['ID'];
@@ -8571,15 +8589,24 @@ export type DeleteDocumentTypeFieldMutationHookResult = ReturnType<typeof useDel
 export type DeleteDocumentTypeFieldMutationResult = Apollo.MutationResult<DeleteDocumentTypeFieldMutation>;
 export type DeleteDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
 export const DocTypeFieldsByParentDocument = gql`
-    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!) {
-  docTypeFieldsByParent(parentId: $parentId, searchText: $searchText, first: 10) {
+    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+  docTypeFieldsFromDocTypeByParent(
+    parentId: $parentId
+    searchText: $searchText
+    first: 10
+    docTypeId: $docTypeId
+  ) {
     edges {
       node {
         id
         name
-        fieldName
+        description
+        fieldType
+        boost
         searchable
         exclude
+        fieldName
+        jsonConfig
         sortable
         parent {
           id
@@ -8605,6 +8632,7 @@ export const DocTypeFieldsByParentDocument = gql`
  *   variables: {
  *      searchText: // value for 'searchText'
  *      parentId: // value for 'parentId'
+ *      docTypeId: // value for 'docTypeId'
  *   },
  * });
  */
@@ -11174,12 +11202,13 @@ export type DeleteSearchConfigMutationHookResult = ReturnType<typeof useDeleteSe
 export type DeleteSearchConfigMutationResult = Apollo.MutationResult<DeleteSearchConfigMutation>;
 export type DeleteSearchConfigMutationOptions = Apollo.BaseMutationOptions<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>;
 export const DocumentTypeFieldsDocument = gql`
-    query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String) {
-  docTypeFieldsFromDocType(
+    query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String, $parentId: BigInteger!) {
+  docTypeFieldsFromDocTypeByParent(
     docTypeId: $documentTypeId
     searchText: $searchText
     first: 25
     after: $cursor
+    parentId: $parentId
   ) {
     edges {
       node {
@@ -11232,6 +11261,7 @@ export const DocumentTypeFieldsDocument = gql`
  *      documentTypeId: // value for 'documentTypeId'
  *      searchText: // value for 'searchText'
  *      cursor: // value for 'cursor'
+ *      parentId: // value for 'parentId'
  *   },
  * });
  */
@@ -12730,4 +12760,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-09-12T11:17:51+02:00
+// Generated on 2023-10-04T10:22:46+02:00

@@ -35,8 +35,8 @@ gql`
 `;
 
 export const DocumentTypeFieldsParentQuery = gql`
-  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!) {
-    docTypeFieldsByParent(parentId: $parentId, searchText: $searchText, first: 10) {
+  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+    docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: 10, docTypeId: $docTypeId) {
       edges {
         node {
           id
@@ -68,10 +68,11 @@ export function DocumentTypeFields() {
   const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
     variables: {
       searchText: "",
-      // parentId: Number(documentTypeId || "0"),
       parentId: 0,
+      docTypeId: documentTypeId || 0,
     },
   });
+
   const [updateDoctype] = useCreateOrUpdateDocumentTypeFieldMutation({
     refetchQueries: [DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
   });
@@ -127,7 +128,7 @@ export function DocumentTypeFields() {
       <ContainerFluid>
         <div style={{ display: "flex", background: "white", overflowX: "auto" }}>
           <ClayList style={{ marginBottom: "0", width: "400px", borderRight: "3px solid #00000017" }}>
-            {data.docTypeFieldsByParent.edges.map(
+            {data.docTypeFieldsFromDocTypeByParent.edges.map(
               ({
                 node,
               }: {
@@ -150,14 +151,14 @@ export function DocumentTypeFields() {
                   className={node.id === selectedDocumentId ? "active selected" : ""}
                   onMouseOver={(event) => {
                     const currentTarget = event.currentTarget as any;
-                    if (!currentTarget.classList.contains('active')) {
-                      currentTarget.classList.add('active');
-                    }    
+                    if (!currentTarget.classList.contains("active")) {
+                      currentTarget.classList.add("active");
+                    }
                   }}
                   onMouseOut={(event) => {
                     const currentTarget = event.currentTarget as any;
-                    if (currentTarget.classList.contains('active') && !currentTarget.classList.contains('selected')) {
-                      currentTarget.classList.remove('active');
+                    if (currentTarget.classList.contains("active") && !currentTarget.classList.contains("selected")) {
+                      currentTarget.classList.remove("active");
                     }
                   }}
                 >
@@ -325,6 +326,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
     variables: {
       searchText: "",
       parentId: Number(documentId),
+      docTypeId: documentTypeId || 0,
     },
   });
 
@@ -346,7 +348,7 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
     return <div>Error: {error.message}</div>;
   }
 
-  const childDocuments = data.docTypeFieldsByParent.edges;
+  const childDocuments = data.docTypeFieldsFromDocTypeByParent.edges;
 
   const handleChildClick = (childId: string) => {
     setSelectedChildDocumentId(childId);
@@ -379,14 +381,14 @@ const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, doc
                 className={node.id === selectedChildDocumentId ? "active selected" : ""}
                 onMouseOver={(event) => {
                   const currentTarget = event.currentTarget as any;
-                  if (!currentTarget.classList.contains('active')) {
-                    currentTarget.classList.add('active');
-                  }    
+                  if (!currentTarget.classList.contains("active")) {
+                    currentTarget.classList.add("active");
+                  }
                 }}
                 onMouseOut={(event) => {
                   const currentTarget = event.currentTarget as any;
-                  if (currentTarget.classList.contains('active') && !currentTarget.classList.contains('selected')) {
-                    currentTarget.classList.remove('active');
+                  if (currentTarget.classList.contains("active") && !currentTarget.classList.contains("selected")) {
+                    currentTarget.classList.remove("active");
                   }
                 }}
               >

@@ -105,6 +105,7 @@ export function DocumentTypeField() {
       }
     },
   });
+
   const form = useForm({
     initialValues: React.useMemo(
       () => ({

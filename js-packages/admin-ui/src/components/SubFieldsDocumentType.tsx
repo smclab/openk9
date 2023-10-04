@@ -21,8 +21,8 @@ import { CodeInput } from "./CodeInput";
 import { ClassNameButton } from "../App";
 
 export const DocumentTypeFieldsQuery = gql`
-  query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String) {
-    docTypeFieldsFromDocType(docTypeId: $documentTypeId, searchText: $searchText, first: 25, after: $cursor) {
+  query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String, $parentId: BigInteger!) {
+    docTypeFieldsFromDocTypeByParent(docTypeId: $documentTypeId, searchText: $searchText, first: 25, after: $cursor, parentId: $parentId) {
       edges {
         node {
           id
