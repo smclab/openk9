@@ -128,7 +128,7 @@ function useCreateDataIndexModal({
     },
     {
       onSuccess(data, variables, context) {
-        showToast({ displayType: "info", title: "Data Index created", content: variables.datasourceId });
+        showToast({ displayType: "info", title: "Data Index created", content: data.name });
         modal.onClose();
       },
     }

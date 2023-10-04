@@ -43,7 +43,7 @@ export function SearchConfigs() {
     refetchQueries: [SearchConfigsQuery],
     onCompleted(data) {
       if (data.deleteSearchConfig?.id) {
-        showToast({ displayType: "success", title: "Search config deleted", content: data.deleteSearchConfig.id ?? "" });
+        showToast({ displayType: "success", title: "Search config deleted", content: data.deleteSearchConfig.name ?? "" });
       }
     },
     onError(error) {
