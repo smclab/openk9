@@ -295,7 +295,7 @@ export function Main({
             sort={completelySort}
             setSortResult={setSortResult}
             isMobile={isMobile}
-            overChangeCard={false}
+            overChangeCard={true}
             language={languageSelect}
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}

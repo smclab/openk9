@@ -347,7 +347,7 @@ export function App() {
         </div>
       </div>
       <div
-        className="openk9-results-container openk9-box"
+        className="openk9-filters-mobile-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
             filtersMobileLiveChange: {
@@ -428,6 +428,7 @@ export function App() {
         css={css`
           grid-area: detail;
           overflow-y: auto;
+          overflow-x: hidden;
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
