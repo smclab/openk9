@@ -9,11 +9,11 @@ import { useDocumentTypeFieldsQuery } from "../graphql-generated";
 import { TableVirtuoso } from "react-virtuoso";
 
 export function DocTypeFieldsSearch() {
-  const { documentTypeId = "new", searchText = "", parentId = "" } = useParams();
+  const { documentTypeId = "0", searchText = "", parentId = "" } = useParams();
   const [searchTextDoc, setSearchTextDoc] = React.useState(searchText);
   const searchTextDebounced = useDebounced(searchTextDoc);
   const documentTypeFieldsQuery = useDocumentTypeFieldsQuery({
-    variables: { documentTypeId: documentTypeId, searchText: searchTextDebounced, parentId: parentId },
+    variables: { documentTypeId: documentTypeId, searchText: searchTextDebounced, parentId: 0 },
   });
 
   React.useEffect(() => {
