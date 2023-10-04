@@ -153,7 +153,7 @@ function FiltersMobileLiveChange<E>({
         style={{
           overflowY: "auto",
           position: "relative",
-          height: "calc(100vh - 230px)",
+          height: "calc(100vh - 210px)",
           borderRadius: "8px",
         }}
       >
@@ -189,6 +189,7 @@ function FiltersMobileLiveChange<E>({
           left: 0;
           right: 0;
           padding: 10px;
+          background: white;
           @media (max-width: 480px) {
             padding-inline: 20px;
             flex-direction: column;
