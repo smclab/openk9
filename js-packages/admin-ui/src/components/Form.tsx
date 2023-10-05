@@ -899,18 +899,20 @@ export function AssociatedEntities<Q>({
                   <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
                 </ClayList.ItemField>
                 <ClayList.ItemField>
-                  <ClayList.QuickActionMenu>
+                  <div>
                     {canAct && (
-                      <ClayList.QuickActionMenu.Item
-                        onClick={() => {
-                          if (row?.id) {
-                            removeMutate({ variables: { parentId, childId: row.id } });
-                          }
-                        }}
-                        symbol="chain-broken"
-                      />
+                      <button className="component-action quick-action-item">
+                        <ClayIcon
+                          symbol={"chain-broken"}
+                          onClick={() => {
+                            if (row?.id) {
+                              removeMutate({ variables: { parentId, childId: row.id } });
+                            }
+                          }}
+                        />
+                      </button>
                     )}
-                  </ClayList.QuickActionMenu>
+                  </div>
                 </ClayList.ItemField>
               </React.Fragment>
             );
