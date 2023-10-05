@@ -18,6 +18,7 @@ import { ClayInput } from "@clayui/form";
 import useDebounced from "./useDebounced";
 import { ClassNameButton } from "../App";
 import { ContainerFluidWithoutView, CustomButtomClay, CustomFormGroup, EmptySpace } from "./Form";
+import { ClayDropDownWithItems } from "@clayui/drop-down";
 
 export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
@@ -398,12 +399,11 @@ function moveItem<T>(fromIndex: number, toIndex: number, array: Array<T>): Array
   }
   return array;
 }
-
 function ItemActions({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
   return (
     <React.Fragment>
       <div style={{ position: "relative" }}>
-        <div className="quick-action-menu" style={{ alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           {actions.map((action, index) => {
             return (
               <ClayButtonWithIcon
@@ -417,18 +417,13 @@ function ItemActions({ actions }: { actions: Array<{ label: string; icon: string
           })}
         </div>
       </div>
-      <div className="dropdown">
-        <ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />
-        <ul className="dropdown-menu">
-          {actions.map((action, index) => (
-            <li key={index}>
-              <button className="dropdown-item" onClick={action.onClick}>
-                {action.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ClayDropDownWithItems
+        trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
+        items={actions.map((action) => ({
+          label: action.label,
+          onClick: action.onClick,
+        }))}
+      />
     </React.Fragment>
   );
 }
