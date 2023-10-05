@@ -39,6 +39,7 @@ type SearchProps = {
   isVisibleFilters: boolean;
   mobileVersion?: boolean;
   btnSearch?: boolean;
+  defaultValue?: string;
   isSearchOnInputChange?: boolean;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
@@ -58,6 +59,7 @@ export function Search({
   actionCloseMobileVersion,
   isSearchOnInputChange = false,
   saveSearchQuery,
+  defaultValue,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -69,7 +71,9 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
-  const [textBtn, setTextBtn] = React.useState<string | undefined>();
+  const [textBtn, setTextBtn] = React.useState<string | undefined>(
+    defaultValue,
+  );
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -81,6 +85,23 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
+  React.useEffect(() => {
+    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
+      if (defaultValue === "") {
+        selectionsDispatch({
+          type: "reset-search",
+        });
+      } else {
+        selectionsDispatch({
+          type: "set-text",
+          text: defaultValue,
+          textOnchange: defaultValue,
+        });
+      }
+      setTextBtn(defaultValue);
+    }
+  }, [defaultValue]);
+
   const { t } = useTranslation();
   return (
     <React.Fragment>

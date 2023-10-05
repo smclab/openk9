@@ -13,6 +13,7 @@ import { ClayToggle } from "@clayui/form";
 import { ContainerFluid, ContainerFluidWithoutView, EmptySpace, MainTitle, StyleToggle } from "./Form";
 import { ClassNameButton } from "../App";
 import ClayIcon from "@clayui/icon";
+import { useDeleteDocumentTypeFieldMutation } from "../graphql-generated";
 
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return (

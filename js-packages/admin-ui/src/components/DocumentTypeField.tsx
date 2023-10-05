@@ -105,6 +105,7 @@ export function DocumentTypeField() {
       }
     },
   });
+
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -133,6 +134,7 @@ export function DocumentTypeField() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateDocumentTypeFieldMutation.data?.docTypeField?.fieldValidators),
   });
+
   return (
     <React.Fragment>
       <ClayToolbar light>

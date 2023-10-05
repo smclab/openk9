@@ -89,6 +89,7 @@ import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
 import { Languages } from "./components/Languages";
 import { BucketLanguage } from "./components/BucketLanguage";
 import { Language } from "./components/Language";
+import { DocTypeFieldsSearch } from "./components/DocTypeFieldsSearch";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -276,6 +277,14 @@ export default function App() {
                         <Route path="document-type-fields" element={<DocumentTypeFields />} />
                       </Route>
                     </Route>
+                    <Route
+                      path="document-types/:documentTypeId/document-type-fields/search-document-type-field/search/"
+                      element={<DocTypeFieldsSearch />}
+                    />
+                    <Route
+                      path="document-types/:documentTypeId/document-type-fields/search-document-type-field/search/:searchText"
+                      element={<DocTypeFieldsSearch />}
+                    />
                     <Route path="search-configs">
                       <Route path="" element={<SearchConfigs />} />
                       <Route path=":searchConfigId/query-parsers/:queryParserConfigId" element={<QueryParserConfig />} />

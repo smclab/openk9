@@ -1,17 +1,30 @@
 import React from "react";
-import { gql } from "@apollo/client";
+import { QueryResult, gql, useQuery } from "@apollo/client";
 import {
+  DocTypeFieldsByParentQuery,
+  Exact,
   FieldType,
+  InputMaybe,
   useCreateOrUpdateDocumentTypeFieldMutation,
   useDeleteDocumentTypeFieldMutation,
+  useDocTypeFieldsByParentQuery,
   useDocumentTypeFieldsQuery,
 } from "../graphql-generated";
 import { formatName, TableWithSubFields } from "./Table";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
 import { ClayToggle } from "@clayui/form";
-import { StyleToggle } from "./Form";
+import { ContainerFluid, ContainerFluidWithoutView, StyleToggle } from "./Form";
 import { ClayTooltipProvider } from "@clayui/tooltip";
+import { CategoricalChartFunc } from "recharts/types/chart/generateCategoricalChart";
+import ClayIcon from "@clayui/icon";
+import ClayList from "@clayui/list";
+import DropDown from "@clayui/drop-down";
+import { apolloClient } from "./apolloClient";
+import ClayToolbar from "@clayui/toolbar";
+import { ClayButtonWithIcon } from "@clayui/button";
+import { ClassNameButton } from "../App";
+import useDebounced from "./useDebounced";
 
 gql`
   mutation DeleteDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID!) {
@@ -21,183 +34,514 @@ gql`
   }
 `;
 
+export const DocumentTypeFieldsParentQuery = gql`
+  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+    docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: 10, docTypeId: $docTypeId) {
+      edges {
+        node {
+          id
+          name
+          description
+          fieldType
+          boost
+          searchable
+          exclude
+          fieldName
+          jsonConfig
+          sortable
+          parent {
+            id
+            fieldName
+          }
+        }
+      }
+    }
+  }
+`;
+
 export function DocumentTypeFields() {
   const { documentTypeId } = useParams();
-  const documentTypeFieldsQuery = useDocumentTypeFieldsQuery({
-    variables: { documentTypeId: documentTypeId! },
-    skip: !documentTypeId,
+
+  const [selectedDocumentId, setSelectedDocumentId] = React.useState<string | null>(null);
+  const [searchText, setSearchText] = React.useState("");
+
+  const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
+    variables: {
+      searchText: "",
+      parentId: 0,
+      docTypeId: documentTypeId || 0,
+    },
   });
-  const [deleteDocumentTypeFieldMutate] = useDeleteDocumentTypeFieldMutation({
-    refetchQueries: [{ query: DocumentTypeFieldsQuery, variables: { documentTypeId: documentTypeId! } }],
+
+  const [updateDoctype] = useCreateOrUpdateDocumentTypeFieldMutation({
+    refetchQueries: [DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
   });
-  const [updateDocumentTypeFieldMutate] = useCreateOrUpdateDocumentTypeFieldMutation({
-    refetchQueries: [{ query: DocumentTypeFieldsQuery, variables: { documentTypeId: documentTypeId! } }],
-  });
-  if (!documentTypeId) throw new Error();
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  const handleDocumentClick = (documentId: string) => {
+    setSelectedDocumentId(documentId);
+  };
 
   return (
-    <React.Fragment>
-      <TableWithSubFields
-        data={{
-          queryResult: documentTypeFieldsQuery,
-          field: (data) => data?.docTypeFieldsFromDocType,
-        }}
-        label="Document Type Fields"
-        onCreatePath="new"
-        onCreatePathSubFields="newSubFields"
-        onDelete={(documentTypeField) => {
-          if (documentTypeField?.id) {
-            deleteDocumentTypeFieldMutate({ variables: { documentTypeId: documentTypeId!, documentTypeFieldId: documentTypeField.id } });
-          }
-        }}
-        id={documentTypeId}
-        columns={[
-          { header: "Name", content: (documentTypeField) => formatName(documentTypeField) },
-          { header: "Field Type", content: (documentTypeField) => documentTypeField?.fieldType },
-          { header: "Boost", content: (documentTypeField) => documentTypeField?.boost },
-          {
-            header: "Searchable",
-            content: (documentTypeField) => (
-              <React.Fragment>
-                <ClayToggle
-                  toggled={documentTypeField?.searchable ?? false}
-                  onToggle={(searchable) => {
-                    if (
-                      documentTypeField &&
-                      documentTypeField.id &&
-                      documentTypeField.fieldType &&
-                      documentTypeField.name &&
-                      documentTypeField.fieldName
-                    ) {
-                      updateDocumentTypeFieldMutate({
-                        variables: {
-                          documentTypeFieldId: documentTypeField.id,
-                          documentTypeId: documentTypeId,
-                          searchable,
-                          sortable: documentTypeField.sortable ?? false,
-                          fieldType: documentTypeField.fieldType,
-                          boost: documentTypeField.boost,
-                          name: documentTypeField.name,
-                          description: documentTypeField.description,
-                          fieldName: documentTypeField.fieldName,
-                        },
-                      });
-                    }
+    <div>
+      <ClayToolbar light>
+        <ContainerFluidWithoutView>
+          <ClayToolbar.Nav>
+            <ClayToolbar.Item expand>
+              <div style={{ position: "relative" }}>
+                <ClayToolbar.Input
+                  placeholder="Search..."
+                  sizing="sm"
+                  value={searchText}
+                  onChange={(event) => {
+                    setSearchText(event.currentTarget.value);
                   }}
                 />
-                <style type="text/css"> {StyleToggle}</style>
-              </React.Fragment>
-            ),
-          },
-          {
-            header: "Exclude",
-            content: (documentTypeField) => (
-              <ClayToggle
-                toggled={documentTypeField?.exclude ?? false}
-                onToggle={(exclude) => {
-                  if (
-                    documentTypeField &&
-                    documentTypeField.id &&
-                    documentTypeField.fieldType &&
-                    documentTypeField.name &&
-                    documentTypeField.fieldName &&
-                    typeof documentTypeField.searchable === "boolean"
-                  ) {
-                    updateDocumentTypeFieldMutate({
-                      variables: {
-                        documentTypeFieldId: documentTypeField.id,
-                        documentTypeId: documentTypeId,
-                        exclude,
-                        description: documentTypeField.description,
-                        boost: documentTypeField.boost,
-                        fieldType: documentTypeField.fieldType,
-                        name: documentTypeField.name,
-                        sortable: documentTypeField.sortable ?? false,
-                        searchable: documentTypeField.searchable,
-                        fieldName: documentTypeField.fieldName,
-                      },
-                    });
-                  }
-                }}
-              />
-            ),
-          },
-          {
-            header: "Sortable",
-            content: (documentTypeField) => (
-              <React.Fragment>
-                {documentTypeField?.fieldType !== FieldType.Date && documentTypeField?.fieldType !== FieldType.Keyword ? (
-                  <ClayTooltipProvider autoAlign>
-                    <span title={"Only Document Type Fields of type Keyword or Date are sortable."}>
-                      <ClayToggle
-                        toggled={documentTypeField?.sortable ?? false}
-                        style={{
-                          cursor: "not-allowed",
-                        }}
-                        onToggle={(sortable) => {
-                          if (
-                            (documentTypeField?.fieldType === FieldType.Date || documentTypeField?.fieldType === FieldType.Keyword) &&
-                            documentTypeField &&
-                            documentTypeField.id &&
-                            documentTypeField.fieldType &&
-                            documentTypeField.name &&
-                            documentTypeField.fieldName &&
-                            typeof documentTypeField.searchable === "boolean"
-                          ) {
-                            updateDocumentTypeFieldMutate({
-                              variables: {
-                                documentTypeFieldId: documentTypeField.id,
-                                documentTypeId: documentTypeId,
-                                exclude: documentTypeField.exclude,
-                                description: documentTypeField.description,
-                                fieldType: documentTypeField.fieldType,
-                                name: documentTypeField.name,
-                                sortable,
-                                searchable: documentTypeField.searchable,
-                                boost: documentTypeField.boost,
-                                fieldName: documentTypeField.fieldName,
-                              },
-                            });
-                          }
-                        }}
-                      />
-                    </span>
-                  </ClayTooltipProvider>
-                ) : (
-                  <ClayToggle
-                    toggled={documentTypeField?.sortable ?? false}
-                    onToggle={(sortable) => {
-                      if (
-                        documentTypeField &&
-                        documentTypeField.id &&
-                        documentTypeField.fieldType &&
-                        documentTypeField.name &&
-                        documentTypeField.fieldName &&
-                        typeof documentTypeField.searchable === "boolean"
-                      ) {
-                        updateDocumentTypeFieldMutate({
-                          variables: {
-                            documentTypeFieldId: documentTypeField.id,
-                            documentTypeId: documentTypeId,
-                            exclude: documentTypeField.exclude,
-                            description: documentTypeField.description,
-                            fieldType: documentTypeField.fieldType,
-                            name: documentTypeField.name,
-                            sortable,
-                            searchable: documentTypeField.searchable,
-                            boost: documentTypeField.boost,
-                            fieldName: documentTypeField.fieldName,
-                          },
-                        });
-                      }
+                {searchText !== "" && (
+                  <ClayButtonWithIcon
+                    aria-label=""
+                    symbol="times"
+                    className="component-action"
+                    onClick={() => {
+                      setSearchText("");
                     }}
+                    style={{ position: "absolute", right: "10px", top: "0px" }}
                   />
                 )}
-              </React.Fragment>
-            ),
-          },
-        ]}
-      />
-    </React.Fragment>
+              </div>
+            </ClayToolbar.Item>
+            <ClayToolbar.Item>
+              <Link to={"/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText}>
+                <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="search" aria-label="search" small />
+              </Link>
+            </ClayToolbar.Item>
+          </ClayToolbar.Nav>
+        </ContainerFluidWithoutView>
+      </ClayToolbar>
+
+      <ContainerFluid>
+        <div style={{ display: "flex", background: "white", overflowX: "auto", borderRight: "3px solid #00000017", alignItems: "stretch" }}>
+          <ClayList style={{ marginBottom: "0", width: "400px" }}>
+            {data.docTypeFieldsFromDocTypeByParent.edges.map(
+              ({
+                node,
+              }: {
+                node: {
+                  id: string;
+                  name: string;
+                  description: string;
+                  fieldType: FieldType.Text;
+                  boost: number;
+                  searchable: boolean;
+                  exclude: boolean;
+                  fieldName: string;
+                  jsonConfig: string;
+                  sortable: boolean;
+                };
+              }) => (
+                <ClayList.Item
+                  key={node.id}
+                  style={{ padding: "8px 8px" }}
+                  className={node.id === selectedDocumentId ? "active selected" : ""}
+                  onMouseOver={(event) => {
+                    const currentTarget = event.currentTarget as any;
+                    if (!currentTarget.classList.contains("active")) {
+                      currentTarget.classList.add("active");
+                    }
+                  }}
+                  onMouseOut={(event) => {
+                    const currentTarget = event.currentTarget as any;
+                    if (currentTarget.classList.contains("active") && !currentTarget.classList.contains("selected")) {
+                      currentTarget.classList.remove("active");
+                    }
+                  }}
+                >
+                  <style type="text/css">{StyleToggle}</style>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    {node?.id && (
+                      <Link
+                        style={{
+                          color: "#da1414",
+                          textDecoration: "none",
+                          font: "Helvetica",
+                          fontWeight: "700",
+                          fontSize: "15px",
+                          lineHeight: "44px",
+                        }}
+                        to={node.id}
+                      >
+                        {node.name}
+                      </Link>
+                    )}
+                    <div style={{ display: "flex", gap: "3px" }}>
+                      <div>
+                        <Link to={`newSubFields/${node?.id}/new`}>
+                          <button
+                            style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                            aria-label="Plus doc type fields"
+                            title="Plus doc type fields"
+                          >
+                            <ClayIcon symbol={"plus"} />
+                          </button>
+                        </Link>
+                      </div>
+                      <div>
+                        <DropDown
+                          trigger={
+                            <button
+                              style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                              aria-label="Open Drop Down for more option"
+                              title="Open Drop Down"
+                            >
+                              <ClayIcon symbol={"angle-down"} />
+                            </button>
+                          }
+                        >
+                          <DropDown.ItemList>
+                            <DropDown.Item>
+                              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                  <label>Searchable</label>
+                                </div>
+                                <div>
+                                  <ClayToggle
+                                    toggled={node?.searchable ?? false}
+                                    onToggle={(searchable) => {
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: searchable,
+                                            exclude: node.exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: node.sortable,
+                                          },
+                                        });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </DropDown.Item>
+                            <DropDown.Divider />
+                            <DropDown.Item>
+                              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                  <label>Exclude</label>
+                                </div>
+                                <div>
+                                  <ClayToggle
+                                    toggled={node?.exclude ?? false}
+                                    onToggle={(exclude) => {
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: node.searchable,
+                                            exclude: exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: node.sortable,
+                                          },
+                                        });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </DropDown.Item>
+                            <DropDown.Divider />
+                            <DropDown.Item>
+                              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                  <label>Sortable</label>
+                                </div>
+                                <div>
+                                  <ClayToggle
+                                    toggled={node?.sortable ?? false}
+                                    onToggle={(sortable) => {
+                                      if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                        updateDoctype({
+                                          variables: {
+                                            documentTypeId: documentTypeId,
+                                            documentTypeFieldId: node.id,
+                                            name: node.name,
+                                            description: node.description,
+                                            fieldType: node.fieldType,
+                                            boost: node.boost,
+                                            searchable: node.searchable,
+                                            exclude: node.exclude,
+                                            fieldName: node.fieldName,
+                                            jsonConfig: node.jsonConfig,
+                                            sortable: sortable,
+                                          },
+                                        });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </DropDown.Item>
+                          </DropDown.ItemList>
+                        </DropDown>
+                      </div>
+                      <div>
+                        <button style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}>
+                          <ClayIcon symbol={"angle-right"} onClick={() => handleDocumentClick(node.id)} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </ClayList.Item>
+              )
+            )}
+          </ClayList>
+          {selectedDocumentId && <ChildListComponent documentId={selectedDocumentId} documentTypeId={documentTypeId} />}
+        </div>
+      </ContainerFluid>
+    </div>
   );
 }
+
+interface ChildListComponentProps {
+  documentId: string;
+  documentTypeId: string | undefined;
+}
+
+const ChildListComponent: React.FC<ChildListComponentProps> = ({ documentId, documentTypeId }) => {
+  const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
+    variables: {
+      searchText: "",
+      parentId: Number(documentId),
+      docTypeId: documentTypeId || 0,
+    },
+  });
+
+  const [updateDoctype] = useCreateOrUpdateDocumentTypeFieldMutation({
+    refetchQueries: [DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
+  });
+
+  const [selectedChildDocumentId, setSelectedChildDocumentId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    setSelectedChildDocumentId(null);
+  }, [documentId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  const childDocuments = data.docTypeFieldsFromDocTypeByParent.edges;
+
+  const handleChildClick = (childId: string) => {
+    setSelectedChildDocumentId(childId);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex" }}>
+        <ClayList style={{ width: "400px" }}>
+          {childDocuments.map(
+            ({
+              node,
+            }: {
+              node: {
+                id: string;
+                name: string;
+                description: string;
+                fieldType: FieldType.Text;
+                boost: number;
+                searchable: boolean;
+                exclude: boolean;
+                fieldName: string;
+                jsonConfig: string;
+                sortable: boolean;
+              };
+            }) => (
+              <ClayList.Item
+                key={node.id}
+                style={{ cursor: "pointer", padding: "8px 8px" }}
+                className={node.id === selectedChildDocumentId ? "active selected" : ""}
+                onMouseOver={(event) => {
+                  const currentTarget = event.currentTarget as any;
+                  if (!currentTarget.classList.contains("active")) {
+                    currentTarget.classList.add("active");
+                  }
+                }}
+                onMouseOut={(event) => {
+                  const currentTarget = event.currentTarget as any;
+                  if (currentTarget.classList.contains("active") && !currentTarget.classList.contains("selected")) {
+                    currentTarget.classList.remove("active");
+                  }
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  {node?.id && (
+                    <Link
+                      style={{
+                        color: "#da1414",
+                        textDecoration: "none",
+                        font: "Helvetica",
+                        fontWeight: "700",
+                        fontSize: "15px",
+                        lineHeight: "44px",
+                      }}
+                      to={node.id}
+                    >
+                      {node.name}
+                    </Link>
+                  )}
+                  <div style={{ display: "flex", gap: "3px" }}>
+                    <div>
+                      <Link to={`newSubFields/${node?.id}/new`}>
+                        <button
+                          style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                          aria-label="Plus doc type fields"
+                          title="Plus doc type fields"
+                        >
+                          <ClayIcon symbol={"plus"} />
+                        </button>
+                      </Link>
+                    </div>
+                    <div>
+                      <DropDown
+                        trigger={
+                          <button
+                            style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
+                            aria-label="Open Drop Down for more option"
+                            title="Open Drop Down"
+                          >
+                            <ClayIcon symbol={"angle-down"} />
+                          </button>
+                        }
+                      >
+                        <DropDown.ItemList>
+                          <DropDown.Item>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Searchable</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.searchable ?? false}
+                                  onToggle={(searchable) => {
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: searchable,
+                                          exclude: node.exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: node.sortable,
+                                        },
+                                      });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                          <DropDown.Divider />
+                          <DropDown.Item>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Exclude</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.exclude ?? false}
+                                  onToggle={(exclude) => {
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: node.searchable,
+                                          exclude: exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: node.sortable,
+                                        },
+                                      });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                          <DropDown.Divider />
+                          <DropDown.Item>
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <div>
+                                <label>Sortable</label>
+                              </div>
+                              <div>
+                                <ClayToggle
+                                  toggled={node?.sortable ?? false}
+                                  onToggle={(sortable) => {
+                                    if (node && node.id && node.name && node.fieldName && node.fieldType && documentTypeId)
+                                      updateDoctype({
+                                        variables: {
+                                          documentTypeId: documentTypeId,
+                                          documentTypeFieldId: node.id,
+                                          name: node.name,
+                                          description: node.description,
+                                          fieldType: node.fieldType,
+                                          boost: node.boost,
+                                          searchable: node.searchable,
+                                          exclude: node.exclude,
+                                          fieldName: node.fieldName,
+                                          jsonConfig: node.jsonConfig,
+                                          sortable: sortable,
+                                        },
+                                      });
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </DropDown.Item>
+                        </DropDown.ItemList>
+                      </DropDown>
+                    </div>
+                    <div>
+                      <button style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}>
+                        <ClayIcon symbol={"angle-right"} onClick={() => handleChildClick(node.id)} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </ClayList.Item>
+            )
+          )}
+        </ClayList>
+        {selectedChildDocumentId && <ChildListComponent documentId={selectedChildDocumentId} documentTypeId={documentTypeId} />}
+      </div>
+    </div>
+  );
+};

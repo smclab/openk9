@@ -80,6 +80,16 @@
 .DateRangePicker_picker{
   @media (max-width:480px) {
   bottom: 30px !important;
+  left: 50% !important;
+  transform: translate(-50%, 0) !important;
+  }
+}
+
+.DateRangePicker_picker {
+  @media (min-width: 481px) and (max-width: 768px) {
+    bottom: 30px !important;
+    left:50% !important;
+    transform: translate(-50%, 0) !important;
   }
 }
 
