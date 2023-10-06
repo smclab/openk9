@@ -480,7 +480,7 @@ function useInfiniteResults<E>(
   const client = useOpenK9Client();
 
   return useInfiniteQuery(
-    ["results", searchQuery, sort, language, sortAfterKey] as const,
+    ["results", searchQuery, sort, language, sortAfterKey, result] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       const RangePage: [number, number] =
         sortAfterKey === "" ? [result, pageSize] : [0, pageSize];
