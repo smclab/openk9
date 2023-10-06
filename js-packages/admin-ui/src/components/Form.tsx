@@ -1700,6 +1700,8 @@ export function TemplateQueryComponent({
   setInputFields: React.Dispatch<React.SetStateAction<InputField[]>>;
   setType: (value: string) => void;
 }) {
+  const regex = /"(-?[0-9]+\.{0,1}[0-9]*)"/g;
+  recoveryValue = recoveryValue.replace(regex, "$1");
   const recoveryvalueObject = JSON.parse(recoveryValue);
   const handleTitleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const title = event.target.value;
