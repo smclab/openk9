@@ -213,7 +213,7 @@ export function App() {
               ref={(element) =>
                 openk9.updateConfiguration({
                   searchConfigurable: {
-                    btnSearch: false,
+                    btnSearch: true,
                     isShowSyntax: true,
                     element,
                   },
@@ -425,6 +425,10 @@ export function App() {
       <div
         className="openk9-preview-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ details: element })}
+        // ref={(element) =>
+        //   openk9.updateConfiguration({
+        //     filtersHorizontal: { element: element, callback: () => {} },
+        //   })
         css={css`
           grid-area: detail;
           overflow-y: auto;

@@ -314,11 +314,11 @@ export function Search({
                 background-color: inherit;
                 color: ${isMobile
                   ? "black"
-                  : textBtn
+                  : btnSearch
                   ? "black"
                   : showSyntax
                   ? "transparent"
-                  : "inherit"};
+                  : "black"};
               `}
               spellCheck="false"
               onSelect={(event) => {
@@ -379,7 +379,8 @@ export function Search({
                       });
                     }
                   }
-                  option?.value ? setTextBtn(option?.value) : null;
+
+                  if (btnSearch && option?.value) setTextBtn(option?.value);
 
                   if (span) {
                     if (isSearchOnInputChange) {

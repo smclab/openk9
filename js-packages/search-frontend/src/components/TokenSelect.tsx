@@ -195,12 +195,14 @@ export function TokenSelect({
               <div
                 key={index}
                 onClick={() => {
-                  setTextBtn(getTokenLabel(option) || '')
-                  isBtnSearch ?  selectionsDispatch({
-                    type: "set-text",
-                    text: option?.value,
-                    textOnchange: option?.value,
-                  }) : null
+                  if (isBtnSearch) setTextBtn(getTokenLabel(option) || "");
+                  isBtnSearch
+                    ? selectionsDispatch({
+                        type: "set-text",
+                        text: option?.value,
+                        textOnchange: option?.value,
+                      })
+                    : null;
                   if (option.tokenType === "AUTOCOMPLETE") {
                     onSelectText(option);
                   } else {

@@ -403,7 +403,7 @@ function FiltersHorizontal({
                   }
                 `}
               >
-                <button
+                {/* <button
                   className="openk9-load-more-button"
                   css={css`
                     border: none;
@@ -417,6 +417,9 @@ function FiltersHorizontal({
                     align-items: center;
                     gap: 10px;
                     cursor: pointer;
+                    &:hover {
+                      text-decoration: underline;
+                    }
                   `}
                   onClick={() => {
                     suggestions.fetchNextPage();
@@ -424,6 +427,144 @@ function FiltersHorizontal({
                 >
                   {t("load-more") || "Load More"}
                   <ArrowDownSvg />
+                </button> */}
+
+                {/* <button
+                  className="button type1"
+                  css={css`
+                    height: 45px;
+                    width: 170px;
+                    position: relative;
+                    background-color: transparent;
+                    cursor: pointer;
+                    border: 2px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    overflow: hidden;
+                    border-radius: 30px;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    transition: all 0.5s ease-in-out;
+                    display: flex;
+                    gap: 3px;
+                    align-items: center;
+                    justify-content: center;
+
+                    .btn-txt {
+                      z-index: 1;
+                      font-weight: 800;
+                    }
+
+                    &::after {
+                      content: "";
+                      position: absolute;
+                      left: 0;
+                      top: 0;
+                      transition: all 0.5s ease-in-out;
+                      background-color: var(
+                        --openk9-embeddable-search--primary-color
+                      );
+                      border-radius: 30px;
+                      visibility: hidden;
+                      height: 10px;
+                      width: 10px;
+                      z-index: -1;
+                    }
+
+                    &:hover {
+                      color: #fff;
+                      border: none;
+
+                      &::after {
+                        visibility: visible;
+                        transform: scale(100) translateX(2px);
+                      }
+
+                      .openk9-logo-arrow-down-color {
+                        fill: white;
+                        transition-delay: 0.23s; 
+                      }
+                    }
+                  `}
+                  onClick={() => {
+                    suggestions.fetchNextPage();
+                  }}
+                >
+                  <span className="btn-txt">
+                    {t("load-more") || "Load More"}
+                  </span>
+                  <ArrowDownSvg
+                    fill="var(
+                        --openk9-embeddable-search--primary-color
+                      );"
+                    size="18px"
+                  />
+                </button> */}
+
+                <button
+                  className="button type1"
+                  css={css`
+                    height: 45px;
+                    width: 170px;
+                    position: relative;
+                    background-color: transparent;
+                    cursor: pointer;
+                    border: 2px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    overflow: hidden;
+                    border-radius: 30px;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    transition: all 0.5s ease-in-out;
+                    display: flex;
+                    gap: 3px;
+                    align-items: center;
+                    justify-content: center;
+
+                    .btn-txt {
+                      z-index: 1;
+                      font-weight: 800;
+                    }
+
+                    &::after {
+                      content: "";
+                      position: absolute;
+                      left: 0;
+                      top: 0;
+                      transition: all 0.5s ease-in-out;
+                      background-color: var(
+                        --openk9-embeddable-search--primary-color
+                      );
+                      border-radius: 30px;
+                      visibility: hidden;
+                      height: 10px;
+                      width: 10px;
+                      z-index: -1;
+                    }
+
+                    &:hover {
+                      color: #fff;
+                      border: 2px solid
+                        var(--openk9-embeddable-search--primary-color);
+                      background-color: var(
+                        --openk9-embeddable-search--primary-color
+                      );
+                      .openk9-logo-arrow-down-color {
+                        fill: white;
+                        transition-delay: 0.23s;
+                      }
+                    }
+                  `}
+                  onClick={() => {
+                    suggestions.fetchNextPage();
+                  }}
+                >
+                  <span className="btn-txt">
+                    {t("load-more") || "Load More"}
+                  </span>
+                  <ArrowDownSvg
+                    fill="var(
+                        --openk9-embeddable-search--primary-color
+                      );"
+                    size="18px"
+                  />
                 </button>
               </div>
             )}
