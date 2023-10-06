@@ -350,9 +350,12 @@ export function Main({
             pagination={numberOfResults}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            anchor={configuration.resultListPagination?.anchor}
           />
         </I18nextProvider>,
-        configuration.resultListPagination,
+        configuration.resultListPagination
+        ? configuration.resultListPagination.element
+        : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

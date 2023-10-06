@@ -234,6 +234,11 @@ type FilterProps = {
   numberItems?: number | null | undefined;
 };
 
+type ResulListPaginationProps = {
+  element: Element | string | null;
+  anchor?: React.MutableRefObject<HTMLDivElement | null>;
+}
+
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
@@ -253,7 +258,7 @@ export type Configuration = {
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   sortable: Element | string | null;
   results: Element | string | null;
-  resultListPagination: Element | string | null;
+  resultListPagination: ResulListPaginationProps | null;
   details: Element | string | null;
   calendar: Element | string | null;
   login: Element | string | null;

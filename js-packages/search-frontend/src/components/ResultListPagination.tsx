@@ -38,6 +38,7 @@ type ResultsProps<E> = {
   pagination: number;
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  anchor?: React.MutableRefObject<HTMLDivElement | null>;
 };
 function ResultsPagination<E>({
   displayMode,
@@ -56,6 +57,7 @@ function ResultsPagination<E>({
   pagination,
   currentPage,
   setCurrentPage,
+  anchor,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -86,6 +88,7 @@ function ResultsPagination<E>({
           changePage={changePage}
           elementForPage={pagination}
           setCurrentPage={setCurrentPage}
+          anchor={anchor}
         />
       );
   }
@@ -196,6 +199,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   elementForPage: number;
   changePage: (page: number) => void;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  anchor?: React.MutableRefObject<HTMLDivElement | null>;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -215,6 +219,7 @@ export function InfiniteResults<E>({
   changePage,
   elementForPage,
   setCurrentPage,
+  anchor,
 }: InfiniteResultsProps<E>) {
   const result = currentPage * elementForPage;
   const results = useInfiniteResults<E>(
@@ -242,11 +247,10 @@ export function InfiniteResults<E>({
     }
   }, [currentPage]);
 
-  const overlayRef = React.useRef<HTMLDivElement | null>(null);
 
   function scrollToOverlay() {
-    if (overlayRef.current) {
-      overlayRef.current.scrollIntoView({
+    if (anchor && anchor.current) {
+      anchor.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
@@ -289,7 +293,7 @@ export function InfiniteResults<E>({
 
   return (
     <React.Fragment>
-      <div ref={overlayRef} style={{ overflowX: "hidden" }} className="scroll">
+      <div style={{ overflowX: "hidden" }} className="scroll">
         {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
           <div
             className="openk9-infinite-results-container-wrapper"
