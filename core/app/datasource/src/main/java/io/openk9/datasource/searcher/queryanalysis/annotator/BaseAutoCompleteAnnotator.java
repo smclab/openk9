@@ -102,7 +102,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (!value.equals(token)) {
+						if (!value.equals(token) || ((String) value).startsWith(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$AUTOCOMPLETE",
@@ -117,7 +117,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-							if (!e2.getValue().equals(token)) {
+								if (!e2.getValue().equals(token) || ((String) e2.getValue()).startsWith(token)) {
 								categorySemantics.add(
 									CategorySemantics.of(
 										"$AUTOCOMPLETE",
