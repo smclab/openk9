@@ -23,11 +23,18 @@ function Detail<E>(props: DetailProps<E>) {
   const renderers = useRenderers();
   const { t } = useTranslation();
 
+  const scrollContainer = document.querySelector(
+    ".openk9-detail-overlay-scrollbars-component",
+  );
+
+  if (scrollContainer) {
+    scrollContainer.scrollTop = 0;
+  }
   if (!result) {
     return <NoDetail />;
   }
   return (
-    <OverlayScrollbarsComponent
+    <div
       className="openk9-detail-overlay-scrollbars-component"
       css={css`
         position: relative;
@@ -122,7 +129,7 @@ function Detail<E>(props: DetailProps<E>) {
           return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
         })()}
       </div>
-    </OverlayScrollbarsComponent>
+    </div>
   );
 }
 export const DetailMemo = React.memo(Detail);
