@@ -181,7 +181,11 @@ public class TikaProcessor {
 
                     String text = tikaContent.getText();
 
-                    text = text.replaceAll("\\s+", " ");
+                    text = text.replaceAll("[.,]+", "")
+                        .replaceAll("_", "")
+                        .replaceAll("\\s+", " ")
+                        .replaceAll("\\n", " ")
+                        .replaceAll("\\t", " ");
 
                     document.put("content", text);
 
@@ -191,9 +195,6 @@ public class TikaProcessor {
                     } else {
                         document.put("summary", text);
                     }
-
-                    text = text.replaceAll("\\n", " ");
-                    text = text.replaceAll("\\t", " ");
 
                     if (document.getString("title") == null) {
                         document.put("title", title);
