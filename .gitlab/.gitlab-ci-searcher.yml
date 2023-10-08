@@ -39,14 +39,14 @@ Build Latest Searcher Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - main
+      - keyword-autocomplete
   when:
     manual
   except:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.5.0-keyword-autocomplete-SNAPSHOT
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-searcher" -F ref=master $DEV_TRIGGER_URL
   cache:
