@@ -31,7 +31,7 @@ public class AnnotatorFactory {
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath());
-			case KEYWORD_AUTOCOMPLETE -> new BaseAutoCompleteAnnotator(
+			case KEYWORD_AUTOCOMPLETE -> new BasekeywordAutoCompleteAnnotator(
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath());
