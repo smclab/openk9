@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
+public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
-	public BasekeywordAutoCompleteAnnotator(
+	public BaseKeywordAutoCompleteAnnotator(
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
@@ -102,7 +102,7 @@ public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (!value.equals(token)) {
+						if (!value.equals(token) && ((String) value).startsWith(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$KEYWORD_AUTOCOMPLETE",
@@ -118,7 +118,7 @@ public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-							if (!e2.getValue().equals(token)) {
+							if (!e2.getValue().equals(token) && ((String) e2.getValue()).startsWith(token)) {
 								categorySemantics.add(
 									CategorySemantics.of(
 										"$KEYWORD_AUTOCOMPLETE",
@@ -181,11 +181,11 @@ public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
 	protected final String includeField;
 
 	private static final Logger _log = Logger.getLogger(
-		BasekeywordAutoCompleteAnnotator.class);
+		BaseKeywordAutoCompleteAnnotator.class);
 
 	@Override
 	public int getLastTokenCount() {
-		return 2;
+		return 3;
 	}
 
 }
