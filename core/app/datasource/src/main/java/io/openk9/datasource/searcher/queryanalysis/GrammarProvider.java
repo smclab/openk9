@@ -157,7 +157,8 @@ public class GrammarProvider {
 			.in(
 				AnnotatorType.AGGREGATOR,
 				AnnotatorType.AUTOCOMPLETE,
-				AnnotatorType.AUTOCORRECT
+				AnnotatorType.AUTOCORRECT,
+				AnnotatorType.KEYWORD_AUTOCOMPLETE
 			);
 	}
 

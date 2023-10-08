@@ -108,10 +108,10 @@ public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
 									"$KEYWORD_AUTOCOMPLETE",
 									Map.of(
 										"tokenType", "KEYWORD_AUTOCOMPLETE",
-										"keywordKey", label + "keyword",
+										"keywordKey", label + ".keyword",
 										"label", label,
 										"value", value,
-										"score", 0.1f
+										"score", 0.2f
 									)
 								));
 						}
@@ -124,10 +124,10 @@ public class BasekeywordAutoCompleteAnnotator extends BaseAnnotator {
 										"$KEYWORD_AUTOCOMPLETE",
 										Map.of(
 											"tokenType", "KEYWORD_AUTOCOMPLETE",
-											"keywordKey", label + "keyword",
+											"keywordKey", label + ".keyword",
 											"label", label,
 											"value", e2.getValue(),
-											"score", 0.1f
+											"score", 0.2f
 										)
 									)
 								);
