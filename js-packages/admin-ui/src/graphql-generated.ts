@@ -12762,4 +12762,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-09T09:30:19+02:00
+// Generated on 2023-10-09T15:28:45+02:00
