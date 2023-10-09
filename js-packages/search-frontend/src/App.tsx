@@ -379,7 +379,11 @@ export function App() {
       ></div>
       <div
         className="openk9-results-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ results: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            results: element,
+          })
+        }
         css={css`
           grid-area: result;
           overflow-y: auto;
@@ -425,10 +429,6 @@ export function App() {
       <div
         className="openk9-preview-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ details: element })}
-        // ref={(element) =>
-        //   openk9.updateConfiguration({
-        //     filtersHorizontal: { element: element, callback: () => {} },
-        //   })
         css={css`
           grid-area: detail;
           overflow-y: auto;

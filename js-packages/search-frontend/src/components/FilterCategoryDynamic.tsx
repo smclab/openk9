@@ -13,6 +13,7 @@ import { PlusSvg } from "../svgElement/PlusSvg";
 import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
 import { useTranslation } from "react-i18next";
 import { capitalize } from "lodash";
+import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -26,7 +27,7 @@ type FilterCategoryDynamicallyProps = {
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   language: string;
-  numberItems?: number | null | undefined
+  numberItems?: number | null | undefined;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
@@ -361,18 +362,32 @@ function FilterCategoryDynamic({
                 marginTop: "10px",
               }}
             >
-              <CreateLabel
-                label={t("load-more")}
-                action={() => {
+              <button
+                className="openk9-load-more-button"
+                aria-label={t("load-more-filter") || "load more filters"}
+                css={css`
+                  background: inherit;
+                  color: var(--openk9-embeddable-search--primary-color);
+                  font-size: 14px;
+                  font-style: normal;
+                  font-weight: 700;
+                  line-height: normal;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  cursor: pointer;
+                  padding: 8px 16px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--primary-color);
+                  border-radius: 20px;
+                `}
+                onClick={() => {
                   suggestions.fetchNextPage();
                 }}
-                svgIcon={<PlusSvg size={12} />}
-                sizeHeight="22px"
-                sizeFont="16px"
-                marginOfSvg="5px"
-                disabled={!isUniqueLoadMore}
-                widthLabel={"100%"}
-              />
+              >
+                {t("load-more") || "Load More"}
+                <ArrowDownSvg size="18px" />
+              </button>
             </div>
           )}
         </React.Fragment>

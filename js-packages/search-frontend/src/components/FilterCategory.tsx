@@ -389,8 +389,9 @@ function FilterCategory({
               `}
             >
               <button
+                className="openk9-load-more-button"
+                aria-label={t("load-more-filter") || "load more filters"}
                 css={css`
-                  border: none;
                   background: inherit;
                   color: var(--openk9-embeddable-search--primary-color);
                   font-size: 14px;
@@ -401,13 +402,17 @@ function FilterCategory({
                   align-items: center;
                   gap: 10px;
                   cursor: pointer;
+                  padding: 8px 16px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--primary-color);
+                  border-radius: 20px;
                 `}
                 onClick={() => {
                   suggestions.fetchNextPage();
                 }}
               >
                 {t("load-more") || "Load More"}
-                <ArrowDownSvg />
+                <ArrowDownSvg size="18px" />
               </button>
             </div>
           )}
