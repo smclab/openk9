@@ -65,7 +65,7 @@ export function Analyzer() {
     variables: { id: analyzerId as string },
     skip: !analyzerId || analyzerId === "new",
   });
-  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(analyzerQuery.data?.analyzer?.jsonConfig || `{}`));
+  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(analyzerQuery.data?.analyzer?.jsonConfig || `${TemplateAnalyzers[0].Json}`));
   const [IsEmpty, setIsEmpty] = React.useState(false);
   const [isCustom, setIsCustom] = React.useState(false);
   const [createOrUpdateAnalyzerMutate, createOrUpdateanalyzerMutation] = useCreateOrUpdateAnalyzerMutation({
