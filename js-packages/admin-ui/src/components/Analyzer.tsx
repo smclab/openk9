@@ -95,7 +95,7 @@ export function Analyzer() {
     isLoading: analyzerQuery.loading || createOrUpdateanalyzerMutation.loading,
     onSubmit(data) {
       createOrUpdateAnalyzerMutate({
-        variables: { id: analyzerId !== "new" ? analyzerId : undefined, ...data },
+      variables: { id: analyzerId !== "new" ? analyzerId : undefined, ...data },
       });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateanalyzerMutation.data?.analyzer?.fieldValidators),
@@ -293,7 +293,7 @@ const TemplateAnalyzers = [
     description: "custom analyzer.",
     Json: `
   {
-   
+    "type": "select-type"
   }`,
     descriptionAttribute: `
   {
@@ -306,7 +306,7 @@ const TemplateAnalyzers = [
     description: "custom analyzer.",
     Json: `
   {
-   
+    "type": "custom"
   }`,
     descriptionAttribute: `
   {
@@ -320,6 +320,7 @@ const TemplateAnalyzers = [
       "The fingerprint analyzer implements a fingerprinting algorithm which is used by the OpenRefine project to assist in clustering.",
     Json: `
     {
+      "type": "fingerprint",
       "separator":" ",
       "max_output_size":255,
       "stopwords":"_none_",
@@ -339,6 +340,7 @@ const TemplateAnalyzers = [
     description: "The keyword analyzer is a “noop” analyzer which returns the entire input string as a single token.",
     Json: `
     {
+      "type": "keyword"
     }`,
     descriptionAttribute: `
     {
@@ -350,6 +352,7 @@ const TemplateAnalyzers = [
     description: "A set of analyzers aimed at analyzing specific language text.",
     Json: `
     {
+      "type": "language"
     }`,
     descriptionAttribute: `
     {
@@ -362,6 +365,7 @@ const TemplateAnalyzers = [
       "The simple analyzer breaks text into tokens at any non-letter character, such as numbers, spaces, hyphens and apostrophes, discards non-letter characters, and changes uppercase to lowercase.",
     Json: `
     {
+      "type": "simple"
     }`,
     visible: "false",
     descriptionAttribute: `
@@ -374,6 +378,7 @@ const TemplateAnalyzers = [
     description: "The standard analyzer is the default analyzer which is used if none is specified.",
     Json: `
     {
+      "type": "standard",
       "max_token_length":255,
       "stopwords":"_none_",
       "stopwords_path":""
@@ -392,6 +397,7 @@ const TemplateAnalyzers = [
       "The stop analyzer is the same as the simple analyzer but adds support for removing stop words. It defaults to using the _english_ stop words.",
     Json: `
     {
+      "type": "stop",
       "stopwords":"none",
       "stopwords_path":""
     }`,
@@ -407,6 +413,7 @@ const TemplateAnalyzers = [
     description: "The whitespace analyzer breaks text into terms whenever it encounters a whitespace character.",
     Json: `
     {
+      "type": "whitespace"
      }`,
     visible: "false",
     descriptionAttribute: `
