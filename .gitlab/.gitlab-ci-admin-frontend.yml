@@ -1,15 +1,16 @@
 Build Latest Admin Ui Docker Image:
-  image: docker:19.03.13
+  image: docker:24.0.2
   services:
-    - docker:19.03.13-dind
+    - docker:24.0.2-dind
   stage: build-docker
   variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   only:
     refs:
-      - main
+      - fix-docker-host
     changes:
       - js-packages/admin-ui/**/*
       - .gitlab/.gitlab-ci-admin-frontend.yml
@@ -25,14 +26,15 @@ Build Latest Admin Ui Docker Image:
 
 
 Build Tagged Admin Ui Docker Image:
-  image: docker:19.03.13
+  image: docker:24.0.2
   services:
-    - docker:19.03.13-dind
+    - docker:24.0.2-dind
   stage: build-docker
   variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   only:
     refs:
       - tags
