@@ -404,7 +404,7 @@ function FiltersHorizontal({
                 `}
               >
                 <button
-                  className="openk9-load-more-button"
+                  className="openk9-load-more-button horizontal-filter-load-more"
                   aria-label={t("load-more-filter") || "load more filters"}
                   css={css`
                     background: inherit;

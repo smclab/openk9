@@ -370,7 +370,7 @@ function FilterCategoryDynamic({
                   color: var(--openk9-embeddable-search--primary-color);
                   font-size: 14px;
                   font-style: normal;
-                  font-weight: 700;
+                  font-weight: 400;
                   line-height: normal;
                   display: flex;
                   align-items: center;
@@ -386,7 +386,7 @@ function FilterCategoryDynamic({
                 }}
               >
                 {t("load-more") || "Load More"}
-                <ArrowDownSvg size="18px" />
+                <ArrowDownSvg size="16px" />
               </button>
             </div>
           )}
