@@ -975,18 +975,20 @@ export function AssociatedEntities<Q>({
                             <ClayList.ItemText>{edge?.node?.description || "..."}</ClayList.ItemText>
                           </ClayList.ItemField>
                           <ClayList.ItemField>
-                            <ClayList.QuickActionMenu>
+                            <div>
                               {canAct && (
-                                <ClayList.QuickActionMenu.Item
-                                  onClick={() => {
-                                    if (edge?.node?.id) {
-                                      addMutate({ variables: { parentId, childId: edge.node.id } });
-                                    }
-                                  }}
-                                  symbol="link"
-                                />
+                                <button className="component-action quick-action-item">
+                                  <ClayIcon
+                                    symbol={"link"}
+                                    onClick={() => {
+                                      if (edge?.node?.id) {
+                                        addMutate({ variables: { parentId, childId: edge.node.id } });
+                                      }
+                                    }}
+                                  />
+                                </button>
                               )}
-                            </ClayList.QuickActionMenu>
+                            </div>
                           </ClayList.ItemField>
                         </ClayList.Item>
                       );
