@@ -107,7 +107,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 								CategorySemantics.of(
 									"$KEYWORD_AUTOCOMPLETE",
 									Map.of(
-										"tokenType", "KEYWORD_AUTOCOMPLETE",
+										"tokenType", "TEXT",
 										"keywordKey", label + ".keyword",
 										"label", label,
 										"value", value,
@@ -123,7 +123,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 									CategorySemantics.of(
 										"$KEYWORD_AUTOCOMPLETE",
 										Map.of(
-											"tokenType", "KEYWORD_AUTOCOMPLETE",
+											"tokenType", "TEXT",
 											"keywordKey", label + ".keyword",
 											"label", label,
 											"value", e2.getValue(),
