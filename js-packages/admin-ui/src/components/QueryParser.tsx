@@ -84,6 +84,8 @@ export function QueryParserConfig() {
     originalValues: queryParserQuery.data?.queryParserConfig,
     isLoading: queryParserQuery.loading || queryParserQuery.loading,
     onSubmit(data) {
+      const regex = /"(-?[0-9]+\.{0,1}[0-9]*)"/g;
+      data.jsonConfig = data.jsonConfig.replace(regex, "$1");
       createOrUpdateQueryParserConfigMutate({
         variables: {
           searchConfigId: searchConfigId as string,
