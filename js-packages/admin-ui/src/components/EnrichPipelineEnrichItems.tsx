@@ -138,6 +138,9 @@ export function EnrichPipelineEnrichItems() {
   });
   const navigate = useNavigate();
   const canAct = !addMutation.loading && !removeMutation.loading && !sortMutation.loading;
+  React.useEffect(() => {
+    if (open === true) unassociatedListQuery.refetch();
+  }, [open]);
   if (!enrichPipelineId || enrichPipelineId === "new") return null;
   return (
     <ContainerFluidWithoutView>
