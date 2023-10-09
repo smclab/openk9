@@ -113,6 +113,7 @@ export enum AnnotatorType {
   Autocorrect = 'AUTOCORRECT',
   Doctype = 'DOCTYPE',
   Keyword = 'KEYWORD',
+  KeywordAutocomplete = 'KEYWORD_AUTOCOMPLETE',
   Ner = 'NER',
   NerAutocomplete = 'NER_AUTOCOMPLETE',
   Stopword = 'STOPWORD',
@@ -4756,7 +4757,7 @@ export type TabTokenTabQueryVariables = Exact<{
 }>;
 
 
-export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
 
 export type CreateOrUpdateTabTokenMutationVariables = Exact<{
   tabTokenId?: InputMaybe<Scalars['ID']>;
@@ -11782,6 +11783,7 @@ export const TabTokenTabDocument = gql`
     description
     value
     filter
+    tokenType
     docTypeField {
       id
     }
@@ -12760,4 +12762,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-04T14:09:21+02:00
+// Generated on 2023-10-09T09:30:19+02:00

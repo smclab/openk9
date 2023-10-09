@@ -32,6 +32,7 @@ const TabTokenQuery = gql`
       description
       value
       filter
+      tokenType
       docTypeField {
         id
       }
