@@ -52,21 +52,11 @@ module.exports = {
       watch: true,
     },
     proxy: {
-      "/api/searcher": {
+      "/api": {
         target: "https://test.openk9.io",
         changeOrigin: true,
         secure: false,
       },
-      "/api/datasource": {
-        target: "https://test.openk9.io",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/api/file-manager": {
-        target: "https://test.openk9.io",
-        changeOrigin: true,
-        secure: false,
-      }
     },
   },
 };
