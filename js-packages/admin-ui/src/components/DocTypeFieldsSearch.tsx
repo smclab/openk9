@@ -35,7 +35,7 @@ export function DocTypeFieldsSearch() {
                     setSearchTextDoc(event.currentTarget.value);
                   }}
                 />
-                {searchText !== "" && (
+                {searchTextDoc !== "" && (
                   <ClayButtonWithIcon
                     aria-label=""
                     symbol="times"

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { QueryResult, gql, useQuery } from "@apollo/client";
 import {
   DocTypeFieldsByParentQuery,
@@ -64,6 +65,7 @@ export function DocumentTypeFields() {
 
   const [selectedDocumentId, setSelectedDocumentId] = React.useState<string | null>(null);
   const [searchText, setSearchText] = React.useState("");
+  const navigate = useNavigate();
 
   const { data, loading, error } = useQuery(DocumentTypeFieldsParentQuery, {
     variables: {
@@ -102,6 +104,15 @@ export function DocumentTypeFields() {
                   onChange={(event) => {
                     setSearchText(event.currentTarget.value);
                   }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && searchText !== "") {
+                      event.preventDefault();
+                      setSearchText(event.currentTarget.value);
+                      navigate(
+                        "/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText
+                      );
+                    }
+                  }}
                 />
                 {searchText !== "" && (
                   <ClayButtonWithIcon
@@ -117,9 +128,11 @@ export function DocumentTypeFields() {
               </div>
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <Link to={"/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText}>
-                <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="search" aria-label="search" small />
-              </Link>
+              {searchText !== "" && (
+                <Link to={"/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText}>
+                  <ClayButtonWithIcon className={`${ClassNameButton} btn-sm`} symbol="search" aria-label="search" small />
+                </Link>
+              )}
             </ClayToolbar.Item>
           </ClayToolbar.Nav>
         </ContainerFluidWithoutView>
