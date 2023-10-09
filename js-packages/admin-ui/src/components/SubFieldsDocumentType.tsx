@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
 import { ClassNameButton } from "../App";
+import { DocumentTypeFieldsParentQuery } from "./DocumentTypeFields";
 
 export const DocumentTypeFieldsQuery = gql`
   query DocumentTypeFields($documentTypeId: ID!, $searchText: String, $cursor: String, $parentId: BigInteger!) {
@@ -142,10 +143,9 @@ export function SubFieldsDocumentType() {
     variables: { id: subFieldID as string },
     skip: !subFieldID || subFieldID === "new",
   });
-
   const [createOrUpdateDocumentTypeSubFieldMutate, createOrUpdateDocumentTypeSubFieldMutation] =
     useCreateOrUpdateDocumentTypeSubFieldsMutation({
-      refetchQueries: [DocumentTypeFieldsQuery],
+      refetchQueries: [DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
       onCompleted(data) {
         if (data.createSubField?.entity) {
           navigate(`/document-types/${documentTypeId}/document-type-fields`, { replace: true });
