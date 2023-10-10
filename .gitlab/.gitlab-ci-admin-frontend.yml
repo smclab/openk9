@@ -10,7 +10,7 @@ Build Latest Admin Ui Docker Image:
     DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   only:
     refs:
-      - fix-docker-host
+      - main
     changes:
       - js-packages/admin-ui/**/*
       - .gitlab/.gitlab-ci-admin-frontend.yml
