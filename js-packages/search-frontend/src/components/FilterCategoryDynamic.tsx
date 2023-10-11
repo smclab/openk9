@@ -354,13 +354,18 @@ function FilterCategoryDynamic({
           </div>
           {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div
-              style={{
-                textAlign: "center",
-                width: "100%",
-                display: "flex",
-                marginLeft: "12px",
-                marginTop: "10px",
-              }}
+              className="openk9-container-load-more"
+              css={css`
+                text-align: center;
+                width: 100%;
+                display: flex;
+                margin-left: 12px;
+                margin-top: 10px;
+                justify-content: center;
+                @media (max-width: 480px) {
+                  margin-top: 15px;
+                }
+              `}
             >
               <button
                 className="openk9-load-more-button"
