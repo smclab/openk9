@@ -14,6 +14,7 @@ type TabsProps = {
   onSelectedTabIndexChange(index: number): void;
   onConfigurationChange: ConfigurationUpdateFunction;
   language: string;
+  onAction?(): void;
 };
 function Tabs({
   tabs,
@@ -21,6 +22,7 @@ function Tabs({
   onSelectedTabIndexChange,
   onConfigurationChange,
   language,
+  onAction,
 }: TabsProps) {
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -95,6 +97,7 @@ function Tabs({
                 onClick={() => {
                   onSelectedTabIndexChange(index);
                   onConfigurationChange({ filterTokens: [] });
+                  if (onAction) onAction();
                 }}
               >
                 {tabTraslation.toUpperCase()}

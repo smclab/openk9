@@ -237,7 +237,12 @@ type FilterProps = {
 type ResulListPaginationProps = {
   element: Element | string | null;
   anchor?: React.MutableRefObject<HTMLDivElement | null>;
-}
+};
+
+type TabsProps = {
+  element: Element | string | null;
+  onAction(): void;
+};
 
 export type Configuration = {
   enabled: boolean;
@@ -274,6 +279,7 @@ export type Configuration = {
   tenant: string | null;
   numberResult: number | null | undefined;
   isQueryAnalysis: boolean | null;
+  tabsConfigurable: TabsProps | null;
   token: string | null;
   totalResult: Element | string | null;
   useKeycloak: boolean;
@@ -318,6 +324,7 @@ const defaultConfiguration: Configuration = {
   searchReplaceText: true,
   isQueryAnalysis: true,
   numberResult: null,
+  tabsConfigurable: null,
   filterTokens: [],
   defaultTokens: [],
   resultsDisplayMode: { type: "infinite" },

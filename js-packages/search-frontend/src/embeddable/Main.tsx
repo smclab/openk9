@@ -213,6 +213,21 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <TabsMemo
+            tabs={tabs}
+            selectedTabIndex={selectedTabIndex}
+            onSelectedTabIndexChange={setSelectedTabIndex}
+            onConfigurationChange={onConfigurationChange}
+            language={languageSelect}
+            onAction={configuration.tabsConfigurable?.onAction}
+          />
+        </I18nextProvider>,
+        configuration.tabsConfigurable
+          ? configuration.tabsConfigurable.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <FiltersMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
@@ -354,8 +369,8 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.resultListPagination
-        ? configuration.resultListPagination.element
-        : null,
+          ? configuration.resultListPagination.element
+          : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
