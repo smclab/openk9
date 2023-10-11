@@ -224,7 +224,7 @@ function FilterCategoryDynamic({
             {filters.map((suggestion, index) => {
               const asSearchToken = mapSuggestionToSearchToken(
                 suggestion,
-                true,
+                false,
               );
               const isChecked = tokens.some((searchToken) => {
                 if (
