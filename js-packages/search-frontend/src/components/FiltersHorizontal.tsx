@@ -323,7 +323,9 @@ function FiltersHorizontal({
                     return (
                       element.values &&
                       element.values[0] === token.value &&
-                      "goToSuggestion" in element
+                      "goToSuggestion" in element &&
+                      element.suggestionCategoryId ===
+                        token.suggestionCategoryId
                     );
                   });
                   return (
