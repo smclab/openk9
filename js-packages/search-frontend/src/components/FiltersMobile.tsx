@@ -123,6 +123,7 @@ function FiltersMobile<E>({
         dynamicFilters={dynamicFilters}
         language={language}
         sortAfterKey={sortAfterKey}
+        numberOfResults={10}
       />
     </React.Fragment>
   );

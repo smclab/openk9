@@ -1,0 +1,20 @@
+/* SelectStyles.css */
+
+.openk9-react-select__control {
+    border-radius: 50px!important;
+    background-color: #FAFAFA !important;
+    border: 1px solid #FAFAFA !important;
+    box-shadow: 0 0 0 1px var(--openk9-embeddable-search--active-color) !important;
+  }
+  
+  .openk9-react-select__control:hover {
+    border: 1px solid var(--openk9-embeddable-search--active-color) !important;
+  }
+
+  .select-custom{
+    border-radius:20px;
+    border:1px solid var(--openk9-embeddable-search--active-color) !important;
+  }
+
+
+  

@@ -5,16 +5,17 @@ import { useQuery } from "react-query";
 import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { components } from "react-select";
+import "./SortResultList.css";
 
 export function SortResultList({
   setSortResult,
-background = "white",
+  background = "white",
   minHeight = "40px",
   color = "#7e7e7e",
   relevance = "relevance",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
-background?: string;
+  background?: string;
   minHeight?: string;
   color?: string;
   relevance?: string;
@@ -79,16 +80,6 @@ background?: string;
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
-      borderRadius: "50px",
-      backgroundColor: "#FAFAFA",
-      border:
-        !state.isFocused || !state.isHovered
-          ? "1px solid #FAFAFA"
-          : "1px solid var(--openk9-embeddable-search--active-color)",
-      boxShadow: "0 0 0 1px var(--openk9-embeddable-search--active-color)",
-      ":hover": {
-        border: "1px solid var(--openk9-embeddable-search--active-color)",
-      },
     }),
     menu: (provided: any, state: any) => ({
       ...provided,
@@ -115,6 +106,8 @@ background?: string;
   return (
     <span className="openk9-container-sort-result-list-component">
       <Select
+        className="openk9-react-select-container"
+        classNamePrefix="openk9-react-select"
         defaultValue={startValue}
         options={sortOptions}
         components={{ SingleValue }}
