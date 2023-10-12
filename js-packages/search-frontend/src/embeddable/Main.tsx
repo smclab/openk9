@@ -287,6 +287,7 @@ export function Main({
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
+            isDynamicElement={isDynamicElement}
             numberOfResults={numberOfResults}
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
@@ -748,14 +749,17 @@ function useSearch({
       ),
     );
   }, [isSvaleQuery, debounced.text]);
-
+  const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
+    searchTokenS.isSearch = true;
+    return searchTokenS;
+  });
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
       ...tabTokens,
       ...filterTokens,
-      ...searchTokens,
+      ...newSearch,
       ...dateTokens,
     ],
     [defaultTokens, tabTokens, filterTokens, dateTokens, searchTokens],

@@ -595,7 +595,7 @@ export function mergeAndSortObjects(
 
 export type WhoIsDynamic = "tab" | "filter" | "search";
 
-function createSuggestion(
+export function createSuggestion(
   searchQueryNotFilter: SearchToken[] | null,
   whoIsDynamic: WhoIsDynamic[],
 ): SearchToken[] | null {

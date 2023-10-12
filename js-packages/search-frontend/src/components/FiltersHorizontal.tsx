@@ -14,6 +14,8 @@ import { Logo } from "./Logo";
 import { PlusSvg } from "../svgElement/PlusSvg";
 import {
   FilterCategoryDynamicMemo,
+  WhoIsDynamic,
+  createSuggestion,
   mergeAndSortObjects,
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
@@ -40,6 +42,7 @@ type FiltersProps = {
   language: string;
   sortAfterKey: string;
   numberOfResults: number;
+  isDynamicElement: WhoIsDynamic[];
 };
 function FiltersHorizontal({
   searchQuery,
@@ -53,6 +56,7 @@ function FiltersHorizontal({
   language,
   sortAfterKey,
   numberOfResults,
+  isDynamicElement,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -105,6 +109,7 @@ function FiltersHorizontal({
       >
         {suggestionCategories.data?.map((suggestion, index) => {
           const suggestions = useInfiniteSuggestions(
+            isDynamicElement,
             lastSearchQueryWithResults,
             dynamicFilters,
             suggestion.id,
@@ -478,6 +483,7 @@ function useSuggestionCategories() {
 }
 
 export function useInfiniteSuggestions(
+  isDynamicElement: WhoIsDynamic[],
   searchQueryParams: SearchToken[] | null,
   dynamicFilters: boolean,
   suggestionCategoryId: number,
@@ -486,14 +492,9 @@ export function useInfiniteSuggestions(
   const pageSize = 8;
   const client = useOpenK9Client();
 
-  let searchQuery: SearchToken[] | null = [];
-  if (searchQueryParams && searchQueryParams?.length > 0) {
-    searchQueryParams.forEach((singleSearchQuery) => {
-      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
-    });
-  } else {
-    searchQuery = searchQueryParams;
-  }
+  const searchQuery = false
+    ? searchQueryParams
+    : createSuggestion(searchQueryParams, isDynamicElement);
 
   const suggestionCategories = useInfiniteQuery(
     ["suggestions", searchQuery, suggestionCategoryId, false] as const,
