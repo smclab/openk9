@@ -79,11 +79,6 @@ function FilterCategoryDynamic({
     SearchToken | undefined
   >();
   const show = Boolean(text || (filters.length ?? 0) > 0);
-  const isMatchFound = searchQuery.some(
-    (searchToken) =>
-      "goToSuggestion" in searchToken &&
-      suggestionCategoryId === searchToken.suggestionCategoryId,
-  );
 
   if (!show)
     return (
@@ -403,23 +398,41 @@ function FilterCategoryDynamic({
 
 export const FilterCategoryDynamicMemo = React.memo(FilterCategoryDynamic);
 
+type AllType = "tab" | "filter" | "search";
+
 function createSuggestion(
   searchQueryNotFilter: SearchToken[] | null,
-  addTabDynamic: string,
+  whoIsDynamic: AllType[],
 ): SearchToken[] | null {
   const searchQuery: SearchToken[] | null = [];
+  whoIsDynamic.forEach((add) => {
+    switch (add) {
+      case "tab":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("isTab" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      case "filter":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("goToSuggestion" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      case "search":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("isSearch" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      default:
+        return searchQueryNotFilter;
+    }
+  });
 
-  switch (addTabDynamic) {
-    case "tab":
-      searchQueryNotFilter?.forEach((searchToken) => {
-        if ("isTab" in searchToken) {
-          searchQuery.push(searchToken);
-        }
-      });
-      break;
-    default:
-      return searchQueryNotFilter;
-  }
   return searchQuery;
 }
 
@@ -437,7 +450,9 @@ function useInfiniteSuggestions(
   const client = useOpenK9Client();
   const searchQuery = allDynamic
     ? searchQueryNotFilter
-    : createSuggestion(searchQueryNotFilter, "tab");
+    : createSuggestion(searchQueryNotFilter, ["tab", "filter", "search"]);
+  console.log(searchQueryNotFilter);
+
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",

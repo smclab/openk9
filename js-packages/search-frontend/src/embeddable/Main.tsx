@@ -624,17 +624,22 @@ function useSearchOnClick({
       ),
     [spans, selectionsState.selection],
   );
+  const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
+    searchTokenS.isSearch = true;
+    return searchTokenS;
+  });
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
       ...tabTokens,
       ...filterTokens,
-      ...searchTokens,
+      ...newSearch,
       ...dateTokens,
     ],
     [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
   );
+
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
     selectionsState.text === debounced.text &&

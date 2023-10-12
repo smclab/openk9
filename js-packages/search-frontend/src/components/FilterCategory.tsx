@@ -78,11 +78,6 @@ function FilterCategory({
     text ||
       (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
   );
-  const isMatchFound = searchQuery.some(
-    (searchToken) =>
-      "goToSuggestion" in searchToken &&
-      suggestionCategoryId === searchToken.suggestionCategoryId,
-  );
 
   if (!show)
     return (
