@@ -104,32 +104,32 @@ export function HuggingFace() {
             <div>
               <Button
                 displayType={null}
-                className={library === "spacy" ? "btn-info" : ""}
+                className={library === "transformers-pytorch" ? "btn-info" : ""}
                 onClick={(event) => {
-                  if (library === "spacy") {
+                  if (library === "transformers-pytorch") {
                     setLibrary("");
                   } else {
-                    setLibrary("spacy");
-                  }
-                }}
-              >
-                <Spacy />
-                Spacy
-              </Button>
-              <Button
-                displayType={null}
-                className={library === "transformers" ? "btn-info" : ""}
-                onClick={(event) => {
-                  if (library === "transformers") {
-                    setLibrary("");
-                  } else {
-                    setLibrary("transformers");
+                    setLibrary("transformers-pytorch");
                   }
                 }}
               >
                 <Trasformers />
-                <span style={{ marginLeft: "10px" }}> Transformers</span>
+                <span style={{ marginLeft: "10px" }}> Transformers with Pytorch</span>
               </Button>
+			  <Button
+				  displayType={null}
+				  className={library === "transformers-tensorflow" ? "btn-info" : ""}
+				  onClick={(event) => {
+					if (library === "transformers-tensorflow") {
+					  setLibrary("");
+					} else {
+					  setLibrary("transformers-tensorflow");
+					}
+				  }}
+				>
+				  <Trasformers />
+				  <span style={{ marginLeft: "10px" }}> Transformers with Tensorflow</span>
+				</Button>
               <Button
                 displayType={null}
                 className={library === "flair" ? "btn-info" : ""}
@@ -144,6 +144,20 @@ export function HuggingFace() {
                 <Flair />
                 Flair
               </Button>
+				<Button
+				  displayType={null}
+				  className={library === "spacy" ? "btn-info" : ""}
+				  onClick={(event) => {
+					if (library === "spacy") {
+					  setLibrary("");
+					} else {
+					  setLibrary("spacy");
+					}
+				  }}
+				>
+				  <Spacy />
+				  Spacy
+				</Button>
               <Button
                 displayType={null}
                 className={library === "stanza" ? "btn-info" : ""}
