@@ -826,10 +826,12 @@ function useTabs(
     [tenantTabs, overrideTabs, language],
   );
 
-  const tabTokens = React.useMemo(
-    () => tabs[selectedTabIndex]?.tokens ?? [],
-    [selectedTabIndex, tabs, language],
-  );
+  const tabTokens = React.useMemo(() => {
+    const createTab = tabs[selectedTabIndex]?.tokens;
+    const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
+    return completeTab ?? [];
+  }, [selectedTabIndex, tabs, language]);
+
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }
 

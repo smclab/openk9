@@ -404,6 +404,7 @@ export type SearchToken =
       filter: boolean;
       suggestionCategoryId?: number;
       count?: string;
+      isTab?: boolean;
     }
   | {
       tokenType: "DOCTYPE";
@@ -412,6 +413,7 @@ export type SearchToken =
       filter: boolean;
       suggestionCategoryId?: number;
       count?: string;
+      isTab?: boolean;
     }
   | {
       tokenType: "TEXT";
@@ -422,6 +424,7 @@ export type SearchToken =
       label?: string;
       suggestionCategoryId?: number;
       count?: string;
+      isTab?: boolean;
     }
   | {
       tokenType: "ENTITY";
@@ -432,6 +435,7 @@ export type SearchToken =
       filter: boolean;
       suggestionCategoryId?: number;
       count?: string;
+      isTab?: boolean;
     }
   | {
       tokenType: "DATE";
@@ -443,6 +447,7 @@ export type SearchToken =
       suggestionCategoryId?: number;
       count?: string;
       values?: string[];
+      isTab?: boolean;
     };
 
 export type SortField = {

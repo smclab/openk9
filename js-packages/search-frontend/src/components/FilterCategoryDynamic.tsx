@@ -403,17 +403,41 @@ function FilterCategoryDynamic({
 
 export const FilterCategoryDynamicMemo = React.memo(FilterCategoryDynamic);
 
+function createSuggestion(
+  searchQueryNotFilter: SearchToken[] | null,
+  addTabDynamic: string,
+): SearchToken[] | null {
+  const searchQuery: SearchToken[] | null = [];
+
+  switch (addTabDynamic) {
+    case "tab":
+      searchQueryNotFilter?.forEach((searchToken) => {
+        if ("isTab" in searchToken) {
+          searchQuery.push(searchToken);
+        }
+      });
+      break;
+    default:
+      return searchQueryNotFilter;
+  }
+  return searchQuery;
+}
+
 function useInfiniteSuggestions(
-  searchQuery: SearchToken[] | null,
+  searchQueryNotFilter: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
   loadAll: boolean,
   language: string,
   numberItems: number | null | undefined,
+  allDynamic = false,
 ) {
   const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
   const NPageSize = numberItems ? numberItems : pageSize;
   const client = useOpenK9Client();
+  const searchQuery = allDynamic
+    ? searchQueryNotFilter
+    : createSuggestion(searchQueryNotFilter, "tab");
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
