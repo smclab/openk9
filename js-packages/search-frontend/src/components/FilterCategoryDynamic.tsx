@@ -27,6 +27,7 @@ type FilterCategoryDynamicallyProps = {
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   language: string;
+  isDynamicElement: WhoIsDynamic[];
   numberItems?: number | null | undefined;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
@@ -45,10 +46,12 @@ function FilterCategoryDynamic({
   loadAll = false,
   language,
   numberItems,
+  isDynamicElement,
   setHasMoreSuggestionsCategories = undefined,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
+    isDynamicElement,
     tokens,
     suggestionCategoryId,
     useDebounce(text, 600),
@@ -398,45 +401,8 @@ function FilterCategoryDynamic({
 
 export const FilterCategoryDynamicMemo = React.memo(FilterCategoryDynamic);
 
-type AllType = "tab" | "filter" | "search";
-
-function createSuggestion(
-  searchQueryNotFilter: SearchToken[] | null,
-  whoIsDynamic: AllType[],
-): SearchToken[] | null {
-  const searchQuery: SearchToken[] | null = [];
-  whoIsDynamic.forEach((add) => {
-    switch (add) {
-      case "tab":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("isTab" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      case "filter":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("goToSuggestion" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      case "search":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("isSearch" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      default:
-        return searchQueryNotFilter;
-    }
-  });
-
-  return searchQuery;
-}
-
 function useInfiniteSuggestions(
+  isDynamicElement: WhoIsDynamic[],
   searchQueryNotFilter: SearchToken[] | null,
   activeSuggestionCategory: number,
   suggestKeyword: string,
@@ -450,9 +416,7 @@ function useInfiniteSuggestions(
   const client = useOpenK9Client();
   const searchQuery = allDynamic
     ? searchQueryNotFilter
-    : createSuggestion(searchQueryNotFilter, ["tab", "filter", "search"]);
-  console.log(searchQueryNotFilter);
-
+    : createSuggestion(searchQueryNotFilter, isDynamicElement);
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
@@ -627,4 +591,42 @@ export function mergeAndSortObjects(
   });
 
   return mergedArray;
+}
+
+export type WhoIsDynamic = "tab" | "filter" | "search";
+
+function createSuggestion(
+  searchQueryNotFilter: SearchToken[] | null,
+  whoIsDynamic: WhoIsDynamic[],
+): SearchToken[] | null {
+  const searchQuery: SearchToken[] | null = [];
+  whoIsDynamic.forEach((add) => {
+    switch (add) {
+      case "tab":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("isTab" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      case "filter":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("goToSuggestion" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      case "search":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if ("isSearch" in searchToken) {
+            searchQuery.push(searchToken);
+          }
+        });
+        break;
+      default:
+        return searchQueryNotFilter;
+    }
+  });
+
+  return searchQuery;
 }

@@ -116,7 +116,11 @@ export function Main({
   );
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
-
+  const isDynamicElement = configuration.dynamicElement || [
+    "filter",
+    "search",
+    "tab",
+  ];
   const {
     searchQuery,
     spans,
@@ -239,6 +243,7 @@ export function Main({
             sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
+            isDynamicElement={isDynamicElement}
           />
         </I18nextProvider>,
         configuration.filters,
@@ -260,6 +265,7 @@ export function Main({
             }
             numberItems={configuration.filtersConfigurable?.numberItems}
             numberOfResults={numberOfResults}
+            isDynamicElement={isDynamicElement}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable

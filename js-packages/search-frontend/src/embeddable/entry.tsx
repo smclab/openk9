@@ -11,6 +11,7 @@ import * as RendererComponents from "../renderer-components";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
+import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 
 export const rendererComponents = RendererComponents;
 
@@ -247,6 +248,7 @@ type TabsProps = {
 export type Configuration = {
   enabled: boolean;
   search: Element | string | null;
+  dynamicElement: WhoIsDynamic[] | null;
   searchConfigurable: SearchProps | null;
   activeFilters: Element | string | null;
   tabs: Element | string | null;
@@ -292,6 +294,7 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   enabled: false,
   search: null,
+  dynamicElement: null,
   searchConfigurable: null,
   activeFilters: null,
   tabs: null,

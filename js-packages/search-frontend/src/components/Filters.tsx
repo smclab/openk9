@@ -10,7 +10,10 @@ import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
-import { FilterCategoryDynamicMemo } from "./FilterCategoryDynamic";
+import {
+  FilterCategoryDynamicMemo,
+  WhoIsDynamic,
+} from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 
 type FiltersProps = {
@@ -27,6 +30,7 @@ type FiltersProps = {
   isCollapsable?: boolean;
   numberItems?: number | null | undefined;
   numberOfResults: number;
+  isDynamicElement: WhoIsDynamic[];
 };
 function Filters({
   searchQuery,
@@ -42,6 +46,7 @@ function Filters({
   isCollapsable = true,
   numberItems,
   numberOfResults,
+  isDynamicElement,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -218,6 +223,7 @@ function Filters({
               language={language}
               isCollapsable={isCollapsable}
               numberItems={numberItems}
+              isDynamicElement={isDynamicElement}
             />
           ) : (
             <FilterCategoryMemo
