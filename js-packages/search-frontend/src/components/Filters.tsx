@@ -66,10 +66,14 @@ function Filters({
   }, [isPreviousData, searchQuery]);
   const [count, setCount] = React.useState(0);
   React.useEffect(() => {
-    const count = searchQuery.filter(
-      (search) => "goToSuggestion" in search,
-    ).length;
-    setCount(count);
+    let accumulatore = 0;
+    searchQuery
+      .filter((search) => "goToSuggestion" in search)
+      .forEach((filter) => {
+        if (filter && filter.values)
+          accumulatore = accumulatore + filter.values?.length || 0;
+      });
+    setCount(accumulatore);
   }, [searchQuery]);
 
   return (
