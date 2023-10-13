@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>io.openk9.client.grpc</groupId>
 		<artifactId>grpc</artifactId>
-		<version>1.5.0-SNAPSHOT</version>
+		<version>1.6.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<name>OpenK9 :: Client :: Grpc :: File Manager Client Grpc</name>
