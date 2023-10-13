@@ -893,10 +893,6 @@ function useFilters({
     [onConfigurationChange],
   );
 
-  React.useEffect(() => {
-    console.log(filterTokens);
-  }, [filterTokens]);
-
   const defaultTokens = configuration.defaultTokens;
   return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
 }
