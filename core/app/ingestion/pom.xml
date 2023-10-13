@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.openk9.app</groupId>
     <artifactId>app</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.0</version>
   </parent>
   <name>OpenK9 :: App :: Ingestion</name>
   <artifactId>ingestion</artifactId>
@@ -83,4 +83,8 @@
       </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <tag>v1.5.0</tag>
+  </scm>
 </project>
