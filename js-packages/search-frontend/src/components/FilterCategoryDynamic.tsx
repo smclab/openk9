@@ -551,14 +551,27 @@ export function mergeAndSortObjects(
           "goToSuggestion" in element &&
           element.suggestionCategoryId === suggestionCategoryId,
       )
-      .map((element) => ({
-        tokenType: "TEXT",
-        keywordKey: element.keywordKey,
-        value: element.values?.[0] || "",
-        suggestionCategoryId: element.suggestionCategoryId || 0,
-        count: element.count,
-      }));
+      .flatMap((element) =>
+        (element.values || []).map((value) => ({
+          tokenType: "TEXT",
+          keywordKey: element.keywordKey,
+          value: value || "",
+          suggestionCategoryId: element.suggestionCategoryId || 0,
+          count: element.count,
+        })),
+      );
   }
+
+  if (mergedArray.length === 0) {
+    return [];
+  }
+
+  [...unsortedArray].filter(
+    (element) =>
+      element.tokenType === "TEXT" &&
+      "goToSuggestion" in element &&
+      element.suggestionCategoryId === suggestionCategoryId,
+  );
 
   for (const element of unsortedArray) {
     const foundElement = mergedArray.find((obj) => {
@@ -577,14 +590,16 @@ export function mergeAndSortObjects(
     });
 
     if (foundElement && element.tokenType === "TEXT") {
-      const newElement: SuggestionResult = {
-        tokenType: "TEXT",
-        keywordKey: element.keywordKey,
-        value: element.values[0],
-        suggestionCategoryId: element.suggestionCategoryId || 0,
-        count: element.count,
-      };
-      mergedArray.push(newElement);
+      element.values.forEach((singlevalue) => {
+        const newElement: SuggestionResult = {
+          tokenType: "TEXT",
+          keywordKey: element.keywordKey,
+          value: singlevalue,
+          suggestionCategoryId: element.suggestionCategoryId || 0,
+          count: element.count,
+        };
+        mergedArray.push(newElement);
+      });
     }
   }
 

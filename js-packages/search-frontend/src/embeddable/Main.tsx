@@ -877,13 +877,26 @@ function useFilters({
   const removeFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       onConfigurationChange((configuration) => ({
-        filterTokens: configuration.filterTokens.filter(
-          (token) => !isEqual(token, searchToken),
-        ),
+        filterTokens: configuration.filterTokens.filter((token) => {
+          if (searchToken && searchToken.values && token && token.values)
+            return !(
+              token.suggestionCategoryId === searchToken.suggestionCategoryId &&
+              token.isFilter === searchToken.isFilter &&
+              token.keywordKey === searchToken.keywordKey &&
+              token.tokenType === searchToken.tokenType &&
+              containsAtLeastOne(searchToken.values, token.values)
+            );
+          return true;
+        }),
       }));
     },
     [onConfigurationChange],
   );
+
+  React.useEffect(() => {
+    console.log(filterTokens);
+  }, [filterTokens]);
+
   const defaultTokens = configuration.defaultTokens;
   return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
 }
@@ -1163,3 +1176,9 @@ function remappingLanguageToBack({ language }: { language: string }) {
       return "en_US";
   }
 }
+
+const containsAtLeastOne = (array1: string[], array2: string[]): boolean => {
+  return array1.some((element1) => {
+    return array2.includes(element1);
+  });
+};
