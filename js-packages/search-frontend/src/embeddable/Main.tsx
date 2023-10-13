@@ -44,6 +44,8 @@ import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
 import { ResultsPaginationMemo } from "../components/ResultListPagination";
+import _ from "lodash";
+
 type MainProps = {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
@@ -631,20 +633,26 @@ function useSearchOnClick({
       ),
     [spans, selectionsState.selection],
   );
+
   const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
     searchTokenS.isSearch = true;
     return searchTokenS;
   });
+  const newTokenFilter: SearchToken[] = React.useMemo(
+    () => createFilter(filterTokens),
+    [filterTokens],
+  );
+
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
       ...tabTokens,
-      ...filterTokens,
+      ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
     ],
-    [defaultTokens, tabTokens, filterTokens, searchTokens, dateTokens],
+    [defaultTokens, tabTokens, newTokenFilter, searchTokens, dateTokens],
   );
 
   const searchQuery = useDebounce(searchQueryMemo, 600);
@@ -1101,6 +1109,29 @@ function fixQueryAnalysisResult(data: AnalysisResponse | null) {
           return isValidEntry;
         }),
     };
+}
+
+function createFilter(filterTokens: SearchToken[]): SearchToken[] {
+  const groupedTokens: { [key: number]: SearchToken } = {};
+
+  for (const item of filterTokens) {
+    if (
+      item &&
+      item.values &&
+      item.values.length > 0 &&
+      item.suggestionCategoryId
+    ) {
+      const suggestionCategoryId = item.suggestionCategoryId;
+
+      if (!groupedTokens[suggestionCategoryId]) {
+        groupedTokens[suggestionCategoryId] = _.cloneDeep(item);
+      } else {
+        groupedTokens[suggestionCategoryId].values!.push(item.values[0]);
+      }
+    }
+  }
+
+  return Object.values(groupedTokens);
 }
 
 export function remappingLanguage({ language }: { language: string }) {

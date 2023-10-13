@@ -107,7 +107,7 @@ function FiltersHorizontal({
           borderRadius: "8px",
         }}
       >
-        {suggestionCategories.data?.map((suggestion, index) => {
+        {suggestionCategories?.data?.map((suggestion, index) => {
           const suggestions = useInfiniteSuggestions(
             isDynamicElement,
             lastSearchQueryWithResults,

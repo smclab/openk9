@@ -226,8 +226,10 @@ function FilterCategoryDynamic({
               );
               const isChecked = tokens.some((searchToken) => {
                 if (
-                  JSON.stringify(searchToken.values) ===
-                    JSON.stringify(asSearchToken.values) &&
+                  haveSomeValue(
+                    searchToken.values || [],
+                    asSearchToken.values || [""],
+                  ) &&
                   searchToken.suggestionCategoryId ===
                     asSearchToken.suggestionCategoryId &&
                   searchToken.keywordKey === asSearchToken.keywordKey
@@ -629,4 +631,9 @@ export function createSuggestion(
   });
 
   return searchQuery;
+}
+
+function haveSomeValue(values: string[], value: string[]) {
+  const singleValue = value[0];
+  return values.includes(singleValue);
 }
