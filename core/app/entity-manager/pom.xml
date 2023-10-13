@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>app</artifactId>
 		<groupId>io.openk9.app</groupId>
-		<version>1.5.0</version>
+		<version>1.5.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -148,8 +148,4 @@
 			<artifactId>microprofile-rest-client-api</artifactId>
 		</dependency>
 	</dependencies>
-
-  <scm>
-    <tag>v1.5.0</tag>
-  </scm>
 </project>

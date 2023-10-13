@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>io.openk9.app</groupId>
 		<artifactId>app</artifactId>
-		<version>1.5.0</version>
+		<version>1.5.1-SNAPSHOT</version>
 	</parent>
 	<name>OpenK9 :: App :: File Manager</name>
 	<artifactId>file-manager</artifactId>
@@ -128,9 +128,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
-  <scm>
-    <tag>v1.5.0</tag>
-  </scm>
 </project>
