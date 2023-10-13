@@ -761,16 +761,21 @@ function useSearch({
     searchTokenS.isSearch = true;
     return searchTokenS;
   });
+
+  const newTokenFilter: SearchToken[] = React.useMemo(
+    () => createFilter(filterTokens),
+    [filterTokens],
+  );
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
       ...tabTokens,
-      ...filterTokens,
+      ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
     ],
-    [defaultTokens, tabTokens, filterTokens, dateTokens, searchTokens],
+    [defaultTokens, tabTokens, newTokenFilter, dateTokens, searchTokens],
   );
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
