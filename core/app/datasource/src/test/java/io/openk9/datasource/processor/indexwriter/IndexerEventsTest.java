@@ -24,6 +24,7 @@ public class IndexerEventsTest {
 
 	@Test
 	void shouldMapToDocTypeFields() {
+
 		List<DocTypeField> docTypeFields = IndexerEvents.toDocTypeFields(mappings.getMap());
 		Optional<DocTypeField> optField = docTypeFields
 			.stream()
@@ -77,13 +78,6 @@ public class IndexerEventsTest {
 			.flatMap(Collection::stream)
 			.noneMatch(f -> f.getFieldName().equals("title")
 				&& f.getDescription().equals("auto-generated"))
-		);
-
-		docTypes.forEach(docType1 -> docType1
-			.getDocTypeFields()
-			.forEach(docTypeField ->
-				_printDocTypeField(docTypeField, "")
-			)
 		);
 
 	}
