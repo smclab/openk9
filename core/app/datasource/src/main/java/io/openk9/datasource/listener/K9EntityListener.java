@@ -20,8 +20,8 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
+import io.vertx.ext.web.RoutingContext;
 import org.hibernate.Hibernate;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -56,7 +56,7 @@ public class K9EntityListener {
 		if (_isDatasource(k9Entity)) {
 			if (EventType.DELETE.equals(create)) {
 				_schedulerInitializer.get().deleteScheduler(
-					currentTenantIdentifierResolver.resolveCurrentTenantIdentifier(),
+					routingContext.get("_tenantId"),
 					(Datasource)k9Entity);
 			}
 			else {
@@ -69,7 +69,7 @@ public class K9EntityListener {
 	private void _createOrUpdateScheduler(Datasource datasource)
 		throws SchedulerException {
 		_schedulerInitializer.get().createOrUpdateScheduler(
-			currentTenantIdentifierResolver.resolveCurrentTenantIdentifier(), datasource);
+			routingContext.get("_tenantId"), datasource);
 	}
 
 	private boolean _isDatasource(K9Entity k9Entity) {
@@ -81,6 +81,6 @@ public class K9EntityListener {
 	Instance<SchedulerInitializer> _schedulerInitializer;
 
 	@Inject
-	CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	RoutingContext routingContext;
 
 }

@@ -2,6 +2,7 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,7 +29,7 @@ public class TriggerResource {
 
 		return schedulerInitializer
 			.get()
-			.triggerJobs(ctir.resolveCurrentTenantIdentifier(), dto.getDatasourceIds());
+			.triggerJobs(routingContext.get("_tenantId"), dto.getDatasourceIds());
 
 	}
 
@@ -36,7 +37,7 @@ public class TriggerResource {
 	Instance<SchedulerInitializer> schedulerInitializer;
 
 	@Inject
-	CurrentTenantIdentifierResolver ctir;
+	RoutingContext routingContext;
 
 	@Data
 	@NoArgsConstructor

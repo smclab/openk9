@@ -19,11 +19,11 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
@@ -46,7 +46,7 @@ public class ReindexResource {
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 		return schedulerInitializer
 			.get()
-			.triggerJobs(ctir.resolveCurrentTenantIdentifier(), dto.getDatasourceIds(), true)
+			.triggerJobs(routingContext.get("_tenantId"), dto.getDatasourceIds(), true)
 			.map(list -> list
 				.stream()
 				.map(datasourceId -> ReindexResponseDto.of(datasourceId, true))
@@ -58,7 +58,7 @@ public class ReindexResource {
 	Instance<SchedulerInitializer> schedulerInitializer;
 
 	@Inject
-	CurrentTenantIdentifierResolver ctir;
+	RoutingContext routingContext;
 
 	@Data
 	@AllArgsConstructor(staticName = "of")
