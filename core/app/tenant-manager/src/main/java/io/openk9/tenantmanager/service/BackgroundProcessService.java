@@ -41,6 +41,7 @@ public class BackgroundProcessService extends GraphQLService<BackgroundProcess> 
 				})
 			);
 	}
+
 	public Uni<BackgroundProcess> createBackgroundProcess(
 		BackgroundProcess backgroundProcess) {
 
@@ -122,14 +123,13 @@ public class BackgroundProcessService extends GraphQLService<BackgroundProcess> 
 	}
 
 	@Override
-	protected SingularAttribute<BackgroundProcess, Long> getIdAttribute() {
-		return BackgroundProcess_.id;
+	protected Mutiny.SessionFactory getSessionFactory() {
+		return sf;
 	}
 
 	@Override
-	protected <T> Uni<T> withTransaction(
-		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> function) {
-		return sf.withTransaction(function);
+	protected SingularAttribute<BackgroundProcess, Long> getIdAttribute() {
+		return BackgroundProcess_.id;
 	}
 
 	@Inject

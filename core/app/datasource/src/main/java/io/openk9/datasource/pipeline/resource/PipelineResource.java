@@ -3,7 +3,6 @@ package io.openk9.datasource.pipeline.resource;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -53,8 +52,5 @@ public class PipelineResource {
 
 	@Inject
 	ActorSystemProvider actorSystemProvider;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 }

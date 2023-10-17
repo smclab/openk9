@@ -75,12 +75,12 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<Set<TokenTab>> getTokenTabs(Tab tab) {
-		return withTransaction(s -> Mutiny2.fetch(s, tab.getTokenTabs()));
+		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, tab.getTokenTabs()));
 	}
 
 	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
 
-		return withTransaction((s, tr) -> findById(tabId)
+		return sessionFactory.withTransaction((s, tr) -> findById(tabId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
@@ -98,7 +98,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	public Uni<Tuple2<Tab, TokenTab>> removeTokenTabToTab(long tabId, long tokenTabId) {
 
-		return withTransaction((s, tr) -> findById(tabId)
+		return sessionFactory.withTransaction((s, tr) -> findById(tabId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
@@ -114,7 +114,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<List<TokenTab>> getTokenTabsByName(String tabName) {
-		return withStatelessTransaction((s) -> {
+		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<TokenTab> cq = cb.createQuery(TokenTab.class);
 			Root<Tab> root = cq.from(Tab.class);
@@ -125,7 +125,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<Tab> findByName(String name) {
-		return withStatelessTransaction((s) -> {
+		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<Tab> cq = cb.createQuery(Tab.class);
 			Root<Tab> root = cq.from(Tab.class);
@@ -137,7 +137,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<List<Tab>> getTabListByNames(String[] tabNames) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
@@ -157,7 +157,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<Boolean> existsByName(String name) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 

@@ -111,7 +111,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<Set<EnrichItem>> getEnrichItemsInEnrichPipeline(
 		long enrichPipelineId) {
 
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s ->
 				findById(enrichPipelineId)
 					.flatMap(ep -> Mutiny2.fetch(s, ep.getEnrichPipelineItems()))
@@ -126,7 +126,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<List<EnrichItem>> getEnrichItemsNotInEnrichPipeline(
 		long enrichPipelineId) {
 
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> {
 
 				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -168,7 +168,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		long enrichPipelineId, List<Long> enrichItemIdList) {
 
 
-		return withTransaction(s -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction(s -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline -> {
@@ -232,7 +232,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
 		long enrichPipelineId, long enrichItemId, boolean tail) {
 
-		return withTransaction((s) -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
@@ -279,7 +279,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return withTransaction((s) -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction((s) -> findById(enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
@@ -329,13 +329,13 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<EnrichItem> findFirstEnrichItem(long enrichPipelineId) {
-		return withTransaction(s -> findFirstEnrichItem(s, enrichPipelineId));
+		return sessionFactory.withTransaction(s -> findFirstEnrichItem(s, enrichPipelineId));
 	}
 
 	public Uni<EnrichItem> findNextEnrichItem(
 		long enrichPipelineId, long enrichItemId) {
 
-		 return withTransaction(s -> {
+		 return sessionFactory.withTransaction(s -> {
 
 			 String queryString =
 				 "select epi_next.enrichItem " +

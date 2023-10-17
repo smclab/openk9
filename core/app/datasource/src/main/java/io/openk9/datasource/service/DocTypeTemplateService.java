@@ -27,7 +27,7 @@ public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate,
 	}
 
 	public Uni<DocTypeTemplate> findByName(String name) {
-		return withStatelessTransaction((s) -> {
+		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<DocTypeTemplate> cq = cb.createQuery(DocTypeTemplate.class);
 			Root<DocTypeTemplate> root = cq.from(DocTypeTemplate.class);
@@ -39,7 +39,7 @@ public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate,
 	}
 
 	public Uni<List<DocTypeTemplate>> getDocTypeTemplateListByNames(String[] docTypeTemplateNames) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
@@ -59,7 +59,7 @@ public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate,
 	}
 
 	public Uni<Boolean> existsByName(String name) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 

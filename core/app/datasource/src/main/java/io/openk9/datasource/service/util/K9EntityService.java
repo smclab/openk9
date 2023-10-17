@@ -30,13 +30,24 @@ import java.util.Set;
 
 public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends EntityService<ENTITY, DTO> {
+	Uni<List<ENTITY>> findAll();
+
+	Uni<List<ENTITY>> findAll(String tenantId);
+
 	Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, String searchText);
+
+	Uni<Page<ENTITY>> findAllPaginated(String tenantId, Pageable pageable, String searchText);
 
 	Uni<Page<ENTITY>> findAllPaginated(
 		Pageable pageable, Filter filter);
 
+	Uni<Page<ENTITY>> findAllPaginated(
+		String tenantId, Pageable pageable, Filter filter);
+
 	Uni<Page<ENTITY>> findAllPaginated(Pageable pageable);
+
+	Uni<Page<ENTITY>> findAllPaginated(String tenantId, Pageable pageable);
 
 	<T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
 		Long[] entityIds, String joinField, Class<T> joinType, int limit,
@@ -44,18 +55,48 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 		long afterId, long beforeId, String searchText);
 
 	<T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
+		String tenantId, Long[] entityIds, String joinField, Class<T> joinType, int limit,
+		String sortBy, long afterId, long beforeId, String searchText);
+
+	<T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
 		Long[] entityIds, String joinField, Class<T> joinType, int limit,
+		String sortBy,
+		long afterId, long beforeId, Filter filter);
+
+	<T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
+		String tenantId, Long[] entityIds, String joinField, Class<T> joinType, int limit,
 		String sortBy,
 		long afterId, long beforeId, Filter filter);
 
 	Uni<Page<ENTITY>> findAllPaginated(
 		int limit, String sortBy, long afterId, long beforeId, Filter filter);
 
+	Uni<Page<ENTITY>> findAllPaginated(
+		String tenantId, int limit, String sortBy, long afterId, long beforeId, Filter filter);
+
 	Uni<ENTITY> findById(long id);
+
+	Uni<ENTITY> findById(String tenantId, long id);
 
 	Uni<List<ENTITY>> findByIds(Set<Long> ids);
 
+	Uni<List<ENTITY>> findByIds(String tenantId, Set<Long> ids);
+
+	Uni<ENTITY> patch(String tenantId, long id, DTO dto);
+
+	Uni<ENTITY> update(String tenantId, long id, DTO dto);
+
+	Uni<ENTITY> create(String tenantId, DTO dto);
+
 	Uni<ENTITY> create(ENTITY entity);
 
+	Uni<ENTITY> create(String tenantId, ENTITY entity);
+
 	Uni<ENTITY> deleteById(long entityId);
+
+	Uni<ENTITY> deleteById(String tenantId, long entityId);
+
+	Uni<Long> count();
+
+	Uni<Long> count(String tenantId);
 }

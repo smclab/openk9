@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -15,11 +14,11 @@ abstract class BaseAnnotator implements Annotator {
 	public BaseAnnotator(
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopwords, TenantResolver tenantResolver) {
+		List<String> stopwords, String tenantId) {
 		this.bucket = bucket;
 		this.annotator = annotator;
 		this.stopWords = stopwords;
-		this.tenantResolver = tenantResolver;
+		this.tenantId = tenantId;
 	}
 
 	protected QueryBuilder query(String field, String token) {
@@ -75,6 +74,6 @@ abstract class BaseAnnotator implements Annotator {
 
 	protected final List<String> stopWords;
 
-	protected final TenantResolver tenantResolver;
+	protected final String tenantId;
 
 }

@@ -36,13 +36,13 @@ import java.util.stream.Stream;
 
 public class Grammar {
 
-	public Grammar(Runnable schemaSetter, List<GrammarMixin> bases) {
-		this(schemaSetter, bases, "$ROOT");
+	public Grammar(String tenantId, List<GrammarMixin> bases) {
+		this(tenantId, bases, "$ROOT");
 	}
 
 	public Grammar(
-		Runnable schemaSetter, List<GrammarMixin> bases, String startSymbol) {
-		this.schemaSetter = schemaSetter;
+		String tenantId, List<GrammarMixin> bases, String startSymbol) {
+		this.tenantId = tenantId;
 		for (GrammarMixin base : bases) {
 			rules.addAll(base.getRules());
 			annotators.addAll(base.getAnnotators());
@@ -62,8 +62,6 @@ public class Grammar {
 	}
 
 	public List<Parse> parseInput(String[] tokens) {
-
-		schemaSetter.run();
 
 		Map<Tuple, List<Parse>> chart = new HashMap<>();
 
@@ -367,7 +365,7 @@ public class Grammar {
 	private final Map<Tuple, List<Rule>> binaryRules = new HashMap<>();
 	private final Set<String> categories = new HashSet<>();
 	private final List<Rule> rules = new ArrayList<>();
-	private final Runnable schemaSetter;
 	private final List<Annotator> annotators = new ArrayList<>();
+	private final String tenantId;
 
 }

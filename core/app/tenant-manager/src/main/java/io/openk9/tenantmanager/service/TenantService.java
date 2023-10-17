@@ -204,14 +204,13 @@ public class TenantService
 	}
 
 	@Override
-	protected final SingularAttribute<Tenant, Long> getIdAttribute() {
-		return Tenant_.id;
+	protected Mutiny.SessionFactory getSessionFactory() {
+		return sf;
 	}
 
 	@Override
-	protected <T> Uni<T> withTransaction(
-		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> function) {
-		return sf.withTransaction(function);
+	protected final SingularAttribute<Tenant, Long> getIdAttribute() {
+		return Tenant_.id;
 	}
 
 	@Inject

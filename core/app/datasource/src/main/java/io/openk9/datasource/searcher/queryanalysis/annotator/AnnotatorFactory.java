@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -12,7 +11,7 @@ import java.util.List;
 public class AnnotatorFactory {
 
 	public Annotator getAnnotator(
-		Bucket bucket,
+		String schemaName, Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords) {
 
@@ -21,7 +20,7 @@ public class AnnotatorFactory {
 			case KEYWORD -> new KeywordAnnotator(bucket, annotator, stopWords);
 			case STOPWORD -> new StopWordsAnnotator(bucket, annotator, stopWords);
 			case NER -> new BaseNerAnnotator(
-				bucket, annotator, stopWords, annotator.getFieldName(), client, tenantResolver);
+				bucket, annotator, stopWords, annotator.getFieldName(), client, schemaName);
 			case DOCTYPE -> new DocTypeAnnotator(
 				bucket, annotator, stopWords, client);
 			case AGGREGATOR -> new AggregatorAnnotator(
@@ -36,7 +35,7 @@ public class AnnotatorFactory {
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath());
 			case NER_AUTOCOMPLETE -> new BaseAutoCompleteNerAnnotator(
-				bucket, annotator, stopWords, annotator.getFieldName(), client, tenantResolver);
+				bucket, annotator, stopWords, annotator.getFieldName(), client, schemaName);
 			case AUTOCORRECT -> new BaseAutoCorrectAnnotator(
 				bucket, annotator, stopWords, client,
 				annotator.getFieldName(),
@@ -46,8 +45,5 @@ public class AnnotatorFactory {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 }

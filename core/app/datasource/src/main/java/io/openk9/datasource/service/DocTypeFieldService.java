@@ -60,17 +60,16 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> Mutiny2.fetch(s, docTypeField.getAnalyzer()));
 	}
 
 	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
-		return withTransaction(
-			() -> findById(docTypeFieldId).flatMap(this::getAnalyzer));
+		return findById(docTypeFieldId).flatMap(this::getAnalyzer);
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
-		return withTransaction((s, tr) -> findById(docTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(docTypeFieldId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docTypeField -> _analyzerService.findById(analyzerId)
@@ -83,7 +82,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
-		return withTransaction((s, tr) -> findById(docTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(docTypeFieldId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docTypeField -> {
@@ -102,7 +101,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> Mutiny2.fetch(s, docTypeField.getParentDocTypeField()));
 	}
 
@@ -119,7 +118,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	public Uni<DocTypeField> createSubField(
 		long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
 
-		return withTransaction((s, tr) -> findById(parentDocTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(parentDocTypeFieldId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(parentDocTypeField -> Mutiny2

@@ -2,6 +2,7 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.service.SchedulerService;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
@@ -26,10 +27,12 @@ public class SchedulerResource {
 	@Path("/{schedulerId}/cancelSchedulation")
 	@POST
 	public Uni<Void> cancelSchedulation(@PathParam("schedulerId") long schedulerId) {
-		return schedulerService.cancelSchedulation(schedulerId);
+		return schedulerService.cancelSchedulation(ctir.resolveCurrentTenantIdentifier(), schedulerId);
 	}
 
 	@Inject
 	SchedulerService schedulerService;
 
+	@Inject
+	CurrentTenantIdentifierResolver ctir;
 }

@@ -75,7 +75,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
 		long id, long ruleId) {
 
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(queryAnalysis -> ruleService.findById(ruleId)
@@ -104,7 +104,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	public Uni<Tuple2<QueryAnalysis, Rule>> removeRuleToQueryAnalysis(
 		long id, long ruleId) {
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getRules())
@@ -124,7 +124,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	}
 
 	public Uni<Tuple2<QueryAnalysis, Annotator>> addAnnotatorToQueryAnalysis(long id, long annotatorId) {
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(queryAnalysis -> annotatorService.findById(annotatorId)
@@ -153,7 +153,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	public Uni<Tuple2<QueryAnalysis, Annotator>> removeAnnotatorToQueryAnalysis(long id, long annotatorId) {
 
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getAnnotators())

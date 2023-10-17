@@ -19,7 +19,6 @@ package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
 import io.openk9.auth.tenant.MultiTenancyConfig;
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
@@ -64,8 +63,7 @@ public class SchedulerInitializer {
 				List<Uni<Void>> unis = new ArrayList<>(list.size());
 				for (TenantResponse tenantResponse : list) {
 					String schemaName = tenantResponse.getSchemaName();
-					tenantResolver.setTenant(schemaName);
-					Uni<List<Datasource>> listDatasource = datasourceService.findAll();
+					Uni<List<Datasource>> listDatasource = datasourceService.findAll(schemaName);
 
 					Uni<Void> voidUni = listDatasource
 						.onItemOrFailure()
@@ -106,17 +104,17 @@ public class SchedulerInitializer {
 
 	}
 
-	public Uni<List<Long>> triggerJobs(List<Long> datasourceIds) {
-		return triggerJobs(datasourceIds, false);
+	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds) {
+		return triggerJobs(tenantName, datasourceIds, false);
 	}
 
-	public Uni<List<Long>> triggerJobs(List<Long> datasourceIds, boolean startFromFirst) {
+	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds, boolean startFromFirst) {
 
 		List<Uni<Long>> triggers = new ArrayList<>(datasourceIds.size());
 
 		for (long datasourceId : datasourceIds) {
 			triggers.add(
-				triggerJob(datasourceId, String.valueOf(datasourceId), startFromFirst)
+				triggerJob(tenantName, datasourceId, String.valueOf(datasourceId), startFromFirst)
 					.map(unused -> datasourceId)
 			);
 		}
@@ -131,12 +129,12 @@ public class SchedulerInitializer {
 
 	
 	public Uni<Void> triggerJob(
-		long datasourceId, String name, boolean startFromFirst) {
+		String tenantName, long datasourceId, String name, boolean startFromFirst) {
 
 		return Uni.createFrom().deferred(() -> {
 			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " startFromFirst: " + startFromFirst);
 			return performTask(
-				tenantResolver.getTenantName(), datasourceId, startFromFirst);
+				tenantName, datasourceId, startFromFirst);
 		});
 
 	}
@@ -162,9 +160,8 @@ public class SchedulerInitializer {
 
 	}
 
-	public void deleteScheduler(Datasource datasource) {
-		schedulerInitializerActor.unScheduleDataSource(
-			tenantResolver.getTenantName(), datasource.getId());
+	public void deleteScheduler(String tenantId, Datasource datasource) {
+		schedulerInitializerActor.unScheduleDataSource(tenantId, datasource.getId());
 	}
 
 	@GrpcClient("tenantmanager")
@@ -175,9 +172,6 @@ public class SchedulerInitializer {
 
 	@Inject
 	DatasourceService datasourceService;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 	@Inject
 	EventBus eventBus;

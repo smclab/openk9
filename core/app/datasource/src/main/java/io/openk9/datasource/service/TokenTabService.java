@@ -33,18 +33,17 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	}
 
 	public Uni<DocTypeField> getDocTypeField(TokenTab tokenTab) {
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> Mutiny2.fetch(s, tokenTab.getDocTypeField()));
 	}
 
 	public Uni<DocTypeField> getDocTypeField(long tokenTabId) {
-		return withTransaction(
-			() -> findById(tokenTabId).flatMap(this::getDocTypeField));
+		return findById(tokenTabId).flatMap(this::getDocTypeField);
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(
 		long tokenTabId, long docTypeFieldId) {
-		return withTransaction((s) -> findById(tokenTabId)
+		return sessionFactory.withTransaction((s) -> findById(tokenTabId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tokenTab -> docTypeFieldService.findById(docTypeFieldId)
@@ -59,7 +58,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> unbindDocTypeFieldFromTokenTab(
 		long tokenTabId, long docTypeFieldId) {
-		return withTransaction((s) -> findById(tokenTabId)
+		return sessionFactory.withTransaction((s) -> findById(tokenTabId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(tokenTab -> docTypeFieldService.findById(docTypeFieldId)

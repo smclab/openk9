@@ -58,19 +58,18 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	}
 
 	public Uni<Tokenizer> getTokenizer(Analyzer analyzer) {
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> Mutiny2.fetch(s, analyzer.getTokenizer()));
 	}
 
 	public Uni<Tokenizer> getTokenizer(long analyzerId) {
-		return withTransaction(
-			() -> findById(analyzerId).flatMap(this::getTokenizer));
+		return findById(analyzerId).flatMap(this::getTokenizer);
 	}
 
 	public Uni<Tuple2<Analyzer, TokenFilter>> addTokenFilterToAnalyzer(
 		long id, long tokenFilterId) {
 
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> _tokenFilterService.findById(tokenFilterId)
@@ -99,7 +98,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterToAnalyzer(
 		long id, long tokenFilterId) {
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getTokenFilters())
@@ -120,7 +119,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Analyzer> removeTokenFilterListFromAnalyzer(
 		long analyzerId) {
-		return withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getTokenFilters())
@@ -140,7 +139,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Analyzer> removeCharFilterListFromAnalyzer(
 		long analyzerId) {
-		return withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getCharFilters())
@@ -161,7 +160,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(
 		long id, long charFilterId) {
 
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> _charFilterService.findById(charFilterId)
@@ -190,7 +189,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Tuple2<Analyzer, CharFilter>> removeCharFilterFromAnalyzer(
 		long id, long charFilterId) {
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getCharFilters())
@@ -210,7 +209,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	}
 
 	public Uni<Tuple2<Analyzer, Tokenizer>> bindTokenizer(long analyzerId, long tokenizerId) {
-		return withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> _tokenizerService.findById(tokenizerId)
@@ -223,7 +222,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	}
 
 	public Uni<Tuple2<Analyzer, Tokenizer>> unbindTokenizer(long analyzerId) {
-		return withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> {

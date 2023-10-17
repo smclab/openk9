@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -27,12 +28,15 @@ public class TriggerResource {
 
 		return schedulerInitializer
 			.get()
-			.triggerJobs(dto.getDatasourceIds());
+			.triggerJobs(ctir.resolveCurrentTenantIdentifier(), dto.getDatasourceIds());
 
 	}
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;
+
+	@Inject
+	CurrentTenantIdentifierResolver ctir;
 
 	@Data
 	@NoArgsConstructor

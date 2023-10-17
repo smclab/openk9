@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -104,7 +103,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.flatMap(this::indexesDiff);
 	}
 
-	public Uni<Void> cancelSchedulation(long schedulerId) {
+	public Uni<Void> cancelSchedulation(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> {
 				if (scheduler.getStatus() == Scheduler.SchedulerStatus.STARTED) {
@@ -115,8 +114,8 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
 						Schedulation.ENTITY_TYPE_KEY,
-						SchedulationKeyUtils.getValue(
-							tenantResolver.getTenantName(), scheduler.getScheduleId()));
+						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					);
 
 					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
 				}
@@ -181,6 +180,5 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	RestHighLevelClient client;
 	@Inject
 	ActorSystemProvider actorSystemProvider;
-	@Inject
-	TenantResolver tenantResolver;
+
 }

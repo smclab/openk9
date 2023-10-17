@@ -1,20 +1,23 @@
 package io.openk9.datasource.sql;
 
+import io.quarkus.arc.Unremovable;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import io.quarkus.hibernate.orm.runtime.tenant.TenantResolver;
+import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
-@ApplicationScoped
+@RequestScoped
+@Unremovable
 @PersistenceUnitExtension
-public class SchemaTenantResolver implements TenantResolver {
+public class DynamicSchemaTenantResolver implements TenantResolver {
 
-	private static final Logger LOG = Logger.getLogger(SchemaTenantResolver.class);
+	private static final Logger LOG = Logger.getLogger(DynamicSchemaTenantResolver.class);
 
 	@Inject
-	io.openk9.auth.tenant.TenantResolver tenantResolver;
+	RoutingContext routingContext;
 
 	@Override
 	public String getDefaultTenantId() {
@@ -23,13 +26,10 @@ public class SchemaTenantResolver implements TenantResolver {
 
 	@Override
 	public String resolveTenantId() {
-		String tenantId = tenantResolver.getTenantName();
+		String tenantId = routingContext.get("_tenantId", getDefaultTenantId());
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("tenant resolved: %s", tenantId));
-			if (tenantId == null) {
-				LOG.debug("fallback to default tenant");
-			}
 		}
-		return tenantId != null ? tenantId : getDefaultTenantId();
+		return tenantId;
 	}
 }

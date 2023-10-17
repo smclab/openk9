@@ -59,7 +59,7 @@ public class DataIndexService
 
 	public Uni<Set<DocType>> getDocTypes(
 		DataIndex dataIndex) {
-		return withTransaction(s -> Mutiny2.fetch(s, dataIndex.getDocTypes()));
+		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, dataIndex.getDocTypes()));
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
@@ -102,7 +102,7 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
 		long dataIndexId, long docTypeId) {
-		return withTransaction((s) -> findById(dataIndexId)
+		return sessionFactory.withTransaction((s) -> findById(dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
@@ -125,7 +125,7 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
 		long dataIndexId, long docTypeId) {
-		return withTransaction((s) -> findById(dataIndexId)
+		return sessionFactory.withTransaction((s) -> findById(dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
@@ -184,7 +184,7 @@ public class DataIndexService
 			.onItem()
 			.transformToUni(ignore -> super.findById(entityId))
 			.onItem()
-			.transformToUni(dataIndex -> withTransaction(s -> {
+			.transformToUni(dataIndex -> sessionFactory.withTransaction(s -> {
 				dataIndex.getDocTypes().clear();
 				return s.persist(dataIndex);
 			}))

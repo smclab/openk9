@@ -105,7 +105,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<Set<QueryParserConfig>> getQueryParserConfig(SearchConfig searchConfig) {
-		return withTransaction(s -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()));
+		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()));
 	}
 
 	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfig(
@@ -114,7 +114,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		QueryParserConfig queryParserConfig =
 			_queryParserConfigMapper.create(queryParserConfigDTO);
 
-		return withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()).flatMap(
@@ -128,7 +128,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {
-		return withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()).flatMap(

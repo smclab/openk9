@@ -1,7 +1,6 @@
 package io.openk9.datasource.searcher;
 
 import com.google.protobuf.ByteString;
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
@@ -67,7 +66,6 @@ public abstract class BaseSearchService {
 
 		return tenantManager
 			.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
-			.invoke((tenantResponse) -> tenantResolver.setTenant(tenantResponse.getSchemaName()))
 			.flatMap(tenantResponse -> sf
 				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
 
@@ -324,9 +322,6 @@ public abstract class BaseSearchService {
 
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
 

@@ -117,7 +117,7 @@ public class PluginDriverService
 	public Uni<Set<DocTypeField>> getDocTypeFieldsInPluginDriver(
 		long pluginDriverId) {
 
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s ->
 				findById(pluginDriverId)
 					.flatMap(
@@ -133,7 +133,7 @@ public class PluginDriverService
 	public Uni<List<DocTypeField>> getDocTypeFieldsNotInPluginDriver(
 		long pluginDriverId) {
 
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> {
 
 				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -185,7 +185,7 @@ public class PluginDriverService
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeField(
 		long pluginDriverId, long docTypeFieldId, UserField userField) {
 
-		return withTransaction((s) -> findById(pluginDriverId)
+		return sessionFactory.withTransaction((s) -> findById(pluginDriverId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(pluginDriver ->
@@ -218,7 +218,7 @@ public class PluginDriverService
 	}
 
 	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeField(long pluginDriverId, long docTypeFieldId) {
-		return withTransaction((s) -> findById(pluginDriverId)
+		return sessionFactory.withTransaction((s) -> findById(pluginDriverId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(pluginDriver ->
@@ -249,14 +249,14 @@ public class PluginDriverService
 	}
 
 	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
-		return withStatelessTransaction(s -> s.fetch(pluginDriver.getAclMappings()));
+		return sessionFactory.withTransaction(s -> s.fetch(pluginDriver.getAclMappings()));
 	}
 
 	public Uni<AclMapping> setUserField(
 		long pluginDriverId,
 		long docTypeFieldId, UserField userField){
 
-		return withTransaction(s-> {
+		return sessionFactory.withTransaction(s-> {
 			CriteriaBuilder criteria= sessionFactory.getCriteriaBuilder();
 
 			CriteriaUpdate<AclMapping> query =

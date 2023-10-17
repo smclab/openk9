@@ -115,7 +115,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
-		return withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
+		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
 	}
 
 	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
@@ -123,7 +123,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		DocTypeField docTypeField =
 			docTypeFieldMapper.create(docTypeFieldDTO);
 
-		return withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
@@ -136,7 +136,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
-		return withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
@@ -149,7 +149,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Tuple2<DocType, DocTypeTemplate>> setDocTypeTemplate(long docTypeId, long docTypeTemplateId) {
-		return withTransaction(() -> findById(docTypeId)
+		return findById(docTypeId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> docTypeTemplateService.findById(docTypeTemplateId)
@@ -159,21 +159,21 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 					docType.setDocTypeTemplate(docTypeTemplate);
 					return persist(docType)
 						.map(d -> Tuple2.of(d, docTypeTemplate));
-				})));
+				}));
 	}
 
 	public Uni<DocType> unsetDocType(long docTypeId) {
-		return withTransaction(() -> findById(docTypeId)
+		return findById(docTypeId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> {
 				docType.setDocTypeTemplate(null);
 				return persist(docType);
-			}));
+			});
 	}
 
 	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
-		return withStatelessTransaction((s) -> {
+		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
 			Root<DocType> root = cq.from(DocType.class);
@@ -184,7 +184,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<DocType> findByName(String name) {
-		return withStatelessTransaction((s) -> {
+		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
 			Root<DocType> root = cq.from(DocType.class);
@@ -196,7 +196,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<List<DocType>> getDocTypeListByNames(String[] docTypeNames) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
@@ -216,7 +216,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Boolean> existsByName(String name) {
-		return withTransaction(s -> {
+		return sessionFactory.withTransaction(s -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 

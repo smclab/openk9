@@ -1,7 +1,6 @@
 package io.openk9.auth.resolver;
 
 import io.openk9.auth.tenant.TenantRegistry;
-import io.openk9.auth.tenant.TenantResolver;
 import io.quarkus.oidc.OidcRequestContext;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.quarkus.oidc.TenantConfigResolver;
@@ -58,8 +57,6 @@ public class OIDCTenantResolver implements TenantConfigResolver {
 
                 routingContext.put("_tenantId", tenant.schemaName());
 
-                tenantResolver.setTenant(tenant.schemaName());
-
                 return config;
 
             });
@@ -76,9 +73,6 @@ public class OIDCTenantResolver implements TenantConfigResolver {
 
     @Inject
     TenantRegistry tenantRegistry;
-
-    @Inject
-    TenantResolver tenantResolver;
 
     @ConfigProperty(
         name = "openk9.authServerUrl.template"

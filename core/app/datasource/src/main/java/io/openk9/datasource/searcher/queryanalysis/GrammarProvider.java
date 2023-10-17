@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.queryanalysis;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.Annotator_;
@@ -44,7 +43,6 @@ public class GrammarProvider {
 		Uni<Tuple2<String, Bucket>> getTenantUni = _getTenant(virtualHost);
 
 		return getTenantUni
-			.invoke(t2 -> tenantResolver.setTenant(t2.getItem1()))
 			.map(t2 -> {
 
 				String schemaName = t2.getItem1();
@@ -58,22 +56,21 @@ public class GrammarProvider {
 					_toGrammarRule(rules);
 
 				List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-					_toAnnotator(t, queryAnalysis.getStopWordsList());
+					_toAnnotator(schemaName, t, queryAnalysis.getStopWordsList());
 
 				GrammarMixin grammarMixin = GrammarMixin.of(
 					mappedRules, mappedAnnotators);
 
-				return new Grammar(
-					() -> tenantResolver.setTenant(schemaName), List.of(grammarMixin));
+				return new Grammar(schemaName, List.of(grammarMixin));
 
 			});
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		Bucket bucket, List<String> stopWords) {
+		String schemaName, Bucket bucket, List<String> stopWords) {
 		return bucket.getQueryAnalysis().getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(bucket, a, stopWords))
+			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords))
 			.toList();
 	}
 
@@ -168,8 +165,5 @@ public class GrammarProvider {
 
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
-
-	@Inject
-	TenantResolver tenantResolver;
 
 }

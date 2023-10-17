@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import org.elasticsearch.action.search.SearchRequest;
@@ -27,8 +26,8 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, String category,
 		RestHighLevelClient restHighLevelClient,
-		TenantResolver tenantResolver) {
-		super(bucket, annotator, stopWords, tenantResolver);
+		String tenantId) {
+		super(bucket, annotator, stopWords, tenantId);
 		this.category = category;
 		this.restHighLevelClient = restHighLevelClient;
 	}
@@ -53,7 +52,7 @@ public class BaseAutoCompleteNerAnnotator extends BaseAnnotator {
 		builder.must(QueryBuilders.termQuery("type", category));
 
 		SearchRequest searchRequest = new SearchRequest(
-			tenantResolver.getTenantName() + "-entity");
+			tenantId + "-entity");
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

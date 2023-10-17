@@ -61,7 +61,7 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 
 	public Uni<Tuple2<Annotator, DocTypeField>> bindDocTypeField(
 		long annotatorId, long docTypeFieldId) {
-		return withTransaction((s) -> findById(annotatorId)
+		return sessionFactory.withTransaction((s) -> findById(annotatorId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(annotator -> docTypeFieldService.findById(docTypeFieldId)
@@ -76,7 +76,7 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 
 	public Uni<Tuple2<Annotator, DocTypeField>> unbindDocTypeField(
 		long annotatorId, long docTypeFieldId) {
-		return withTransaction((s) -> findById(annotatorId)
+		return sessionFactory.withTransaction((s) -> findById(annotatorId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(annotator -> docTypeFieldService.findById(docTypeFieldId)

@@ -64,7 +64,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
-		return withTransaction(s -> findById(bucketId)
+		return sessionFactory.withTransaction(s -> findById(bucketId)
 			.flatMap(bucket -> Mutiny2.fetch(s, bucket.getQueryAnalysis())));
 	}
 
@@ -181,17 +181,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Language> getLanguage(Bucket bucket) {
-		return withTransaction(
+		return sessionFactory.withTransaction(
 			s -> Mutiny2.fetch(s, bucket.getDefaultLanguage()));
 	}
 
 	public Uni<Language> getLanguage(long bucketId) {
-		return withTransaction(
-			() -> findById(bucketId).flatMap(this::getLanguage));
+		return findById(bucketId).flatMap(this::getLanguage);
 	}
 
 	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(long bucketId, long datasourceId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> datasourceService.findById(datasourceId)
@@ -208,7 +207,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Tuple2<Bucket, Datasource>> addDatasource(long bucketId, long datasourceId) {
 
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> datasourceService.findById(datasourceId)
@@ -227,7 +226,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(
 		long id, long tabId) {
 
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> tabService.findById(tabId)
@@ -256,7 +255,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(
 		long id, long tabId) {
-		return withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getTabs())
@@ -276,7 +275,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(long bucketId, long suggestionCategoryId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> suggestionCategoryService.findById(suggestionCategoryId)
@@ -303,7 +302,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getSuggestionCategories())
@@ -324,7 +323,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> addLanguage(long bucketId, long languageId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> languageService.findById(languageId)
@@ -351,7 +350,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getAvailableLanguages())
@@ -372,7 +371,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysis(long bucketId, long queryAnalysisId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> queryAnalysisService.findById(queryAnalysisId)
@@ -385,7 +384,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
@@ -395,7 +394,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> languageService.findById(languageId)
@@ -408,7 +407,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
@@ -419,7 +418,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 
 	public Uni<Tuple2<Bucket, SearchConfig>> bindSearchConfig(long bucketId, long searchConfigId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> searchConfigService.findById(searchConfigId)
@@ -432,7 +431,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfig(long bucketId) {
-		return withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
@@ -442,7 +441,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Bucket> enableTenant(long id) {
-		return withTransaction(s -> s
+		return sessionFactory.withTransaction(s -> s
 			.find(Bucket.class, id)
 			.flatMap(bucket -> {
 
@@ -520,7 +519,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>>,
 			Uni<? extends T>> mapper) {
 
-		return withTransaction(s -> getDataIndexNames(bucketId, s))
+		return sessionFactory.withTransaction(s -> getDataIndexNames(bucketId, s))
 			.flatMap(indexService::getExistsAndIndexNames)
 			.flatMap(mapper);
 

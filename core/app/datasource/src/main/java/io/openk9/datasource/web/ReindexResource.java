@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
@@ -45,7 +46,7 @@ public class ReindexResource {
 	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
 		return schedulerInitializer
 			.get()
-			.triggerJobs(dto.getDatasourceIds(), true)
+			.triggerJobs(ctir.resolveCurrentTenantIdentifier(), dto.getDatasourceIds(), true)
 			.map(list -> list
 				.stream()
 				.map(datasourceId -> ReindexResponseDto.of(datasourceId, true))
@@ -55,6 +56,9 @@ public class ReindexResource {
 
 	@Inject
 	Instance<SchedulerInitializer> schedulerInitializer;
+
+	@Inject
+	CurrentTenantIdentifierResolver ctir;
 
 	@Data
 	@AllArgsConstructor(staticName = "of")

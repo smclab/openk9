@@ -1,6 +1,5 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.auth.tenant.TenantResolver;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -34,10 +33,10 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		TenantResolver tenantResolver,
+		String tenantId,
 		String...keywords) {
 		this(
-			bucket, annotator, stopWords, restHighLevelClient, tenantResolver,
+			bucket, annotator, stopWords, restHighLevelClient, tenantId,
 			List.of(keywords));
 	}
 
@@ -45,9 +44,9 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		TenantResolver tenantResolver,
+		String tenantId,
 		List<String> keywords) {
-		super(bucket, annotator, stopWords, tenantResolver);
+		super(bucket, annotator, stopWords, tenantId);
 		this.keywords = keywords;
 		this.restHighLevelClient = restHighLevelClient;
 	}

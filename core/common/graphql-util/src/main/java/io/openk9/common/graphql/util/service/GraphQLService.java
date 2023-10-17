@@ -200,154 +200,168 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 		String before, Integer first, Integer last, String searchText,
 		Set<SortBy> sortByList) {
 
-		return withTransaction((s, t) -> {
+		return getSessionFactory().withTransaction((s, t) -> _findConnection(
+			criteriaBuilderQuery, root, defaultWhere, searchFields, after, before, first, last,
+			searchText, sortByList, s));
 
-			Predicate where = defaultWhere;
+	}
 
-			CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+	public <T extends GraphqlId> Uni<Connection<T>> findConnection(
+		String tenantId, CriteriaQuery<T> criteriaBuilderQuery, Path<T> root,
+		Predicate defaultWhere, String[] searchFields, String after,
+		String before, Integer first, Integer last, String searchText,
+		Set<SortBy> sortByList) {
 
-			if (after != null) {
-				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
-				where = criteriaBuilder.and(
-					where, criteriaBuilder.greaterThan(root.get(getIdAttribute()), cursor.getId()));
+		return getSessionFactory().withTransaction(tenantId, (s, t) -> _findConnection(
+			criteriaBuilderQuery, root, defaultWhere, searchFields, after, before, first, last,
+			searchText, sortByList, s));
+
+	}
+
+	private <T extends GraphqlId> Uni<Connection<T>> _findConnection(CriteriaQuery<T> criteriaBuilderQuery, Path<T> root, Predicate defaultWhere, String[] searchFields, String after, String before, Integer first, Integer last, String searchText, Set<SortBy> sortByList, Mutiny.Session s) {
+		Predicate where = defaultWhere;
+
+		CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+
+		if (after != null) {
+			RelayUtil.Cursor cursor = RelayUtil.decodeCursor(after);
+			where = criteriaBuilder.and(
+				where, criteriaBuilder.greaterThan(root.get(getIdAttribute()), cursor.getId()));
+		}
+
+		if (before != null) {
+			RelayUtil.Cursor cursor = RelayUtil.decodeCursor(before);
+			where = criteriaBuilder.and(
+				where, criteriaBuilder.lessThan(root.get(getIdAttribute()), cursor.getId()));
+		}
+
+		if (searchText != null && !searchText.isBlank()) {
+
+			Predicate searchConditions = criteriaBuilder.disjunction();
+
+			for (String searchField : searchFields) {
+
+				Path<?> searchPath = root.get(searchField);
+
+				searchConditions = _addSearchCondition(
+					criteriaBuilder, searchConditions, searchPath,
+					searchText);
+
+			}
+			if (StringUtils.isNumeric(searchText)) {
+				searchConditions = criteriaBuilder.or(
+					searchConditions, criteriaBuilder.equal(
+						root.get(getIdAttribute()),
+						Long.parseLong(searchText)
+					)
+				);
 			}
 
-			if (before != null) {
-				RelayUtil.Cursor cursor = RelayUtil.decodeCursor(before);
-				where = criteriaBuilder.and(
-					where, criteriaBuilder.lessThan(root.get(getIdAttribute()), cursor.getId()));
+			where = criteriaBuilder.and(where, searchConditions);
+
+		}
+
+		criteriaBuilderQuery.where(where);
+
+		List<Order> orders =
+			new ArrayList<>(criteriaBuilderQuery.getOrderList());
+
+		if (sortByList != null) {
+			for (SortBy sortBy : sortByList) {
+				Path<?> sortPath = root.get(sortBy.getColumn());
+				orders.add(
+					sortBy.getDirection() == SortBy.Direction.ASC
+						? criteriaBuilder.asc(sortPath)
+						: criteriaBuilder.desc(sortPath)
+				);
 			}
+		}
 
-			if (searchText != null && !searchText.isBlank()) {
+		Order order = criteriaBuilder.asc(root.get(getIdAttribute()));
 
-				Predicate searchConditions = criteriaBuilder.disjunction();
+		if (last != null) {
+			order = criteriaBuilder.desc(root.get(getIdAttribute()));
+		}
 
-				for (String searchField : searchFields) {
+		if (order != null) {
+			orders.add(order);
+		}
 
-					Path<?> searchPath = root.get(searchField);
+		criteriaBuilderQuery.orderBy(orders);
 
-					searchConditions = _addSearchCondition(
-						criteriaBuilder, searchConditions, searchPath,
-						searchText);
+		Mutiny.Query<T> query = s.createQuery(criteriaBuilderQuery);
 
-				}
-				if (StringUtils.isNumeric(searchText)) {
-					searchConditions = criteriaBuilder.or(
-						searchConditions, criteriaBuilder.equal(
-							root.get(getIdAttribute()),
-							Long.parseLong(searchText)
-						)
-					);
-				}
-
-				where = criteriaBuilder.and(where, searchConditions);
-
+		if (first != null) {
+			if (first < 0) {
+				return Uni.createFrom().failure(
+					() -> new InvalidPageSizeException(format("The page size must not be negative: 'first'=%s", first)));
 			}
-
-			criteriaBuilderQuery.where(where);
-
-			List<Order> orders =
-				new ArrayList<>(criteriaBuilderQuery.getOrderList());
-
-			if (sortByList != null) {
-				for (SortBy sortBy : sortByList) {
-					Path<?> sortPath = root.get(sortBy.getColumn());
-					orders.add(
-						sortBy.getDirection() == SortBy.Direction.ASC
-							? criteriaBuilder.asc(sortPath)
-							: criteriaBuilder.desc(sortPath)
-					);
-				}
+			query.setMaxResults(first + 1);
+		}
+		if (last != null) {
+			if (last < 0) {
+				return Uni.createFrom().failure(
+					() -> new InvalidPageSizeException(format("The page size must not be negative: 'last'=%s", last)));
 			}
+			query.setMaxResults(last + 1);
+		}
 
-			Order order = criteriaBuilder.asc(root.get(getIdAttribute()));
+		Uni<List<T>> entities = query
+			.setCacheable(true)
+			.getResultList();
 
-			if (last != null) {
-				order = criteriaBuilder.desc(root.get(getIdAttribute()));
-			}
+		return entities.map(entitiesList -> {
 
-			if (order != null) {
-				orders.add(order);
-			}
+			List<Edge<T>> edges = RelayUtil.toEdgeList(entitiesList);
 
-			criteriaBuilderQuery.orderBy(orders);
+			int size = entitiesList.size();
 
-			Mutiny.Query<T> query = s.createQuery(criteriaBuilderQuery);
+			String startCursor =
+				entitiesList.isEmpty()
+					? null
+					: edges.get(0).getCursor();
+
+			String endCursor = null;
+
+			boolean hasNextPage = false;
+			boolean hasPreviousPage = false;
 
 			if (first != null) {
-				if (first < 0) {
-					return Uni.createFrom().failure(
-						() -> new InvalidPageSizeException(format("The page size must not be negative: 'first'=%s", first)));
+
+				hasNextPage = size == first + 1;
+
+				if (hasNextPage) {
+					endCursor =
+						entitiesList.isEmpty()
+							? null
+							: edges.get(size - 2).getCursor();
 				}
-				query.setMaxResults(first + 1);
+
 			}
+
 			if (last != null) {
-				if (last < 0) {
-					return Uni.createFrom().failure(
-						() -> new InvalidPageSizeException(format("The page size must not be negative: 'last'=%s", last)));
+
+				hasPreviousPage = size == last + 1;
+				hasNextPage = false;
+
+				if (hasPreviousPage) {
+					endCursor =
+						entitiesList.isEmpty()
+							? null
+							: edges.get(size - 2).getCursor();
 				}
-				query.setMaxResults(last + 1);
 			}
 
-			Uni<List<T>> entities = query
-				.setCacheable(true)
-				.getResultList();
+			if ((hasNextPage || hasPreviousPage) && !edges.isEmpty()) {
+				edges.remove(size - 1);
+			}
 
-			return entities.map(entitiesList -> {
+			PageInfo pageInfo = new DefaultPageInfo(
+				startCursor, endCursor, hasPreviousPage, hasNextPage);
 
-				List<Edge<T>> edges = RelayUtil.toEdgeList(entitiesList);
-
-				int size = entitiesList.size();
-
-				String startCursor =
-					entitiesList.isEmpty()
-						? null
-						: edges.get(0).getCursor();
-
-				String endCursor = null;
-
-				boolean hasNextPage = false;
-				boolean hasPreviousPage = false;
-
-				if (first != null) {
-
-					hasNextPage = size == first + 1;
-
-					if (hasNextPage) {
-						endCursor =
-							entitiesList.isEmpty()
-								? null
-								: edges.get(size - 2).getCursor();
-					}
-
-				}
-
-				if (last != null) {
-
-					hasPreviousPage = size == last + 1;
-					hasNextPage = false;
-
-					if (hasPreviousPage) {
-						endCursor =
-							entitiesList.isEmpty()
-								? null
-								: edges.get(size - 2).getCursor();
-					}
-				}
-
-				if ((hasNextPage || hasPreviousPage) && !edges.isEmpty()) {
-					edges.remove(size - 1);
-				}
-
-				PageInfo pageInfo = new DefaultPageInfo(
-					startCursor, endCursor, hasPreviousPage, hasNextPage);
-
-				return new DefaultConnection<>(edges, pageInfo);
-
-			});
+			return new DefaultConnection<>(edges, pageInfo);
 
 		});
-
 	}
 
 	public Uni<Connection<ENTITY>> findConnection(
@@ -446,8 +460,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 	protected abstract <T> SingularAttribute<T, Long> getIdAttribute();
 
-	protected abstract <T> Uni<T> withTransaction(
-		BiFunction<Mutiny.Session, Mutiny.Transaction, Uni<T>> function);
+	protected abstract Mutiny.SessionFactory getSessionFactory();
 
 	private static final Logger LOGGER = Logger.getLogger(GraphQLService.class);
 
