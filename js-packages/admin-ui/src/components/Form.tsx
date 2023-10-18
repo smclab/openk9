@@ -18,6 +18,7 @@ import { BrandLogo } from "./BrandLogo";
 import ClayCard from "@clayui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as TooltipRecharts, Legend } from "recharts";
 import ClayTable from "@clayui/table";
+import { useToast } from "./ToastProvider";
 
 type Nullable<T> = T | null | undefined;
 export const fromFieldValidators =
@@ -460,6 +461,8 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
   const { observer, onOpenChange, open } = useModal();
   const scrollerRef = React.useRef<HTMLElement>();
   const [removeMutate, removeMutation] = useRemoveMutation({});
+  const showToast = useToast();
+
   return (
     <React.Fragment>
       <CustomFormGroup>
@@ -508,6 +511,10 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
                       variables: mapValueToRemoveMutationVariables(),
                       onCompleted() {
                         invalidate();
+                        showToast({ displayType: "success", title: "Remove Association", content: "" });
+                      },
+                      onError() {
+                        showToast({ displayType: "danger", title: "Error", content: "" });
                       },
                     });
                 }}
@@ -563,6 +570,10 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
                                   variables: mapValueToMutationVariables(row.id),
                                   onCompleted() {
                                     onOpenChange(false);
+                                    showToast({ displayType: "success", title: "Associate " + row.name, content: "" });
+                                  },
+                                  onError() {
+                                    showToast({ title: "error", content: "", displayType: "danger" });
                                   },
                                 });
                               }
@@ -597,7 +608,12 @@ export function SearchSelect<Value, Change extends Record<string, any>, Remove e
           </ClayModal.Body>
           <ClayModal.Footer
             first={
-              <ClayButton displayType="secondary" onClick={() => onOpenChange(false)}>
+              <ClayButton
+                displayType="secondary"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
                 Cancel
               </ClayButton>
             }
