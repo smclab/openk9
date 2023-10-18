@@ -26,6 +26,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Column;
@@ -40,6 +41,10 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
+
+
+	@Formula("current_schema()")
+	private String tenant;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
