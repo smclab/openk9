@@ -56,7 +56,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
+@Cacheable(value = false)
 public class DocTypeField extends BaseDocTypeField {
 
 	@Column(name = "name", nullable = false)
