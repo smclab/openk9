@@ -20,7 +20,6 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
-import io.vertx.ext.web.RoutingContext;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
