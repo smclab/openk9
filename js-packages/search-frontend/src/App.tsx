@@ -17,6 +17,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: true,
+  dynamicElement: ["tab", "search"],
 });
 
 export function App() {
@@ -428,7 +429,11 @@ export function App() {
       ></div>
       <div
         className="openk9-preview-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ details: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            filtersHorizontal: { element, callback: () => {} },
+          })
+        }
         css={css`
           grid-area: detail;
           overflow-y: auto;

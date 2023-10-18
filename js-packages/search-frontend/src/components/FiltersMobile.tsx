@@ -10,6 +10,7 @@ import {
 } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
+import { WhoIsDynamic } from "./FilterCategoryDynamic";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -26,6 +27,7 @@ export type FiltersMobileProps<E> = {
     | undefined;
   language: string;
   sortAfterKey: string;
+  isDynamicElement: WhoIsDynamic[];
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -39,6 +41,7 @@ function FiltersMobile<E>({
   setIsVisibleFilters,
   language,
   sortAfterKey,
+  isDynamicElement,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -124,6 +127,7 @@ function FiltersMobile<E>({
         language={language}
         sortAfterKey={sortAfterKey}
         numberOfResults={10}
+        isDynamicElement={isDynamicElement}
       />
     </React.Fragment>
   );

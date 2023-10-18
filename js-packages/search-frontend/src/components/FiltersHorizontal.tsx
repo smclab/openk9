@@ -20,7 +20,7 @@ import {
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
-import { capitalize } from "lodash";
+import { capitalize, result } from "lodash";
 import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
@@ -76,7 +76,6 @@ function FiltersHorizontal({
 
   const [filterSelect, setFilterSelect] =
     React.useState<Array<SearchToken>>(searchQuery);
-  const [haveValue, setHaveValue] = React.useState(false);
 
   const handleCheckboxChange = (event: any, token: SearchToken) => {
     const isChecked = event.target.checked;
@@ -115,13 +114,8 @@ function FiltersHorizontal({
             suggestion.id,
             language,
           );
-          return CreateSuggestion(
-            index,
-            suggestion,
-            suggestions,
-            haveValue,
-            setHaveValue,
-          );
+
+          return MemoizedCreateSuggestion(index, suggestion, suggestions);
         })}
       </OverlayScrollbarsComponent>
       <div
@@ -132,112 +126,126 @@ function FiltersHorizontal({
           }
         `}
       ></div>
-      {!haveValue && <NoFilters />}
-      {haveValue && (
-        <div
-          className="openk9-filter-horizontal-container-submit"
+      <div
+        className="openk9-filter-horizontal-container-submit"
+        css={css`
+          display: flex;
+          justify-content: flex-end;
+          @media (max-width: 480px) {
+            padding-inline: 20px;
+            flex-direction: column;
+            gap: 15px;
+          }
+        `}
+      >
+        <button
+          className="openk9-filter-horizontal-submit"
+          aria-label="rimuovi filtri"
           css={css`
+            font-size: smaller;
+            height: 52px;
+            padding: 8px 12px;
+            white-space: nowrap;
+            border: 1px solid #d6012e;
+            background-color: #d6012e;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
+            gap: 3px;
             @media (max-width: 480px) {
-              padding-inline: 20px;
-              flex-direction: column;
-              gap: 15px;
+              background: white;
+              border: 1px solid #d6012e;
+              width: 100%;
+              height: auto;
+              margin-top: 20px;
+              color: black;
+              border-radius: 50px;
+              display: flex;
+              justify-content: center;
+              color: var(--red-tones-500, #c0272b);
+              text-align: center;
+              font-size: 16px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+              align-items: center;
             }
           `}
+          onClick={() => {
+            onConfigurationChange({ filterTokens: [] });
+            onConfigurationChangeExt && onConfigurationChangeExt();
+          }}
         >
-          <button
-            className="openk9-filter-horizontal-submit"
-            aria-label="rimuovi filtri"
-            css={css`
-              font-size: smaller;
-              height: 52px;
-              padding: 8px 12px;
-              white-space: nowrap;
+          <div>{t("remove-filters")}</div>
+          <TrashSvg size="18px" />
+        </button>
+        <button
+          className="openk9-filter-horizontal-submit"
+          aria-label="applica filtri"
+          css={css`
+            font-size: smaller;
+            height: 52px;
+            padding: 8px 12px;
+            white-space: nowrap;
+            border: 1px solid #d6012e;
+            background-color: #d6012e;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            @media (max-width: 480px) {
+              background: #d6012e;
               border: 1px solid #d6012e;
-              background-color: #d6012e;
-              border-radius: 5px;
+              width: 100%;
+              height: auto;
+              margin-top: 20px;
               color: white;
-              font-weight: 600;
-              cursor: pointer;
+              border-radius: 50px;
               display: flex;
-              align-items: center;
-              gap: 3px;
-              @media (max-width: 480px) {
-                background: white;
-                border: 1px solid #d6012e;
-                width: 100%;
-                height: auto;
-                margin-top: 20px;
-                color: black;
-                border-radius: 50px;
-                display: flex;
-                justify-content: center;
-                color: var(--red-tones-500, #c0272b);
-                text-align: center;
-                font-size: 16px;
-                font-style: normal;
-                font-weight: 700;
-                line-height: normal;
-                align-items: center;
-              }
-            `}
-            onClick={() => {
-              onConfigurationChange({ filterTokens: [] });
-              onConfigurationChangeExt && onConfigurationChangeExt();
-            }}
-          >
-            <div>{t("remove-filters")}</div>
-            <TrashSvg size="18px" />
-          </button>
-          <button
-            className="openk9-filter-horizontal-submit"
-            aria-label="applica filtri"
-            css={css`
-              font-size: smaller;
-              height: 52px;
-              padding: 8px 12px;
-              white-space: nowrap;
-              border: 1px solid #d6012e;
-              background-color: #d6012e;
-              border-radius: 5px;
-              color: white;
-              font-weight: 600;
-              cursor: pointer;
-              display: flex;
-              align-items: center;
-              gap: 3px;
-              @media (max-width: 480px) {
-                background: #d6012e;
-                border: 1px solid #d6012e;
-                width: 100%;
-                height: auto;
-                margin-top: 20px;
-                color: white;
-                border-radius: 50px;
-                display: flex;
-                justify-content: center;
-                text-align: center;
-                font-size: 16px;
-                font-style: normal;
-                font-weight: 700;
-                line-height: normal;
-              }
-            `}
-            onClick={() => {
-              onConfigurationChange({ filterTokens: filterSelect });
-              onConfigurationChangeExt && onConfigurationChangeExt();
-            }}
-          >
-            <div>{t("add-filters") || "Add Filters"}</div>
-            <div>
-              <AddFiltersSvg size="22px" />
-            </div>
-          </button>
-        </div>
-      )}
+              justify-content: center;
+              text-align: center;
+              font-size: 16px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+          `}
+          onClick={() => {
+            onConfigurationChange({ filterTokens: filterSelect });
+            onConfigurationChangeExt && onConfigurationChangeExt();
+          }}
+        >
+          <div>{t("add-filters") || "Add Filters"}</div>
+          <div>
+            <AddFiltersSvg size="22px" />
+          </div>
+        </button>
+      </div>
     </React.Fragment>
   );
+
+  function MemoizedCreateSuggestion(
+    index: number,
+    suggestion: { name: string; id: number; multiSelect: boolean },
+    suggestions: UseInfiniteQueryResult<
+      {
+        result: SuggestionResult[];
+        afterKey: string;
+      },
+      unknown
+    >,
+  ) {
+    return React.useMemo(
+      () => CreateSuggestion(index, suggestion, suggestions),
+      [index, suggestion, suggestions],
+    );
+  }
 
   function CreateSuggestion(
     index: number,
@@ -249,8 +257,6 @@ function FiltersHorizontal({
       },
       unknown
     >,
-    haveValue: boolean,
-    setHaveValue: any,
   ): JSX.Element {
     const [isOpen, setIsOpen] = React.useState(true);
     const resultValue = suggestions.data?.pages || [];
@@ -260,10 +266,18 @@ function FiltersHorizontal({
       searchQuery,
       suggestion.id,
     );
-    if (filters.length === 0) return <div></div>;
-    React.useEffect(() => {
-      setHaveValue(true);
-    }, []);
+    if (filters.length === 0)
+      return (
+        <div
+          css={css`
+            color: var(--openk9-embeddable-search--secondary-text-color);
+          `}
+        >
+          <h4>{suggestion.name}</h4>
+          <NoFilters />
+        </div>
+      );
+
     return (
       <React.Fragment key={index}>
         {filters.length !== 0 && (

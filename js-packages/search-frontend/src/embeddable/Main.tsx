@@ -458,6 +458,7 @@ export function Main({
             setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
             language={languageSelect}
             sortAfterKey={sortAfterKey}
+            isDynamicElement={isDynamicElement}
           />
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
