@@ -50,26 +50,24 @@ public class K9EntityListener {
 		_handle(k9Entity, EventType.DELETE);
 	}
 
-	private void _handle(K9Entity k9Entity, String create)
-		throws SchedulerException {
+	private void _handle(K9Entity k9Entity, String create) throws SchedulerException {
 
 		if (_isDatasource(k9Entity)) {
+			Datasource datasource = (Datasource) k9Entity;
 			if (EventType.DELETE.equals(create)) {
-				_schedulerInitializer.get().deleteScheduler(
-					routingContext.get("_tenantId"),
-					(Datasource)k9Entity);
+				_schedulerInitializer.get().deleteScheduler(datasource.getTenant(), datasource);
 			}
 			else {
-				_createOrUpdateScheduler((Datasource) k9Entity);
+				_createOrUpdateScheduler(datasource);
 			}
 		}
 
 	}
 
-	private void _createOrUpdateScheduler(Datasource datasource)
-		throws SchedulerException {
-		_schedulerInitializer.get().createOrUpdateScheduler(
-			routingContext.get("_tenantId"), datasource);
+	private void _createOrUpdateScheduler(Datasource datasource) throws SchedulerException {
+
+		_schedulerInitializer.get().createOrUpdateScheduler(datasource.getTenant(), datasource);
+
 	}
 
 	private boolean _isDatasource(K9Entity k9Entity) {
@@ -79,8 +77,5 @@ public class K9EntityListener {
 
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
-
-	@Inject
-	RoutingContext routingContext;
 
 }
