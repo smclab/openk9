@@ -115,16 +115,24 @@ type ResultCountProps = {
   children: number | undefined;
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
+  addClass?: string;
 };
 
-function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
+function ResultCount({
+  children,
+  setSortResult,
+  isMobile,
+  addClass,
+}: ResultCountProps) {
   const client = useOpenK9Client();
   const { t } = useTranslation();
 
   return (
     <React.Fragment>
       <div
-        className="openk9-result-list-container-title box-title"
+        className={`openk9-result-list-container-title box-title ${
+          addClass || ""
+        }`}
         css={css`
           padding: 0px 16px;
           width: 100%;
@@ -389,40 +397,13 @@ export function InfiniteResults<E>({
         </div>
       ) : (
         <React.Fragment>
-          <div className="openk9-container-no-results">
-            <div
-              className="openk9-result-list-container-title box-title"
-              css={css`
-                padding: 0px 16px;
-                width: 100%;
-                background: #fafafa;
-                padding-top: 20.7px;
-                padding-bottom: 12.7px;
-                display: flex;
-                margin-bottom: 8px;
-              `}
-            >
-              <span>
-                <ResultSvg />
-              </span>
-              <span
-                className="openk9-result-list-title title"
-                css={css`
-                  margin-left: 5px;
-                  font-style: normal;
-                  font-weight: 700;
-                  font-size: 18px;
-                  height: 18px;
-                  line-height: 22px;
-                  align-items: center;
-                  color: #3f3f46;
-                  margin-left: 8px;
-                `}
-              >
-                {t("result")}
-              </span>
-            </div>
-          </div>
+          <ResultCount
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            addClass="openk9-container-no-results"
+          >
+            {results.data?.pages[0].total}
+          </ResultCount>
           <NoResults />
         </React.Fragment>
       )}
