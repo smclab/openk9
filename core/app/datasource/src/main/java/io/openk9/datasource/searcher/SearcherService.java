@@ -616,7 +616,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				.addAllAnalysis(result)
 				.build();
 
-		});
+		})
+		.onFailure()
+		.recoverWithItem(() -> QueryAnalysisResponse.newBuilder().build());
 
 	}
 
