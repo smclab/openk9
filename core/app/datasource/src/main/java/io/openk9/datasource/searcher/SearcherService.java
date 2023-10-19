@@ -469,15 +469,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Override
 	public Uni<QueryAnalysisResponse> queryAnalysis(QueryAnalysisRequest request) {
 
-		if (1 == 1) {
-			return Uni.createFrom().item(
-				QueryAnalysisResponse.newBuilder()
-					.setSearchText("")
-					.clearAnalysis()
-					.build()
-			);
-		}
-
 		String searchText = request.getSearchText();
 
 		Uni<Grammar> grammarUni =
