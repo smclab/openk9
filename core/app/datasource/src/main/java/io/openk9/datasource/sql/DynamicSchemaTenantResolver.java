@@ -3,15 +3,12 @@ package io.openk9.datasource.sql;
 import io.quarkus.arc.Unremovable;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import io.quarkus.hibernate.orm.runtime.tenant.TenantResolver;
-import io.quarkus.vertx.http.runtime.CurrentVertxRequest;
 import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.IllegalProductException;
 import javax.enterprise.inject.InjectionException;
 import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.ResolutionException;
 import javax.inject.Inject;
 
 @RequestScoped
