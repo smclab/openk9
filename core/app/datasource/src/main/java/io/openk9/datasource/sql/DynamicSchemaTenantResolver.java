@@ -7,6 +7,8 @@ import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Instance;
+import javax.enterprise.inject.ResolutionException;
 import javax.inject.Inject;
 
 @RequestScoped
@@ -17,19 +19,26 @@ public class DynamicSchemaTenantResolver implements TenantResolver {
 	private static final Logger LOG = Logger.getLogger(DynamicSchemaTenantResolver.class);
 
 	@Inject
-	RoutingContext routingContext;
+	Instance<RoutingContext> routingContextI;
 
 	@Override
 	public String getDefaultTenantId() {
-		return "public";
+		return "<unknown>";
 	}
 
 	@Override
 	public String resolveTenantId() {
-		String tenantId = routingContext.get("_tenantId", getDefaultTenantId());
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("tenant resolved: %s", tenantId));
+		try {
+			RoutingContext context = routingContextI.get();
+			String tenantId = context.get("_tenantId", getDefaultTenantId());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("tenant resolved: %s", tenantId));
+			}
+			return tenantId;
 		}
-		return tenantId;
+		catch (ResolutionException re) {
+			return getDefaultTenantId();
+		}
+
 	}
 }
