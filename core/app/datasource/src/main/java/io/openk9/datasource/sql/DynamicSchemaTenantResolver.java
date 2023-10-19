@@ -22,7 +22,7 @@ public class DynamicSchemaTenantResolver implements TenantResolver {
 	private static final Logger LOG = Logger.getLogger(DynamicSchemaTenantResolver.class);
 
 	@Inject
-	Instance<CurrentVertxRequest> vertxRequests;
+	Instance<RoutingContext> routingContextInstance;
 
 	@Override
 	public String getDefaultTenantId() {
@@ -32,7 +32,7 @@ public class DynamicSchemaTenantResolver implements TenantResolver {
 	@Override
 	public String resolveTenantId() {
 		try {
-			RoutingContext context = vertxRequests.get().getCurrent();
+			RoutingContext context = routingContextInstance.get();
 
 			String tenantId = context.get("_tenantId", getDefaultTenantId());
 			if (LOG.isDebugEnabled()) {
