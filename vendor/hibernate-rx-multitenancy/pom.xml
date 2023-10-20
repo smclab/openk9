@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>quarkus-extensions-parent</artifactId>
+        <groupId>io.quarkus</groupId>
+        <version>2.15.3.Final</version>
+        <relativePath/>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>hibernate-rx-multitenancy-parent</artifactId>
+    <groupId>io.openk9</groupId>
+    <version>2.15.3.Final</version>
+    <name>Quarkus - Hibernate Reactive for OpenK9</name>
+    <packaging>pom</packaging>
+    <modules>
+        <module>deployment</module>
+        <module>runtime</module>
+    </modules>
+
+	<properties>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.release>17</maven.compiler.release>
+	</properties>
+
+</project>
