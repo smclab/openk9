@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AccessLevel;
@@ -46,6 +47,7 @@ public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 	@Type(type = "io.openk9.datasource.type.TenantUserType")
 	@Column(name = "id", insertable = false, updatable = false)
+	@JsonIgnore
 	private String tenant;
 
 	@Setter(AccessLevel.NONE)
