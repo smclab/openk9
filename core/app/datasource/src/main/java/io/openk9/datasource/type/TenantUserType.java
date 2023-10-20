@@ -2,7 +2,7 @@ package io.openk9.datasource.type;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StringType;
+import org.hibernate.type.LongType;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -14,7 +14,7 @@ import java.util.Objects;
 public class TenantUserType implements UserType {
 	@Override
 	public int[] sqlTypes() {
-		return new int[] {StringType.INSTANCE.sqlType()};
+		return new int[] {LongType.INSTANCE.sqlType()};
 	}
 
 	@Override

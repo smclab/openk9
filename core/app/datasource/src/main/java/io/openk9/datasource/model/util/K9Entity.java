@@ -45,7 +45,7 @@ public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 
 	@Type(type = "io.openk9.datasource.type.TenantUserType")
-	@Column(table = "tenant_binding", name = "virtual_host", insertable = false, updatable = false)
+	@Column(name = "id", insertable = false, updatable = false)
 	private String tenant;
 
 	@Setter(AccessLevel.NONE)
