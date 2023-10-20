@@ -27,6 +27,7 @@ import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Column;
@@ -43,7 +44,8 @@ import java.util.Objects;
 public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 
-	@Formula("current_schema()")
+	@Type(type = "io.openk9.datasource.type.TenantUserType")
+	@Column(table = "tenant_binding", name = "virtual_host", insertable = false, updatable = false)
 	private String tenant;
 
 	@Setter(AccessLevel.NONE)
