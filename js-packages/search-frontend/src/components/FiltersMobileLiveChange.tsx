@@ -26,6 +26,7 @@ import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { Tab } from "./Tabs";
 import { capitalize } from "lodash";
+import { WhoIsDynamic } from "./FilterCategoryDynamic";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -48,6 +49,8 @@ export type FiltersMobileProps<E> = {
   sortAfterKey: string;
   isCollapsable?: boolean;
   numberOfResults: number;
+  whoIsDynamic: WhoIsDynamic[];
+  numberItems?: number | null | undefined;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -67,6 +70,8 @@ function FiltersMobileLiveChange<E>({
   sortAfterKey,
   isCollapsable = true,
   numberOfResults,
+  whoIsDynamic,
+  numberItems,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -165,10 +170,12 @@ function FiltersMobileLiveChange<E>({
           filtersSelect={configuration.filterTokens}
           sort={sort}
           dynamicFilters={dynamicFilters}
+          isDynamicElement={whoIsDynamic}
           language={language}
           sortAfterKey={sortAfterKey}
           isCollapsable={isCollapsable}
           numberOfResults={numberOfResults}
+          numberItems={numberItems}
           preFilters={
             viewTabs ? (
               <ViewAllTabs

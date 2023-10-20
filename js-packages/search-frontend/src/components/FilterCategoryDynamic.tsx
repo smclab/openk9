@@ -403,7 +403,7 @@ function FilterCategoryDynamic({
 
 export const FilterCategoryDynamicMemo = React.memo(FilterCategoryDynamic);
 
-function useInfiniteSuggestions(
+export function useInfiniteSuggestions(
   isDynamicElement: WhoIsDynamic[],
   searchQueryNotFilter: SearchToken[] | null,
   activeSuggestionCategory: number,

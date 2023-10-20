@@ -477,6 +477,8 @@ export function Main({
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
+            whoIsDynamic={isDynamicElement}
+            numberItems={configuration.filtersConfigurable?.numberItems}
             isVisibleFilters={
               configuration.filtersMobileLiveChange?.isVisible || false
             }
