@@ -77,14 +77,14 @@ function Filters({
   }, [searchQuery]);
 
   return (
-    <OverlayScrollbarsComponent
+    <div
       className="openk9-filter-overlay-scrollbars"
-      style={{
-        overflowY: "auto",
-        position: "relative",
-        height: "100%",
-        borderRadius: "8px",
-      }}
+      css={css`
+        overflow-y: auto;
+        position: relative;
+        height: 100%;
+        border-radius: 8px;
+      `}
     >
       <div
         className="openk9-filter-list-container-title box-title"
@@ -251,7 +251,7 @@ function Filters({
           );
         })}
       </div>
-    </OverlayScrollbarsComponent>
+    </div>
   );
 }
 export const FiltersMemo = React.memo(Filters);
