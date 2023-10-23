@@ -490,6 +490,7 @@ export function Search({
           <div className="openk9-search-btn-external-container">
             <button
               className="openk9-search-btn-external"
+              aria-label={t("search-on-website") || "search on website"}
               css={css`
                 min-height: 50px;
                 min-width: 50px;
