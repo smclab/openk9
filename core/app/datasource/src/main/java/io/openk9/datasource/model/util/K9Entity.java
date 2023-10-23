@@ -46,6 +46,7 @@ public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 
 	@Type(type = "io.openk9.datasource.type.TenantUserType")
+	// workaround to get the UserType valuated
 	@Column(name = "id", insertable = false, updatable = false)
 	@JsonIgnore
 	private String tenant;
