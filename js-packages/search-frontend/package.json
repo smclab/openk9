@@ -51,9 +51,9 @@
     "@babel/preset-typescript": "^7.16.0",
     "@babel/runtime": "^7.16.0",
     "@fortawesome/fontawesome-svg-core": "6.2.0",
+    "@fortawesome/free-brands-svg-icons": "6.2.0",
     "@fortawesome/free-solid-svg-icons": "6.2.0",
     "@fortawesome/react-fontawesome": "0.2.0",
-    "@fortawesome/free-brands-svg-icons": "6.2.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
     "@types/keycloak-js": "^3.4.1",
     "@types/lodash": "^4.14.178",
@@ -111,6 +111,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@types/react-dates": "^21.8.5",
     "i18next": "^22.5.1",
     "react-i18next": "^12.3.1",
     "sanitize-html": "^2.11.0"

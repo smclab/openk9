@@ -5298,10 +5298,10 @@
     "@types/react" "*"
     date-fns "^2.16.1"
 
-"@types/react-dates@^21.8.3":
-  version "21.8.3"
-  resolved "https://registry.npmjs.org/@types/react-dates/-/react-dates-21.8.3.tgz#dc4e71f83d09979b1c4f355c267e52a850d0fe2c"
-  integrity sha512-MSG/A5UCXepPw5a9BtdOXfCCSMcQ5+oQIkm0K2u39sf4EJbsgngUg1zcoY3amxa6Hz0EWZkZOiExK/92J6hxUw==
+"@types/react-dates@^21.8.5":
+  version "21.8.5"
+  resolved "https://registry.npmjs.org/@types/react-dates/-/react-dates-21.8.5.tgz#f5d38241e23e90e6c86f5eb3ac52272d1a60848d"
+  integrity sha512-EZulbUARHrnzEOjb4q+hWlg3Onwm1Z4k6wnPmRLWDMk4UnkQ+pLgLJWAjC7GkKEeneE+WrFeTLoXiNceg3xy7g==
   dependencies:
     "@types/react" "*"
     "@types/react-outside-click-handler" "*"

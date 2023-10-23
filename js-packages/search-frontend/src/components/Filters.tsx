@@ -273,6 +273,7 @@ function useSuggestionCategories() {
 
 type createLabel = {
   label: string;
+  idValue?: string;
   action?(): void;
   svgIcon?: React.ReactNode;
   sizeHeight?: string;
@@ -295,6 +296,7 @@ type createLabel = {
 };
 export function CreateLabel({
   label,
+  idValue,
   action,
   svgIcon,
   classN = "",
@@ -315,6 +317,7 @@ export function CreateLabel({
   return (
     <button
       aria-label={ariaLabel || ""}
+      id={idValue || ""}
       disabled={false}
       className={`openk9-create-label-container-wrapper ${classN}`}
       css={css`

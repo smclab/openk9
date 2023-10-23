@@ -9,7 +9,7 @@ import "moment/locale/de";
 import "moment/locale/it";
 import "moment/locale/es";
 import "moment/locale/fr";
-
+import { DateRangePickerPhrases } from "react-dates/lib/defaultPhrases";
 export function DataRangePickerVertical({
   onChange,
   calendarDate,
@@ -25,6 +25,10 @@ export function DataRangePickerVertical({
   end?: any;
   classTab?: string;
 }) {
+  const languageCalendar = mappingNameLanguage(language);
+  moment.locale(languageCalendar);
+  const { t } = useTranslation();
+
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
   const [endDate, setEndDate] = React.useState<any | null>(null);
@@ -42,9 +46,21 @@ export function DataRangePickerVertical({
     });
   }, [endDate, startDate]);
 
-  const { t } = useTranslation();
-  const languageCalendar = mappingNameLanguage(language);
-  moment.locale(languageCalendar);
+  const customPhrasesStart = {
+    ...DateRangePickerPhrases,
+    clearDates: t("remove-dates"),
+    focusStartDate: startDate
+      ? t("remove-data-start") || "remove start date"
+      : t("open-calendar-start-date") || "open calendar start date",
+  };
+  const customPhrasesEndDate = {
+    ...DateRangePickerPhrases,
+    clearDates: t("remove-dates"),
+    focusStartDate: endDate
+      ? t("remove-data-end") || "remove end date"
+      : t("open-calendar-end-date") || "open calendar end date",
+  };
+  console.log(DateRangePickerPhrases);
 
   return (
     <div
@@ -81,6 +97,7 @@ export function DataRangePickerVertical({
             isOutsideRange={() => false}
             placeholder={t("start-day") || "Start day"}
             openDirection="up"
+            phrases={customPhrasesStart}
           />
         </div>
       </div>
@@ -108,6 +125,7 @@ export function DataRangePickerVertical({
             isOutsideRange={() => false}
             placeholder={t("end-day") || "End day"}
             openDirection="up"
+            phrases={customPhrasesEndDate}
           />
         </div>
       </div>
