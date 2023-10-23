@@ -95,10 +95,6 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>io.openk9.client.grpc</groupId>
-			<artifactId>file-manager-client-grpc</artifactId>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
