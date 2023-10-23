@@ -56,7 +56,7 @@
         <dependency>
             <groupId>io.openk9</groupId>
             <artifactId>hibernate-rx-multitenancy</artifactId>
-						<version>${project.version}</version>
+			<version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
