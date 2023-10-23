@@ -37,7 +37,7 @@
     <dependency>
       <groupId>io.openk9</groupId>
       <artifactId>hibernate-rx-multitenancy</artifactId>
-      <version>2.15.3.Final</version>
+      <version>${quarkus.platform.version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
