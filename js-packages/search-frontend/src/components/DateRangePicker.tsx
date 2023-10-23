@@ -191,6 +191,7 @@ export function DataRangePicker({
         />
         <button
           aria-label={t("remove-calendar-filters") || "remove calendar filters"}
+          id={"reset-filter-data-picker"}
           style={{
             zIndex: "2",
             backgroundColor: "inherit",
@@ -223,4 +224,21 @@ export function DataRangePicker({
       </div>
     </div>
   );
+}
+
+export function resetFilterCalendar() {
+  const resetButton = document.getElementById("reset-filter-data-picker");
+  if (resetButton) {
+    resetButton.click();
+  }
+  const resetButtonVerticalStart = document.querySelectorAll(
+    ".SingleDatePickerInput_clearDate.SingleDatePickerInput_clearDate_1.SingleDatePickerInput_clearDate__default.SingleDatePickerInput_clearDate__default_2",
+  );
+  if (resetButtonVerticalStart) {
+    resetButtonVerticalStart.forEach((resetButton) => {
+      if (resetButton instanceof HTMLButtonElement) {
+        resetButton.click();
+      }
+    });
+  }
 }

@@ -6,6 +6,7 @@ import { SearchToken } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";
+import { resetFilterCalendar } from "./DateRangePicker";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -98,6 +99,7 @@ function Tabs({
                   onSelectedTabIndexChange(index);
                   onConfigurationChange({ filterTokens: [] });
                   if (onAction) onAction();
+                  resetFilterCalendar();
                 }}
               >
                 {tabTraslation.toUpperCase()}

@@ -29,8 +29,10 @@ export function DataRangePickerVertical({
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
-  const [manageAccessibilityStart, setManageAccessibilityStart] = React.useState<boolean>(false);
-  const [manageAccessibilityEnd, setManageAccessibilityEnd] = React.useState<boolean>(false);
+  const [manageAccessibilityStart, setManageAccessibilityStart] =
+    React.useState<boolean>(false);
+  const [manageAccessibilityEnd, setManageAccessibilityEnd] =
+    React.useState<boolean>(false);
 
   React.useEffect(() => {
     onChange({
@@ -59,7 +61,12 @@ export function DataRangePickerVertical({
         <p className="DateRangePickerVertical-date-title">
           Dal ({t("gg/mm/aaaa")}):
         </p>
-        <div onClick={() => setManageAccessibilityStart(!manageAccessibilityStart)} onKeyDown={(e) => e.key === 'Tab' ? setManageAccessibilityStart(false) : null}>
+        <div
+          onClick={() => setManageAccessibilityStart(!manageAccessibilityStart)}
+          onKeyDown={(e) =>
+            e.key === "Tab" ? setManageAccessibilityStart(false) : null
+          }
+        >
           <SingleDatePicker
             date={start || startDate}
             numberOfMonths={1}
@@ -81,7 +88,12 @@ export function DataRangePickerVertical({
         <p className="DateRangePickerVertical-date-title">
           Al ({t("gg/mm/aaaa")}):
         </p>
-        <div onClick={() => setManageAccessibilityEnd(!manageAccessibilityEnd)} onKeyDown={(e) => e.key === 'Tab' ? setManageAccessibilityEnd(false) : null}>
+        <div
+          onClick={() => setManageAccessibilityEnd(!manageAccessibilityEnd)}
+          onKeyDown={(e) =>
+            e.key === "Tab" ? setManageAccessibilityEnd(false) : null
+          }
+        >
           <SingleDatePicker
             date={end || endDate}
             numberOfMonths={1}
