@@ -582,9 +582,7 @@ export function mergeAndSortObjects(
         element.suggestionCategoryId === suggestionCategoryId
       ) {
         return (
-          obj.tokenType === element.tokenType &&
-          (obj.value?.includes(element.values[0]) ||
-            obj.value === element.values[0])
+          obj.tokenType === element.tokenType && obj.value === element.values[0]
         );
       }
     });
