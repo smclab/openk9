@@ -50,10 +50,10 @@ export function ActiveFilter({
             `}
           >
             {searchQuery.map((selectToken, index) => {
-              return (
-                <React.Fragment key={index}>
-                  {"goToSuggestion" in selectToken && (
-                    <div key={index} className="openk9-container-active-filter">
+              if ("goToSuggestion" in selectToken) {
+                return selectToken.values.map((value, valueIndex) => (
+                  <React.Fragment key={valueIndex}>
+                    <div className="openk9-container-active-filter">
                       <button
                         className="openk9-active-filter"
                         css={css`
@@ -70,12 +70,17 @@ export function ActiveFilter({
                           white-space: nowrap;
                         `}
                       >
-                        {capitalize(selectToken.values?.[0])}
+                        {capitalize(value)}
                         <span
                           css={css`
                             cursor: pointer;
                           `}
-                          onClick={() => onRemoveFilterToken(selectToken)}
+                          onClick={() =>
+                            onRemoveFilterToken({
+                              ...selectToken,
+                              values: [value],
+                            })
+                          }
                         >
                           <DeleteLogo
                             heightParam={10}
@@ -85,9 +90,10 @@ export function ActiveFilter({
                         </span>
                       </button>
                     </div>
-                  )}
-                </React.Fragment>
-              );
+                  </React.Fragment>
+                ));
+              }
+              return null;
             })}
           </div>
         </div>
