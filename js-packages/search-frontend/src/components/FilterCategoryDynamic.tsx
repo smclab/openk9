@@ -262,6 +262,12 @@ function FilterCategoryDynamic({
                               ? "checked-checkbox filter-dynamic-check"
                               : "not-checked-checkbox filter-dynamic-not-check"
                           }`}
+                          id={
+                            "checkbox-dynamic-" +
+                            suggestion.value +
+                            "-" +
+                            suggestionCategoryId
+                          }
                           type="checkbox"
                           checked={isChecked}
                           onChange={(event) => {
@@ -309,6 +315,8 @@ function FilterCategoryDynamic({
                         onRemove={onRemove}
                         singleSelect={singleSelect}
                         setSingleSelect={setSingleselect}
+                        suggestionValue={suggestion.value}
+                        suggestionCategoryId={"" + suggestionCategoryId}
                       />
                     )}
                     <span
@@ -318,6 +326,17 @@ function FilterCategoryDynamic({
                     >
                       <label
                         className="form-check-label"
+                        htmlFor={
+                          multiSelect
+                            ? "checkbox-dynamic-" +
+                              suggestion.value +
+                              "-" +
+                              suggestionCategoryId
+                            : "radio-button-dynamic-" +
+                              suggestion.value +
+                              "-" +
+                              suggestionCategoryId
+                        }
                         css={css`
                           text-overflow: ellipsis;
                           font-style: normal;
@@ -469,6 +488,8 @@ function SingleSelect({
   onRemove,
   singleSelect,
   setSingleSelect,
+  suggestionValue,
+  suggestionCategoryId,
 }: {
   isChecked: boolean;
   multiSelect: boolean;
@@ -479,12 +500,19 @@ function SingleSelect({
   setSingleSelect: React.Dispatch<
     React.SetStateAction<SearchToken | undefined>
   >;
+  suggestionValue: string;
+  suggestionCategoryId: string;
 }) {
   return (
     <React.Fragment>
       <div>
         <input
-          id="radio-button"
+          id={
+            "radio-button-dynamic-" +
+            suggestionValue +
+            "-" +
+            suggestionCategoryId
+          }
           className={`radio-button ${
             isChecked
               ? "is-checked-dynamic-radio"
