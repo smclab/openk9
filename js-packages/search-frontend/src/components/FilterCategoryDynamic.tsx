@@ -646,7 +646,7 @@ export function createSuggestion(
   return searchQuery;
 }
 
-function haveSomeValue(values: string[], value: string[]) {
+export function haveSomeValue(values: string[], value: string[]) {
   const singleValue = value[0];
   return values.includes(singleValue);
 }

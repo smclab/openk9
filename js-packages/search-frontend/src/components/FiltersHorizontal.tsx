@@ -16,6 +16,7 @@ import {
   FilterCategoryDynamicMemo,
   WhoIsDynamic,
   createSuggestion,
+  haveSomeValue,
   mergeAndSortObjects,
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
@@ -88,10 +89,16 @@ function FiltersHorizontal({
       setFilterSelect([...filterSelect, newFilter]);
     } else {
       setFilterSelect(
-        filterSelect.filter(
-          (t) =>
-            t.values && newFilter.values && t.values[0] !== newFilter.values[0],
-        ),
+        filterSelect.map((t) => {
+          if (t.values && newFilter) {
+            const filteredValues = t.values.filter(
+              (value) => newFilter?.values && value !== newFilter.values[0],
+            );
+            return { ...t, values: filteredValues };
+          } else {
+            return t;
+          }
+        }),
       );
     }
   };
@@ -341,7 +348,7 @@ function FiltersHorizontal({
                   const checked = filterSelect.some((element) => {
                     return (
                       element.values &&
-                      element.values[0] === token.value &&
+                      haveSomeValue(element.values, [token.value]) &&
                       "goToSuggestion" in element &&
                       element.suggestionCategoryId ===
                         token.suggestionCategoryId
@@ -565,4 +572,8 @@ function NoFilters() {
       </div>
     </div>
   );
+}
+
+export function isChecked(values: string[], value: string) {
+  return values.includes(value);
 }
