@@ -246,93 +246,97 @@ type TabsProps = {
 };
 
 export type Configuration = {
-  enabled: boolean;
-  search: Element | string | null;
+  // simple types
+  defaultTokens: Array<SearchToken>;
   dynamicElement: WhoIsDynamic[] | null;
-  searchConfigurable: SearchProps | null;
-  activeFilters: Element | string | null;
-  tabs: Element | string | null;
-  filters: Element | string | null;
-  filtersConfigurable: FilterProps | null;
-  calendarMobile: CalendarMobileConfiguration | null;
-  resultList: ResultListProps | null;
-  searchMobile: SearchMobileConfiguration | null;
-  sortableConfigurable: SortableProps | null;
-  filtersMobile: FiltersHorizontalMobileConfiguration | null;
-  filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
-  dataRangePicker: DataRangePickerProps | null;
-  dataRangePickerVertical: DataRangePickerVerticalProps | null;
-  filtersHorizontal: FiltersHorizontalConfiguration | null;
-  sortable: Element | string | null;
-  results: Element | string | null;
-  resultListPagination: ResulListPaginationProps | null;
-  details: Element | string | null;
-  calendar: Element | string | null;
-  login: Element | string | null;
-  detailMobile: Element | string | null;
-  changeLanguage: Element | string | null;
+  enabled: boolean;
+  filterTokens: Array<SearchToken>;
+  isQueryAnalysis: boolean | null;
+  numberResult: number | null | undefined;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
-  filterTokens: Array<SearchToken>;
   sort: Array<RestApi.SortField>;
-  sortResultConfigurable: SortResultConfigurableProps | null;
-  defaultTokens: Array<SearchToken>;
-  resultsDisplayMode: ResultsDisplayMode;
   tenant: string | null;
-  numberResult: number | null | undefined;
-  isQueryAnalysis: boolean | null;
-  tabsConfigurable: TabsProps | null;
   token: string | null;
-  totalResult: Element | string | null;
   useKeycloak: boolean;
-  overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
+  // element types
+  activeFilters: Element | string | null; 
+  calendar: Element | string | null;
+  changeLanguage: Element | string | null;
+  detailMobile: Element | string | null;
+  details: Element | string | null;
+  filters: Element | string | null;
+  login: Element | string | null;
+  results: Element | string | null;
+  search: Element | string | null;
+  sortable: Element | string | null;
+  tabs: Element | string | null;
+  totalResult: Element | string | null;
+  // configurable types
+  calendarMobile: CalendarMobileConfiguration | null;
+  dataRangePicker: DataRangePickerProps | null;
+  dataRangePickerVertical: DataRangePickerVerticalProps | null;
+  filtersConfigurable: FilterProps | null;
+  filtersHorizontal: FiltersHorizontalConfiguration | null;
+  filtersMobile: FiltersHorizontalMobileConfiguration | null;
+  filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
+  resultList: ResultListProps | null;
+  resultListPagination: ResulListPaginationProps | null;
+  resultsDisplayMode: ResultsDisplayMode;
+  searchConfigurable: SearchProps | null;
+  searchMobile: SearchMobileConfiguration | null;
+  sortableConfigurable: SortableProps | null;
+  sortResultConfigurable: SortResultConfigurableProps | null;
+  tabsConfigurable: TabsProps | null;
+  // functions
   changeSortResult: (
     sort: Array<RestApi.SortField>,
   ) => Array<RestApi.SortField>;
+  overrideTabs: (tabs: Array<Tab>) => Array<Tab>;
 };
 
 const defaultConfiguration: Configuration = {
-  enabled: false,
-  search: null,
-  dynamicElement: null,
-  searchConfigurable: null,
   activeFilters: null,
-  tabs: null,
-  searchMobile: null,
-  filtersMobile: null,
-  filtersMobileLiveChange: null,
+  calendar: null,
+  calendarMobile: null,
+  changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
-  calendarMobile: null,
-  sortable: null,
+  defaultTokens: [],
   detailMobile: null,
-  sort: [],
+  details: null,
+  dynamicElement: null,
+  enabled: false,
   filters: null,
   filtersConfigurable: null,
-  changeLanguage: null,
   filtersHorizontal: null,
-  results: null,
-  resultListPagination: null,
-  details: null,
-  sortResultConfigurable: null,
+  filtersMobile: null,
+  filtersMobileLiveChange: null,
+  filterTokens: [],
+  isQueryAnalysis: true,
   login: null,
+  numberResult: null,
+  resultList: null,
+  resultListPagination: null,
+  results: null,
+  resultsDisplayMode: { type: "infinite" },
+  search: null,
+  searchAutoselect: true,
+  searchConfigurable: null,
+  searchMobile: null,
+  searchReplaceText: true,
+  sort: [],
+  sortable: null,
+  sortableConfigurable: null,
+  sortResultConfigurable: null,
+  tabs: null,
+  tabsConfigurable: null,
   tenant: null,
   token: null,
   totalResult: null,
-  calendar: null,
-  sortableConfigurable: null,
-  resultList: null,
   useKeycloak: true,
-  searchAutoselect: true,
-  searchReplaceText: true,
-  isQueryAnalysis: true,
-  numberResult: null,
-  tabsConfigurable: null,
-  filterTokens: [],
-  defaultTokens: [],
-  resultsDisplayMode: { type: "infinite" },
-  overrideTabs: (tabs) => tabs,
   changeSortResult: (sort) => sort,
+  overrideTabs: (tabs) => tabs,
 };
 
 export type ConfigurationUpdateFunction = (
