@@ -27,6 +27,7 @@ import lombok.ToString;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -79,12 +80,12 @@ public class Bucket extends K9Entity {
 	private Set<SuggestionCategory> suggestionCategories
 		= new LinkedHashSet<>();
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "query_analysis_id")
 	@ToString.Exclude
 	private QueryAnalysis queryAnalysis;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "search_config_id")
 	@ToString.Exclude
 	private SearchConfig searchConfig;

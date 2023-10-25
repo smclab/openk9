@@ -8,6 +8,7 @@ import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -22,8 +23,9 @@ public class TenantBinding extends K9Entity {
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "tenant_binding_bucket_id")
+	@ToString.Exclude
 	private Bucket bucket;
 
 }
