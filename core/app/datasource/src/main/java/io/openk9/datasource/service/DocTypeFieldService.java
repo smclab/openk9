@@ -25,7 +25,6 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -61,7 +60,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, docTypeField.getAnalyzer()));
+			s -> s.fetch(docTypeField.getAnalyzer()));
 	}
 
 	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
@@ -102,7 +101,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, docTypeField.getParentDocTypeField()));
+			s -> s.fetch(docTypeField.getParentDocTypeField()));
 	}
 
 	public Uni<Connection<DocTypeField>> getSubDocTypeFields(
@@ -121,8 +120,8 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		return sessionFactory.withTransaction((s, tr) -> findById(parentDocTypeFieldId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(parentDocTypeField -> Mutiny2
-				.fetch(s, parentDocTypeField.getSubDocTypeFields())
+			.transformToUni(parentDocTypeField -> s
+				.fetch(parentDocTypeField.getSubDocTypeFields())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(subList -> {
@@ -145,7 +144,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
 
 				 for (DocType docType : docTypes) {
-					 docTypeField.add(Mutiny2.fetch(docType.getDocTypeFields()));
+					 docTypeField.add(s.fetch(docType.getDocTypeFields()));
 				 }
 
 				 return Uni
@@ -240,7 +239,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			for (DocTypeField docTypeField : docTypeFields) {
 
 				subDocTypeFieldUnis.add(
-					Mutiny2.fetch(docTypeField.getSubDocTypeFields()));
+					s.fetch(docTypeField.getSubDocTypeFields()));
 
 			}
 
@@ -265,13 +264,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			for (DocTypeField typeField : typeFields) {
 				Analyzer analyzer = typeField.getAnalyzer();
 				if (analyzer != null) {
-					unis.add(
-						Mutiny2
-							.fetch(s, typeField.getAnalyzer())
-							.flatMap(_analyzerService::load));
+					unis.add(s
+						.fetch(typeField.getAnalyzer())
+						.flatMap(_analyzerService::load));
 				}
 				if (typeField.getAclMappings() != null) {
-					unis.add(Mutiny2.fetch(s, typeField.getAclMappings()));
+					unis.add(s.fetch(typeField.getAclMappings()));
 				}
 
 			}

@@ -25,7 +25,6 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -82,7 +81,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 				.onItem()
 				.ifNotNull()
 				.transformToUni(rule ->
-					Mutiny2.fetch(s, queryAnalysis.getRules())
+					s.fetch(queryAnalysis.getRules())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(rules -> {
@@ -107,7 +106,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getRules())
+			.transformToUni(queryAnalysis -> s.fetch(queryAnalysis.getRules())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(rules -> {
@@ -131,7 +130,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 						.onItem()
 						.ifNotNull()
 						.transformToUni(annotator ->
-								Mutiny2.fetch(s, queryAnalysis.getAnnotators())
+								s.fetch(queryAnalysis.getAnnotators())
 										.onItem()
 										.ifNotNull()
 										.transformToUni(annotators -> {
@@ -156,7 +155,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 		return sessionFactory.withTransaction((s, tr) -> findById(id)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(queryAnalysis -> Mutiny2.fetch(s, queryAnalysis.getAnnotators())
+				.transformToUni(queryAnalysis -> s.fetch(queryAnalysis.getAnnotators())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(annotators -> {

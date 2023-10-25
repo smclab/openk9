@@ -26,7 +26,6 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.model.dto.TranslationKeyDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -128,7 +127,7 @@ public class SuggestionCategoryService extends
 				)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(docTypeField -> Mutiny2.fetch(s, suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.add(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
 						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
@@ -146,7 +145,7 @@ public class SuggestionCategoryService extends
 			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(docTypeField -> Mutiny2.fetch(s, suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
+				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.remove(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
 						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));

@@ -26,7 +26,6 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -118,12 +117,12 @@ public class DocTypeGraphqlResource {
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
 		return sessionFactory.withTransaction(
-			(s) -> Mutiny2.fetch(s, docTypeField.getDocType()));
+			(s) -> s.fetch(docTypeField.getDocType()));
 	}
 
 	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
 		return sessionFactory.withTransaction(
-			(s) -> Mutiny2.fetch(s, docType.getDocTypeTemplate()));
+			(s) -> s.fetch(docType.getDocTypeTemplate()));
 	}
 
 	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {

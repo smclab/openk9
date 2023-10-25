@@ -9,7 +9,6 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.model.dto.TranslationKeyDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -75,7 +74,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<Set<TokenTab>> getTokenTabs(Tab tab) {
-		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, tab.getTokenTabs()));
+		return sessionFactory.withTransaction(s -> s.fetch(tab.getTokenTabs()));
 	}
 
 	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
@@ -86,7 +85,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenTab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(tokenTabs -> {
+				.transformToUni(tokenTab -> s.fetch(tab.getTokenTabs()).flatMap(tokenTabs -> {
 					if (tokenTabs.add(tokenTab)) {
 						tab.setTokenTabs(tokenTabs);
 						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
@@ -104,7 +103,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenTab -> Mutiny2.fetch(s, tab.getTokenTabs()).flatMap(tokenTabs -> {
+				.transformToUni(tokenTab -> s.fetch(tab.getTokenTabs()).flatMap(tokenTabs -> {
 					if (tab.removeTokenTab(tokenTabs, tokenTabId)) {
 						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
 					}

@@ -35,7 +35,6 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.BucketDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -65,7 +64,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(bucketId)
-			.flatMap(bucket -> Mutiny2.fetch(s, bucket.getQueryAnalysis())));
+			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
 	}
 
 	public Uni<Connection<Datasource>> getDatasourcesConnection(
@@ -182,7 +181,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Language> getLanguage(Bucket bucket) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, bucket.getDefaultLanguage()));
+			s -> s.fetch(bucket.getDefaultLanguage()));
 	}
 
 	public Uni<Language> getLanguage(long bucketId) {
@@ -196,7 +195,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.transformToUni(bucket -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny2.fetch(s, datasource.getBuckets()).flatMap(buckets -> {
+				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
 					if (buckets.remove(bucket)) {
 						datasource.setBuckets(buckets);
 						return persist(datasource).map((newD) -> Tuple2.of(bucket, newD));
@@ -213,7 +212,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.transformToUni(bucket -> datasourceService.findById(datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(datasource -> Mutiny2.fetch(s, datasource.getBuckets()).flatMap(buckets -> {
+				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
 					if (buckets.add(bucket)) {
 						datasource.setBuckets(buckets);
 						return persist(datasource).map(newD -> Tuple2.of(bucket, newD));
@@ -233,7 +232,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tab ->
-					Mutiny2.fetch(s, bucket.getTabs())
+					s.fetch(bucket.getTabs())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(tabs -> {
@@ -258,7 +257,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getTabs())
+			.transformToUni(bucket -> s.fetch(bucket.getTabs())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tabs -> {
@@ -282,7 +281,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.onItem()
 				.ifNotNull()
 				.transformToUni(suggestionCategory ->
-					Mutiny2.fetch(s, bucket.getSuggestionCategories())
+					s.fetch(bucket.getSuggestionCategories())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(suggestionCategories -> {
@@ -305,7 +304,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getSuggestionCategories())
+			.transformToUni(bucket -> s.fetch(bucket.getSuggestionCategories())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(suggestionCategories -> {
@@ -330,7 +329,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.onItem()
 				.ifNotNull()
 				.transformToUni(language ->
-					Mutiny2.fetch(s, bucket.getAvailableLanguages())
+					s.fetch(bucket.getAvailableLanguages())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(languages -> {
@@ -353,7 +352,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> Mutiny2.fetch(s, bucket.getAvailableLanguages())
+			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(languages -> {

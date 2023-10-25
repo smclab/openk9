@@ -28,7 +28,6 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.DocTypeDTO;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -115,7 +114,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
-		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, docType.getDocTypeFields()));
+		return sessionFactory.withTransaction(s -> s.fetch(docType.getDocTypeFields()));
 	}
 
 	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
@@ -126,7 +125,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
+			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
 					return persist(docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));
@@ -139,7 +138,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> Mutiny2.fetch(s, docType.getDocTypeFields()).flatMap(docTypeFields -> {
+			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
 					return persist(docType)
 						.map(dt -> Tuple2.of(dt, docTypeFieldId));

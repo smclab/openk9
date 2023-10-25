@@ -29,7 +29,6 @@ import io.openk9.datasource.model.EnrichPipelineItem_;
 import io.openk9.datasource.model.EnrichPipeline_;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.model.util.K9Entity_;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -114,7 +113,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return sessionFactory.withTransaction(
 			s ->
 				findById(enrichPipelineId)
-					.flatMap(ep -> Mutiny2.fetch(s, ep.getEnrichPipelineItems()))
+					.flatMap(ep -> s.fetch(ep.getEnrichPipelineItems()))
 					.map(l -> l
 						.stream()
 						.map(EnrichPipelineItem::getEnrichItem)
@@ -185,8 +184,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					.all()
 					.unis(enrichItemList)
 					.combinedWith(EnrichItem.class, Function.identity())
-					.flatMap(l -> Mutiny2
-						.fetch(s, enrichPipeline.getEnrichPipelineItems())
+					.flatMap(l -> s
+						.fetch(enrichPipeline.getEnrichPipelineItems())
 						.flatMap(epi -> {
 
 							float weight = 0.0f;
@@ -239,9 +238,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem ->
-						Mutiny2
-							.fetch(s, enrichPipeline.getEnrichPipelineItems())
+					.transformToUni(enrichItem -> s
+							.fetch(enrichPipeline.getEnrichPipelineItems())
 							.flatMap(enrichPipelineItems -> {
 
 								DoubleStream doubleStream =
@@ -286,9 +284,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				enrichItemService.findById(enrichItemId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(enrichItem ->
-						Mutiny2
-							.fetch(s, enrichPipeline.getEnrichPipelineItems())
+					.transformToUni(enrichItem -> s
+							.fetch(enrichPipeline.getEnrichPipelineItems())
 							.flatMap(enrichPipelineItems -> {
 
 								boolean removed = enrichPipelineItems.removeIf(

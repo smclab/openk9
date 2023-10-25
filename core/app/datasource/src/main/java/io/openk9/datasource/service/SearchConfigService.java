@@ -27,7 +27,6 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -105,7 +104,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<Set<QueryParserConfig>> getQueryParserConfig(SearchConfig searchConfig) {
-		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()));
+		return sessionFactory.withTransaction(s -> s.fetch(searchConfig.getQueryParserConfigs()));
 	}
 
 	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfig(
@@ -117,7 +116,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(searchConfig -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()).flatMap(
+			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
 				queryParserConfigs -> {
 					if (searchConfig.addQueryParserConfig(queryParserConfigs, queryParserConfig)) {
 						return persist(searchConfig)
@@ -131,7 +130,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		return sessionFactory.withTransaction((s) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(searchConfig -> Mutiny2.fetch(s, searchConfig.getQueryParserConfigs()).flatMap(
+			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
 				queryParserConfigs -> {
 					if (searchConfig.removeQueryParserConfig(queryParserConfigs, queryParserConfigId)) {
 						return persist(searchConfig)

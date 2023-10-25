@@ -23,7 +23,6 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.AnnotatorDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.AnnotatorService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -91,7 +90,7 @@ public class AnnotatorGraphqlResource {
 	}
 
 	public Uni<DocTypeField> docTypeField(@Source Annotator annotator) {
-		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, annotator.getDocTypeField()));
+		return sessionFactory.withTransaction(s -> s.fetch(annotator.getDocTypeField()));
 	}
 
 	public Uni<Response<Annotator>> patchAnnotator(@Id long id, AnnotatorDTO annotatorDTO) {

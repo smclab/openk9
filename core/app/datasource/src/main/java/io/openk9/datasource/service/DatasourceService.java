@@ -27,7 +27,6 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -89,7 +88,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, datasource.getEnrichPipeline()));
+			s -> s.fetch(datasource.getEnrichPipeline()));
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {

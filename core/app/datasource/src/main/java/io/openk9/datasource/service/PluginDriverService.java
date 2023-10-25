@@ -30,7 +30,6 @@ import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.util.K9Entity_;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -121,7 +120,7 @@ public class PluginDriverService
 			s ->
 				findById(pluginDriverId)
 					.flatMap(
-						ep -> Mutiny2.fetch(s, ep.getAclMappings()))
+						ep -> s.fetch(ep.getAclMappings()))
 					.map(l -> l
 						.stream()
 						.map(AclMapping::getDocTypeField)
@@ -192,9 +191,8 @@ public class PluginDriverService
 				docTypeFieldService.findById(docTypeFieldId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(docTypeField ->
-						Mutiny2
-							.fetch(s, pluginDriver.getAclMappings())
+					.transformToUni(docTypeField -> s
+							.fetch(pluginDriver.getAclMappings())
 							.flatMap(aclMappings -> {
 
 								AclMapping newAclMapping =
@@ -225,9 +223,8 @@ public class PluginDriverService
 				docTypeFieldService.findById(docTypeFieldId)
 					.onItem()
 					.ifNotNull()
-					.transformToUni(docTypeField ->
-						Mutiny2
-							.fetch(s, pluginDriver.getAclMappings())
+					.transformToUni(docTypeField -> s
+							.fetch(pluginDriver.getAclMappings())
 							.flatMap(aclMappings -> {
 
 								boolean removed = aclMappings.removeIf(

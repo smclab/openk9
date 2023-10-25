@@ -25,7 +25,6 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -59,7 +58,7 @@ public class DataIndexService
 
 	public Uni<Set<DocType>> getDocTypes(
 		DataIndex dataIndex) {
-		return sessionFactory.withTransaction(s -> Mutiny2.fetch(s, dataIndex.getDocTypes()));
+		return sessionFactory.withTransaction(s -> s.fetch(dataIndex.getDocTypes()));
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
@@ -110,7 +109,7 @@ public class DataIndexService
 					.onItem()
 					.ifNotNull()
 					.transformToUni(
-						docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
+						docType -> s.fetch(dataIndex.getDocTypes())
 							.flatMap(dts -> {
 								if (dts.add(docType)) {
 									dataIndex.setDocTypes(dts);
@@ -133,7 +132,7 @@ public class DataIndexService
 					.onItem()
 					.ifNotNull()
 					.transformToUni(
-						docType -> Mutiny2.fetch(s, dataIndex.getDocTypes())
+						docType -> s.fetch(dataIndex.getDocTypes())
 							.flatMap(dts -> {
 								if (dts.remove(docType)) {
 									dataIndex.setDocTypes(dts);

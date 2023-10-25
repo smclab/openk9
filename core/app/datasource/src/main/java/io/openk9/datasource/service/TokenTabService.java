@@ -7,7 +7,6 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TokenTabDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -34,7 +33,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 
 	public Uni<DocTypeField> getDocTypeField(TokenTab tokenTab) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, tokenTab.getDocTypeField()));
+			s -> s.fetch(tokenTab.getDocTypeField()));
 	}
 
 	public Uni<DocTypeField> getDocTypeField(long tokenTabId) {

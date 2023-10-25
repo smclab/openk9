@@ -26,7 +26,6 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -64,15 +63,15 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<Datasource> getDatasource(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getDatasource()));
+		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getDatasource()));
 	}
 
 	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getOldDataIndex()));
+		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getOldDataIndex()));
 	}
 
 	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> Mutiny2.fetch(s, scheduler.getNewDataIndex()));
+		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getNewDataIndex()));
 	}
 
 	public Uni<List<String>> getDeletedContentIds(String tenant, String schedulerId) {

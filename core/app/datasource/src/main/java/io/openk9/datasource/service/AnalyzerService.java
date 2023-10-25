@@ -9,7 +9,6 @@ import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.model.util.Mutiny2;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -59,7 +58,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Tokenizer> getTokenizer(Analyzer analyzer) {
 		return sessionFactory.withTransaction(
-			s -> Mutiny2.fetch(s, analyzer.getTokenizer()));
+			s -> s.fetch(analyzer.getTokenizer()));
 	}
 
 	public Uni<Tokenizer> getTokenizer(long analyzerId) {
@@ -76,7 +75,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tokenFilter ->
-					Mutiny2.fetch(s, analyzer.getTokenFilters())
+					s.fetch(analyzer.getTokenFilters())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(tokenFilters -> {
@@ -101,7 +100,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getTokenFilters())
+			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tokenFilters -> {
@@ -122,7 +121,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getTokenFilters())
+			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tokenFilters -> {
@@ -142,7 +141,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getCharFilters())
+			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(charFilters -> {
@@ -167,7 +166,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				.onItem()
 				.ifNotNull()
 				.transformToUni(charFilter ->
-					Mutiny2.fetch(s, analyzer.getCharFilters())
+					s.fetch(analyzer.getCharFilters())
 						.onItem()
 						.ifNotNull()
 						.transformToUni(charFilters -> {
@@ -192,7 +191,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		return sessionFactory.withTransaction((s, tr) -> findById(id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> Mutiny2.fetch(s, analyzer.getCharFilters())
+			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
 				.onItem()
 				.ifNotNull()
 				.transformToUni(charFilters -> {
@@ -236,9 +235,9 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 			List<Uni<?>> unis = new ArrayList<>();
 
-			unis.add(Mutiny2.fetch(s, analyzer.getTokenizer()));
-			unis.add(Mutiny2.fetch(s, analyzer.getCharFilters()));
-			unis.add(Mutiny2.fetch(s, analyzer.getTokenFilters()));
+			unis.add(s.fetch(analyzer.getTokenizer()));
+			unis.add(s.fetch(analyzer.getCharFilters()));
+			unis.add(s.fetch(analyzer.getTokenFilters()));
 
 			return Uni.combine().all().unis(unis).collectFailures().discardItems();
 
