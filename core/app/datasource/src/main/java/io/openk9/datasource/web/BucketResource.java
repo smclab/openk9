@@ -172,7 +172,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList()
 				.map(tList ->
 					tList
@@ -235,7 +234,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList()
 				.map(mapper::toTemplateResponseDtoList);
 
@@ -276,7 +274,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList()
 				.chain(tabs -> {
 					if (translated) {
@@ -325,7 +322,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList()
 				.chain(categories -> {
 						if (translated) {
@@ -371,7 +367,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getSingleResult();
 		});
 
@@ -402,7 +397,6 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList();
 		});
 

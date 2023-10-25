@@ -306,9 +306,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 			query.setMaxResults(last + 1);
 		}
 
-		Uni<List<T>> entities = query
-			.setCacheable(true)
-			.getResultList();
+		Uni<List<T>> entities = query.getResultList();
 
 		return entities.map(entitiesList -> {
 

@@ -63,7 +63,6 @@ public class DataIndexResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getSingleResult()
 				.onItem()
 				.transformToUni(dataIndex -> indexerEvents.generateDocTypeFields(dataIndex));

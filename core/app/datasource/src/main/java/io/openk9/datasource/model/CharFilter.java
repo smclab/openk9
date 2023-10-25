@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Lob;
@@ -18,7 +17,6 @@ import javax.persistence.Table;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
 public class CharFilter extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)

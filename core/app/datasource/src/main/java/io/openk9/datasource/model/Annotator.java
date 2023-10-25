@@ -26,7 +26,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -43,7 +42,6 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
 public class Annotator extends K9Entity {
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;

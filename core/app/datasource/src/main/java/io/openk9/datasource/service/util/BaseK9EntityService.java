@@ -659,7 +659,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		query.from(getEntityClass());
 
 		return s.createQuery(query)
-			.setCacheable(true)
 			.getResultList();
 
 	}

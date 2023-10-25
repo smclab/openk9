@@ -26,13 +26,11 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
-import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -56,7 +54,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable(value = false)
 public class DocTypeField extends BaseDocTypeField {
 
 	@Column(name = "name", nullable = false)

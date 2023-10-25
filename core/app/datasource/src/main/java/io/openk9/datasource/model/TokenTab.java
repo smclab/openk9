@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -19,17 +18,11 @@ import javax.persistence.Table;
 
 
 @Entity
-@Table(name = "token_tab")/*, uniqueConstraints = {
-	@UniqueConstraint(
-		name = "uc_tokentab_name_tab_id",
-		columnNames = {"name", "tab_id"}
-	)
-})*/
+@Table(name = "token_tab")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
 public class TokenTab extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)

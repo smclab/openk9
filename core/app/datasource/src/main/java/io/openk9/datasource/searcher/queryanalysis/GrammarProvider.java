@@ -140,7 +140,6 @@ public class GrammarProvider {
 
 						return s
 							.createQuery(query)
-							.setCacheable(true)
 							.getSingleResult()
 							.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b));
 				}));

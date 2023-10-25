@@ -107,7 +107,6 @@ public class DateFilterResource {
 
 			return session
 				.createQuery(query)
-				.setCacheable(true)
 				.getResultList()
 				.map(tList ->
 					tList

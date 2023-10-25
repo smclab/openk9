@@ -28,7 +28,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 
-import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -51,7 +50,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable
 @EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
