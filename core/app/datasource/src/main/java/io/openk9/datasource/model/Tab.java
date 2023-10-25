@@ -25,7 +25,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@Cacheable(value = false)
+@Cacheable
 public class Tab extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)
