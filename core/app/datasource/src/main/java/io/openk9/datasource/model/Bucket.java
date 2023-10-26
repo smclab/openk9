@@ -32,6 +32,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
@@ -50,6 +52,23 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@NamedQueries({
+	@NamedQuery(
+		name = "Bucket.all",
+		query =
+			"from Bucket b " +
+			"join fetch b.tenantBinding tb " +
+			"join fetch b.datasources ds " +
+			"join fetch ds.dataIndex di " +
+			"join fetch b.queryAnalysis qa " +
+			"join fetch qa.rules qar " +
+			"join fetch qa.annotators qaa " +
+			"join fetch qaa.docTypeField dtf " +
+			"left join fetch dtf.parentDocTypeField pdtf " +
+			"left join fetch dtf.subDocTypeField sdtf " +
+			"where tb.virtualHost = :virtualHost "
+	)
+})
 public class Bucket extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)
