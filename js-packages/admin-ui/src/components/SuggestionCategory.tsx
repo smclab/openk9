@@ -2,11 +2,11 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSuggestionCategoryMutation, useSuggestionCategoryQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom, ContainerFluid } from "./Form";
+import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom, ContainerFluid, MainTitle } from "./Form";
 import { SuggestionCategoriesQuery } from "./SuggestionCategories";
 import { useToast } from "./ToastProvider";
 
-const SuggestionCategoryQuery = gql`
+export const SuggestionCategoryQuery = gql`
   query SuggestionCategory($id: ID!) {
     suggestionCategory(id: $id) {
       id
@@ -14,6 +14,12 @@ const SuggestionCategoryQuery = gql`
       description
       priority
       multiSelect
+      translations {
+        key
+        language
+        value
+        description
+      }
     }
   }
 `;
@@ -78,6 +84,7 @@ export function SuggestionCategory() {
   });
   return (
     <ContainerFluid>
+      {suggestionCategoryId !== "new" && <MainTitle title="Attributes" />}
       <form
         className="sheet"
         onSubmit={(event) => {

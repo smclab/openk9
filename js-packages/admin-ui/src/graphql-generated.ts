@@ -4696,7 +4696,7 @@ export type SuggestionCategoryQueryVariables = Exact<{
 }>;
 
 
-export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean } | null };
+export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -11470,6 +11470,12 @@ export const SuggestionCategoryDocument = gql`
     description
     priority
     multiSelect
+    translations {
+      key
+      language
+      value
+      description
+    }
   }
 }
     `;
@@ -12762,4 +12768,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-09T15:28:45+02:00
+// Generated on 2023-10-24T10:51:41+02:00
