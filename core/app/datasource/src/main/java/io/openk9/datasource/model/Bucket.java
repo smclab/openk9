@@ -65,7 +65,7 @@ import java.util.Set;
 				"join fetch qa.annotators qaa " +
 				"join fetch qaa.docTypeField dtf " +
 				"left join fetch dtf.parentDocTypeField pdtf " +
-				"left join fetch dtf.subDocTypeField sdtf " +
+				"left join fetch dtf.subDocTypeFields sdtf " +
 				"join fetch qa.annotators qaa2 " +
 			"where tb.virtualHost = :virtualHost " +
 			"and (" +
