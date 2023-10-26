@@ -4740,7 +4740,7 @@ export type TabQueryVariables = Exact<{
 }>;
 
 
-export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null } | null };
+export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> } | null };
 
 export type CreateOrUpdateTabMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -11704,6 +11704,12 @@ export const TabDocument = gql`
     name
     description
     priority
+    translations {
+      key
+      language
+      value
+      description
+    }
   }
 }
     `;

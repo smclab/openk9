@@ -6,13 +6,19 @@ import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTit
 import { TabsQuery } from "./Tabs";
 import { useToast } from "./ToastProvider";
 
-const TabQuery = gql`
+export const TabQuery = gql`
   query Tab($id: ID!) {
     tab(id: $id) {
       id
       name
       description
       priority
+      translations {
+        key
+        language
+        value
+        description
+      }
     }
   }
 `;
