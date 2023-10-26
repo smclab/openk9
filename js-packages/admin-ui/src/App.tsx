@@ -18,6 +18,7 @@ import { SuggestionCategory } from "./components/SuggestionCategory";
 import { DocumentType } from "./components/DocumentType";
 import { DocumentTypeFields } from "./components/DocumentTypeFields";
 import { DocumentTypeField } from "./components/DocumentTypeField";
+import { SuggestionCategoryTranslations } from "./components/SuggestionCategoryTranslations";
 import { SuggestionCategoryDocumentTypeFields } from "./components/SuggestionCategoryDocumentTypeFields";
 import { QueryAnalyses } from "./components/QueryAnalyses";
 import { QueryAnalysis } from "./components/QueryAnalysis";
@@ -85,6 +86,7 @@ import { HuggingFace } from "./components/HuggingFace";
 import { PluginDriverToAcl } from "./components/PluginDriverToAcl";
 import { InformationBuckets } from "./components/InformationBuckets";
 import { InformationDataSource } from "./components/InformationDataSource";
+import { TabsTranslations } from "./components/TabsTranslations";
 import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
 import { Languages } from "./components/Languages";
 import { BucketLanguage } from "./components/BucketLanguage";
@@ -215,6 +217,7 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
+                                { label: "Translations", path: "translations" },
                                 {
                                   label: "Document Type Fields",
                                   path: "document-type-fields",
@@ -226,6 +229,7 @@ export default function App() {
                         }
                       >
                         <Route path="" element={<SuggestionCategory />} />
+                        <Route path="translations" element={<SuggestionCategoryTranslations />} />
                         <Route path="document-type-fields" element={<SuggestionCategoryDocumentTypeFields />} />
                       </Route>
                     </Route>
@@ -321,6 +325,7 @@ export default function App() {
                             <NavTabs
                               tabs={[
                                 { label: "Attributes", path: "" },
+                                { label: "Translations", path: "translations" },
                                 {
                                   label: "Token Tabs ",
                                   path: "token-tabs",
@@ -332,6 +337,7 @@ export default function App() {
                         }
                       >
                         <Route path="" element={<Tab />} />
+                        <Route path="translations" element={<TabsTranslations />} />
                         <Route path="token-tabs" element={<TabTokenTabsAssociation />} />
                       </Route>
                     </Route>
