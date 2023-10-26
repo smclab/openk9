@@ -3,6 +3,7 @@ package io.openk9.datasource.searcher.queryanalysis;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
@@ -71,8 +72,8 @@ public class GrammarProvider {
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
 				.flatMap(tenantResponse -> sessionFactory
 					.withTransaction(tenantResponse.getSchemaName(), (s, t) -> s
-						.createNamedQuery("Bucket.all", Bucket.class)
-						.setParameter("virtualHost", virtualHost)
+						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
+						.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
 						.getSingleResult()
 						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b))));
 	}

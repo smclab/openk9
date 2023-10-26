@@ -54,26 +54,29 @@ import java.util.Set;
 @RequiredArgsConstructor
 @NamedQueries({
 	@NamedQuery(
-		name = "Bucket.all",
+		name = Bucket.FETCH_ANNOTATORS_NAMED_QUERY,
 		query =
 			"from Bucket b " +
-				"join fetch b.tenantBinding tb " +
-				"join fetch b.datasources ds " +
-				"join fetch ds.dataIndex di " +
-				"join fetch b.queryAnalysis qa " +
-				"join fetch qa.rules qar " +
-				"join fetch qa.annotators qaa " +
-				"join fetch qaa.docTypeField dtf " +
-				"left join fetch dtf.parentDocTypeField pdtf " +
-				"left join fetch dtf.subDocTypeFields sdtf " +
-				"join fetch qa.annotators qaa2 " +
-			"where tb.virtualHost = :virtualHost " +
+				"join fetch b." + Bucket_.TENANT_BINDING  + " tb " +
+				"join fetch b." + Bucket_.DATASOURCES + " ds " +
+				"join fetch ds." + Datasource_.DATA_INDEX + " di " +
+				"join fetch b." + Bucket_.QUERY_ANALYSIS + " qa " +
+				"join fetch qa." + QueryAnalysis_.RULES + " qar " +
+				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa " +
+				"join fetch qaa." + Annotator_.DOC_TYPE_FIELD + " dtf " +
+				"left join fetch dtf." + DocTypeField_.PARENT_DOC_TYPE_FIELD + " pdtf " +
+				"left join fetch dtf." + DocTypeField_.SUB_DOC_TYPE_FIELDS + " sdtf " +
+				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa2 " +
+			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost " +
 			"and (" +
-				"qaa.type in " + Annotator.DOCUMENT_TYPE_SET +
-				"or qaa2.type not in " + Annotator.DOCUMENT_TYPE_SET + " )"
+				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
+				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET
+			+ " )"
 	)
 })
 public class Bucket extends K9Entity {
+
+	public static final String FETCH_ANNOTATORS_NAMED_QUERY = "Bucket.fetchAnnotators";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
