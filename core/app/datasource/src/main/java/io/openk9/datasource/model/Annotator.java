@@ -82,4 +82,8 @@ public class Annotator extends K9Entity {
 	public int hashCode() {
 		return getClass().hashCode();
 	}
+
+	public static final String DOCUMENT_TYPE_SET =
+		"('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')";
+
 }

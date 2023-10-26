@@ -57,16 +57,20 @@ import java.util.Set;
 		name = "Bucket.all",
 		query =
 			"from Bucket b " +
-			"join fetch b.tenantBinding tb " +
-			"join fetch b.datasources ds " +
-			"join fetch ds.dataIndex di " +
-			"join fetch b.queryAnalysis qa " +
-			"join fetch qa.rules qar " +
-			"join fetch qa.annotators qaa " +
-			"join fetch qaa.docTypeField dtf " +
-			"left join fetch dtf.parentDocTypeField pdtf " +
-			"left join fetch dtf.subDocTypeField sdtf " +
-			"where tb.virtualHost = :virtualHost "
+				"join fetch b.tenantBinding tb " +
+				"join fetch b.datasources ds " +
+				"join fetch ds.dataIndex di " +
+				"join fetch b.queryAnalysis qa " +
+				"join fetch qa.rules qar " +
+				"join fetch qa.annotators qaa " +
+				"join fetch qaa.docTypeField dtf " +
+				"left join fetch dtf.parentDocTypeField pdtf " +
+				"left join fetch dtf.subDocTypeField sdtf " +
+				"join fetch qa.annotators qaa2 " +
+			"where tb.virtualHost = :virtualHost " +
+			"and (" +
+				"qaa.type in " + Annotator.DOCUMENT_TYPE_SET +
+				"or qaa2.type not in " + Annotator.DOCUMENT_TYPE_SET + " )"
 	)
 })
 public class Bucket extends K9Entity {
