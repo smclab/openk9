@@ -32,6 +32,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
@@ -94,11 +95,13 @@ public class Datasource extends K9Entity {
 	private EnrichPipeline enrichPipeline;
 
 	@ToString.Exclude
-	@ManyToOne(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+	@ManyToOne(
+		fetch = FetchType.LAZY,
+		cascade = {
+			javax.persistence.CascadeType.PERSIST,
+			javax.persistence.CascadeType.MERGE,
+			javax.persistence.CascadeType.REFRESH,
+			javax.persistence.CascadeType.DETACH})
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;
