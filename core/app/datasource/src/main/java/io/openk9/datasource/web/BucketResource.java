@@ -26,6 +26,8 @@ import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -46,6 +48,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @ApplicationScoped
@@ -58,7 +61,9 @@ public class BucketResource {
 	@Path("/current/templates")
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
-		return getDocTypeTemplateList(request.host());
+		return cache
+			.get(request.host(), this::getDocTypeTemplateList)
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current/tabs")
@@ -66,7 +71,9 @@ public class BucketResource {
 	public Uni<List<TabResponseDTO>> getTabs(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return getTabList(request.host(), translated);
+		return cache
+			.get(request.host() + "#" + translated, k -> getTabList(request.host(), translated))
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current/suggestionCategories")
@@ -74,31 +81,41 @@ public class BucketResource {
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return getSuggestionCategoryList(request.host(), translated);
+		return cache
+			.get(request.host() + "#" + translated, k -> getSuggestionCategoryList(request.host(), translated))
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
-		return getDocTypeFieldsSortableList(request.host());
+		return cache
+			.get(request.host(), this::getDocTypeFieldsSortableList)
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
-		return getDefaultLanguage(request.host());
+		return cache
+			.get(request.host(), this::getDefaultLanguage)
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current/availableLanguage")
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
-		return getAvailableLanguageList(request.host());
+		return cache
+			.get(request.host(), this::getAvailableLanguageList)
+			.flatMap(Function.identity());
 	}
 
 	@Path("/current")
 	@GET
 	public Uni<BucketResponse> getCurrentBucket() {
-		return getBucket(request.host());
+		return cache
+			.get(request.host(), this::getBucket)
+			.flatMap(Function.identity());
 	}
 
 	private Uni<BucketResponse> getBucket(String host) {
@@ -410,6 +427,10 @@ public class BucketResource {
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	TranslationService translationService;
+
+	@Inject
+	@CacheName("bucket-resource")
+	Cache cache;
 
 	public record BucketResponse(boolean handleDynamicFilters) {}
 
