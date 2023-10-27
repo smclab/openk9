@@ -44,7 +44,7 @@ export function SuggestionCategoryTranslations() {
     const element = formOriginalValues![index];
     const translation = {
       language: element?.language?.toLowerCase().replace("_", "-"),
-      key: "name",
+      key: element?.key,
       value: element?.value,
     };
     const translationsToPostIndex = translationsToPost.findIndex(item => item.language === element?.language?.toLowerCase().replace("_", "-"));  
@@ -61,14 +61,23 @@ export function SuggestionCategoryTranslations() {
       }
     },
   });
+
+  const originalValuesArray = translationsToPost?.filter((element) => element?.language?.toLowerCase().replace("_", "-") === flag);
+  const originalValues: { [x: string]: any; } = { language: flag };
+
+  originalValuesArray.forEach((element: any) => {
+    originalValues[element.key] = element.value;
+  });
+
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        value: "",
+        name: "",
+        description: ""
       }),
       []
     ),
-    originalValues: translationsToPost?.find((element) => element?.language?.toLowerCase().replace("_", "-") === flag),
+    originalValues: originalValues,
     isLoading: suggestionCategoryQuery.loading || createOrUpdateSuggestionCategoryMutation.loading,
     onSubmit(data) {
       addTranslation(flag);
@@ -81,16 +90,30 @@ export function SuggestionCategoryTranslations() {
   });
 
   const addTranslation = (languageCode: string) => {
-    const translation = {
+    const nameTranslation = {
       language: languageCode!,
       key: "name",
-      value: form.inputProps("value").value,
+      value: form.inputProps("name").value,
     };
-    const index = translationsToPost.findIndex(item => item.language === languageCode);  
-    if (index !== -1) {
-      translationsToPost[index].value = translation.value;
+    const descriptionTranslation = {
+      language: languageCode!,
+      key: "description",
+      value: form.inputProps("description").value,
+    };
+
+    const nameIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "name"));
+    const descriptionIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "description"));
+    
+    if (nameIndex !== -1) {
+      translationsToPost[nameIndex].value = nameTranslation.value;
     } else {
-      translationsToPost.push(translation);
+      translationsToPost.push(nameTranslation);
+    }
+
+    if (descriptionIndex !== -1) {
+      translationsToPost[descriptionIndex].value = descriptionTranslation.value;
+    } else {
+      translationsToPost.push(descriptionTranslation);
     }   
   };
 
@@ -122,8 +145,10 @@ export function SuggestionCategoryTranslations() {
                     style={{ display: "inline-block", width: "100%", outline: "none" }}
                     onClick={() => {
                       setFlag(languageCode!);
-                      const inputValue = translationsToPost?.find((element) => element?.language?.toLowerCase().replace("_", "-") === languageCode)?.value;     
-                      form.inputProps("value").onChange(inputValue ? inputValue : "");
+                      const nameInputValue = translationsToPost?.find((element) => (element?.language?.toLowerCase().replace("_", "-") === languageCode && element.key === 'name'))?.value;
+                      const descriptionInputValue = translationsToPost?.find((element) => (element?.language?.toLowerCase().replace("_", "-") === languageCode && element.key === 'description'))?.value;
+                      form.inputProps("name").onChange(nameInputValue ? nameInputValue : "");
+                      form.inputProps("description").onChange(descriptionInputValue ? descriptionInputValue : "");
                     }}
                   >
                     <ClayIcon symbol={languageCode!} />
@@ -143,7 +168,8 @@ export function SuggestionCategoryTranslations() {
           form.submit();
         }}
       >
-        <TextInput label="Name" {...form.inputProps("value")} />
+        <TextInput label="Name" {...form.inputProps("name")} />
+        <TextArea label="Description" {...form.inputProps("description")} />
         <div className="sheet-footer">
           <CustomButtom
             nameButton="Update"
