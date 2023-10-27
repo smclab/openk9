@@ -38,10 +38,10 @@ export function SuggestionCategoryTranslations() {
     skip: !suggestionCategoryId,
   });
 
-  const formOriginalValues = suggestionCategoryQuery.data?.suggestionCategory?.translations;
-  const formOriginalValuesLength = formOriginalValues?.length;
-  for (let index = 0; index < formOriginalValuesLength!; index++) {
-    const element = formOriginalValues![index];
+  const originalTranslations = suggestionCategoryQuery.data?.suggestionCategory?.translations;
+  const originalTranslationsLength = originalTranslations?.length;
+  for (let index = 0; index < originalTranslationsLength!; index++) {
+    const element = originalTranslations![index];
     const translation = {
       language: element?.language?.toLowerCase().replace("_", "-"),
       key: element?.key,
@@ -81,7 +81,18 @@ export function SuggestionCategoryTranslations() {
     isLoading: suggestionCategoryQuery.loading || createOrUpdateSuggestionCategoryMutation.loading,
     onSubmit(data) {
       addTranslation(flag);
-      console.log(translationsToPost);     
+      const convertedTranslationsToPost = [];
+      const translationsToPostLength = translationsToPost.length;
+      for (let index = 0; index < translationsToPostLength; index++) {
+        const element = translationsToPost[index];
+        const convertedTranslation = {
+          language: element.language.replace("-", "_").replace(/([^_]*$)/g, (s: string) => s.toUpperCase()),
+          key: element.key,
+          value: element.value,
+        };
+        convertedTranslationsToPost.push(convertedTranslation);
+      }
+      console.log(convertedTranslationsToPost);      
       // createOrUpdateSuggestionCategoryMutate({
       //   variables: { id: suggestionCategoryId, ...data },
       // });

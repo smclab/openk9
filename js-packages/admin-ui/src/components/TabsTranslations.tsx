@@ -24,7 +24,7 @@ gql`
 `;
 
 export function TabsTranslations() {
-  const [flag, setFlag] = React.useState("de-de");
+  const [flag, setFlag] = React.useState("en-us");
   const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
   const dataLanguagesQuery = useLanguagesQuery();
 
@@ -35,11 +35,10 @@ export function TabsTranslations() {
     skip: !tabId,
   });
 
-  const formOriginalValues = tabQuery.data?.tab?.translations;
-  
-  const formOriginalValuesLength = formOriginalValues?.length;
-  for (let index = 0; index < formOriginalValuesLength!; index++) {
-    const element = formOriginalValues![index];
+  const originalTranslations = tabQuery.data?.tab?.translations;
+  const originalTranslationsLength = originalTranslations?.length;
+  for (let index = 0; index < originalTranslationsLength!; index++) {
+    const element = originalTranslations![index];
     const translation = {
       language: element?.language?.toLowerCase().replace("_", "-"),
       key: element?.key,
@@ -81,7 +80,18 @@ export function TabsTranslations() {
     isLoading: tabQuery.loading || createOrUpdateTabMutation.loading,
     onSubmit(data) {
       addTranslation(flag);
-      console.log(translationsToPost); 
+      const convertedTranslationsToPost = [];
+      const translationsToPostLength = translationsToPost.length;
+      for (let index = 0; index < translationsToPostLength; index++) {
+        const element = translationsToPost[index];
+        const convertedTranslation = {
+          language: element.language.replace("-", "_").replace(/([^_]*$)/g, (s: string) => s.toUpperCase()),
+          key: element.key,
+          value: element.value,
+        };
+        convertedTranslationsToPost.push(convertedTranslation);
+      }
+      console.log(convertedTranslationsToPost); 
       // createOrUpdateTabMutate({
       //   variables: { id: tabId !== "new" ? tabId : undefined, ...data },
       // });
