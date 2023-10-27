@@ -1,21 +1,12 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateTabMutation, useTabQuery } from "../graphql-generated";
+import { useCreateOrUpdateTabMutation, useLanguagesQuery, useTabQuery } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom, ContainerFluid } from "./Form";
-import { TabsQuery } from "./Tabs";
 import { useToast } from "./ToastProvider";
-
-const TabQuery = gql`
-  query Tab($id: ID!) {
-    tab(id: $id) {
-      id
-      name
-      description
-      priority
-    }
-  }
-`;
+import { TabQuery } from "./Tab";
+import DropDown from "@clayui/drop-down";
+import ClayIcon from "@clayui/icon";
 
 gql`
   mutation CreateOrUpdateTab($id: ID, $name: String!, $description: String, $priority: Int!) {
@@ -33,47 +24,143 @@ gql`
 `;
 
 export function TabsTranslations() {
+  const [flag, setFlag] = React.useState("de-de");
+  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
+  const dataLanguagesQuery = useLanguagesQuery();
+
   const { tabId = "new" } = useParams();
-  const navigate = useNavigate();
   const showToast = useToast();
   const tabQuery = useTabQuery({
     variables: { id: tabId as string },
-    skip: !tabId || tabId === "new",
+    skip: !tabId,
   });
+
+  const formOriginalValues = tabQuery.data?.tab?.translations;
+  
+  const formOriginalValuesLength = formOriginalValues?.length;
+  for (let index = 0; index < formOriginalValuesLength!; index++) {
+    const element = formOriginalValues![index];
+    const translation = {
+      language: element?.language?.toLowerCase().replace("_", "-"),
+      key: element?.key,
+      value: element?.value,
+    };
+    
+    const translationsToPostIndex = translationsToPost.findIndex((item) => (item.language === element?.language?.toLowerCase().replace("_", "-") && item.key === element?.key));
+    if (translationsToPostIndex === -1) {
+      translationsToPost.push(translation);
+    }
+  }
+
   const [createOrUpdateTabMutate, createOrUpdateTabMutation] = useCreateOrUpdateTabMutation({
-    refetchQueries: [TabQuery, TabsQuery],
+    refetchQueries: [TabQuery],
     onCompleted(data) {
       if (data.tab?.entity) {
-        if (tabId === "new") {
-          navigate(`/tabs/`, { replace: true });
-          showToast({ displayType: "success", title: "Tab created", content: data.tab.entity.name ?? "" });
-        } else {
-          showToast({ displayType: "info", title: "Tab updated", content: data.tab.entity.name ?? "" });
-        }
+        showToast({ displayType: "info", title: "Translation updated", content: data.tab.entity.name ?? "" });
       }
     },
   });
+
+
+  const originalValuesArray = translationsToPost?.filter((element) => element?.language?.toLowerCase().replace("_", "-") === flag);
+  const originalValues: { [x: string]: any; } = { language: flag };
+
+  originalValuesArray.forEach((element: any) => {
+    originalValues[element.key] = element.value;
+  });
+ 
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
         name: "",
-        description: "",
-        priority: 0,
+        description: ""
       }),
       []
     ),
-    originalValues: tabQuery.data?.tab,
+    originalValues: originalValues,
     isLoading: tabQuery.loading || createOrUpdateTabMutation.loading,
     onSubmit(data) {
-      createOrUpdateTabMutate({
-        variables: { id: tabId !== "new" ? tabId : undefined, ...data },
-      });
+      addTranslation(flag);
+      console.log(translationsToPost); 
+      // createOrUpdateTabMutate({
+      //   variables: { id: tabId !== "new" ? tabId : undefined, ...data },
+      // });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTabMutation.data?.tab?.fieldValidators),
   });
+
+  const addTranslation = (languageCode: string) => {
+    const nameTranslation = {
+      language: languageCode!,
+      key: "name",
+      value: form.inputProps("name").value,
+    };
+    const descriptionTranslation = {
+      language: languageCode!,
+      key: "description",
+      value: form.inputProps("description").value,
+    };
+
+    const nameIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "name"));
+    const descriptionIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "description"));
+    
+    if (nameIndex !== -1) {
+      translationsToPost[nameIndex].value = nameTranslation.value;
+    } else {
+      translationsToPost.push(nameTranslation);
+    }
+
+    if (descriptionIndex !== -1) {
+      translationsToPost[descriptionIndex].value = descriptionTranslation.value;
+    } else {
+      translationsToPost.push(descriptionTranslation);
+    }   
+  };
+
   return (
     <ContainerFluid>
-      {tabId !== "new" && <MainTitle title="Translations" />}
+      <MainTitle title="Translations" />
+      <DropDown
+        closeOnClick
+        trigger={
+          <button
+            className="btn btn-unstyled nav-btn nav-btn-monospaced"
+            style={{ border: "1px solid #8F8F8F", width: "100px", height: "35px", backgroundColor: "#ffffff" }}
+            onClick={() => {
+              addTranslation(flag);
+            }}
+          >
+            <ClayIcon symbol={flag} fontSize="25px" />
+            <span style={{ marginLeft: "10px" }}>{flag}</span>
+          </button>
+        }
+      >
+        <DropDown.ItemList>
+          {dataLanguagesQuery.data?.languages?.edges?.map((language) => {
+            const languageCode = language?.node?.value?.toLowerCase().replace("_", "-");
+            return (
+              <div key={language?.node?.id}>
+                <DropDown.Item>
+                  <div
+                    style={{ display: "inline-block", width: "100%", outline: "none" }}
+                    onClick={() => {
+                      setFlag(languageCode!);
+                      const nameInputValue = translationsToPost?.find((element) => (element?.language?.toLowerCase().replace("_", "-") === languageCode && element.key === 'name'))?.value;
+                      const descriptionInputValue = translationsToPost?.find((element) => (element?.language?.toLowerCase().replace("_", "-") === languageCode && element.key === 'description'))?.value;
+                      form.inputProps("name").onChange(nameInputValue ? nameInputValue : "");
+                      form.inputProps("description").onChange(descriptionInputValue ? descriptionInputValue : "");
+                    }}
+                  >
+                    <ClayIcon symbol={languageCode!} />
+                    <span style={{ marginLeft: "10px" }}>{languageCode!}</span>
+                  </div>
+                </DropDown.Item>
+                <DropDown.Divider />
+              </div>
+            );
+          })}
+        </DropDown.ItemList>
+      </DropDown>
       <form
         className="sheet"
         onSubmit={(event) => {
@@ -83,14 +170,8 @@ export function TabsTranslations() {
       >
         <TextInput label="Name" {...form.inputProps("name")} description="Name used to render tab in search frontend" />
         <TextArea label="Description" {...form.inputProps("description")} />
-        <NumberInput
-          label="Priority"
-          {...form.inputProps("priority")}
-          description="Define priority according to which tabs are
-        orderder by search frontend during rendering"
-        />
         <div className="sheet-footer">
-          <CustomButtom nameButton={tabId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
+          <CustomButtom nameButton={"Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </form>
     </ContainerFluid>
