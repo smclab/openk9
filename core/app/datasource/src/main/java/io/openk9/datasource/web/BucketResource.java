@@ -28,6 +28,7 @@ import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
+import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -63,7 +64,7 @@ public class BucketResource {
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
 		return cache
 			.get(
-				request.host() + "#getTemplates",
+				new CompositeCacheKey(request.host(), "getTemplates"),
 				k -> getDocTypeTemplateList(request.host()))
 			.flatMap(Function.identity());
 	}
@@ -75,7 +76,7 @@ public class BucketResource {
 
 		return cache
 			.get(
-				request.host() + "#getTabs" + translated,
+				new CompositeCacheKey(request.host(), "getTabs", translated),
 				k -> getTabList(request.host(), translated))
 			.flatMap(Function.identity());
 	}
@@ -87,7 +88,7 @@ public class BucketResource {
 
 		return cache
 			.get(
-				request.host() + "#getSuggestionCategories" + translated,
+				new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
 				k -> getSuggestionCategoryList(request.host(), translated))
 			.flatMap(Function.identity());
 	}
@@ -97,7 +98,7 @@ public class BucketResource {
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
 		return cache
 			.get(
-				request.host() + "#getDocTypeFieldsSortable",
+				new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
 				k -> getDocTypeFieldsSortableList(request.host()))
 			.flatMap(Function.identity());
 	}
@@ -107,7 +108,7 @@ public class BucketResource {
 	public Uni<Language> getDefaultLanguage(){
 		return cache
 			.get(
-				request.host() + "#getDefaultLanguage",
+				new CompositeCacheKey(request.host(), "getDefaultLanguage"),
 				k -> getDefaultLanguage(request.host()))
 			.flatMap(Function.identity());
 	}
@@ -117,7 +118,7 @@ public class BucketResource {
 	public Uni<List<Language>> getAvailableLanguage(){
 		return cache
 			.get(
-				request.host() + "#getAvailableLanguage",
+				new CompositeCacheKey(request.host(), "getAvailableLanguage"),
 				k -> getAvailableLanguageList(request.host()))
 			.flatMap(Function.identity());
 	}
@@ -127,7 +128,7 @@ public class BucketResource {
 	public Uni<BucketResponse> getCurrentBucket() {
 		return cache
 			.get(
-				request.host() + "#getCurrentBucket",
+				new CompositeCacheKey(request.host(), "getCurrentBucket"),
 				k -> getBucket(request.host()))
 			.flatMap(Function.identity());
 	}

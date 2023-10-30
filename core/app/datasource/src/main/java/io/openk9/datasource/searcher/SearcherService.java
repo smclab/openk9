@@ -35,6 +35,7 @@ import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
+import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -99,7 +100,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 
 			return cache.get(
-					request.getVirtualHost() + "#getTenantAndFetchRelations0",
+					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
 					k -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
 				.flatMap(Function.identity())
@@ -133,7 +134,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.filter(docTypeField -> !docTypeField.isI18N())
 							.toList();
 
-					applySort(docTypeFieldList, request.getSortList(), request.getSortAfterKey(), searchSourceBuilder);
+					applySort(
+						docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+						searchSourceBuilder);
 
 					String language = getLanguage(request, tenant);
 
@@ -175,8 +178,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 			return cache.get(
-					request.getVirtualHost() + "#getTenantAndFetchRelations"
-						+ request.getSuggestionCategoryId(),
+					new CompositeCacheKey(
+						request.getVirtualHost(),
+						"getTenantAndFetchRelations",
+						request.getSuggestionCategoryId()),
 					k -> getTenantAndFetchRelations(request.getVirtualHost(), true, request.getSuggestionCategoryId())
 				)
 				.flatMap(Function.identity())
