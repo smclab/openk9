@@ -780,7 +780,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			DocTypeField i18nParent = getI18nParent(docTypeField);
 			if (i18nParent != null) {
 
-				i18nMap.compute(i18nParent, (k, v) -> {
+					i18nMap.compute(i18nParent, (k, v) -> {
 					String fieldName = docTypeField.getPath();
 					if (v == null) {
 						v = Tuple2.of(new HashSet<>(), new HashSet<>());
@@ -788,6 +788,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					if (fieldName.contains("." + language)){
 						v.getItem2().add(docTypeField);
+					}
+					else if (fieldName.contains(".i18n.")) {
+						excludes.add(docTypeField.getPath());
 					}
 					else if (fieldName.contains(".base")) {
 						v.getItem1().add(docTypeField);

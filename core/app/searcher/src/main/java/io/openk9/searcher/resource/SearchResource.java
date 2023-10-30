@@ -63,6 +63,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -486,15 +487,29 @@ public class SearchResource {
 			if (value instanceof Map) {
 				Map<String, Object> objectMap = (Map<String, Object>) value;
 				if (objectMap.containsKey("i18n")) {
-					Map<String, Object> i18nMap = (Map<String, Object>) objectMap.get("i18n");
-					String i18nString = (String) i18nMap.values().iterator().next();
-					entry.setValue(i18nString);
+
+					Map<String, Object> i18nMap =
+						(Map<String, Object>) objectMap.get("i18n");
+
+					if (!i18nMap.isEmpty()) {
+						String i18nString =
+							(String) i18nMap.values().iterator().next();
+						entry.setValue(i18nString);
+					}
+
 				}
 				else if (objectMap.containsKey("base")) {
 					entry.setValue(objectMap.get("base"));
 				}
 				else {
 					mapI18nFields((Map<String, Object>) value);
+				}
+			}
+			if (value instanceof Iterable) {
+				for (Object item: (Iterable<?>) value) {
+					if (item instanceof Map) {
+						mapI18nFields((Map<String, Object>) item);
+					}
 				}
 			}
 		}
