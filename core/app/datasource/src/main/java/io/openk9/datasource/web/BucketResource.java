@@ -62,7 +62,7 @@ public class BucketResource {
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
 		return cache
-			.get(request.host(), this::getDocTypeTemplateList)
+			.get(request.host() + "#getTemplates", this::getDocTypeTemplateList)
 			.flatMap(Function.identity());
 	}
 
@@ -72,7 +72,7 @@ public class BucketResource {
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
 		return cache
-			.get(request.host() + "#" + translated, k -> getTabList(request.host(), translated))
+			.get(request.host() + "#getTabs" + translated, k -> getTabList(request.host(), translated))
 			.flatMap(Function.identity());
 	}
 
@@ -82,7 +82,7 @@ public class BucketResource {
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
 		return cache
-			.get(request.host() + "#" + translated, k -> getSuggestionCategoryList(request.host(), translated))
+			.get(request.host() + "#getSuggestionCategories" + translated, k -> getSuggestionCategoryList(request.host(), translated))
 			.flatMap(Function.identity());
 	}
 
@@ -90,7 +90,7 @@ public class BucketResource {
 	@GET
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
 		return cache
-			.get(request.host(), this::getDocTypeFieldsSortableList)
+			.get(request.host() + "#getDocTypeFieldsSortable", this::getDocTypeFieldsSortableList)
 			.flatMap(Function.identity());
 	}
 
@@ -98,7 +98,7 @@ public class BucketResource {
 	@GET
 	public Uni<Language> getDefaultLanguage(){
 		return cache
-			.get(request.host(), this::getDefaultLanguage)
+			.get(request.host() + "#getDefaultLanguage", this::getDefaultLanguage)
 			.flatMap(Function.identity());
 	}
 
@@ -106,7 +106,7 @@ public class BucketResource {
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
 		return cache
-			.get(request.host(), this::getAvailableLanguageList)
+			.get(request.host() + "#getAvailableLanguage", this::getAvailableLanguageList)
 			.flatMap(Function.identity());
 	}
 
@@ -114,7 +114,7 @@ public class BucketResource {
 	@GET
 	public Uni<BucketResponse> getCurrentBucket() {
 		return cache
-			.get(request.host(), this::getBucket)
+			.get(request.host() + "#getCurrentBucket", this::getBucket)
 			.flatMap(Function.identity());
 	}
 
