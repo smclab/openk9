@@ -33,6 +33,8 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -81,6 +83,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @GrpcService
@@ -94,7 +97,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+
+			return cache.get(
+					request.getVirtualHost() + "#getTenantAndFetchRelations0",
+					k -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+				)
+				.flatMap(Function.identity())
 				.map(tenant -> {
 
 					if (tenant == null) {
@@ -166,8 +174,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return getTenantAndFetchRelations(
-				request.getVirtualHost(), true, request.getSuggestionCategoryId())
+			return cache.get(
+					request.getVirtualHost() + "#getTenantAndFetchRelations"
+						+ request.getSuggestionCategoryId(),
+					k -> getTenantAndFetchRelations(request.getVirtualHost(), true, request.getSuggestionCategoryId())
+				)
+				.flatMap(Function.identity())
 				.flatMap(tenant -> {
 
 					if (tenant == null) {
@@ -948,6 +960,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	Logger logger;
+
+	@Inject
+	@CacheName("searcher-service")
+	Cache cache;
 
 	@Data
 	@Builder
