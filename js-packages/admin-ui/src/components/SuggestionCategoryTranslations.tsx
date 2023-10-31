@@ -193,11 +193,7 @@ export function SuggestionCategoryTranslations() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextArea label="Description" {...form.inputProps("description")} />
         <div className="sheet-footer">
-          <CustomButtom
-            nameButton="Update"
-            canSubmit={!form.canSubmit}
-            typeSelectet="submit"
-          />
+          <CustomButtom nameButton="Update" canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
       </form>
     </ContainerFluid>
