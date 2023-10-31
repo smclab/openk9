@@ -49,9 +49,7 @@ export function TabsTranslations() {
       value: element?.value,
     };
 
-    const translationsToPostIndex = translationsToPost.findIndex(
-      (item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key
-    );
+    const translationsToPostIndex = translationsToPost.findIndex((item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key);
     if (translationsToPostIndex === -1) {
       translationsToPost.push(translation);
     }
