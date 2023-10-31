@@ -17,6 +17,9 @@ gql`
   }
 `;
 
+let mutationCounter = 0;
+let totalTranslations = 0
+
 export function SuggestionCategoryTranslations() {
   const [flag, setFlag] = React.useState("en-us");
   const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
@@ -58,8 +61,9 @@ export function SuggestionCategoryTranslations() {
   const [addSuggestionCategoryMutate, addSuggestionCategoryMutation] = useAddSuggestionCategoryTranslationMutation({
     refetchQueries: [SuggestionCategoryQuery],
     onCompleted(data) {
-      if (data.addSuggestionCategoryTranslation) {
-        showToast({ displayType: "info", title: "Translation updated", content: "" });
+      mutationCounter++;
+      if (data.addSuggestionCategoryTranslation && mutationCounter === totalTranslations) {
+        showToast({ displayType: "info", title: "Translations updated", content: "" });
       }
     },
   });
@@ -84,6 +88,7 @@ export function SuggestionCategoryTranslations() {
     onSubmit(data) {
       addTranslation(flag);
       const translationsToPostLength = translationsToPost.length;
+      const convertedTranslationsToPost = [];
       for (let index = 0; index < translationsToPostLength; index++) {
         const element = translationsToPost[index];
         if (!originalTranslations!.some((translation) => convertLanguageCodeForBackend(element?.language!) === translation?.language && element.key === translation?.key && element.value === translation?.value)) {
@@ -92,16 +97,21 @@ export function SuggestionCategoryTranslations() {
             key: element.key,
             value: element.value,
           };
-
-          addSuggestionCategoryMutate({
-            variables: {
-              suggestionCategoryId: suggestionCategoryId,
-              language: convertedTranslation.language,
-              value: convertedTranslation.value,
-              key: convertedTranslation.key,
-            },
-          });
+          convertedTranslationsToPost.push(convertedTranslation);
+          totalTranslations++;
         }
+      }
+      const convertedTranslationsToPostLength = convertedTranslationsToPost.length;
+      for (let index = 0; index < convertedTranslationsToPostLength; index++) {
+        const element = convertedTranslationsToPost[index];
+        addSuggestionCategoryMutate({
+          variables: {
+            suggestionCategoryId: suggestionCategoryId,
+            language: element.language,
+            value: element.value,
+            key: element.key,
+          },
+        });
       }
     },
     getValidationMessages: () => {

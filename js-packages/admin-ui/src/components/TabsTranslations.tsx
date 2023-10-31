@@ -17,6 +17,9 @@ gql`
   }
 `;
 
+let mutationCounter = 0;
+let totalTranslations = 0
+
 export function TabsTranslations() {
   const [flag, setFlag] = React.useState("en-us");
   const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
@@ -58,7 +61,8 @@ export function TabsTranslations() {
   const [addTabTranslationMutate, addTabTranslationMutation] = useAddTabTranslationMutation({
     refetchQueries: [TabQuery],
     onCompleted(data) {
-      if (data.addTabTranslation) {
+      mutationCounter++;
+      if (data.addTabTranslation && mutationCounter === totalTranslations) {
         showToast({ displayType: "info", title: "Translations updated", content: "" });
       }
     },
@@ -84,6 +88,7 @@ export function TabsTranslations() {
     onSubmit(data) {
       addTranslation(flag);
       const translationsToPostLength = translationsToPost.length;
+      const convertedTranslationsToPost = [];
       for (let index = 0; index < translationsToPostLength; index++) {
         const element = translationsToPost[index];
         if (!originalTranslations!.some((translation) => convertLanguageCodeForBackend(element?.language!) === translation?.language && element.key === translation?.key && element.value === translation?.value)) {
@@ -92,16 +97,21 @@ export function TabsTranslations() {
             key: element.key,
             value: element.value,
           };
-
-          addTabTranslationMutate({
-            variables: {
-              tabId: tabId,
-              language: convertedTranslation.language,
-              value: convertedTranslation.value,
-              key: convertedTranslation.key,
-            },
-          });
+          convertedTranslationsToPost.push(convertedTranslation);
+          totalTranslations++;
         }
+      }
+      const convertedTranslationsToPostLength = convertedTranslationsToPost.length;
+      for (let index = 0; index < convertedTranslationsToPostLength; index++) {
+        const element = convertedTranslationsToPost[index];
+        addTabTranslationMutate({
+          variables: {
+            tabId: tabId,
+            language: element.language,
+            value: element.value,
+            key: element.key,
+          },
+        });
       }
     },
     getValidationMessages: () => {
