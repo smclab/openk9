@@ -17,6 +17,7 @@ import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.util.CacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -84,7 +85,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @GrpcService
@@ -99,11 +99,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 
-			return cache.get(
+			return CacheUtil.getAsync(
+					cache,
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
-					k -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
-				.flatMap(Function.identity())
 				.map(tenant -> {
 
 					if (tenant == null) {
@@ -177,14 +177,15 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return cache.get(
+			return CacheUtil.getAsync(
+					cache,
 					new CompositeCacheKey(
 						request.getVirtualHost(),
 						"getTenantAndFetchRelations",
 						request.getSuggestionCategoryId()),
-					k -> getTenantAndFetchRelations(request.getVirtualHost(), true, request.getSuggestionCategoryId())
+					getTenantAndFetchRelations(
+						request.getVirtualHost(), true, request.getSuggestionCategoryId())
 				)
-				.flatMap(Function.identity())
 				.flatMap(tenant -> {
 
 					if (tenant == null) {

@@ -23,6 +23,7 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
+import io.openk9.datasource.util.CacheUtil;
 import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
@@ -49,7 +50,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 @ApplicationScoped
@@ -62,11 +62,11 @@ public class BucketResource {
 	@Path("/current/templates")
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getTemplates"),
-				k -> getDocTypeTemplateList(request.host()))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getTemplates"),
+			getDocTypeTemplateList(request.host())
+		);
 	}
 
 	@Path("/current/tabs")
@@ -74,11 +74,10 @@ public class BucketResource {
 	public Uni<List<TabResponseDTO>> getTabs(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getTabs", translated),
-				k -> getTabList(request.host(), translated))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getTabs", translated),
+			getTabList(request.host(), translated));
 	}
 
 	@Path("/current/suggestionCategories")
@@ -86,51 +85,50 @@ public class BucketResource {
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
-				k -> getSuggestionCategoryList(request.host(), translated))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
+			getSuggestionCategoryList(request.host(), translated)
+		);
 	}
 
 	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
-				k -> getDocTypeFieldsSortableList(request.host()))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
+			getDocTypeFieldsSortableList(request.host()));
 	}
 
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getDefaultLanguage"),
-				k -> getDefaultLanguage(request.host()))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getDefaultLanguage"),
+			getDefaultLanguage(request.host())
+		);
 	}
 
 	@Path("/current/availableLanguage")
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getAvailableLanguage"),
-				k -> getAvailableLanguageList(request.host()))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getAvailableLanguage"),
+			getAvailableLanguageList(request.host())
+		);
 	}
 
 	@Path("/current")
 	@GET
 	public Uni<BucketResponse> getCurrentBucket() {
-		return cache
-			.get(
-				new CompositeCacheKey(request.host(), "getCurrentBucket"),
-				k -> getBucket(request.host()))
-			.flatMap(Function.identity());
+		return CacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getCurrentBucket"),
+			getBucket(request.host())
+		);
 	}
 
 	private Uni<BucketResponse> getBucket(String host) {
