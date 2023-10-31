@@ -4740,7 +4740,7 @@ export type TabQueryVariables = Exact<{
 }>;
 
 
-export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> } | null };
+export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateTabMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -4850,6 +4850,16 @@ export type DeleteTabsMutationVariables = Exact<{
 
 
 export type DeleteTabsMutation = { __typename?: 'Mutation', deleteTab?: { __typename?: 'Tab', id?: string | null, name?: string | null } | null };
+
+export type AddTabTranslationMutationVariables = Exact<{
+  tabId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddTabTranslationMutation = { __typename?: 'Mutation', addTabTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
 
 export type TokenFilterQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -12304,6 +12314,43 @@ export function useDeleteTabsMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeleteTabsMutationHookResult = ReturnType<typeof useDeleteTabsMutation>;
 export type DeleteTabsMutationResult = Apollo.MutationResult<DeleteTabsMutation>;
 export type DeleteTabsMutationOptions = Apollo.BaseMutationOptions<DeleteTabsMutation, DeleteTabsMutationVariables>;
+export const AddTabTranslationDocument = gql`
+    mutation AddTabTranslation($tabId: ID!, $language: String!, $key: String, $value: String!) {
+  addTabTranslation(tabId: $tabId, language: $language, key: $key, value: $value) {
+    left
+    right
+  }
+}
+    `;
+export type AddTabTranslationMutationFn = Apollo.MutationFunction<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
+
+/**
+ * __useAddTabTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddTabTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddTabTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addTabTranslationMutation, { data, loading, error }] = useAddTabTranslationMutation({
+ *   variables: {
+ *      tabId: // value for 'tabId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddTabTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddTabTranslationMutation, AddTabTranslationMutationVariables>(AddTabTranslationDocument, options);
+      }
+export type AddTabTranslationMutationHookResult = ReturnType<typeof useAddTabTranslationMutation>;
+export type AddTabTranslationMutationResult = Apollo.MutationResult<AddTabTranslationMutation>;
+export type AddTabTranslationMutationOptions = Apollo.BaseMutationOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
 export const TokenFilterDocument = gql`
     query TokenFilter($id: ID!) {
   tokenFilter(id: $id) {
@@ -12774,4 +12821,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-24T10:51:41+02:00
+// Generated on 2023-10-31T10:28:55+01:00
