@@ -4735,6 +4735,16 @@ export type RemoveDocumentTypeFieldFromSuggestionCategoryMutationVariables = Exa
 
 export type RemoveDocumentTypeFieldFromSuggestionCategoryMutation = { __typename?: 'Mutation', removeDocTypeFieldFromSuggestionCategory?: { __typename?: 'Tuple2_SuggestionCategory_DocTypeField', left?: { __typename?: 'SuggestionCategory', id?: string | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
 
+export type AddSuggestionCategoryTranslationMutationVariables = Exact<{
+  suggestionCategoryId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddSuggestionCategoryTranslationMutation = { __typename?: 'Mutation', addSuggestionCategoryTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
+
 export type TabQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -11707,6 +11717,48 @@ export function useRemoveDocumentTypeFieldFromSuggestionCategoryMutation(baseOpt
 export type RemoveDocumentTypeFieldFromSuggestionCategoryMutationHookResult = ReturnType<typeof useRemoveDocumentTypeFieldFromSuggestionCategoryMutation>;
 export type RemoveDocumentTypeFieldFromSuggestionCategoryMutationResult = Apollo.MutationResult<RemoveDocumentTypeFieldFromSuggestionCategoryMutation>;
 export type RemoveDocumentTypeFieldFromSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<RemoveDocumentTypeFieldFromSuggestionCategoryMutation, RemoveDocumentTypeFieldFromSuggestionCategoryMutationVariables>;
+export const AddSuggestionCategoryTranslationDocument = gql`
+    mutation AddSuggestionCategoryTranslation($suggestionCategoryId: ID!, $language: String!, $key: String, $value: String!) {
+  addSuggestionCategoryTranslation(
+    suggestionCategoryId: $suggestionCategoryId
+    language: $language
+    key: $key
+    value: $value
+  ) {
+    left
+    right
+  }
+}
+    `;
+export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
+
+/**
+ * __useAddSuggestionCategoryTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddSuggestionCategoryTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddSuggestionCategoryTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addSuggestionCategoryTranslationMutation, { data, loading, error }] = useAddSuggestionCategoryTranslationMutation({
+ *   variables: {
+ *      suggestionCategoryId: // value for 'suggestionCategoryId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddSuggestionCategoryTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>(AddSuggestionCategoryTranslationDocument, options);
+      }
+export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<typeof useAddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationResult = Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
 export const TabDocument = gql`
     query Tab($id: ID!) {
   tab(id: $id) {
@@ -12821,4 +12873,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-31T10:28:55+01:00
+// Generated on 2023-10-31T14:35:56+01:00
