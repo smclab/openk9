@@ -20,6 +20,8 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import org.hibernate.Hibernate;
 import org.quartz.SchedulerException;
 
@@ -61,6 +63,7 @@ public class K9EntityListener {
 			}
 		}
 
+		_invalidateQuarkusCache();
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource) throws SchedulerException {
@@ -74,7 +77,20 @@ public class K9EntityListener {
 			   Hibernate.getClass(k9Entity).isAssignableFrom(Datasource.class);
 	}
 
+	private void _invalidateQuarkusCache() {
+		searcherServiceCache.invalidateAll().subscribe();
+		bucketResourceCache.invalidateAll().subscribe();
+	}
+
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
+
+	@Inject
+	@CacheName("searcher-service")
+	Cache searcherServiceCache;
+
+	@Inject
+	@CacheName("bucket-resource")
+	Cache bucketResourceCache;
 
 }
