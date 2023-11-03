@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
@@ -63,7 +61,6 @@ public class K9EntityListener {
 			}
 		}
 
-		P2PCache.askInvalidation(actorSystemProvider.getActorSystem());
 	}
 
 	private void _createOrUpdateScheduler(Datasource datasource) throws SchedulerException {
@@ -80,6 +77,4 @@ public class K9EntityListener {
 	@Inject
 	Instance<SchedulerInitializer> _schedulerInitializer;
 
-	@Inject
-	ActorSystemProvider actorSystemProvider;
 }

@@ -19,7 +19,6 @@ package io.openk9.datasource.model.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
-import io.openk9.datasource.listener.K9EntityListener;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -32,7 +31,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.Column;
-import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.MappedSuperclass;
 import java.time.OffsetDateTime;
@@ -43,7 +41,6 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@EntityListeners(K9EntityListener.class)
 public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
 
 
