@@ -21,6 +21,8 @@ package io.openk9.datasource.service.util;
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
+import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -476,23 +478,27 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	private static <T extends K9Entity> Uni<T> _merge(Mutiny.Session s, T entity) {
+	private <T extends K9Entity> Uni<T> _merge(Mutiny.Session s, T entity) {
 
-		return s.merge(entity).call(s::flush);
+		return s.merge(entity)
+			.call(s::flush)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
 
 	}
 
-	private static <T extends K9Entity> Uni<T> _persist(Mutiny.Session s, T entity) {
+	private <T extends K9Entity> Uni<T> _persist(Mutiny.Session s, T entity) {
 
 		return s.persist(entity)
 			.map(v -> entity)
-			.call(s::flush);
+			.call(s::flush)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
 
 	}
 
 	private Uni<Void> _remove(Mutiny.Session s, ENTITY entity) {
 
-		return s.remove(entity);
+		return s.remove(entity)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
 
 	}
 
@@ -702,6 +708,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	@Inject
 	protected Validator validator;
+
+	@Inject
+	ActorSystemProvider actorSystemProvider;
 
 	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =
 		BroadcastProcessor.create();
