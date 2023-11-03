@@ -7,7 +7,7 @@ import io.smallrye.mutiny.Uni;
 
 import java.util.concurrent.CompletableFuture;
 
-public class CacheUtil {
+public class QuarkusCacheUtil {
 
 	public static <T> Uni<T> getAsync(
 		Cache cache, CompositeCacheKey cacheKey, Uni<T> asyncValueLoader) {
@@ -26,6 +26,13 @@ public class CacheUtil {
 		}
 	}
 
-	public final CacheUtil INSTANCE = new CacheUtil();
-	private CacheUtil() {}
+	public static void invalidateAllAsync(Cache cache) {
+		cache
+			.invalidateAll()
+			.subscribe()
+			.with(unused -> {});
+	}
+
+	public final QuarkusCacheUtil INSTANCE = new QuarkusCacheUtil();
+	private QuarkusCacheUtil() {}
 }

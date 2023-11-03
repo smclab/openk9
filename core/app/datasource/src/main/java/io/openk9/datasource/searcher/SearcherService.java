@@ -17,7 +17,7 @@ import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
-import io.openk9.datasource.util.CacheUtil;
+import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -99,7 +99,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 
-			return CacheUtil.getAsync(
+			return QuarkusCacheUtil.getAsync(
 					cache,
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
 					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
@@ -177,7 +177,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return CacheUtil.getAsync(
+			return QuarkusCacheUtil.getAsync(
 					cache,
 					new CompositeCacheKey(
 						request.getVirtualHost(),

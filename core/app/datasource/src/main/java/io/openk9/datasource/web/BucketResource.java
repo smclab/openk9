@@ -23,7 +23,7 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
-import io.openk9.datasource.util.CacheUtil;
+import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
@@ -62,7 +62,7 @@ public class BucketResource {
 	@Path("/current/templates")
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getTemplates"),
 			getDocTypeTemplateList(request.host())
@@ -74,7 +74,7 @@ public class BucketResource {
 	public Uni<List<TabResponseDTO>> getTabs(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getTabs", translated),
 			getTabList(request.host(), translated));
@@ -85,7 +85,7 @@ public class BucketResource {
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
 			@QueryParam("translated") @DefaultValue("false") boolean translated) {
 
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
 			getSuggestionCategoryList(request.host(), translated)
@@ -95,7 +95,7 @@ public class BucketResource {
 	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
 			getDocTypeFieldsSortableList(request.host()));
@@ -104,7 +104,7 @@ public class BucketResource {
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getDefaultLanguage"),
 			getDefaultLanguage(request.host())
@@ -114,7 +114,7 @@ public class BucketResource {
 	@Path("/current/availableLanguage")
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getAvailableLanguage"),
 			getAvailableLanguageList(request.host())
@@ -124,7 +124,7 @@ public class BucketResource {
 	@Path("/current")
 	@GET
 	public Uni<BucketResponse> getCurrentBucket() {
-		return CacheUtil.getAsync(
+		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getCurrentBucket"),
 			getBucket(request.host())
