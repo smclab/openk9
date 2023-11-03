@@ -5,6 +5,7 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
+import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Schedulation;
@@ -13,6 +14,8 @@ import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -20,6 +23,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import java.util.Set;
 
 @Dependent
 public class ActorSystemConfig {
@@ -86,6 +90,21 @@ public class ActorSystemConfig {
 		return ctx -> ctx.spawnAnonymous(
 			MessageGateway.create(queueConnectionProvider, ingestionPayloadMapper));
 	}
+
+	@Produces
+	@ApplicationScoped
+	ActorSystemBehaviorInitializer cacheHandlerBehaviorInit() {
+		return ctx -> ctx.spawnAnonymous(
+			P2PCache.create(Set.of(bucketResourceCache, searcherServiceCache))
+		);
+	}
+
+
+	@CacheName("bucket-resource")
+	Cache bucketResourceCache;
+
+	@CacheName("searcher-service")
+	Cache searcherServiceCache;
 
 	@Inject
 	Logger logger;
