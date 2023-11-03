@@ -20,7 +20,6 @@ package io.openk9.datasource.model;
 import com.cronutils.model.CronType;
 import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,6 @@ import org.eclipse.microprofile.graphql.Description;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -51,7 +49,6 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
 	@Column(name = "name", nullable = false, unique = true)
