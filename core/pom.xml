@@ -70,7 +70,8 @@
 	</developers>
 
 	<modules>
-		<module>../vendor/hibernate-rx-multitenancy</module>
+		<module>../vendor/hibernate-rx-multitenancy/deployment</module>
+		<module>../vendor/hibernate-rx-multitenancy/runtime</module>
 		<module>api</module>
 		<module>app</module>
 		<module>client</module>
