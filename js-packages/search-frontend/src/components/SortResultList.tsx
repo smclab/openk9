@@ -4,21 +4,20 @@ import React from "react";
 import { useQuery } from "react-query";
 import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
-import Select, { components } from "react-select";
+import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
 
 export function SortResultList({
   setSortResult,
-  background = "white",
-  minHeight = "40px",
-  color = "#7e7e7e",
   relevance = "relevance",
+  HtmlString="",
 }: {
   setSortResult: (sortResultNew: SortField) => void;
   background?: string;
   minHeight?: string;
   color?: string;
   relevance?: string;
+  HtmlString?:string
 }) {
   const { t } = useTranslation();
 
@@ -34,7 +33,8 @@ export function SortResultList({
   });
 
   const sortOptions = [startValue];
-
+  
+  
   if (options.data?.length) {
     for (const option of options.data) {
       sortOptions?.push({
@@ -65,7 +65,7 @@ export function SortResultList({
   );
 
   const handleChange = (event: any) => {
-    if (event.value === "relevance") {
+    if (event.value === relevance|| event.value==="relevance") {
       setSortResult({});
     } else {
       setSortResult({
@@ -80,10 +80,12 @@ export function SortResultList({
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
+      
     }),
     menu: (provided: any, state: any) => ({
       ...provided,
       zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
+      
     }),
     option: (provided: any, state: any) => ({
       ...provided,
@@ -103,9 +105,20 @@ export function SortResultList({
     }),
   };
 
+  const onFocus: AriaOnFocus<any> = ({ focused}) => {    
+    const msg = t("you-are-on")+focused.name;    
+    return msg;
+  };
+
   return (
     <span className="openk9-container-sort-result-list-component">
+      {!HtmlString && <label className="visually-hidden" htmlFor="defaultSort">{"Ordinamento"}</label>}
       <Select
+        tabIndex={0}
+        inputId={HtmlString||"defaultSort"}  
+        aria-label=""
+        aria-labelledby=""
+        ariaLiveMessages={{onFocus}}
         className="openk9-react-select-container"
         classNamePrefix="openk9-react-select"
         defaultValue={startValue}

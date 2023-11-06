@@ -16,5 +16,29 @@
     border:1px solid var(--openk9-embeddable-search--active-color) !important;
   }
 
+  .openk9-react-select__option--is-focused{
+    background: #e836362e   !important;
+    color: white;
+    border: 1px solid red !important;
+  }
+  .openk9-react-select__option--is-selected{
+    background: #d54949 !important;   
+  }
+  .option--is-focused{
+    background: black !important ;
+  }
 
+   .openk9-react-select__control {
+    border-radius: 50px!important;
+  }
+
+  .openk9-react-select__control--is-focused {
+    border-radius: 50px!important;
+    box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848 !important;
+		outline: 0 !important;
+    border: 1px solid red !important; 
+  }
+
+
+  
   

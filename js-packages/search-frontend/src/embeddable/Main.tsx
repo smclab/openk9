@@ -400,6 +400,7 @@ export function Main({
             relevance={
               configuration.sortResultConfigurable?.relevance || "relevance"
             }
+            HtmlString={configuration.sortResultConfigurable?.htmlKey || ""}
           />
         </I18nextProvider>,
         configuration.sortResultConfigurable

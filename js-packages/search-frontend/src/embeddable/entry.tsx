@@ -215,6 +215,7 @@ type ResultListProps = {
 type SortResultConfigurableProps = {
   sort: Element | string | null;
   relevance: string;
+  htmlKey?:string|null|undefined;
 };
 
 type SortableProps = {
