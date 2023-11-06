@@ -5,8 +5,12 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
+import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
+import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -68,14 +72,18 @@ public class GrammarProvider {
 	}
 
 	private Uni<Tuple2<String, Bucket>> _getBucket(String virtualHost) {
-		return tenantManager
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(virtualHost, "grammarProvider", "_getBucket"),
+			tenantManager
 				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
 				.flatMap(tenantResponse -> sessionFactory
 					.withTransaction(tenantResponse.getSchemaName(), (s, t) -> s
 						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
 						.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
 						.getSingleResult()
-						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b))));
+						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b))))
+		);
 	}
 
 	@Inject
@@ -86,5 +94,8 @@ public class GrammarProvider {
 
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
+
+	@CacheName("bucket-resource")
+	Cache cache;
 
 }
