@@ -401,6 +401,7 @@ export function Main({
               configuration.sortResultConfigurable?.relevance || "relevance"
             }
             HtmlString={configuration.sortResultConfigurable?.htmlKey || ""}
+            language={languageSelect}
           />
         </I18nextProvider>,
         configuration.sortResultConfigurable

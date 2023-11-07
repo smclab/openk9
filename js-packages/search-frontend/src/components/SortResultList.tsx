@@ -10,31 +10,38 @@ import "./SortResultList.css";
 export function SortResultList({
   setSortResult,
   relevance = "relevance",
-  HtmlString="",
+  HtmlString = "",
+  language,
 }: {
   setSortResult: (sortResultNew: SortField) => void;
   background?: string;
   minHeight?: string;
   color?: string;
   relevance?: string;
-  HtmlString?:string
+  HtmlString?: string;
+  language?: string;
 }) {
   const { t } = useTranslation();
-
   const startValue = {
     value: relevance,
-    name: relevance === "relevance" ? t("relevance") : relevance,
+    name: relevance,
     icon: null,
   };
-
+  const [myValue, setMyValue] = React.useState({
+    value: relevance,
+    name: relevance,
+    icon: null,
+  });
   const client = useOpenK9Client();
   const options = useQuery(["date-label-sort-options", {}], async () => {
     return await client.getLabelSort();
   });
 
+  React.useEffect(() => {
+    setMyValue({ value: relevance, name: relevance, icon: null });
+  }, [relevance]);
   const sortOptions = [startValue];
-  
-  
+
   if (options.data?.length) {
     for (const option of options.data) {
       sortOptions?.push({
@@ -64,8 +71,8 @@ export function SortResultList({
     </components.SingleValue>
   );
 
-  const handleChange = (event: any) => {
-    if (event.value === relevance|| event.value==="relevance") {
+  const handleChange = (event: any) => {    
+    if (event.value === relevance || event.value === relevance) {
       setSortResult({});
     } else {
       setSortResult({
@@ -75,17 +82,16 @@ export function SortResultList({
         },
       });
     }
+    setMyValue(event)
   };
 
   const customStyles = {
     control: (provided: any, state: any) => ({
       ...provided,
-      
     }),
     menu: (provided: any, state: any) => ({
       ...provided,
       zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
-      
     }),
     option: (provided: any, state: any) => ({
       ...provided,
@@ -105,30 +111,36 @@ export function SortResultList({
     }),
   };
 
-  const onFocus: AriaOnFocus<any> = ({ focused}) => {    
-    const msg = t("you-are-on")+focused.name;    
+  const onFocus: AriaOnFocus<any> = ({ focused }) => {
+    const msg = t("you-are-on") + focused.name;
     return msg;
   };
 
   return (
     <span className="openk9-container-sort-result-list-component">
-      {!HtmlString && <label className="visually-hidden" htmlFor="defaultSort">{"Ordinamento"}</label>}
-      <Select
-        tabIndex={0}
-        inputId={HtmlString||"defaultSort"}  
-        aria-label=""
-        aria-labelledby=""
-        ariaLiveMessages={{onFocus}}
-        className="openk9-react-select-container"
-        classNamePrefix="openk9-react-select"
-        defaultValue={startValue}
-        options={sortOptions}
-        components={{ SingleValue }}
-        onChange={handleChange}
-        getOptionLabel={(e) => e.name}
-        getOptionValue={(e) => e.value}
-        styles={customStyles}
-      />
+      {!HtmlString && (
+        <label className="visually-hidden" htmlFor="defaultSort">
+          {"Ordinamento"}
+        </label>
+      )}
+      {relevance && (
+        <Select
+          tabIndex={0}
+          inputId={HtmlString || "defaultSort"}
+          aria-label=""
+          aria-labelledby=""
+          ariaLiveMessages={{ onFocus }}
+          className="openk9-react-select-container"
+          classNamePrefix="openk9-react-select"
+          options={sortOptions}
+          components={{ SingleValue }}
+          onChange={handleChange}
+          getOptionLabel={(e) => e.name}
+          getOptionValue={(e) => e.value}
+          value={myValue}
+          styles={customStyles}
+        />
+      )}
     </span>
   );
 }
