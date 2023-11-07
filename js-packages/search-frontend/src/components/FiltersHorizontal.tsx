@@ -11,7 +11,6 @@ import {
 import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
-import { PlusSvg } from "../svgElement/PlusSvg";
 import {
   FilterCategoryDynamicMemo,
   WhoIsDynamic,
@@ -22,13 +21,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { mapSuggestionToSearchToken } from "./FilterCategory";
 import { capitalize, result } from "lodash";
-import { FilterHorizontalSvg } from "../svgElement/FilterHorizontalSvg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
-import { Language } from "@mui/icons-material";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 
 type FiltersProps = {
@@ -102,7 +99,10 @@ function FiltersHorizontal({
       );
     }
   };
+
+  let isPresent = true; //per sapere se è presente almeno un filtro all'interno di una qualsiasi suggestion
   const { t } = useTranslation();
+
   return (
     <React.Fragment>
       <OverlayScrollbarsComponent
@@ -121,19 +121,29 @@ function FiltersHorizontal({
             suggestion.id,
             language,
           );
-
-          return MemoizedCreateSuggestion(index, suggestion, suggestions);
+          const suggestionFilters = MemoizedCreateSuggestion(
+            index,
+            suggestion,
+            suggestions,
+          );
+          if (suggestionFilters) isPresent = false;
+          return suggestionFilters;
         })}
+        {isPresent && (
+          <div className="openk9-filter-horizontal-noFilters">
+            <NoFilters />
+          </div>
+        )}
       </OverlayScrollbarsComponent>
-      <div
+   {!isPresent &&    <div
         css={css`
           @media (max-width: 480px) {
             margin-top: 5px;
             border: 0.5px solid rgba(128, 128, 128, 0.48);
           }
         `}
-      ></div>
-      <div
+      ></div> }
+   {!isPresent &&  <div
         className="openk9-filter-horizontal-container-submit"
         css={css`
           display: flex;
@@ -233,7 +243,7 @@ function FiltersHorizontal({
             <AddFiltersSvg size="22px" />
           </div>
         </button>
-      </div>
+      </div>}
     </React.Fragment>
   );
 
@@ -264,7 +274,7 @@ function FiltersHorizontal({
       },
       unknown
     >,
-  ): JSX.Element {
+  ): JSX.Element | null {
     const [isOpen, setIsOpen] = React.useState(true);
     const resultValue = suggestions.data?.pages || [];
 
@@ -273,17 +283,7 @@ function FiltersHorizontal({
       searchQuery,
       suggestion.id,
     );
-    if (filters.length === 0)
-      return (
-        <div
-          css={css`
-            color: var(--openk9-embeddable-search--secondary-text-color);
-          `}
-        >
-          <h4>{suggestion.name}</h4>
-          <NoFilters />
-        </div>
-      );
+    if (filters.length === 0) return null;
 
     return (
       <React.Fragment key={index}>
