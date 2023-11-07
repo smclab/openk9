@@ -445,6 +445,7 @@ export function useInfiniteSuggestions(
       activeSuggestionCategory,
       suggestKeyword,
       loadAll,
+      language
     ] as const,
     async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],

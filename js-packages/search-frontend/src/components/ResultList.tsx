@@ -116,6 +116,7 @@ type ResultCountProps = {
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
   addClass?: string;
+  language?:string;
 };
 
 function ResultCount({
@@ -123,6 +124,7 @@ function ResultCount({
   setSortResult,
   isMobile,
   addClass,
+  language,
 }: ResultCountProps) {
   const client = useOpenK9Client();
   const { t } = useTranslation();
@@ -193,7 +195,7 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList setSortResult={setSortResult} />
+            <SortResultList setSortResult={setSortResult} relevance={t("relevance")||"relevance"} language={language} />
           </span>
         </div>
       </div>
@@ -253,7 +255,7 @@ export function FiniteResults<E>({
             width: 100%;
           `}
         >
-          <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
+          <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
@@ -329,7 +331,7 @@ export function InfiniteResults<E>({
             padding-bottom: 16px;
           `}
         >
-          <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
+          <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
@@ -450,7 +452,7 @@ export function VirtualResults<E>({
       `}
     >
       {thereAreResults && (
-        <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
+        <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
           {results.data?.pages[0].total}
         </ResultCount>
       )}
