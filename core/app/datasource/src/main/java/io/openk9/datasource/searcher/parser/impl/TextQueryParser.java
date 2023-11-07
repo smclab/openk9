@@ -74,9 +74,9 @@ public class TextQueryParser implements QueryParser {
 						)
 					);
 
-			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+			BoolQueryBuilder tokenClauseBuilder = QueryBuilders.boolQuery();
 
-			boolQueryBuilder.boost(getBoost(queryParserConfig));
+			tokenClauseBuilder.boost(getBoost(queryParserConfig));
 
 			QueryType valuesQueryType = getValuesQueryType(queryParserConfig);
 
@@ -99,7 +99,7 @@ public class TextQueryParser implements QueryParser {
 
 					valuesQueryType
 						.useConfiguredQueryType(
-							boolQueryBuilder, multiMatchQueryBuilder);
+							tokenClauseBuilder, multiMatchQueryBuilder);
 
 				}
 
@@ -121,17 +121,24 @@ public class TextQueryParser implements QueryParser {
 
 					valuesQueryType
 						.useConfiguredQueryType(
-							boolQueryBuilder, multiMatchQueryBuilder);
+							tokenClauseBuilder, multiMatchQueryBuilder);
 
 				}
 
 			}
 
-			getGlobalQueryType(queryParserConfig)
-				.useConfiguredQueryType(
-					mutableQuery, boolQueryBuilder);
+			doAddTokenClause(queryParserConfig, mutableQuery, tokenClauseBuilder);
 
 		}
+
+	}
+
+	protected void doAddTokenClause(
+		JsonObject config, BoolQueryBuilder mutableQuery, BoolQueryBuilder tokenClauseBuilder) {
+
+		getGlobalQueryType(config)
+			.useConfiguredQueryType(
+				mutableQuery, tokenClauseBuilder);
 
 	}
 
