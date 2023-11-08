@@ -1,8 +1,8 @@
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
-import io.vertx.core.json.JsonObject;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,7 +16,7 @@ public class FilterQueryParser extends TextQueryParser implements QueryParser {
 
 	@Override
 	protected void doAddTokenClause(
-		JsonObject config, BoolQueryBuilder mutableQuery, BoolQueryBuilder tokenClauseBuilder) {
+		ParserContext context, BoolQueryBuilder mutableQuery, BoolQueryBuilder tokenClauseBuilder) {
 
 		QueryType.FILTER.useConfiguredQueryType(mutableQuery, tokenClauseBuilder);
 	}

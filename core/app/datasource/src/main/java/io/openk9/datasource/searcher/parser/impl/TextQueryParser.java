@@ -3,6 +3,7 @@ package io.openk9.datasource.searcher.parser.impl;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
@@ -17,11 +18,17 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TextQueryParser implements QueryParser {
+
+	public static final String BOOST = "boost";
+	public static final String FUZZINESS = "fuzziness";
+	public static final String GLOBAL_QUERY_TYPE = "globalQueryType";
+	public static final String VALUES_QUERY_TYPE = "valuesQueryType";
 
 	public String getType() {
 		return "TEXT";
@@ -35,8 +42,6 @@ public class TextQueryParser implements QueryParser {
 		Bucket currentTenant = parserContext.getCurrentTenant();
 
 		Set<Datasource> datasources = currentTenant.getDatasources();
-
-		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
 		List<DocTypeField> docTypeFieldList =
 			Utils.getDocTypeFieldsFrom(datasources)
@@ -76,9 +81,11 @@ public class TextQueryParser implements QueryParser {
 
 			BoolQueryBuilder tokenClauseBuilder = QueryBuilders.boolQuery();
 
-			tokenClauseBuilder.boost(getBoost(queryParserConfig));
+			tokenClauseBuilder.boost(getBoost(parserContext));
 
-			QueryType valuesQueryType = getValuesQueryType(queryParserConfig);
+			org.elasticsearch.common.unit.Fuzziness fuzziness = getFuzziness(parserContext);
+
+			QueryType valuesQueryType = getValuesQueryType(parserContext);
 
 			for (String value : values) {
 
@@ -96,6 +103,8 @@ public class TextQueryParser implements QueryParser {
 						new MultiMatchQueryBuilder(value);
 
 					multiMatchQueryBuilder.fields(keywordBoostMap);
+
+					multiMatchQueryBuilder.fuzziness(fuzziness);
 
 					valuesQueryType
 						.useConfiguredQueryType(
@@ -119,6 +128,8 @@ public class TextQueryParser implements QueryParser {
 
 					multiMatchQueryBuilder.boost(2.0f);
 
+					multiMatchQueryBuilder.fuzziness(fuzziness);
+
 					valuesQueryType
 						.useConfiguredQueryType(
 							tokenClauseBuilder, multiMatchQueryBuilder);
@@ -127,33 +138,59 @@ public class TextQueryParser implements QueryParser {
 
 			}
 
-			doAddTokenClause(queryParserConfig, mutableQuery, tokenClauseBuilder);
+			doAddTokenClause(parserContext, mutableQuery, tokenClauseBuilder);
 
 		}
 
 	}
 
 	protected void doAddTokenClause(
-		JsonObject config, BoolQueryBuilder mutableQuery, BoolQueryBuilder tokenClauseBuilder) {
+		ParserContext context,
+		BoolQueryBuilder mutableQuery,
+		BoolQueryBuilder tokenClauseBuilder) {
 
-		getGlobalQueryType(config)
-			.useConfiguredQueryType(
-				mutableQuery, tokenClauseBuilder);
+		getGlobalQueryType(context)
+			.useConfiguredQueryType(mutableQuery, tokenClauseBuilder);
 
 	}
 
-	static float getBoost(JsonObject jsonConfig) {
-		return jsonConfig.getFloat("boost", 1.0F);
+	private static float getBoost(ParserContext context) {
+		return getValue(context, BOOST)
+			.map(Float::parseFloat)
+			.orElse(1.0F);
 	}
 
-	static QueryType getValuesQueryType(JsonObject jsonConfig) {
-		return QueryType.valueOf(
-			jsonConfig.getString("valuesQueryType", "SHOULD"));
+	private static QueryType getValuesQueryType(ParserContext context) {
+		return getValue(context, VALUES_QUERY_TYPE)
+			.map(QueryType::valueOf)
+			.orElse(QueryType.SHOULD);
 	}
 
-	static QueryType getGlobalQueryType(JsonObject jsonConfig) {
-		return QueryType.valueOf(
-			jsonConfig.getString("globalQueryType", "MUST"));
+	private static QueryType getGlobalQueryType(ParserContext context) {
+		return getValue(context, GLOBAL_QUERY_TYPE)
+			.map(QueryType::valueOf)
+			.orElse(QueryType.MUST);
+	}
+
+	private static org.elasticsearch.common.unit.Fuzziness getFuzziness(ParserContext context) {
+		return getValue(context, FUZZINESS)
+			.map(Fuzziness::valueOf)
+			.orElse(Fuzziness.ZERO)
+			.toElasticType();
+	}
+
+	private static Optional<String> getValue(ParserContext context, String key) {
+		Map<String, List<String>> extra = context.getExtraParams();
+
+		if (extra != null && !extra.isEmpty()) {
+			List<String> values = extra.get(key);
+			if (values != null && values.iterator().hasNext()) {
+				return Optional.ofNullable(values.iterator().next());
+			}
+		}
+
+		JsonObject jsonConfig = context.getQueryParserConfig();
+		return Optional.ofNullable(jsonConfig.getString(key));
 	}
 
 }
