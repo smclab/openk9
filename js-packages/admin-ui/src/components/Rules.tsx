@@ -53,30 +53,60 @@ export function Rules() {
   const rules = rulesQuery.data?.rules?.edges;
 
   if (rules) {
-    const nodeWidth = 100; // Larghezza del nodo
-    const nodeHeight = 50; // Altezza del nodo
+    const nodeWidth = 100;
+    const nodeHeight = 50;
 
-    // Calcola la posizione del primo nodo in modo che sia centrato
     const startX = 400;
     const startY = 30;
 
-    rules.forEach((ruleElement, index) => {
+    const uniqueRules = Array.from(
+      rules
+        .reduce((map, rule) => {
+          const lhs = rule?.node?.lhs;
+          if (!map.has(lhs)) {
+            map.set(lhs, rule);
+          }
+          return map;
+        }, new Map())
+        .values()
+    );
+
+    uniqueRules.forEach((ruleElement, index) => {
       const rule = ruleElement?.node;
-      const x = startX + index * nodeWidth;
-      const y = startY + index * nodeHeight;
+      const x = startX + index * nodeWidth ;
+      const y = startY + index * nodeHeight +30;
       elements.push({
-        id: rule?.id || "",
-        type: "default",
-        data: { label: rule?.name || "" },
+        id: rule?.lhs || "",
+        type: "defaut",
+        data: { label: rule?.lhs || "" },
         position: { x, y },
       });
     });
   }
 
+  const edges:Edge<any>[] | undefined = [];
+
+rules?.forEach((rule) => {
+  const lhs = rule?.node?.lhs;
+  const rhs = rule?.node?.rhs;
+
+  if (lhs && rhs) {
+    const edge = {
+      id: rule.node?.name||"", // Un identificatore unico per l'arco
+      source: lhs, // Nodo di partenza
+      target: rhs, // Nodo di destinazione
+      // Puoi aggiungere altre proprietà come label o type se necessario
+    };
+
+    edges.push(edge);
+  }
+});
+console.log(elements);
+
   return (
     <React.Fragment>
       ciao
-      <ReactFlow nodes={elements} style={{ height: "600px", margin: "0 auto" }}>
+      <ReactFlow nodes={elements} edges={edges} style={{ height: "600px", margin: "0 auto" }}>
         <MiniMap />
         <Controls />
         <Background />
