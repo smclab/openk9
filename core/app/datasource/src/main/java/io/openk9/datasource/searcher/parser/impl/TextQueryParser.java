@@ -9,7 +9,6 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
-import io.vertx.core.json.JsonObject;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -18,7 +17,6 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -155,42 +153,27 @@ public class TextQueryParser implements QueryParser {
 	}
 
 	private static float getBoost(ParserContext context) {
-		return getValue(context, BOOST)
-			.map(Float::parseFloat)
+		return context.getFloat(BOOST)
 			.orElse(1.0F);
 	}
 
 	private static QueryType getValuesQueryType(ParserContext context) {
-		return getValue(context, VALUES_QUERY_TYPE)
+		return context.getString(VALUES_QUERY_TYPE)
 			.map(QueryType::valueOf)
 			.orElse(QueryType.SHOULD);
 	}
 
 	private static QueryType getGlobalQueryType(ParserContext context) {
-		return getValue(context, GLOBAL_QUERY_TYPE)
+		return context.getString(GLOBAL_QUERY_TYPE)
 			.map(QueryType::valueOf)
 			.orElse(QueryType.MUST);
 	}
 
 	private static org.elasticsearch.common.unit.Fuzziness getFuzziness(ParserContext context) {
-		return getValue(context, FUZZINESS)
+		return context.getString(FUZZINESS)
 			.map(Fuzziness::valueOf)
 			.orElse(Fuzziness.ZERO)
 			.toElasticType();
-	}
-
-	private static Optional<String> getValue(ParserContext context, String key) {
-		Map<String, List<String>> extra = context.getExtraParams();
-
-		if (extra != null && !extra.isEmpty()) {
-			List<String> values = extra.get(key);
-			if (values != null && values.iterator().hasNext()) {
-				return Optional.ofNullable(values.iterator().next());
-			}
-		}
-
-		JsonObject jsonConfig = context.getQueryParserConfig();
-		return Optional.ofNullable(jsonConfig.getString(key));
 	}
 
 }
