@@ -1,6 +1,6 @@
 import React from "react";
 import { Handle, Position } from "react-flow-renderer";
-import { useCreateOrUpdateRuleQueryMutation } from "../graphql-generated";
+import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../graphql-generated";
 import { RuleQuery } from "./Rule";
 import { RulesQuery } from "./Rules";
 import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
@@ -22,6 +22,17 @@ export default function NodeGraphRule(props: any) {
 
     setPanelOpen(!isPanelOpen);
   };
+  const [deleteRuleMutate] = useDeleteRulesMutation({
+    refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
+    onCompleted(data) {
+      if (data.deleteRule?.id) {
+        showToast({ displayType: "success", title: "Plugin drivers deleted", content: data.deleteRule.name ?? "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "Plungi drivers nerror", content: error.message ?? "" });
+    },
+  });
 
   return (
     <div
@@ -54,32 +65,42 @@ export default function NodeGraphRule(props: any) {
             minWidth: "240px",
           }}
         >
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <label>New Rule: </label>
-              <input
-                type="text"
-                value={inputText}
-                onChange={(event) => {
-                  setInputText(event.currentTarget.value);
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            <label>New Rule: </label>
+            <input
+              type="text"
+              value={inputText}
+              onChange={(event) => {
+                setInputText(event.currentTarget.value);
+              }}
+            />
+            <div style={{ display: "flex", gap: "5px" }}>
+              <button
+                type="submit"
+                onClick={() => {
+                  createOrUpdateRuleMutate({
+                    variables: { id: undefined, name: data.label + "_" + inputText, lhs: data.label, rhs: inputText },
+                  });
+                  setPanelOpen(false);
                 }}
-              />
-              <div style={{ display: "flex", gap: "5px" }}>
-                <button
-                  type="submit"
-                  onClick={() => {
-                    createOrUpdateRuleMutate({
-                      variables: { id: undefined, name: data.label + "_" + inputText, lhs: data.label, rhs: inputText },
-                    });
-                    setPanelOpen(false)
-                  }}
-                >
-                  Invia
-                </button>
-                <button type="submit" onClick={handleNodeClick}>
-                  Chiudi
-                </button>
-              </div>
+              >
+                Invia
+              </button>
+              <button type="submit" onClick={handleNodeClick}>
+                Chiudi
+              </button>
+              <button
+                onClick={() => {
+                  const removeRule = data?.rules?.find((rules: { node: { id: string; name: string; lhs: string; rhs: string } }) => {
+                    return rules.node.rhs === data.label;
+                  });                  
+                   deleteRuleMutate({ variables: { id: removeRule?.node?.id || ""} });
+                }}
+              >
+                Cancella
+              </button>
             </div>
+          </div>
         </div>
       )}
     </div>

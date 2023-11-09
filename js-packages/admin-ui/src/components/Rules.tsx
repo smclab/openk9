@@ -89,7 +89,7 @@ export function Rules() {
       elements.push({
         id: lhs || "",
         type: "custom",
-        data: { label: lhs || "", id: lhs||"",rulesQuery:rulesQuery},
+        data: { label: lhs || "", id: lhs||"",rulesQuery:rulesQuery,rules:rules},
         position: { x, y },
       });
     });
@@ -111,7 +111,6 @@ export function Rules() {
       edges.push(edge);
     }
   });
-console.log(elements,edges);
 
   return <BuildGraph node={elements} edgesValue={edges} />;
 }
