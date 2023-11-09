@@ -7,7 +7,7 @@ import { useForm, fromFieldValidators, TextInput, TextArea, CustomButtom, Contai
 import { useToast } from "./ToastProvider";
 import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
 
-const RuleQuery = gql`
+export const RuleQuery = gql`
   query Rule($id: ID!) {
     rule: rule(id: $id) {
       id
