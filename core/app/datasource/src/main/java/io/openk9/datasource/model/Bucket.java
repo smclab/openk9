@@ -70,12 +70,14 @@ import java.util.Set;
 			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost " +
 			"and (" +
 				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
-				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET
-			+ " )"
+				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET +
+				" )"
 	),
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
-		query = "from Bucket b join b." + Bucket_.TENANT_BINDING
+		query =
+			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tn " +
+				"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
 	)
 })
 public class Bucket extends K9Entity {

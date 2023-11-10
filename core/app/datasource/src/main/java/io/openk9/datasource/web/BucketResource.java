@@ -127,13 +127,14 @@ public class BucketResource {
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getCurrentBucket"),
-			_getCurrentBucket()
+			_getCurrentBucket(request.host())
 		);
 	}
 
-	private Uni<CurrentBucket> _getCurrentBucket() {
+	private Uni<CurrentBucket> _getCurrentBucket(String host) {
 		return sessionFactory.withTransaction(session -> session
 			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
+			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
 			.getSingleResult()
 			.map(mapper::toCurrentBucket)
 		);
