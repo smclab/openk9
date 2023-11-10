@@ -65,13 +65,21 @@ public class TokenTab extends K9Entity {
 	@MapKeyColumn(name = "key")
 	@Column(name = "value")
 	@JsonIgnore
-	public Map<String, String> extraParams = new HashMap<>();
+	private Map<String, String> extraParams = new HashMap<>();
 
 	public enum TokenType {
 		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE
 	}
 
-	public Set<ExtraParam> getExtraParams() {
+	public void addExtraParam(String key, String value) {
+		extraParams.put(key, value);
+	}
+
+	public void removeExtraParam(String key) {
+		extraParams.remove(key);
+	}
+
+	public Set<ExtraParam> getExtraParamsSet() {
 		return extraParams
 			.entrySet()
 			.stream().map(e -> new ExtraParam(e.getKey(), e.getValue()))

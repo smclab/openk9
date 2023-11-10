@@ -44,7 +44,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 
 	public Uni<Set<TokenTab.ExtraParam>> getExtraParams(TokenTab tokenTab) {
 		return sessionFactory
-			.withTransaction((s, t) -> Mutiny.fetch(tokenTab.getExtraParams()));
+			.withTransaction((s, t) -> Mutiny.fetch(tokenTab.getExtraParamsSet()));
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(
@@ -92,4 +92,24 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 
+	public Uni<TokenTab> addExtraParam(long id, String key, String value) {
+		return getSessionFactory()
+			.withTransaction(s ->
+				findById(s, id)
+					.flatMap(tokenTab -> {
+						tokenTab.addExtraParam(key, value);
+						return persist(s, tokenTab);
+					})
+			);
+	}
+
+	public Uni<TokenTab> removeExtraParam(int id, String key) {
+		return getSessionFactory()
+			.withTransaction(s ->
+				findById(s, id)
+					.flatMap(tokenTab -> {
+						tokenTab.removeExtraParam(key);
+						return persist(s, tokenTab);
+					})
+			);	}
 }

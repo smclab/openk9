@@ -78,6 +78,16 @@ public class TokenTabGraphqlResource {
 
 	}
 
+	@Mutation
+	public Uni<TokenTab> addExtraParam(@Id long id, String key, String value) {
+		return tokenTabService.addExtraParam(id, key, value);
+	}
+
+	@Mutation
+	public Uni<TokenTab> removeExtraParam(@Id int id, String key) {
+		return tokenTabService.removeExtraParam(id, key);
+	}
+
 	public Uni<Response<TokenTab>> createTokenTab(TokenTabDTO tokenTabDTO) {
 		return tokenTabService.getValidator().create(tokenTabDTO);
 	}
