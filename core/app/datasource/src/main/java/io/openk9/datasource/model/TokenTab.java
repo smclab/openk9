@@ -7,14 +7,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Entity
@@ -49,7 +56,27 @@ public class TokenTab extends K9Entity {
 	@ToString.Exclude
 	private DocTypeField docTypeField;
 
+	@ElementCollection
+	@CollectionTable(
+		name = "token_tab_extra_params",
+		joinColumns = @JoinColumn(name = "token_tab_id")
+
+	)
+	@MapKeyColumn(name = "key")
+	@Column(name = "value")
+	@JsonIgnore
+	public Map<String, String> extraParams = new HashMap<>();
+
 	public enum TokenType {
 		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE
 	}
+
+	public Set<ExtraParam> getExtraParams() {
+		return extraParams
+			.entrySet()
+			.stream().map(e -> new ExtraParam(e.getKey(), e.getValue()))
+			.collect(Collectors.toSet());
+	}
+
+	public record ExtraParam(String key, String value) {}
 }

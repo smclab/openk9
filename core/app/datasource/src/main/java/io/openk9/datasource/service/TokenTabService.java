@@ -10,6 +10,7 @@ import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -39,6 +40,11 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	public Uni<DocTypeField> getDocTypeField(long tokenTabId) {
 		return sessionFactory.withTransaction(s -> findById(tokenTabId)
 			.flatMap(t -> s.fetch(t.getDocTypeField())));
+	}
+
+	public Uni<Set<TokenTab.ExtraParam>> getExtraParams(TokenTab tokenTab) {
+		return sessionFactory
+			.withTransaction((s, t) -> Mutiny.fetch(tokenTab.getExtraParams()));
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(

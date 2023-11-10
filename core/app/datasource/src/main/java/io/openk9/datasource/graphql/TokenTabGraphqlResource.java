@@ -39,7 +39,11 @@ public class TokenTabGraphqlResource {
 	}
 
 	public Uni<DocTypeField> docTypeField(@Source TokenTab tokenTab) {
-		return tokenTabService.getDocTypeField(tokenTab.getId());
+		return tokenTabService.getDocTypeField(tokenTab);
+	}
+
+	public Uni<Set<TokenTab.ExtraParam>> extraParams(@Source TokenTab tokenTab) {
+		return tokenTabService.getExtraParams(tokenTab);
 	}
 
 	@Mutation
