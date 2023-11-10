@@ -161,10 +161,11 @@ function recoveryValue({
   });
 
   if (matchingRules.length === 0) {
+    const data=rules.find(({ node: { rhs } }: { node: { rhs: string } })=>entity===rhs)
     result.push({
       id: entity,
       type: "custom",
-      data: { label: entity || "", id: entity || "", rulesQuery: undefined, rules: rules, isDelete: true },
+      data: { label: entity || "", id: entity || "", rulesQuery: undefined, rules: rules, isDelete: true,idAssociation:data.node.id,fatherLabel:data.node.lhs},
       position: { x: position.x + (indexElement ? (indexElement + 1) * 250 : 1), y: position.y },
     });
   }

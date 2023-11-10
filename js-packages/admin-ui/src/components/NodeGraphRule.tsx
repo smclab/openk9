@@ -10,9 +10,11 @@ export default function NodeGraphRule(props: any) {
   const { data } = props;
   const showToast = useToast();
   const [inputText, setInputText] = React.useState("");
+  const [modify, setModify] = React.useState(data.label);
   const [isPanelOpen, setPanelOpen] = React.useState(false);
   const [isOptional, setIsOptional] = React.useState(false);
   const [isTerminal, setIsTerminal] = React.useState(false);
+  const [isModify, setIsModify] = React.useState(false);
 
   const [createOrUpdateRuleMutate, createOrUpdateRuleMutation] = useCreateOrUpdateRuleQueryMutation({
     refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
@@ -66,62 +68,95 @@ export default function NodeGraphRule(props: any) {
             minWidth: "240px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <div>
-                {" "}
-                <label>New Rule: </label>
+          {!isModify && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                  {" "}
+                  <label>New Rule: </label>
+                </div>
+                <div>
+                  <button type="submit" style={{ background: "white", border: "none", width: "35px" }} onClick={handleNodeClick}>
+                    X
+                  </button>
+                </div>
               </div>
-              <div>
-                <button type="submit" style={{ background: "white", border: "none", width: "35px" }} onClick={handleNodeClick}>
-                  X
-                </button>
-              </div>
-            </div>
-            <input
-              type="text"
-              style={{ border: "1px solid black" }}
-              value={inputText}
-              onChange={(event) => {
-                setInputText(event.currentTarget.value);
-              }}
-            />
-            <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
-              <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
-              <label>Terminalità </label>
-            </div>
-            <div style={{ display: "flex", gap: "5px" }}>
-              <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
-              <label>Opzionalità </label>
-            </div>
-            <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
-              <button
-                type="submit"
-                onClick={() => {
-                  const variableSymbol:"$?"|"?"|"$"|""= isOptional && isTerminal? "$?" : isOptional? "?" :isTerminal? "$" : ""; 
-                  createOrUpdateRuleMutate({
-                    variables: { id: undefined, name: data.label + "_" + variableSymbol +inputText, lhs: data.label, rhs: variableSymbol+""+inputText },
-                  });
-                  setPanelOpen(false);
-                  setInputText("");
+              <input
+                type="text"
+                style={{ border: "1px solid black" }}
+                value={inputText}
+                onChange={(event) => {
+                  setInputText(event.currentTarget.value);
                 }}
-              >
-                Invia
-              </button>
-              {data.isDelete && (
+              />
+              <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
+                <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
+                <label>Terminalità </label>
+              </div>
+              <div style={{ display: "flex", gap: "5px" }}>
+                <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
+                <label>Opzionalità </label>
+              </div>
+              <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
                 <button
+                  type="submit"
                   onClick={() => {
-                    const removeRule = data?.rules?.find((rules: { node: { id: string; name: string; lhs: string; rhs: string } }) => {
-                      return rules.node.rhs === data.label;
+                    const variableSymbol: "$?" | "?" | "$" | "" =
+                      isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
+                    createOrUpdateRuleMutate({
+                      variables: {
+                        id: undefined,
+                        name: data.label + "_" + variableSymbol + inputText,
+                        lhs: data.label,
+                        rhs: variableSymbol + "" + inputText,
+                      },
                     });
-                    deleteRuleMutate({ variables: { id: removeRule?.node?.id || "" } });
+                    setPanelOpen(false);
+                    setInputText("");
+                    setIsTerminal(false);
+                    setIsOptional(false);
                   }}
                 >
-                  Cancella
+                  Create
                 </button>
-              )}
+                {data.isDelete && (
+                  <button
+                    onClick={() => {
+                      const removeRule = data?.rules?.find((rules: { node: { id: string; name: string; lhs: string; rhs: string } }) => {
+                        return rules.node.rhs === data.label;
+                      });
+                      deleteRuleMutate({ variables: { id: removeRule?.node?.id || "" } });
+                    }}
+                  >
+                    Cancella
+                  </button>
+                )}
+                <button onClick={() => setIsModify(true)}>Modifica</button>
+              </div>
             </div>
-          </div>
+          )}
+          {isModify && data.idAssociation && (
+            <div>
+              <label>Modifica</label>
+              <input type="text" value={modify} onChange={(event) => setModify(event.currentTarget.value)}></input>
+              <button onClick={() => setIsModify(false)}>Back</button>
+              <button
+                onClick={() => {
+                  const variableSymbol: "$?" | "?" | "$" | "" = isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
+                  createOrUpdateRuleMutate({
+                    variables: {
+                      id: data.idAssociation,
+                      name: data.fatherLabel + "_" + variableSymbol + modify,
+                      lhs: data.fatherLabel,
+                      rhs: modify,
+                    },
+                  });
+                }}
+              >
+                Save 
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
