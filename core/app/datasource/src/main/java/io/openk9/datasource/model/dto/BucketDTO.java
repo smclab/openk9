@@ -34,6 +34,15 @@ import javax.validation.constraints.NotNull;
 public class BucketDTO extends K9EntityDTO {
 
 	@NotNull
-	private Boolean handleDynamicFilters = false;
+	private Boolean refreshOnSuggestionCategory = false;
+
+	@NotNull
+	private Boolean refreshOnTab = false;
+
+	@NotNull
+	private Boolean refreshOnDate = false;
+
+	@NotNull
+	private Boolean refreshOnQuery = false;
 
 }

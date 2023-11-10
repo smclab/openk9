@@ -123,40 +123,20 @@ public class BucketResource {
 
 	@Path("/current")
 	@GET
-	public Uni<BucketResponse> getCurrentBucket() {
+	public Uni<CurrentBucket> getCurrentBucket() {
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getCurrentBucket"),
-			getBucket(request.host())
+			_getCurrentBucket()
 		);
 	}
 
-	private Uni<BucketResponse> getBucket(String host) {
-		return sessionFactory.withTransaction(session -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<Boolean> query = cb.createQuery(Boolean.class);
-
-			Root<Bucket> from = query.from(Bucket.class);
-
-			Join<Bucket, TenantBinding> tenantBindingFetch =
-				from.join(Bucket_.tenantBinding);
-
-			tenantBindingFetch.on(
-				cb.equal(
-					tenantBindingFetch.get(TenantBinding_.virtualHost),
-					host
-				)
-			);
-
-			query.select(from.get(Bucket_.handleDynamicFilters));
-
-			return session.createQuery(query)
-				.getSingleResult()
-				.map(BucketResponse::new);
-
-		});
+	private Uni<CurrentBucket> _getCurrentBucket() {
+		return sessionFactory.withTransaction(session -> session
+			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
+			.getSingleResult()
+			.map(mapper::toCurrentBucket)
+		);
 	}
 
 	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
@@ -445,6 +425,12 @@ public class BucketResource {
 	@CacheName("bucket-resource")
 	Cache cache;
 
-	public record BucketResponse(boolean handleDynamicFilters) {}
+	public record CurrentBucket(
+		boolean refreshOnSuggestionCategory,
+		boolean refreshOnTab,
+		boolean refreshOnDate,
+		boolean refreshOnQuery
+		)
+	{}
 
 }

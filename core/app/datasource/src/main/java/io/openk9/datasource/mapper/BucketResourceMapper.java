@@ -1,19 +1,18 @@
 package io.openk9.datasource.mapper;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.TranslationKey;
+import io.openk9.datasource.web.BucketResource;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Mapper(
 	componentModel = "cdi"
@@ -25,6 +24,8 @@ public interface BucketResourceMapper {
 
 	TemplateResponseDTO toTemplateResponseDto(
 		DocTypeTemplate docTypeTemplate);
+
+	BucketResource.CurrentBucket toCurrentBucket(Bucket bucket);
 
 	default List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList) {
 		return toTabResponseDtoList(tabList, null);

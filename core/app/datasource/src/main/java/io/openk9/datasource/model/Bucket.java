@@ -72,11 +72,17 @@ import java.util.Set;
 				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
 				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET
 			+ " )"
+	),
+	@NamedQuery(
+		name = Bucket.CURRENT_NAMED_QUERY,
+		query = "from Bucket b join b." + Bucket_.TENANT_BINDING
 	)
 })
 public class Bucket extends K9Entity {
 
 	public static final String FETCH_ANNOTATORS_NAMED_QUERY = "Bucket.fetchAnnotators";
+
+	public static final String CURRENT_NAMED_QUERY = "Bucket.current";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -84,8 +90,17 @@ public class Bucket extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "handle_dynamic_filters", nullable = false)
-	private Boolean handleDynamicFilters = false;
+	@Column(name = "refresh_on_suggestion_category", nullable = false)
+	private Boolean refreshOnSuggestionCategory = false;
+
+	@Column(name = "refresh_on_tab", nullable = false)
+	private Boolean refreshOnTab = false;
+
+	@Column(name = "refresh_on_date", nullable = false)
+	private Boolean refreshOnDate = false;
+
+	@Column(name = "refresh_on_query", nullable = false)
+	private Boolean refreshOnQuery = false;
 
 	@ManyToMany(mappedBy = "buckets", cascade = {
 		javax.persistence.CascadeType.PERSIST,
