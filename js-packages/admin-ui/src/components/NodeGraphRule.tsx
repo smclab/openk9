@@ -11,6 +11,9 @@ export default function NodeGraphRule(props: any) {
   const showToast = useToast();
   const [inputText, setInputText] = React.useState("");
   const [isPanelOpen, setPanelOpen] = React.useState(false);
+  const [isOptional, setIsOptional] = React.useState(false);
+  const [isTerminal, setIsTerminal] = React.useState(false);
+
   const [createOrUpdateRuleMutate, createOrUpdateRuleMutation] = useCreateOrUpdateRuleQueryMutation({
     refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
     onCompleted(data) {
@@ -18,8 +21,6 @@ export default function NodeGraphRule(props: any) {
     },
   });
   const handleNodeClick = () => {
-    data.rulesQuery.refetch();
-
     setPanelOpen(!isPanelOpen);
   };
   const [deleteRuleMutate] = useDeleteRulesMutation({
@@ -65,23 +66,35 @@ export default function NodeGraphRule(props: any) {
             minWidth: "240px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            <div style={{ display: "flex",justifyContent:"space-between" }}>
-            <div> <label>New Rule: </label></div>
-              <div >
-                <button type="submit" style={{ width: "35px" }} onClick={handleNodeClick}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div>
+                {" "}
+                <label>New Rule: </label>
+              </div>
+              <div>
+                <button type="submit" style={{ background: "white", border: "none", width: "35px" }} onClick={handleNodeClick}>
                   X
                 </button>
               </div>
             </div>
             <input
               type="text"
+              style={{ border: "1px solid black" }}
               value={inputText}
               onChange={(event) => {
                 setInputText(event.currentTarget.value);
               }}
             />
+            <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
+              <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
+              <label>Terminalità </label>
+            </div>
             <div style={{ display: "flex", gap: "5px" }}>
+              <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
+              <label>Opzionalità </label>
+            </div>
+            <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
               <button
                 type="submit"
                 onClick={() => {
@@ -94,16 +107,18 @@ export default function NodeGraphRule(props: any) {
               >
                 Invia
               </button>
-              <button
-                onClick={() => {
-                  const removeRule = data?.rules?.find((rules: { node: { id: string; name: string; lhs: string; rhs: string } }) => {
-                    return rules.node.rhs === data.label;
-                  });
-                  deleteRuleMutate({ variables: { id: removeRule?.node?.id || "" } });
-                }}
-              >
-                Cancella
-              </button>
+              {data.isDelete && (
+                <button
+                  onClick={() => {
+                    const removeRule = data?.rules?.find((rules: { node: { id: string; name: string; lhs: string; rhs: string } }) => {
+                      return rules.node.rhs === data.label;
+                    });
+                    deleteRuleMutate({ variables: { id: removeRule?.node?.id || "" } });
+                  }}
+                >
+                  Cancella
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,12 +1,8 @@
 import { gql } from "@apollo/client";
-import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation, useRulesQuery } from "../graphql-generated";
-import { AddRuleToQueryAnalyses, QueryAnalysesRule, RemoveRuleFromQueryAnalyses } from "./QueryAnalysesRules";
-import { formatName, Table } from "./Table";
-import { useToast } from "./ToastProvider";
-import ReactFlow, { addEdge, MiniMap, Controls, Background, ReactFlowProvider, Node, Edge } from "react-flow-renderer";
+import { useRulesQuery } from "../graphql-generated";
+import ReactFlow, { MiniMap, Controls, Background, Node, Edge, applyNodeChanges } from "react-flow-renderer";
 import React from "react";
 import NodeGraphRule from "./NodeGraphRule";
-import { RuleQuery } from "./Rule";
 
 export const RulesQuery = gql`
   query Rules($searchText: String, $cursor: String) {
@@ -37,11 +33,10 @@ gql`
 `;
 
 const nodeTypes = {
-  custom: NodeGraphRule, 
+  custom: NodeGraphRule,
 };
 
 export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue: Edge<any>[] }) {
-  
   const [nodes, setNodes] = React.useState(node);
   const [edges, setEdges] = React.useState(edgesValue);
 
@@ -49,10 +44,15 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
     setNodes(node);
     setEdges(edgesValue);
   }, [node, edgesValue]);
-  
+
+  const onNodesChange = React.useCallback(
+    (changes:any) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    [setNodes]
+  );
+
   return (
     <React.Fragment>
-      <ReactFlow nodes={nodes} edges={edges} style={{ height: "600px", margin: "0 auto" }} nodeTypes={nodeTypes} fitView>
+      <ReactFlow nodes={nodes} edges={edges} style={{ height: "600px", margin: "0 auto" }} nodeTypes={nodeTypes} onNodesChange={onNodesChange}  fitView>
         <MiniMap />
         <Controls />
         <Background />
@@ -81,20 +81,34 @@ export function Rules() {
       if (item && item.rhs && !ids.includes(item.rhs)) ids.push(item.rhs);
       return ids;
     }, []);
-        
-    uniqueIds.forEach((ruleElement, index) => {
-      const lhs = ruleElement;
-      const x = startX + index * nodeWidth;
-      const y = startY + index * nodeHeight * 2;
-      elements.push({
-        id: lhs || "",
-        type: "custom",
-        data: { label: lhs || "", id: lhs||"",rulesQuery:rulesQuery,rules:rules},
-        position: { x, y },
-      });
+    uniqueIds.forEach((entity, index) => {
+      const isFather = rules.find((rule) => rule?.node?.rhs === entity);
+      if (!isFather) {
+        const lhs = entity;
+        const x = startX;
+        const y = startY + index * nodeHeight * 5;
+        elements.push({
+          id: lhs || "",
+          type: "custom",
+          data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
+          position: { x, y },
+        });
+
+        const son = recoveryValue({ entity, rules, position: { x, y } });
+        son.forEach((sin) => {
+          elements.push(sin);
+        });
+
+        elements.push({
+          id: lhs || "",
+          type: "custom",
+          data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
+          position: { x, y },
+        });
+      }
+      return "";
     });
   }
-
   const edges: Edge<any>[] | undefined = [];
 
   rules?.forEach((rule) => {
@@ -115,3 +129,45 @@ export function Rules() {
   return <BuildGraph node={elements} edgesValue={edges} />;
 }
 
+function recoveryValue({
+  entity,
+  rules,
+  position,
+  elmentOnRoW,
+  indexElement,
+}: {
+  entity: string;
+  rules: any[];
+  position: { x: number; y: number };
+  elmentOnRoW?: number;
+  indexElement?: number;
+}): any[] {
+  const matchingRules: any[] = rules.filter(({ node: { lhs } }: { node: { lhs: string } }) => entity === lhs);
+
+  const result: any[] = matchingRules.map(({ node: { id, lhs, rhs } }: any, index: number) => {
+    return {
+      id: lhs || "",
+      type: "custom",
+      data: { label: lhs || "", id: lhs || "", rulesQuery: undefined, rules: rules },
+      position: { x: position.x + 100 * (index + 1) + (indexElement ? indexElement * 250 : 1), y: position.y },
+    };
+  });
+
+  matchingRules.forEach(({ node: { rhs } }: { node: { rhs: string } }, index) => {
+    const data = recoveryValue({ entity: rhs, rules, position: { x: position.x + 200, y: position.y + 200 }, indexElement: index });
+    if (data) {
+      result.push(...data);
+    }
+  });
+
+  if (matchingRules.length === 0) {
+    result.push({
+      id: entity,
+      type: "custom",
+      data: { label: entity || "", id: entity || "", rulesQuery: undefined, rules: rules, isDelete: true },
+      position: { x: position.x + (indexElement ? (indexElement + 1) * 250 : 1), y: position.y },
+    });
+  }
+
+  return result;
+}
