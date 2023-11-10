@@ -37,35 +37,38 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	}
 
 	public Uni<DocTypeField> getDocTypeField(long tokenTabId) {
-		return findById(tokenTabId).flatMap(this::getDocTypeField);
+		return sessionFactory.withTransaction(s -> findById(tokenTabId)
+			.flatMap(t -> s.fetch(t.getDocTypeField())));
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(
 		long tokenTabId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(tokenTabId)
+		return sessionFactory.withTransaction((s) -> findById(s, tokenTabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tokenTab -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(tokenTab -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> {
 					tokenTab.setDocTypeField(docTypeField);
-					return persist(tokenTab)
+					return persist(s, tokenTab)
 						.map(newTokenTab -> Tuple2.of(newTokenTab, docTypeField));
-				})));
+				})
+			)
+		);
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> unbindDocTypeFieldFromTokenTab(
 		long tokenTabId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(tokenTabId)
+		return sessionFactory.withTransaction((s) -> findById(s, tokenTabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tokenTab -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(tokenTab -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> {
 					tokenTab.setDocTypeField(null);
-					return persist(tokenTab)
+					return persist(s, tokenTab)
 						.map(newTokenTab -> Tuple2.of(newTokenTab, docTypeField));
 				})));
 	}

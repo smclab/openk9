@@ -59,12 +59,16 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return findById(datasourceId).flatMap(this::getDataIndex);
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getDataIndex())));
 	}
 
 
 	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
-		return findById(datasourceId).flatMap(this::getDataIndexes).map(ArrayList::new);
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))
+			.map(ArrayList::new)
+		);
 	}
 
 	public Uni<Connection<DataIndex>> getDataIndexConnection(
@@ -92,96 +96,113 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return findById(datasourceId).flatMap(this::getEnrichPipeline);
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline()))
+		);
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
-		return findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> dataIndexService.findById(dataIndexId)
+		return sessionFactory.withTransaction(s ->
+			findById(s, datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(dataIndex -> {
-					datasource.setDataIndex(dataIndex);
-					return persist(datasource)
-						.map(d -> Tuple2.of(d, dataIndex));
-				})
-			);
+				.transformToUni(datasource -> dataIndexService.findById(s, dataIndexId)
+					.onItem()
+					.ifNotNull()
+					.transformToUni(dataIndex -> {
+						datasource.setDataIndex(dataIndex);
+						return persist(s, datasource)
+							.map(d -> Tuple2.of(d, dataIndex));
+					})
+				)
+		);
 	}
 
 	public Uni<Datasource> unsetDataIndex(long datasourceId) {
-		return findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> {
-				datasource.setDataIndex(null);
-				return persist(datasource);
-			});
+		return sessionFactory.withTransaction(s ->
+			findById(s, datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> {
+					datasource.setDataIndex(null);
+					return persist(s, datasource);
+				})
+		);
 	}
 
 	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
-		return findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> enrichPipelineService.findById(enrichPipelineId)
+		return sessionFactory.withTransaction(s ->
+			findById(s, datasourceId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(enrichPipeline -> {
-					datasource.setEnrichPipeline(enrichPipeline);
-					return persist(datasource)
-						.map(d -> Tuple2.of(d, enrichPipeline));
-				}));
+				.transformToUni(datasource -> enrichPipelineService.findById(s, enrichPipelineId)
+					.onItem()
+					.ifNotNull()
+					.transformToUni(enrichPipeline -> {
+						datasource.setEnrichPipeline(enrichPipeline);
+						return persist(s, datasource)
+							.map(d -> Tuple2.of(d, enrichPipeline));
+					})
+				)
+		);
 	}
 
 	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
-		return findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> {
-				datasource.setEnrichPipeline(null);
-				return persist(datasource);
-			});
+		return sessionFactory.withTransaction(s ->
+			findById(s, datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> {
+					datasource.setEnrichPipeline(null);
+					return persist(s, datasource);
+				})
+		);
 	}
 
 	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
-		return findById(datasourceId).map(Datasource::getPluginDriver);
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getPluginDriver()))
+		);
 	}
 
 	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(long datasourceId, long pluginDriverId) {
-		return findById(datasourceId)
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(datasource -> pluginDriverService.findById(pluginDriverId)
+			.transformToUni(datasource -> pluginDriverService.findById(s, pluginDriverId)
 				.flatMap(pluginDriver -> {
 					datasource.setPluginDriver(pluginDriver);
-					return persist(datasource)
+					return persist(s, datasource)
 						.map(d -> Tuple2.of(d, pluginDriver));
 				})
-			);
+			));
 	}
 
 	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
-		return findById(datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> {
-				datasource.setPluginDriver(null);
-				return persist(datasource);
-			});
+		return sessionFactory.withTransaction(s ->
+			findById(s, datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> {
+					datasource.setPluginDriver(null);
+					return persist(s, datasource);
+				})
+		);
 	}
 
 	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
 		DatasourceDTO datasourceDTO, long pluginDriverId) {
 
-		 return pluginDriverService.findById(pluginDriverId)
-			 .onItem()
-			 .ifNotNull()
-			 .transformToUni(pluginDriver-> {
-				 Datasource dataSource = mapper.create(datasourceDTO);
-				 dataSource.setPluginDriver(pluginDriver);
-				 return persist(dataSource).map(d -> Tuple2.of(d, pluginDriver));
-			 });
+		 return sessionFactory.withTransaction(s ->
+			 pluginDriverService.findById(s, pluginDriverId)
+				 .onItem()
+				 .ifNotNull()
+				 .transformToUni(pluginDriver-> {
+					 Datasource dataSource = mapper.create(datasourceDTO);
+					 dataSource.setPluginDriver(pluginDriver);
+					 return persist(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
+				 })
+		 );
 
 	}
 

@@ -24,6 +24,7 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
 import java.util.Set;
@@ -91,6 +92,8 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 	Uni<ENTITY> create(ENTITY entity);
 
 	Uni<ENTITY> create(String tenantId, ENTITY entity);
+
+	Uni<ENTITY> create(Mutiny.Session s, ENTITY entity);
 
 	Uni<ENTITY> deleteById(long entityId);
 

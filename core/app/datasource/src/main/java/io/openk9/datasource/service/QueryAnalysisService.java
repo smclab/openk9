@@ -74,10 +74,10 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	public Uni<Tuple2<QueryAnalysis, Rule>> addRuleToQueryAnalysis(
 		long id, long ruleId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(queryAnalysis -> ruleService.findById(ruleId)
+			.transformToUni(queryAnalysis -> ruleService.findById(s, ruleId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(rule ->
@@ -90,7 +90,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 								queryAnalysis.setRules(rules);
 
-								return persist(queryAnalysis)
+								return persist(s, queryAnalysis)
 									.map(newSC -> Tuple2.of(newSC, rule));
 							}
 
@@ -103,7 +103,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	public Uni<Tuple2<QueryAnalysis, Rule>> removeRuleToQueryAnalysis(
 		long id, long ruleId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(queryAnalysis -> s.fetch(queryAnalysis.getRules())
@@ -113,7 +113,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 					if (queryAnalysis.removeRule(rules, ruleId)) {
 
-						return persist(queryAnalysis)
+						return persist(s, queryAnalysis)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -123,10 +123,10 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 	}
 
 	public Uni<Tuple2<QueryAnalysis, Annotator>> addAnnotatorToQueryAnalysis(long id, long annotatorId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(queryAnalysis -> annotatorService.findById(annotatorId)
+				.transformToUni(queryAnalysis -> annotatorService.findById(s, annotatorId)
 						.onItem()
 						.ifNotNull()
 						.transformToUni(annotator ->
@@ -139,7 +139,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 												queryAnalysis.setAnnotators(annotators);
 
-												return persist(queryAnalysis)
+												return persist(s, queryAnalysis)
 														.map(newSC -> Tuple2.of(newSC, annotator));
 											}
 
@@ -152,7 +152,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	public Uni<Tuple2<QueryAnalysis, Annotator>> removeAnnotatorToQueryAnalysis(long id, long annotatorId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(queryAnalysis -> s.fetch(queryAnalysis.getAnnotators())
@@ -162,7 +162,7 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 							if (queryAnalysis.removeAnnotators(annotators, annotatorId)) {
 
-								return persist(queryAnalysis)
+								return persist(s, queryAnalysis)
 										.map(newSC -> Tuple2.of(newSC, null));
 							}
 

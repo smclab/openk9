@@ -61,30 +61,30 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 
 	public Uni<Tuple2<Annotator, DocTypeField>> bindDocTypeField(
 		long annotatorId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(annotatorId)
+		return sessionFactory.withTransaction((s) -> findById(s, annotatorId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(annotator -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(annotator -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> {
 					annotator.setDocTypeField(docTypeField);
-					return persist(annotator)
+					return persist(s, annotator)
 						.map(newAnnotator -> Tuple2.of(newAnnotator, docTypeField));
 				})));
 	}
 
 	public Uni<Tuple2<Annotator, DocTypeField>> unbindDocTypeField(
 		long annotatorId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(annotatorId)
+		return sessionFactory.withTransaction((s) -> findById(s, annotatorId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(annotator -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(annotator -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> {
 					annotator.setDocTypeField(null);
-					return persist(annotator)
+					return persist(s, annotator)
 						.map(newAnnotator -> Tuple2.of(newAnnotator, docTypeField));
 				})));
 	}

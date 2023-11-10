@@ -118,7 +118,7 @@ public class PluginDriverService
 
 		return sessionFactory.withTransaction(
 			s ->
-				findById(pluginDriverId)
+				findById(s, pluginDriverId)
 					.flatMap(
 						ep -> s.fetch(ep.getAclMappings()))
 					.map(l -> l
@@ -184,11 +184,11 @@ public class PluginDriverService
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeField(
 		long pluginDriverId, long docTypeFieldId, UserField userField) {
 
-		return sessionFactory.withTransaction((s) -> findById(pluginDriverId)
+		return sessionFactory.withTransaction((s) -> findById(s, pluginDriverId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(pluginDriver ->
-				docTypeFieldService.findById(docTypeFieldId)
+				docTypeFieldService.findById(s, docTypeFieldId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(docTypeField -> s
@@ -204,7 +204,7 @@ public class PluginDriverService
 
 								if (aclMappings.add(newAclMapping)) {
 									pluginDriver.setAclMappings(aclMappings);
-									return persist(pluginDriver).map(ep -> Tuple2.of(ep, docTypeField));
+									return persist(s, pluginDriver).map(ep -> Tuple2.of(ep, docTypeField));
 								} else {
 									return Uni.createFrom().nullItem();
 								}
@@ -216,11 +216,11 @@ public class PluginDriverService
 	}
 
 	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeField(long pluginDriverId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(pluginDriverId)
+		return sessionFactory.withTransaction((s) -> findById(s, pluginDriverId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(pluginDriver ->
-				docTypeFieldService.findById(docTypeFieldId)
+				docTypeFieldService.findById(s, docTypeFieldId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(docTypeField -> s

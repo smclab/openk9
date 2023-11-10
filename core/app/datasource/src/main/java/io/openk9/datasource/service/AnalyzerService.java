@@ -56,22 +56,18 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			last, searchText, sortByList, notEqual);
 	}
 
-	public Uni<Tokenizer> getTokenizer(Analyzer analyzer) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(analyzer.getTokenizer()));
-	}
-
 	public Uni<Tokenizer> getTokenizer(long analyzerId) {
-		return findById(analyzerId).flatMap(this::getTokenizer);
+		return sessionFactory.withTransaction(s -> findById(s, analyzerId)
+				.flatMap(analyzer -> s.fetch(analyzer.getTokenizer())));
 	}
 
 	public Uni<Tuple2<Analyzer, TokenFilter>> addTokenFilterToAnalyzer(
 		long id, long tokenFilterId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> _tokenFilterService.findById(tokenFilterId)
+			.transformToUni(analyzer -> _tokenFilterService.findById(s, tokenFilterId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tokenFilter ->
@@ -84,7 +80,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 								analyzer.setTokenFilters(tokenFilters);
 
-								return persist(analyzer)
+								return persist(s, analyzer)
 									.map(newSC -> Tuple2.of(newSC, tokenFilter));
 							}
 
@@ -97,7 +93,8 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterToAnalyzer(
 		long id, long tokenFilterId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
@@ -107,7 +104,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 					if (analyzer.removeTokenFilter(tokenFilters, tokenFilterId)) {
 
-						return persist(analyzer)
+						return persist(s, analyzer)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -118,7 +115,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Analyzer> removeTokenFilterListFromAnalyzer(
 		long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
@@ -128,7 +125,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 					if(!tokenFilters.isEmpty()){
 						tokenFilters.clear();
-						return persist(analyzer);
+						return persist(s, analyzer);
 					};
 
 					return Uni.createFrom().nullItem();
@@ -136,9 +133,8 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
-	public Uni<Analyzer> removeCharFilterListFromAnalyzer(
-		long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
+	public Uni<Analyzer> removeCharFilterListFromAnalyzer(long analyzerId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
@@ -148,7 +144,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 					if(!charFilters.isEmpty()){
 						charFilters.clear();
-						return persist(analyzer);
+						return persist(s, analyzer);
 					};
 
 					return Uni.createFrom().nullItem();
@@ -156,13 +152,12 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
-	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(
-		long id, long charFilterId) {
+	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(long id, long charFilterId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> _charFilterService.findById(charFilterId)
+			.transformToUni(analyzer -> _charFilterService.findById(s, charFilterId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(charFilter ->
@@ -175,7 +170,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 								analyzer.setCharFilters(charFilters);
 
-								return persist(analyzer)
+								return persist(s, analyzer)
 									.map(newSC -> Tuple2.of(newSC, charFilter));
 							}
 
@@ -188,7 +183,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<Tuple2<Analyzer, CharFilter>> removeCharFilterFromAnalyzer(
 		long id, long charFilterId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
@@ -198,7 +193,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 					if (analyzer.removeCharFilter(charFilters, charFilterId)) {
 
-						return persist(analyzer)
+						return persist(s, analyzer)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -208,25 +203,25 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 	}
 
 	public Uni<Tuple2<Analyzer, Tokenizer>> bindTokenizer(long analyzerId, long tokenizerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> _tokenizerService.findById(tokenizerId)
+			.transformToUni(analyzer -> _tokenizerService.findById(s, tokenizerId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tokenizer -> {
 					analyzer.setTokenizer(tokenizer);
-					return persist(analyzer).map(t -> Tuple2.of(t, tokenizer));
+					return persist(s, analyzer).map(t -> Tuple2.of(t, tokenizer));
 				})));
 	}
 
 	public Uni<Tuple2<Analyzer, Tokenizer>> unbindTokenizer(long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(analyzerId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(analyzer -> {
 				analyzer.setTokenizer(null);
-				return persist(analyzer).map(t -> Tuple2.of(t, null));
+				return persist(s, analyzer).map(t -> Tuple2.of(t, null));
 			}));
 	}
 

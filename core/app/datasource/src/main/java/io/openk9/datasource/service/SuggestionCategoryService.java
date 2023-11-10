@@ -104,21 +104,22 @@ public class SuggestionCategoryService extends
 	}
 
 	public Uni<SuggestionCategory> setMultiSelect(long suggestionCategoryId, boolean multiSelect) {
-		return findById(suggestionCategoryId)
+		return sessionFactory.withTransaction(s -> findById(s, suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(suggestionCategory -> {
 				suggestionCategory.setMultiSelect(multiSelect);
-				return persist(suggestionCategory);
-			});
+				return persist(s, suggestionCategory);
+			})
+		);
 	}
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(suggestionCategoryId)
+		return sessionFactory.withTransaction((s) -> findById(s, suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(suggestionCategory -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transform(docTypeField -> (docTypeField.isKeyword() || docTypeField.isI18N())
@@ -130,7 +131,7 @@ public class SuggestionCategoryService extends
 				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.add(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+						return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
 					}
 					return Uni.createFrom().nullItem();
 
@@ -139,16 +140,16 @@ public class SuggestionCategoryService extends
 
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
 		long suggestionCategoryId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(suggestionCategoryId)
+		return sessionFactory.withTransaction((s) -> findById(s, suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(suggestionCategory -> docTypeFieldService.findById(docTypeFieldId)
+			.transformToUni(suggestionCategory -> docTypeFieldService.findById(s, docTypeFieldId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
 					if (docTypeFields.remove(docTypeField)) {
 						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+						return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
 					}
 					return Uni.createFrom().nullItem();
 

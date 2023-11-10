@@ -79,36 +79,46 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(tabId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
+			.transformToUni(tab -> _tokenTabService.findById(s, tokenTabId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenTab -> s.fetch(tab.getTokenTabs()).flatMap(tokenTabs -> {
-					if (tokenTabs.add(tokenTab)) {
-						tab.setTokenTabs(tokenTabs);
-						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
-					}
-					return Uni.createFrom().nullItem();
-				}))));
+				.transformToUni(tokenTab -> s.
+					fetch(tab.getTokenTabs())
+					.flatMap(tokenTabs -> {
+						if (tokenTabs.add(tokenTab)) {
+							tab.setTokenTabs(tokenTabs);
+							return persist(s, tab).map(newD -> Tuple2.of(newD, tokenTab));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
 
 	}
 
 	public Uni<Tuple2<Tab, TokenTab>> removeTokenTabToTab(long tabId, long tokenTabId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(tabId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tab -> _tokenTabService.findById(tokenTabId)
+			.transformToUni(tab -> _tokenTabService.findById(s, tokenTabId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenTab -> s.fetch(tab.getTokenTabs()).flatMap(tokenTabs -> {
-					if (tab.removeTokenTab(tokenTabs, tokenTabId)) {
-						return persist(tab).map(newD -> Tuple2.of(newD, tokenTab));
-					}
-					return Uni.createFrom().nullItem();
-				}))));
+				.transformToUni(tokenTab -> s
+					.fetch(tab.getTokenTabs())
+					.flatMap(tokenTabs -> {
+						if (tab.removeTokenTab(tokenTabs, tokenTabId)) {
+							return persist(s, tab).map(newD -> Tuple2.of(newD, tokenTab));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
 
 	}
 

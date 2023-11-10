@@ -122,12 +122,12 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		DocTypeField docTypeField =
 			docTypeFieldMapper.create(docTypeFieldDTO);
 
-		return sessionFactory.withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
-					return persist(docType)
+					return persist(s, docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));
 				}
 				return Uni.createFrom().nullItem();
@@ -135,12 +135,12 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
 				if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
-					return persist(docType)
+					return persist(s, docType)
 						.map(dt -> Tuple2.of(dt, docTypeFieldId));
 				}
 				return Uni.createFrom().nullItem();
@@ -148,27 +148,30 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	public Uni<Tuple2<DocType, DocTypeTemplate>> setDocTypeTemplate(long docTypeId, long docTypeTemplateId) {
-		return findById(docTypeId)
+		return sessionFactory.withTransaction(s -> findById(s, docTypeId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> docTypeTemplateService.findById(docTypeTemplateId)
+			.transformToUni(docType -> docTypeTemplateService.findById(s, docTypeTemplateId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(docTypeTemplate -> {
 					docType.setDocTypeTemplate(docTypeTemplate);
-					return persist(docType)
+					return persist(s, docType)
 						.map(d -> Tuple2.of(d, docTypeTemplate));
-				}));
+				})
+			)
+		);
 	}
 
 	public Uni<DocType> unsetDocType(long docTypeId) {
-		return findById(docTypeId)
+		return sessionFactory.withTransaction(s -> findById(s, docTypeId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> {
 				docType.setDocTypeTemplate(null);
-				return persist(docType);
-			});
+				return persist(s, docType);
+			})
+		);
 	}
 
 	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {

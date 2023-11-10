@@ -167,7 +167,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		long enrichPipelineId, List<Long> enrichItemIdList) {
 
 
-		return sessionFactory.withTransaction(s -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction(s -> findById(s, enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline -> {
@@ -207,9 +207,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 							}
 
-							return merge(enrichPipeline);
-
-
+							return merge(s, enrichPipeline);
 						})
 					);
 
@@ -217,8 +215,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
-		long enrichPipelineId, Pageable pageable,
-		Filter filter) {
+		long enrichPipelineId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(
 			new Long[] { enrichPipelineId },
@@ -231,11 +228,11 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> addEnrichItem(
 		long enrichPipelineId, long enrichItemId, boolean tail) {
 
-		return sessionFactory.withTransaction((s) -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction((s) -> findById(s, enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
-				enrichItemService.findById(enrichItemId)
+				enrichItemService.findById(s, enrichItemId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(enrichItem -> s
@@ -265,7 +262,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 								if (enrichPipelineItems.add(newEnrichPipelineItem)) {
 									enrichPipeline.setEnrichPipelineItems(enrichPipelineItems);
-									return persist(enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
+									return persist(s, enrichPipeline).map(ep -> Tuple2.of(ep, enrichItem));
 								} else {
 									return Uni.createFrom().nullItem();
 								}
@@ -277,11 +274,11 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(long enrichPipelineId, long enrichItemId) {
-		return sessionFactory.withTransaction((s) -> findById(enrichPipelineId)
+		return sessionFactory.withTransaction((s) -> findById(s, enrichPipelineId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(enrichPipeline ->
-				enrichItemService.findById(enrichItemId)
+				enrichItemService.findById(s, enrichItemId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(enrichItem -> s

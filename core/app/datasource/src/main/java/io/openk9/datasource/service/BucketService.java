@@ -63,7 +63,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
-		return sessionFactory.withTransaction(s -> findById(bucketId)
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
 	}
 
@@ -185,20 +185,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Language> getLanguage(long bucketId) {
-		return findById(bucketId).flatMap(this::getLanguage);
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(b -> s.fetch(b.getDefaultLanguage())));
 	}
 
 	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(long bucketId, long datasourceId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> datasourceService.findById(datasourceId)
+			.transformToUni(bucket -> datasourceService.findById(s, datasourceId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
 					if (buckets.remove(bucket)) {
 						datasource.setBuckets(buckets);
-						return persist(datasource).map((newD) -> Tuple2.of(bucket, newD));
+						return persist(s, datasource).map((newD) -> Tuple2.of(bucket, newD));
 					}
 					return Uni.createFrom().nullItem();
 				}))));
@@ -206,29 +207,28 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Tuple2<Bucket, Datasource>> addDatasource(long bucketId, long datasourceId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> datasourceService.findById(datasourceId)
+			.transformToUni(bucket -> datasourceService.findById(s, datasourceId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
 					if (buckets.add(bucket)) {
 						datasource.setBuckets(buckets);
-						return persist(datasource).map(newD -> Tuple2.of(bucket, newD));
+						return persist(s, datasource).map(newD -> Tuple2.of(bucket, newD));
 					}
 					return Uni.createFrom().nullItem();
 				}))));
 
 	}
 
-	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(
-		long id, long tabId) {
+	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(long id, long tabId) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> tabService.findById(tabId)
+			.transformToUni(bucket -> tabService.findById(s, tabId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(tab ->
@@ -241,7 +241,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 								bucket.setTabs(tabs);
 
-								return persist(bucket)
+								return persist(s, bucket)
 									.map(newSC -> Tuple2.of(newSC, tab));
 							}
 
@@ -252,9 +252,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			));
 	}
 
-	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(
-		long id, long tabId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(id)
+	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(long id, long tabId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> s.fetch(bucket.getTabs())
@@ -264,7 +263,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 					if (bucket.removeTab(tabs, tabId)) {
 
-						return persist(bucket)
+						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -274,10 +273,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(long bucketId, long suggestionCategoryId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> suggestionCategoryService.findById(suggestionCategoryId)
+			.transformToUni(bucket -> suggestionCategoryService.findById(s, suggestionCategoryId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(suggestionCategory ->
@@ -289,7 +288,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							if (bucket.addSuggestionCategory(
 								suggestionCategories, suggestionCategory)) {
 
-								return persist(bucket)
+								return persist(s, bucket)
 									.map(newSC -> Tuple2.of(newSC, null));
 							}
 
@@ -301,7 +300,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> s.fetch(bucket.getSuggestionCategories())
@@ -312,7 +311,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					if (bucket.removeSuggestionCategory(
 						suggestionCategories, suggestionCategoryId)) {
 
-						return persist(bucket)
+						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -322,10 +321,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> addLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> languageService.findById(languageId)
+			.transformToUni(bucket -> languageService.findById(s, languageId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(language ->
@@ -337,7 +336,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							if (bucket.addLanguage(
 								languages, language)) {
 
-								return persist(bucket)
+								return persist(s, bucket)
 									.map(newSC -> Tuple2.of(newSC, null));
 							}
 
@@ -349,7 +348,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
@@ -360,7 +359,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					if (bucket.removeLanguage(
 						languages, languageId)) {
 
-						return persist(bucket)
+						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
 
@@ -370,78 +369,77 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysis(long bucketId, long queryAnalysisId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> queryAnalysisService.findById(queryAnalysisId)
+			.transformToUni(bucket -> queryAnalysisService.findById(s, queryAnalysisId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(queryAnalysis -> {
 					bucket.setQueryAnalysis(queryAnalysis);
-					return persist(bucket).map(t -> Tuple2.of(t, queryAnalysis));
+					return persist(s, bucket).map(t -> Tuple2.of(t, queryAnalysis));
 				})));
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
 				bucket.setQueryAnalysis(null);
-				return persist(bucket).map(t -> Tuple2.of(t, null));
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
 			}));
 	}
 
 	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> languageService.findById(languageId)
+			.transformToUni(bucket -> languageService.findById(s, languageId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(language -> {
 					bucket.setDefaultLanguage(language);
-					return persist(bucket).map(t -> Tuple2.of(t, language));
+					return persist(s, bucket).map(t -> Tuple2.of(t, language));
 				})));
 	}
 
 	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
 				bucket.setDefaultLanguage(null);
-				return persist(bucket).map(t -> Tuple2.of(t, null));
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
 			}));
 	}
 
 
 	public Uni<Tuple2<Bucket, SearchConfig>> bindSearchConfig(long bucketId, long searchConfigId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> searchConfigService.findById(searchConfigId)
+			.transformToUni(bucket -> searchConfigService.findById(s, searchConfigId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(searchConfig -> {
 					bucket.setSearchConfig(searchConfig);
-					return persist(bucket).map(t -> Tuple2.of(t, searchConfig));
+					return persist(s, bucket).map(t -> Tuple2.of(t, searchConfig));
 				})));
 	}
 
 	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfig(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(bucketId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(bucket -> {
 				bucket.setSearchConfig(null);
-				return persist(bucket).map(t -> Tuple2.of(t, null));
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
 			}));
 	}
 
 	public Uni<Bucket> enableTenant(long id) {
-		return sessionFactory.withTransaction(s -> s
-			.find(Bucket.class, id)
+		return sessionFactory.withTransaction(s -> findById(s, id)
 			.flatMap(bucket -> {
 
 				if (bucket == null) {

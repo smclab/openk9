@@ -70,14 +70,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<List<ENTITY>> findAll() {
 
-		return sessionFactory.withTransaction(this::_findAll);
+		return sessionFactory.withTransaction(this::findAll);
 
 	}
 
 	@Override
 	public Uni<List<ENTITY>> findAll(String tenantId) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _findAll(s));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> findAll(s));
 
 	}
 
@@ -244,14 +244,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<ENTITY> findById(long id) {
 
-		return sessionFactory.withTransaction((s) -> _findById(s, id));
+		return sessionFactory.withTransaction((s) -> findById(s, id));
 
 	}
 
 	@Override
 	public Uni<ENTITY> findById(String tenantId, long id) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _findById(s, id));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> findById(s, id));
 
 	}
 
@@ -274,28 +274,28 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<ENTITY> patch(long id, DTO dto) {
 
-		return sessionFactory.withTransaction((s) -> _patch(id, dto, s));
+		return sessionFactory.withTransaction((s) -> patch(s, id, dto));
 
 	}
 
 	@Override
 	public Uni<ENTITY> patch(String tenantId, long id, DTO dto) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _patch(id, dto, s));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> patch(s, id, dto));
 
 	}
 
 	@Override
 	public Uni<ENTITY> update(long id, DTO dto) {
 
-		return sessionFactory.withTransaction((s) -> _update(id, dto, s));
+		return sessionFactory.withTransaction((s) -> update(s, id, dto));
 
 	}
 
 	@Override
 	public Uni<ENTITY> update(String tenantId, long id, DTO dto) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _update(id, dto, s));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> update(s, id, dto));
 
 	}
 
@@ -315,25 +315,25 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public <T extends K9Entity> Uni<T> merge(T entity) {
 
-		return sessionFactory.withTransaction((s, t) -> _merge(s, entity));
+		return sessionFactory.withTransaction((s, t) -> merge(s, entity));
 
 	}
 
 	public <T extends K9Entity> Uni<T> merge(String tenantId, T entity) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _merge(s, entity));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> merge(s, entity));
 
 	}
 
 	public <T extends K9Entity> Uni<T> persist(T entity) {
 
-		return sessionFactory.withTransaction((s, t) -> _persist(s, entity));
+		return sessionFactory.withTransaction((s, t) -> persist(s, entity));
 
 	}
 
 	public <T extends K9Entity> Uni<T> persist(String tenantId, T entity) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _persist(s, entity));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> persist(s, entity));
 
 	}
 
@@ -355,17 +355,27 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+
+	@Override
+	public Uni<ENTITY> create(Mutiny.Session s, ENTITY entity) {
+
+		return persist(s, entity)
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
+
+	}
+
 	@Override
 	public Uni<ENTITY> deleteById(long entityId) {
 
-		return sessionFactory.withTransaction((s) -> _deleteById(s, entityId));
+		return sessionFactory.withTransaction((s) -> deleteById(s, entityId));
 
 	}
 
 	@Override
 	public Uni<ENTITY> deleteById(String tenantId, long entityId) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> _deleteById(s, entityId));
+		return sessionFactory.withTransaction(tenantId, (s, t) -> deleteById(s, entityId));
 
 	}
 
@@ -455,7 +465,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	protected Uni<Void> remove(ENTITY entity) {
 
-		return sessionFactory.withTransaction((s, t) -> _remove(s, entity));
+		return sessionFactory.withTransaction((s, t) -> remove(s, entity));
 
 	}
 
@@ -475,43 +485,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		else {
 			return Sort.by(prefix + sortBy).and(prefix + K9Entity_.ID);
 		}
-
-	}
-
-	private <T extends K9Entity> Uni<T> _merge(Mutiny.Session s, T entity) {
-
-		return s.merge(entity)
-			.call(s::flush)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
-	}
-
-	private <T extends K9Entity> Uni<T> _persist(Mutiny.Session s, T entity) {
-
-		return s.persist(entity)
-			.map(v -> entity)
-			.call(s::flush)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
-	}
-
-	private Uni<Void> _remove(Mutiny.Session s, ENTITY entity) {
-
-		return s.remove(entity)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
-	}
-
-	private Uni<ENTITY> _deleteById(Mutiny.Session s, long entityId) {
-
-		return _findById(s, entityId)
-			.onItem().ifNotNull()
-			.call(entity -> _remove(s, entity))
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
-			.onItem().ifNull()
-			.failWith(() -> new IllegalStateException("entity with id: " + entityId
-				+ " for service: " + getClass().getSimpleName() + " not found"));
 
 	}
 
@@ -649,13 +622,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	private Uni<ENTITY> _findById(Mutiny.Session s, long id) {
+	public Uni<ENTITY> findById(Mutiny.Session s, long id) {
 
 		return s.find(getEntityClass(), id);
 
 	}
 
-	private Uni<List<ENTITY>> _findAll(Mutiny.Session s) {
+	protected Uni<List<ENTITY>> findAll(Mutiny.Session s) {
 
 		CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
 
@@ -669,11 +642,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	private Uni<ENTITY> _patch(long id, DTO dto, Mutiny.Session s) {
-		return _findById(s, id)
+	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
+		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> _persist(s, mapper.patch(prev, dto))
+				(prev) -> persist(s, mapper.patch(prev, dto))
 					.invoke(newEntity -> processor.onNext(
 						K9EntityEvent.of(
 							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
@@ -684,8 +657,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 						id + " not found"));
 	}
 
-	private Uni<ENTITY> _update(long id, DTO dto, Mutiny.Session s) {
-		return _findById(s, id)
+	protected Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
+		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(
 				(prev) -> persist(mapper.update(prev, dto))
@@ -696,6 +669,43 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 				() -> new IllegalStateException(
 					"entity: " + dto.getClass().getSimpleName() + " with id: " +
 						id + " not found"));
+	}
+
+	protected  <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+
+		return s.merge(entity)
+			.call(s::flush)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+
+	}
+
+	public  <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
+
+		return s.persist(entity)
+			.map(v -> entity)
+			.call(s::flush)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+
+	}
+
+	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
+
+		return s.remove(entity)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+
+	}
+
+	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
+
+		return findById(s, entityId)
+			.onItem().ifNotNull()
+			.call(entity -> remove(s, entity))
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
+			.onItem().ifNull()
+			.failWith(() -> new IllegalStateException("entity with id: " + entityId
+				+ " for service: " + getClass().getSimpleName() + " not found"));
+
 	}
 
 	protected K9EntityMapper<ENTITY, DTO> mapper;

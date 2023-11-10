@@ -113,13 +113,13 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		QueryParserConfig queryParserConfig =
 			_queryParserConfigMapper.create(queryParserConfigDTO);
 
-		return sessionFactory.withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
 				queryParserConfigs -> {
 					if (searchConfig.addQueryParserConfig(queryParserConfigs, queryParserConfig)) {
-						return persist(searchConfig)
+						return persist(s, searchConfig)
 							.map(dt -> Tuple2.of(dt, queryParserConfig));
 					}
 					return Uni.createFrom().nullItem();
@@ -127,13 +127,13 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {
-		return sessionFactory.withTransaction((s) -> findById(id)
+		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
 				queryParserConfigs -> {
 					if (searchConfig.removeQueryParserConfig(queryParserConfigs, queryParserConfigId)) {
-						return persist(searchConfig)
+						return persist(s, searchConfig)
 							.map(dt -> Tuple2.of(dt, queryParserConfigId));
 					}
 					return Uni.createFrom().nullItem();

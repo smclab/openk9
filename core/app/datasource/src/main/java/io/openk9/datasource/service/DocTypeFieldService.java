@@ -28,6 +28,7 @@ import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -64,29 +65,30 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
-		return findById(docTypeFieldId).flatMap(this::getAnalyzer);
+		return getSessionFactory().withTransaction(s -> findById(s, docTypeFieldId)
+			.flatMap(d -> s.fetch(d.getAnalyzer())));
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(docTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docTypeField -> _analyzerService.findById(analyzerId)
+			.transformToUni(docTypeField -> _analyzerService.findById(s, analyzerId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(analyzer -> {
 					docTypeField.setAnalyzer(analyzer);
-					return persist(docTypeField).map(t -> Tuple2.of(t, analyzer));
+					return persist(s, docTypeField).map(t -> Tuple2.of(t, analyzer));
 				})));
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(docTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docTypeField -> {
 				docTypeField.setAnalyzer(null);
-				return persist(docTypeField).map(t -> Tuple2.of(t, null));
+				return persist(s, docTypeField).map(t -> Tuple2.of(t, null));
 			}));
 	}
 
@@ -117,7 +119,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	public Uni<DocTypeField> createSubField(
 		long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
 
-		return sessionFactory.withTransaction((s, tr) -> findById(parentDocTypeFieldId)
+		return sessionFactory.withTransaction((s, tr) -> findById(s, parentDocTypeFieldId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(parentDocTypeField -> s
@@ -130,9 +132,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					docTypeField.setParentDocTypeField(parentDocTypeField);
 					docTypeField.setDocType(parentDocTypeField.getDocType());
 					subList.add(docTypeField);
-					return persist(docTypeField);
-
-				})));
+					return persist(s, docTypeField);
+				})
+			)
+		);
 
 	}
 
@@ -153,7 +156,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					 .unis(docTypeField)
 					 .collectFailures()
 					 .combinedWith(e -> (List<Set<DocTypeField>>) e)
-					 .flatMap(this::loadAndExpandDocTypeFields)
+					 .flatMap(sets -> loadAndExpandDocTypeFields(s, sets))
 					 .replaceWith(docTypes);
 			 });
 		 }
@@ -188,12 +191,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	 }
 
 
-	private Uni<? extends Set<DocTypeField>> loadAndExpandDocTypeFields(List<Set<DocTypeField>> list) {
+	private Uni<? extends Set<DocTypeField>> loadAndExpandDocTypeFields(Mutiny.Session s, List<Set<DocTypeField>> list) {
 
 		List<Uni<Void>> loadedDTFs = new LinkedList<>();
 
 		for (Set<DocTypeField> typeFields : list) {
-			loadedDTFs.add(loadDocTypeField(typeFields));
+			loadedDTFs.add(loadDocTypeField(s, typeFields));
 		}
 
 		return Uni
@@ -207,7 +210,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				List<Uni<Set<DocTypeField>>> inner = new LinkedList<>();
 
 				for (Set<DocTypeField> typeFields : list) {
-					inner.add(expandDocTypeFields(typeFields));
+					inner.add(expandDocTypeFields(s, typeFields));
 				}
 
 				return Uni
@@ -226,63 +229,53 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	}
 
-	private Uni<Set<DocTypeField>> expandDocTypeFields(Collection<DocTypeField> docTypeFields) {
+	private Uni<Set<DocTypeField>> expandDocTypeFields(
+		Mutiny.Session s, Collection<DocTypeField> docTypeFields) {
 
 		if (docTypeFields == null || docTypeFields.isEmpty()) {
 			return Uni.createFrom().item(Set.of());
 		}
 
-		return sessionFactory.withTransaction(s -> {
+		List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
 
-			List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
+		for (DocTypeField docTypeField : docTypeFields) {
 
-			for (DocTypeField docTypeField : docTypeFields) {
+			subDocTypeFieldUnis.add(
+				s.fetch(docTypeField.getSubDocTypeFields()));
 
-				subDocTypeFieldUnis.add(
-					s.fetch(docTypeField.getSubDocTypeFields()));
+		}
 
-			}
-
-			return Uni
-				.combine()
-				.all()
-				.unis(subDocTypeFieldUnis)
-				.collectFailures()
-				.combinedWith(e -> (List<Set<DocTypeField>>)e)
-				.flatMap(this::loadAndExpandDocTypeFields);
-
-		});
-
+		return Uni
+			.combine()
+			.all()
+			.unis(subDocTypeFieldUnis)
+			.collectFailures()
+			.combinedWith(e -> (List<Set<DocTypeField>>)e)
+			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));
 	}
 
-	private Uni<Void> loadDocTypeField(Set<DocTypeField> typeFields) {
+	private Uni<Void> loadDocTypeField(Mutiny.Session s, Set<DocTypeField> typeFields) {
 
-		return sessionFactory.withTransaction(s -> {
+		List<Uni<?>> unis = new ArrayList<>();
 
-			List<Uni<?>> unis = new ArrayList<>();
-
-			for (DocTypeField typeField : typeFields) {
-				Analyzer analyzer = typeField.getAnalyzer();
-				if (analyzer != null) {
-					unis.add(s
-						.fetch(typeField.getAnalyzer())
-						.flatMap(_analyzerService::load));
-				}
-				if (typeField.getAclMappings() != null) {
-					unis.add(s.fetch(typeField.getAclMappings()));
-				}
-
+		for (DocTypeField typeField : typeFields) {
+			Analyzer analyzer = typeField.getAnalyzer();
+			if (analyzer != null) {
+				unis.add(s
+					.fetch(typeField.getAnalyzer())
+					.flatMap(_analyzerService::load));
+			}
+			if (typeField.getAclMappings() != null) {
+				unis.add(s.fetch(typeField.getAclMappings()));
 			}
 
-			if (unis.isEmpty()) {
-				return Uni.createFrom().voidItem();
-			}
+		}
 
-			return Uni.combine().all().unis(unis).collectFailures().discardItems();
+		if (unis.isEmpty()) {
+			return Uni.createFrom().voidItem();
+		}
 
-		});
-
-
+		return Uni.combine().all().unis(unis).collectFailures().discardItems();
 	}
 
 

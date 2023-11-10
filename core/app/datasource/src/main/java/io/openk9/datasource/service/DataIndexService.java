@@ -56,8 +56,7 @@ public class DataIndexService
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
-	public Uni<Set<DocType>> getDocTypes(
-		DataIndex dataIndex) {
+	public Uni<Set<DocType>> getDocTypes(DataIndex dataIndex) {
 		return sessionFactory.withTransaction(s -> s.fetch(dataIndex.getDocTypes()));
 	}
 
@@ -101,11 +100,11 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
 		long dataIndexId, long docTypeId) {
-		return sessionFactory.withTransaction((s) -> findById(dataIndexId)
+		return sessionFactory.withTransaction((s) -> findById(s, dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
-				docTypeService.findById(docTypeId)
+				docTypeService.findById(s, docTypeId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(
@@ -113,7 +112,7 @@ public class DataIndexService
 							.flatMap(dts -> {
 								if (dts.add(docType)) {
 									dataIndex.setDocTypes(dts);
-									return create(dataIndex)
+									return create(s, dataIndex)
 										.map(di -> Tuple2.of(di, docType));
 								}
 								return Uni.createFrom().nullItem();
@@ -124,11 +123,11 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
 		long dataIndexId, long docTypeId) {
-		return sessionFactory.withTransaction((s) -> findById(dataIndexId)
+		return sessionFactory.withTransaction((s) -> findById(s, dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
-				docTypeService.findById(docTypeId)
+				docTypeService.findById(s, docTypeId)
 					.onItem()
 					.ifNotNull()
 					.transformToUni(
@@ -136,7 +135,7 @@ public class DataIndexService
 							.flatMap(dts -> {
 								if (dts.remove(docType)) {
 									dataIndex.setDocTypes(dts);
-									return create(dataIndex)
+									return create(s, dataIndex)
 										.map(di -> Tuple2.of(di, docType));
 								}
 								return Uni.createFrom().nullItem();
@@ -152,7 +151,8 @@ public class DataIndexService
 
 	@Override
 	public Uni<DataIndex> deleteById(long entityId) {
-		return findById(entityId)
+		return sessionFactory.withTransaction(s ->
+			findById(s, entityId)
 			.onItem()
 			.transformToUni(dataIndex -> Uni.createFrom()
 				.<AcknowledgedResponse>emitter(emitter -> {
@@ -181,14 +181,15 @@ public class DataIndexService
 				})
 			)
 			.onItem()
-			.transformToUni(ignore -> super.findById(entityId))
+			.transformToUni(ignore -> findById(s, entityId))
 			.onItem()
-			.transformToUni(dataIndex -> sessionFactory.withTransaction(s -> {
+			.transformToUni(dataIndex -> {
 				dataIndex.getDocTypes().clear();
 				return s.persist(dataIndex);
-			}))
+			})
 			.onItem()
-			.transformToUni(ignore -> super.deleteById(entityId));
+			.transformToUni(ignore -> deleteById(s, entityId))
+		);
 	}
 
 	@Inject
