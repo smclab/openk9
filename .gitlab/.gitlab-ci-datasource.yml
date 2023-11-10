@@ -43,7 +43,7 @@ Build Latest Datasource Docker Images:
     manual
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-562-SNAPSHOT
   cache:
     key: datasource
     paths:
