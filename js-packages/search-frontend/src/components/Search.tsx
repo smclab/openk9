@@ -41,6 +41,7 @@ type SearchProps = {
   btnSearch?: boolean;
   defaultValue?: string;
   isSearchOnInputChange?: boolean;
+  htmlKey?: string|undefined|null;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
@@ -60,6 +61,7 @@ export function Search({
   isSearchOnInputChange = false,
   saveSearchQuery,
   defaultValue,
+  htmlKey,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -268,7 +270,7 @@ export function Search({
               className="openk9--input-search"
               autoComplete="off"
               ref={inputRef}
-              id="search-openk9"
+              id={htmlKey||"search-openk9"}
               aria-label={
                 t(
                   "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",

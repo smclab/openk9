@@ -199,6 +199,7 @@ export function Main({
             btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
             isSearchOnInputChange={isSearchOnInputChange}
             defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
+            htmlKey={configuration.searchConfigurable?.htmlKey}
           />
         </I18nextProvider>,
         configuration.searchConfigurable

@@ -215,7 +215,7 @@ type ResultListProps = {
 type SortResultConfigurableProps = {
   sort: Element | string | null;
   relevance: string;
-  htmlKey?:string|null|undefined;
+  htmlKey?: string | null | undefined;
 };
 
 type SortableProps = {
@@ -228,6 +228,7 @@ type SearchProps = {
   btnSearch: boolean;
   isShowSyntax?: boolean | undefined | null;
   defaultValue?: string | undefined | null;
+  htmlKey?: string | undefined | null;
 };
 
 type FilterProps = {
@@ -261,7 +262,7 @@ export type Configuration = {
   token: string | null;
   useKeycloak: boolean;
   // element types
-  activeFilters: Element | string | null; 
+  activeFilters: Element | string | null;
   calendar: Element | string | null;
   changeLanguage: Element | string | null;
   detailMobile: Element | string | null;
