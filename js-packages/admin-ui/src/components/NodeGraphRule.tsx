@@ -91,11 +91,11 @@ export default function NodeGraphRule(props: any) {
               />
               <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
                 <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
-                <label>Terminalità </label>
+                <label>Terminal </label>
               </div>
               <div style={{ display: "flex", gap: "5px" }}>
                 <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
-                <label>Opzionalità </label>
+                <label>Optional </label>
               </div>
               <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
                 <button
@@ -119,6 +119,7 @@ export default function NodeGraphRule(props: any) {
                 >
                   Create
                 </button>
+                {data.isDelete && <button onClick={() => setIsModify(true)}>Modifica</button>}
                 {data.isDelete && (
                   <button
                     onClick={() => {
@@ -128,33 +129,40 @@ export default function NodeGraphRule(props: any) {
                       deleteRuleMutate({ variables: { id: removeRule?.node?.id || "" } });
                     }}
                   >
-                    Cancella
+                    Delete
                   </button>
                 )}
-                <button onClick={() => setIsModify(true)}>Modifica</button>
               </div>
             </div>
           )}
           {isModify && data.idAssociation && (
-            <div>
-              <label>Modifica</label>
-              <input type="text" value={modify} onChange={(event) => setModify(event.currentTarget.value)}></input>
-              <button onClick={() => setIsModify(false)}>Back</button>
-              <button
-                onClick={() => {
-                  const variableSymbol: "$?" | "?" | "$" | "" = isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
-                  createOrUpdateRuleMutate({
-                    variables: {
-                      id: data.idAssociation,
-                      name: data.fatherLabel + "_" + variableSymbol + modify,
-                      lhs: data.fatherLabel,
-                      rhs: modify,
-                    },
-                  });
-                }}
-              >
-                Save 
-              </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label>Edit</label>
+              <input
+                type="text"
+                style={{ border: "1px solid black" }}
+                value={modify}
+                onChange={(event) => setModify(event.currentTarget.value)}
+              ></input>
+              <div style={{ display: "flex", gap: "3px" }}>
+                <button onClick={() => setIsModify(false)}>Back</button>
+                <button
+                  onClick={() => {
+                    const variableSymbol: "$?" | "?" | "$" | "" =
+                      isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
+                    createOrUpdateRuleMutate({
+                      variables: {
+                        id: data.idAssociation,
+                        name: data.fatherLabel + "_" + variableSymbol + modify,
+                        lhs: data.fatherLabel,
+                        rhs: modify,
+                      },
+                    });
+                  }}
+                >
+                  Save
+                </button>
+              </div>
             </div>
           )}
         </div>

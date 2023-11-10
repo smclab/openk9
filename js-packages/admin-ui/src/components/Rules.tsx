@@ -45,14 +45,18 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
     setEdges(edgesValue);
   }, [node, edgesValue]);
 
-  const onNodesChange = React.useCallback(
-    (changes:any) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [setNodes]
-  );
+  const onNodesChange = React.useCallback((changes: any) => setNodes((nds) => applyNodeChanges(changes, nds)), [setNodes]);
 
   return (
     <React.Fragment>
-      <ReactFlow nodes={nodes} edges={edges} style={{ height: "600px", margin: "0 auto" }} nodeTypes={nodeTypes} onNodesChange={onNodesChange}  fitView>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        style={{ height: "600px", margin: "0 auto" }}
+        nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        fitView
+      >
         <MiniMap />
         <Controls />
         <Background />
@@ -69,9 +73,7 @@ export function Rules() {
   const rules = rulesQuery.data?.rules?.edges;
 
   if (rules) {
-    const nodeWidth = 100;
     const nodeHeight = 50;
-
     const startX = 400;
     const startY = 30;
 
@@ -81,6 +83,7 @@ export function Rules() {
       if (item && item.rhs && !ids.includes(item.rhs)) ids.push(item.rhs);
       return ids;
     }, []);
+
     uniqueIds.forEach((entity, index) => {
       const isFather = rules.find((rule) => rule?.node?.rhs === entity);
       if (!isFather) {
@@ -161,11 +164,19 @@ function recoveryValue({
   });
 
   if (matchingRules.length === 0) {
-    const data=rules.find(({ node: { rhs } }: { node: { rhs: string } })=>entity===rhs)
+    const data = rules.find(({ node: { rhs } }: { node: { rhs: string } }) => entity === rhs);
     result.push({
       id: entity,
       type: "custom",
-      data: { label: entity || "", id: entity || "", rulesQuery: undefined, rules: rules, isDelete: true,idAssociation:data.node.id,fatherLabel:data.node.lhs},
+      data: {
+        label: entity || "",
+        id: entity || "",
+        rulesQuery: undefined,
+        rules: rules,
+        isDelete: true,
+        idAssociation: data.node.id,
+        fatherLabel: data.node.lhs,
+      },
       position: { x: position.x + (indexElement ? (indexElement + 1) * 250 : 1), y: position.y },
     });
   }
