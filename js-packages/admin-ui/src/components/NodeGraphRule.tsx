@@ -119,7 +119,7 @@ export default function NodeGraphRule(props: any) {
                 >
                   Create
                 </button>
-                {data.isDelete && <button onClick={() => setIsModify(true)}>Modifica</button>}
+                {data.isDelete && <button onClick={() => setIsModify(true)}>Edit</button>}
                 {data.isDelete && (
                   <button
                     onClick={() => {
