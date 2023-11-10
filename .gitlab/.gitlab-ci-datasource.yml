@@ -38,6 +38,7 @@ Build Latest Datasource Docker Images:
   only:
     refs:
       - main
+      - 562-ottimizzazione-performance-accesso-db
   when:
     manual
   script:
