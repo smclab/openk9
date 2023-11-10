@@ -98,8 +98,9 @@ export default function NodeGraphRule(props: any) {
               <button
                 type="submit"
                 onClick={() => {
+                  const variableSymbol:"$?"|"?"|"$"|""= isOptional && isTerminal? "$?" : isOptional? "?" :isTerminal? "$" : ""; 
                   createOrUpdateRuleMutate({
-                    variables: { id: undefined, name: data.label + "_" + inputText, lhs: data.label, rhs: inputText },
+                    variables: { id: undefined, name: data.label + "_" + variableSymbol +inputText, lhs: data.label, rhs: variableSymbol+""+inputText },
                   });
                   setPanelOpen(false);
                   setInputText("");
