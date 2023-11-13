@@ -14,6 +14,8 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
+import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
+@Named("TextQueryParser")
+@Default
 public class TextQueryParser implements QueryParser {
 
 	public static final String BOOST = "boost";

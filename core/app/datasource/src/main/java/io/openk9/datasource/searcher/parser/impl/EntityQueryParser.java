@@ -14,6 +14,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -170,6 +171,7 @@ public class EntityQueryParser implements QueryParser {
 	public static final String ENTITIES_CONTEXT = "entities.context";
 
 	@Inject
+	@Named("TextQueryParser")
 	TextQueryParser textQueryParser;
 
 }
