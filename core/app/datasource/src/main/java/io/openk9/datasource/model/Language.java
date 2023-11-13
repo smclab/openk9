@@ -20,6 +20,8 @@ import javax.persistence.Table;
 @Cacheable
 public class Language extends K9Entity {
 
+	public static final String NONE = "<<none>>";
+
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 

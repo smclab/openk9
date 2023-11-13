@@ -1045,10 +1045,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 	}
 
-	private static String getLanguage(QueryParserRequest request, Bucket tenant) {
+	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
 		String requestLanguage = request.getLanguage();
-		String language = tenant.getDefaultLanguage().getValue();
-
 		if (requestLanguage != null && !requestLanguage.isBlank()) {
 			for (Language available : tenant.getAvailableLanguages()) {
 				if (available.getValue().equals(requestLanguage)) {
@@ -1057,7 +1055,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 		}
 
-		return language;
+		Language defaultLanguage = tenant.getDefaultLanguage();
+		if (defaultLanguage != null) {
+			return defaultLanguage.getValue();
+		}
+
+		return Language.NONE;
 	}
 
 }
