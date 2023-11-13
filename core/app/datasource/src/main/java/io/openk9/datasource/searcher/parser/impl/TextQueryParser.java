@@ -138,8 +138,6 @@ public class TextQueryParser implements QueryParser {
 
 					multiMatchQueryBuilder.boost(2.0f);
 
-					multiMatchQueryBuilder.fuzziness(fuzziness);
-
 					valuesQueryType
 						.useConfiguredQueryType(
 							tokenClauseBuilder, multiMatchQueryBuilder);
