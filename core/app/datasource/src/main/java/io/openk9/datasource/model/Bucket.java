@@ -76,8 +76,9 @@ import java.util.Set;
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
 		query =
+			"select b " +
 			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tb " +
-				"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
+			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
 	)
 })
 public class Bucket extends K9Entity {
