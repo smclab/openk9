@@ -34,6 +34,10 @@ type ResultsProps<E> = {
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
+  setIdPreview?:
+    | React.Dispatch<React.SetStateAction<string>>
+    | undefined
+    | null;
 };
 function Results<E>({
   displayMode,
@@ -49,6 +53,7 @@ function Results<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  setIdPreview,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -69,6 +74,7 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          setIdPreview={setIdPreview}
         />
       );
     case "infinite":
@@ -87,6 +93,7 @@ function Results<E>({
           setSortAfterKey={setSortAfterKey}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          setIdPreview={setIdPreview}
         />
       );
     case "virtual":
@@ -104,6 +111,7 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          setIdPreview={setIdPreview}
         />
       );
   }
@@ -116,7 +124,7 @@ type ResultCountProps = {
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
   addClass?: string;
-  language?:string;
+  language?: string;
 };
 
 function ResultCount({
@@ -195,7 +203,11 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList setSortResult={setSortResult} relevance={t("relevance")||"relevance"} language={language} />
+            <SortResultList
+              setSortResult={setSortResult}
+              relevance={t("relevance") || "relevance"}
+              language={language}
+            />
           </span>
         </div>
       </div>
@@ -215,6 +227,7 @@ type ResulListProps<E> = {
   language: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
+  setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
@@ -231,6 +244,7 @@ export function FiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  setIdPreview,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -255,7 +269,11 @@ export function FiniteResults<E>({
             width: 100%;
           `}
         >
-          <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
+          <ResultCount
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            language={language}
+          >
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages[0].result.map((result, index) => {
@@ -268,6 +286,7 @@ export function FiniteResults<E>({
                 setDetailMobile={setDetailMobile}
                 isMobile={isMobile}
                 overChangeCard={overChangeCard}
+                setIdPreview={setIdPreview}
               />
             );
           })}
@@ -282,6 +301,7 @@ export function FiniteResults<E>({
 type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
+  setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -297,6 +317,7 @@ export function InfiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  setIdPreview,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -331,7 +352,11 @@ export function InfiniteResults<E>({
             padding-bottom: 16px;
           `}
         >
-          <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
+          <ResultCount
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            language={language}
+          >
             {results.data?.pages[0].total}
           </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
@@ -347,6 +372,7 @@ export function InfiniteResults<E>({
                       setDetailMobile={setDetailMobile}
                       isMobile={isMobile}
                       overChangeCard={overChangeCard}
+                      setIdPreview={setIdPreview}
                     />
                   );
                 })}
@@ -452,7 +478,11 @@ export function VirtualResults<E>({
       `}
     >
       {thereAreResults && (
-        <ResultCount setSortResult={setSortResult} isMobile={isMobile} language={language}>
+        <ResultCount
+          setSortResult={setSortResult}
+          isMobile={isMobile}
+          language={language}
+        >
           {results.data?.pages[0].total}
         </ResultCount>
       )}

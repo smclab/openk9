@@ -16,11 +16,16 @@ import { useTranslation } from "react-i18next";
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
   setDetailMobile?: any;
+  isMobile?:boolean;
+  actionOnCLose():void;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile;
+  const actionOnCLose=props.actionOnCLose;
   const renderers = useRenderers();
+  const isMobile= props.isMobile;
+  const refFocus=React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
 
   const scrollContainer = document.querySelector(
@@ -32,6 +37,9 @@ function Detail<E>(props: DetailProps<E>) {
   }
   if (!result) {
     return <NoDetail />;
+  }
+  if(isMobile && isMobile===true){
+    refFocus.current?.focus()
   }
   return (
     <div
@@ -85,16 +93,21 @@ function Detail<E>(props: DetailProps<E>) {
           </h2>
         </div>
         {setDetailMobile && (
-          <div
+          <button
+            aria-label={t("close") || "close"}
+            ref={refFocus}
             css={css`
               cursor: pointer;
+              background: inherit;
+              border: none;
             `}
             onClick={() => {
               setDetailMobile(null);
+              actionOnCLose();
             }}
           >
             <DeleteLogo />
-          </div>
+          </button>
         )}
       </div>
       <div

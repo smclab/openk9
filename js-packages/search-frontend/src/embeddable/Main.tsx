@@ -149,7 +149,7 @@ export function Main({
         setCurrentPage,
       });
   const { detail, setDetail } = useDetails(searchQuery);
-  const { detailMobile, setDetailMobile } = useDetailsMobile(searchQuery);
+  const { detailMobile, setDetailMobile, idPreview, setIdPreview } = useDetailsMobile(searchQuery);
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -327,6 +327,7 @@ export function Main({
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
             numberOfResults={numberOfResults}
+            setIdPreview={setIdPreview}
           />
         </I18nextProvider>,
         configuration.results,
@@ -353,6 +354,7 @@ export function Main({
             setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
             numberOfResults={numberOfResults}
+            setIdPreview={setIdPreview}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -385,7 +387,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DetailMemo result={detail} />
+          <DetailMemo result={detail} actionOnCLose={()=>{}}/>
         </I18nextProvider>,
         configuration.details,
       )}
@@ -443,6 +445,11 @@ export function Main({
           <DetailMobileMemo
             result={detailMobile}
             setDetailMobile={setDetailMobile}
+            onClose={()=>{
+              const recoveryButton= document.getElementById("preview-card-"+idPreview) as HTMLButtonElement
+              if(recoveryButton)
+              recoveryButton.focus();
+            }}
           />
         </I18nextProvider>,
         configuration.detailMobile,
@@ -991,12 +998,13 @@ function renderPortal(
 }
 
 function useDetailsMobile(searchQuery: Array<SearchToken>) {
+  const [idPreview,setIdPreview]=React.useState("");
   const [detailMobile, setDetailMobile] =
     React.useState<GenericResultItem<unknown> | null>(null);
   React.useEffect(() => {
     setDetailMobile(null);
   }, [searchQuery]);
-  return { detailMobile, setDetailMobile };
+  return { detailMobile, setDetailMobile,idPreview, setIdPreview };
 }
 
 export type QueryState = {

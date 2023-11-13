@@ -449,6 +449,11 @@ export function App() {
           }
         `}
       ></div>
+      <div
+          ref={(element) =>
+            openk9.updateConfiguration({ detailMobile: element })
+          }
+        ></div>
     </div>
   );
 }

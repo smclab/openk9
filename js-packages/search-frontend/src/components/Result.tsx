@@ -15,11 +15,16 @@ type ResultProps<E> = {
   isMobile: boolean;
   setDetailMobile(result: GenericResultItem<E> | null): void;
   overChangeCard: boolean;
+  setIdPreview?:
+    | React.Dispatch<React.SetStateAction<string>>
+    | undefined
+    | null;
 };
 function Result<E>(props: ResultProps<E>) {
   const result = props.result as any;
   const { onDetail, renderers } = props;
   const isMobile = props.isMobile;
+  const setIdPreview= props.setIdPreview;
   const setDetailMobile = props.setDetailMobile;
   const overChangeCard = props.overChangeCard;
   return (
@@ -42,6 +47,7 @@ function Result<E>(props: ResultProps<E>) {
               <Renderer result={result} />
               {isMobile &&
                 CreateButton({
+                  setIdPreview,
                   setDetailMobile,
                   result,
                 })}
@@ -54,6 +60,7 @@ function Result<E>(props: ResultProps<E>) {
               <PdfResult result={result} />
               {isMobile &&
                 CreateButton({
+                  setIdPreview,
                   setDetailMobile,
                   result,
                 })}
@@ -66,6 +73,7 @@ function Result<E>(props: ResultProps<E>) {
               <DocumentResult result={result} />
               {isMobile &&
                 CreateButton({
+                  setIdPreview,
                   setDetailMobile,
                   result,
                 })}
@@ -78,6 +86,7 @@ function Result<E>(props: ResultProps<E>) {
               <WebResult result={result} />
               {isMobile &&
                 CreateButton({
+                  setIdPreview,
                   setDetailMobile,
                   result,
                 })}
@@ -103,9 +112,11 @@ function Result<E>(props: ResultProps<E>) {
 function CreateButton({
   setDetailMobile,
   result,
+  setIdPreview,
 }: {
   setDetailMobile: (result: GenericResultItem<any> | null) => void;
   result: GenericResultItem<any>;
+  setIdPreview?: React.Dispatch<React.SetStateAction<string>>|undefined|null;
 }) {
   const { t } = useTranslation();
   return (
@@ -121,6 +132,7 @@ function CreateButton({
       `}
     >
       <button
+        id={"preview-card-"+result?.source?.id}
         css={css`
           display: flex;
           align-items: center;
@@ -136,6 +148,8 @@ function CreateButton({
           cursor: pointer;
         `}
         onClick={() => {
+          if(setIdPreview)
+          setIdPreview(result?.source?.id||"")
           setDetailMobile(result);
         }}
       >
