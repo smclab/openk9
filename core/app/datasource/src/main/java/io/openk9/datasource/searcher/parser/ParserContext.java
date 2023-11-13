@@ -25,6 +25,7 @@ public class ParserContext {
 	private JsonObject queryParserConfig;
 	private JWT jwt;
 	private Map<String, List<String>> extraParams;
+	private String language;
 
 	/**
 	 * Get from context the String value mapped to key:

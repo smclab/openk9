@@ -89,6 +89,7 @@ import java.util.stream.Collectors;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
+
 	@Override
 	@ActivateRequestContext
 	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
@@ -114,8 +115,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()), extraParams);
+					String language = _getLanguage(request, tenant);
+
+					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
+							tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -137,8 +140,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					applySort(
 						docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
 						searchSourceBuilder);
-
-					String language = getLanguage(request, tenant);
 
 					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, language);
 
@@ -209,8 +210,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-					BoolQueryBuilder boolQueryBuilder =
-						createBoolQuery(tokenGroup, tenant, JWT.of(request.getJwt()), extraParams);
+					String language = _getLanguage(request, tenant);
+
+					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
+						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
 
 					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -226,8 +229,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.getDocTypeFieldsFrom(tenant)
 							.filter(docTypeField -> !docTypeField.isI18N())
 							.toList();
-
-					String language = getLanguage(request, tenant);
 
 					List<Tuple2<Long, DocTypeField>> suggestionDocTypeFields = new ArrayList<>();
 

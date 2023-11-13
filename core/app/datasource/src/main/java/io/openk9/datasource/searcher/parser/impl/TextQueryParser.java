@@ -3,6 +3,7 @@ package io.openk9.datasource.searcher.parser.impl;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -45,9 +46,16 @@ public class TextQueryParser implements QueryParser {
 
 		Set<Datasource> datasources = currentTenant.getDatasources();
 
+		String language = parserContext.getLanguage();
+
 		List<DocTypeField> docTypeFieldList =
 			Utils.getDocTypeFieldsFrom(datasources)
 				.filter(DocTypeField::isSearchableAndText)
+				.filter(f -> !f.isI18N() || f.isI18N() && (
+						f.getPath().contains(".i18n." + language)
+						|| language.equals(Language.NONE) && f.getPath().contains(".base")
+					)
+				)
 				.toList();
 
 		if (docTypeFieldList.isEmpty()) {
