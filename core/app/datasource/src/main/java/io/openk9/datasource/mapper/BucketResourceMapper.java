@@ -67,6 +67,9 @@ public interface BucketResourceMapper {
 	@Mapping(
 		target = "values", source = "value"
 	)
+	@Mapping(
+		target = "extra", source = "extraParams"
+	)
 	TokenTabResponseDTO toTokenTabResponseDto(TokenTab tokenTab);
 
 	static List<String> toValues(String value) {

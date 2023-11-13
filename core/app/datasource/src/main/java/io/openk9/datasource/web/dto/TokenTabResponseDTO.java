@@ -8,5 +8,5 @@ public record TokenTabResponseDTO(
 	String keywordKey,
 	boolean filter,
 	List<String> values,
-	Map<String, String> extraParams) {
+	Map<String, String> extra) {
 }
