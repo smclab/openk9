@@ -76,7 +76,7 @@ import java.util.Set;
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
 		query =
-			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tn " +
+			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tb " +
 				"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
 	)
 })
