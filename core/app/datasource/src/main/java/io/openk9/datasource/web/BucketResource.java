@@ -270,6 +270,8 @@ public class BucketResource {
 
 			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
 
+			tokenTabFetch.fetch(TokenTab_.extraParams, JoinType.LEFT);
+
 			query.select(tabsJoin);
 
 			query.where(
