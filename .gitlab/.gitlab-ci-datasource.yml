@@ -11,7 +11,6 @@ Build Tagged Datasource Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 694-nuovo-token-type-per-i-filtri-suggestion-categories
       - tags
     changes:
       - core/app/datasource/ci.properties
@@ -19,7 +18,7 @@ Build Tagged Datasource Docker Images:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-694-SNAPSHOT
+    - ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: datasource
     paths:
@@ -40,6 +39,7 @@ Build Latest Datasource Docker Images:
     refs:
       - main
       - 562-ottimizzazione-performance-accesso-db
+      - 694-nuovo-token-type-per-i-filtri-suggestion-categories
   when:
     manual
   script:
