@@ -79,7 +79,7 @@ public class TokenTab extends K9Entity {
 		extraParams.remove(key);
 	}
 
-	public Set<ExtraParam> getExtraParamsSet() {
+	public static Set<ExtraParam> getExtraParamsSet(Map<String, String> extraParams) {
 		return extraParams
 			.entrySet()
 			.stream().map(e -> new ExtraParam(e.getKey(), e.getValue()))
