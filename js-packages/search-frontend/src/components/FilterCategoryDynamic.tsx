@@ -28,6 +28,7 @@ type FilterCategoryDynamicallyProps = {
   loadAll?: boolean;
   language: string;
   isDynamicElement: WhoIsDynamic[];
+  noResultMessage?: string|null|undefined
   numberItems?: number | null | undefined;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
@@ -48,6 +49,7 @@ function FilterCategoryDynamic({
   numberItems,
   isDynamicElement,
   setHasMoreSuggestionsCategories = undefined,
+  noResultMessage,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -90,6 +92,7 @@ function FilterCategoryDynamic({
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           suggestionCategoryName={suggestionCategoryName}
+          noResultMessage={noResultMessage}
         />
       </React.Fragment>
     );

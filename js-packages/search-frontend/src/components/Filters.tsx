@@ -31,6 +31,7 @@ type FiltersProps = {
   numberItems?: number | null | undefined;
   numberOfResults: number;
   isDynamicElement: WhoIsDynamic[];
+  noResultMessage?: string | null | undefined;
 };
 function Filters({
   searchQuery,
@@ -47,6 +48,7 @@ function Filters({
   numberItems,
   numberOfResults,
   isDynamicElement,
+  noResultMessage,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -228,6 +230,7 @@ function Filters({
               isCollapsable={isCollapsable}
               numberItems={numberItems}
               isDynamicElement={isDynamicElement}
+              noResultMessage={noResultMessage}
             />
           ) : (
             <FilterCategoryMemo

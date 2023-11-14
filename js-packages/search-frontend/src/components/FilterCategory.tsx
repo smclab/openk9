@@ -628,11 +628,17 @@ export function NoFilter({
   setIsOpen,
   isOpen,
   suggestionCategoryName,
+  noResultMessage,
 }: {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isOpen: Boolean;
   suggestionCategoryName: string;
+  noResultMessage?: string | undefined | null;
 }) {
+  const messageNoResult = noResultMessage
+    ? noResultMessage.replaceAll("%s", suggestionCategoryName)
+    : "";
+
   return (
     <div>
       <div>
@@ -682,9 +688,16 @@ export function NoFilter({
             margin-left: 10px;
           `}
         >
-          <Logo size={100} />
-          <h4>No {suggestionCategoryName} </h4>
-          <div></div>
+          <div className="openk9-no-filter-svg">
+            <Logo size={100} />
+          </div>
+          <div className="openk9-no-results-message">
+            {noResultMessage ? (
+              <h4>{messageNoResult}</h4>
+            ) : (
+              <h4>No {suggestionCategoryName} </h4>
+            )}
+          </div>
         </div>
       )}
     </div>

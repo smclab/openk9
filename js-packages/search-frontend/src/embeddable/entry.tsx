@@ -235,6 +235,7 @@ type FilterProps = {
   element: Element | string | null;
   isCollapsable?: boolean;
   numberItems?: number | null | undefined;
+  noResultMessage?: string | null | undefined;
 };
 
 type ResulListPaginationProps = {

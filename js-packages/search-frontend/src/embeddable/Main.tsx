@@ -269,6 +269,7 @@ export function Main({
             numberItems={configuration.filtersConfigurable?.numberItems}
             numberOfResults={numberOfResults}
             isDynamicElement={isDynamicElement}
+            noResultMessage={configuration.filtersConfigurable?.noResultMessage}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable
