@@ -787,7 +787,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						v = Tuple2.of(new HashSet<>(), new HashSet<>());
 					}
 
-					if (fieldName.contains("." + language)){
+					if (fieldName.contains(".i18n." + language)) {
 						v.getItem2().add(docTypeField);
 					}
 					else if (fieldName.contains(".base")) {
@@ -804,7 +804,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					excludes.add(name);
 				}
 				else {
-					includes.add(name);
+					if (docTypeField.getFieldType() != FieldType.OBJECT) {
+						includes.add(name);
+					}
 					if (docTypeField.isSearchableAndText()) {
 						highlightFields.add(new HighlightBuilder.Field(name));
 					}
@@ -858,9 +860,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		DocTypeField parent = docTypeField.getParentDocTypeField();
-		return parent != null &&
-				(parent.getFieldType() != null && parent.getFieldType() == FieldType.I18N) ?
-				parent : getI18nParent(parent);
+
+		return parent != null
+			&& parent.getFieldType() != null
+			&& parent.getFieldType() == FieldType.I18N
+			? parent
+			: getI18nParent(parent);
 	}
 
 	private static void applyMinScore(
