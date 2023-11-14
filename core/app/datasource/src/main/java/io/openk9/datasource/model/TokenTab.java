@@ -68,7 +68,7 @@ public class TokenTab extends K9Entity {
 	private Map<String, String> extraParams = new HashMap<>();
 
 	public enum TokenType {
-		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE
+		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE, FILTER
 	}
 
 	public void addExtraParam(String key, String value) {
