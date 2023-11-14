@@ -380,7 +380,7 @@ public class BucketResource {
 
 			return session
 				.createQuery(query)
-				.getSingleResult();
+				.getSingleResultOrNull();
 		});
 
 	}
