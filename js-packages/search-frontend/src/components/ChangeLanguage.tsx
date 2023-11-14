@@ -86,11 +86,17 @@ export function ChangeLanguage({
     }),
   };
 
-  const languagesOption = languages?.map((language) => ({
-    value: language.value,
-    name: language.name,
-    icon: <GloboSvg />,
-  }));
+  const defaultValue= {
+    value: "",
+    name: "Select Language",
+    icon: <GloboSvg/>,
+}
+const languageElement= languages?.map((language) => ({
+  value: language.value,
+  name: language.name,
+  icon: <GloboSvg />,
+}));
+  languageElement?.unshift(defaultValue)
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>
@@ -105,7 +111,7 @@ export function ChangeLanguage({
     <span>
       <Select
         value={startValue}
-        options={languagesOption}
+        options={languageElement}
         components={{ SingleValue }}
         onChange={handleChange}
         getOptionLabel={(e) => e.name}
