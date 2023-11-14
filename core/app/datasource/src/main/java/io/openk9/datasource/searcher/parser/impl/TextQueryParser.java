@@ -54,11 +54,7 @@ public class TextQueryParser implements QueryParser {
 		List<DocTypeField> docTypeFieldList =
 			Utils.getDocTypeFieldsFrom(datasources)
 				.filter(DocTypeField::isSearchableAndText)
-				.filter(f -> !f.isI18N() || f.isI18N() && (
-						f.getPath().contains(".i18n." + language)
-						|| language.equals(Language.NONE) && f.getPath().contains(".base")
-					)
-				)
+				.filter(f -> i18nFilter(f, language))
 				.toList();
 
 		if (docTypeFieldList.isEmpty()) {
@@ -164,6 +160,26 @@ public class TextQueryParser implements QueryParser {
 		getGlobalQueryType(token, jsonConfig)
 			.useConfiguredQueryType(mutableQuery, tokenClauseBuilder);
 
+	}
+
+	private static boolean i18nFilter(DocTypeField f, String language) {
+		String fieldPath = f.getPath();
+
+		if (!language.equals(Language.NONE)) {
+			return isI18nOrNotBase(fieldPath, language);
+		}
+		else {
+			return isBaseOrNotI18n(fieldPath);
+		}
+	}
+
+	private static boolean isBaseOrNotI18n(String fieldPath) {
+		return fieldPath.contains(".base") || !fieldPath.contains(".i18n");
+	}
+
+	private static boolean isI18nOrNotBase(String fieldPath, String language) {
+		return fieldPath.contains(".i18n." + language)
+			|| !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
 	}
 
 	private static float getBoost(
