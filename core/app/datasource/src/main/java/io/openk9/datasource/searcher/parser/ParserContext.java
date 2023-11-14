@@ -27,82 +27,93 @@ public class ParserContext {
 	private Map<String, List<String>> extraParams;
 	private String language;
 
-	/**
-	 * Get from context the String value mapped to key:
-	 *
-	 * <ol>
-	 *  <li> if exist in the extraParams, the first String from the list is taken; </li>
-	 *  <li> if the key is not found in extraParams,
-	 *  then is the String is taken from the queryParserConfig. </li>
-	 * <ol/>
-	 *
-	 * @param key the key to take from context
-	 * @return Optionally, the String value.
-	 */
-	public Optional<String> getString(String key) {
-		return getString(this, key);
-	}
 
 	/**
 	 * Get from context the Float value mapped to key:
 	 *
 	 * <ol>
-	 *  <li> if exist in the extraParams, the first Float from the list is taken; </li>
-	 *  <li> if the key is not found in extraParams,
+	 *  <li> if exist in the extra properties of the token, get the Float value for this key; </li>
+	 *  <li> if the key is not found in extra,
 	 *  then is the Float is taken from the queryParserConfig. </li>
 	 * <ol/>
 	 *
+	 * @param token the token
+	 * @param jsonConfig the config
 	 * @param key the key to take from context
 	 * @return Optionally, the Float value.
 	 */
-	public Optional<Float> getFloat(String key) {
-		return getString(this, key).map(Float::parseFloat);
+	public static Optional<Float> getFloat(
+		ParserSearchToken token, JsonObject jsonConfig, String key) {
+
+		return getString(token, jsonConfig, key).map(Float::parseFloat);
 	}
 
 	/**
 	 * Get from context the Integer value mapped to key:
 	 *
 	 * <ol>
-	 *  <li> if exist in the extraParams, the first Integer from the list is taken; </li>
-	 *  <li> if the key is not found in extraParams,
+	 *  <li> if exist in the extra properties of the token, get the Integer value for this key; </li>
+	 *  <li> if the key is not found in extra,
 	 *  then is the Integer is taken from the queryParserConfig. </li>
 	 * <ol/>
 	 *
+	 * @param token the token
+	 * @param jsonConfig the config
 	 * @param key the key to take from context
 	 * @return Optionally, the Integer value.
 	 */
-	public Optional<Integer> getInteger(String key) {
-		return getString(this, key).map(Integer::parseInt);
+	public static Optional<Integer> getInteger(
+		ParserSearchToken token, JsonObject jsonConfig, String key) {
+
+		return getString(token, jsonConfig, key).map(Integer::parseInt);
 	}
 
 	/**
 	 * Get from context the Boolean value mapped to key:
 	 *
 	 * <ol>
-	 *  <li> if exist in the extraParams, the first Boolean from the list is taken; </li>
-	 *  <li> if the key is not found in extraParams,
+	 *  <li> if exist in the extra properties of the token, get the Boolean value for this key; </li>
+	 *  <li> if the key is not found in extra,
 	 *  then is the Boolean is taken from the queryParserConfig. </li>
 	 * <ol/>
 	 *
+	 * @param token the token
+	 * @param jsonConfig the config
 	 * @param key the key to take from context
 	 * @return Optionally, the Boolean value.
 	 */
-	public Optional<Boolean> getBoolean(String key) {
-		return getString(key).map(Boolean::parseBoolean);
+	public static Optional<Boolean> getBoolean(
+		ParserSearchToken token, JsonObject jsonConfig, String key) {
+
+		return getString(token, jsonConfig, key).map(Boolean::parseBoolean);
 	}
 
+	/**
+	 * Get from context the String value mapped to key:
+	 *
+	 * <ol>
+	 *  <li> if exist in the extra properties of the token, get the String value for this key; </li>
+	 *  <li> if the key is not found in extra,
+	 *  then is the String is taken from the queryParserConfig. </li>
+	 * <ol/>
+	 *
+	 * @param token the token
+	 * @param jsonConfig the config
+	 * @param key the key to take from context
+	 * @return Optionally, the String value.
+	 */
+	public static Optional<String> getString(
+		ParserSearchToken token, JsonObject jsonConfig, String key) {
 
-	private static Optional<String> getString(ParserContext context, String key) {
-		Map<String, List<String>> extra = context.getExtraParams();
+		Map<String, String> extra = token.getExtra();
 
 		if (extra != null && !extra.isEmpty()) {
-			List<String> values = extra.get(key);
-			if (values != null && values.iterator().hasNext()) {
-				return Optional.ofNullable(values.iterator().next());
+			String value = extra.get(key);
+			if (value != null && !value.isBlank()) {
+				return Optional.of(value);
 			}
 		}
 
-		JsonObject jsonConfig = context.getQueryParserConfig();
 		return Optional.ofNullable(jsonConfig.getString(key));
 	}
 

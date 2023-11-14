@@ -10,6 +10,7 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.vertx.core.json.JsonObject;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -47,6 +48,8 @@ public class TextQueryParser implements QueryParser {
 		Set<Datasource> datasources = currentTenant.getDatasources();
 
 		String language = parserContext.getLanguage();
+
+		JsonObject jsonConfig = parserContext.getQueryParserConfig();
 
 		List<DocTypeField> docTypeFieldList =
 			Utils.getDocTypeFieldsFrom(datasources)
@@ -91,11 +94,11 @@ public class TextQueryParser implements QueryParser {
 
 			BoolQueryBuilder tokenClauseBuilder = QueryBuilders.boolQuery();
 
-			tokenClauseBuilder.boost(getBoost(parserContext));
+			tokenClauseBuilder.boost(getBoost(token, jsonConfig));
 
-			org.elasticsearch.common.unit.Fuzziness fuzziness = getFuzziness(parserContext);
+			org.elasticsearch.common.unit.Fuzziness fuzziness = getFuzziness(token, jsonConfig);
 
-			QueryType valuesQueryType = getValuesQueryType(parserContext);
+			QueryType valuesQueryType = getValuesQueryType(token, jsonConfig);
 
 			for (String value : values) {
 
@@ -146,41 +149,50 @@ public class TextQueryParser implements QueryParser {
 
 			}
 
-			doAddTokenClause(parserContext, mutableQuery, tokenClauseBuilder);
+			doAddTokenClause(token, jsonConfig, mutableQuery, tokenClauseBuilder);
 
 		}
 
 	}
 
 	protected void doAddTokenClause(
-		ParserContext context,
+		ParserSearchToken token,
+		JsonObject jsonConfig,
 		BoolQueryBuilder mutableQuery,
 		BoolQueryBuilder tokenClauseBuilder) {
 
-		getGlobalQueryType(context)
+		getGlobalQueryType(token, jsonConfig)
 			.useConfiguredQueryType(mutableQuery, tokenClauseBuilder);
 
 	}
 
-	private static float getBoost(ParserContext context) {
-		return context.getFloat(BOOST)
+	private static float getBoost(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getFloat(token, jsonConfig, BOOST)
 			.orElse(1.0F);
 	}
 
-	private static QueryType getValuesQueryType(ParserContext context) {
-		return context.getString(VALUES_QUERY_TYPE)
+	private static QueryType getValuesQueryType(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getString(token, jsonConfig, VALUES_QUERY_TYPE)
 			.map(QueryType::valueOf)
 			.orElse(QueryType.SHOULD);
 	}
 
-	private static QueryType getGlobalQueryType(ParserContext context) {
-		return context.getString(GLOBAL_QUERY_TYPE)
+	private static QueryType getGlobalQueryType(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getString(token, jsonConfig, GLOBAL_QUERY_TYPE)
 			.map(QueryType::valueOf)
 			.orElse(QueryType.MUST);
 	}
 
-	private static org.elasticsearch.common.unit.Fuzziness getFuzziness(ParserContext context) {
-		return context.getString(FUZZINESS)
+	private static org.elasticsearch.common.unit.Fuzziness getFuzziness(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getString(token, jsonConfig, FUZZINESS)
 			.map(Fuzziness::valueOf)
 			.orElse(Fuzziness.ZERO)
 			.toElasticType();
