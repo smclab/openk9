@@ -134,6 +134,7 @@ function FiltersMobileLiveChange<E>({
         </div>
         <button
           className="openk9-filters-list-button-close"
+          aria-label={t("close")||"close"}
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 15px;
