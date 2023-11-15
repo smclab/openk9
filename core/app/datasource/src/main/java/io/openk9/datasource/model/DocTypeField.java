@@ -47,8 +47,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "doc_type_field", uniqueConstraints = {
-	@UniqueConstraint(name = "field_name_doc_type_id_parent_doc_type_field_id", columnNames = {
-		"field_name", "doc_type_id", "parent_doc_type_field_id"})
+	@UniqueConstraint(
+		name = "field_name_doc_type_id_parent_doc_type_field_id",
+		columnNames = {"field_name", "doc_type_id", "parent_doc_type_field_id"}
+	)
 })
 @Getter
 @Setter
@@ -89,13 +91,21 @@ public class DocTypeField extends BaseDocTypeField {
 
 	@ToString.Exclude
 	@ManyToOne(cascade = {
-		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
-		CascadeType.DETACH})
+		CascadeType.PERSIST,
+		CascadeType.MERGE,
+		CascadeType.REFRESH,
+		CascadeType.DETACH
+	})
 	@JoinColumn(name = "analyzer")
 	@JsonIgnore
 	private Analyzer analyzer;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne(cascade = {
+		CascadeType.DETACH,
+		CascadeType.MERGE,
+		CascadeType.REFRESH,
+		CascadeType.PERSIST
+	})
 	@JoinColumn(name = "parent_doc_type_field_id", updatable = false)
 	@JsonIgnore
 	@ToString.Exclude

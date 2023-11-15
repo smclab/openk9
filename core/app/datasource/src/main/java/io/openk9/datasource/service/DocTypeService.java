@@ -138,13 +138,16 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
-				if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
-					return persist(s, docType)
-						.map(dt -> Tuple2.of(dt, docTypeFieldId));
-				}
-				return Uni.createFrom().nullItem();
-			})));
+			.transformToUni(docType -> s.fetch(docType.getDocTypeFields())
+				.flatMap(docTypeFields -> {
+					if (docType.removeDocTypeField(docTypeFields, docTypeFieldId)) {
+						return merge(s, docType)
+							.map(dt -> Tuple2.of(dt, docTypeFieldId));
+					}
+					return Uni.createFrom().nullItem();
+				})
+			)
+		);
 	}
 
 	public Uni<Tuple2<DocType, DocTypeTemplate>> setDocTypeTemplate(long docTypeId, long docTypeTemplateId) {
