@@ -35,6 +35,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -250,6 +251,15 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(Collection<String> docTypeNames) {
 		return getDocTypeListByNames(docTypeNames.toArray(String[]::new))
 			.chain(dts -> docTypeFieldService.expandDocTypes(dts));
+	}
+
+	@Override
+	public Uni<DocType> deleteById(long entityId) {
+		return sessionFactory.withTransaction((s, t) ->
+			findById(s, entityId)
+				.call(docType -> Mutiny.fetch(docType.getDocTypeFields()))
+				.invoke(docType -> remove(s, docType))
+		);
 	}
 
 	@Inject
