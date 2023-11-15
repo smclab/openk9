@@ -257,8 +257,12 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<DocType> deleteById(long entityId) {
 		return sessionFactory.withTransaction((s, t) ->
 			findById(s, entityId)
-				.call(docType -> Mutiny.fetch(docType.getDocTypeFields()))
-				.invoke(docType -> remove(s, docType))
+				.call(docType -> Mutiny
+					.fetch(docType.getDocTypeFields())
+					.invoke(Set::clear)
+					.invoke(docType::setDocTypeFields)
+				)
+				.call(docType -> remove(s, docType))
 		);
 	}
 
