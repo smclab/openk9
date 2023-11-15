@@ -261,6 +261,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 					.fetch(docType.getDocTypeFields())
 					.invoke(Set::clear)
 					.invoke(docType::setDocTypeFields)
+					.invoke(docTypeFields -> merge(s, docType))
+					.invoke(s::flush)
 				)
 				.call(docType -> remove(s, docType))
 		);
