@@ -35,11 +35,11 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
@@ -255,16 +255,14 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	@Override
 	public Uni<DocType> deleteById(long entityId) {
-		return sessionFactory.withTransaction((s, t) ->
-			findById(s, entityId)
-				.call(docType -> Mutiny
-					.fetch(docType.getDocTypeFields())
-					.invoke(Set::clear)
-					.invoke(docType::setDocTypeFields)
-					.invoke(docTypeFields -> merge(s, docType))
-					.invoke(s::flush)
-				)
-				.call(docType -> remove(s, docType))
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		CriteriaDelete<DocTypeField> delete = cb.createCriteriaDelete(DocTypeField.class);
+		Root<DocTypeField> from = delete.from(DocTypeField.class);
+		delete.where(cb.equal(from.get(DocTypeField_.docType), entityId));
+
+		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
+			.call(docType -> s.createQuery(delete).executeUpdate())
+			.call(s::remove)
 		);
 	}
 
