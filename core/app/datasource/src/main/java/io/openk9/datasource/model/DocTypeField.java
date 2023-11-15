@@ -120,7 +120,15 @@ public class DocTypeField extends BaseDocTypeField {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
-	@OneToMany(mappedBy = "docTypeField", cascade = javax.persistence.CascadeType.ALL)
+	@OneToMany(
+		mappedBy = "docTypeField",
+		cascade = {
+			CascadeType.DETACH,
+			CascadeType.MERGE,
+			CascadeType.REFRESH,
+			CascadeType.PERSIST
+		}
+	)
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<AclMapping> aclMappings = new LinkedHashSet<>();
