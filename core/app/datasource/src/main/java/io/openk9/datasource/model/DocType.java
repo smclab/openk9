@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -63,7 +64,12 @@ public class DocType extends K9Entity {
 	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
 
 	@ToString.Exclude
-	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = {
+		CascadeType.DETACH,
+		CascadeType.MERGE,
+		CascadeType.PERSIST,
+		CascadeType.REFRESH
+	})
 	@JoinColumn(name = "doc_type_template_id", referencedColumnName = "id")
 	@JsonIgnore
 	private DocTypeTemplate docTypeTemplate;
