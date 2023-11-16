@@ -125,7 +125,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public Uni<List<DatasourceJobStatus>> getStatusByDatasources(List<Long> datasourceIds) {
 		return sessionFactory.withStatelessTransaction((session, transaction) -> session
-			.createQuery("select d.id from Scheduler s join fetch s.datasource d where d in :datasourceIds and s.status = 'STARTED'", Long.class)
+			.createQuery(
+				"select d.id " +
+					"from Scheduler s " +
+					"join fetch s.datasource d " +
+					"where d in :datasourceIds and s.status = 'STARTED'", Long.class)
 			.setParameter("datasourceIds", datasourceIds)
 			.getResultList()
 			.map(ids -> datasourceIds
