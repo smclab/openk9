@@ -181,7 +181,8 @@ public class DataIndexService
 				})
 			)
 			.onItem()
-			.transformToUni(ignore -> findById(s, entityId))
+			.transformToUni(ignore -> findById(s, entityId)
+				.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
 			.onItem()
 			.transformToUni(dataIndex -> {
 				dataIndex.getDocTypes().clear();
