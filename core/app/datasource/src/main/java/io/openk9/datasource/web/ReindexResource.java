@@ -18,11 +18,10 @@
 package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
+import io.openk9.datasource.service.SchedulerService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 
 import javax.annotation.security.RolesAllowed;
@@ -43,14 +42,14 @@ public class ReindexResource {
 
 	@POST
 	@Path("/reindex")
-	public Uni<List<ReindexResponseDto>> reindex(ReindexRequestDto dto) {
-		return schedulerInitializer
-			.get()
-			.triggerJobs(routingContext.get("_tenantId"), dto.getDatasourceIds(), true)
-			.map(list -> list
-				.stream()
-				.map(datasourceId -> ReindexResponseDto.of(datasourceId, true))
-				.toList()
+	public Uni<List<SchedulerService.DatasourceJobStatus>> reindex(ReindexRequestDto dto) {
+		List<Long> datasourceIds = dto.datasourceIds;
+		String tenantId = routingContext.get("_tenantId");
+		return schedulerService
+			.getStatusByDatasources(datasourceIds)
+			.call(() -> schedulerInitializer
+				.get()
+				.triggerJobs(tenantId, dto.getDatasourceIds(), true)
 			);
 	}
 
@@ -60,13 +59,8 @@ public class ReindexResource {
 	@Inject
 	RoutingContext routingContext;
 
-	@Data
-	@AllArgsConstructor(staticName = "of")
-	@NoArgsConstructor(staticName = "of")
-	public static class ReindexResponseDto {
-		private long datasourceId;
-		private boolean status;
-	}
+	@Inject
+	SchedulerService schedulerService;
 
 	@Data
 	public static class ReindexRequestDto {

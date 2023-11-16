@@ -47,6 +47,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
@@ -122,6 +123,26 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			});
 	}
 
+	public Uni<List<DatasourceJobStatus>> getStatusByDatasources(List<Long> datasourceIds) {
+		return sessionFactory.withStatelessTransaction((session, transaction) -> session
+			.createQuery("select d.id from Scheduler s join fetch s.datasource d where d in :datasourceIds and s.status = 'STARTED'", Long.class)
+			.setParameter("datasourceIds", datasourceIds)
+			.getResultList()
+			.map(ids -> datasourceIds
+				.stream()
+				.map(id -> new DatasourceJobStatus(id, JobStatus.SCHEDULABLE))
+				.map(djs -> ids
+					.stream()
+					.filter(id -> djs.id() == id)
+					.findFirst()
+					.map(id -> new DatasourceJobStatus(djs.id(), JobStatus.ALREADY_RUNNING))
+					.orElse(djs)
+				)
+				.collect(Collectors.toList())
+			)
+		);
+	}
+
 	private Uni<List<String>> indexesDiff(Scheduler scheduler) {
 		if (scheduler == null) {
 			return Uni.createFrom().item(List.of());
@@ -179,5 +200,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	RestHighLevelClient client;
 	@Inject
 	ActorSystemProvider actorSystemProvider;
+
+	public enum JobStatus {
+		ALREADY_RUNNING,
+		SCHEDULABLE
+	}
+
+	public record DatasourceJobStatus(long id, JobStatus status) {}
 
 }

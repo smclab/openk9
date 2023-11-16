@@ -1,12 +1,12 @@
 package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
+import io.openk9.datasource.service.SchedulerService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -25,11 +25,16 @@ public class TriggerResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ActivateRequestContext
-	public Uni<List<Long>> trigger(TriggerResourceRequest dto) {
+	public Uni<List<SchedulerService.DatasourceJobStatus>> trigger(TriggerResourceRequest dto) {
+		List<Long> datasourceIds = dto.datasourceIds;
+		String tenantId = routingContext.get("_tenantId");
 
-		return schedulerInitializer
-			.get()
-			.triggerJobs(routingContext.get("_tenantId"), dto.getDatasourceIds());
+		return schedulerService
+			.getStatusByDatasources(datasourceIds)
+			.call(() -> schedulerInitializer
+				.get()
+				.triggerJobs(tenantId, dto.getDatasourceIds())
+			);
 
 	}
 
@@ -38,6 +43,9 @@ public class TriggerResource {
 
 	@Inject
 	RoutingContext routingContext;
+
+	@Inject
+	SchedulerService schedulerService;
 
 	@Data
 	@NoArgsConstructor
