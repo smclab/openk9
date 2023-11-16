@@ -68,7 +68,7 @@ function Tabs({
   return !scrollMode ? (
     <div css={css`openk9-container-arrow-tabs`}>
       <nav
-        className=""
+        className="openk9-nav-container-tabs"
         ref={elementRef}
         css={css`
           display: flex;
@@ -79,7 +79,11 @@ function Tabs({
         `}
       >
         <div
-          className="openk9-left-button-tabs"
+          className={
+            "openk9-nav-container-left-button " + arrowRightDisable
+              ? "disabled"
+              : "not-disabled"
+          }
           css={css`
             position: absolute;
           `}
@@ -108,6 +112,11 @@ function Tabs({
           )}
         </div>
         <div
+          className={
+            "openk9-nav-container-right-button " + arrowRightDisable
+              ? "disabled"
+              : "not-disabled"
+          }
           css={css`
             position: absolute;
             right: 8px;
