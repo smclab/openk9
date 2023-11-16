@@ -21,6 +21,9 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.AclMapping_;
+import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
@@ -41,6 +44,8 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import java.util.Collection;
@@ -256,12 +261,46 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	@Override
 	public Uni<DocType> deleteById(long entityId) {
 		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-		CriteriaDelete<DocTypeField> delete = cb.createCriteriaDelete(DocTypeField.class);
-		Root<DocTypeField> from = delete.from(DocTypeField.class);
-		delete.where(cb.equal(from.get(DocTypeField_.docType), entityId));
+
+		// dereference aclMappings
+		CriteriaUpdate<AclMapping> updateAclMapping = cb.createCriteriaUpdate(AclMapping.class);
+		Root<AclMapping> updateAclMappingFrom = updateAclMapping.from(AclMapping.class);
+		Join<AclMapping, DocTypeField> updateAclMappingJoin =
+			updateAclMappingFrom.join(AclMapping_.docTypeField);
+		updateAclMapping.where(
+			cb.equal(updateAclMappingJoin.get(DocTypeField_.docType), entityId));
+		updateAclMapping.set(
+			updateAclMappingFrom.get(AclMapping_.docTypeField), cb.nullLiteral(DocTypeField.class));
+
+		// dereference parents and analyzer
+		CriteriaUpdate<DocTypeField> updateDocTypeField =
+			cb.createCriteriaUpdate(DocTypeField.class);
+		Root<DocTypeField> updateDocTypeFieldFrom = updateDocTypeField.from(DocTypeField.class);
+		updateDocTypeField.where(
+			cb.equal(updateDocTypeFieldFrom.get(DocTypeField_.docType), entityId));
+		updateDocTypeField.set(
+			updateDocTypeFieldFrom.get(DocTypeField_.analyzer), cb.nullLiteral(Analyzer.class));
+		updateDocTypeField.set(
+			updateDocTypeFieldFrom.get(DocTypeField_.parentDocTypeField),
+			cb.nullLiteral(DocTypeField.class));
+
+		// delete docTypeFields
+		CriteriaDelete<DocTypeField> deleteDocTypeFields =
+			cb.createCriteriaDelete(DocTypeField.class);
+		Root<DocTypeField> deleteFrom = deleteDocTypeFields.from(DocTypeField.class);
+		deleteDocTypeFields.where(cb.equal(deleteFrom.get(DocTypeField_.docType), entityId));
+
+		// dereference docTypeTemplate
+		CriteriaUpdate<DocType> updateDocType = cb.createCriteriaUpdate(DocType.class);
+		Root<DocType> docTypeFrom = updateDocType.from(DocType.class);
+		updateDocType.where(cb.equal(docTypeFrom.get(DocType_.id), entityId));
+		updateDocType.set(DocType_.docTypeTemplate, cb.nullLiteral(DocTypeTemplate.class));
 
 		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
-			.call(docType -> s.createQuery(delete).executeUpdate())
+			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
+			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
+			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate())
+			.call(docType -> s.createQuery(updateDocType).executeUpdate())
 			.call(s::remove)
 		);
 	}
