@@ -106,7 +106,7 @@ public class DocTypeField extends BaseDocTypeField {
 		CascadeType.REFRESH,
 		CascadeType.PERSIST
 	})
-	@JoinColumn(name = "parent_doc_type_field_id", updatable = false)
+	@JoinColumn(name = "parent_doc_type_field_id")
 	@JsonIgnore
 	@ToString.Exclude
 	private DocTypeField parentDocTypeField;
