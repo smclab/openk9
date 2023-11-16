@@ -305,7 +305,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
 			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate())
 			.call(docType -> s.createQuery(updateDocType).executeUpdate())
-			.call(s::flush)
 			.call(s::remove)
 		);
 	}
