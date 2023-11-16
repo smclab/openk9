@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2023/11/16-01-changelog.xml">
+
+
+	<changeSet id="1700143191681-1" author="openk9">
+		<addColumn tableName="datasource">
+			<column name="reindex_rate" type="INTEGER" defaultValue="0" />
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="1700143191681-2" author="openk9">
+		<update tableName="datasource">
+			<column name="reindex_rate" value="1" />
+			<where>
+				reindex='true'
+			</where>
+		</update>
+	</changeSet>
+
+	<changeSet id="1700143191681-3" author="openk9">
+		<dropColumn tableName="datasource">
+			<column name="reindex" />
+		</dropColumn>
+	</changeSet>
+
+</databaseChangeLog>

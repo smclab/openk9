@@ -495,7 +495,7 @@ public class JobScheduler {
 									tenantName,
 									d,
 									startFromFirst == null
-										? d.getReindex()
+										? d.getReindexRate() == 1
 										: startFromFirst
 								)
 						)
