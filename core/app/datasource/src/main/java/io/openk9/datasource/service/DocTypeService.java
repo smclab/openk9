@@ -45,9 +45,9 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -265,10 +265,13 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		// dereference aclMappings
 		CriteriaUpdate<AclMapping> updateAclMapping = cb.createCriteriaUpdate(AclMapping.class);
 		Root<AclMapping> updateAclMappingFrom = updateAclMapping.from(AclMapping.class);
-		Join<AclMapping, DocTypeField> updateAclMappingJoin =
-			updateAclMappingFrom.join(AclMapping_.docTypeField);
+
+		Subquery<DocTypeField> fieldSubquery = updateAclMapping.subquery(DocTypeField.class);
+		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
+		fieldSubquery.where(cb.equal(fieldSubqueryFrom.get(DocTypeField_.docType), entityId));
+
 		updateAclMapping.where(
-			cb.equal(updateAclMappingJoin.get(DocTypeField_.docType), entityId));
+			updateAclMappingFrom.get(AclMapping_.docTypeField).in(fieldSubquery));
 		updateAclMapping.set(
 			updateAclMappingFrom.get(AclMapping_.docTypeField), cb.nullLiteral(DocTypeField.class));
 
