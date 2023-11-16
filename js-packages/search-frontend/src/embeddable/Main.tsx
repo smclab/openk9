@@ -236,6 +236,7 @@ export function Main({
             onConfigurationChange={onConfigurationChange}
             language={languageSelect}
             onAction={configuration.tabsConfigurable?.onAction}
+            scrollMode={configuration.tabsConfigurable?.scrollMode || true }
           />
         </I18nextProvider>,
         configuration.tabsConfigurable

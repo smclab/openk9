@@ -15,6 +15,7 @@ type TabsProps = {
   onSelectedTabIndexChange(index: number): void;
   onConfigurationChange: ConfigurationUpdateFunction;
   language: string;
+  scrollMode?: boolean;
   onAction?(): void;
 };
 function Tabs({
@@ -24,32 +25,119 @@ function Tabs({
   onConfigurationChange,
   language,
   onAction,
+  scrollMode = true,
 }: TabsProps) {
+  const elementRef = React.useRef(null);
+  const [arrowDisable, setArrowDisable] = React.useState(true);
+  const [arrowRightDisable, setArrowRightDisable] = React.useState(false);
+  const distance = 25;
+  const speed = 200;
+  const step = 35;
+  const handleHorizantalScroll = ({
+    element,
+    speed,
+    distance,
+    step,
+  }: {
+    element: any;
+    speed: number;
+    distance: number;
+    step: number;
+  }) => {
+    let scrollAmount = 0;
+    const slideTimer = setInterval(() => {
+      element.scrollLeft += step;
+      scrollAmount += Math.abs(step);
+      console.log(element.scrollLeft, element.scrollRight);
+
+      if (scrollAmount >= distance) {
+        clearInterval(slideTimer);
+      }
+      if (element.scrollLeft === 0) {
+        setArrowDisable(true);
+      } else {
+        setArrowDisable(false);
+      }
+      if (element.scrollLeft > 91) {
+        setArrowRightDisable(true);
+      } else {
+        setArrowRightDisable(false);
+      }
+    }, speed);
+  };
+
   return (
-    <OverlayScrollbarsComponentDockerFix
-      className="openk9-tabs-overlay-scrollbars"
-      style={{
-        position: "relative",
-        overflowX: "auto",
-        overflowY: "none",
-        height: "60px",
-      }}
-    >
-      <nav
-        className="openk9-tabs-container-internal"
+    <div css={css`openk9-container-arrow-tabs`}>
+      <div
+        className=""
+        ref={elementRef}
         css={css`
-          position: absolute;
           display: flex;
-          padding-top: 14px;
-          padding: 8px 12px;
-          width: fit-content;
-          height: fit-content;
-          gap: 16px;
-          @media (max-width: 480px) {
-            gap: 10px;
-          }
+          overflow-x: hidden;
+          white-space: nowrap;
+          width: 90vw;
+          margin-left: 15px;
         `}
       >
+        <div
+          className="openk9-left-button-tabs"
+          css={css`
+            position: absolute;
+          `}
+        >
+          {!arrowDisable && (
+            <button
+              className="openk9-button-left-tabs"
+              css={css`
+                padding: 8px 12px;
+                border: 1px solid #80808082;
+                background: #dbdbdb;
+                opacity: 0.9;
+                border-radius: 20px;
+              `}
+              onClick={() => {
+                handleHorizantalScroll({
+                  element: elementRef.current,
+                  distance,
+                  speed,
+                  step: -step,
+                });
+              }}
+            >
+              {"<"}
+            </button>
+          )}
+        </div>
+        <div
+          css={css`
+            position: absolute;
+            right: 8px;
+          `}
+        >
+          {!arrowRightDisable && (
+            <button
+              className="openk9-button-right-tabs"
+              css={css`
+                padding: 8px 12px;
+                border: 1px solid #80808082;
+                background: #dbdbdb;
+                opacity: 0.9;
+                border-radius: 20px;
+                right: 0;
+              `}
+              onClick={() => {
+                handleHorizantalScroll({
+                  element: elementRef.current,
+                  distance,
+                  speed,
+                  step,
+                });
+              }}
+            >
+              {">"}
+            </button>
+          )}
+        </div>
         {tabs.map((tab, index) => {
           const isSelected = index === selectedTabIndex;
           const tabTraslation = translationTab({
@@ -107,8 +195,8 @@ function Tabs({
             </button>
           );
         })}
-      </nav>
-    </OverlayScrollbarsComponentDockerFix>
+      </div>
+    </div>
   );
 }
 export const TabsMemo = React.memo(Tabs);
@@ -171,3 +259,87 @@ export function translationTabValue({
 
   return tabClick || defaultValue;
 }
+
+// <OverlayScrollbarsComponentDockerFix
+// className="openk9-tabs-overlay-scrollbars"
+// style={{
+//   position: "relative",
+//   overflowX: "auto",
+//   overflowY: "none",
+//   height: "60px",
+// }}
+// >
+// <nav
+//   className="openk9-tabs-container-internal"
+//   css={css`
+//     position: absolute;
+//     display: flex;
+//     padding-top: 14px;
+//     padding: 8px 12px;
+//     width: fit-content;
+//     height: fit-content;
+//     gap: 16px;
+//     @media (max-width: 480px) {
+//       gap: 10px;
+//     }
+//   `}
+// >
+//   {tabs.map((tab, index) => {
+//     const isSelected = index === selectedTabIndex;
+//     const tabTraslation = translationTab({
+//       language: language,
+//       tabLanguages: tab.translationMap,
+//       defaultValue: tab.label,
+//     });
+//     return (
+//       <button
+//         className="openk9-single-tab-container"
+//         key={index}
+//         tabIndex={0}
+//         css={css`
+//           border: none;
+//           background: none;
+//         `}
+//       >
+//         <span
+//           key={index}
+//           className={
+//             "openk9-single-tab " +
+//             (isSelected ? "openk9-active-tab" : "openk9-not-active")
+//           }
+//           css={css`
+//             white-space: nowrap;
+//             padding: 8px 12px;
+//             background: ${isSelected
+//               ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+//               : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+//             border-radius: 8px;
+//             font: Helvetica Neue LT Std;
+//             font-style: normal;
+//             display: block;
+//             color: ${isSelected
+//               ? "var(--openk9-embeddable-search--primary-background-color)"
+//               : "var(--openk9-embeddable-tabs--primary-color)"};
+//             ${isSelected
+//               ? "var(--openk9-embeddable-search--active-color)"
+//               : "transparent"};
+//             cursor: ${isSelected ? "" : "pointer"};
+//             user-select: none;
+//             :hover {
+//               ${isSelected ? "" : "text-decoration: underline;"}
+//             }
+//           `}
+//           onClick={() => {
+//             onSelectedTabIndexChange(index);
+//             onConfigurationChange({ filterTokens: [] });
+//             if (onAction) onAction();
+//             resetFilterCalendar();
+//           }}
+//         >
+//           {tabTraslation.toUpperCase()}
+//         </span>
+//       </button>
+//     );
+//   })}
+// </nav>
+// </OverlayScrollbarsComponentDockerFix>

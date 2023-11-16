@@ -247,6 +247,7 @@ type ResulListPaginationProps = {
 type TabsProps = {
   element: Element | string | null;
   onAction(): void;
+  scrollMode?:boolean;
 };
 
 export type Configuration = {
