@@ -266,8 +266,9 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		CriteriaUpdate<AclMapping> updateAclMapping = cb.createCriteriaUpdate(AclMapping.class);
 		Root<AclMapping> updateAclMappingFrom = updateAclMapping.from(AclMapping.class);
 
-		Subquery<DocTypeField> fieldSubquery = updateAclMapping.subquery(DocTypeField.class);
+		Subquery<Long> fieldSubquery = updateAclMapping.subquery(Long.class);
 		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
+		fieldSubquery.select(fieldSubqueryFrom.get(DocTypeField_.id));
 		fieldSubquery.where(cb.equal(fieldSubqueryFrom.get(DocTypeField_.docType), entityId));
 
 		updateAclMapping.where(
