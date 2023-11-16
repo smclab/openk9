@@ -24,6 +24,7 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.util.ActorActionListener;
 import io.openk9.datasource.util.CborSerializable;
+import io.smallrye.mutiny.Uni;
 import io.vavr.Function3;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -64,7 +65,7 @@ public class JobScheduler {
 	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
 	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record UnScheduleJobInternal(String jobName) implements Command {}
-	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
+	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, Boolean startFromFirst) implements Command {}
 	private record InvokePluginDriverInternal(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
 		boolean startFromFirst) implements Command {}
@@ -228,7 +229,7 @@ public class JobScheduler {
 
 		Datasource datasource = triggerDatasourceInternal.datasource;
 		String tenantName = triggerDatasourceInternal.tenantName;
-		boolean startFromFirst = triggerDatasourceInternal.startFromFirst;
+		Boolean startFromFirst = triggerDatasourceInternal.startFromFirst;
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
@@ -252,7 +253,7 @@ public class JobScheduler {
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
 					.getResultList()
-					.invoke(list -> {
+					.flatMap(list -> {
 						if (list != null && !list.isEmpty()) {
 
 							for (Scheduler scheduler : list) {
@@ -260,17 +261,36 @@ public class JobScheduler {
 									"A Scheduler with id {} for datasource {} is running.",
 									scheduler.getId(), datasource.getId());
 							}
+							return Uni.createFrom().voidItem();
+						}
 
+						if (startFromFirst != null) {
+							ctx.getSelf().tell(
+								new StartSchedulerInternal(tenantName, datasource, startFromFirst));
+							return Uni.createFrom().voidItem();
 						}
 						else {
-							ctx.getSelf().tell(new StartSchedulerInternal(
-								tenantName, datasource, startFromFirst));
+							return isReindexRequest(s, datasource.getId())
+								.map(isReindex ->
+									new StartSchedulerInternal(tenantName, datasource, isReindex));
 						}
 					})
 			)
 		);
 
 		return Behaviors.same();
+	}
+
+	private static Uni<Boolean> isReindexRequest(Mutiny.StatelessSession s, long datasourceId) {
+		return s.createQuery(
+				"select mod(count(s.id), d.reindexRate) " +
+					"from Scheduler s " +
+					"join s.datasource d" +
+					"where d.id = :datasourceId " +
+					"group by d.id, d.reindexRate", Integer.class)
+			.setParameter("datasourceId", datasourceId)
+			.getSingleResult()
+			.map(integer -> integer.equals(0));
 	}
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
@@ -494,9 +514,7 @@ public class JobScheduler {
 								.apply(
 									tenantName,
 									d,
-									startFromFirst == null
-										? d.getReindexRate() == 1
-										: startFromFirst
+									startFromFirst
 								)
 						)
 					)
