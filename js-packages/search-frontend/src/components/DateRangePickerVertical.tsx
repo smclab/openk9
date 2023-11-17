@@ -85,6 +85,7 @@ export function DataRangePickerVertical({
           <SingleDatePicker
             date={start || startDate}
             numberOfMonths={1}
+            readOnly={true}
             onDateChange={(startDate) => setStartDate(startDate)}
             focused={manageAccessibilityStart ? focusedStartInput : false}
             onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
@@ -93,8 +94,10 @@ export function DataRangePickerVertical({
             showClearDate
             showDefaultInputIcon
             inputIconPosition="after"
-            isOutsideRange={(event) => {
-              return false;
+            isOutsideRange={(day) => {
+              return (
+                day.isAfter(moment().endOf("day")) || (endDate && day.isAfter(endDate))
+              );
             }}
             placeholder={t("start-day") || "Start day"}
             openDirection="up"
@@ -115,6 +118,7 @@ export function DataRangePickerVertical({
           <SingleDatePicker
             date={end || endDate}
             numberOfMonths={1}
+            readOnly={true}
             onDateChange={(endDate) => setEndDate(endDate)}
             focused={manageAccessibilityEnd ? focusedEndInput : false}
             onFocusChange={(focus) => setFocusedEndInput(focus.focused)}
@@ -123,10 +127,11 @@ export function DataRangePickerVertical({
             showClearDate
             showDefaultInputIcon
             inputIconPosition="after"
-            isOutsideRange={(day) =>
-              {
-               return day.isAfter(moment().endOf("day")) || startDate.isAfter(day) 
-}            }
+            isOutsideRange={(day) => {
+              return (
+                day.isAfter(moment().endOf("day")) || (startDate && startDate.isAfter(day))
+              );
+            }}
             placeholder={t("end-day") || "End day"}
             openDirection="up"
             phrases={customPhrasesEndDate}
