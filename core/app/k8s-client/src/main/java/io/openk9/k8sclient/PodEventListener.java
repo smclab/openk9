@@ -1,4 +1,4 @@
-package io.openk9.monitoring;
+package io.openk9.k8sclient;
 
 import io.fabric8.kubernetes.api.model.ListOptions;
 import io.fabric8.kubernetes.api.model.Pod;

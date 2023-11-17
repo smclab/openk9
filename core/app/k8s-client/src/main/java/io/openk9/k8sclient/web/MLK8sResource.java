@@ -1,4 +1,4 @@
-package io.openk9.monitoring.web;
+package io.openk9.k8sclient.web;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -13,10 +13,10 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.openk9.monitoring.dto.MlDto;
-import io.openk9.monitoring.dto.MlPodResponse;
-import io.openk9.monitoring.dto.ModelActionesponse;
-import io.openk9.monitoring.dto.PodResponse;
+import io.openk9.k8sclient.dto.MlDto;
+import io.openk9.k8sclient.dto.MlPodResponse;
+import io.openk9.k8sclient.dto.ModelActionesponse;
+import io.openk9.k8sclient.dto.PodResponse;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import java.util.Collections;

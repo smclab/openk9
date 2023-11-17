@@ -1,4 +1,4 @@
-package io.openk9.monitoring.web;
+package io.openk9.k8sclient.web;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -6,9 +6,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.PrettyLoggable;
-import io.openk9.monitoring.PodEventListener;
-import io.openk9.monitoring.PodMetricResponse;
-import io.openk9.monitoring.dto.PodResponse;
+import io.openk9.k8sclient.PodEventListener;
+import io.openk9.k8sclient.PodMetricResponse;
+import io.openk9.k8sclient.dto.PodResponse;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
