@@ -24,6 +24,7 @@
 		<module>ingestion</module>
 		<module>resources-validator</module>
 		<module>tika</module>
+		<module>k8s-client</module>
 	</modules>
 
 </project>

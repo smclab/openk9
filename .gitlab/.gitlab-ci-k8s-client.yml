@@ -1,0 +1,67 @@
+Build Tagged K8s Client Docker Images:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  only:
+    refs:
+      - tags
+    changes:
+      - core/app/k8s-client/ci.properties
+  except:
+    - schedules
+  script:
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+  cache:
+    key: ingestion
+    paths:
+      - .m2/repository
+
+Build Latest K8s Client Docker Images:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  only:
+    refs:
+      - 609-completamento-integrazione-hugging-face
+  when:
+    manual
+  except:
+    - schedules
+  script:
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-609-SNAPSHOT
+  cache:
+    key: ingestion
+    paths:
+      - .m2/repository
+
+trigger_deploy_k8s_client:
+  image: curlimages/curl
+  stage: deploy
+  needs: ['Build Latest Ingestion Docker Images']
+  only:
+    refs:
+      - main
+    changes:
+      - core/app/k8s-client/ci.properties
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-k8s-client" -F ref=master $DEPLOY_TRIGGER_URL
