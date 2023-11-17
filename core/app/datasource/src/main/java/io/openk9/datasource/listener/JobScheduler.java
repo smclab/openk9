@@ -283,9 +283,12 @@ public class JobScheduler {
 
 	private static Uni<Boolean> isReindexRequest(Mutiny.StatelessSession s, long datasourceId) {
 		return s.createQuery(
-				"select mod(count(s.id), d.reindexRate) " +
+				"select case " +
+					"	when d.reindexRate > 0 then mod(count(s.id), d.reindexRate) " +
+					"	else -1 " +
+					"end " +
 					"from Scheduler s " +
-					"join s.datasource d" +
+					"join s.datasource d " +
 					"where d.id = :datasourceId " +
 					"group by d.id, d.reindexRate", Integer.class)
 			.setParameter("datasourceId", datasourceId)
