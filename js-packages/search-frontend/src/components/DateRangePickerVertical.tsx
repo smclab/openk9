@@ -60,7 +60,6 @@ export function DataRangePickerVertical({
       ? t("remove-data-end") || "remove end date"
       : t("open-calendar-end-date") || "open calendar end date",
   };
-  console.log(DateRangePickerPhrases);
 
   return (
     <div
@@ -94,7 +93,9 @@ export function DataRangePickerVertical({
             showClearDate
             showDefaultInputIcon
             inputIconPosition="after"
-            isOutsideRange={() => false}
+            isOutsideRange={(event) => {
+              return false;
+            }}
             placeholder={t("start-day") || "Start day"}
             openDirection="up"
             phrases={customPhrasesStart}
@@ -122,7 +123,10 @@ export function DataRangePickerVertical({
             showClearDate
             showDefaultInputIcon
             inputIconPosition="after"
-            isOutsideRange={() => false}
+            isOutsideRange={(day) =>
+              {
+               return day.isAfter(moment().endOf("day")) || startDate.isAfter(day) 
+}            }
             placeholder={t("end-day") || "End day"}
             openDirection="up"
             phrases={customPhrasesEndDate}
