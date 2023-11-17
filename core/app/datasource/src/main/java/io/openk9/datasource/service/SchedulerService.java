@@ -134,7 +134,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.getResultList()
 			.map(ids -> datasourceIds
 				.stream()
-				.map(id -> new DatasourceJobStatus(id, JobStatus.SCHEDULABLE))
+				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULATION))
 				.map(djs -> ids
 					.stream()
 					.filter(id -> djs.id() == id)
