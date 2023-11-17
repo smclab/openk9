@@ -129,7 +129,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				"select d.id " +
 					"from Scheduler s " +
 					"join s.datasource d " +
-					"where d in :datasourceIds and s.status = 'STARTED'", Long.class)
+					"where d.id in :datasourceIds and s.status = 'STARTED'", Long.class)
 			.setParameter("datasourceIds", datasourceIds)
 			.getResultList()
 			.map(ids -> datasourceIds
