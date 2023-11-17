@@ -104,7 +104,7 @@ public class SchedulerInitializer {
 	}
 
 	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds) {
-		return triggerJobs(tenantName, datasourceIds, null);
+		return triggerJobs(tenantName, datasourceIds, false);
 	}
 
 	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds, Boolean startFromFirst) {
