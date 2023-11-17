@@ -205,6 +205,7 @@ type DataRangePickerVerticalProps = {
   element: Element | string | null;
   start?: any;
   end?: any;
+  readOnly?:boolean;
 };
 
 type ResultListProps = {

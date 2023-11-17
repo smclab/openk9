@@ -17,6 +17,7 @@ export function DataRangePickerVertical({
   start,
   end,
   classTab,
+  readOnly=false,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -24,6 +25,7 @@ export function DataRangePickerVertical({
   start?: any;
   end?: any;
   classTab?: string;
+  readOnly?:boolean;
 }) {
   const languageCalendar = mappingNameLanguage(language);
   moment.locale(languageCalendar);
@@ -85,7 +87,7 @@ export function DataRangePickerVertical({
           <SingleDatePicker
             date={start || startDate}
             numberOfMonths={1}
-            readOnly={true}
+            readOnly={readOnly}
             onDateChange={(startDate) => setStartDate(startDate)}
             focused={manageAccessibilityStart ? focusedStartInput : false}
             onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
@@ -118,7 +120,7 @@ export function DataRangePickerVertical({
           <SingleDatePicker
             date={end || endDate}
             numberOfMonths={1}
-            readOnly={true}
+            readOnly={readOnly}
             onDateChange={(endDate) => setEndDate(endDate)}
             focused={manageAccessibilityEnd ? focusedEndInput : false}
             onFocusChange={(focus) => setFocusedEndInput(focus.focused)}

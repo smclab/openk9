@@ -534,6 +534,7 @@ export function Main({
             start={configuration.dataRangePickerVertical?.start}
             end={configuration.dataRangePickerVertical?.end}
             classTab={tabs[selectedTabIndex]?.label}
+            readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
           />
         </I18nextProvider>,
         configuration.dataRangePickerVertical?.element !== undefined
