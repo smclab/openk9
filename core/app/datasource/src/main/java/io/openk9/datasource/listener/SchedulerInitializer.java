@@ -104,10 +104,10 @@ public class SchedulerInitializer {
 	}
 
 	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds) {
-		return triggerJobs(tenantName, datasourceIds, false);
+		return triggerJobs(tenantName, datasourceIds, null);
 	}
 
-	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds, boolean startFromFirst) {
+	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds, Boolean startFromFirst) {
 
 		List<Uni<Long>> triggers = new ArrayList<>(datasourceIds.size());
 
@@ -128,7 +128,7 @@ public class SchedulerInitializer {
 
 	
 	public Uni<Void> triggerJob(
-		String tenantName, long datasourceId, String name, boolean startFromFirst) {
+		String tenantName, long datasourceId, String name, Boolean startFromFirst) {
 
 		return Uni.createFrom().deferred(() -> {
 			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " startFromFirst: " + startFromFirst);
@@ -147,7 +147,7 @@ public class SchedulerInitializer {
 	}
 
 	public Uni<Void> performTask(
-		String schemaName, Long datasourceId, boolean startFromFirst) {
+		String schemaName, Long datasourceId, Boolean startFromFirst) {
 
 		return sessionFactory.withTransaction(
 			schemaName,

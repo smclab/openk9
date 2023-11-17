@@ -23,7 +23,7 @@ public class SchedulerInitializerActor {
 	}
 
 	public void triggerDataSource(
-		String tenantName, long datasourceId, boolean startFromFirst) {
+		String tenantName, long datasourceId, Boolean startFromFirst) {
 		getSchedulerRef().tell(new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
 	}
 
