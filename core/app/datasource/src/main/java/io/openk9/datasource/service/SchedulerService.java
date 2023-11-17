@@ -207,7 +207,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public enum JobStatus {
 		ALREADY_RUNNING,
-		SCHEDULABLE
+		ON_SCHEDULE
 	}
 
 	public record DatasourceJobStatus(long id, JobStatus status) {}
