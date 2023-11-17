@@ -271,8 +271,11 @@ public class JobScheduler {
 						}
 						else {
 							return isReindexRequest(s, datasource.getId())
-								.map(isReindex ->
-									new StartSchedulerInternal(tenantName, datasource, isReindex));
+								.flatMap(isReindex -> {
+									ctx.getSelf().tell(new StartSchedulerInternal(
+										tenantName, datasource, isReindex));
+									return Uni.createFrom().voidItem();
+								});
 						}
 					})
 			)
