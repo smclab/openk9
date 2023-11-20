@@ -230,6 +230,7 @@ export function Main({
             onSelectedTabIndexChange={setSelectedTabIndex}
             onConfigurationChange={onConfigurationChange}
             language={languageSelect}
+            filterResetOnChange={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.tabs,
@@ -256,6 +257,8 @@ export function Main({
             distance={configuration.tabsConfigurable?.distance}
             step={configuration.tabsConfigurable?.step}
             pxHiddenRightArrow={configuration.tabsConfigurable?.pxHiddenRightArrow}
+            filterResetOnChange={selectionsDispatch}
+          
           />
         </I18nextProvider>,
         configuration.tabsConfigurable

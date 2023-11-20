@@ -106,7 +106,8 @@ export type SelectionsActionOnClick =
       selection: SelectionOnClick;
     }
   | { type: "remove-filter"; filter: SearchToken }
-  | { type: "set-filters"; filter: any };
+  | { type: "set-filters"; filter: any }
+  | {type: "reset-filters"};
 
 type SelectionOnClick = {
   text: string;
@@ -218,29 +219,19 @@ function reducerOnClick(
         ),
       };
     }
-    case "set-filters": {
-      // let newFilters;
-
-      // if (state.filters.length === 0) {
-      //   newFilters = [action.filter];
-      // } else {
-      //   newFilters = state.filters.map((filter) => {
-      //     if ( filter.values && filter.suggestionCategoryId === action.filter?.suggestionCategoryId) {
-      //       return {
-      //         ...filter,
-      //         values: [...filter.values, ...(action.filter.values || [])]
-      //       };
-      //     } else {
-      //       return filter;
-      //     }
-      //   });
-      // }
-      
+    case "set-filters": {      
       return {
         text: state.text,
         filters: [...state.filters,action.filter],
         selection: state.selection,
       };
+    }
+    case "reset-filters":{
+      return{
+        text:state.text,
+        filters: [],
+        selection: state.selection,
+      }
     }
     case "remove-filter": {
       const filters = state.filters.filter((token) => {
