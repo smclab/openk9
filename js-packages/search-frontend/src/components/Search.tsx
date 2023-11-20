@@ -42,6 +42,7 @@ type SearchProps = {
   defaultValue?: string;
   isSearchOnInputChange?: boolean;
   htmlKey?: string|undefined|null;
+  textOnQueryStringOnCLick?: string | null | undefined;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
@@ -55,6 +56,7 @@ export function Search({
   onDetail,
   showSyntax,
   isMobile,
+  textOnQueryStringOnCLick,
   mobileVersion = false,
   btnSearch = false,
   actionCloseMobileVersion,
@@ -73,9 +75,11 @@ export function Search({
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
-  const [textBtn, setTextBtn] = React.useState<string | undefined>(
-    defaultValue,
-  );
+  const text =
+  textOnQueryStringOnCLick && textOnQueryStringOnCLick !== ""
+    ? textOnQueryStringOnCLick
+    : defaultValue;
+const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -88,18 +92,14 @@ export function Search({
     }
   }, [adjustedSelection]);
   React.useEffect(() => {
-    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
-      if (defaultValue === "") {
-        selectionsDispatch({
-          type: "reset-search",
-        });
-      } else {
+    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch ) {
+    
         selectionsDispatch({
           type: "set-text",
           text: defaultValue,
           textOnchange: defaultValue,
         });
-      }
+      if(defaultValue!=="")
       setTextBtn(defaultValue);
     }
   }, [defaultValue]);

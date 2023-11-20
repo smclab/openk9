@@ -7,7 +7,7 @@ import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";
 import { resetFilterCalendar } from "./DateRangePicker";
-import { SelectionsActionOnClick } from "./useSelections";
+import { SelectionsAction, SelectionsActionOnClick } from "./useSelections";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -23,6 +23,7 @@ type TabsProps = {
   step?: number;
   pxHiddenRightArrow?:number
   filterResetOnChange:React.Dispatch<SelectionsActionOnClick>;
+  filterResetOnChange:React.Dispatch<SelectionsAction> | React.Dispatch<SelectionsActionOnClick>;
 };
 function Tabs({
   tabs,

@@ -14,6 +14,7 @@ export function useSelections() {
     initial,
     (initial) => loadQueryString<SelectionsState>() ?? initial,
   );
+  
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
@@ -37,6 +38,7 @@ export function useSelectionsOnClick() {
     (initialOnClick) =>
       loadQueryString<SelectionsStateOnClick>() || initialOnClick,
   );
+  
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
@@ -70,14 +72,16 @@ const initial: SelectionsState = {
 export type SelectionsAction =
   | { type: "set-text"; text?: string; textOnchange?: string }
   | { type: "reset-search" }
-  | { type: "set-filters"; filter: SearchToken }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: Selection;
-    };
+    }
+  | { type: "remove-filter"; filter: SearchToken }
+  | { type: "set-filters"; filter: any }
+  | { type: "reset-filters" };
 
-type Selection = {
+ type Selection = {
   text: string;
   textOnChange: string;
   start: number;
@@ -107,9 +111,9 @@ export type SelectionsActionOnClick =
     }
   | { type: "remove-filter"; filter: SearchToken }
   | { type: "set-filters"; filter: any }
-  | {type: "reset-filters"};
+  | { type: "reset-filters" };
 
-type SelectionOnClick = {
+ type SelectionOnClick = {
   text: string;
   start: number;
   end: number;
@@ -138,15 +142,7 @@ function reducer(
       return {
         text: "",
         textOnChange: "",
-        filters: [],
-        selection: [],
-      };
-    }
-    case "set-filters": {
-      return {
-        text: "",
-        textOnChange: "",
-        filters: [],
+        filters: state.filters,
         selection: [],
       };
     }
@@ -200,6 +196,39 @@ function reducer(
         ).concat(selection ? [selection] : []),
       };
     }
+    case "set-filters": {
+      return {
+        text: state.text,
+        filters: [...state.filters, action.filter],
+        selection: state.selection,
+      };
+    }
+    case "reset-filters": {
+      return {
+        text: state.text,
+        filters: [],
+        selection: state.selection,
+      };
+    }
+    case "remove-filter": {
+      const filters = state.filters.filter((token) => {
+        const searchToken = action.filter;
+        if (searchToken && searchToken.values && token && token.values)
+          return !(
+            token.suggestionCategoryId === searchToken.suggestionCategoryId &&
+            token.isFilter === searchToken.isFilter &&
+            token.keywordKey === searchToken.keywordKey &&
+            token.tokenType === searchToken.tokenType &&
+            containsAtLeastOne(searchToken.values, token.values)
+          );
+        return true;
+      });
+      return {
+        filters: filters,
+        selection: state.selection,
+        text: state.text,
+      };
+    }
   }
 }
 
@@ -219,19 +248,19 @@ function reducerOnClick(
         ),
       };
     }
-    case "set-filters": {      
+    case "set-filters": {
       return {
         text: state.text,
-        filters: [...state.filters,action.filter],
+        filters: [...state.filters, action.filter],
         selection: state.selection,
       };
     }
-    case "reset-filters":{
-      return{
-        text:state.text,
+    case "reset-filters": {
+      return {
+        text: state.text,
         filters: [],
         selection: state.selection,
-      }
+      };
     }
     case "remove-filter": {
       const filters = state.filters.filter((token) => {

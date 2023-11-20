@@ -61,17 +61,14 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  React.useEffect(()=>{
-    console.log(configuration.filterTokens);
-
-  },[configuration])
+  
   const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
   });
-  
-  const [selectionsState, selectionsDispatch] = useSelectionsOnClick();
-  const [selectionsStateOnClick, selectionsDispatchOnClick] = useSelections();
+  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
+
+  const [selectionsState, selectionsDispatch] = useSelections(); 
 
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
@@ -132,7 +129,6 @@ export function Main({
     languageSelect,
   );
   const [currentPage, setCurrentPage] = React.useState<number>(0);
-  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const isDynamicElement = configuration.dynamicElement || [
     "tab",
   ];
@@ -143,6 +139,7 @@ export function Main({
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
+    textOnQueryStringOnCLick,
   } = isSearchOnInputChange
     ? useSearchOnClick({
         configuration,
@@ -161,8 +158,8 @@ export function Main({
         dateTokens,
         onQueryStateChange,
         setCurrentPage,
-        selectionsDispatch:selectionsDispatchOnClick,
-        selectionsState:selectionsStateOnClick,
+        selectionsDispatch,
+        selectionsState,
       });
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } = useDetailsMobile(searchQuery);
@@ -203,6 +200,7 @@ export function Main({
             spans={spans}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
+            textOnQueryStringOnCLick={textOnQueryStringOnCLick}
             showSyntax={
               configuration.searchConfigurable?.isShowSyntax === false
                 ? false
@@ -654,14 +652,14 @@ function useSearchOnClick({
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState:SelectionsStateOnClick;
-  selectionsDispatch:  React.Dispatch<SelectionsActionOnClick>;
+  selectionsState:SelectionsStateOnClick|SelectionsState,
+  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-
-  const debounced = useDebounce(selectionsState, 600);
+  const textOnQueryStringOnCLick="";
+  const debounced = useDebounce(selectionsState , 600);
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.text || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
@@ -730,7 +728,7 @@ function useSearchOnClick({
     if (
       searchAutoselect &&
       queryAnalysis.data &&
-      queryAnalysis.data.searchText === selectionsState.text
+      queryAnalysis.data.searchText === selectionsState.text 
     ) {
       const autoSelections = getAutoSelections(
         selectionsState.selection,
@@ -740,7 +738,7 @@ function useSearchOnClick({
         selectionsDispatch({
           type: "set-selection",
           replaceText: false,
-          selection,
+          selection:{token:selection.token,end:selection.end,isAuto:selection.isAuto,start:selection.start,text:selection.text,textOnChange: ('textOnChange' in selection && typeof selection.textOnChange==="string")? selection.textOnChange :""},
         });
       }
     }
@@ -758,6 +756,7 @@ function useSearchOnClick({
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
+    textOnQueryStringOnCLick,
   };
 }
 
@@ -777,14 +776,14 @@ function useSearch({
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState:SelectionsState;
-  selectionsDispatch:React.Dispatch<SelectionsAction>;
+  selectionsState:SelectionsStateOnClick|SelectionsState,
+  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-  const debounced = useDebounce(selectionsState, 600);
-
+  const debounced = useDebounce(selectionsState as SelectionsState , 600);
+  
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.textOnChange || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
@@ -828,6 +827,7 @@ function useSearch({
     ],
     [defaultTokens, tabTokens, newTokenFilter, dateTokens, searchTokens],
   );
+  
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
     selectionsState.text === debounced.text &&
@@ -888,6 +888,7 @@ function useSearch({
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
+    textOnQueryStringOnCLick:selectionsState.text,
   };
 }
 
@@ -920,8 +921,8 @@ function useFilters({
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
-  selectionsState:SelectionsStateOnClick,
-  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>;
+  selectionsState:SelectionsStateOnClick|SelectionsState,
+  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
 }) {
   const filter= [...configuration.filterTokens,...selectionsState.filters]
   const filterTokens = filter;

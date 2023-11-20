@@ -1,5 +1,5 @@
 export function loadQueryString<Value>(): Value | null {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);  
   const q = params.get("q");
   if (q) return JSON.parse(q);
   return null;
