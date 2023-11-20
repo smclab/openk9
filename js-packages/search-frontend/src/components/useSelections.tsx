@@ -2,9 +2,11 @@ import React from "react";
 import {
   AnalysisResponseEntry,
   AnalysisToken,
+  SearchToken,
   useOpenK9Client,
 } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
+import { containsAtLeastOne } from "../embeddable/Main";
 
 export function useSelections() {
   const [state, dispatch] = React.useReducer(
@@ -55,17 +57,20 @@ export type SelectionsState = {
   text?: string;
   selection: Array<Selection>;
   textOnChange?: string;
+  filters: SearchToken[];
 };
 
 const initial: SelectionsState = {
   text: "",
   selection: [],
   textOnChange: "",
+  filters: [],
 };
 
 export type SelectionsAction =
   | { type: "set-text"; text?: string; textOnchange?: string }
   | { type: "reset-search" }
+  | { type: "set-filters"; filter: SearchToken }
   | {
       type: "set-selection";
       replaceText: boolean;
@@ -84,11 +89,13 @@ type Selection = {
 export type SelectionsStateOnClick = {
   text: string;
   selection: Array<SelectionOnClick>;
+  filters: SearchToken[];
 };
 
 const initialOnClick: SelectionsStateOnClick = {
   text: "",
   selection: [],
+  filters: [],
 };
 
 export type SelectionsActionOnClick =
@@ -97,7 +104,9 @@ export type SelectionsActionOnClick =
       type: "set-selection";
       replaceText: boolean;
       selection: SelectionOnClick;
-    };
+    }
+  | { type: "remove-filter"; filter: SearchToken }
+  | { type: "set-filters"; filter: any };
 
 type SelectionOnClick = {
   text: string;
@@ -115,6 +124,7 @@ function reducer(
     case "set-text": {
       return {
         text: action.text || state.text || "",
+        filters: state.filters,
         textOnChange: action.textOnchange || state.textOnChange || "",
         selection: shiftSelection(
           state.textOnChange ?? "",
@@ -123,12 +133,21 @@ function reducer(
         ),
       };
     }
-    case "reset-search" : {
+    case "reset-search": {
       return {
-        text: '',
-        textOnChange: '',
-        selection: []
-      }
+        text: "",
+        textOnChange: "",
+        filters: [],
+        selection: [],
+      };
+    }
+    case "set-filters": {
+      return {
+        text: "",
+        textOnChange: "",
+        filters: [],
+        selection: [],
+      };
     }
     case "set-selection": {
       const { text, selection } = (() => {
@@ -170,6 +189,7 @@ function reducer(
       return {
         text,
         textOnChange: state.textOnChange || "",
+        filters: state.filters,
         selection: shiftSelection(
           state.textOnChange || "",
           state.textOnChange || "",
@@ -190,11 +210,55 @@ function reducerOnClick(
     case "set-text": {
       return {
         text: action.text,
+        filters: state.filters,
         selection: shiftSelectionOnCLick(
           state.text,
           action.text,
           state.selection,
         ),
+      };
+    }
+    case "set-filters": {
+      // let newFilters;
+
+      // if (state.filters.length === 0) {
+      //   newFilters = [action.filter];
+      // } else {
+      //   newFilters = state.filters.map((filter) => {
+      //     if ( filter.values && filter.suggestionCategoryId === action.filter?.suggestionCategoryId) {
+      //       return {
+      //         ...filter,
+      //         values: [...filter.values, ...(action.filter.values || [])]
+      //       };
+      //     } else {
+      //       return filter;
+      //     }
+      //   });
+      // }
+      
+      return {
+        text: state.text,
+        filters: [...state.filters,action.filter],
+        selection: state.selection,
+      };
+    }
+    case "remove-filter": {
+      const filters = state.filters.filter((token) => {
+        const searchToken = action.filter;
+        if (searchToken && searchToken.values && token && token.values)
+          return !(
+            token.suggestionCategoryId === searchToken.suggestionCategoryId &&
+            token.isFilter === searchToken.isFilter &&
+            token.keywordKey === searchToken.keywordKey &&
+            token.tokenType === searchToken.tokenType &&
+            containsAtLeastOne(searchToken.values, token.values)
+          );
+        return true;
+      });
+      return {
+        filters: filters,
+        selection: state.selection,
+        text: state.text,
       };
     }
     case "set-selection": {
@@ -230,6 +294,7 @@ function reducerOnClick(
       })();
       return {
         text,
+        filters: state.filters,
         selection: shiftSelectionOnCLick(
           state.text,
           text,

@@ -4,6 +4,10 @@ import { useDebounce } from "../components/useDebounce";
 import { DetailMemo } from "../components/Detail";
 import { ResultsMemo } from "../components/ResultList";
 import {
+  SelectionsAction,
+  SelectionsActionOnClick,
+  SelectionsState,
+  SelectionsStateOnClick,
   getAutoSelections,
   isOverlapping,
   useSelections,
@@ -57,13 +61,23 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
+  React.useEffect(()=>{
+    console.log(configuration.filterTokens);
+
+  },[configuration])
   const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
   });
+  
+  const [selectionsState, selectionsDispatch] = useSelectionsOnClick();
+  const [selectionsStateOnClick, selectionsDispatchOnClick] = useSelections();
+
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
     onConfigurationChange,
+    selectionsState,
+    selectionsDispatch,
   });
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
 
@@ -120,15 +134,12 @@ export function Main({
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const isDynamicElement = configuration.dynamicElement || [
-    "filter",
-    "search",
     "tab",
   ];
+
   const {
     searchQuery,
     spans,
-    selectionsState,
-    selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
@@ -140,6 +151,8 @@ export function Main({
         dateTokens,
         onQueryStateChange,
         setCurrentPage,
+        selectionsState,
+        selectionsDispatch
       })
     : useSearch({
         configuration,
@@ -148,6 +161,8 @@ export function Main({
         dateTokens,
         onQueryStateChange,
         setCurrentPage,
+        selectionsDispatch:selectionsDispatchOnClick,
+        selectionsState:selectionsStateOnClick,
       });
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } = useDetailsMobile(searchQuery);
@@ -627,6 +642,8 @@ function useSearchOnClick({
   dateTokens,
   onQueryStateChange,
   setCurrentPage,
+  selectionsState,
+  selectionsDispatch,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
@@ -634,10 +651,11 @@ function useSearchOnClick({
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
+  selectionsState:SelectionsStateOnClick;
+  selectionsDispatch:  React.Dispatch<SelectionsActionOnClick>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
-  const [selectionsState, selectionsDispatch] = useSelectionsOnClick();
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
 
   const debounced = useDebounce(selectionsState, 600);
@@ -734,8 +752,6 @@ function useSearchOnClick({
   return {
     searchQuery,
     spans,
-    selectionsState,
-    selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
@@ -749,6 +765,8 @@ function useSearch({
   dateTokens,
   onQueryStateChange,
   setCurrentPage,
+  selectionsState,
+  selectionsDispatch,
 }: {
   configuration: Configuration;
   tabTokens: SearchToken[];
@@ -756,10 +774,11 @@ function useSearch({
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
+  selectionsState:SelectionsState;
+  selectionsDispatch:React.Dispatch<SelectionsAction>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
-  const [selectionsState, selectionsDispatch] = useSelections();
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
   const debounced = useDebounce(selectionsState, 600);
 
@@ -863,8 +882,6 @@ function useSearch({
   return {
     searchQuery,
     spans,
-    selectionsState,
-    selectionsDispatch,
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
@@ -895,21 +912,43 @@ function useTabs(
 function useFilters({
   configuration,
   onConfigurationChange,
+  selectionsState,
+  selectionsDispatch,
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
+  selectionsState:SelectionsStateOnClick,
+  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>;
 }) {
-  const filterTokens = configuration.filterTokens;
+  const filter= [...configuration.filterTokens,...selectionsState.filters]
+  const filterTokens = filter;
+  
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
+      const newFilters = configuration.filterTokens.map((token) => {
+        if (token.suggestionCategoryId === searchToken.suggestionCategoryId) {
+          const updatedToken: SearchToken = {
+            ...token,
+            values: token.values ? [...token.values, ...searchToken.values??[]] : [...searchToken.values??[]],
+          };
+          return updatedToken;
+        }
+        return token;
+      });
+  
+      selectionsDispatch({ type: "set-filters", filter: searchToken });
+  
       onConfigurationChange((configuration) => ({
-        filterTokens: [...configuration.filterTokens, searchToken],
+        ...configuration,
+        filterTokens: [...newFilters],
       }));
     },
-    [onConfigurationChange],
+    [configuration.filterTokens, onConfigurationChange, selectionsDispatch]
   );
+  
   const removeFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
+      selectionsDispatch({type:"remove-filter", filter:searchToken});
       onConfigurationChange((configuration) => ({
         filterTokens: configuration.filterTokens.filter((token) => {
           if (searchToken && searchToken.values && token && token.values)
@@ -1208,7 +1247,7 @@ function remappingLanguageToBack({ language }: { language: string }) {
   }
 }
 
-const containsAtLeastOne = (array1: string[], array2: string[]): boolean => {
+export const containsAtLeastOne = (array1: string[], array2: string[]): boolean => {
   return array1.some((element1) => {
     return array2.includes(element1);
   });

@@ -6,8 +6,8 @@ export function loadQueryString<Value>(): Value | null {
 }
 
 export function saveQueryString<Value>(value: Value) {
-  const params = new URLSearchParams(window.location.search);
-  params.set("q", JSON.stringify(value));
+  const params = new URLSearchParams(window.location.search);  
+  params.set("q", JSON.stringify(value));  
   const url = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState(null, "", url);
 }
