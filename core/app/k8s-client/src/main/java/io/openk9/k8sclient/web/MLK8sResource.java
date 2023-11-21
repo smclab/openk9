@@ -363,10 +363,12 @@ public class MLK8sResource {
 				return new ModelActionesponse("Service already exist", "DANGER");
 			}
 			else {
-				_kubernetesClient.services()
-					.inNamespace(namespace).withName(serviceName).delete();
+				deleteMlModel(parserName);
 				throw e;
 			}
+		} catch (Exception e) {
+			deleteMlModel(parserName);
+			throw e;
 		}
 
 		return new ModelActionesponse("Model deploy started", "SUCCESS");
