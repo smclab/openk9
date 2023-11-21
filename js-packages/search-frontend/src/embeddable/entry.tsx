@@ -248,6 +248,9 @@ type TabsProps = {
   element: Element | string | null;
   onAction(): void;
   scrollMode?:boolean;
+  speed: number;
+  distance: number;
+  step: number;
 };
 
 export type Configuration = {

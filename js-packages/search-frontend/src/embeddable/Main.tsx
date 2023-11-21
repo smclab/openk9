@@ -237,6 +237,9 @@ export function Main({
             language={languageSelect}
             onAction={configuration.tabsConfigurable?.onAction}
             scrollMode={configuration.tabsConfigurable?.scrollMode }
+            speed={configuration.tabsConfigurable?.speed}
+            distance={configuration.tabsConfigurable?.distance}
+            step={configuration.tabsConfigurable?.step}
           />
         </I18nextProvider>,
         configuration.tabsConfigurable

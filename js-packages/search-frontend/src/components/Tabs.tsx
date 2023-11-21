@@ -17,6 +17,9 @@ type TabsProps = {
   language: string;
   scrollMode?: boolean;
   onAction?(): void;
+  speed?: number;
+  distance?: number;
+  step?: number;
 };
 function Tabs({
   tabs,
@@ -26,13 +29,14 @@ function Tabs({
   language,
   onAction,
   scrollMode = true,
+  speed=25,
+  distance=200,
+  step=35,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
   const [arrowRightDisable, setArrowRightDisable] = React.useState(false);
-  const distance = 25;
-  const speed = 200;
-  const step = 35;
+
   const handleHorizantalScroll = ({
     element,
     speed,
