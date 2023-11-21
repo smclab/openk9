@@ -33,8 +33,10 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	}
 
 	public Uni<DocTypeField> getDocTypeField(TokenTab tokenTab) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(tokenTab.getDocTypeField()));
+		return sessionFactory.withTransaction(s -> s
+			.merge(tokenTab)
+			.flatMap(merged -> s.fetch(merged.getDocTypeField()))
+		);
 	}
 
 	public Uni<DocTypeField> getDocTypeField(long tokenTabId) {
@@ -43,8 +45,9 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	}
 
 	public Uni<Set<TokenTab.ExtraParam>> getExtraParams(TokenTab tokenTab) {
-		return Mutiny
-			.fetch(tokenTab.getExtraParams())
+		return sessionFactory.withTransaction((s, t) -> s
+				.merge(tokenTab)
+				.flatMap(merged -> s.fetch(merged.getExtraParams())))
 			.map(TokenTab::getExtraParamsSet);
 	}
 
@@ -97,7 +100,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 		return getSessionFactory()
 			.withTransaction(s ->
 				findById(s, id)
-					.flatMap(TokenTabService::fetchExtraParams)
+					.flatMap(tokenTab -> fetchExtraParams(s, tokenTab))
 					.flatMap(tokenTab -> {
 						tokenTab.addExtraParam(key, value);
 						return persist(s, tokenTab);
@@ -109,15 +112,15 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 		return getSessionFactory()
 			.withTransaction(s ->
 				findById(s, id)
-					.flatMap(TokenTabService::fetchExtraParams)
+					.flatMap(tokenTab -> fetchExtraParams(s, tokenTab))
 					.flatMap(tokenTab -> {
 						tokenTab.removeExtraParam(key);
 						return persist(s, tokenTab);
 					})
 			);	}
 
-	private static Uni<TokenTab> fetchExtraParams(TokenTab tokenTab) {
-		return Mutiny
+	private static Uni<TokenTab> fetchExtraParams(Mutiny.Session s, TokenTab tokenTab) {
+		return s
 			.fetch(tokenTab.getExtraParams())
 			.flatMap(extraParams -> {
 				tokenTab.setExtraParams(extraParams);
