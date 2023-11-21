@@ -17,7 +17,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: true,
-  useKeycloak:false,
+  useKeycloak:true,
 });
 
 export function App() {
