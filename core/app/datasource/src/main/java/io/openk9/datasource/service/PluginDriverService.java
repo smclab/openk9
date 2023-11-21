@@ -246,7 +246,10 @@ public class PluginDriverService
 	}
 
 	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
-		return sessionFactory.withTransaction(s -> s.fetch(pluginDriver.getAclMappings()));
+		return sessionFactory.withTransaction(s -> s
+			.merge(pluginDriver)
+			.flatMap(merged -> s.fetch(merged.getAclMappings()))
+		);
 	}
 
 	public Uni<AclMapping> setUserField(

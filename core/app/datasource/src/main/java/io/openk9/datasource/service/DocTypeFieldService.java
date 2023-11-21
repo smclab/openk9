@@ -102,8 +102,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(docTypeField.getParentDocTypeField()));
+		return sessionFactory.withTransaction(s -> s
+			.merge(docTypeField)
+			.flatMap(merged -> s.fetch(merged.getParentDocTypeField()))
+		);
 	}
 
 	public Uni<Connection<DocTypeField>> getSubDocTypeFields(

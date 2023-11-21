@@ -116,13 +116,17 @@ public class DocTypeGraphqlResource {
 	}
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
-		return sessionFactory.withTransaction(
-			(s) -> s.fetch(docTypeField.getDocType()));
+		return sessionFactory.withTransaction(s -> s
+			.merge(docTypeField)
+			.flatMap(merged -> s.fetch(merged.getDocType()))
+		);
 	}
 
 	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
-		return sessionFactory.withTransaction(
-			(s) -> s.fetch(docType.getDocTypeTemplate()));
+		return sessionFactory.withTransaction(s -> s
+			.merge(docType)
+			.flatMap(merged -> s.fetch(merged.getDocTypeTemplate()))
+		);
 	}
 
 	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {
