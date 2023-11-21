@@ -44,7 +44,7 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 
 	public Uni<Set<TokenTab.ExtraParam>> getExtraParams(TokenTab tokenTab) {
 		return sessionFactory
-			.withTransaction((s, t) -> Mutiny
+			.withTransaction((s, t) -> s
 				.fetch(tokenTab.getExtraParams())
 				.map(TokenTab::getExtraParamsSet)
 			);
