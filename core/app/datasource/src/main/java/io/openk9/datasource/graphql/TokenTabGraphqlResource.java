@@ -28,6 +28,11 @@ import java.util.Set;
 public class TokenTabGraphqlResource {
 
 	@Query
+	public Uni<TokenTab> getTokenTab(@Id long id) {
+		return tokenTabService.findById(id);
+	}
+
+	@Query
 	public Uni<Connection<TokenTab>> getTotalTokenTabs(
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,

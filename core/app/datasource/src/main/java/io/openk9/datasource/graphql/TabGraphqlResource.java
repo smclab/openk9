@@ -91,11 +91,6 @@ public class TabGraphqlResource {
 		return _tabService.findById(id);
 	}
 
-	@Query
-	public Uni<TokenTab> getTokenTab(@Id long id) {
-		return _tokenTabService.findById(id);
-	}
-
 	public Uni<Set<TranslationDTO>> getTranslations(@Source Tab tab) {
 		return translationService.getTranslationDTOs(Tab.class, tab.getId());
 	}
