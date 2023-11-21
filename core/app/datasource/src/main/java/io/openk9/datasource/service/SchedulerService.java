@@ -64,15 +64,21 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<Datasource> getDatasource(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getDatasource()));
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getDatasource()))
+		);
 	}
 
 	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getOldDataIndex()));
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getOldDataIndex()))
+		);
 	}
 
 	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
-		return sessionFactory.withStatelessTransaction(s -> s.fetch(scheduler.getNewDataIndex()));
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getNewDataIndex()))
+		);
 	}
 
 	public Uni<List<String>> getDeletedContentIds(String tenant, String schedulerId) {
