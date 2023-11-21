@@ -17,6 +17,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: true,
+  useKeycloak:false,
 });
 
 export function App() {
@@ -212,11 +213,7 @@ export function App() {
               className="openk9-update-configuration"
               ref={(element) =>
                 openk9.updateConfiguration({
-                  searchConfigurable: {
-                    btnSearch: false,
-                    isShowSyntax: true,
-                    element,
-                  },
+                search:element
                 })
               }
             ></div>
