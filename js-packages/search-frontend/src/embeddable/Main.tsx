@@ -45,6 +45,7 @@ import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
 import { ResultsPaginationMemo } from "../components/ResultListPagination";
 import _ from "lodash";
+import { RemoveFilters } from "../components/RemoveFilters";
 
 type MainProps = {
   configuration: Configuration;
@@ -217,6 +218,14 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.tabs,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <RemoveFilters
+            onConfigurationChange={onConfigurationChange}
+          />
+        </I18nextProvider>,
+        configuration.removeFilters,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

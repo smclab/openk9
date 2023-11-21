@@ -276,6 +276,7 @@ export type Configuration = {
   sortable: Element | string | null;
   tabs: Element | string | null;
   totalResult: Element | string | null;
+  removeFilters: Element |string|null;
   // configurable types
   calendarMobile: CalendarMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
@@ -320,6 +321,7 @@ const defaultConfiguration: Configuration = {
   isQueryAnalysis: true,
   login: null,
   numberResult: null,
+  removeFilters: null,
   resultList: null,
   resultListPagination: null,
   results: null,
