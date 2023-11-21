@@ -21,6 +21,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import java.util.Collections;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -35,6 +36,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Path("/k8s")
+@RolesAllowed("k9-admin")
 public class MLK8sResource {
 
 	@Inject
