@@ -34,7 +34,7 @@ export function RemoveFilters({
         `}
       >
         <CircleDelete />
-        {t("remove-filters")}
+        Cancella tutti i filtri
       </button>
     </div>
   );
