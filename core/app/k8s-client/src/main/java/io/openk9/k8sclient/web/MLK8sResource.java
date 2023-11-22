@@ -22,6 +22,8 @@ import org.jboss.logging.Logger;
 import java.util.Collections;
 
 import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -35,6 +37,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@ApplicationScoped
+@ActivateRequestContext
 @Path("/k8s")
 @RolesAllowed("k9-admin")
 public class MLK8sResource {
