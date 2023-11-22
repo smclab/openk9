@@ -48,6 +48,10 @@ public class MLK8sResource {
 	String namespace;
 
 	@Inject
+	@ConfigProperty(name = "openk9.pipeline.docker-registry")
+	String dockerRegistry;
+
+	@Inject
 	@ConfigProperty(name = "openk9.pipeline.base-transformers-tensorflow-image")
 	String baseMlTransformersTensorflowImage;
 
@@ -146,6 +150,8 @@ public class MLK8sResource {
 			case "transformers-pytorch" -> baseMlTransformersPytorchImage;
 			default -> baseMlTransformersPytorchImage;
 		};
+
+		baseMlImage = dockerRegistry + "/" + baseMlImage
 
 		try {
 
@@ -298,7 +304,7 @@ public class MLK8sResource {
 				.withNewSpec()
 				.addNewContainer()
 				.withName(serviceName.toLowerCase())
-				.withImage("smclab/" + serviceName + ":latest")
+				.withImage(dockerRegistry + serviceName + ":latest")
 				.withImagePullPolicy("Always")
 				.withEnv(
 					new EnvVar(
