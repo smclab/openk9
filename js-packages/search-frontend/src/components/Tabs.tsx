@@ -21,8 +21,6 @@ type TabsProps = {
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?:number
-  filterResetOnChange:React.Dispatch<SelectionsActionOnClick>;
   filterResetOnChange:React.Dispatch<SelectionsAction> | React.Dispatch<SelectionsActionOnClick>;
 };
 function Tabs({
