@@ -151,7 +151,7 @@ public class MLK8sResource {
 			default -> baseMlTransformersPytorchImage;
 		};
 
-		baseMlImage = dockerRegistry + "/" + baseMlImage
+		baseMlImage = dockerRegistry + "/" + baseMlImage;
 
 		try {
 
