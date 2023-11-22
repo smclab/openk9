@@ -20,6 +20,7 @@ type TabsProps = {
   speed?: number;
   distance?: number;
   step?: number;
+  pxHiddenRightArrow?:number
 };
 function Tabs({
   tabs,
@@ -29,14 +30,15 @@ function Tabs({
   language,
   onAction,
   scrollMode = true,
-  speed=25,
-  distance=200,
-  step=35,
+  speed=10,
+  distance=700,
+  step=30,
+  pxHiddenRightArrow=91,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
   const [arrowRightDisable, setArrowRightDisable] = React.useState(false);
-
+  let scrollAmount = 0;
   const handleHorizantalScroll = ({
     element,
     speed,
@@ -47,26 +49,14 @@ function Tabs({
     speed: number;
     distance: number;
     step: number;
-  }) => {
-    let scrollAmount = 0;
-    const slideTimer = setInterval(() => {
+  }) => {    
       element.scrollLeft += step;
       scrollAmount += Math.abs(step);
-
-      if (scrollAmount >= distance) {
-        clearInterval(slideTimer);
-      }
       if (element.scrollLeft === 0) {
         setArrowDisable(true);
       } else {
         setArrowDisable(false);
       }
-      if (element.scrollLeft > 91) {
-        setArrowRightDisable(true);
-      } else {
-        setArrowRightDisable(false);
-      }
-    }, speed);
   };
 
   return !scrollMode ? (
@@ -159,7 +149,7 @@ function Tabs({
           });
           return (
             <button
-              className="openk9-single-tab-container"
+              className={`openk9-single-tab-container`}
               key={index}
               tabIndex={0}
               css={css`

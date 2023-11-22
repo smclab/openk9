@@ -240,6 +240,7 @@ export function Main({
             speed={configuration.tabsConfigurable?.speed}
             distance={configuration.tabsConfigurable?.distance}
             step={configuration.tabsConfigurable?.step}
+            pxHiddenRightArrow={configuration.tabsConfigurable?.pxHiddenRightArrow}
           />
         </I18nextProvider>,
         configuration.tabsConfigurable
