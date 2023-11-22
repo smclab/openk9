@@ -9,24 +9,22 @@ const plugins = [
     type: "Basic tier",
     cards: [
       {
-        iconSrc: "img/plugins/email.svg",
+        iconSrc: "img/plugins/sitemap.svg",
         title: "Sitemap",
-        pluginHref: "/docs/standalone-app",
+        pluginHref: "/docs/plugins/sitemap-plugin",
         description: (
           <>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
-            est, laoreet vitae porttitor sed, aliquam et ex.
+            Plugin to get and handle data from web site using information provided by Sitemap's site
           </>
         ),
       },
       {
         iconSrc: "img/plugins/web-crawler.svg",
         title: "Web Crawler",
-        pluginHref: "/docs/standalone-app",
+        pluginHref: "/docs/plugins/web-crawler",
         description: (
           <>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
-            est, laoreet vitae porttitor sed, aliquam et ex.
+            Plugin to get and handle data from web site crawling in generic web
           </>
         ),
       },
@@ -34,6 +32,51 @@ const plugins = [
         iconSrc: "img/plugins/email.svg",
         title: "Imap",
         pluginHref: "/docs/plugins/imap-plugin",
+        description: (
+          <>
+            Plugin to get and handle email and relative attachments from imap email server
+          </>
+        ),
+      },
+      {
+        iconSrc: "img/plugins/database.svg",
+        title: "Database",
+        pluginHref: "/docs/plugins/database-plugin",
+        description: (
+          <>
+            Plugin to get and handle data coming from relational database
+          </>
+        ),
+      },
+      {
+        iconSrc: "img/plugins/push.svg",
+        title: "Push",
+        pluginHref: "/docs/plugins/push-plugin",
+        description: (
+          <>
+            Plugin to push data from external
+          </>
+        ),
+      }
+    ],
+  },
+  {
+    type: "Advanced tier",
+    cards: [
+      {
+        iconSrc: "img/plugins/gitlab.svg",
+        title: "Gitlab",
+        pluginHref: "/docs/plugins/gitlab-plugin",
+        description: (
+          <>
+            Plugin to
+          </>
+        ),
+      },
+      {
+        iconSrc: "img/plugins/github.svg",
+        title: "Github",
+        pluginHref: "/docs/plugins/github-plugin",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
@@ -44,23 +87,7 @@ const plugins = [
       {
         iconSrc: "img/plugins/liferay.svg",
         title: "Liferay",
-        pluginHref: "/docs/standalone-app",
-        description: (
-          <>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
-            est, laoreet vitae porttitor sed, aliquam et ex.
-          </>
-        ),
-      }
-    ],
-  },
-  {
-    type: "Advanced tier",
-    cards: [
-      {
-        iconSrc: "img/plugins/email.svg",
-        title: "Email",
-        pluginHref: "/docs/standalone-app",
+        pluginHref: "/docs/plugins/liferay-plugin",
         description: (
           <>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
@@ -85,8 +112,7 @@ function Plugins() {
             <span className={styles.blackText}> Collection </span>
           </h1>
           <p className={styles.pageDescription}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nisi
-            est, laoreet vitae porttitor sed, aliquam et ex.
+            In this section are describes available plugins for Openk9
           </p>
         </div>
       </header>

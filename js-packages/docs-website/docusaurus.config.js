@@ -8,6 +8,12 @@ module.exports = {
   favicon: "img/favicon.ico",
   organizationName: "smc",
   projectName: "openk9",
+  customFields: {
+  	 markdown: {
+          mermaid: true,
+        },
+        themes: ['@docusaurus/theme-mermaid']
+  },
   themeConfig: {
     colorMode: {
       disableSwitch: true,
@@ -67,7 +73,7 @@ module.exports = {
           position: "left",
         },
         {
-          to: "comingsoon/",
+          to: "Plugins",
           activeBasePath: "plugins",
           label: "Plugins",
           position: "left",
@@ -132,7 +138,7 @@ module.exports = {
             },
             {
               label: "Plugins",
-              to: "/comingsoon",
+              to: "/Plugins",
             },
           ],
         },
