@@ -17,14 +17,13 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: true,
-  useKeycloak:true,
 });
 
 export function App() {
   const serviceStatus = useServiceStatus();
   if (serviceStatus === "down") {
     return <MaintenancePage />;
-  }
+  }  
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);

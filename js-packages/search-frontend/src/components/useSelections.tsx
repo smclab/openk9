@@ -17,18 +17,17 @@ export function useSelections() {
   
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
-  // React.useEffect(() => {
-  //   if (client.authInit)
-  //     client.authInit.then(() => {
-  //       setCanSave(true);
-  //     });
-  // }, []);
-  // React.useEffect(() => {
-  //   if (canSave) {
-  //     saveQueryString(state);
-  //   }
-  // }, [canSave, state]);
-  saveQueryString(state);
+  React.useEffect(() => {
+    if (client.authInit)
+      client.authInit.then(() => {
+        setCanSave(true);
+      });
+  }, []);
+  React.useEffect(() => {
+    if (canSave) {
+      saveQueryString(state);
+    }
+  }, [canSave, state]);
   return [state, dispatch] as const;
 }
 
@@ -42,18 +41,17 @@ export function useSelectionsOnClick() {
   
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
-  // React.useEffect(() => {
-  //   if (client.authInit)
-  //     client.authInit.then(() => {
-  //       setCanSave(true);
-  //     });
-  // }, []);
-  // React.useEffect(() => {
-  //   if (canSave) {
-  //     saveQueryString(state);
-  //   }
-  // }, [canSave, state]);
-  saveQueryString(state);
+  React.useEffect(() => {
+    if (client.authInit)
+      client.authInit.then(() => {
+        setCanSave(true);
+      });
+  }, []);
+  React.useEffect(() => {
+    if (canSave) {
+      saveQueryString(state);
+    }
+  }, [canSave, state]);
   return [state, dispatch] as const;
 }
 
