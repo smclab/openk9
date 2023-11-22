@@ -27,6 +27,7 @@ import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { Tab } from "./Tabs";
 import { capitalize } from "lodash";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
+import { SelectionsAction } from "./useSelections";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -50,6 +51,7 @@ export type FiltersMobileProps<E> = {
   isCollapsable?: boolean;
   numberOfResults: number;
   whoIsDynamic: WhoIsDynamic[];
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
   numberItems?: number | null | undefined;
 };
 function FiltersMobileLiveChange<E>({
@@ -72,6 +74,7 @@ function FiltersMobileLiveChange<E>({
   numberOfResults,
   whoIsDynamic,
   numberItems,
+  selectionsDispatch,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -134,7 +137,7 @@ function FiltersMobileLiveChange<E>({
         </div>
         <button
           className="openk9-filters-list-button-close"
-          aria-label={t("close")||"close"}
+          aria-label={t("close") || "close"}
           css={css`
             color: var(--openk9-grey-stone-600);
             font-size: 15px;
@@ -249,6 +252,8 @@ function FiltersMobileLiveChange<E>({
           onClick={() => {
             onConfigurationChange({ filterTokens: [] });
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            if (selectionsDispatch)
+              selectionsDispatch({ type: "reset-filters" });
           }}
         >
           <div>{t("remove-filters")} </div>

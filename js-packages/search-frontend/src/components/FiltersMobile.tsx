@@ -11,6 +11,7 @@ import {
 import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
+import { SelectionsAction } from "./useSelections";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -28,6 +29,7 @@ export type FiltersMobileProps<E> = {
   language: string;
   sortAfterKey: string;
   isDynamicElement: WhoIsDynamic[];
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -42,6 +44,7 @@ function FiltersMobile<E>({
   language,
   sortAfterKey,
   isDynamicElement,
+  selectionsDispatch,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -128,6 +131,7 @@ function FiltersMobile<E>({
         sortAfterKey={sortAfterKey}
         numberOfResults={10}
         isDynamicElement={isDynamicElement}
+        selectionsDispatch={selectionsDispatch}
       />
     </React.Fragment>
   );

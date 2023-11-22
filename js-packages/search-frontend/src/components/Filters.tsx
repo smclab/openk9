@@ -15,6 +15,7 @@ import {
   WhoIsDynamic,
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
+import { SelectionsAction } from "./useSelections";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -32,6 +33,7 @@ type FiltersProps = {
   numberOfResults: number;
   isDynamicElement: WhoIsDynamic[];
   noResultMessage?: string | null | undefined;
+  selectionsDispatch?: React.Dispatch<SelectionsAction>;
 };
 function Filters({
   searchQuery,
@@ -49,6 +51,7 @@ function Filters({
   numberOfResults,
   isDynamicElement,
   noResultMessage,
+  selectionsDispatch,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -171,6 +174,8 @@ function Filters({
               label={t("remove-filters")}
               action={() => {
                 onConfigurationChange({ filterTokens: [] });
+                if (selectionsDispatch)
+                  selectionsDispatch({ type: "reset-filters" });
               }}
               svgIconRight={
                 <DeleteLogo

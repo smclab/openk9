@@ -237,6 +237,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <RemoveFilters
             onConfigurationChange={onConfigurationChange}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.removeFilters,
@@ -256,7 +257,6 @@ export function Main({
             step={configuration.tabsConfigurable?.step}
             pxHiddenRightArrow={configuration.tabsConfigurable?.pxHiddenRightArrow}
             filterResetOnChange={selectionsDispatch}
-          
           />
         </I18nextProvider>,
         configuration.tabsConfigurable
@@ -277,6 +277,7 @@ export function Main({
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
             isDynamicElement={isDynamicElement}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.filters,
@@ -300,6 +301,7 @@ export function Main({
             numberOfResults={numberOfResults}
             isDynamicElement={isDynamicElement}
             noResultMessage={configuration.filtersConfigurable?.noResultMessage}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.filtersConfigurable
@@ -326,6 +328,7 @@ export function Main({
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
+            selectionsDispatch={selectionsDispatch}
             onConfigurationChangeExt={
               configuration.filtersHorizontal
                 ? configuration.filtersHorizontal.callback
@@ -493,6 +496,7 @@ export function Main({
             onConfigurationChange={onConfigurationChange}
             filtersSelect={configuration.filterTokens}
             sort={completelySort}
+            selectionsDispatch={selectionsDispatch}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
             isVisibleFilters={configuration.filtersMobile?.isVisible || false}
@@ -535,6 +539,7 @@ export function Main({
               configuration.filtersMobileLiveChange?.isCollapsable ?? true
             }
             numberOfResults={numberOfResults}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined

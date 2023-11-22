@@ -27,6 +27,7 @@ import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
+import { SelectionsAction } from "./useSelections";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -41,6 +42,7 @@ type FiltersProps = {
   sortAfterKey: string;
   numberOfResults: number;
   isDynamicElement: WhoIsDynamic[];
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -55,6 +57,7 @@ function FiltersHorizontal({
   sortAfterKey,
   numberOfResults,
   isDynamicElement,
+  selectionsDispatch,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -194,6 +197,7 @@ function FiltersHorizontal({
           onClick={() => {
             onConfigurationChange({ filterTokens: [] });
             onConfigurationChangeExt && onConfigurationChangeExt();
+            selectionsDispatch({"type":"reset-filters"})
           }}
         >
           <div>{t("remove-filters")}</div>
