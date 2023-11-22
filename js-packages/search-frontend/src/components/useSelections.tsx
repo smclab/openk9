@@ -17,17 +17,18 @@ export function useSelections() {
   
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
-  React.useEffect(() => {
-    if (client.authInit)
-      client.authInit.then(() => {
-        setCanSave(true);
-      });
-  }, []);
-  React.useEffect(() => {
-    if (canSave) {
-      saveQueryString(state);
-    }
-  }, [canSave, state]);
+  // React.useEffect(() => {
+  //   if (client.authInit)
+  //     client.authInit.then(() => {
+  //       setCanSave(true);
+  //     });
+  // }, []);
+  // React.useEffect(() => {
+  //   if (canSave) {
+  //     saveQueryString(state);
+  //   }
+  // }, [canSave, state]);
+  saveQueryString(state);
   return [state, dispatch] as const;
 }
 
@@ -41,17 +42,18 @@ export function useSelectionsOnClick() {
   
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
-  React.useEffect(() => {
-    if (client.authInit)
-      client.authInit.then(() => {
-        setCanSave(true);
-      });
-  }, []);
-  React.useEffect(() => {
-    if (canSave) {
-      saveQueryString(state);
-    }
-  }, [canSave, state]);
+  // React.useEffect(() => {
+  //   if (client.authInit)
+  //     client.authInit.then(() => {
+  //       setCanSave(true);
+  //     });
+  // }, []);
+  // React.useEffect(() => {
+  //   if (canSave) {
+  //     saveQueryString(state);
+  //   }
+  // }, [canSave, state]);
+  saveQueryString(state);
   return [state, dispatch] as const;
 }
 
@@ -70,7 +72,7 @@ const initial: SelectionsState = {
 };
 
 export type SelectionsAction =
-  | { type: "set-text"; text?: string; textOnchange?: string }
+  | { type: "set-text"; text?: string; textOnchange?: string, onClick?:boolean }
   | { type: "reset-search" }
   | {
       type: "set-selection";
@@ -103,7 +105,7 @@ const initialOnClick: SelectionsStateOnClick = {
 };
 
 export type SelectionsActionOnClick =
-  | { type: "set-text"; text: string }
+  | { type: "set-text"; text: string; onClick?:boolean }
   | {
       type: "set-selection";
       replaceText: boolean;
@@ -128,7 +130,7 @@ function reducer(
   switch (action.type) {
     case "set-text": {
       return {
-        text: action.text || state.text || "",
+        text:  action.onClick?   action.text || state.text || "" :action.text || "",
         filters: state.filters,
         textOnChange: action.textOnchange || state.textOnChange || "",
         selection: shiftSelection(

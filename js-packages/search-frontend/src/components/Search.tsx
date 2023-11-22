@@ -98,6 +98,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
           type: "set-text",
           text: defaultValue,
           textOnchange: defaultValue,
+          onClick:btnSearch,
         });
       if(defaultValue!=="")
       setTextBtn(defaultValue);
@@ -223,6 +224,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                       selectionsDispatch({
                         type: "set-text",
                         text: token.value,
+                        onClick: btnSearch,
                       });
                     if (
                       inputRef.current?.selectionStart &&
@@ -286,6 +288,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     type: "set-text",
                     text: event.currentTarget.value,
                     textOnchange: event.currentTarget.value,
+                    onClick:btnSearch,
                   });
                   onDetail(null);
                   setOpenedDropdown(null);
@@ -295,11 +298,13 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     selectionsDispatch({
                       type: "set-text",
                       text: event.currentTarget.value,
+                      onClick:btnSearch,
                     });
                   } else {
                     selectionsDispatch({
                       type: "set-text",
                       textOnchange: event.currentTarget.value,
+                      onClick:btnSearch,
                     });
                   }
                 }
@@ -378,6 +383,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                         type: "set-text",
                         text: option?.value,
                         textOnchange: option?.value,
+                        onClick:btnSearch,
                       });
                     }
                   }
@@ -470,12 +476,14 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     selectionsDispatch({
                       type: "set-text",
                       text: "",
+                      onClick:btnSearch,
                     });
                   } else {
                     selectionsDispatch({
                       type: "set-text",
                       textOnchange: " ",
                       text: " ",
+                      onClick:btnSearch,
                     });
                     setTextBtn("");
                     onDetail(null);
@@ -514,6 +522,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     type: "set-text",
                     text: textBtn,
                     textOnchange: textBtn,
+                    onClick:btnSearch,
                   });
                 }
                 onDetail(null);
