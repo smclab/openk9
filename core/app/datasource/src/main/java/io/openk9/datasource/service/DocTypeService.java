@@ -50,6 +50,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.List;
@@ -307,7 +308,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		CriteriaQuery<DataIndex> dataIndexQuery = cb.createQuery(DataIndex.class);
 		Root<DataIndex> dataIndexFrom = dataIndexQuery.from(DataIndex.class);
 		dataIndexFrom.fetch(DataIndex_.docTypes, JoinType.INNER);
-		dataIndexQuery.where(dataIndexFrom.get(DataIndex_.docTypes).in(entityId));
+		SetJoin<DataIndex, DocType> join = dataIndexFrom.join(DataIndex_.docTypes, JoinType.INNER);
+		dataIndexQuery.where(cb.equal(join.get(DocType_.id), entityId));
 
 		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
 			.call(docType -> s.createQuery(dataIndexQuery)
