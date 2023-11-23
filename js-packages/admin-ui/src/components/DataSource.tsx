@@ -83,7 +83,10 @@ gql`
     $scheduling: String!
     $jsonConfig: String
     $reindexRate: Int!
+<<<<<<< HEAD
 
+=======
+>>>>>>> aaba48d3a (Datasource:)
   ) {
     datasource(
       id: $id
