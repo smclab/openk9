@@ -50,6 +50,7 @@ import { TotalResults } from "../components/TotalResults";
 import { ResultsPaginationMemo } from "../components/ResultListPagination";
 import _ from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
+import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 
 type MainProps = {
   configuration: Configuration;
@@ -61,14 +62,13 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  
   const { sort, setSortResult } = useSortResult({
     configuration,
     onConfigurationChange,
   });
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
 
-  const [selectionsState, selectionsDispatch] = useSelections(); 
+  const [selectionsState, selectionsDispatch] = useSelections();
 
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
@@ -123,15 +123,30 @@ export function Main({
   const languages = useQuery(["date-label-languages", {}], async () => {
     return await client.getLanguages();
   });
+  const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
+
+  const whoIsDynamicResponse = useQuery(
+    ["refresh-components", {}],
+    async () => {
+      return await client.getRefreshFilters();
+    },
+  );
+
+  React.useEffect(() => {
+    if (whoIsDynamicResponse.isSuccess) {
+      const newData = factoryWhoIsDynamic({
+        whoIsDynamicResponse: whoIsDynamicResponse.data,
+      });
+      setDynamicData(newData);
+    }
+  }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
+
   const [languageSelect, setLanguageSelect] = React.useState("");
   const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
     configuration.overrideTabs,
     languageSelect,
   );
   const [currentPage, setCurrentPage] = React.useState<number>(0);
-  const isDynamicElement = configuration.dynamicElement || [
-    "tab",
-  ];
 
   const {
     searchQuery,
@@ -149,7 +164,7 @@ export function Main({
         onQueryStateChange,
         setCurrentPage,
         selectionsState,
-        selectionsDispatch
+        selectionsDispatch,
       })
     : useSearch({
         configuration,
@@ -162,7 +177,8 @@ export function Main({
         selectionsState,
       });
   const { detail, setDetail } = useDetails(searchQuery);
-  const { detailMobile, setDetailMobile, idPreview, setIdPreview } = useDetailsMobile(searchQuery);
+  const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
+    useDetailsMobile(searchQuery);
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -251,11 +267,13 @@ export function Main({
             onConfigurationChange={onConfigurationChange}
             language={languageSelect}
             onAction={configuration.tabsConfigurable?.onAction}
-            scrollMode={configuration.tabsConfigurable?.scrollMode }
+            scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
             distance={configuration.tabsConfigurable?.distance}
             step={configuration.tabsConfigurable?.step}
-            pxHiddenRightArrow={configuration.tabsConfigurable?.pxHiddenRightArrow}
+            pxHiddenRightArrow={
+              configuration.tabsConfigurable?.pxHiddenRightArrow
+            }
             filterResetOnChange={selectionsDispatch}
           />
         </I18nextProvider>,
@@ -276,7 +294,7 @@ export function Main({
             sortAfterKey={sortAfterKey}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
-            isDynamicElement={isDynamicElement}
+            isDynamicElement={dynamicData}
             selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
@@ -299,7 +317,7 @@ export function Main({
             }
             numberItems={configuration.filtersConfigurable?.numberItems}
             numberOfResults={numberOfResults}
-            isDynamicElement={isDynamicElement}
+            isDynamicElement={dynamicData}
             noResultMessage={configuration.filtersConfigurable?.noResultMessage}
             selectionsDispatch={selectionsDispatch}
           />
@@ -323,7 +341,7 @@ export function Main({
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
-            isDynamicElement={isDynamicElement}
+            isDynamicElement={dynamicData}
             numberOfResults={numberOfResults}
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
@@ -420,7 +438,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DetailMemo result={detail} actionOnCLose={()=>{}}/>
+          <DetailMemo result={detail} actionOnCLose={() => {}} />
         </I18nextProvider>,
         configuration.details,
       )}
@@ -478,10 +496,11 @@ export function Main({
           <DetailMobileMemo
             result={detailMobile}
             setDetailMobile={setDetailMobile}
-            onClose={()=>{
-              const recoveryButton= document.getElementById("preview-card-"+idPreview) as HTMLButtonElement
-              if(recoveryButton)
-              recoveryButton.focus();
+            onClose={() => {
+              const recoveryButton = document.getElementById(
+                "preview-card-" + idPreview,
+              ) as HTMLButtonElement;
+              if (recoveryButton) recoveryButton.focus();
             }}
           />
         </I18nextProvider>,
@@ -503,7 +522,7 @@ export function Main({
             setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
             language={languageSelect}
             sortAfterKey={sortAfterKey}
-            isDynamicElement={isDynamicElement}
+            isDynamicElement={dynamicData}
           />
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
@@ -522,7 +541,7 @@ export function Main({
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
-            whoIsDynamic={isDynamicElement}
+            whoIsDynamic={dynamicData}
             numberItems={configuration.filtersConfigurable?.numberItems}
             isVisibleFilters={
               configuration.filtersMobileLiveChange?.isVisible || false
@@ -657,14 +676,16 @@ function useSearchOnClick({
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState:SelectionsStateOnClick|SelectionsState,
-  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
+  selectionsState: SelectionsStateOnClick | SelectionsState;
+  selectionsDispatch:
+    | React.Dispatch<SelectionsActionOnClick>
+    | React.Dispatch<SelectionsAction>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-  const textOnQueryStringOnCLick="";
-  const debounced = useDebounce(selectionsState , 600);
+  const textOnQueryStringOnCLick = "";
+  const debounced = useDebounce(selectionsState, 600);
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.text || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
@@ -733,7 +754,7 @@ function useSearchOnClick({
     if (
       searchAutoselect &&
       queryAnalysis.data &&
-      queryAnalysis.data.searchText === selectionsState.text 
+      queryAnalysis.data.searchText === selectionsState.text
     ) {
       const autoSelections = getAutoSelections(
         selectionsState.selection,
@@ -743,7 +764,18 @@ function useSearchOnClick({
         selectionsDispatch({
           type: "set-selection",
           replaceText: false,
-          selection:{token:selection.token,end:selection.end,isAuto:selection.isAuto,start:selection.start,text:selection.text,textOnChange: ('textOnChange' in selection && typeof selection.textOnChange==="string")? selection.textOnChange :""},
+          selection: {
+            token: selection.token,
+            end: selection.end,
+            isAuto: selection.isAuto,
+            start: selection.start,
+            text: selection.text,
+            textOnChange:
+              "textOnChange" in selection &&
+              typeof selection.textOnChange === "string"
+                ? selection.textOnChange
+                : "",
+          },
         });
       }
     }
@@ -781,14 +813,16 @@ function useSearch({
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState:SelectionsStateOnClick|SelectionsState,
-  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
+  selectionsState: SelectionsStateOnClick | SelectionsState;
+  selectionsDispatch:
+    | React.Dispatch<SelectionsActionOnClick>
+    | React.Dispatch<SelectionsAction>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-  const debounced = useDebounce(selectionsState as SelectionsState , 600);
-  
+  const debounced = useDebounce(selectionsState as SelectionsState, 600);
+
   const queryAnalysis = useQueryAnalysis({
     searchText: debounced.textOnChange || "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
@@ -832,7 +866,7 @@ function useSearch({
     ],
     [defaultTokens, tabTokens, newTokenFilter, dateTokens, searchTokens],
   );
-  
+
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
     selectionsState.text === debounced.text &&
@@ -893,7 +927,7 @@ function useSearch({
     isQueryAnalysisComplete,
     completelySort,
     setIsSaveQuery,
-    textOnQueryStringOnCLick:selectionsState.text,
+    textOnQueryStringOnCLick: selectionsState.text,
   };
 }
 
@@ -926,38 +960,42 @@ function useFilters({
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
-  selectionsState:SelectionsStateOnClick|SelectionsState,
-  selectionsDispatch:React.Dispatch<SelectionsActionOnClick>|React.Dispatch<SelectionsAction> ;
+  selectionsState: SelectionsStateOnClick | SelectionsState;
+  selectionsDispatch:
+    | React.Dispatch<SelectionsActionOnClick>
+    | React.Dispatch<SelectionsAction>;
 }) {
-  const filter= [...configuration.filterTokens,...selectionsState.filters]
+  const filter = [...configuration.filterTokens, ...selectionsState.filters];
   const filterTokens = filter;
-  
+
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       const newFilters = configuration.filterTokens.map((token) => {
         if (token.suggestionCategoryId === searchToken.suggestionCategoryId) {
           const updatedToken: SearchToken = {
             ...token,
-            values: token.values ? [...token.values, ...searchToken.values??[]] : [...searchToken.values??[]],
+            values: token.values
+              ? [...token.values, ...(searchToken.values ?? [])]
+              : [...(searchToken.values ?? [])],
           };
           return updatedToken;
         }
         return token;
       });
-  
+
       selectionsDispatch({ type: "set-filters", filter: searchToken });
-  
+
       onConfigurationChange((configuration) => ({
         ...configuration,
         filterTokens: [...newFilters],
       }));
     },
-    [configuration.filterTokens, onConfigurationChange, selectionsDispatch]
+    [configuration.filterTokens, onConfigurationChange, selectionsDispatch],
   );
-  
+
   const removeFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
-      selectionsDispatch({type:"remove-filter", filter:searchToken});
+      selectionsDispatch({ type: "remove-filter", filter: searchToken });
       onConfigurationChange((configuration) => ({
         filterTokens: configuration.filterTokens.filter((token) => {
           if (searchToken && searchToken.values && token && token.values)
@@ -1061,13 +1099,13 @@ function renderPortal(
 }
 
 function useDetailsMobile(searchQuery: Array<SearchToken>) {
-  const [idPreview,setIdPreview]=React.useState("");
+  const [idPreview, setIdPreview] = React.useState("");
   const [detailMobile, setDetailMobile] =
     React.useState<GenericResultItem<unknown> | null>(null);
   React.useEffect(() => {
     setDetailMobile(null);
   }, [searchQuery]);
-  return { detailMobile, setDetailMobile,idPreview, setIdPreview };
+  return { detailMobile, setDetailMobile, idPreview, setIdPreview };
 }
 
 export type QueryState = {
@@ -1256,8 +1294,43 @@ function remappingLanguageToBack({ language }: { language: string }) {
   }
 }
 
-export const containsAtLeastOne = (array1: string[], array2: string[]): boolean => {
+export const containsAtLeastOne = (
+  array1: string[],
+  array2: string[],
+): boolean => {
   return array1.some((element1) => {
     return array2.includes(element1);
   });
 };
+
+function factoryWhoIsDynamic({
+  whoIsDynamicResponse,
+}: {
+  whoIsDynamicResponse:
+    | {
+        refreshOnSuggestionCategory: boolean;
+        refreshOnTab: boolean;
+        refreshOnDate: boolean;
+        refreshOnQuery: boolean;
+      }
+    | undefined;
+}): WhoIsDynamic[] {
+
+  if (whoIsDynamicResponse === undefined) {    
+    return [];
+  }
+
+  const resultArray: WhoIsDynamic[] = [];
+
+  if (whoIsDynamicResponse.refreshOnQuery) {
+    resultArray.push("search");
+  }
+  if (whoIsDynamicResponse.refreshOnSuggestionCategory) {
+    resultArray.push("filter");
+  }
+  if (whoIsDynamicResponse.refreshOnTab) {
+    resultArray.push("tab");
+  }
+
+  return resultArray;
+}

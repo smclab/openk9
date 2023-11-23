@@ -12,7 +12,7 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
-import { ChangeLanguage } from "./components/ChangeLanguage";
+
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
