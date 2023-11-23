@@ -53,7 +53,7 @@ export function LiferayWizard() {
           name: data.name,
           scheduling: data.scheduling,
           description: "",
-          reindex: false,
+          reindexRate: 0,
           schedulable: true,
           jsonConfig: JSON.stringify(
             {
@@ -85,7 +85,6 @@ export function LiferayWizard() {
           <TextInput label="Password" {...form.inputProps("password")} item />
         </CustomFormGroup>
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>

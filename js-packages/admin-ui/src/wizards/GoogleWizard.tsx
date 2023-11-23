@@ -43,7 +43,7 @@ export function GoogleWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
-          reindex: false,
+          reindexRate: 0,
           jsonConfig: JSON.stringify(
             {
               token: data.token,
@@ -67,7 +67,6 @@ export function GoogleWizard() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Token" {...form.inputProps("token")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />

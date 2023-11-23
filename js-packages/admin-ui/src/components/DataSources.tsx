@@ -19,7 +19,7 @@ export const DataSourcesQuery = gql`
           scheduling
           jsonConfig
           description
-          reindex
+          reindexRate
         }
       }
       pageInfo {
@@ -77,7 +77,7 @@ export function DataSources() {
               <ClayToggle
                 toggled={dataSource?.schedulable ?? false}
                 onToggle={(schedulable) => {
-                  if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling)
+                  if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling && dataSource.reindexRate)
                     updateDataSourceMutate({
                       variables: {
                         id: dataSource.id,
@@ -86,7 +86,7 @@ export function DataSources() {
                         scheduling: dataSource.scheduling,
                         jsonConfig: dataSource.jsonConfig ?? "{}",
                         description: dataSource.description ?? "",
-                        reindex: dataSource.reindex || false,
+                        reindexRate: dataSource.reindexRate || 0,
                       },
                     });
                 }}

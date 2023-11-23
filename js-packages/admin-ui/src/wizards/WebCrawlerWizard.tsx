@@ -23,7 +23,7 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
-    $reindex: Boolean!
+    $reindexRate: Int!
   ) {
     datasource(
       datasourceDTO: {
@@ -32,7 +32,7 @@ gql`
         schedulable: $schedulable
         scheduling: $scheduling
         jsonConfig: $jsonConfig
-        reindex: $reindex
+        reindexRate: $reindexRate
       }
     ) {
       entity {
@@ -83,7 +83,7 @@ export function WebCrawlerWizard() {
           description: "",
           schedulable: true,
           jsonConfig: JSON.stringify({ startUrls: [data.urls] }, null, 2),
-          reindex: false,
+          reindexRate: 0,
         },
       });
     },
@@ -101,7 +101,6 @@ export function WebCrawlerWizard() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <StringListInput label="Urls" {...form.inputProps("urls")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>

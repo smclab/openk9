@@ -16,6 +16,7 @@ import {
   CustomFormGroup,
   InformationField,
   ClayListComponents,
+  StyleToggle,
 } from "./Form";
 import { useToast } from "./ToastProvider";
 import {
@@ -42,7 +43,7 @@ import {
 import { BucketsQuery } from "./Buckets";
 import useDebounced from "./useDebounced";
 import ClayModal, { useModal } from "@clayui/modal";
-import { ClayInput } from "@clayui/form";
+import { ClayInput, ClayToggle } from "@clayui/form";
 import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import { Virtuoso } from "react-virtuoso";
 import ClayList from "@clayui/list";
@@ -54,7 +55,10 @@ const BucketQuery = gql`
       name
       description
       enabled
-      handleDynamicFilters
+      refreshOnDate
+      refreshOnQuery
+      refreshOnSuggestionCategory
+      refreshOnTab
       queryAnalysis {
         id
       }
@@ -75,9 +79,28 @@ gql`
     }
   }
 `;
+
 gql`
-  mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $handleDynamicFilters: Boolean!) {
-    bucket(id: $id, bucketDTO: { name: $name, description: $description, handleDynamicFilters: $handleDynamicFilters }) {
+  mutation CreateOrUpdateBucket(
+    $id: ID
+    $name: String!
+    $description: String
+    $refreshOnDate: Boolean!
+    $refreshOnQuery: Boolean!
+    $refreshOnSuggestionCategory: Boolean!
+    $refreshOnTab: Boolean!
+  ) {
+    bucket(
+      id: $id
+      bucketDTO: {
+        name: $name
+        description: $description
+        refreshOnDate: $refreshOnDate
+        refreshOnQuery: $refreshOnQuery
+        refreshOnSuggestionCategory: $refreshOnSuggestionCategory
+        refreshOnTab: $refreshOnTab
+      }
+    ) {
       entity {
         id
         name
@@ -112,13 +135,17 @@ export function Bucket() {
       }
     },
   });
+
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
         name: "",
         description: "",
         enable: false,
-        handleDynamicFilters: false,
+        refreshOnDate: false,
+        refreshOnQuery: false,
+        refreshOnSuggestionCategory: false,
+        refreshOnTab: false,
       }),
       []
     ),
@@ -129,6 +156,7 @@ export function Bucket() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateBucketMutation.data?.bucket?.fieldValidators),
   });
+
   return (
     <ContainerFluid>
       {bucketId !== "new" && <MainTitle title="Attribute" />}
@@ -187,11 +215,34 @@ export function Bucket() {
           </React.Fragment>
         )}
         {bucketId !== "new" && (
-          <BooleanInput
-            label="Dynamic Filters"
-            description=" Allow to handle filter in dynamic way. Filters will change base to current query."
-            {...form.inputProps("handleDynamicFilters")}
-          />
+          <div className="custom-panel panel" style={{ border: "1px solid #0000001a" }}>
+            <div className="panel-body">
+              <div className="panel-heading" style={{marginTop: "20px" }}>
+                <div className="panel-title title" style={{paddingBottom:"20px"}}>{"Refresh on ..."}</div>
+              </div>
+              <div className="my-custom-panel-body">
+                <div style={{ paddingBottom: "20px" }}>
+                </div>
+                <style type="text/css">{StyleToggle}</style>
+                <BooleanInput
+                  label="Refresh on date"
+                  {...form.inputProps("refreshOnDate")}
+                />
+                <BooleanInput
+                  label="Refresh on query"
+                  {...form.inputProps("refreshOnQuery")}
+                />
+                <BooleanInput
+                  label="Refresh on suggestion category"
+                  {...form.inputProps("refreshOnSuggestionCategory")}
+                />
+                <BooleanInput
+                  label="Refresh on Tab"
+                  {...form.inputProps("refreshOnTab")}
+                />
+              </div>
+            </div>
+          </div>
         )}
         <div className="sheet-footer">
           <CustomButtom nameButton={bucketId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />

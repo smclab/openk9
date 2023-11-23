@@ -22,6 +22,7 @@ import {
   ContainerFluid,
   CronInput,
   fromFieldValidators,
+  NumberInput,
   SearchSelect,
   SearchSelectGraphql,
   SimpleModal,
@@ -51,7 +52,7 @@ const DataSourceQuery = gql`
       schedulable
       scheduling
       jsonConfig
-      reindex
+      reindexRate
       pluginDriver {
         id
       }
@@ -81,7 +82,8 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
-    $reindex: Boolean!
+    $reindexRate: Int!
+
   ) {
     datasource(
       id: $id
@@ -91,7 +93,7 @@ gql`
         schedulable: $schedulable
         scheduling: $scheduling
         jsonConfig: $jsonConfig
-        reindex: $reindex
+        reindexRate: $reindexRate
       }
     ) {
       entity {
@@ -142,7 +144,7 @@ export function DataSource() {
         schedulable: false,
         jsonConfig: "{}",
         scheduling: "",
-        reindex: false,
+        reindexRate: 0,
       }),
       []
     ),
@@ -283,7 +285,7 @@ export function DataSource() {
             {...form.inputProps("schedulable")}
             description={"If datasource is automatically schedulable"}
           />
-          <BooleanInput label="Reindex" {...form.inputProps("reindex")} />
+          <NumberInput label="Reindex" {...form.inputProps("reindexRate")} />
           {!datasourceQuery.loading && <CronInput label="Scheduling" {...form.inputProps("scheduling")} />}
           {datasourceId !== "new" && (
             <React.Fragment>

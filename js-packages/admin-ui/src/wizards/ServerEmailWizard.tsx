@@ -56,7 +56,7 @@ export function ServerEmailWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
-          reindex: false,
+          reindexRate: 0,
           jsonConfig: JSON.stringify(
             {
               mailServer: data.mailServer,
@@ -90,7 +90,6 @@ export function ServerEmailWizard() {
         </CustomFormGroup>
         <TextInput label="Folder" {...form.inputProps("folder")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>

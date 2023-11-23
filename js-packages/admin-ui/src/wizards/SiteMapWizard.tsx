@@ -53,7 +53,7 @@ export function SiteMapWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
-          reindex: false,
+          reindexRate: 0,
           jsonConfig: JSON.stringify(
             {
               sitemapUrls: data.sitemapUrls,
@@ -80,7 +80,6 @@ export function SiteMapWizard() {
         <StringListInput label="Urls" {...form.inputProps("sitemapUrls")} />
         <StringListInput label="Allowed Domains" {...form.inputProps("allowedDomains")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>

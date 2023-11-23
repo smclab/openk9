@@ -139,8 +139,7 @@ export type Bucket = {
   datasources?: Maybe<Connection_Datasource>;
   description?: Maybe<Scalars['String']>;
   docCount?: Maybe<Scalars['BigInteger']>;
-  enabled?: Maybe<Scalars['Boolean']>;
-  handleDynamicFilters?: Maybe<Scalars['Boolean']>;
+  enabled: Scalars['Boolean'];
   id?: Maybe<Scalars['ID']>;
   indexCount?: Maybe<Scalars['BigInteger']>;
   language?: Maybe<Language>;
@@ -149,6 +148,10 @@ export type Bucket = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   queryAnalysis?: Maybe<QueryAnalysis>;
+  refreshOnDate?: Maybe<Scalars['Boolean']>;
+  refreshOnQuery?: Maybe<Scalars['Boolean']>;
+  refreshOnSuggestionCategory?: Maybe<Scalars['Boolean']>;
+  refreshOnTab?: Maybe<Scalars['Boolean']>;
   searchConfig?: Maybe<SearchConfig>;
   suggestionCategories?: Maybe<Connection_SuggestionCategory>;
   tabs?: Maybe<Connection_Tab>;
@@ -200,8 +203,11 @@ export type BucketTabsArgs = {
 
 export type BucketDtoInput = {
   description?: InputMaybe<Scalars['String']>;
-  handleDynamicFilters: Scalars['Boolean'];
   name: Scalars['String'];
+  refreshOnDate: Scalars['Boolean'];
+  refreshOnQuery: Scalars['Boolean'];
+  refreshOnSuggestionCategory: Scalars['Boolean'];
+  refreshOnTab: Scalars['Boolean'];
 };
 
 export type CatResponse = {
@@ -478,8 +484,8 @@ export type Datasource = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   pluginDriver?: Maybe<PluginDriver>;
-  /** If true execute reindex on datasource */
-  reindex?: Maybe<Scalars['Boolean']>;
+  /** Reindex on datasource every {reindexRate} times, never if 0 */
+  reindexRate: Scalars['Int'];
   /** If true set datasource as schedulable */
   schedulable?: Maybe<Scalars['Boolean']>;
   schedulers?: Maybe<Connection_Scheduler>;
@@ -514,8 +520,8 @@ export type DatasourceDtoInput = {
   /** Json configuration with custom fields for datasource */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
-  /** If true datasource is reindexed after each ingestion */
-  reindex: Scalars['Boolean'];
+  /** Reindex on datasource every {reindexRate} times, never if 0 */
+  reindexRate: Scalars['Int'];
   /** If true datasource is scheduled based on defined scheduling expression */
   schedulable: Scalars['Boolean'];
   /** Chron quartz expression to define scheduling of datasource */
@@ -1234,6 +1240,12 @@ export enum EventSortable {
   Version = 'VERSION'
 }
 
+export type ExtraParam = {
+  __typename?: 'ExtraParam';
+  key?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
 export enum FieldType {
   AnnotatedText = 'ANNOTATED_TEXT',
   Binary = 'BINARY',
@@ -1321,6 +1333,7 @@ export type Mutation = {
   addDocTypeFieldToSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   addDocTypeToDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   addEnrichItemToEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
+  addExtraParam?: Maybe<TokenTab>;
   addLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   addRuleToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
   addSuggestionCategoryToBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
@@ -1390,6 +1403,7 @@ export type Mutation = {
   removeDocTypeFieldFromSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   removeDocTypeFromDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   removeEnrichItemFromEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
+  removeExtraParam?: Maybe<TokenTab>;
   removeLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   removeQueryParserConfig?: Maybe<Tuple2_SearchConfig_BigInteger>;
   removeRuleFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
@@ -1469,6 +1483,14 @@ export type MutationAddEnrichItemToEnrichPipelineArgs = {
   enrichItemId: Scalars['ID'];
   enrichPipelineId: Scalars['ID'];
   tail?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
+export type MutationAddExtraParamArgs = {
+  id: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1953,6 +1975,13 @@ export type MutationRemoveDocTypeFromDataIndexArgs = {
 export type MutationRemoveEnrichItemFromEnrichPipelineArgs = {
   enrichItemId: Scalars['ID'];
   enrichPipelineId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationRemoveExtraParamArgs = {
+  id: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -3225,6 +3254,7 @@ export type TokenTab = {
   description?: Maybe<Scalars['String']>;
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldsNotInTokenTab?: Maybe<Connection_DocTypeField>;
+  extraParams?: Maybe<Array<Maybe<ExtraParam>>>;
   filter?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
   /** ISO-8601 */
@@ -3257,6 +3287,7 @@ export enum TokenType {
   Date = 'DATE',
   Doctype = 'DOCTYPE',
   Entity = 'ENTITY',
+  Filter = 'FILTER',
   Text = 'TEXT'
 }
 
@@ -3641,7 +3672,7 @@ export type BucketQueryVariables = Exact<{
 }>;
 
 
-export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null, handleDynamicFilters?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null, language?: { __typename?: 'Language', id?: string | null } | null } | null };
+export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean, refreshOnDate?: boolean | null, refreshOnQuery?: boolean | null, refreshOnSuggestionCategory?: boolean | null, refreshOnTab?: boolean | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null, language?: { __typename?: 'Language', id?: string | null } | null } | null };
 
 export type EnableBucketMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -3654,11 +3685,14 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
-  handleDynamicFilters: Scalars['Boolean'];
+  refreshOnDate: Scalars['Boolean'];
+  refreshOnQuery: Scalars['Boolean'];
+  refreshOnSuggestionCategory: Scalars['Boolean'];
+  refreshOnTab: Scalars['Boolean'];
 }>;
 
 
-export type CreateOrUpdateBucketMutation = { __typename?: 'Mutation', bucket?: { __typename?: 'Response_Bucket', entity?: { __typename?: 'Bucket', id?: string | null, name?: string | null, enabled?: boolean | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateBucketMutation = { __typename?: 'Mutation', bucket?: { __typename?: 'Response_Bucket', entity?: { __typename?: 'Bucket', id?: string | null, name?: string | null, enabled: boolean } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 export type QueryAnalysisOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -3860,7 +3894,7 @@ export type BucketsQueryVariables = Exact<{
 }>;
 
 
-export type BucketsQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type BucketsQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteBucketMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -3913,7 +3947,7 @@ export type DataSourceQueryVariables = Exact<{
 }>;
 
 
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindex?: boolean | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexRate: number, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -3922,7 +3956,7 @@ export type CreateOrUpdateDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
-  reindex: Scalars['Boolean'];
+  reindexRate: Scalars['Int'];
 }>;
 
 
@@ -4024,7 +4058,7 @@ export type DataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null, reindex?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null, reindexRate: number } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteDataSourceMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -4943,7 +4977,7 @@ export type CreateSitemapDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
-  reindex: Scalars['Boolean'];
+  reindexRate: Scalars['Int'];
 }>;
 
 
@@ -4955,7 +4989,7 @@ export type CreateWebCrawlerDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
-  reindex: Scalars['Boolean'];
+  reindexRate: Scalars['Int'];
 }>;
 
 
@@ -4967,7 +5001,7 @@ export type CreateYouTubeDataSourceMutationVariables = Exact<{
   schedulable: Scalars['Boolean'];
   scheduling: Scalars['String'];
   jsonConfig?: InputMaybe<Scalars['String']>;
-  reindex: Scalars['Boolean'];
+  reindexRate: Scalars['Int'];
 }>;
 
 
@@ -5929,7 +5963,10 @@ export const BucketDocument = gql`
     name
     description
     enabled
-    handleDynamicFilters
+    refreshOnDate
+    refreshOnQuery
+    refreshOnSuggestionCategory
+    refreshOnTab
     queryAnalysis {
       id
     }
@@ -6005,10 +6042,10 @@ export type EnableBucketMutationHookResult = ReturnType<typeof useEnableBucketMu
 export type EnableBucketMutationResult = Apollo.MutationResult<EnableBucketMutation>;
 export type EnableBucketMutationOptions = Apollo.BaseMutationOptions<EnableBucketMutation, EnableBucketMutationVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $handleDynamicFilters: Boolean!) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!) {
   bucket(
     id: $id
-    bucketDTO: {name: $name, description: $description, handleDynamicFilters: $handleDynamicFilters}
+    bucketDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab}
   ) {
     entity {
       id
@@ -6040,7 +6077,10 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      id: // value for 'id'
  *      name: // value for 'name'
  *      description: // value for 'description'
- *      handleDynamicFilters: // value for 'handleDynamicFilters'
+ *      refreshOnDate: // value for 'refreshOnDate'
+ *      refreshOnQuery: // value for 'refreshOnQuery'
+ *      refreshOnSuggestionCategory: // value for 'refreshOnSuggestionCategory'
+ *      refreshOnTab: // value for 'refreshOnTab'
  *   },
  * });
  */
@@ -7389,7 +7429,7 @@ export const DataSourceDocument = gql`
     schedulable
     scheduling
     jsonConfig
-    reindex
+    reindexRate
     pluginDriver {
       id
     }
@@ -7440,10 +7480,10 @@ export type DataSourceQueryHookResult = ReturnType<typeof useDataSourceQuery>;
 export type DataSourceLazyQueryHookResult = ReturnType<typeof useDataSourceLazyQuery>;
 export type DataSourceQueryResult = Apollo.QueryResult<DataSourceQuery, DataSourceQueryVariables>;
 export const CreateOrUpdateDataSourceDocument = gql`
-    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
+    mutation CreateOrUpdateDataSource($id: ID, $name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
     id: $id
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindexRate: $reindexRate}
   ) {
     entity {
       id
@@ -7477,7 +7517,7 @@ export type CreateOrUpdateDataSourceMutationFn = Apollo.MutationFunction<CreateO
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
- *      reindex: // value for 'reindex'
+ *      reindexRate: // value for 'reindexRate'
  *   },
  * });
  */
@@ -7989,7 +8029,7 @@ export const DataSourcesDocument = gql`
         scheduling
         jsonConfig
         description
-        reindex
+        reindexRate
       }
     }
     pageInfo {
@@ -8614,7 +8654,7 @@ export const DocTypeFieldsByParentDocument = gql`
   docTypeFieldsFromDocTypeByParent(
     parentId: $parentId
     searchText: $searchText
-    first: 10
+    first: 30
     docTypeId: $docTypeId
   ) {
     edges {
@@ -12736,9 +12776,9 @@ export type DeleteTokenizerMutationHookResult = ReturnType<typeof useDeleteToken
 export type DeleteTokenizerMutationResult = Apollo.MutationResult<DeleteTokenizerMutation>;
 export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
 export const CreateSitemapDataSourceDocument = gql`
-    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
+    mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindexRate: $reindexRate}
   ) {
     entity {
       id
@@ -12770,7 +12810,7 @@ export type CreateSitemapDataSourceMutationFn = Apollo.MutationFunction<CreateSi
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
- *      reindex: // value for 'reindex'
+ *      reindexRate: // value for 'reindexRate'
  *   },
  * });
  */
@@ -12782,9 +12822,9 @@ export type CreateSitemapDataSourceMutationHookResult = ReturnType<typeof useCre
 export type CreateSitemapDataSourceMutationResult = Apollo.MutationResult<CreateSitemapDataSourceMutation>;
 export type CreateSitemapDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateSitemapDataSourceMutation, CreateSitemapDataSourceMutationVariables>;
 export const CreateWebCrawlerDataSourceDocument = gql`
-    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
+    mutation CreateWebCrawlerDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindexRate: $reindexRate}
   ) {
     entity {
       id
@@ -12816,7 +12856,7 @@ export type CreateWebCrawlerDataSourceMutationFn = Apollo.MutationFunction<Creat
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
- *      reindex: // value for 'reindex'
+ *      reindexRate: // value for 'reindexRate'
  *   },
  * });
  */
@@ -12828,9 +12868,9 @@ export type CreateWebCrawlerDataSourceMutationHookResult = ReturnType<typeof use
 export type CreateWebCrawlerDataSourceMutationResult = Apollo.MutationResult<CreateWebCrawlerDataSourceMutation>;
 export type CreateWebCrawlerDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateWebCrawlerDataSourceMutation, CreateWebCrawlerDataSourceMutationVariables>;
 export const CreateYouTubeDataSourceDocument = gql`
-    mutation CreateYouTubeDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindex: Boolean!) {
+    mutation CreateYouTubeDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
-    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindex: $reindex}
+    datasourceDTO: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, reindexRate: $reindexRate}
   ) {
     entity {
       id
@@ -12862,7 +12902,7 @@ export type CreateYouTubeDataSourceMutationFn = Apollo.MutationFunction<CreateYo
  *      schedulable: // value for 'schedulable'
  *      scheduling: // value for 'scheduling'
  *      jsonConfig: // value for 'jsonConfig'
- *      reindex: // value for 'reindex'
+ *      reindexRate: // value for 'reindexRate'
  *   },
  * });
  */
@@ -12873,4 +12913,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-10-31T14:35:56+01:00
+// Generated on 2023-11-23T15:30:59+01:00

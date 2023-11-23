@@ -1,5 +1,5 @@
 import React from "react";
-import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, TextInput, useForm } from "../components/Form";
+import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, NumberInput, TextInput, useForm } from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,7 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
-    $reindex: Boolean!
+    $reindexRate: Int!
   ) {
     datasource(
       datasourceDTO: {
@@ -23,7 +23,7 @@ gql`
         schedulable: $schedulable
         scheduling: $scheduling
         jsonConfig: $jsonConfig
-        reindex: $reindex
+        reindexRate: $reindexRate
       }
     ) {
       entity {
@@ -73,7 +73,7 @@ export function DropBoxWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
-          reindex: false,
+          reindexRate: 0,
           jsonConfig: JSON.stringify(
             {
               token: data.token,
@@ -98,7 +98,6 @@ export function DropBoxWizard() {
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Token" {...form.inputProps("token")} />
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>

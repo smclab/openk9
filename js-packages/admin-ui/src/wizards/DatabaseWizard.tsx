@@ -24,7 +24,7 @@ gql`
     $schedulable: Boolean!
     $scheduling: String!
     $jsonConfig: String
-    $reindex: Boolean!
+    $reindexRate: Int!
   ) {
     datasource(
       datasourceDTO: {
@@ -33,7 +33,7 @@ gql`
         schedulable: $schedulable
         scheduling: $scheduling
         jsonConfig: $jsonConfig
-        reindex: $reindex
+        reindexRate: $reindexRate
       }
     ) {
       entity {
@@ -91,7 +91,7 @@ export function DatabaseWizard() {
           scheduling: data.scheduling,
           description: "",
           schedulable: true,
-          reindex: false,
+          reindexRate: 0,
           jsonConfig: JSON.stringify(
             {
               dialect: data.dialect,
@@ -136,7 +136,6 @@ export function DatabaseWizard() {
           <TextInput label="Table" {...form.inputProps("table")} item />
         </CustomFormGroup>
         <CronInput label="Scheduling" {...form.inputProps("scheduling")} />
-        <BooleanInput label="Index on Create" {...form.inputProps("reindex")} />
         <div className="sheet-footer">
           <CustomButtom nameButton={"Create"} canSubmit={!form.canSubmit} typeSelectet="submit" />
         </div>
