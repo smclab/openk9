@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
 import { ContainerFluid, SimpleModal } from "./Form";
+import { keycloak } from "./authentication";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -31,7 +32,7 @@ export function HuggingFace() {
           actionContinue={() => {
             const requestOptions = {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${keycloak.token}` },
               body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
             };
             fetch("/api/k8s-client/k8s/deploy-ml-model", requestOptions)
