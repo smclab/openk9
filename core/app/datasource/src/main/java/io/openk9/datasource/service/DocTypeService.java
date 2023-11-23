@@ -24,6 +24,8 @@ import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
 import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
@@ -47,6 +49,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.List;
@@ -300,7 +303,23 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		updateDocType.where(cb.equal(docTypeFrom.get(DocType_.id), entityId));
 		updateDocType.set(DocType_.docTypeTemplate, cb.nullLiteral(DocTypeTemplate.class));
 
+		// queries dataIndex
+		CriteriaQuery<DataIndex> dataIndexQuery = cb.createQuery(DataIndex.class);
+		Root<DataIndex> dataIndexFrom = dataIndexQuery.from(DataIndex.class);
+		SetJoin<DataIndex, DocType> dataIdxDocTypesJoin = dataIndexFrom.join(DataIndex_.docTypes);
+		dataIndexQuery.where(cb.equal(dataIdxDocTypesJoin.get(DocType_.id), entityId));
+
 		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
+			.call(docType -> s.createQuery(dataIndexQuery)
+				.getResultList()
+				.flatMap(dataIndices -> {
+					for (DataIndex dataIndex : dataIndices) {
+						Set<DocType> docTypes = dataIndex.getDocTypes();
+						docTypes.remove(docType);
+					}
+					return s.mergeAll(dataIndices.toArray());
+				})
+			)
 			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
 			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
 			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate())
