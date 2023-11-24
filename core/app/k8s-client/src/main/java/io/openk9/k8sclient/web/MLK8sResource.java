@@ -36,6 +36,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import io.openk9.auth.tenant.TenantResolver;
 
 @ApplicationScoped
 @ActivateRequestContext
@@ -79,6 +80,9 @@ public class MLK8sResource {
 	@ConfigProperty(name = "openk9.kubernetes-client.ingestion-url")
 	String ingestionUrl;
 
+	@Inject
+	TenantResolver _tenantResolver;
+
 	private String getName(Pod e) {
 
 		String name = e.getMetadata().getLabels().get("statefulset.kubernetes.io/pod-name");
@@ -98,6 +102,10 @@ public class MLK8sResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/get/pods/ml")
 	public List<MlPodResponse> getMlPods() {
+
+		String tenantName = _tenantResolver.getTenantName();
+
+		logger.info(tenantName);
 
 		return _kubernetesClient.pods().inNamespace(namespace)
 			.list().getItems().stream().map(pod -> {
