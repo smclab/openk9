@@ -88,9 +88,6 @@ public class MLK8sResource {
 	@ConfigProperty(name = "openk9.kubernetes-client.ingestion-url")
 	String ingestionUrl;
 
-	@Inject
-	TenantResolver _tenantResolver;
-
 	private String getName(Pod e) {
 
 		String name = e.getMetadata().getLabels().get("statefulset.kubernetes.io/pod-name");
@@ -106,14 +103,18 @@ public class MLK8sResource {
 		return name;
 	}
 
+	private String getTenant() {
+
+		TenantResponse tenantResponse = tenantmanager
+			.findTenant(TenantRequest.newBuilder().setVirtualHost(_request.host()).build());
+
+		return tenantResponse.getSchemaName();
+	}
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/get/pods/ml")
 	public List<MlPodResponse> getMlPods() {
-
-		TenantResponse tenantResponse = tenantmanager.findTenant(TenantRequest.newBuilder().setVirtualHost(_request.host()).build());
-
-		logger.info(tenantResponse.getSchemaName());
 
 		return _kubernetesClient.pods().inNamespace(namespace)
 			.list().getItems().stream().map(pod -> {
@@ -207,6 +208,7 @@ public class MLK8sResource {
 				.addToLabels("library", library)
 				.addToLabels("app-type", "ml")
 				.addToLabels("task", pipelineName)
+				.addToLabels("tenant", getTenant())
 				.endMetadata()
 				.withNewSpec()
 				.addNewContainer()
