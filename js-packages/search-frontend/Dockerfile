@@ -15,7 +15,7 @@ WORKDIR /app/js-packages/search-frontend
 RUN NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
-FROM nginx:alpine
+FROM nginx:1.25.3
 COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/

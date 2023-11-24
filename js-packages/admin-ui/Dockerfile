@@ -9,7 +9,7 @@ RUN yarn install --frozen-lockfile
 RUN NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
-FROM nginx:alpine
+FROM nginx:1.25.3
 COPY ./js-packages/admin-ui/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=react-build /app/build /usr/share/nginx/html/admin/
