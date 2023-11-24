@@ -120,7 +120,9 @@ public class MLK8sResource {
 			.list().getItems().stream().map(pod -> {
 
 				if (Objects.equals(
-					pod.getMetadata().getLabels().get("app-type"), "ml")) {
+					pod.getMetadata().getLabels().get("app-type"), "ml") &&
+					Objects.equals(
+						pod.getMetadata().getLabels().get("tenant"), getTenant())) {
 
 					MlPodResponse mlPodResponse = new MlPodResponse();
 
