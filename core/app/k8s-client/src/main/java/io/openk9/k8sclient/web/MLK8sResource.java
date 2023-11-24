@@ -17,6 +17,11 @@ import io.openk9.k8sclient.dto.MlDto;
 import io.openk9.k8sclient.dto.MlPodResponse;
 import io.openk9.k8sclient.dto.ModelActionesponse;
 import io.openk9.k8sclient.dto.PodResponse;
+import io.openk9.tenantmanager.grpc.TenantManagerGrpc;
+import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
+import io.quarkus.grpc.GrpcClient;
+import io.vertx.core.http.HttpServerRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import java.util.Collections;
@@ -43,6 +48,9 @@ import io.openk9.auth.tenant.TenantResolver;
 @Path("/k8s")
 @RolesAllowed("k9-admin")
 public class MLK8sResource {
+
+	@Inject
+	HttpServerRequest _request;
 
 	@Inject
 	@ConfigProperty(name = "openk9.kubernetes-client.namespace")
@@ -103,9 +111,9 @@ public class MLK8sResource {
 	@Path("/get/pods/ml")
 	public List<MlPodResponse> getMlPods() {
 
-		String tenantName = _tenantResolver.getTenantName();
+		TenantResponse tenantResponse = tenantmanager.findTenant(TenantRequest.newBuilder().setVirtualHost(_request.host()).build());
 
-		logger.info(tenantName);
+		logger.info(tenantResponse.getSchemaName());
 
 		return _kubernetesClient.pods().inNamespace(namespace)
 			.list().getItems().stream().map(pod -> {
@@ -453,5 +461,7 @@ public class MLK8sResource {
 	@Inject
 	Logger logger;
 
+	@GrpcClient("tenantmanager")
+	TenantManagerGrpc.TenantManagerBlockingStub tenantmanager;
 
 }
