@@ -126,7 +126,7 @@ public class MLK8sResource {
 
 					MlPodResponse mlPodResponse = new MlPodResponse();
 
-					String name = getName(pod);
+					String name = getName(pod).replace( "-" + getTenant(), "");
 
 					mlPodResponse.setName(name);
 					mlPodResponse.setTask(pod.getMetadata().getLabels().get("task"));
@@ -157,12 +157,12 @@ public class MLK8sResource {
 		String tokenizerName = mlDto.getModelName();
 		String modelName = mlDto.getModelName();
 		String deploymentName = modelName
-			.replace("/", "")
-			.toLowerCase();
+			.replace("/", "").replace("_", "")
+			.toLowerCase()  + "-" + getTenant();
 		String pipelineName = mlDto.getPipelineName();
 		String library = mlDto.getLibrary();
 
-		String configMapName = deploymentName + "-configmap";
+		String configMapName = deploymentName + "-configmap"  + "-" + getTenant();
 
 		String baseMlImage = switch (library) {
 			case "transformers-tensorflow" -> baseMlTransformersTensorflowImage;
@@ -281,18 +281,18 @@ public class MLK8sResource {
 	@Path("/delete-ml-model/{name}")
 	public ModelActionesponse deleteMlModel(@PathParam("name") String name) throws KubernetesClientException {
 
-		String configMapName = name + "-configmap";
+		String configMapName = name + "-configmap"  + "-" + getTenant();
 
 		_kubernetesClient.apps()
 			.deployments()
-			.inNamespace(namespace).withName(name)
+			.inNamespace(namespace).withName(name  + "-" + getTenant())
 			.delete();
 
 		_kubernetesClient.configMaps()
 			.inNamespace(namespace).withName(configMapName).delete();
 
 		_kubernetesClient.services()
-			.inNamespace(namespace).withName(name).delete();
+			.inNamespace(namespace).withName(name  + "-" + getTenant()).delete();
 
 		return new ModelActionesponse("Model deleted", "SUCCESS");
 
@@ -320,6 +320,7 @@ public class MLK8sResource {
 				.addToLabels(
 					"app.kubernetes.io/name", serviceName.toLowerCase())
 				.addToLabels("app-type", "parser")
+				.addToLabels("tenant", getTenant())
 				.endMetadata()
 				.withNewSpec()
 				.addNewContainer()
@@ -443,7 +444,8 @@ public class MLK8sResource {
 
 				String name = getName(pod);
 
-				if (name.equals(parserName)) {
+				if (name.equals(parserName) && Objects.equals(
+					pod.getMetadata().getLabels().get("tenant"), getTenant())) {
 
 					podResponse.setServiceName(name);
 					podResponse.setPodName(pod.getMetadata().getName());
