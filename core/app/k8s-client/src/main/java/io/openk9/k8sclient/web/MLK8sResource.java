@@ -325,7 +325,7 @@ public class MLK8sResource {
 				.withNewSpec()
 				.addNewContainer()
 				.withName(serviceName)
-				.withImage(dockerRegistry + serviceName + ":latest")
+				.withImage(dockerRegistry + "/" + serviceName + ":latest")
 				.withImagePullPolicy("Always")
 				.withEnv(
 					new EnvVar(
