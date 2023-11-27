@@ -305,13 +305,13 @@ public class MLK8sResource {
 	public ModelActionesponse deployParserModel(@PathParam("parserName")String parserName) throws
 		KubernetesClientException {
 
-		String serviceName = parserName.toLowerCase();
+		String serviceName = parserName.toLowerCase() + "-" + getTenant();
 
 		try {
 
 			Deployment deployment = new DeploymentBuilder()
 				.withNewMetadata()
-				.withName(serviceName.toLowerCase())
+				.withName(serviceName)
 				.endMetadata()
 				.withNewSpec()
 				.withReplicas(1)
@@ -324,7 +324,7 @@ public class MLK8sResource {
 				.endMetadata()
 				.withNewSpec()
 				.addNewContainer()
-				.withName(serviceName.toLowerCase())
+				.withName(serviceName)
 				.withImage(dockerRegistry + serviceName + ":latest")
 				.withImagePullPolicy("Always")
 				.withEnv(
@@ -340,7 +340,7 @@ public class MLK8sResource {
 				.endSpec()
 				.endTemplate()
 				.withNewSelector()
-				.addToMatchLabels("app.kubernetes.io/name", serviceName.toLowerCase())
+				.addToMatchLabels("app.kubernetes.io/name", serviceName)
 				.endSelector()
 				.endSpec()
 				.build();
@@ -351,28 +351,13 @@ public class MLK8sResource {
 
 			logger.info("Created deployment: " + deployment.toString());
 
-		}
-		catch (KubernetesClientException e) {
-			if (e.getStatus().getCode() == 409) {
-				return new ModelActionesponse("Deployment already exist", "DANGER");
-			}
-			else {
-				_kubernetesClient.apps()
-					.deployments()
-					.inNamespace(namespace).withName(serviceName.toLowerCase())
-					.delete();
-				throw e;
-			}
-		}
-
-		try {
 			Service service = new ServiceBuilder()
 				.withNewMetadata()
-				.withName(serviceName.toLowerCase())
+				.withName(serviceName)
 				.endMetadata()
 				.withNewSpec()
 				.withSelector(Collections.singletonMap("app.kubernetes.io/name",
-					serviceName.toLowerCase()))
+					serviceName))
 				.addNewPort()
 				.withName("trigger-port")
 				.withProtocol("TCP")
@@ -393,14 +378,14 @@ public class MLK8sResource {
 		}
 		catch (KubernetesClientException e) {
 			if (e.getStatus().getCode() == 409) {
-				return new ModelActionesponse("Service already exist", "DANGER");
+				return new ModelActionesponse("Parser already exist", "DANGER");
 			}
 			else {
-				deleteMlModel(parserName);
+				deleteParserModel(serviceName);
 				throw e;
 			}
 		} catch (Exception e) {
-			deleteMlModel(parserName);
+			deleteParserModel(parserName);
 			throw e;
 		}
 
@@ -412,7 +397,7 @@ public class MLK8sResource {
 	@Path("/delete-parser-model/{parserName}")
 	public ModelActionesponse deleteParserModel(@PathParam("parserName") String parserName) throws KubernetesClientException {
 
-		String serviceName = parserName.toLowerCase();
+		String serviceName = parserName.toLowerCase() + "-"  + getTenant();
 
 		_kubernetesClient.apps()
 			.deployments()
@@ -442,7 +427,7 @@ public class MLK8sResource {
 
 				PodResponse podResponse = new PodResponse();
 
-				String name = getName(pod);
+				String name = getName(pod).replace( "-" + getTenant(), "");;
 
 				if (name.equals(parserName) && Objects.equals(
 					pod.getMetadata().getLabels().get("tenant"), getTenant())) {
