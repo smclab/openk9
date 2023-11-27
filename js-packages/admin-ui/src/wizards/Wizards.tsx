@@ -9,6 +9,7 @@ import { GoogleDriveLogo } from "./Logo/GoogleDriveLogo";
 import { LiferayLogo } from "./Logo/LiferayLogo";
 import { DropBoxLogo } from "./Logo/DropBoxLogo";
 import { YouTubeLogo } from "./Logo/YouTubeLogo";
+import { MinioLogo } from "./Logo/MinioLogo";
 import { ClassNameButton } from "../App";
 import { ContainerFluid, ContainerFluidWithoutView, EmptySpace } from "../components/Form";
 
@@ -73,6 +74,12 @@ const wizards = [
     path: "youtube",
     icon: <YouTubeLogo height={150} weigth={100} />,
   },
+	{
+	  title: "Minio",
+	  description: "Retrieve files with metadata from your Minio's buckets",
+	  path: "minio",
+	  icon: <MinioLogo height={150} weigth={100} />,
+	}
 ];
 
 export function Wizards() {
