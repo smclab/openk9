@@ -249,7 +249,7 @@ public class JobScheduler {
 					"select s " +
 						"from Scheduler s " +
 						"where s.datasource.id = :datasourceId " +
-						"and s.status = 'STARTED'",
+						"and s.status in ('STARTED', 'ERROR')",
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
 					.getResultList()
@@ -258,8 +258,11 @@ public class JobScheduler {
 
 							for (Scheduler scheduler : list) {
 								log.warn(
-									"A Scheduler with id {} for datasource {} is running.",
-									scheduler.getId(), datasource.getId());
+									"A Scheduler with id {} for datasource {} is {}",
+									scheduler.getId(),
+									datasource.getId(),
+									scheduler.getStatus()
+								);
 							}
 							return Uni.createFrom().voidItem();
 						}

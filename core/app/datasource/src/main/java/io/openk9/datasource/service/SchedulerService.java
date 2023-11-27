@@ -27,6 +27,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
@@ -124,6 +125,22 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 					);
 
 					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+				}
+				return Uni.createFrom().voidItem();
+			});
+	}
+
+	public Uni<Void> rereouteSchedulation(String tenantId, long schedulerId) {
+		return findById(schedulerId)
+			.chain(scheduler -> {
+				if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
+
+					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+
+					MessageGateway.askReroute(
+						actorSystem,
+						SchedulationKeyUtils.getKey(tenantId, scheduler.getScheduleId())
+					);
 				}
 				return Uni.createFrom().voidItem();
 			});

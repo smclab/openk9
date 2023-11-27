@@ -49,9 +49,12 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
 	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
+	public record TrackError(ActorRef<Response> replyTo) implements Command {}
+	public record Restart(ActorRef<Response> replyTo) implements Command {}
 	private enum PersistDataIndex implements Command {INSTANCE}
 	private enum PersistStatusFinished implements Command {INSTANCE}
 	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo) implements Command {}
 	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
@@ -135,7 +138,10 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		logBehavior(READY_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(Ingest.class, this::onIngestReady)
+			.onMessage(Ingest.class, this::onIngest)
+			.onMessage(TrackError.class, this::onTrackError)
+			.onMessage(Restart.class, this::onReroute)
+			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.build();
 	}
@@ -204,7 +210,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		return this.next();
 	}
 
-	private Behavior<Command> onIngestReady(Ingest ingest) {
+	private Behavior<Command> onIngest(Ingest ingest) {
 		this.currentIngest = ingest;
 		this.lastRequest = LocalDateTime.now();
 
@@ -246,6 +252,23 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 			return this.finish();
 		}
+	}
+
+	private Behavior<Command> onTrackError(TrackError trackError) {
+		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
+			getContext().getSelf().tell(
+				new PersistStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
+			);
+		}
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onReroute(Restart restart) {
+		getContext().getSelf().tell(
+			new PersistStatus(Scheduler.SchedulerStatus.STARTED, restart.replyTo)
+		);
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onCancel() {
@@ -365,8 +388,15 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onTick() {
+		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
+			if (log.isTraceEnabled()) {
+				log.trace("a manual operation is needed for scheduler with id {}", scheduler.getId());
+			}
+			return Behaviors.same();
+		}
+
 		if (log.isTraceEnabled()) {
-			log.trace("Check {} expiration", key);
+			log.trace("check {} expiration", key);
 		}
 
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
@@ -403,6 +433,38 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 		);
 		return Behaviors.same();
 	}
+
+	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
+		Scheduler.SchedulerStatus status = persistStatus.status;
+		VertxUtil.runOnContext(() -> sessionFactory
+			.withTransaction(key.tenantId(), (s, tx) -> s
+				.find(Scheduler.class, scheduler.getId())
+				.call(entity -> {
+					entity.setStatus(status);
+					return s.persist(entity);
+				})
+				.invoke(entity -> scheduler = entity)
+			)
+			.onItemOrFailure()
+			.invoke((r, t) -> {
+				if (t != null) {
+					persistStatus.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(t)));
+				}
+				else {
+					log.info(
+						"status updated to {} for schedulation with id {}",
+						status,
+						scheduler.getId()
+					);
+
+					persistStatus.replyTo.tell(Success.INSTANCE);
+				}
+			})
+		);
+
+		return Behaviors.same();
+	}
+
 
 	private Behavior<Command> onSetLastIngestionDate(SetLastIngestionDate setLastIngestionDate) {
 		this.lastIngestionDate = setLastIngestionDate.lastIngestionDate;

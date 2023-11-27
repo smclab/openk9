@@ -3,11 +3,9 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.service.SchedulerService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -30,6 +28,13 @@ public class SchedulerResource {
 	@POST
 	public Uni<Void> cancelSchedulation(@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.cancelSchedulation(
+			routingContext.get("_tenantId"), schedulerId);
+	}
+
+	@Path("/{schedulerId}/rerouteSchedulation")
+	@POST
+	public Uni<Void> rerouteSchedulation(@PathParam("schedulerId") long schedulerId) {
+		return schedulerService.rereouteSchedulation(
 			routingContext.get("_tenantId"), schedulerId);
 	}
 

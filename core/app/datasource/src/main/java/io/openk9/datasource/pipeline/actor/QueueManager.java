@@ -6,18 +6,24 @@ import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
 
 import javax.enterprise.inject.spi.CDI;
+import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
-	public static final String INSTANCE_NAME = "queue-manager";
-	private static final String EXCHANGE = "amq.topic";
+	public static final String INSTANCE_NAME = "schedulationKey-manager";
+	public static final String AMQ_TOPIC_EXCHANGE = "amq.topic";
+	private static final String DLX_EXCHANGE = "dlx";
+	private static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
+	private static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
 
 	public sealed interface Command extends CborSerializable {}
 	private enum Start implements Command {INSTANCE}
@@ -26,7 +32,32 @@ public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 	public record GetQueue(String schedulationKey, ActorRef<Response> replyTo) implements Command {}
 	public record DestroyQueue(String schedulationKey) implements Command {}
 	public sealed interface Response extends CborSerializable {}
-	public record QueueBind(String queue, String exchange, String routingKey) implements Response {}
+	public record QueueBind(String schedulationKey) implements Response {
+		public String getMainQueue() {
+			return schedulationKey;
+		}
+
+		public String getMainKey() {
+			return getMainQueue();
+		}
+
+		public String getRetryQueue() {
+			return schedulationKey + ".dlq.retry";
+		}
+
+		public String getRetryKey() {
+			return getRetryQueue();
+		}
+
+		public String getErrorQueue() {
+			return schedulationKey + ".dlq.error";
+		}
+
+		public String getErrorKey() {
+			return getErrorQueue();
+		}
+
+	}
 
 	private Channel channel;
 	private final QueueConnectionProvider connectionProvider;
@@ -84,12 +115,12 @@ public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 
 	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
 		try {
-			QueueBind queueBind =
-				new QueueBind(
-					destroyQueue.schedulationKey(), EXCHANGE, destroyQueue.schedulationKey());
+			QueueBind queueBind = new QueueBind(destroyQueue.schedulationKey());
 
 			if (queueBinds.contains(queueBind)) {
-				channel.queueDelete(queueBind.queue);
+				channel.queueDelete(queueBind.getMainQueue());
+				channel.queueDelete(queueBind.getRetryQueue());
+				channel.queueDelete(queueBind.getErrorQueue());
 				queueBinds.remove(queueBind);
 			}
 		}
@@ -101,14 +132,20 @@ public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 	}
 
 	private Behavior<Command> onGetQueue(GetQueue getQueue) {
-		QueueBind queueBind = new QueueBind(getQueue.schedulationKey(), EXCHANGE, getQueue.schedulationKey());
+		QueueBind queueBind = new QueueBind(getQueue.schedulationKey());
 
 		if (!queueBinds.contains(queueBind)) {
 			try {
 				log.info("register: {}", queueBind);
-				channel.queueDeclare(
-					queueBind.queue, true, false, true, null);
-				channel.queueBind(queueBind.queue, queueBind.exchange, queueBind.routingKey);
+
+				_declareDeadLetterExchange();
+
+				_bindMainQueue(queueBind);
+
+				_bindRetryQueue(queueBind);
+
+				_bindErrorQueue(queueBind);
+
 				queueBinds.add(queueBind);
 			}
 			catch (Exception e) {
@@ -120,4 +157,64 @@ public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 
 		return Behaviors.same();
 	}
+
+
+	private void _declareDeadLetterExchange() throws IOException {
+		channel.exchangeDeclare(DLX_EXCHANGE, BuiltinExchangeType.DIRECT, true);
+	}
+
+	private void _bindMainQueue(QueueBind queueBind) throws IOException {
+		channel.queueDeclare(
+			queueBind.getMainQueue(),
+			true,
+			false,
+			true,
+			Map.of(
+				X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE,
+				X_DEAD_LETTER_ROUTING_KEY, queueBind.getRetryKey()
+			)
+		);
+
+		channel.queueBind(
+			queueBind.getMainQueue(),
+			AMQ_TOPIC_EXCHANGE,
+			queueBind.getMainKey()
+		);
+	}
+
+	private void _bindRetryQueue(QueueBind queueBind) throws IOException {
+		channel.queueDeclare(
+			queueBind.getRetryQueue(),
+			true,
+			false,
+			true,
+			Map.of(
+				X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE,
+				X_DEAD_LETTER_ROUTING_KEY, queueBind.getErrorKey()
+			)
+		);
+
+		channel.queueBind(
+			queueBind.getRetryQueue(),
+			DLX_EXCHANGE,
+			queueBind.getRetryKey()
+		);
+	}
+
+	private void _bindErrorQueue(QueueBind queueBind) throws IOException {
+		channel.queueDeclare(
+			queueBind.getErrorQueue(),
+			true,
+			false,
+			true,
+			Map.of()
+		);
+
+		channel.queueBind(
+			queueBind.getErrorQueue(),
+			DLX_EXCHANGE,
+			queueBind.getErrorKey()
+		);
+	}
+
 }

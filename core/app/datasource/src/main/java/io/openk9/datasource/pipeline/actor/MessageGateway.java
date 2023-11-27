@@ -1,25 +1,33 @@
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.PreRestart;
 import akka.actor.typed.Signal;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.internal.receptionist.ReceptionistMessages;
+import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.AskPattern;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.actor.typed.receptionist.Receptionist;
 import akka.actor.typed.receptionist.ServiceKey;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.Channel;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
-import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
+import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
+import io.openk9.datasource.pipeline.consumer.MainConsumer;
+import io.openk9.datasource.pipeline.consumer.RetryConsumer;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+import org.jboss.logging.Logger;
 import scala.Option;
 
 import java.io.IOException;
@@ -29,16 +37,45 @@ import java.util.Deque;
 import java.util.Set;
 
 public class MessageGateway
-	extends AbstractLoggerBehavior<MessageGateway.Command> {
+	extends AbstractBehavior<MessageGateway.Command> {
+
+	private static final Logger log = Logger.getLogger(MessageGateway.class);
 
 	public static final ServiceKey<Command> SERVICE_KEY =
 		ServiceKey.create(Command.class, "message-gateway");
+
+	public static void askReroute(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+		Receptionist receptionist = Receptionist.get(actorSystem);
+
+		AskPattern.ask(
+			receptionist.ref(),
+			(ActorRef<Receptionist.Listing> replyTo) ->
+				Receptionist.find(MessageGateway.SERVICE_KEY, replyTo),
+			Duration.ofSeconds(10),
+			actorSystem.scheduler()
+		).whenComplete(
+			(listing, throwable) -> {
+				if (throwable == null) {
+					listing
+						.getServiceInstances(MessageGateway.SERVICE_KEY)
+						.stream()
+						.filter(ref -> ref.path().address().port().isEmpty())
+						.forEach(ref -> ref.tell(
+							new Reroute(new QueueManager.QueueBind(schedulationKey.value()))));
+				}
+				else {
+					log.warnf("Cannot reroute schedulation {}", schedulationKey);
+				}
+			}
+		);
+	}
 
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
 	public record Register(String schedulationKey) implements Command, CborSerializable {}
 	public record Deregister(String schedulationKey) implements Command {}
 	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
+	private record Reroute(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
 	private record ChannelInit(Channel channel) implements Command {}
 	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
@@ -114,6 +151,7 @@ public class MessageGateway
 			.onMessage(Register.class, this::onRegister)
 			.onMessage(QueueManagerResponseWrapper.class, this::onQueueManagerResponse)
 			.onMessage(SpawnConsumer.class, this::onSpawnConsumer)
+			.onMessage(Reroute.class, this::onReroute)
 			.onMessage(Deregister.class, this::onDeregister)
 			.onSignal(PreRestart.class, this::destroyChannel)
 			.onSignal(PostStop.class, this::destroyChannel)
@@ -125,14 +163,66 @@ public class MessageGateway
 
 		try {
 			channel.basicConsume(
-				(queueBind).queue(),
+				queueBind.getMainQueue(),
 				false,
-				new SchedulationConsumer(
-					channel, getContext(), queueBind, ingestionPayloadMapper));
+				new MainConsumer(
+					channel, getContext(), queueBind, ingestionPayloadMapper)
+			);
+			channel.basicConsume(
+				queueBind.getRetryQueue(),
+				false,
+				new RetryConsumer(channel, getContext(), queueBind)
+			);
 		} catch (IOException e) {
-			log.error("consumer cannot be registered", e);
+			log.error("consumers cannot be registered", e);
 			throw new RuntimeException(e);
 		}
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onReroute(Reroute reroute) {
+
+		QueueManager.QueueBind queueBind = reroute.queueBind;
+
+		ActorSystem<Void> system = getContext().getSystem();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(system);
+
+		EntityRef<Schedulation.Command> entityRef = clusterSharding.entityRefFor(
+			Schedulation.ENTITY_TYPE_KEY, queueBind.schedulationKey());
+
+		AskPattern.ask(
+			entityRef,
+			Schedulation.Restart::new,
+			Duration.ofSeconds(10),
+			system.scheduler()
+		).whenComplete((r, t) -> {
+			try {
+				if (t != null || r instanceof Schedulation.Failure) {
+					log.warnf(
+						"error when restart schedulation {}",
+						queueBind.schedulationKey()
+					);
+				}
+				else {
+					log.infof(
+						"restart schedulation with key {}",
+						queueBind.schedulationKey()
+					);
+
+					channel.basicConsume(
+						queueBind.getErrorQueue(),
+						false,
+						new ErrorConsumer(channel, getContext(), queueBind)
+					);
+				}
+			} catch (Exception e) {
+				log.error(
+					"cannot consume from errorQueue", e
+				);
+			}
+		});
+
 		return Behaviors.same();
 	}
 
@@ -167,7 +257,7 @@ public class MessageGateway
 
 	private Behavior<Command> onStartup(Command command) {
 		this.lag.add(command);
-		this.log.info("there are {} commands waiting", lag.size());
+		log.infof("there are {} commands waiting", lag.size());
 		return Behaviors.same();
 	}
 
@@ -214,7 +304,7 @@ public class MessageGateway
 
 		this.channel = ci.channel;
 
-		log.info("Rabbitmq channel created.. channel number: {}", channel.getChannelNumber());
+		log.infof("Rabbitmq channel created.. channel number: {}", channel.getChannelNumber());
 
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
