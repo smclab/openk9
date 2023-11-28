@@ -240,15 +240,23 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return this.next();
 		}
 		else {
-			log.infof("%s ingestion is done, replyTo %s", key, currentIngest.replyTo);
-
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
 			if (!failureTracked) {
-				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
-			}
+				log.infof("%s ingestion is done, replyTo %s", key, currentIngest.replyTo);
 
-			return this.finish();
+				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+
+				return this.finish();
+			}
+			else {
+				log.infof(
+					"%s ingestion is done, but a failure was tracked, wait for the next message",
+					key, currentIngest.replyTo
+				);
+
+				return this.next();
+			}
 		}
 	}
 
