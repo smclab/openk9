@@ -3,6 +3,7 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
@@ -17,7 +18,6 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
-import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.util.CborSerializable;
@@ -25,6 +25,7 @@ import io.quarkus.runtime.util.ExceptionUtil;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,7 +35,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
+public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
@@ -45,7 +46,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private static final String NEXT_BEHAVIOR = "Next";
 	private static final String FINISH_BEHAVIOR = "Finish";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
-
+	private static final Logger log = Logger.getLogger(Schedulation.class);
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
 	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
@@ -244,7 +245,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			return this.next();
 		}
 		else {
-			log.info("{} ingestion is done, replyTo {}", key, currentIngest.replyTo);
+			log.infof("%s ingestion is done, replyTo %s", key, currentIngest.replyTo);
 
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
@@ -290,7 +291,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 	private Behavior<Command> enqueue(Command command) {
 		this.lag.add(command);
-		log.info("There are {} commands waiting", lag.size());
+		log.infof("There are %s commands waiting", lag.size());
 		return Behaviors.same();
 	}
 
@@ -299,8 +300,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 
 		if (response instanceof EnrichPipeline.Success) {
 
-			log.info(
-				"enrich pipeline success for content-id {} replyTo {}",
+			log.infof(
+				"enrich pipeline success for content-id %s replyTo %s",
 				getContentId(currentIngest.payload), currentIngest.replyTo);
 
 			currentIngest.replyTo.tell(Success.INSTANCE);
@@ -327,8 +328,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 			Long datasourceId = datasource.getId();
 			String tenantId = key.tenantId;
 
-			log.info(
-				"replacing dataindex {} for datasource {} on tenant {}",
+			log.infof(
+				"replacing dataindex %s for datasource %s on tenant %s",
 				newDataIndexId, datasourceId, tenantId);
 			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
@@ -390,17 +391,17 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	private Behavior<Command> onTick() {
 		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
 			if (log.isTraceEnabled()) {
-				log.trace("a manual operation is needed for scheduler with id {}", scheduler.getId());
+				log.tracef("a manual operation is needed for scheduler with id %s", scheduler.getId());
 			}
 			return Behaviors.same();
 		}
 
 		if (log.isTraceEnabled()) {
-			log.trace("check {} expiration", key);
+			log.tracef("check %s expiration", key);
 		}
 
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
-			log.info("{} ingestion is expired ", key);
+			log.infof("%s ingestion is expired ", key);
 
 			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
 
@@ -425,7 +426,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 						log.warn("last ingestion date cannot be persisted", t);
 					}
 					else {
-						log.info("update last ingestion date for datasource with id {}", datasourceId);
+						log.infof("update last ingestion date for datasource with id %s", datasourceId);
 						getContext().getSelf().tell(new SetLastIngestionDate(lastIngestionDate));
 					}
 				})
@@ -451,8 +452,8 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 					persistStatus.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(t)));
 				}
 				else {
-					log.info(
-						"status updated to {} for schedulation with id {}",
+					log.infof(
+						"status updated to %s for schedulation with id %s",
 						status,
 						scheduler.getId()
 					);
@@ -491,7 +492,7 @@ public class Schedulation extends AbstractLoggerBehavior<Schedulation.Command> {
 	}
 
 	private void logBehavior(String behavior) {
-		log.info("Schedulation with key {} behavior is {}", key, behavior);
+		log.infof("Schedulation with key %s behavior is %s", key, behavior);
 	}
 
 	private static Duration getTimeout(ActorContext<?> context) {

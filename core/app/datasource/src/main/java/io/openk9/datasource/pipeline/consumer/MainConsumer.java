@@ -37,7 +37,7 @@ public class MainConsumer extends BaseConsumer {
 		throws IOException {
 
 		log.infof(
-			"consuming deliveryTag {} on actor {}",
+			"consuming deliveryTag %s on actor %s",
 			envelope.getDeliveryTag(),
 			context.getSelf()
 		);
@@ -60,21 +60,21 @@ public class MainConsumer extends BaseConsumer {
 			try {
 				if (t != null) {
 					log.infof(
-						"nack message with deliveryTag {} on actor {}",
+						"nack message with deliveryTag %s on actor %s",
 						envelope.getDeliveryTag(),
 						context.getSelf()
 					);
 					getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 				} else if (r instanceof Schedulation.Failure) {
 					log.infof(
-						"nack message with deliveryTag {} on actor {}",
+						"nack message with deliveryTag %s on actor %s",
 						envelope.getDeliveryTag(),
 						context.getSelf()
 					);
 					getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 				} else {
 					log.infof(
-						"ack message with deliveryTag {} on actor {}",
+						"ack message with deliveryTag %s on actor %s",
 						envelope.getDeliveryTag(),
 						context.getSelf()
 					);
@@ -83,7 +83,7 @@ public class MainConsumer extends BaseConsumer {
 			} catch (Exception e) {
 				log.errorf(
 					e,
-					"Error on message acknowledgement for deliveryTag {}",
+					"Error on message acknowledgement for deliveryTag %s",
 					envelope.getDeliveryTag()
 				);
 			}

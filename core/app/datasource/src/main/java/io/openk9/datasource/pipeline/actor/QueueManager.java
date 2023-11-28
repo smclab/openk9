@@ -3,14 +3,15 @@ package io.openk9.datasource.pipeline.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
-import io.openk9.datasource.pipeline.actor.util.AbstractLoggerBehavior;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
@@ -18,13 +19,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
+public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "schedulationKey-manager";
 	public static final String AMQ_TOPIC_EXCHANGE = "amq.topic";
 	private static final String DLX_EXCHANGE = "dlx";
 	private static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
 	private static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
-
+	private static final Logger log = Logger.getLogger(QueueManager.class);
 	public sealed interface Command extends CborSerializable {}
 	private enum Start implements Command {INSTANCE}
 	private record ChannelInit(Channel c) implements Command {}
@@ -136,7 +137,7 @@ public class QueueManager extends AbstractLoggerBehavior<QueueManager.Command> {
 
 		if (!queueBinds.contains(queueBind)) {
 			try {
-				log.info("register: {}", queueBind);
+				log.infof("register: %s", queueBind);
 
 				_declareDeadLetterExchange();
 

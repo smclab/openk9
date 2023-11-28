@@ -11,6 +11,7 @@ import io.openk9.datasource.pipeline.actor.Schedulation;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,14 @@ public class RetryConsumer extends BaseConsumer {
 		long count = (long) xDeath.getOrDefault("count", 0L);
 
 		if (count < maxRetries) {
+			if (log.isTraceEnabled()) {
+				log.tracef(
+					"(count < maxRetries): %s < %s for payload with hashCode %s",
+					count,
+					maxRetries,
+					Arrays.hashCode(body)
+				);
+			}
 			getChannel().basicPublish(
 				QueueManager.AMQ_TOPIC_EXCHANGE,
 				queueBind.getMainKey(),
@@ -63,20 +72,20 @@ public class RetryConsumer extends BaseConsumer {
 				if (t != null) {
 					log.warnf(
 						t,
-						"Error cannot be tracked for schedulation: {}",
+						"Error cannot be tracked for schedulation: %s",
 						queueBind.schedulationKey()
 					);
 				}
 				else if (r instanceof Schedulation.Failure) {
 					log.warnf(
-						"Error cannot be tracked for schedulation: {}, cause: {}",
+						"Error cannot be tracked for schedulation: %s, cause: %s",
 						queueBind.schedulationKey(),
 						((Schedulation.Failure) r).error()
 					);
 				}
 				else {
-					log.warnf(
-						"Error tracked for schedulation: {}",
+					log.infof(
+						"Error tracked for schedulation: %s",
 						queueBind.schedulationKey()
 					);
 				}

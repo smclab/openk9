@@ -64,7 +64,7 @@ public class MessageGateway
 							new Reroute(new QueueManager.QueueBind(schedulationKey.value()))));
 				}
 				else {
-					log.warnf("Cannot reroute schedulation {}", schedulationKey);
+					log.warnf("Cannot reroute schedulation %s", schedulationKey);
 				}
 			}
 		);
@@ -200,13 +200,13 @@ public class MessageGateway
 			try {
 				if (t != null || r instanceof Schedulation.Failure) {
 					log.warnf(
-						"error when restart schedulation {}",
+						"error when restart schedulation %s",
 						queueBind.schedulationKey()
 					);
 				}
 				else {
 					log.infof(
-						"restart schedulation with key {}",
+						"restart schedulation with key %s",
 						queueBind.schedulationKey()
 					);
 
@@ -257,7 +257,7 @@ public class MessageGateway
 
 	private Behavior<Command> onStartup(Command command) {
 		this.lag.add(command);
-		log.infof("there are {} commands waiting", lag.size());
+		log.infof("there are %s commands waiting", lag.size());
 		return Behaviors.same();
 	}
 
@@ -304,7 +304,7 @@ public class MessageGateway
 
 		this.channel = ci.channel;
 
-		log.infof("Rabbitmq channel created.. channel number: {}", channel.getChannelNumber());
+		log.infof("Rabbitmq channel created... channel number: %s", channel.getChannelNumber());
 
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 

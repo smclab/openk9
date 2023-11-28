@@ -40,8 +40,7 @@ import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
 import org.elasticsearch.cluster.metadata.Template;
 import org.elasticsearch.rest.RestStatus;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 import scala.Option;
 
 import java.time.Instant;
@@ -55,7 +54,7 @@ import java.util.UUID;
 
 public class JobScheduler {
 
-	private static final Logger log = LoggerFactory.getLogger(JobScheduler.class);
+	private static final Logger log = Logger.getLogger(JobScheduler.class);
 	
 	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
@@ -170,14 +169,14 @@ public class JobScheduler {
 
 			List<String> newJobNames = new ArrayList<>(jobNames);
 			newJobNames.remove(jobName);
-			log.info("Job removed: {}", jobName);
+			log.infof("Job removed: %s", jobName);
 
 			return initial(
 				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
 				sessionFactory, restHighLevelClient, messageGateway, newJobNames);
 		}
 
-		log.info("Job not found: {}", jobName);
+		log.infof("Job not found: %s", jobName);
 
 		return Behaviors.same();
 	}
@@ -233,11 +232,11 @@ public class JobScheduler {
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
-		log.info("Job executed: {}", datasource.getName());
+		log.infof("Job executed: %s", datasource.getName());
 
 		if (pluginDriver == null) {
-			log.warn(
-				"datasource with id: {} has no pluginDriver", datasource.getId());
+			log.warnf(
+				"datasource with id: %s has no pluginDriver", datasource.getId());
 
 			return Behaviors.same();
 		}
@@ -257,8 +256,8 @@ public class JobScheduler {
 						if (list != null && !list.isEmpty()) {
 
 							for (Scheduler scheduler : list) {
-								log.warn(
-									"A Scheduler with id {} for datasource {} is {}",
+								log.warnf(
+									"A Scheduler with id %s for datasource %s is %s",
 									scheduler.getId(),
 									datasource.getId(),
 									scheduler.getStatus()
@@ -388,7 +387,7 @@ public class JobScheduler {
 					quartzSchedulerTypedExtension.defaultTimezone()
 				);
 
-				log.info("Job updated: {} datasourceId: {}", jobName, datasourceId);
+				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
 
 				return Behaviors.same();
 			}
@@ -415,7 +414,7 @@ public class JobScheduler {
 				);
 
 
-				log.info("Job created: {} datasourceId: {}", jobName, datasourceId);
+				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
 
 				List<String> newJobNames = new ArrayList<>(jobNames);
 
@@ -429,11 +428,11 @@ public class JobScheduler {
 		}
 		else if (jobNames.contains(jobName)) {
 			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
-			log.info("job is not schedulable, removing job: {}", jobName);
+			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
 
-		log.info("Job not created: datasourceId: {}, the datasource is not schedulable", datasourceId);
+		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
 
 		return Behaviors.same();
 
@@ -549,7 +548,7 @@ public class JobScheduler {
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
-		log.info("A Scheduler with schedule-id {} is starting", scheduler.getScheduleId());
+		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
 
 		if (oldDataIndex == null || startFromFirst) {
 
