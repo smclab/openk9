@@ -47,6 +47,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String FINISH_BEHAVIOR = "Finish";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Schedulation.class);
+
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
 	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
@@ -87,6 +88,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Scheduler scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private OffsetDateTime lastIngestionDate;
+	private boolean failureTracked = false;
+
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -141,7 +144,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return newReceiveBuilder()
 			.onMessage(Ingest.class, this::onIngest)
 			.onMessage(TrackError.class, this::onTrackError)
-			.onMessage(Restart.class, this::onReroute)
+			.onMessage(Restart.class, this::onRestart)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.build();
@@ -241,7 +244,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			currentIngest.replyTo.tell(Success.INSTANCE);
 
-			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+			if (!failureTracked) {
+				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+			}
 
 			return this.finish();
 		}
@@ -253,15 +258,17 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				new PersistStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
 			);
 		}
-		return Behaviors.same();
+		return next();
 	}
 
-	private Behavior<Command> onReroute(Restart restart) {
+	private Behavior<Command> onRestart(Restart restart) {
+		failureTracked = false;
+		lastRequest = LocalDateTime.now();
 		getContext().getSelf().tell(
 			new PersistStatus(Scheduler.SchedulerStatus.STARTED, restart.replyTo)
 		);
 
-		return Behaviors.same();
+		return next();
 	}
 
 	private Behavior<Command> onCancel() {
@@ -301,6 +308,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		else if (response instanceof EnrichPipeline.Failure) {
 			Throwable exception = ((EnrichPipeline.Failure) response).exception();
 			log.error("enrich pipeline failure", exception);
+			this.failureTracked = true;
 			currentIngest.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
