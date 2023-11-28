@@ -229,12 +229,14 @@ const TemplateQueryParser = [
     {
        "boost": 50.0,
        "valuesQueryType": "MUST",
-       "globalQueryType": "MUST"
+       "globalQueryType": "MUST",
+       "fuzziness": "ZERO"
     }`,
     multiselect: `
     {
        "valuesQueryType": ["MUST","SHOULD","MIN_SHOULD_1","MIN_SHOULD_2","MIN_SHOULD_3","MUST_NOT","FILTER"], 
-       "globalQueryType": ["MUST","SHOULD","MIN_SHOULD_1","MIN_SHOULD_2","MIN_SHOULD_3","MUST_NOT","FILTER"]
+       "globalQueryType": ["MUST","SHOULD","MIN_SHOULD_1","MIN_SHOULD_2","MIN_SHOULD_3","MUST_NOT","FILTER"],
+       "fuzziness": ["ZERO", "ONE", "TWO", "AUTO"]
     }`,
     visible: "false",
     descriptionAttribute: `
