@@ -302,7 +302,7 @@ export function OpenK9Client({
               tokens: [
                 {
                   label: "",
-                  tokenType: "TEXT",
+                  tokenType: "FILTER",
                   value: "ciao",
                   score: 0.8,
                 },
@@ -315,7 +315,7 @@ export function OpenK9Client({
               tokens: [
                 {
                   label: "test di prova",
-                  tokenType: "TEXT",
+                  tokenType: "FILTER",
                   value: "bella",
                   score: 0.8,
                 },
@@ -328,7 +328,7 @@ export function OpenK9Client({
               tokens: [
                 {
                   label: "",
-                  tokenType: "TEXT",
+                  tokenType: "FILTER",
                   value: "prova",
                   keywordKey: "test",
                   score: 0.8,
@@ -477,6 +477,19 @@ export type SearchToken =
       isTab?: boolean;
       isFilter?: boolean;
       isSearch?: boolean;
+    }
+  | {
+      tokenType: "FILTER";
+      keywordKey?: string;
+      values: string[];
+      filter: boolean;
+      goToSuggestion?: boolean;
+      label?: string;
+      suggestionCategoryId?: number;
+      count?: string;
+      isTab?: boolean;
+      isFilter?: boolean;
+      isSearch?: boolean;
     };
 
 export type SortField = {
@@ -534,7 +547,14 @@ export type AnalysisToken =
       tokenType: "AUTOCOMPLETE";
       value: string;
       label: string;
-    };
+    }
+  | {
+      tokenType: "FILTER";
+      keywordKey?: string;
+      keywordName?: string;
+      value: string;
+      label: string;
+    }  ;
 
 export type AnalysisRequest = {
   searchText: string;
@@ -593,6 +613,13 @@ export type SuggestionResult =
       suggestionCategoryId: number;
       value: string;
       keywordKey?: string;
+      count?: string;
+    }
+  | {
+      tokenType: "FILTER";
+      suggestionCategoryId: number;
+      keywordKey?: string;
+      value: string;
       count?: string;
     };
 

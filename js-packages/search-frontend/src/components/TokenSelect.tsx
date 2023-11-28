@@ -259,6 +259,8 @@ function getTokenLabel(token: AnalysisToken) {
       return token.value;
     case "AUTOCOMPLETE":
       return token.value;
+    case "FILTER":
+      return token.value;  
   }
   return token.value;
 }

@@ -647,6 +647,8 @@ function getTokenLabel(token: AnalysisToken) {
       return token.entityName;
     case "TEXT":
       return token.value;
+    case "FILTER":
+      return token.value;  
   }
 }
 

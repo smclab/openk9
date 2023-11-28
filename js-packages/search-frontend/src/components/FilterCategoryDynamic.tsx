@@ -579,13 +579,13 @@ export function mergeAndSortObjects(
     mergedArray = [...unsortedArray]
       .filter(
         (element) =>
-          element.tokenType === "TEXT" &&
+          element.tokenType === "FILTER" &&
           "goToSuggestion" in element &&
           element.suggestionCategoryId === suggestionCategoryId,
       )
       .flatMap((element) =>
         (element.values || []).map((value) => ({
-          tokenType: "TEXT",
+          tokenType: "FILTER",
           keywordKey: element.keywordKey,
           value: value || "",
           suggestionCategoryId: element.suggestionCategoryId || 0,
@@ -600,7 +600,7 @@ export function mergeAndSortObjects(
 
   [...unsortedArray].filter(
     (element) =>
-      element.tokenType === "TEXT" &&
+      element.tokenType === "FILTER" &&
       "goToSuggestion" in element &&
       element.suggestionCategoryId === suggestionCategoryId,
   );
@@ -608,8 +608,8 @@ export function mergeAndSortObjects(
   for (const element of unsortedArray) {
     const foundElement = mergedArray.find((obj) => {
       if (
-        obj.tokenType === "TEXT" &&
-        element.tokenType === "TEXT" &&
+        obj.tokenType === "FILTER" &&
+        element.tokenType === "FILTER" &&
         element.values[0] !== obj.value &&
         element.suggestionCategoryId === suggestionCategoryId
       ) {
@@ -619,10 +619,10 @@ export function mergeAndSortObjects(
       }
     });
 
-    if (foundElement && element.tokenType === "TEXT") {
+    if (foundElement && element.tokenType === "FILTER") {
       element.values.forEach((singlevalue) => {
         const newElement: SuggestionResult = {
-          tokenType: "TEXT",
+          tokenType: "FILTER",
           keywordKey: element.keywordKey,
           value: singlevalue,
           suggestionCategoryId: element.suggestionCategoryId || 0,

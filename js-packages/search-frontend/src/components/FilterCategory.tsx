@@ -621,6 +621,17 @@ export const mapSuggestionToSearchToken = (
         suggestionCategoryId: suggestion.suggestionCategoryId,
       };
     }
+    case "FILTER": {
+      return {
+        tokenType: "FILTER",
+        keywordKey: suggestion.keywordKey,
+        values: [suggestion.value],
+        filter,
+        goToSuggestion: false,
+        count: suggestion.count,
+        suggestionCategoryId: suggestion.suggestionCategoryId,
+      };
+    }
   }
 };
 
