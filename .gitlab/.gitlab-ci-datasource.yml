@@ -38,6 +38,7 @@ Build Latest Datasource Docker Images:
   only:
     refs:
       - main
+      - 431-ottimizzazioni-rabbitmq
       - 562-ottimizzazione-performance-accesso-db
       - 694-nuovo-token-type-per-i-filtri-suggestion-categories
   when:
