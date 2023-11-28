@@ -185,15 +185,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onStart(Start start) {
 		VertxUtil.runOnContext(() -> sessionFactory
 			.withStatelessTransaction(key.tenantId, (s, t) -> s
-				.createQuery("select s " +
-					"from Scheduler s " +
-					"join fetch s.datasource d " +
-					"left join fetch d.enrichPipeline ep " +
-					"left join fetch ep.enrichPipelineItems epi " +
-					"left join fetch epi.enrichItem " +
-					"left join fetch s.oldDataIndex " +
-					"left join fetch s.newDataIndex " +
-					"where s.scheduleId = :scheduleId", Scheduler.class)
+				.createNamedQuery(Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
 				.setParameter("scheduleId", key.scheduleId)
 				.getSingleResult()
 				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
@@ -444,7 +436,12 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 					entity.setStatus(status);
 					return s.persist(entity);
 				})
-				.invoke(entity -> scheduler = entity)
+				.call(entity -> s.createNamedQuery(
+						Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
+					.setParameter("scheduleId", entity.getScheduleId())
+					.getSingleResult()
+					.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
+				)
 			)
 			.onItemOrFailure()
 			.invoke((r, t) -> {
