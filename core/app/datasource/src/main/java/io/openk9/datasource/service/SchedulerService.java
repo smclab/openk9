@@ -112,9 +112,8 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public Uni<Void> cancelSchedulation(String tenantId, long schedulerId) {
 		return findById(schedulerId)
-			.chain(scheduler -> {
-				if (scheduler.getStatus() == Scheduler.SchedulerStatus.STARTED) {
-
+			.chain(scheduler -> switch (scheduler.getStatus()) {
+				case STARTED, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
@@ -125,8 +124,9 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 					);
 
 					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+					yield Uni.createFrom().voidItem();
 				}
-				return Uni.createFrom().voidItem();
+				default -> Uni.createFrom().voidItem();
 			});
 	}
 
