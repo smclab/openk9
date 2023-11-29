@@ -38,6 +38,8 @@ public class EntityQueryParser implements QueryParser {
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
+		String language = parserContext.getLanguage();
+
 		Map<String, List<ParserSearchToken>> searchTokenGroupingByType =
 			parserContext
 				.getTokenTypeGroup()
@@ -131,6 +133,7 @@ public class EntityQueryParser implements QueryParser {
 					.currentTenant(parserContext.getCurrentTenant())
 					.tokenTypeGroup(textParserSearchTokenList)
 					.queryParserConfig(textQueryParserConfig)
+					.language(language)
 					.build()
 			);
 		}
