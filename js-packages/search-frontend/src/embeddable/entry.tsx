@@ -266,6 +266,7 @@ export type Configuration = {
   tenant: string | null;
   token: string | null;
   useKeycloak: boolean;
+  useQueryString: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -343,6 +344,7 @@ const defaultConfiguration: Configuration = {
   token: null,
   totalResult: null,
   useKeycloak: true,
+  useQueryString: true,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };

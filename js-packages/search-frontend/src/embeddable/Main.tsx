@@ -67,7 +67,7 @@ export function Main({
     onConfigurationChange,
   });
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
-
+  const useQueryString= configuration.useQueryString;
   const [selectionsState, selectionsDispatch] = useSelections();
 
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
@@ -75,6 +75,7 @@ export function Main({
     onConfigurationChange,
     selectionsState,
     selectionsDispatch,
+    useQueryString,
   });
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
 
@@ -958,15 +959,17 @@ function useFilters({
   onConfigurationChange,
   selectionsState,
   selectionsDispatch,
+  useQueryString,
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
   selectionsState: SelectionsStateOnClick | SelectionsState;
+  useQueryString:boolean;
   selectionsDispatch:
     | React.Dispatch<SelectionsActionOnClick>
     | React.Dispatch<SelectionsAction>;
 }) {
-  const filterTokens = selectionsState.filters;
+  const filterTokens:SearchToken[] = useQueryString? selectionsState.filters :[];
 
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
