@@ -1,10 +1,13 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.web.BucketResource;
+import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
@@ -49,6 +52,34 @@ public interface BucketResourceMapper {
 			return tabList
 				.stream()
 				.map(this::toTabResponseDto)
+				.toList();
+		}
+	}
+
+	default List<DocTypeFieldResponseDTO> toDocTypeFieldResponseDtoList(List<DocTypeField> docTypeFieldList) {
+		return toDocTypeFieldResponseDtoList(docTypeFieldList, null);
+	}
+
+	default List<DocTypeFieldResponseDTO> toDocTypeFieldResponseDtoList(List<DocTypeField> docTypeFieldList, Map<Long, Map<String, String>> translations) {
+		if (translations != null) {
+			return docTypeFieldList
+				.stream()
+				.map(docTypeField -> new DocTypeFieldResponseDTO(
+					docTypeField.getPath(),
+					docTypeField.getId(),
+					docTypeField.getName(),
+					translations.get(docTypeField.getId()))
+				)
+				.toList();
+		}
+		else {
+			return docTypeFieldList
+				.stream()
+				.map((docTypeField -> new DocTypeFieldResponseDTO(
+					docTypeField.getPath(),
+					docTypeField.getId(),
+					docTypeField.getName(),
+					null)))
 				.toList();
 		}
 	}

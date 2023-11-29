@@ -24,7 +24,7 @@ import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
-import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
+import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.quarkus.cache.Cache;
@@ -94,11 +94,12 @@ public class BucketResource {
 
 	@Path("/current/doc-type-fields-sortable")
 	@GET
-	public Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortable(){
+	public Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortable(
+		@QueryParam("translated") @DefaultValue("false") boolean translated){
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
-			getDocTypeFieldsSortableList(request.host()));
+			getDocTypeFieldsSortableList(request.host(), translated));
 	}
 
 	@Path("/current/defaultLanguage")
@@ -140,7 +141,7 @@ public class BucketResource {
 		);
 	}
 
-	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldsSortableList(String virtualhost) {
+	private Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortableList(String virtualhost, boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -207,11 +208,24 @@ public class BucketResource {
 							}
 
 							return builder.build();
-						})
-						.distinct()
-						.map(PartialDocTypeFieldDTO::of)
-						.toList()
-				);
+						}))
+				.chain(docTypeFields -> {
+					List<DocTypeField> docTypeFieldList = docTypeFields.toList();
+					if (translated) {
+						return translationService
+							.getTranslationMaps(
+								DocTypeField.class,
+								docTypeFieldList.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toDocTypeFieldResponseDtoList(docTypeFieldList, maps));
+					}
+					else {
+						return Uni
+							.createFrom()
+							.item(mapper.toDocTypeFieldResponseDtoList(docTypeFieldList));
+					}
+				});
 		});
 
 	}
@@ -308,7 +322,8 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost, boolean translated) {
+	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost,
+																			  boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();

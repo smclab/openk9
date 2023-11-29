@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
@@ -28,7 +29,9 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.web.dto.PartialDocTypeFieldDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.TranslationService;
+import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
@@ -45,8 +48,10 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.stream.Stream;
@@ -58,11 +63,13 @@ public class DateFilterResource {
 	HttpServerRequest request;
 
 	@GET
-	public Uni<List<PartialDocTypeFieldDTO>> getFields() {
-		return getDocTypeFieldList(request.host());
+	public Uni<List<DocTypeFieldResponseDTO>> getFields(
+		@QueryParam("translated") @DefaultValue("false") boolean translated
+	) {
+		return getDocTypeFieldList(request.host(), translated);
 	}
 
-	private Uni<List<PartialDocTypeFieldDTO>> getDocTypeFieldList(String virtualhost) {
+	private Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldList(String virtualhost, boolean translated) {
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -133,11 +140,23 @@ public class DateFilterResource {
 							return builder.build();
 						})
 				)
-				.map(docTypeFields ->
-					docTypeFields
-						.map(PartialDocTypeFieldDTO::of)
-						.toList()
-				);
+				.chain(docTypeFields -> {
+					List<DocTypeField> docTypeFieldList = docTypeFields.toList();
+					if (translated) {
+						return translationService
+							.getTranslationMaps(
+								DocTypeField.class,
+								docTypeFieldList.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toDocTypeFieldResponseDtoList(docTypeFieldList, maps));
+					}
+					else {
+						return Uni
+							.createFrom()
+							.item(mapper.toDocTypeFieldResponseDtoList(docTypeFieldList));
+					}
+				});
 		});
 	}
 
@@ -153,5 +172,11 @@ public class DateFilterResource {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
+	@Inject
+	TranslationService translationService;
+
+	@Inject
+	BucketResourceMapper mapper;
 
 }
