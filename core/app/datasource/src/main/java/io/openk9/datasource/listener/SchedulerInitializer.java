@@ -18,7 +18,12 @@
 package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
+import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.MessageGateway;
+import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
@@ -43,24 +48,23 @@ import java.util.function.Function;
 @ApplicationScoped
 public class SchedulerInitializer {
 
+	private static final String INITIALIZE_SCHEDULER = "initialize_scheduler";
+	private static final String SPAWN_CONSUMERS = "spawn_consumers";
+
 	public void startUp(@Observes StartupEvent event) {
-		eventBus.send("initialize_scheduler", "initialize_scheduler");
+		eventBus.send(INITIALIZE_SCHEDULER, INITIALIZE_SCHEDULER);
+		eventBus.send(SPAWN_CONSUMERS, SPAWN_CONSUMERS);
 	}
 
-	@ConsumeEvent(value = "initialize_scheduler")
+	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
 	@ActivateRequestContext
-	public Uni<Void> initScheduler(String testMessage) {
-
-		Uni<TenantListResponse> tenantList =
-			tenantManager.findTenantList(Empty.getDefaultInstance());
-
+	public Uni<Void> initScheduler(String message) {
 		logger.info("init scheduler");
 
-		return tenantList
-			.map(TenantListResponse::getTenantResponseList)
-			.flatMap(list -> {
-				List<Uni<Void>> unis = new ArrayList<>(list.size());
-				for (TenantResponse tenantResponse : list) {
+		return getTenantList()
+			.flatMap(tenantList -> {
+				List<Uni<Void>> unis = new ArrayList<>(tenantList.size());
+				for (TenantResponse tenantResponse : tenantList) {
 					String schemaName = tenantResponse.getSchemaName();
 					Uni<List<Datasource>> listDatasource = datasourceService.findAll(schemaName);
 
@@ -163,6 +167,51 @@ public class SchedulerInitializer {
 		schedulerInitializerActor.unScheduleDataSource(tenantId, datasource.getId());
 	}
 
+	@ConsumeEvent(value = SPAWN_CONSUMERS)
+	@ActivateRequestContext
+	public Uni<Void> spawnConsumers(String message) {
+		return getTenantList()
+			.flatMap(tenantList -> {
+				List<Uni<List<Scheduler>>> registrations = new ArrayList<>();
+
+				for (TenantResponse tenantResponse : tenantList) {
+					Uni<List<Scheduler>> registration = sessionFactory.withTransaction(
+							tenantResponse.getSchemaName(),
+							(session, transaction) -> session
+								.createNamedQuery(Scheduler.FETCH_RUNNING_QUERY, Scheduler.class)
+								.getResultList()
+						)
+						.invoke(schedulers -> {
+							for (Scheduler scheduler : schedulers) {
+								Schedulation.SchedulationKey schedulationKey =
+									SchedulationKeyUtils.getKey(
+										tenantResponse.getSchemaName(),
+										scheduler.getScheduleId()
+									);
+
+								MessageGateway.askRegister(
+									actorSystemProvider.getActorSystem(),
+									schedulationKey
+								);
+							}
+						});
+
+					registrations.add(registration);
+				}
+
+				return Uni.join()
+					.all(registrations)
+					.andCollectFailures()
+					.replaceWithVoid();
+			});
+	}
+
+	private Uni<List<TenantResponse>> getTenantList() {
+		return tenantManager
+			.findTenantList(Empty.getDefaultInstance())
+			.map(TenantListResponse::getTenantResponseList);
+	}
+
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
 
@@ -181,4 +230,6 @@ public class SchedulerInitializer {
 	@Inject
 	SchedulerInitializerActor schedulerInitializerActor;
 
+	@Inject
+	ActorSystemProvider actorSystemProvider;
 }

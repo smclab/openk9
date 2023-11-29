@@ -70,6 +70,31 @@ public class MessageGateway
 		);
 	}
 
+	public static void askRegister(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+		Receptionist receptionist = Receptionist.get(actorSystem);
+
+		AskPattern.ask(
+			receptionist.ref(),
+			(ActorRef<Receptionist.Listing> replyTo) ->
+				Receptionist.find(MessageGateway.SERVICE_KEY, replyTo),
+			Duration.ofSeconds(10),
+			actorSystem.scheduler()
+		).whenComplete(
+			(listing, throwable) -> {
+				if (throwable == null) {
+					listing
+						.getServiceInstances(MessageGateway.SERVICE_KEY)
+						.stream()
+						.filter(ref -> ref.path().address().port().isEmpty())
+						.forEach(ref -> ref.tell(new Register(schedulationKey.value())));
+				}
+				else {
+					log.warnf("Cannot register schedulation %s", schedulationKey);
+				}
+			}
+		);
+	}
+
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
 	public record Register(String schedulationKey) implements Command, CborSerializable {}

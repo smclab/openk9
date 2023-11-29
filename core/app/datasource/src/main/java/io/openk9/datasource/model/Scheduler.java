@@ -13,6 +13,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 
@@ -20,21 +21,29 @@ import javax.persistence.OneToOne;
 @Getter
 @Setter
 @ToString
-@NamedQuery(
-	name = "Scheduler.fetchSchedulation",
-	query = "select s " +
-		"from Scheduler s " +
-		"join fetch s.datasource d " +
-		"left join fetch d.enrichPipeline ep " +
-		"left join fetch ep.enrichPipelineItems epi " +
-		"left join fetch epi.enrichItem " +
-		"left join fetch s.oldDataIndex " +
-		"left join fetch s.newDataIndex " +
-		"where s.scheduleId = :scheduleId"
-)
+@NamedQueries({
+	@NamedQuery(
+		name = Scheduler.FETCH_SCHEDULATION_QUERY,
+		query = "select s " +
+			"from Scheduler s " +
+			"join fetch s.datasource d " +
+			"left join fetch d.enrichPipeline ep " +
+			"left join fetch ep.enrichPipelineItems epi " +
+			"left join fetch epi.enrichItem " +
+			"left join fetch s.oldDataIndex " +
+			"left join fetch s.newDataIndex " +
+			"where s.scheduleId = :scheduleId"
+	),
+	@NamedQuery(
+		name = Scheduler.FETCH_RUNNING_QUERY,
+		query = "from Scheduler s where s.status in ('STARTED', 'ERROR')"
+	)
+
+})
 public class Scheduler extends K9Entity {
 
 	public static final String FETCH_SCHEDULATION_QUERY = "Scheduler.fetchSchedulation";
+	public static final String FETCH_RUNNING_QUERY = "Scheduler.fetchRunning";
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;
