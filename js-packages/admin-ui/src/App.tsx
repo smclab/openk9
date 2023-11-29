@@ -18,6 +18,7 @@ import { SuggestionCategory } from "./components/SuggestionCategory";
 import { DocumentType } from "./components/DocumentType";
 import { DocumentTypeFields } from "./components/DocumentTypeFields";
 import { DocumentTypeField } from "./components/DocumentTypeField";
+import { DocumentTypeFieldsTranslations } from "./components/DocumentTypeFieldsTranslations";
 import { SuggestionCategoryTranslations } from "./components/SuggestionCategoryTranslations";
 import { SuggestionCategoryDocumentTypeFields } from "./components/SuggestionCategoryDocumentTypeFields";
 import { QueryAnalyses } from "./components/QueryAnalyses";
@@ -255,7 +256,23 @@ export default function App() {
                         path=":documentTypeId/document-type-fields/:documentTypeFieldId/:ParentId/:SubFieldId"
                         element={<SubFieldsDocumentType />}
                       />
-                      <Route path=":documentTypeId/document-type-fields/:documentTypeFieldId" element={<DocumentTypeField />} />
+                      <Route
+                        path=":documentTypeId/document-type-fields/:documentTypeFieldId"
+                        element={
+                          <React.Fragment>
+                            <NavTabs
+                              tabs={[
+                                { label: "Attributes", path: "" },
+                                { label: "Translations", path: "translations" },
+                              ]}
+                            />
+                            <Outlet />
+                          </React.Fragment>
+                        }
+                      >
+                        <Route path="" element={<DocumentTypeField />} />
+                        <Route path="translations" element={<DocumentTypeFieldsTranslations />} />
+                      </Route>
                       <Route path="new" element={<DocumentType />} />
                       <Route path="settings" element={<DocumentTypesSettings />} />
                       <Route
