@@ -98,7 +98,7 @@ public class BucketResource {
 		@QueryParam("translated") @DefaultValue("false") boolean translated){
 		return QuarkusCacheUtil.getAsync(
 			cache,
-			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable"),
+			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
 			getDocTypeFieldsSortableList(request.host(), translated));
 	}
 
