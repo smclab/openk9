@@ -84,4 +84,9 @@ public abstract class Suggestions {
 		return new DocTypeSuggestions(value, suggestionCategoryId);
 	}
 
+	public static Suggestions filter(
+		String value, long suggestionCategoryId, String keywordKey) {
+		return new FilterSuggestions(value, suggestionCategoryId, keywordKey);
+	}
+
 }

@@ -99,4 +99,9 @@ public abstract class Suggestions {
 		return new DatasourceSuggestions(value, suggestionCategoryId, count);
 	}
 
+	public static Suggestions filter(
+		String value, long suggestionCategoryId, String keywordKey, long count) {
+		return new FilterSuggestions(value, suggestionCategoryId, keywordKey, count);
+	}
+
 }

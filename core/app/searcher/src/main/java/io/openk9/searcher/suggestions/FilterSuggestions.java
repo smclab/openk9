@@ -17,4 +17,18 @@
 
 package io.openk9.searcher.suggestions;
 
-enum TokenType {ENTITY, TEXT, DOCTYPE, FILTER}
+class FilterSuggestions extends Suggestions {
+
+	FilterSuggestions(
+		String value, long suggestionCategoryId, String keywordKey) {
+		super(TokenType.FILTER, value, suggestionCategoryId);
+		this.keywordKey = keywordKey;
+	}
+
+	public String getKeywordKey() {
+		return keywordKey;
+	}
+
+	private final String keywordKey;
+
+}

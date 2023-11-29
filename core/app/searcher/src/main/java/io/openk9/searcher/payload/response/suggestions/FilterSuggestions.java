@@ -15,6 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.suggestions;
+package io.openk9.searcher.payload.response.suggestions;
 
-enum TokenType {ENTITY, TEXT, DOCTYPE, FILTER}
+class FilterSuggestions extends Suggestions {
+
+	FilterSuggestions(
+		String value, long suggestionCategoryId, String keywordKey,
+		long count) {
+		super(TokenType.FILTER, value, suggestionCategoryId, count);
+		this.keywordKey = keywordKey;
+	}
+
+	public String getKeywordKey() {
+		return keywordKey;
+	}
+
+	private final String keywordKey;
+
+}

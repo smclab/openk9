@@ -17,4 +17,4 @@
 
 package io.openk9.searcher.payload.response.suggestions;
 
-enum TokenType {DATASOURCE, ENTITY, TEXT, DOCTYPE}
+enum TokenType {DATASOURCE, ENTITY, TEXT, DOCTYPE, FILTER}

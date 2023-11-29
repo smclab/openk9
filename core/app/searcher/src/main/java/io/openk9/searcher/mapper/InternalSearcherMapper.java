@@ -73,6 +73,9 @@ public interface InternalSearcherMapper {
 			case DOCTYPE -> Suggestions.docType(
 				value.getValue(), value.getSuggestionCategoryId(),
 				value.getCount());
+			case FILTER -> Suggestions.filter(
+				value.getValue(), value.getSuggestionCategoryId(), value.getKeywordKey(),
+				value.getCount());
 			default -> null;
 		};
 
