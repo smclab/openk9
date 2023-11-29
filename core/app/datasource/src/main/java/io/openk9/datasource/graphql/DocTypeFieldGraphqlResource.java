@@ -6,8 +6,11 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -16,6 +19,7 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -120,6 +124,33 @@ public class DocTypeFieldGraphqlResource {
 		return docTypeFieldService.unbindAnalyzer(docTypeFieldId);
 	}
 
+	public Uni<Set<TranslationDTO>> getTranslations(@Source DocTypeField docTypeField) {
+		return translationService.getTranslationDTOs(DocTypeField.class, docTypeField.getId());
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> addDocTypeFieldTranslation(
+		@Id @Name("docTypeFieldId") long docTypeFieldId,
+		String language, String key, String value) {
+
+		return translationService
+			.addTranslation(DocTypeField.class, docTypeFieldId, language, key, value)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> deleteDocTypeFieldTranslation(
+		@Id @Name("docTypeFieldId") long docTypeFieldId,
+		String language, String key) {
+
+		return translationService
+			.deleteTranslation(Tab.class, docTypeFieldId, language, key)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	TranslationService translationService;
 }
