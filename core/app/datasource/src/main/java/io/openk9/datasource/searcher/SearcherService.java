@@ -433,7 +433,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									else {
 										addSuggestions.accept(
 											value,
-											SuggestionsUtil.text(
+											SuggestionsUtil.filter(
 												value, suggestionCategoryId,
 												key, docCount
 											)

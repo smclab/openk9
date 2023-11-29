@@ -73,4 +73,16 @@ public class SuggestionsUtil {
 			.build();
 	}
 
+	public static Suggestions filter(
+		String value, long suggestionCategoryId, String keywordKey, long count) {
+		return Suggestions
+			.newBuilder()
+			.setTokenType(TokenType.FILTER)
+			.setSuggestionCategoryId(suggestionCategoryId)
+			.setValue(value)
+			.setKeywordKey(keywordKey)
+			.setCount(count)
+			.build();
+	}
+
 }
