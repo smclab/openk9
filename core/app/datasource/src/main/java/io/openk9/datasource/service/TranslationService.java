@@ -142,15 +142,17 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 			.chain(entity -> {
 				if (entity != null) {
 					entity.setValue(value);
-					return session.persist(entity);
+					return persist(session, entity);
 				}
 				else {
 					Translation translation = new Translation();
 					translation.setPk(pkValue);
 					translation.setValue(value);
-					return session.persist(translation);
+					return persist(session, translation);
 				}
-			}));
+			})
+			.replaceWithVoid()
+		);
 	}
 
 	public <T extends K9Entity> Uni<Void> deleteTranslation(
@@ -162,7 +164,7 @@ public class TranslationService extends BaseK9EntityService<Translation, Transla
 			.find(Translation.class, Identifier.id("pk", pkValue))
 			.chain(entity -> {
 				if (entity != null) {
-					return session.remove(entity);
+					return remove(session, entity);
 				}
 				else {
 					return Uni.createFrom().voidItem();
