@@ -16,6 +16,7 @@ import {
   CustomButtom,
   EnumSelect,
   fromFieldValidators,
+  MainTitle,
   NumberInput,
   SearchSelect,
   TextArea,
@@ -30,7 +31,7 @@ import { useToast } from "./ToastProvider";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { ClassNameButton } from "../App";
 
-const DocumentTypeFieldQuery = gql`
+export const DocumentTypeFieldQuery = gql`
   query DocumentTypeField($id: ID!) {
     docTypeField(id: $id) {
       id
@@ -45,6 +46,12 @@ const DocumentTypeFieldQuery = gql`
       sortable
       analyzer {
         id
+      }
+      translations {
+        key
+        language
+        value
+        description
       }
     }
   }
@@ -149,6 +156,7 @@ export function DocumentTypeField() {
         </ContainerFluid>
       </ClayToolbar>
       <ContainerFluid>
+        <MainTitle title="Attributes" />
         <form
           className="sheet"
           onSubmit={(event) => {
