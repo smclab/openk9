@@ -187,6 +187,7 @@ export function Main({
       setLanguageSelect(languageQuery.data.value);
     }
   }, [languageQuery.data, i18n]);
+  
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
   const numberOfResults = configuration.numberResult || 10;
@@ -965,8 +966,7 @@ function useFilters({
     | React.Dispatch<SelectionsActionOnClick>
     | React.Dispatch<SelectionsAction>;
 }) {
-  const filter = [...configuration.filterTokens, ...selectionsState.filters];
-  const filterTokens = filter;
+  const filterTokens = selectionsState.filters;
 
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
