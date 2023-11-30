@@ -126,7 +126,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	@Override
 	public ReceiveBuilder<Command> newReceiveBuilder() {
-		return super.newReceiveBuilder().onMessageEquals(Tick.INSTANCE, this::onTick);
+		return super.newReceiveBuilder()
+			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onSignal(PostStop.class, this::onPostStop);
 	}
 
 	private Receive<Command> init() {
@@ -136,7 +138,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.onMessage(Start.class, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onAnyMessage(this::enqueue)
-			.onSignal(PostStop.class, this::onPostStop)
 			.build();
 	}
 
