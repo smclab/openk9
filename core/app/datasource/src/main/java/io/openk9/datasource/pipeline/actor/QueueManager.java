@@ -169,7 +169,7 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 			queueBind.getMainQueue(),
 			true,
 			false,
-			true,
+			false,
 			Map.of(
 				X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE,
 				X_DEAD_LETTER_ROUTING_KEY, queueBind.getRetryKey()
@@ -188,7 +188,7 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 			queueBind.getRetryQueue(),
 			true,
 			false,
-			true,
+			false,
 			Map.of(
 				X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE,
 				X_DEAD_LETTER_ROUTING_KEY, queueBind.getErrorKey()
@@ -207,7 +207,7 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 			queueBind.getErrorQueue(),
 			true,
 			false,
-			true,
+			false,
 			Map.of()
 		);
 
