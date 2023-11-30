@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateDocumentTypeFieldMutation, useDocumentTypeFieldQuery, useLanguagesQuery } from "../graphql-generated";
+import { useParams } from "react-router-dom";
+import { useAddDocTypeFieldTranslationMutation, useDocumentTypeFieldQuery, useLanguagesQuery } from "../graphql-generated";
 import { ContainerFluid, CustomButtom, fromFieldValidators, MainTitle, TextArea, TextInput, useForm } from "./Form";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
@@ -30,12 +30,11 @@ export function DocumentTypeFieldsTranslations() {
   const dataLanguagesQuery = useLanguagesQuery();
 
   const { documentTypeId, documentTypeFieldId = "new" } = useParams();
-  const navigate = useNavigate();
+  const showToast = useToast();
   const documentTypeFieldQuery = useDocumentTypeFieldQuery({
     variables: { id: documentTypeFieldId as string },
     skip: !documentTypeFieldId,
   });
-  const showToast = useToast();
 
   // convert languageCode from en_US to en-us
   const convertLanguageCodeForFrontend = (languageCode: string) => {
@@ -65,15 +64,15 @@ export function DocumentTypeFieldsTranslations() {
     }
   }
 
-  // const [addDocTypeFieldTranslationMutate, addDocTypeFieldTranslationMutation] = useAddDocTypeFieldTranslationMutation({
-  //   refetchQueries: [DocumentTypeFieldQuery],
-  //   onCompleted(data: { addDocTypeFieldTranslation: any }) {
-  //     mutationCounter++;
-  //     if (data.addDocTypeFieldTranslation && mutationCounter === totalTranslations) {
-  //       showToast({ displayType: "info", title: "Translations updated", content: "" });
-  //     }
-  //   },
-  // });
+  const [addDocTypeFieldTranslationMutate, addDocTypeFieldTranslationMutation] = useAddDocTypeFieldTranslationMutation({
+    refetchQueries: [DocumentTypeFieldQuery],
+    onCompleted(data) {
+      mutationCounter++;
+      if (data.addDocTypeFieldTranslation && mutationCounter === totalTranslations) {
+        showToast({ displayType: "info", title: "Translations updated", content: "" });
+      }
+    },
+  });
 
   const originalValuesArray = translationsToPost?.filter((element) => convertLanguageCodeForFrontend(element?.language!) === flag);
   const originalValues: { [x: string]: any } = { language: flag };
@@ -91,47 +90,46 @@ export function DocumentTypeFieldsTranslations() {
       []
     ),
     originalValues: originalValues,
-    // isLoading: documentTypeFieldQuery.loading || addDocTypeFieldTranslationMutate.loading,
-    isLoading: documentTypeFieldQuery.loading,
+    isLoading: documentTypeFieldQuery.loading || addDocTypeFieldTranslationMutation.loading,
     onSubmit(data) {
       addTranslation(flag);
       const translationsToPostLength = translationsToPost.length;
       const convertedTranslationsToPost = [];
       for (let index = 0; index < translationsToPostLength; index++) {
         const element = translationsToPost[index];
-        // if (
-        //   !originalTranslations!.some(
-        //     (translation: { language: string; key: any; value: any }) =>
-        //       convertLanguageCodeForBackend(element?.language!) === translation?.language &&
-        //       element.key === translation?.key &&
-        //       element.value === translation?.value
-        //   )
-        // ) {
-        //   const convertedTranslation = {
-        //     language: convertLanguageCodeForBackend(element?.language!),
-        //     key: element.key,
-        //     value: element.value,
-        //   };
-        //   convertedTranslationsToPost.push(convertedTranslation);
-        //   totalTranslations++;
-        // }
+        if (
+          !originalTranslations!.some(
+            (translation) =>
+              convertLanguageCodeForBackend(element?.language!) === translation?.language &&
+              element.key === translation?.key &&
+              element.value === translation?.value
+          )
+        ) {
+          const convertedTranslation = {
+            language: convertLanguageCodeForBackend(element?.language!),
+            key: element.key,
+            value: element.value,
+          };
+          convertedTranslationsToPost.push(convertedTranslation);
+          totalTranslations++;
+        }
       }
       const convertedTranslationsToPostLength = convertedTranslationsToPost.length;
-      // for (let index = 0; index < convertedTranslationsToPostLength; index++) {
-      //   const element = convertedTranslationsToPost[index];
-      //   addDocTypeFieldTranslationMutate({
-      //     variables: {
-      //       docTypeFieldId: documentTypeFieldId,
-      //       language: element.language,
-      //       value: element.value,
-      //       key: element.key,
-      //     },
-      //   });
-      // }
+      for (let index = 0; index < convertedTranslationsToPostLength; index++) {
+        const element = convertedTranslationsToPost[index];
+        addDocTypeFieldTranslationMutate({
+          variables: {
+            docTypeFieldId: documentTypeFieldId,
+            language: element.language,
+            value: element.value,
+            key: element.key,
+          },
+        });
+      }
     },
     getValidationMessages: () => {
-      // const errorText = (addDocTypeFieldTranslationMutate as any).error?.body?.details;
-      // if (errorText) return [errorText];
+      const errorText = (addDocTypeFieldTranslationMutation as any).error?.body?.details;
+      if (errorText) return [errorText];
       return [];
     },
   });
