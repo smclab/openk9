@@ -44,9 +44,9 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
 		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
 	private static final String BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX =
-		"UPDATE scheduler s SET s.old_data_index_id = null WHERE s.old_data_index_id in (:ids)";
+		"UPDATE scheduler SET old_data_index_id = null WHERE old_data_index_id in (:ids)";
 	private static final String BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX =
-		"UPDATE scheduler s SET s.new_data_index_id = null WHERE s.new_data_index_id in (:ids)";
+		"UPDATE scheduler SET new_data_index_id = null WHERE new_data_index_id in (:ids)";
 	private static final String BULK_DELETE_DATA_INDEX =
 		"DELETE FROM data_index t WHERE t.id in (:ids)";
 	private static final String JPQL_QUERY_DATA_INDEX_ORPHANS =
