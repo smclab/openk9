@@ -102,37 +102,57 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (!value.equals(token) && ((String) value).startsWith(token)) {
+						if (!value.equals(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$AUTOCOMPLETE",
 									Map.of(
-										"tokenType", "AUTOCOMPLETE",
+										"tokenType", "TEXT",
 										"label", label,
 										"value", value,
-										"score", 0.1f
+										"score", 0.2f
 									)
 								));
 						}
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-								if (!e2.getValue().equals(token) && ((String) e2.getValue()).startsWith(token)) {
-								categorySemantics.add(
-									CategorySemantics.of(
-										"$AUTOCOMPLETE",
-										Map.of(
-											"tokenType", "AUTOCOMPLETE",
-											"label", label,
-											"value", e2.getValue(),
-											"score", 0.1f
-										)
-									)
-								);
+							if (e2.getValue() instanceof ArrayList) {
+								for (String name : ((ArrayList<String>) e2.getValue())) {
+									if (!name.equals(token) &&
+										(name.contains(token))) {
+										categorySemantics.add(
+											CategorySemantics.of(
+												"$AUTOCOMPLETE",
+												Map.of(
+													"tokenType", "TEXT",
+													"label", label,
+													"value", name,
+													"score", 0.1f
+												)
+											)
+										);
+									}
+								}
 							}
+							else {
+								if (!e2.getValue().equals(token)) {
+									categorySemantics.add(
+										CategorySemantics.of(
+											"$AUTOCOMPLETE",
+											Map.of(
+												"tokenType", "TEXT",
+												"label", label,
+												"value", e2.getValue(),
+												"score", 0.1f
+											)
+										)
+									);
+								}
+							}
+
 						}
 					}
-
 				}
 			}
 
