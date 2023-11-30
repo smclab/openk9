@@ -895,6 +895,7 @@ export type DocTypeField = {
   sortable: Scalars['Boolean'];
   subFields?: Maybe<Connection_DocTypeField>;
   text: Scalars['Boolean'];
+  translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
 
@@ -1331,6 +1332,7 @@ export type Mutation = {
   addDatasourceToBucket?: Maybe<Tuple2_Bucket_Datasource>;
   addDocTypeFieldToPluginDriver?: Maybe<Tuple2_PluginDriver_DocTypeField>;
   addDocTypeFieldToSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
+  addDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
   addDocTypeToDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   addEnrichItemToEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
   addExtraParam?: Maybe<TokenTab>;
@@ -1368,6 +1370,7 @@ export type Mutation = {
   deleteDataIndex?: Maybe<DataIndex>;
   deleteDatasource?: Maybe<Datasource>;
   deleteDocType?: Maybe<DocType>;
+  deleteDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
   deleteDocTypeTemplate?: Maybe<DocTypeTemplate>;
   deleteEnrichItem?: Maybe<EnrichItem>;
   deleteEnrichPipeline?: Maybe<EnrichPipeline>;
@@ -1468,6 +1471,15 @@ export type MutationAddDocTypeFieldToPluginDriverArgs = {
 export type MutationAddDocTypeFieldToSuggestionCategoryArgs = {
   docTypeFieldId: Scalars['ID'];
   suggestionCategoryId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddDocTypeFieldTranslationArgs = {
+  docTypeFieldId: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -1732,6 +1744,14 @@ export type MutationDeleteDatasourceArgs = {
 /** Mutation root */
 export type MutationDeleteDocTypeArgs = {
   docTypeId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationDeleteDocTypeFieldTranslationArgs = {
+  docTypeFieldId: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -3035,6 +3055,7 @@ export type Scheduler = {
 
 export enum SchedulerStatus {
   Cancelled = 'CANCELLED',
+  Error = 'ERROR',
   Finished = 'FINISHED',
   Started = 'STARTED'
 }
@@ -4118,7 +4139,7 @@ export type DocumentTypeFieldQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable: boolean, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
+export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable: boolean, analyzer?: { __typename?: 'Analyzer', id?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateDocumentTypeSubFieldsMutationVariables = Exact<{
   parentDocTypeFieldId: Scalars['ID'];
@@ -4180,6 +4201,16 @@ export type DocTypeFieldsByParentQueryVariables = Exact<{
 
 
 export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable: boolean, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable: boolean, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
+
+export type AddDocTypeFieldTranslationMutationVariables = Exact<{
+  docTypeFieldId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddDocTypeFieldTranslationMutation = { __typename?: 'Mutation', addDocTypeFieldTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
 
 export type DocumentTypeTemplateQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -8363,6 +8394,12 @@ export const DocumentTypeFieldDocument = gql`
     analyzer {
       id
     }
+    translations {
+      key
+      language
+      value
+      description
+    }
   }
 }
     `;
@@ -8708,6 +8745,48 @@ export function useDocTypeFieldsByParentLazyQuery(baseOptions?: Apollo.LazyQuery
 export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentQuery>;
 export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
 export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
+export const AddDocTypeFieldTranslationDocument = gql`
+    mutation addDocTypeFieldTranslation($docTypeFieldId: ID!, $language: String!, $key: String, $value: String!) {
+  addDocTypeFieldTranslation(
+    docTypeFieldId: $docTypeFieldId
+    language: $language
+    key: $key
+    value: $value
+  ) {
+    left
+    right
+  }
+}
+    `;
+export type AddDocTypeFieldTranslationMutationFn = Apollo.MutationFunction<AddDocTypeFieldTranslationMutation, AddDocTypeFieldTranslationMutationVariables>;
+
+/**
+ * __useAddDocTypeFieldTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddDocTypeFieldTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddDocTypeFieldTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addDocTypeFieldTranslationMutation, { data, loading, error }] = useAddDocTypeFieldTranslationMutation({
+ *   variables: {
+ *      docTypeFieldId: // value for 'docTypeFieldId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddDocTypeFieldTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddDocTypeFieldTranslationMutation, AddDocTypeFieldTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddDocTypeFieldTranslationMutation, AddDocTypeFieldTranslationMutationVariables>(AddDocTypeFieldTranslationDocument, options);
+      }
+export type AddDocTypeFieldTranslationMutationHookResult = ReturnType<typeof useAddDocTypeFieldTranslationMutation>;
+export type AddDocTypeFieldTranslationMutationResult = Apollo.MutationResult<AddDocTypeFieldTranslationMutation>;
+export type AddDocTypeFieldTranslationMutationOptions = Apollo.BaseMutationOptions<AddDocTypeFieldTranslationMutation, AddDocTypeFieldTranslationMutationVariables>;
 export const DocumentTypeTemplateDocument = gql`
     query DocumentTypeTemplate($id: ID!) {
   docTypeTemplate(id: $id) {
@@ -12913,4 +12992,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-11-23T15:30:59+01:00
+// Generated on 2023-11-30T11:12:52+01:00
