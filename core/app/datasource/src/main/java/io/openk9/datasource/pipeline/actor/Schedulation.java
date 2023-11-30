@@ -2,6 +2,7 @@ package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -135,6 +136,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.onMessage(Start.class, this::onStart)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onAnyMessage(this::enqueue)
+			.onSignal(PostStop.class, this::onPostStop)
 			.build();
 	}
 
@@ -163,6 +165,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Receive<Command> finish() {
 		logBehavior(FINISH_BEHAVIOR);
+
+		currentIngest = null;
 
 		return newReceiveBuilder()
 			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
@@ -502,6 +506,14 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onStop() {
 		logBehavior(STOPPED_BEHAVIOR);
 		return Behaviors.stopped();
+	}
+
+	private Behavior<Command> onPostStop(PostStop postStop) {
+		if (currentIngest != null) {
+			currentIngest.replyTo.tell(new Failure("stopped for unexpected reason"));
+		}
+
+		return Behaviors.same();
 	}
 
 	private void logBehavior(String behavior) {
