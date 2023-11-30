@@ -15,9 +15,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "schedulationKey-manager";
@@ -62,8 +60,6 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 
 	private Channel channel;
 	private final QueueConnectionProvider connectionProvider;
-
-	private final Set<QueueBind> queueBinds = new HashSet<>();
 
 	public QueueManager(ActorContext<Command> context) {
 		super(context);
@@ -118,12 +114,9 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 		try {
 			QueueBind queueBind = new QueueBind(destroyQueue.schedulationKey());
 
-			if (queueBinds.contains(queueBind)) {
-				channel.queueDelete(queueBind.getMainQueue());
-				channel.queueDelete(queueBind.getRetryQueue());
-				channel.queueDelete(queueBind.getErrorQueue());
-				queueBinds.remove(queueBind);
-			}
+			channel.queueDelete(queueBind.getMainQueue());
+			channel.queueDelete(queueBind.getRetryQueue());
+			channel.queueDelete(queueBind.getErrorQueue());
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -135,23 +128,20 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	private Behavior<Command> onGetQueue(GetQueue getQueue) {
 		QueueBind queueBind = new QueueBind(getQueue.schedulationKey());
 
-		if (!queueBinds.contains(queueBind)) {
-			try {
-				log.infof("register: %s", queueBind);
+		try {
+			log.infof("register: %s", queueBind);
 
-				_declareDeadLetterExchange();
+			_declareDeadLetterExchange();
 
-				_bindMainQueue(queueBind);
+			_bindMainQueue(queueBind);
 
-				_bindRetryQueue(queueBind);
+			_bindRetryQueue(queueBind);
 
-				_bindErrorQueue(queueBind);
+			_bindErrorQueue(queueBind);
 
-				queueBinds.add(queueBind);
-			}
-			catch (Exception e) {
-				throw new RuntimeException(e);
-			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 
 		getQueue.replyTo.tell(queueBind);
