@@ -246,4 +246,22 @@ const TemplateQueryParser = [
       "globalQueryType": "Query type applied in case of match betweem different Text query parser"
     }`,
   },
+  {
+    title: "FILTER",
+    description: "",
+    Json: `
+    {
+       "boost": 50.0,
+       "fuzziness": "ZERO"
+    }`,
+    multiselect: `
+    {
+       "fuzziness": ["ZERO", "ONE", "TWO", "AUTO"]
+    }`,
+    visible: "false",
+    descriptionAttribute: `
+    {
+      "boost": "Boost applied in case of match of Text query parser",
+    }`,
+  },
 ];
