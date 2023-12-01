@@ -52,7 +52,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        style={{ height: "600px", margin: "0 auto" }}
+        style={{ height: "100%", minHeight: "95vh", margin: "0 auto" }}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         fitView
