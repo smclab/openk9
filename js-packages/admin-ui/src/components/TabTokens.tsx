@@ -17,6 +17,10 @@ export const TabTokens = gql`
           tokenType
           value
           filter
+          extraParams {
+            key
+            value
+          }
         }
       }
       pageInfo {
