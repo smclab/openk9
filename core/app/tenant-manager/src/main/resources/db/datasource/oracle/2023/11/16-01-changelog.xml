@@ -18,7 +18,7 @@
 		<update tableName="datasource">
 			<column name="reindex_rate" value="1" />
 			<where>
-				reindex='true'
+				reindex='1'
 			</where>
 		</update>
 	</changeSet>
