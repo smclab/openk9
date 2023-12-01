@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 import { useAnalyzersQuery, useDeleteAnalyzersMutation } from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
+import { queryAnalysisConfigOptions } from "./Bucket";
 
 export const AnalyzersQuery = gql`
   query Analyzers($searchText: String, $cursor: String) {
@@ -36,7 +37,7 @@ export function Analyzers() {
   const analyzersQuery = useAnalyzersQuery();
   const showToast = useToast();
   const [deleteAnalyzersMutate] = useDeleteAnalyzersMutation({
-    refetchQueries: [AnalyzersQuery],
+    refetchQueries: [AnalyzersQuery,queryAnalysisConfigOptions],
     onCompleted(data) {
       if (data.deleteAnalyzer?.id) {
         showToast({ displayType: "success", title: "Analyzers deleted", content: data.deleteAnalyzer.name ?? "" });

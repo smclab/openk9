@@ -15,6 +15,7 @@ import {
 } from "./Form";
 import { useToast } from "./ToastProvider";
 import { SearchConfigsQuery } from "./SearchConfigs";
+import { searchConfigOptions } from "./Bucket";
 
 const SearchConfigQuery = gql`
   query SearchConfig($id: ID!) {
@@ -70,7 +71,7 @@ export function SearchConfig() {
     skip: !searchConfigId || searchConfigId === "new",
   });
   const [createOrUpdateSearchConfigMutate, createOrUpdateSearchConfigMutation] = useCreateOrUpdateSearchConfigMutation({
-    refetchQueries: [SearchConfigQuery, SearchConfigsQuery],
+    refetchQueries: [SearchConfigQuery, SearchConfigsQuery,searchConfigOptions],
     onCompleted(data) {
       if (data.searchConfig?.entity) {
         if (searchConfigId === "new") {

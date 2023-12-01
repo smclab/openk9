@@ -4832,7 +4832,7 @@ export type TabTokenTabQueryVariables = Exact<{
 }>;
 
 
-export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null, extraParams?: Array<{ __typename?: 'ExtraParam', key?: string | null, value?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateTabTokenMutationVariables = Exact<{
   tabTokenId?: InputMaybe<Scalars['ID']>;
@@ -4845,6 +4845,15 @@ export type CreateOrUpdateTabTokenMutationVariables = Exact<{
 
 
 export type CreateOrUpdateTabTokenMutation = { __typename?: 'Mutation', tokenTab?: { __typename?: 'Response_TokenTab', entity?: { __typename?: 'TokenTab', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type AddExtraParamMutationVariables = Exact<{
+  id: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddExtraParamMutation = { __typename?: 'Mutation', addExtraParam?: { __typename?: 'TokenTab', name?: string | null } | null };
 
 export type DocTypeFieldOptionsTokenTabQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -4902,7 +4911,7 @@ export type TabTokensQueryVariables = Exact<{
 }>;
 
 
-export type TabTokensQuery = { __typename?: 'Query', totalTokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabTokensQuery = { __typename?: 'Query', totalTokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null, extraParams?: Array<{ __typename?: 'ExtraParam', key?: string | null, value?: string | null } | null> | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteTabTokenMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -11980,6 +11989,10 @@ export const TabTokenTabDocument = gql`
     docTypeField {
       id
     }
+    extraParams {
+      key
+      value
+    }
   }
 }
     `;
@@ -12058,6 +12071,41 @@ export function useCreateOrUpdateTabTokenMutation(baseOptions?: Apollo.MutationH
 export type CreateOrUpdateTabTokenMutationHookResult = ReturnType<typeof useCreateOrUpdateTabTokenMutation>;
 export type CreateOrUpdateTabTokenMutationResult = Apollo.MutationResult<CreateOrUpdateTabTokenMutation>;
 export type CreateOrUpdateTabTokenMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>;
+export const AddExtraParamDocument = gql`
+    mutation addExtraParam($id: ID!, $key: String, $value: String!) {
+  addExtraParam(id: $id, key: $key, value: $value) {
+    name
+  }
+}
+    `;
+export type AddExtraParamMutationFn = Apollo.MutationFunction<AddExtraParamMutation, AddExtraParamMutationVariables>;
+
+/**
+ * __useAddExtraParamMutation__
+ *
+ * To run a mutation, you first call `useAddExtraParamMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddExtraParamMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addExtraParamMutation, { data, loading, error }] = useAddExtraParamMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddExtraParamMutation(baseOptions?: Apollo.MutationHookOptions<AddExtraParamMutation, AddExtraParamMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddExtraParamMutation, AddExtraParamMutationVariables>(AddExtraParamDocument, options);
+      }
+export type AddExtraParamMutationHookResult = ReturnType<typeof useAddExtraParamMutation>;
+export type AddExtraParamMutationResult = Apollo.MutationResult<AddExtraParamMutation>;
+export type AddExtraParamMutationOptions = Apollo.BaseMutationOptions<AddExtraParamMutation, AddExtraParamMutationVariables>;
 export const DocTypeFieldOptionsTokenTabDocument = gql`
     query DocTypeFieldOptionsTokenTab($searchText: String, $cursor: String) {
   options: docTypeFields(searchText: $searchText, first: 5, after: $cursor) {
@@ -12332,6 +12380,10 @@ export const TabTokensDocument = gql`
         tokenType
         value
         filter
+        extraParams {
+          key
+          value
+        }
       }
     }
     pageInfo {
@@ -12992,4 +13044,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-11-30T11:12:52+01:00
+// Generated on 2023-12-01T12:41:27+01:00

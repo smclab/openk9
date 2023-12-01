@@ -26,6 +26,7 @@ import {
 import { useToast } from "./ToastProvider";
 import { AnalyzersQuery } from "./Analyzers";
 import { ClassNameButton } from "../App";
+import { queryAnalysisConfigOptions } from "./Bucket";
 
 const AnalyzerQuery = gql`
   query Analyzer($id: ID!) {

@@ -6,6 +6,7 @@ import { QueryAnalysesQuery } from "./QueryAnalyses";
 import { useForm, fromFieldValidators, TextInput, TextArea, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { CodeInput } from "./CodeInput";
 import { useToast } from "./ToastProvider";
+import { queryAnalysisConfigOptions } from "./Bucket";
 
 const QueryAnalysisQuery = gql`
   query QueryAnalysis($id: ID!) {
@@ -42,7 +43,7 @@ export function QueryAnalysis() {
     skip: !queryAnalysisId || queryAnalysisId === "new",
   });
   const [createOrUpdateQueryAnalysisMutate, createOrUpdateQueryAnalysisMutation] = useCreateOrUpdateQueryAnalysisMutation({
-    refetchQueries: [QueryAnalysisQuery, QueryAnalysesQuery],
+    refetchQueries: [QueryAnalysisQuery, QueryAnalysesQuery,queryAnalysisConfigOptions],
     onCompleted(data) {
       if (data.queryAnalysis?.entity) {
         if (queryAnalysisId === "new") {

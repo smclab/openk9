@@ -252,7 +252,7 @@ export function Bucket() {
   );
 }
 
-gql`
+export const queryAnalysisConfigOptions=gql`
   query QueryAnalysisOptions($searchText: String, $cursor: String) {
     options: queryAnalyses(searchText: $searchText, first: 5, after: $cursor) {
       edges {
@@ -303,7 +303,7 @@ gql`
   }
 `;
 
-gql`
+export const searchConfigOptions=gql`
   query SearchConfigOptions($searchText: String, $cursor: String) {
     options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
       edges {
