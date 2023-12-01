@@ -5,6 +5,7 @@ import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
+import { searchConfigOptions } from "./Bucket";
 
 export const SearchConfigsQuery = gql`
   query SearchConfigs($searchText: String, $cursor: String) {
@@ -40,7 +41,7 @@ export function SearchConfigs() {
   const searchConfigsQuery = useSearchConfigsQuery();
   const showToast = useToast();
   const [deleteSearchConfigMutate] = useDeleteSearchConfigMutation({
-    refetchQueries: [SearchConfigsQuery],
+    refetchQueries: [SearchConfigsQuery,searchConfigOptions],
     onCompleted(data) {
       if (data.deleteSearchConfig?.id) {
         showToast({ displayType: "success", title: "Search config deleted", content: data.deleteSearchConfig.name ?? "" });
