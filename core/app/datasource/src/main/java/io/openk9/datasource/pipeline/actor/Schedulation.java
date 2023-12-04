@@ -114,8 +114,14 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Schedulation(
-					ctx, schedulationKey, sessionFactory, datasourceService)))
-			.onFailure(SupervisorStrategy.resume());
+					ctx, schedulationKey, sessionFactory, datasourceService)
+				)
+			)
+			.onFailure(SupervisorStrategy.restartWithBackoff(
+				Duration.ofSeconds(3),
+				Duration.ofSeconds(60),
+				0.2)
+			);
 	}
 
 
