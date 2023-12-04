@@ -41,7 +41,6 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import io.openk9.auth.tenant.TenantResolver;
 
 @ApplicationScoped
 @ActivateRequestContext
@@ -186,7 +185,7 @@ public class MLK8sResource {
 				.build();
 
 			_kubernetesClient.configMaps()
-				.inNamespace(namespace).create(configMap);
+				.inNamespace(namespace).resource(configMap).create();
 
 			logger.info("Created configmap: " + configMap.toString());
 
@@ -232,7 +231,7 @@ public class MLK8sResource {
 
 			deployment =
 				_kubernetesClient.apps().deployments().inNamespace(namespace)
-					.create(deployment);
+					.resource(deployment).create();
 
 			logger.info("Created deployment: " + deployment.toString());
 
@@ -253,7 +252,8 @@ public class MLK8sResource {
 				.endSpec()
 				.build();
 
-			service = _kubernetesClient.services().inNamespace(namespace).create(service);
+			service = _kubernetesClient.services().inNamespace(namespace)
+					.resource(service).create();
 
 			logger.info("Created service with name " + service.getMetadata().getName());
 
@@ -347,7 +347,7 @@ public class MLK8sResource {
 
 			deployment =
 				_kubernetesClient.apps().deployments().inNamespace(namespace)
-					.create(deployment);
+					.resource(deployment).create();
 
 			logger.info("Created deployment: " + deployment.toString());
 
@@ -369,8 +369,8 @@ public class MLK8sResource {
 				.build();
 
 			service =
-				_kubernetesClient.services().inNamespace(namespace).create(
-					service);
+				_kubernetesClient.services().inNamespace(namespace)
+						.resource(service).create();
 
 			logger.info(
 				"Created service with name " + service.getMetadata().getName());
