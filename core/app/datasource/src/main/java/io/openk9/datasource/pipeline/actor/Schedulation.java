@@ -132,6 +132,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
 
@@ -161,9 +164,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(BUSY_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
