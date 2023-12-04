@@ -20,7 +20,6 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import io.vertx.core.buffer.Buffer;
@@ -35,6 +34,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
@@ -82,39 +83,36 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private final SchedulationKey key;
 	private final Mutiny.SessionFactory sessionFactory;
-	private final DatasourceService datasourceService;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Duration timeout;
-	private Ingest currentIngest;
 	private Scheduler scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
-
+	private int maxWorkers = 3;
+	private int workers = 0;
+	private Set<ActorRef<Response>> consumers = new HashSet<>();
 
 	public Schedulation(
 		ActorContext<Command> context,
 		SchedulationKey key,
-		Mutiny.SessionFactory sessionFactory,
-		DatasourceService datasourceService) {
+		Mutiny.SessionFactory sessionFactory
+	) {
 
 		super(context);
 		this.key = key;
 		this.sessionFactory = sessionFactory;
-		this.datasourceService = datasourceService;
 		this.timeout = getTimeout(context);
 
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory,
-		DatasourceService datasourceService) {
+		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory) {
 
 		return Behaviors
 			.<Command>supervise(
-				Behaviors.setup(ctx -> new Schedulation(
-					ctx, schedulationKey, sessionFactory, datasourceService)
+				Behaviors.setup(ctx -> new Schedulation(ctx, schedulationKey, sessionFactory)
 				)
 			)
 			.onFailure(SupervisorStrategy.restartWithBackoff(
@@ -173,8 +171,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Receive<Command> finish() {
 		logBehavior(FINISH_BEHAVIOR);
 
-		currentIngest = null;
-
 		return newReceiveBuilder()
 			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
@@ -185,8 +181,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> next() {
 		logBehavior(NEXT_BEHAVIOR);
-
-		currentIngest = null;
 
 		if (!lag.isEmpty()) {
 			Command command = lag.pop();
@@ -218,7 +212,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onIngest(Ingest ingest) {
-		this.currentIngest = ingest;
 		this.lastRequest = LocalDateTime.now();
 
 		String indexName = getIndexName();
@@ -240,21 +233,25 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext()
 				.spawnAnonymous(
 					EnrichPipeline.create(
-						key, responseActorRef, dataPayload, scheduler));
+						key, responseActorRef, ingest.replyTo, dataPayload, scheduler)
+				);
 
 			enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
 
-			return this.busy();
+			consumers.add(ingest.replyTo());
+			workers++;
+
+			return workers < maxWorkers ? this.next() : this.busy();
 		}
 		else if (!dataPayload.isLast()) {
-			currentIngest.replyTo.tell(new Failure("content-id is null"));
+			ingest.replyTo.tell(new Failure("content-id is null"));
 			return this.next();
 		}
 		else {
-			currentIngest.replyTo.tell(Success.INSTANCE);
+			ingest.replyTo.tell(Success.INSTANCE);
 
 			if (!failureTracked) {
-				log.infof("%s ingestion is done, replyTo %s", key, currentIngest.replyTo);
+				log.infof("%s ingestion is done, replyTo %s", key, ingest.replyTo);
 
 				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
 
@@ -263,7 +260,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			else {
 				log.infof(
 					"%s ingestion is done, but a failure was tracked, wait for the next message",
-					key, currentIngest.replyTo
+					key, ingest.replyTo
 				);
 
 				return this.next();
@@ -316,26 +313,25 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponseWrapper eprw) {
 		EnrichPipeline.Response response = eprw.response;
 
-		if (response instanceof EnrichPipeline.Success) {
-
+		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
 				"enrich pipeline success for content-id %s replyTo %s",
-				getContentId(currentIngest.payload), currentIngest.replyTo);
+				success.dataPayload().getContentId(), success.replyTo()
+			);
 
-			currentIngest.replyTo.tell(Success.INSTANCE);
+			response.replyTo().tell(Success.INSTANCE);
 		}
-		else if (response instanceof EnrichPipeline.Failure) {
-			Throwable exception = ((EnrichPipeline.Failure) response).exception();
+		else if (response instanceof EnrichPipeline.Failure failure) {
+			Throwable exception = failure.exception();
 			log.error("enrich pipeline failure", exception);
 			this.failureTracked = true;
-			currentIngest.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
+			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
-		return this.next();
-	}
+		workers--;
+		consumers.remove(response.replyTo());
 
-	private String getContentId(byte[] payload) {
-		return Json.decodeValue(Buffer.buffer(payload), DataPayload.class).getContentId();
+		return this.next();
 	}
 
 	private Behavior<Command> onPersistDataIndex() {
@@ -516,8 +512,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onPostStop(PostStop postStop) {
-		if (currentIngest != null) {
-			currentIngest.replyTo.tell(new Failure("stopped for unexpected reason"));
+		for (ActorRef<Response> consumer : consumers) {
+			consumer.tell(new Failure("stopped for unexpected reason"));
 		}
 
 		return Behaviors.same();

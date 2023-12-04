@@ -68,8 +68,7 @@ public class ActorSystemConfig {
 					new Schedulation.SchedulationKey(strings[0], strings[1]);
 				return Schedulation.create(
 					key,
-					sessionFactory,
-					datasourceService
+					sessionFactory
 				);
 			}));
 
