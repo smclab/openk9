@@ -44,12 +44,14 @@ services:
         image: postgres:latest
         hostname: postgresql
         environment:
+            - POSTGRES_MULTIPLE_DATABASES=openk9,tenantmanager,keycloak
             - POSTGRES_PASSWORD=openk9
-            - POSTGRES_USER=openk9
-            - POSTGRES_MULTIPLE_DATABASES=openk9,tenant-manager,keycloak
-            - PGDATA=/var/lib/postgresql/data/pgdata
+            - POSTGRES_USER=postgres
+            - OPENK9_USER=openk9
+            - OPENK9_PASSWORD=openk9
         volumes:
             - ./postgres/db-data:/var/lib/postgresql/data
+            - ./compose-utilities:/docker-entrypoint-initdb.d
     adminer:
         image: adminer
         restart: always
@@ -96,7 +98,7 @@ services:
         environment:
             QUARKUS_DATASOURCE_USERNAME: 'openk9'
             QUARKUS_DATASOURCE_PASSWORD: 'openk9'
-            QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/tenant-manager'
+            QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/tenantmanager'
             OPENK9_DATASOURCE_URL: 'postgresql://postgresql/openk9'
             QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'none'
             QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
@@ -124,6 +126,7 @@ services:
         container_name: datasource
         environment:
             AKKA_CLUSTER_BOOTSTRAP_SERVICE_NAME: datasource
+            AKKA_CLUSTER_FILE: local
             IO_OPENK9_SCHEDULATION_PURGE_CRON: 0 */10 * ? * *
             IO_OPENK9_SCHEDULATION_PURGE_MAX_AGE: 2d
             IO_OPENK9_SCHEDULATION_TIMEOUT: 100s
@@ -174,11 +177,15 @@ services:
         image: smclab/openk9-searcher:1.5.0
         container_name: searcher
         environment:
-            JAVA_DEBUG_PORT: '*:5005'
-            JAVA_MIN_MEM: '3096M'
-            JAVA_MAX_MEM: '3096M'
-            JAVA_PERM_MEM: '1024M'
-            JAVA_MAX_PERM_MEM: '1024M'
+            OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.local:8081/realms/{realm}
+            OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
+            QUARKUS_ELASTICSEARCH_HOSTS: elasticsearch:9200
+            QUARKUS_ELASTICSEARCH_USERNAME: elastic
+            QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: openk9-datasource
+            QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
+            QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.local:8081/realms/master
+            QUARKUS_OIDC_CLIENT_ID: openk9
+            QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.local:8081
         ports:
             - 8188:8080
     entity-manager:
