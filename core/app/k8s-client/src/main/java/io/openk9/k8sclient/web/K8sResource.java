@@ -15,6 +15,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.SseElementType;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Path("/k8s")
+@RolesAllowed("k9-admin")
 public class K8sResource {
 
 	@Inject
