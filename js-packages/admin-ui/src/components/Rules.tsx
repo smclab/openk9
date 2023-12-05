@@ -57,7 +57,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
         onNodesChange={onNodesChange}
         fitView
       >
-        <MiniMap />
+        <MiniMap style={{ zIndex: "0" }} />
         <Controls />
         <Background />
       </ReactFlow>
