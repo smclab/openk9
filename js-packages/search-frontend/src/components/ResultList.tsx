@@ -34,10 +34,12 @@ type ResultsProps<E> = {
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
+  label?: string | null | undefined;
+  counterIsVisible?:boolean;
   setIdPreview?:
-    | React.Dispatch<React.SetStateAction<string>>
-    | undefined
-    | null;
+  | React.Dispatch<React.SetStateAction<string>>
+  | undefined
+  | null;
 };
 function Results<E>({
   displayMode,
@@ -53,6 +55,8 @@ function Results<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  label,
+  counterIsVisible=false,
   setIdPreview,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -74,7 +78,10 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          label={label}
+          counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
+
         />
       );
     case "infinite":
@@ -93,7 +100,10 @@ function Results<E>({
           setSortAfterKey={setSortAfterKey}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          label={label}
+          counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
+
         />
       );
     case "virtual":
@@ -111,6 +121,8 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
+          label={label}
+          counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
         />
       );
@@ -124,6 +136,9 @@ type ResultCountProps = {
   setSortResult: (sortResultNew: SortField) => void;
   isMobile: boolean;
   addClass?: string;
+  label?: string | undefined | null;
+  results: any;
+  counterIsVisible: boolean;
   language?: string;
 };
 
@@ -132,7 +147,10 @@ function ResultCount({
   setSortResult,
   isMobile,
   addClass,
+  label,
   language,
+  results,
+  counterIsVisible,
 }: ResultCountProps) {
   const client = useOpenK9Client();
   const { t } = useTranslation();
@@ -170,9 +188,20 @@ function ResultCount({
               margin: 0;
             `}
           >
-            {t("result")}
+            {label || t("result")}
           </h2>
         </span>
+        {counterIsVisible && (
+          <span
+            className="openk9-result-list-counter-number"
+            css={css`
+              color: var(--openk9-embeddable-search--active-color);
+              font-weight: 700;
+            `}
+          >
+            {results.data?.pages[0].total || 0}
+          </span>
+        )}
       </div>
       <div
         className="openk9-number-result-list-container-wrapper "
@@ -203,11 +232,8 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList
-              setSortResult={setSortResult}
-              relevance={t("relevance") || "relevance"}
-              language={language}
-            />
+            <SortResultList setSortResult={setSortResult}  relevance={t("relevance") || "relevance"}
+              language={language}/>
           </span>
         </div>
       </div>
@@ -230,7 +256,11 @@ type ResulListProps<E> = {
   setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
 };
 
-type FiniteResultsProps<E> = ResulListProps<E> & { sortAfterKey: string };
+type FiniteResultsProps<E> = ResulListProps<E> & {
+  sortAfterKey: string;
+  label: string | null | undefined;
+  counterIsVisible: boolean;
+};
 export function FiniteResults<E>({
   renderers,
   searchQuery,
@@ -244,6 +274,8 @@ export function FiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  label,
+  counterIsVisible,
   setIdPreview,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
@@ -270,8 +302,11 @@ export function FiniteResults<E>({
           `}
         >
           <ResultCount
+            counterIsVisible={counterIsVisible}
             setSortResult={setSortResult}
             isMobile={isMobile}
+            label={label}
+            results={results}
             language={language}
           >
             {results.data?.pages[0].total}
@@ -301,6 +336,8 @@ export function FiniteResults<E>({
 type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
+  label?: string | undefined | null;
+  counterIsVisible: boolean;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
 };
 export function InfiniteResults<E>({
@@ -317,6 +354,8 @@ export function InfiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  label,
+  counterIsVisible,
   setIdPreview,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
@@ -353,8 +392,11 @@ export function InfiniteResults<E>({
           `}
         >
           <ResultCount
+            counterIsVisible={counterIsVisible}
             setSortResult={setSortResult}
             isMobile={isMobile}
+            label={label}
+            results={results}
             language={language}
           >
             {results.data?.pages[0].total}
@@ -429,6 +471,9 @@ export function InfiniteResults<E>({
             setSortResult={setSortResult}
             isMobile={isMobile}
             addClass="openk9-container-no-results"
+            label={label}
+            results={result}
+            counterIsVisible={counterIsVisible}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -441,6 +486,8 @@ export function InfiniteResults<E>({
 
 type VirtualResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
+  label?: string | undefined | null;
+  counterIsVisible:boolean;
 };
 export function VirtualResults<E>({
   renderers,
@@ -455,6 +502,8 @@ export function VirtualResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
+  label,
+  counterIsVisible
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -481,6 +530,9 @@ export function VirtualResults<E>({
         <ResultCount
           setSortResult={setSortResult}
           isMobile={isMobile}
+          label={label}
+          results={results}
+          counterIsVisible={counterIsVisible}
           language={language}
         >
           {results.data?.pages[0].total}

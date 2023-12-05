@@ -408,6 +408,8 @@ export function Main({
             sortAfterKey={sortAfterKey}
             numberOfResults={numberOfResults}
             setIdPreview={setIdPreview}
+            counterIsVisible={configuration.resultList?.counterIsVisible||false}
+            label={configuration.resultList?.label}
           />
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,

@@ -210,6 +210,8 @@ type DataRangePickerVerticalProps = {
 type ResultListProps = {
   element: Element | string | null;
   changeOnOver: boolean;
+  counterIsVisible?: boolean;
+  label?:string;
 };
 
 type SortResultConfigurableProps = {
