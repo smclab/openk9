@@ -9,9 +9,8 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.service.SchedulerService;
 
 import javax.enterprise.inject.spi.CDI;
@@ -21,12 +20,12 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
 	private final Schedulation.SchedulationKey schedulationKey;
-	private final Scheduler scheduler;
+	private final SchedulerDTO scheduler;
 	private final ActorRef<Response> replyTo;
 
 	public NotificationSender(
 		ActorContext<Command> context,
-		Scheduler scheduler,
+		SchedulerDTO scheduler,
 		Schedulation.SchedulationKey schedulationKey, ActorRef<Response> replyTo) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
@@ -38,7 +37,7 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 	}
 
 	public static Behavior<Command> create(
-		Scheduler scheduler, Schedulation.SchedulationKey key, ActorRef<Response> replyTo) {
+		SchedulerDTO scheduler, Schedulation.SchedulationKey key, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key, replyTo));
 	}
@@ -65,15 +64,15 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 		VertxUtil.runOnContext(() -> service.getDeletedContentIds(tenantName, scheduleId), list -> {
 
-			Long datasourceId = scheduler.getDatasource().getId();
-			DataIndex newDataIndex = scheduler.getNewDataIndex();
+			Long datasourceId = scheduler.getDatasourceId();
+			String newDataIndexName = scheduler.getNewDataIndexName();
 
 			for (String deletedContentId : list) {
 				sender.sendEvent(
 					DatasourceMessage
 						.Delete
 						.builder()
-						.indexName(newDataIndex.getName())
+						.indexName(newDataIndexName)
 						.datasourceId(datasourceId)
 						.tenantId(tenantName)
 						.contentId(deletedContentId)

@@ -7,10 +7,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.collection.Collections;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichPipelineItem;
-import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -24,7 +23,6 @@ import org.jboss.logging.Logger;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -39,7 +37,7 @@ public class EnrichPipeline {
 		ActorRef<Response> schedulation,
 		ActorRef<Schedulation.Response> consumer,
 		DataPayload dataPayload,
-		Scheduler scheduler
+		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
 
 	) implements Command, CborSerializable {}
 	private record IndexWriterResponseWrapper(
@@ -49,7 +47,7 @@ public class EnrichPipeline {
 		EnrichItemSupervisor.Response response
 	) implements Command {}
 	private record EnrichItemError(
-		EnrichItem enrichItem,
+		EnrichItemDTO enrichItem,
 		Throwable exception
 	) implements Command {}
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
@@ -92,7 +90,7 @@ public class EnrichPipeline {
 		Setup setup
 	) {
 
-		Scheduler scheduler = setup.scheduler();
+		SchedulerDTO scheduler = setup.scheduler();
 		DataPayload dataPayload = setup.dataPayload();
 		ActorRef<Response> schedulation = setup.schedulation();
 		ActorRef<Schedulation.Response> consumer = setup.consumer();
@@ -102,24 +100,13 @@ public class EnrichPipeline {
 				IndexWriterActor.Response.class,
 				IndexWriterResponseWrapper::new);
 
-		Datasource datasource = scheduler.getDatasource();
-		io.openk9.datasource.model.EnrichPipeline enrichPipeline =
-			datasource.getEnrichPipeline();
-
-		if (scheduler.getOldDataIndex() != null) {
-			String oldDataIndex = scheduler.getOldDataIndex().getName();
-			dataPayload.setOldIndexName(oldDataIndex);
+		String oldDataIndexName = scheduler.getOldDataIndexName();
+		if (oldDataIndexName != null) {
+			dataPayload.setOldIndexName(oldDataIndexName);
 		}
 
-		Set<EnrichPipelineItem> items;
 
-		if (enrichPipeline != null) {
-			items = enrichPipeline.getEnrichPipelineItems();
-		} else {
-			items = new HashSet<>();
-		}
-
-		log.infof("start pipeline for datasource with id %s", datasource.getId());
+		log.infof("start pipeline for datasource with id %s", scheduler.getDatasourceId());
 
 		ActorRef<HttpSupervisor.Command> supervisorActorRef =
 			ctx.spawnAnonymous(HttpSupervisor.create(key));
@@ -132,7 +119,7 @@ public class EnrichPipeline {
 			consumer,
 			dataPayload,
 			scheduler,
-			items
+			scheduler.getEnrichItems()
 		);
 
 	}
@@ -144,8 +131,8 @@ public class EnrichPipeline {
 		ActorRef<Response> replyTo,
 		ActorRef<Schedulation.Response> consumer,
 		DataPayload dataPayload,
-		Scheduler scheduler,
-		Set<EnrichPipelineItem> enrichPipelineItems
+		SchedulerDTO scheduler,
+		Set<EnrichItemDTO> enrichPipelineItems
 	) {
 
 
@@ -211,9 +198,8 @@ public class EnrichPipeline {
 
 		}
 
-		EnrichPipelineItem enrichPipelineItem = Collections.head(enrichPipelineItems);
-		EnrichItem enrichItem = enrichPipelineItem.getEnrichItem();
-		Set<EnrichPipelineItem> tail = Collections.tail(enrichPipelineItems);
+		EnrichItemDTO enrichItem = Collections.head(enrichPipelineItems);
+		Set<EnrichItemDTO> tail = Collections.tail(enrichPipelineItems);
 
 
 		log.infof("start enrich for enrichItem with id %s", enrichItem.getId());
@@ -255,7 +241,7 @@ public class EnrichPipeline {
 		return Behaviors.receive(Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
-				EnrichItem enrichItemError = param.enrichItem();
+				EnrichItemDTO enrichItemError = param.enrichItem();
 
 				EnrichItem.BehaviorOnError behaviorOnError = enrichItemError.getBehaviorOnError();
 

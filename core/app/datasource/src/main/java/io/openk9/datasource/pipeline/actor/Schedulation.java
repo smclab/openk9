@@ -22,6 +22,8 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -52,6 +54,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String FINISH_BEHAVIOR = "Finish";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Schedulation.class);
+	private final SchedulerMapper schedulerMapper;
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
@@ -88,7 +91,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final Mutiny.SessionFactory sessionFactory;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Duration timeout;
-	private Scheduler scheduler;
+	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
@@ -99,24 +102,29 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public Schedulation(
 		ActorContext<Command> context,
 		SchedulationKey key,
-		Mutiny.SessionFactory sessionFactory
-	) {
+		Mutiny.SessionFactory sessionFactory,
+		SchedulerMapper schedulerMapper) {
 
 		super(context);
 		this.key = key;
 		this.sessionFactory = sessionFactory;
+		this.schedulerMapper = schedulerMapper;
 		this.timeout = getTimeout(context);
 
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory) {
+		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory, SchedulerMapper schedulerMapper) {
 
 		return Behaviors
 			.<Command>supervise(
-				Behaviors.setup(ctx -> new Schedulation(ctx, schedulationKey, sessionFactory)
-				)
+				Behaviors.setup(ctx -> new Schedulation(
+					ctx,
+					schedulationKey,
+					sessionFactory,
+					schedulerMapper
+				))
 			)
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 				Duration.ofSeconds(3),
@@ -210,7 +218,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
-		this.scheduler = setScheduler.scheduler;
+		this.scheduler = schedulerMapper.map(setScheduler.scheduler);
 		return this.next();
 	}
 
@@ -348,12 +356,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private Behavior<Command> onPersistDataIndex() {
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		io.openk9.datasource.model.Datasource datasource = scheduler.getDatasource();
+		Long newDataIndexId = scheduler.getNewDataIndexId();
+		Long datasourceId = scheduler.getDatasourceId();
 
-		if (newDataIndex != null) {
-			Long newDataIndexId = newDataIndex.getId();
-			Long datasourceId = datasource.getId();
+		if (newDataIndexId != null) {
 			String tenantId = key.tenantId;
 
 			log.infof(
@@ -396,7 +402,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		if (scheduler.getOldDataIndex() != null && scheduler.getNewDataIndex() != null) {
+		Long newDataIndexId = scheduler.getNewDataIndexId();
+		Long oldDataIndexId = scheduler.getOldDataIndexId();
+
+		if (newDataIndexId != null && oldDataIndexId != null) {
 			ActorRef<NotificationSender.Response> messageAdapter = getContext().messageAdapter(
 				NotificationSender.Response.class, NotificationSenderResponseWrapper::new);
 			getContext().spawnAnonymous(
@@ -440,7 +449,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
-		Long datasourceId = scheduler.getDatasource().getId();
+		Long datasourceId = scheduler.getDatasourceId();
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
 			key.tenantId, (s, tx) -> s
 				.find(Datasource.class, datasourceId)
@@ -506,17 +515,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private String getIndexName() {
-		String indexName = null;
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
+		String newDataIndexName = scheduler.getNewDataIndexName();
 
-		if (newDataIndex != null) {
-			indexName = newDataIndex.getName();
-		}
-
-		if (indexName == null) {
-			indexName = scheduler.getOldDataIndex().getName();
-		}
-		return indexName;
+		return newDataIndexName != null
+			? newDataIndexName
+			: scheduler.getOldDataIndexName();
 	}
 
 	private Behavior<Command> onStop() {

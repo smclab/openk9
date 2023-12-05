@@ -5,6 +5,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.json.JsonObject;
 
@@ -14,12 +15,12 @@ public class EnrichItemSupervisor {
 
 	public sealed interface Command {}
 	public record Execute(
-		EnrichItem enrichItem, DataPayload dataPayload,
+		io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO enrichItem, DataPayload dataPayload,
 		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	private record HttpSupervisorWrapper(HttpSupervisor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovySupervisorWrapper(GroovyActor.Response response, ActorRef<Response> replyTo) implements Command {}
 	private record GroovyValidatorWrapper(
-		GroovyActor.Response response, EnrichItem enrichItem,
+		GroovyActor.Response response, EnrichItemDTO enrichItem,
 		JsonObject dataPayload, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response {}
 	public record Body(byte[] body) implements Response {}
@@ -46,7 +47,7 @@ public class EnrichItemSupervisor {
 		ActorContext<Command> ctx) {
 
 		GroovyActor.Response response = gvw.response;
-		EnrichItem enrichItem = gvw.enrichItem;
+		EnrichItemDTO enrichItem = gvw.enrichItem;
 		JsonObject dataPayload = gvw.dataPayload;
 
 		if (response instanceof GroovyActor.GroovyValidateResponse) {
@@ -127,7 +128,7 @@ public class EnrichItemSupervisor {
 		ActorRef<HttpSupervisor.Command> httpSupervisor,
 		Execute execute, ActorContext<Command> ctx) {
 
-		EnrichItem enrichItem = execute.enrichItem;
+		EnrichItemDTO enrichItem = execute.enrichItem;
 		DataPayload dataPayload = execute.dataPayload;
 		ActorRef<Response> replyTo = execute.replyTo;
 		LocalDateTime expiredDate = execute.expiredDate;
@@ -156,7 +157,7 @@ public class EnrichItemSupervisor {
 	}
 
 	private static void onGroovyEnrichItem(
-		EnrichItem enrichItem, JsonObject dataPayload, ActorRef<Response> replyTo,
+		EnrichItemDTO enrichItem, JsonObject dataPayload, ActorRef<Response> replyTo,
 		ActorContext<Command> ctx) {
 
 		ActorRef<GroovyActor.Response> responseActorRef =
@@ -177,7 +178,7 @@ public class EnrichItemSupervisor {
 	}
 
 	private static void onHttpEnrichItem(
-		EnrichItem enrichItem, JsonObject dataPayload,
+		EnrichItemDTO enrichItem, JsonObject dataPayload,
 		ActorRef<Response> replyTo, ActorRef<HttpSupervisor.Command> httpSupervisor,
 		LocalDateTime expiredDate, ActorContext<Command> ctx) {
 

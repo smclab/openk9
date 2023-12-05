@@ -11,8 +11,8 @@ import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
 import io.openk9.datasource.queue.QueueConnectionProvider;
-import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.cache.Cache;
@@ -69,7 +69,8 @@ public class ActorSystemConfig {
 					new Schedulation.SchedulationKey(strings[0], strings[1]);
 				return Schedulation.create(
 					key,
-					sessionFactory
+					sessionFactory,
+					schedulerMapper
 				);
 			}));
 
@@ -119,11 +120,11 @@ public class ActorSystemConfig {
 	Logger logger;
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
-	@Inject
-	DatasourceService datasourceService;
     @Inject
 	QueueConnectionProvider queueConnectionProvider;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
+	@Inject
+	SchedulerMapper schedulerMapper;
 
 }
