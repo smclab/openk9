@@ -41,7 +41,7 @@ type SearchProps = {
   btnSearch?: boolean;
   defaultValue?: string;
   isSearchOnInputChange?: boolean;
-  htmlKey?: string|undefined|null;
+  htmlKey?: string | undefined | null;
   textOnQueryStringOnCLick?: string | null | undefined;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
@@ -76,10 +76,10 @@ export function Search({
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
 
   const text =
-  textOnQueryStringOnCLick && textOnQueryStringOnCLick !== ""
-    ? textOnQueryStringOnCLick
-    : defaultValue;
-const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
+    textOnQueryStringOnCLick && textOnQueryStringOnCLick !== ""
+      ? textOnQueryStringOnCLick
+      : defaultValue;
+  const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -92,16 +92,14 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
     }
   }, [adjustedSelection]);
   React.useEffect(() => {
-    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch ) {
-    
-        selectionsDispatch({
-          type: "set-text",
-          text: defaultValue,
-          textOnchange: defaultValue,
-          onClick:btnSearch,
-        });
-      if(defaultValue!=="")
-      setTextBtn(defaultValue);
+    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
+      selectionsDispatch({
+        type: "set-text",
+        text: defaultValue,
+        textOnchange: defaultValue,
+        onClick: btnSearch,
+      });
+      if (defaultValue !== "") setTextBtn(defaultValue);
     }
   }, [defaultValue]);
 
@@ -272,7 +270,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
               className="openk9--input-search"
               autoComplete="off"
               ref={inputRef}
-              id={htmlKey||"search-openk9"}
+              id={htmlKey || "search-openk9"}
               aria-label={
                 t(
                   "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
@@ -288,7 +286,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     type: "set-text",
                     text: event.currentTarget.value,
                     textOnchange: event.currentTarget.value,
-                    onClick:btnSearch,
+                    onClick: btnSearch,
                   });
                   onDetail(null);
                   setOpenedDropdown(null);
@@ -298,13 +296,13 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     selectionsDispatch({
                       type: "set-text",
                       text: event.currentTarget.value,
-                      onClick:btnSearch,
+                      onClick: btnSearch,
                     });
                   } else {
                     selectionsDispatch({
                       type: "set-text",
                       textOnchange: event.currentTarget.value,
-                      onClick:btnSearch,
+                      onClick: btnSearch,
                     });
                   }
                 }
@@ -383,7 +381,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                         type: "set-text",
                         text: option?.value,
                         textOnchange: option?.value,
-                        onClick:btnSearch,
+                        onClick: btnSearch,
                       });
                     }
                   }
@@ -460,6 +458,25 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
               background: "inherit",
               border: "none",
             }}
+            onClick={() => {
+              if (!btnSearch) {
+                selectionsDispatch({
+                  type: "set-text",
+                  text: "",
+                  onClick: btnSearch,
+                });
+              } else {
+                selectionsDispatch({
+                  type: "set-text",
+                  textOnchange: " ",
+                  text: " ",
+                  onClick: btnSearch,
+                });
+                setTextBtn("");
+                onDetail(null);
+                setOpenedDropdown(null);
+              }
+            }}
           >
             <div>
               <span
@@ -471,25 +488,6 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     display: none;
                   }
                 `}
-                onClick={() => {
-                  if (!btnSearch) {
-                    selectionsDispatch({
-                      type: "set-text",
-                      text: "",
-                      onClick:btnSearch,
-                    });
-                  } else {
-                    selectionsDispatch({
-                      type: "set-text",
-                      textOnchange: " ",
-                      text: " ",
-                      onClick:btnSearch,
-                    });
-                    setTextBtn("");
-                    onDetail(null);
-                    setOpenedDropdown(null);
-                  }
-                }}
               >
                 <DeleteLogo />
               </span>
@@ -522,7 +520,7 @@ const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
                     type: "set-text",
                     text: textBtn,
                     textOnchange: textBtn,
-                    onClick:btnSearch,
+                    onClick: btnSearch,
                   });
                 }
                 onDetail(null);
