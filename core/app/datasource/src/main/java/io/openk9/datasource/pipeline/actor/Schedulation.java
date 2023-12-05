@@ -1,6 +1,7 @@
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.SupervisorStrategy;
@@ -9,6 +10,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
+import akka.cluster.sharding.typed.javadsl.ClusterSharding;
+import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
@@ -227,16 +230,26 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			dataPayload.setIndexName(indexName);
 
+			String contentId = dataPayload.getContentId();
+
 			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
 				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
 
-			ActorRef<EnrichPipeline.Command> enrichPipelineActorRef = getContext()
-				.spawnAnonymous(
-					EnrichPipeline.create(
-						key, responseActorRef, ingest.replyTo, dataPayload, scheduler)
-				);
+			ActorSystem<Void> system = getContext().getSystem();
 
-			enrichPipelineActorRef.tell(EnrichPipeline.Start.INSTANCE);
+			ClusterSharding clusterSharding = ClusterSharding.get(system);
+
+			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
+				EnrichPipeline.ENTITY_TYPE_KEY,
+				key.value() + "#" + contentId
+			);
+
+			enrichPipelineRef.tell(new EnrichPipeline.Setup(
+				responseActorRef,
+				ingest.replyTo,
+				dataPayload,
+				scheduler)
+			);
 
 			consumers.add(ingest.replyTo());
 			workers++;

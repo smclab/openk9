@@ -7,6 +7,7 @@ import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
 import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -80,6 +81,15 @@ public class ActorSystemConfig {
 				return Token.create(key);
 			}));
 
+			clusterSharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
+				String entityId = entityCtx.getEntityId();
+				String[] strings = entityId.split("#");
+				Schedulation.SchedulationKey schedulationKey =
+					new Schedulation.SchedulationKey(strings[0], strings[1]);
+				String contentId = strings[2];
+
+				return EnrichPipeline.create(schedulationKey, contentId);
+			}));
 		};
 	}
 
