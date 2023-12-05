@@ -52,7 +52,7 @@ public class EnrichPipeline {
 	) implements Command {}
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
-	public sealed interface Response {
+	public sealed interface Response extends CborSerializable {
 		ActorRef<Schedulation.Response> replyTo();
 
 		String scheduleId();
