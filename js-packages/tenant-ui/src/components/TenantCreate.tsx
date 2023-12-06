@@ -9,7 +9,7 @@ import ClayLayout from "@clayui/layout";
 import { useToast } from "./ToastProvider";
 import { useCreateOrUpdateTenantMutation, useTenantQuery } from "../graphql-generated";
 import { useRestClient } from "./queryClient";
-
+import "./Spinner.css";
 gql`
   mutation CreateOrUpdateTenant(
     $id: ID
@@ -78,6 +78,7 @@ export function TenantCreate() {
       createOrUpdateTenantMutate({ variables: { id: undefined, ...data } });
     },
   });
+
   return (
     <ClayLayout.ContainerFluid view>
       {loading && (
@@ -92,19 +93,30 @@ export function TenantCreate() {
             zIndex: "2",
           }}
         >
-          <ClayLoadingIndicator
-            shape="squares"
-            style={{
-              position: "fixed",
-              zIndex: "2",
-              margin: "auto",
-              top: "50%",
-              left: "55%",
-              cursor: "wait",
-            }}
-            displayType="primary"
-            size="lg"
-          />
+          <div style={{ position: "absolute", top: "50%", left: "55%" }}>
+            <div className="spinner">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <div style={{ marginTop: "25px" }}>
+              <div className="spinner-word">
+                <span>L</span>
+                <span>O</span>
+                <span>A</span>
+                <span>D</span>
+                <span>I</span>
+                <span>N</span>
+                <span>G</span>
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

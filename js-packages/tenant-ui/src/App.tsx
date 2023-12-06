@@ -13,7 +13,6 @@ import { apolloClient } from "./components/apolloClient";
 import { ApolloProvider } from "@apollo/client";
 import { queryClient } from "./components/queryClient";
 import { AuthenticationProvider } from "./components/authentication";
-import { Process } from "./components/Process";
 import { Tenants } from "./components/Tenants";
 import { Tenant } from "./components/Tenant";
 import { TenantCreate } from "./components/TenantCreate";
@@ -39,7 +38,6 @@ export default function App() {
                         <Route path="" element={<Tenant />}></Route>
                       </Route>
                     </Route>
-                    <Route path="process" element={<Process />} />
                   </Routes>
                 </div>
               </BrowserRouter>

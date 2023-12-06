@@ -83,7 +83,7 @@ export function Table<
 
   isItemsSelectable?: boolean;
   columns: Array<{ header: React.ReactNode; content(row: Row | undefined): React.ReactNode }>;
-  onDelete(row: Row | undefined): void;
+  onDelete?(row: Row | undefined): void;
   onCreatePath: string;
   rowActions?(row: Row | undefined): Array<{ label: string; icon: string; onClick(): void }>;
   rowsActions?(rows: Array<Row>): Array<{ label: string; onClick(): void }>;
@@ -290,11 +290,6 @@ export function Table<
                   <TableRowActions
                     actions={[
                       ...rowActions(row),
-                      {
-                        label: "Delete",
-                        icon: "trash",
-                        onClick: () => onDelete(row),
-                      },
                       {
                         label: "Redirect",
                         icon: "sites",

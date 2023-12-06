@@ -725,6 +725,30 @@ export function AssociatedEntities<Q>({
   );
 }
 
+export function DropDownCustom() {
+  return (
+    <div aria-labelledby="theDropdownToggleId" className="dropdown-menu">
+      <ul className="list-unstyled">
+        <li>
+          <a className="active dropdown-item" href="#1">
+            Selected Option
+          </a>
+        </li>
+        <li>
+          <a className="dropdown-item" href="#3">
+            Normal Option
+          </a>
+        </li>
+        <li>
+          <a className="disabled dropdown-item" href="#4">
+            Disabled Option
+          </a>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 export function CronInput(props: BaseInputProps<string>) {
   const { label, value, onChange, validationMessages, disabled } = props;
   const scheduling = useCompoundFormField({

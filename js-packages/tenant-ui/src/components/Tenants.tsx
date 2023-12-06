@@ -28,7 +28,6 @@ export function Tenants() {
           field: (data) => data?.tenants,
         }}
         onCreatePath="/buckets/new"
-        onDelete={() => {}}
         columns={[
           { header: "Virtual Host", content: (tenant) => formatVirtualHost(tenant) },
           { header: "Create Date", content: (tenant) => tenant?.createDate },
