@@ -169,6 +169,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		maxWorkers = 3 * nodes;
 
+		log.infof("Max Workers updated to %i", maxWorkers);
+
 		return Behaviors.same();
 	}
 
