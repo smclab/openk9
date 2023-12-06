@@ -169,7 +169,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		maxWorkers = 3 * nodes;
 
-		log.infof("Max Workers updated to %i", maxWorkers);
+		if (log.isDebugEnabled()) {
+			log.debugf(
+				"Max Workers updated to %d for schedule-id %s",
+				maxWorkers,
+				scheduler.getScheduleId()
+			);
+		}
 
 		return Behaviors.same();
 	}
