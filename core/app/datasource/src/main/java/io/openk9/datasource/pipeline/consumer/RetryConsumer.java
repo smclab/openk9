@@ -6,6 +6,7 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
+import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 import org.jboss.logging.Logger;
@@ -103,7 +104,7 @@ public class RetryConsumer extends BaseConsumer {
 	}
 
 	private static int getMaxRetries(Config config) {
-		return getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
+		return AkkaUtils.getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
 	}
 
 }

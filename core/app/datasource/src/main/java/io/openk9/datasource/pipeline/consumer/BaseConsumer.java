@@ -7,11 +7,11 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.typesafe.config.Config;
+import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Schedulation;
 
 import java.time.Duration;
-import java.util.function.Function;
 
 public abstract class BaseConsumer extends DefaultConsumer {
 
@@ -40,21 +40,7 @@ public abstract class BaseConsumer extends DefaultConsumer {
 			Schedulation.ENTITY_TYPE_KEY, queueBind.schedulationKey());
 	}
 
-	protected static <T> T getProperty(
-		Config config, String configPath, Function<String, T> getter, T defaultValue) {
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return defaultValue;
-			} else {
-				return getter.apply(configPath);
-			}
-		} else {
-			return defaultValue;
-		}
-	}
-
 	private static Duration getTimeout(Config config) {
-		return getProperty(config, CONSUMER_TIMEOUT, config::getDuration, Duration.ofMinutes(10));
+		return AkkaUtils.getProperty(config, CONSUMER_TIMEOUT, config::getDuration, Duration.ofMinutes(10));
 	}
 }

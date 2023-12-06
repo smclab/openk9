@@ -18,6 +18,7 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.typesafe.config.Config;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
@@ -47,7 +48,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
-
+	public static final String SCHEDULATION_TIMEOUT = "io.openk9.schedulation.timeout";
+	public static final String WORKERS_PER_NODE = "io.openk9.schedulation.workers-per-node";
+	public static final int WORKERS_PER_NODE_DEFAULT = 2;
 	private static final String INIT_BEHAVIOR = "Init";
 	private static final String READY_BEHAVIOR = "Ready";
 	private static final String BUSY_BEHAVIOR = "Busy";
@@ -55,7 +58,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String FINISH_BEHAVIOR = "Finish";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Schedulation.class);
-	private final SchedulerMapper schedulerMapper;
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
@@ -92,14 +94,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final SchedulationKey key;
 	private final Mutiny.SessionFactory sessionFactory;
 	private final Deque<Command> lag = new ArrayDeque<>();
+	private final Set<ActorRef<Response>> consumers = new HashSet<>();
+	private final SchedulerMapper schedulerMapper;
 	private final Duration timeout;
+	private final int workersPerNode;
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
-	private int maxWorkers = 3;
+	private int maxWorkers;
 	private int workers = 0;
-	private Set<ActorRef<Response>> consumers = new HashSet<>();
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -112,6 +116,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.sessionFactory = sessionFactory;
 		this.schedulerMapper = schedulerMapper;
 		this.timeout = getTimeout(context);
+		this.workersPerNode = getWorkersPerNode(context);
+		this.maxWorkers = workersPerNode;
 
 		ActorRef<Receptionist.Listing> messageAdapter =
 			getContext().messageAdapter(Receptionist.Listing.class, MessageGatewaySubscription::new);
@@ -167,7 +173,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.size();
 
-		maxWorkers = 3 * nodes;
+		maxWorkers = workersPerNode * nodes;
 
 		if (log.isDebugEnabled()) {
 			log.debugf(
@@ -570,21 +576,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		log.infof("Schedulation with key %s behavior is %s", key, behavior);
 	}
 
+	private static int getWorkersPerNode(ActorContext<Command> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
+	}
+
 	private static Duration getTimeout(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 
-		String configPath = "io.openk9.schedulation.timeout";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return Duration.ofHours(6);
-			} else {
-				return config.getDuration(configPath);
-			}
-		} else {
-			return Duration.ofHours(6);
-		}
-
+		return AkkaUtils.getDuration(config, SCHEDULATION_TIMEOUT, Duration.ofHours(6));
 	}
 
 	private void updateLastIngestionDate(DataPayload dataPayload) {

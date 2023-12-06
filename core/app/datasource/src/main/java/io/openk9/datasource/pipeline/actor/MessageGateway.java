@@ -21,6 +21,8 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.Channel;
+import com.typesafe.config.Config;
+import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
 import io.openk9.datasource.pipeline.consumer.MainConsumer;
@@ -187,7 +189,7 @@ public class MessageGateway
 		QueueManager.QueueBind queueBind = spawnConsumer.queueBind;
 
 		try {
-			channel.basicQos(3);
+			channel.basicQos(getWorkersPerNode(getContext()));
 			channel.basicConsume(
 				queueBind.getMainQueue(),
 				false,
@@ -354,4 +356,9 @@ public class MessageGateway
 		return Behaviors.same();
 	}
 
+	private int getWorkersPerNode(ActorContext<Command> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getInteger(config, Schedulation.WORKERS_PER_NODE, Schedulation.WORKERS_PER_NODE_DEFAULT);
+	}
 }
