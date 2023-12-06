@@ -244,6 +244,12 @@ function Tabs({
                 border: none;
                 background: none;
               `}
+              onClick={() => {
+                onSelectedTabIndexChange(index);
+                onConfigurationChange({ filterTokens: [] });
+                if (onAction) onAction();
+                resetFilterCalendar();
+              }}
             >
               <span
                 key={index}
@@ -273,12 +279,6 @@ function Tabs({
                     ${isSelected ? "" : "text-decoration: underline;"}
                   }
                 `}
-                onClick={() => {
-                  onSelectedTabIndexChange(index);
-                  onConfigurationChange({ filterTokens: [] });
-                  if (onAction) onAction();
-                  resetFilterCalendar();
-                }}
               >
                 {tabTraslation.toUpperCase()}
               </span>
