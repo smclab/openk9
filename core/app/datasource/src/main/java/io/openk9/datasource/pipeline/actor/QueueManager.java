@@ -20,8 +20,7 @@ import java.util.Map;
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "schedulationKey-manager";
 	public static final String AMQ_TOPIC_EXCHANGE = "amq.topic";
-	public static final String DLX_EXCHANGE = "dlx";
-	public static final String PARKING_QUEUE = "parking_queue";
+	private static final String DLX_EXCHANGE = "dlx";
 	private static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
 	private static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
 	private static final Logger log = Logger.getLogger(QueueManager.class);
@@ -140,8 +139,6 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 
 			_bindErrorQueue(queueBind);
 
-			_bindParkingQueue();
-
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -211,15 +208,4 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 		);
 	}
 
-	private void _bindParkingQueue() throws IOException {
-		channel.queueDeclare(
-			PARKING_QUEUE,
-			true,
-			false,
-			false,
-			Map.of()
-		);
-
-		channel.queueBind(PARKING_QUEUE, DLX_EXCHANGE, PARKING_QUEUE);
-	}
 }
