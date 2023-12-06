@@ -177,9 +177,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		if (log.isDebugEnabled()) {
 			log.debugf(
-				"Max Workers updated to %d for schedule-id %s",
+				"Max Workers updated to %d for %s",
 				maxWorkers,
-				scheduler.getScheduleId()
+				key
 			);
 		}
 
@@ -573,7 +573,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	private void logBehavior(String behavior) {
-		log.infof("Schedulation with key %s behavior is %s", key, behavior);
+		log.infof("%s behavior is %s", key, behavior);
 	}
 
 	private static int getWorkersPerNode(ActorContext<Command> context) {
