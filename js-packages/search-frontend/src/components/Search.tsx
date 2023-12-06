@@ -271,12 +271,6 @@ export function Search({
               autoComplete="off"
               ref={inputRef}
               id={htmlKey || "search-openk9"}
-              aria-label={
-                t(
-                  "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
-                ) ||
-                "insert text to set the value or use up and down arrow keys to navigate the suggestion box"
-              }
               type="text"
               placeholder={t("search") || "search..."}
               value={btnSearch ? textBtn ?? "" : selectionsState.text}
