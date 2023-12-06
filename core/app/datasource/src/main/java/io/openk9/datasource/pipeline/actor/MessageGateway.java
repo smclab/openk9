@@ -187,12 +187,14 @@ public class MessageGateway
 		QueueManager.QueueBind queueBind = spawnConsumer.queueBind;
 
 		try {
+			channel.basicQos(3);
 			channel.basicConsume(
 				queueBind.getMainQueue(),
 				false,
 				new MainConsumer(
 					channel, getContext(), queueBind, ingestionPayloadMapper)
 			);
+			channel.basicQos(1);
 			channel.basicConsume(
 				queueBind.getRetryQueue(),
 				false,
@@ -235,6 +237,7 @@ public class MessageGateway
 						queueBind.schedulationKey()
 					);
 
+					channel.basicQos(1);
 					channel.basicConsume(
 						queueBind.getErrorQueue(),
 						false,

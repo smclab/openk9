@@ -10,6 +10,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
+import akka.actor.typed.receptionist.Receptionist;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
@@ -69,6 +70,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
 	private record NotificationSenderResponseWrapper(NotificationSender.Response response) implements Command {}
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 	private enum Start implements Command {INSTANCE}
 	private enum Stop implements Command {INSTANCE}
 	private enum Tick implements Command {INSTANCE}
@@ -111,6 +113,13 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.schedulerMapper = schedulerMapper;
 		this.timeout = getTimeout(context);
 
+		ActorRef<Receptionist.Listing> messageAdapter =
+			getContext().messageAdapter(Receptionist.Listing.class, MessageGatewaySubscription::new);
+
+		getContext().getSystem().receptionist().tell(
+			Receptionist.subscribe(MessageGateway.SERVICE_KEY, messageAdapter)
+		);
+
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
@@ -143,10 +152,24 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onSignal(PostStop.class, this::onPostStop);
+	}
+
+	private Behavior<Command> onMessageGatewaySubscription(
+		MessageGatewaySubscription messageGatewaySubscription) {
+
+		int nodes = messageGatewaySubscription
+			.listing()
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.size();
+
+		maxWorkers = 3 * nodes;
+
+		return Behaviors.same();
 	}
 
 	private Receive<Command> init() {
