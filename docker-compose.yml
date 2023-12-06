@@ -107,7 +107,7 @@ services:
             QUARKUS_HTTP_CORS: 'true'
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
-            QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak:8081'
+            QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.local:8081'
             QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.local:8081/realms/tenant-manager'
             QUARKUS_OIDC_CLIENT_ID: 'tenant-manager'
         ports:
@@ -159,6 +159,15 @@ services:
             RABBITMQ_USERNAME: openk9
         ports:
             - 8185:8080
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.api-datasource.entrypoints=web"
+            - "traefik.http.routers.api-datasource.rule=PathPrefix(`/api/datasource`)"
+            - "traefik.http.middlewares.api-datasource_compress.compress=true"
+            - "traefik.http.routers.api-datasource.middlewares=api-datasource-strip@docker,api-datasource_compress@docker"
+            - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
+            - "traefik.http.routers.api-datasource.middlewares=api-datasource_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
     ingestion:
         image: smclab/openk9-ingestion:1.5.0
         container_name: ingestion
@@ -232,15 +241,21 @@ services:
         image: smclab/openk9-admin-ui:1.5.0
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.admin.entrypoints=web"
-            - "traefik.http.routers.admin.rule=PathPrefix(`/admin`)"
+            - "traefik.http.routers.admin-ui.entrypoints=web"
+            - "traefik.http.routers.admin-ui.rule=PathPrefix(`/admin`)"
+            - "traefik.http.middlewares.admin-ui_compress.compress=true"
+            - "traefik.http.routers.admin-ui.middlewares=admin-ui_compress@docker"
+            - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
+            - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
+            - "traefik.http.routers.admin-ui.middlewares=admin-ui_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
+            - "traefik.http.services.admin-ui.loadbalancer.server.port=8080"
     tenant-admin:
         image: smclab/openk9-tenant-ui:1.5.0
         hostname: tenant-admin
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.tenant-admin.entrypoints=web"
-            - "traefik.http.routers.tenant-admin.rule=PathPrefix(`/admin`)"
+            - "traefik.http.routers.tenant-admin.rule=PathPrefix(`/tenant`)"
             - "traefik.http.middlewares.tenant-admin_compress.compress=true"
             - "traefik.http.routers.tenant-admin.middlewares=tenant-admin_compress@docker"
             - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
