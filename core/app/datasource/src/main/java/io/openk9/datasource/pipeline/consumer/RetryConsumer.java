@@ -40,11 +40,25 @@ public class RetryConsumer extends BaseConsumer {
 
 		Map<String, Object> headers = properties.getHeaders();
 
+		if (wasInOthersDLQ(headers)) {
+
+			getChannel().basicPublish(
+				QueueManager.DLX_EXCHANGE,
+				QueueManager.PARKING_QUEUE,
+				properties,
+				body
+			);
+
+			getChannel().basicAck(envelope.getDeliveryTag(), false);
+
+		}
+
 		Map<String, Object> xDeath = getXDeath(headers);
 
 		long count = (long) xDeath.getOrDefault("count", 0L);
 
 		if (count < maxRetries) {
+
 			if (log.isTraceEnabled()) {
 				log.tracef(
 					"(count < maxRetries): %s < %s for payload with hashCode %s",
@@ -53,15 +67,18 @@ public class RetryConsumer extends BaseConsumer {
 					Arrays.hashCode(body)
 				);
 			}
+
 			getChannel().basicPublish(
 				QueueManager.AMQ_TOPIC_EXCHANGE,
 				queueBind.getMainKey(),
 				properties,
 				body
 			);
+
 			getChannel().basicAck(envelope.getDeliveryTag(), false);
 		}
 		else {
+
 			getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 
 			AskPattern.ask(
@@ -70,6 +87,7 @@ public class RetryConsumer extends BaseConsumer {
 				timeout,
 				context.getSystem().scheduler()
 			).whenComplete((r, t) -> {
+
 				if (t != null) {
 					log.warnf(
 						t,
@@ -90,6 +108,7 @@ public class RetryConsumer extends BaseConsumer {
 						queueBind.schedulationKey()
 					);
 				}
+
 			});
 
 		}
@@ -101,6 +120,16 @@ public class RetryConsumer extends BaseConsumer {
 		List<Map<String, Object>> list = (List<Map<String, Object>>)
 			headers.getOrDefault("x-death", List.of(Map.of()));
 		return list.iterator().next();
+	}
+
+	/**
+	 * Assuming that the items for x-death header are more than one,
+	 * if a message comes from more than one dead letter queue
+	 */
+	private static boolean wasInOthersDLQ(Map<String, Object> headers) {
+		List<Map<String, Object>> list = (List<Map<String, Object>>)
+			headers.getOrDefault("x-death", List.of(Map.of()));
+		return list.size() > 1;
 	}
 
 	private static int getMaxRetries(Config config) {
