@@ -22,7 +22,6 @@ import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -674,25 +673,19 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected  <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
 
 		return s.merge(entity)
-			.call(s::flush)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
+			.call(s::flush);
 	}
 
 	public  <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
 
 		return s.persist(entity)
 			.map(v -> entity)
-			.call(s::flush)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
+			.call(s::flush);
 	}
 
 	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
 
-		return s.remove(entity)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
-
+		return s.remove(entity);
 	}
 
 	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
