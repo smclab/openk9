@@ -77,5 +77,9 @@
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-logging-json</artifactId>
+		</dependency>
 	</dependencies>
 </project>
