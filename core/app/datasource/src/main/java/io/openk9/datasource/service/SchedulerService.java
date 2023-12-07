@@ -123,7 +123,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Schedulation.PersistStatusFinished.INSTANCE);
+					schedulationRef.tell(Schedulation.PersistDataIndex.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
