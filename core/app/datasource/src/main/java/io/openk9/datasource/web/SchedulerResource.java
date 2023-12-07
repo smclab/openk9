@@ -24,6 +24,13 @@ public class SchedulerResource {
 		return schedulerService.getDeletedContentIds(schedulerId);
 	}
 
+	@Path("/{schedulerId}/closeSchedulation")
+	@POST
+	public Uni<Void> closeSchedulation(@PathParam("schedulerId") long schedulerId) {
+		return schedulerService.closeSchedulation(
+			routingContext.get("_tenantId"), schedulerId);
+	}
+
 	@Path("/{schedulerId}/cancelSchedulation")
 	@POST
 	public Uni<Void> cancelSchedulation(@PathParam("schedulerId") long schedulerId) {

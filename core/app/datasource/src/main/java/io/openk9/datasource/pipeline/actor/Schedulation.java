@@ -64,8 +64,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
 	public record TrackError(ActorRef<Response> replyTo) implements Command {}
 	public record Restart(ActorRef<Response> replyTo) implements Command {}
+	public enum PersistStatusFinished implements Command {INSTANCE}
 	private enum PersistDataIndex implements Command {INSTANCE}
-	private enum PersistStatusFinished implements Command {INSTANCE}
 	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo) implements Command {}
 	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}

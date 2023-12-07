@@ -110,6 +110,27 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.flatMap(this::indexesDiff);
 	}
 
+	public Uni<Void> closeSchedulation(String tenantId, long schedulerId) {
+		return findById(schedulerId)
+			.chain(scheduler -> switch (scheduler.getStatus()) {
+				case STARTED, ERROR -> {
+					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+
+					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+
+					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
+						Schedulation.ENTITY_TYPE_KEY,
+						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					);
+
+					schedulationRef.tell(Schedulation.PersistStatusFinished.INSTANCE);
+					yield Uni.createFrom().voidItem();
+				}
+				default -> Uni.createFrom().voidItem();
+			});
+	}
+
+
 	public Uni<Void> cancelSchedulation(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
