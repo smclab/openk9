@@ -32,14 +32,14 @@ public class EnrichPipeline {
 		EntityTypeKey.create(EnrichPipeline.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Setup(
 		ActorRef<Response> schedulation,
 		ActorRef<Schedulation.Response> consumer,
 		DataPayload dataPayload,
 		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
 
-	) implements Command, CborSerializable {}
+	) implements Command {}
 	private record IndexWriterResponseWrapper(
 		IndexWriterActor.Response response
 	) implements Command {}

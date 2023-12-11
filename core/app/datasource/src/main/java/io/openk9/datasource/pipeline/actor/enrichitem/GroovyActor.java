@@ -7,16 +7,17 @@ import akka.actor.typed.javadsl.Behaviors;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Map;
 
 public class GroovyActor {
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Execute(
 		JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
 	public record Validate(JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Response extends CborSerializable {}
 	public record GroovyResponse(byte[] response) implements Response {}
 	public record GroovyError(String error) implements Response {}
 	public record GroovyValidateResponse(boolean valid) implements Response {}

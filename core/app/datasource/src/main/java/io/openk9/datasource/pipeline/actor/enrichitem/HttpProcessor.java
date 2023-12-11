@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.datasource.pipeline.actor.common.Http;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.JsonObject;
 
 import java.net.MalformedURLException;
@@ -193,13 +194,13 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	private final RecipientRef<Token.Command> tokenActorRef;
 	private final ActorRef<Token.Response> tokenResponseAdapter;
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Start(
 		String url, byte[] body, LocalDateTime expiredDate,
 		ActorRef<Response> replyTo) implements Command {}
 	private record TokenResponseWrapper(Token.Response response) implements Command {}
 	private record ResponseWrapper(Http.Response response, ActorRef<Response> replyTo) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Response extends CborSerializable {}
 	public record Error(String message) implements Response {}
 	public record Body(byte[] body) implements Response {}
 

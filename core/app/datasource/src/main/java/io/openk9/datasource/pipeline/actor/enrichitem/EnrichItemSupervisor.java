@@ -7,13 +7,14 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
 
 public class EnrichItemSupervisor {
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Execute(
 		io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO enrichItem, DataPayload dataPayload,
 		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
@@ -22,7 +23,7 @@ public class EnrichItemSupervisor {
 	private record GroovyValidatorWrapper(
 		GroovyActor.Response response, EnrichItemDTO enrichItem,
 		JsonObject dataPayload, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Response extends CborSerializable {}
 	public record Body(byte[] body) implements Response {}
 	public record Error(String error) implements Response {}
 

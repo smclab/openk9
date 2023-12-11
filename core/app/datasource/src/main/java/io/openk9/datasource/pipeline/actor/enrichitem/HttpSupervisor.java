@@ -10,6 +10,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.util.CborSerializable;
 
 import java.time.LocalDateTime;
 
@@ -81,13 +82,13 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	private final RecipientRef<Token.Command> tokenActorRef;
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public record Call(
 		boolean async, String url, byte[] jsonObject,
 		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	public record Callback(String tokenId, byte[] jsonObject) implements Command {}
 	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Response extends CborSerializable {}
 	public record Body(byte[] jsonObject) implements Response {}
 	public record Error(String error) implements Response {}
 

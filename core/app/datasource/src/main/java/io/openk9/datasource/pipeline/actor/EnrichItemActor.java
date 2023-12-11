@@ -6,14 +6,19 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.util.CborSerializable;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.inject.spi.CDI;
 
 public class EnrichItemActor {
-	public sealed interface Command {}
-	public record EnrichItemCallback(long enrichItemId, String tenantId, ActorRef<EnrichItemCallbackResponse> replyTo) implements Command {}
-	public sealed interface Response {}
+	public sealed interface Command extends CborSerializable {}
+	public record EnrichItemCallback(
+		long enrichItemId,
+		String tenantId,
+		ActorRef<EnrichItemCallbackResponse> replyTo
+	) implements Command {}
+	public sealed interface Response extends CborSerializable {}
 	public record EnrichItemCallbackResponse(EnrichItem enrichItem) implements Response {}
 
 	public static Behavior<Command> create() {

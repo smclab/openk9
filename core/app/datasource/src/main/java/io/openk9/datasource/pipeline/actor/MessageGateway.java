@@ -97,12 +97,12 @@ public class MessageGateway
 		);
 	}
 
-	public sealed interface Command {}
+	public sealed interface Command extends CborSerializable {}
 	public enum Start implements Command {INSTANCE}
-	public record Register(String schedulationKey) implements Command, CborSerializable {}
+	public record Register(String schedulationKey) implements Command {}
 	public record Deregister(String schedulationKey) implements Command {}
-	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
-	private record Reroute(QueueManager.QueueBind queueBind) implements Command, CborSerializable {}
+	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command {}
+	private record Reroute(QueueManager.QueueBind queueBind) implements Command {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
 	private record ChannelInit(Channel channel) implements Command {}
 	private record ReceptionistSubscribeWrapper(Receptionist.Listing listing) implements Command {}
