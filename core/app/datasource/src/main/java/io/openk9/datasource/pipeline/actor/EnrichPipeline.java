@@ -36,7 +36,7 @@ public class EnrichPipeline {
 	public record Setup(
 		ActorRef<Response> schedulation,
 		ActorRef<Schedulation.Response> consumer,
-		DataPayload dataPayload,
+		byte[] ingestPayload,
 		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
 
 	) implements Command {}
@@ -59,7 +59,7 @@ public class EnrichPipeline {
 		String tenantId();
 	}
 	public record Success(
-		DataPayload dataPayload,
+		String contentId,
 		ActorRef<Schedulation.Response> replyTo,
 		String scheduleId,
 		String tenantId
@@ -91,7 +91,11 @@ public class EnrichPipeline {
 	) {
 
 		SchedulerDTO scheduler = setup.scheduler();
-		DataPayload dataPayload = setup.dataPayload();
+		byte[] payloadArray = setup.ingestPayload();
+
+		DataPayload dataPayload =
+			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
+
 		ActorRef<Response> schedulation = setup.schedulation();
 		ActorRef<Schedulation.Response> consumer = setup.consumer();
 
@@ -164,7 +168,7 @@ public class EnrichPipeline {
 
 							if (response instanceof IndexWriterActor.Success) {
 								replyTo.tell(new Success(
-									dataPayload,
+									dataPayload.getContentId(),
 									consumer,
 									scheduleId,
 									dataPayload.getTenantId()
@@ -288,7 +292,7 @@ public class EnrichPipeline {
 						);
 
 						replyTo.tell(new Success(
-							dataPayload,
+							dataPayload.getContentId(),
 							consumer,
 							dataPayload.getScheduleId(),
 							dataPayload.getTenantId()

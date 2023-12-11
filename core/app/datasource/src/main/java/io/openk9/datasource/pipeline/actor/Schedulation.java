@@ -292,7 +292,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
 				responseActorRef,
 				ingest.replyTo,
-				dataPayload,
+				ingest.payload,
 				scheduler)
 			);
 
@@ -374,7 +374,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
 				"enrich pipeline success for content-id %s replyTo %s",
-				success.dataPayload().getContentId(), success.replyTo()
+				success.contentId(), success.replyTo()
 			);
 
 			response.replyTo().tell(Success.INSTANCE);
