@@ -514,16 +514,17 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		VertxUtil.runOnContext(() -> sessionFactory
 			.withTransaction(key.tenantId(), (s, tx) -> s
 				.find(Scheduler.class, scheduler.getId())
-				.call(entity -> {
+				.flatMap(entity -> {
 					entity.setStatus(status);
-					return s.persist(entity);
+					return s
+						.persist(entity)
+						.flatMap(ignore -> s.createNamedQuery(
+								Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
+							.setParameter("scheduleId", entity.getScheduleId())
+							.getSingleResult()
+							.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
+						);
 				})
-				.call(entity -> s.createNamedQuery(
-						Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
-					.setParameter("scheduleId", entity.getScheduleId())
-					.getSingleResult()
-					.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
-				)
 			)
 			.onItemOrFailure()
 			.invoke((r, t) -> {
@@ -534,7 +535,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 					log.infof(
 						"status updated to %s for schedulation with id %s",
 						status,
-						scheduler.getId()
+						r.getId()
 					);
 
 					persistStatus.replyTo.tell(Success.INSTANCE);
