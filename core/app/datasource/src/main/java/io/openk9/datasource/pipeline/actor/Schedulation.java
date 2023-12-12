@@ -130,7 +130,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey, Mutiny.SessionFactory sessionFactory, SchedulerMapper schedulerMapper) {
+		SchedulationKey schedulationKey,
+		Mutiny.SessionFactory sessionFactory,
+		SchedulerMapper schedulerMapper
+	) {
 
 		return Behaviors
 			.<Command>supervise(
@@ -241,8 +244,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onStart(Start start) {
 		VertxUtil.runOnContext(() -> sessionFactory
 			.withStatelessTransaction(key.tenantId, (s, t) -> s
-				.createNamedQuery(Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
+				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 				.setParameter("scheduleId", key.scheduleId)
+				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 				.getSingleResult()
 				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
 			)
@@ -519,8 +523,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 					return s
 						.persist(entity)
 						.flatMap(ignore -> s.createNamedQuery(
-								Scheduler.FETCH_SCHEDULATION_QUERY, Scheduler.class)
+								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 							.setParameter("scheduleId", entity.getScheduleId())
+							.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 							.getSingleResult()
 							.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
 						);
