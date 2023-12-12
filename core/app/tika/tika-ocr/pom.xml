@@ -47,7 +47,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-container-image-docker</artifactId>
+			<artifactId>quarkus-container-image-jib</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.openk9.app.tika</groupId>
