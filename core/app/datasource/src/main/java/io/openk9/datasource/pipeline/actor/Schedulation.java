@@ -168,6 +168,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
+			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
 
@@ -225,8 +227,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(FINISH_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
-			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
