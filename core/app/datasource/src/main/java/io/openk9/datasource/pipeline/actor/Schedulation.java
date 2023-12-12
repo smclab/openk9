@@ -165,6 +165,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
+			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
@@ -195,7 +196,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		return newReceiveBuilder()
 			.onMessage(Start.class, this::onStart)
-			.onMessage(SetScheduler.class, this::onSetScheduler)
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
