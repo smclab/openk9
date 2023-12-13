@@ -271,6 +271,7 @@ export function Search({
               autoComplete="off"
               ref={inputRef}
               id={htmlKey || "search-openk9"}
+              aria-describedby="message-search"
               type="text"
               placeholder={t("search") || "search..."}
               value={btnSearch ? textBtn ?? "" : selectionsState.text}
@@ -436,6 +437,12 @@ export function Search({
                 }
               }}
             ></input>
+            <p className="visually-hidden" id="message-search">
+              {t(
+                "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
+              ) ||
+                "insert text to set the value or use up and down arrow keys to navigate the suggestion box"}
+            </p>
           </div>
           <button
             className="openk9--search-delete-container-icon"
