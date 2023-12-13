@@ -3,6 +3,7 @@ import { useRulesQuery } from "../graphql-generated";
 import ReactFlow, { MiniMap, Controls, Background, Node, Edge, applyNodeChanges } from "react-flow-renderer";
 import React from "react";
 import NodeGraphRule from "./NodeGraphRule";
+import NodeGraphRuleDouble from "./NodeGraphRuleDouble";
 
 export const RulesQuery = gql`
   query Rules($searchText: String, $cursor: String) {
@@ -34,7 +35,13 @@ gql`
 
 const nodeTypes = {
   custom: NodeGraphRule,
+  customDouble: NodeGraphRuleDouble,
 };
+
+function checkNodeType(entity: string) {
+  const type = entity.includes(" ") ? "customDouble" : "custom";
+  return type;
+}
 
 export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue: Edge<any>[] }) {
   const [nodes, setNodes] = React.useState(node);
@@ -86,13 +93,14 @@ export function Rules() {
 
     uniqueIds.forEach((entity, index) => {
       const isFather = rules.find((rule) => rule?.node?.rhs === entity);
+      const type = checkNodeType(entity);
       if (!isFather) {
         const lhs = entity;
         const x = startX;
         const y = startY + index * nodeHeight * 5;
         elements.push({
           id: lhs || "",
-          type: "custom",
+          type: type,
           data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
           position: { x, y },
         });
@@ -104,7 +112,7 @@ export function Rules() {
 
         elements.push({
           id: lhs || "",
-          type: "custom",
+          type: type,
           data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
           position: { x, y },
         });
@@ -147,10 +155,12 @@ function recoveryValue({
 }): any[] {
   const matchingRules: any[] = rules.filter(({ node: { lhs } }: { node: { lhs: string } }) => entity === lhs);
 
+  const type = checkNodeType(entity);
+
   const result: any[] = matchingRules.map(({ node: { id, lhs, rhs } }: any, index: number) => {
     return {
       id: lhs || "",
-      type: "custom",
+      type: type,
       data: { label: lhs || "", id: lhs || "", rulesQuery: undefined, rules: rules },
       position: { x: position.x + 100 * (index + 1) + (indexElement ? indexElement * 250 : 1), y: position.y },
     };
@@ -167,7 +177,7 @@ function recoveryValue({
     const data = rules.find(({ node: { rhs } }: { node: { rhs: string } }) => entity === rhs);
     result.push({
       id: entity,
-      type: "custom",
+      type: type,
       data: {
         label: entity || "",
         id: entity || "",
