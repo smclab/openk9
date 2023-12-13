@@ -438,6 +438,8 @@ function FiltersHorizontal({
                     );
                   })}
               </GridContainer>
+              </fieldset>
+
               {suggestions.hasNextPage && (
                 <div
                   className="openk9-container-load-more"
@@ -481,7 +483,6 @@ function FiltersHorizontal({
                   </button>
                 </div>
               )}
-            </fieldset>
           </React.Fragment>
         )}
       </React.Fragment>
