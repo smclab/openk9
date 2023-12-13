@@ -34,6 +34,7 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.dto.BucketDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -561,6 +562,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return s.createQuery(criteriaQuery).getResultList();
 	}
 
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};
@@ -569,6 +571,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	@Override
 	public Class<Bucket> getEntityClass() {
 		return Bucket.class;
+	}
+
+	public Uni<Bucket> getCurrentBucket(String host) {
+		 return sessionFactory.withTransaction(session -> session
+			 .createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
+			 .setParameter(TenantBinding_.VIRTUAL_HOST, host)
+			 .getSingleResult()
+		 );
 	}
 
 	@Inject

@@ -36,6 +36,7 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -47,6 +48,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.Context;
 import java.util.List;
 import java.util.Set;
 
@@ -145,6 +147,11 @@ public class BucketGraphqlResource {
 	@Query
 	public Uni<Bucket> getBucket(@Id long id) {
 		return bucketService.findById(id);
+	}
+
+	@Query
+	public  Uni<Bucket> getEnabledBucket() {
+		return bucketService.getCurrentBucket(request.host());
 	}
 
 	public Uni<Response<Bucket>> patchBucket(@Id long id, BucketDTO bucketDTO) {
@@ -290,5 +297,8 @@ public class BucketGraphqlResource {
 
 	@Inject
 	LanguageService languageService;
+
+	@Context
+	HttpServerRequest request;
 
 }

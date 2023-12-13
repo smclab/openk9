@@ -22,6 +22,7 @@ import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
@@ -133,12 +134,9 @@ public class BucketResource {
 	}
 
 	private Uni<CurrentBucket> _getCurrentBucket(String host) {
-		return sessionFactory.withTransaction(session -> session
-			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
-			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
-			.getSingleResult()
-			.map(mapper::toCurrentBucket)
-		);
+		return bucketService
+			.getCurrentBucket(host)
+			.map(mapper::toCurrentBucket);
 	}
 
 	private Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortableList(String virtualhost, boolean translated) {
@@ -438,7 +436,8 @@ public class BucketResource {
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	TranslationService translationService;
-
+	@Inject
+	BucketService bucketService;
 	@Inject
 	@CacheName("bucket-resource")
 	Cache cache;
