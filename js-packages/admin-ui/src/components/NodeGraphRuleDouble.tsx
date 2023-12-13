@@ -143,8 +143,8 @@ export default function NodeGraphRuleDouble(props: any) {
                           createOrUpdateRuleMutate({
                             variables: {
                               id: undefined,
-                              name: data.label + "_" + variableSymbol + inputText,
-                              lhs: data.label,
+                              name: labelParts[subNode - 1] + "_" + variableSymbol + inputText,
+                              lhs: labelParts[subNode - 1],
                               rhs: variableSymbol + "" + inputText,
                             },
                           });
