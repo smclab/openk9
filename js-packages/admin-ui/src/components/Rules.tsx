@@ -59,7 +59,7 @@ export function BuildGraph({ node, edgesValue }: { node: Node<any>[]; edgesValue
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        style={{ height: "100%", minHeight: "90vh", margin: "0 auto" }}
+        style={{ minHeight: "90vh", margin: "0 auto" }}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         fitView
@@ -78,6 +78,19 @@ export function Rules() {
   if (rulesQuery.loading) return <div>caricamento</div>;
   const elements: Node[] = [];
   const rules = rulesQuery.data?.rules?.edges;
+
+  const customDoubleRules: string[] = [];
+
+  rules?.forEach((rule, index) => {
+    const rhs = rule?.node?.rhs;
+    const type = checkNodeType(rhs || "");
+    if (type === "customDouble") {
+      const rhsSplitted = rhs?.split(" ");
+      rhsSplitted?.forEach((rhsSplit, index) => {
+        customDoubleRules.push(rhsSplit);
+      });
+    }
+  });
 
   if (rules) {
     const nodeHeight = 50;
@@ -98,24 +111,29 @@ export function Rules() {
         const lhs = entity;
         const x = startX;
         const y = startY + index * nodeHeight * 5;
-        elements.push({
-          id: lhs || "",
-          type: type,
-          data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
-          position: { x, y },
-        });
+        if (!customDoubleRules?.includes(lhs)) {
+          elements.push({
+            id: lhs || "",
+            type: type,
+            data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
+            position: { x, y },
+          });
+        }
 
         const son = recoveryValue({ entity, rules, position: { x, y } });
         son.forEach((sin) => {
-          elements.push(sin);
+          if (!customDoubleRules?.includes(sin.id)) {
+            elements.push(sin);
+          }
         });
-
-        elements.push({
-          id: lhs || "",
-          type: type,
-          data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
-          position: { x, y },
-        });
+        if (!customDoubleRules?.includes(lhs)) {
+          elements.push({
+            id: lhs || "",
+            type: type,
+            data: { label: lhs || "", id: lhs || "", rulesQuery: rulesQuery, rules: rules },
+            position: { x, y },
+          });
+        }
       }
       return "";
     });
@@ -125,7 +143,7 @@ export function Rules() {
   rules?.forEach((rule) => {
     const lhs = rule?.node?.lhs;
     const rhs = rule?.node?.rhs;
-
+    const type = checkNodeType(rhs || "");
     if (lhs && rhs) {
       const edge = {
         id: rule.node?.name || "",
@@ -134,6 +152,24 @@ export function Rules() {
       };
 
       edges.push(edge);
+    }
+    if (lhs && rhs && type === "customDouble") {
+      const customDoubleNodes = rhs.split(" ");
+
+      rules?.forEach((rule, index) => {
+        const customDoubleNodesLhs = rule?.node?.lhs || "";
+        const customDoubleNodesRhs = rule?.node?.rhs || "";
+        if (customDoubleNodes?.includes(customDoubleNodesLhs)) {
+          const edge = {
+            id: rhs + "_" + customDoubleNodesRhs,
+            source: rhs,
+            target: customDoubleNodesRhs,
+            // sourceHandle: index.toString(),
+          };
+
+          edges.push(edge);
+        }
+      });
     }
   });
 

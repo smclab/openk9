@@ -19,6 +19,14 @@ export default function NodeGraphRuleDouble(props: any) {
 
   const labelParts = data.label.split(" ");
 
+  const fathers: string[] = [];
+
+  data.rules.forEach((rule: any) => {
+    fathers.push(rule.node.lhs);
+  });
+
+  let hasSon = labelParts.filter((x: string) => fathers.includes(x)).length;
+
   const [createOrUpdateRuleMutate, createOrUpdateRuleMutation] = useCreateOrUpdateRuleQueryMutation({
     refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
     onCompleted(data) {
@@ -104,7 +112,12 @@ export default function NodeGraphRuleDouble(props: any) {
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <div>
                         {" "}
-                        <label>New Rule for {labelParts[subNode - 1]}: </label>
+                        {(fathers.includes(labelParts[subNode - 1]) || hasSon === 0) && (
+                          <label>New Rule for {labelParts[subNode - 1]}: </label>
+                        )}
+                        {!fathers.includes(labelParts[subNode - 1]) && hasSon > 0 && (
+                          <label>Edit or Delete {labelParts[subNode - 1]}</label>
+                        )}
                       </div>
                       <div>
                         <button
@@ -118,44 +131,50 @@ export default function NodeGraphRuleDouble(props: any) {
                         </button>
                       </div>
                     </div>
-                    <input
-                      type="text"
-                      style={{ border: "1px solid black" }}
-                      value={inputText}
-                      onChange={(event) => {
-                        setInputText(event.currentTarget.value);
-                      }}
-                    />
+                    {(fathers.includes(labelParts[subNode - 1]) || hasSon === 0) && (
+                      <div>
+                        <input
+                          type="text"
+                          style={{ border: "1px solid black" }}
+                          value={inputText}
+                          onChange={(event) => {
+                            setInputText(event.currentTarget.value);
+                          }}
+                        />
+                        <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
+                          <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
+                          <label>Terminal </label>
+                        </div>
+                        <div style={{ display: "flex", gap: "5px" }}>
+                          <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
+                          <label>Optional </label>
+                        </div>
+                      </div>
+                    )}
                     <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
-                      <input type="checkbox" onChange={() => setIsTerminal(!isTerminal)} checked={isTerminal} />
-                      <label>Terminal </label>
-                    </div>
-                    <div style={{ display: "flex", gap: "5px" }}>
-                      <input type="checkbox" onChange={() => setIsOptional(!isOptional)} checked={isOptional} />
-                      <label>Optional </label>
-                    </div>
-                    <div style={{ display: "flex", gap: "5px", alignItems: "baseline" }}>
-                      <button
-                        type="submit"
-                        onClick={() => {
-                          const variableSymbol: "$?" | "?" | "$" | "" =
-                            isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
-                          createOrUpdateRuleMutate({
-                            variables: {
-                              id: undefined,
-                              name: labelParts[subNode - 1] + "_" + variableSymbol + inputText,
-                              lhs: labelParts[subNode - 1],
-                              rhs: variableSymbol + "" + inputText,
-                            },
-                          });
-                          setPanelOpen(false);
-                          setInputText("");
-                          setIsTerminal(false);
-                          setIsOptional(false);
-                        }}
-                      >
-                        Create
-                      </button>
+                      {(fathers.includes(labelParts[subNode - 1]) || hasSon === 0) && (
+                        <button
+                          type="submit"
+                          onClick={() => {
+                            const variableSymbol: "$?" | "?" | "$" | "" =
+                              isOptional && isTerminal ? "$?" : isOptional ? "?" : isTerminal ? "$" : "";
+                            createOrUpdateRuleMutate({
+                              variables: {
+                                id: undefined,
+                                name: labelParts[subNode - 1] + "_" + variableSymbol + inputText,
+                                lhs: labelParts[subNode - 1],
+                                rhs: variableSymbol + "" + inputText,
+                              },
+                            });
+                            setPanelOpen(false);
+                            setInputText("");
+                            setIsTerminal(false);
+                            setIsOptional(false);
+                          }}
+                        >
+                          Create
+                        </button>
+                      )}
                       {data.isDelete && <button onClick={() => setIsModify(true)}>Edit</button>}
                       {data.isDelete && (
                         <button
