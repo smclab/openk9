@@ -116,9 +116,7 @@ export default function NodeGraphRuleDouble(props: any) {
                         {(fathers.includes(labelParts[subNode - 1]) || hasSon === 0) && (
                           <label>New Rule for {labelParts[subNode - 1]}: </label>
                         )}
-                        {!fathers.includes(labelParts[subNode - 1]) && hasSon > 0 && (
-                          <label>Edit or Delete {labelParts[subNode - 1]}</label>
-                        )}
+                        {!fathers.includes(labelParts[subNode - 1]) && hasSon > 0 && <label>Edit {labelParts[subNode - 1]}</label>}
                       </div>
                       <div>
                         <button
@@ -176,8 +174,10 @@ export default function NodeGraphRuleDouble(props: any) {
                           Create
                         </button>
                       )}
-                      {data.isDelete && <button onClick={() => setIsModify(true)}>Edit</button>}
-                      {data.isDelete && (
+                      {data.isDelete && !fathers.includes(labelParts[subNode - 1]) && (
+                        <button onClick={() => setIsModify(true)}>Edit</button>
+                      )}
+                      {data.isDelete && !fathers.includes(labelParts[subNode - 1]) && hasSon === 0 && (
                         <button
                           onClick={() => {
                             const removeRule = data?.rules?.find(
