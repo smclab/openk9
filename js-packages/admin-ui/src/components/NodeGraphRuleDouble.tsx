@@ -25,7 +25,7 @@ export default function NodeGraphRuleDouble(props: any) {
     fathers.push(rule.node.lhs);
   });
 
-  let hasSon = labelParts.filter((x: string) => fathers.includes(x)).length;
+  const hasSon = labelParts.filter((x: string) => fathers.includes(x)).length;
 
   const [createOrUpdateRuleMutate, createOrUpdateRuleMutation] = useCreateOrUpdateRuleQueryMutation({
     refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
@@ -85,6 +85,7 @@ export default function NodeGraphRuleDouble(props: any) {
                   alignItems: "center",
                   // borderRadius: "50px",
                   cursor: "pointer",
+                  color: fathers.includes(label) ? "red" : "black",
                 }}
                 onClick={() => {
                   handleNodeClick(index + 1);
