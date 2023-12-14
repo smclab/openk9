@@ -252,6 +252,8 @@ public class TikaProcessor {
 //                }
 
                 logger.error(e.getMessage(), e);
+
+                throw new RuntimeException();
             }
 
         }
