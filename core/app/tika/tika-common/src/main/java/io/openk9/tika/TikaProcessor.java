@@ -237,17 +237,19 @@ public class TikaProcessor {
                 }
                 else {
                     if (!retainBinaries) {
-                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                        fileManagerClient.delete(resourceId, schemaName);
+//                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
+//                        fileManagerClient.delete(resourceId, schemaName);
+                        logger.info("Skipping resource with id: " + resourceId + " and name: " + name
+                        + " because not supported by configuration");
                     }
                 }
 
             } catch (Exception e) {
 
-                if (!retainBinaries) {
-                    logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                    fileManagerClient.delete(resourceId, schemaName);
-                }
+//                if (!retainBinaries) {
+//                    logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
+//                    fileManagerClient.delete(resourceId, schemaName);
+//                }
 
                 logger.error(e.getMessage(), e);
             }
