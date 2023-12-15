@@ -26,15 +26,22 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "annotator")
@@ -65,6 +72,16 @@ public class Annotator extends K9Entity {
 	@Column(name = "field_name", nullable = false)
 	private String fieldName;
 
+	@ElementCollection
+	@CollectionTable(
+		name = "annotator_extra_params",
+		joinColumns = @JoinColumn(name = "annotator_id")
+	)
+	@MapKeyColumn(name = "key")
+	@Column(name = "value")
+	@JsonIgnore
+	private Map<String, String> extraParams = new HashMap<>();
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -85,5 +102,23 @@ public class Annotator extends K9Entity {
 
 	public static final String DOCUMENT_TYPE_SET =
 		"('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')";
+
+	public void addExtraParam(String key, String value) {
+		extraParams.put(key, value);
+	}
+
+	public void removeExtraParam(String key) {
+		extraParams.remove(key);
+	}
+
+	public static Set<Annotator.AnnotatorExtraParam> getExtraParamsSet(
+		Map<String, String> extraParams) {
+		return extraParams
+			.entrySet()
+			.stream().map(e -> new Annotator.AnnotatorExtraParam(e.getKey(), e.getValue()))
+			.collect(Collectors.toSet());
+	}
+
+	public record AnnotatorExtraParam(String key, String value) {}
 
 }

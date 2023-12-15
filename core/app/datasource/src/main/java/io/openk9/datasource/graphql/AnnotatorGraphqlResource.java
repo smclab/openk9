@@ -22,6 +22,7 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.AnnotatorDTO;
 import io.openk9.datasource.service.AnnotatorService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -159,6 +160,20 @@ public class AnnotatorGraphqlResource {
 			.getProcessor()
 			.filter(K9EntityEvent::isUpdate)
 			.map(K9EntityEvent::getEntity);
+	}
+
+	public Uni<Set<Annotator.AnnotatorExtraParam>> extraParams(@Source Annotator annotator) {
+		return annotatorService.getExtraParams(annotator);
+	}
+
+	@Mutation
+	public Uni<Annotator> addExtraParam(@Id long id, String key, String value) {
+		return annotatorService.addExtraParam(id, key, value);
+	}
+
+	@Mutation
+	public Uni<Annotator> removeExtraParam(@Id int id, String key) {
+		return annotatorService.removeExtraParam(id, key);
 	}
 
 	@Inject

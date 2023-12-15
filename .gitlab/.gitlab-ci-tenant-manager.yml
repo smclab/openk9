@@ -41,11 +41,12 @@ Build Latest Tenant Manager Docker Images:
   only:
     refs:
       - main
+      - 780-extra-params-for-annotators
   when:
     manual
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-780-SNAPSHOT
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEV_TRIGGER_URL
   cache:

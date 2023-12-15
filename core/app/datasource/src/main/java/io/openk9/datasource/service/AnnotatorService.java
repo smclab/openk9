@@ -27,6 +27,7 @@ import io.openk9.datasource.model.dto.AnnotatorDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -87,6 +88,46 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 					return persist(s, annotator)
 						.map(newAnnotator -> Tuple2.of(newAnnotator, docTypeField));
 				})));
+	}
+
+	public Uni<Set<Annotator.AnnotatorExtraParam>> getExtraParams(Annotator annotator) {
+		return sessionFactory.withTransaction((s, t) -> s
+				.merge(annotator)
+				.flatMap(merged -> s.fetch(merged.getExtraParams())))
+			.map(Annotator::getExtraParamsSet);
+	}
+
+	public Uni<Annotator> addExtraParam(long id, String key, String value) {
+		return getSessionFactory()
+			.withTransaction(s ->
+				findById(s, id)
+					.flatMap(annotator -> fetchExtraParams(s, annotator))
+					.flatMap(annotator -> {
+						annotator.addExtraParam(key, value);
+						return persist(s, annotator);
+					})
+			);
+	}
+
+	public Uni<Annotator> removeExtraParam(int id, String key) {
+		return getSessionFactory()
+			.withTransaction(s ->
+				findById(s, id)
+					.flatMap(annotator -> fetchExtraParams(s, annotator))
+					.flatMap(annotator -> {
+						annotator.removeExtraParam(key);
+						return persist(s, annotator);
+					})
+			);
+	}
+
+	private static Uni<Annotator> fetchExtraParams(Mutiny.Session s, Annotator annotator) {
+		return s
+			.fetch(annotator.getExtraParams())
+			.flatMap(extraParams -> {
+				annotator.setExtraParams(extraParams);
+				return Uni.createFrom().item(annotator);
+			});
 	}
 
 	@Inject
