@@ -2,6 +2,7 @@ package io.openk9.datasource.listener;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.internal.receptionist.ReceptionistMessages;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.receptionist.Receptionist;
@@ -45,11 +46,9 @@ import scala.Option;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,31 +57,24 @@ public class JobScheduler {
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 	
 	public sealed interface Command extends CborSerializable {}
-	public record Initialize(List<ScheduleDatasource> schedulatedJobs) implements Command {}
-	public record ScheduleDatasource(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
+	public record ScheduleDatasource(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 	public record TriggerDatasource(
 		String tenantName, long datasourceId, Boolean startFromFirst) implements Command {}
 	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
-	private record ScheduleDatasourceInternal(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
+	private record ScheduleDatasourceInternal(String tenantName, long datasourceId, boolean schedulable, String cron) implements Command {}
 	private record UnScheduleJobInternal(String jobName) implements Command {}
-	private record TriggerDatasourceInternal(
-		String tenantName, Datasource datasource, Boolean startFromFirst) implements Command {}
+	private record TriggerDatasourceInternal(String tenantName, Datasource datasource, Boolean startFromFirst) implements Command {}
 	private record InvokePluginDriverInternal(
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler, boolean startFromFirst
-	) implements Command {}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+		String tenantName, io.openk9.datasource.model.Scheduler scheduler,
+		boolean startFromFirst) implements Command {}
+	private record StartSubscribeResponse(Receptionist.Listing listing) implements Command {}
+	private record InitialSubscribeResponse(Receptionist.Listing listing) implements Command {}
+
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
-	private record StartSchedulerInternal(
-		String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
-	private record CopyIndexTemplate(
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
-	private record PersistSchedulerInternal(
-		String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
+	private record StartSchedulerInternal(String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
+	private record CopyIndexTemplate(String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
+	private record PersistSchedulerInternal(String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
 	private record CancelSchedulation(String tenantName, Scheduler scheduler) implements Command {}
 
 	public static Behavior<Command> create(
@@ -98,74 +90,40 @@ public class JobScheduler {
 			ActorRef<Receptionist.Listing> listingActorRef =
 				ctx.messageAdapter(
 					Receptionist.Listing.class,
-					MessageGatewaySubscription::new
-				);
+					StartSubscribeResponse::new);
 
 			ctx
 				.getSystem()
 				.receptionist()
-				.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
+				.tell(new ReceptionistMessages.Subscribe<>(MessageGateway.SERVICE_KEY, listingActorRef));
 
-			return setup(
-				httpPluginDriverClient,
-				sessionFactory,
-				restHighLevelClient,
-				ctx,
-				quartzSchedulerTypedExtension,
-				new ArrayDeque<>()
-			);
+			return start(
+				httpPluginDriverClient, sessionFactory, restHighLevelClient,
+				ctx, quartzSchedulerTypedExtension);
 
 
 		});
 	}
 
-	private static Behavior<Command> setup(
+	private static Behavior<Command> start(
 		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
+		Mutiny.SessionFactory sessionFactory, RestHighLevelClient restHighLevelClient,
 		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		Queue<Command> lag) {
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension) {
 
 		return Behaviors
 			.receive(Command.class)
-			.onMessage(MessageGatewaySubscription.class,
-				mgs -> onMessageGatewaySubscription(ctx, mgs))
-			.onMessage(Start.class, start -> {
-				Command command = lag.poll();
-
-				while (command != null) {
-					ctx.getSelf().tell(command);
-					command = lag.poll();
-				}
-
-				return initial(
-					ctx,
-					quartzSchedulerTypedExtension,
-					httpPluginDriverClient,
-					sessionFactory,
-					restHighLevelClient,
+			.onMessage(Start.class, start ->
+				initial(
+					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
+					sessionFactory, restHighLevelClient,
 					start.channelManagerRef,
 					new ArrayList<>()
-				);
-			})
-			.onAnyMessage(command -> {
-				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
-				newLag.add(command);
-
-				if (log.isDebugEnabled()) {
-					log.debugf("there are %d commands waiting...", newLag.size());
-				}
-
-				return setup(
-					httpPluginDriverClient,
-					sessionFactory,
-					restHighLevelClient,
-					ctx,
-					quartzSchedulerTypedExtension,
-					newLag
-				);
-			})
+				)
+			)
+			.onMessage(
+				StartSubscribeResponse.class,
+				ssr -> onStartSubscribeResponse(ctx, ssr))
 			.build();
 	}
 
@@ -179,7 +137,7 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
+			.onMessage(InitialSubscribeResponse.class, isr -> onInitialSubscribeResponse(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, jobNames, isr))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
@@ -194,20 +152,6 @@ public class JobScheduler {
 			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
 			.build();
 
-	}
-
-	private static Behavior<Command> onInitialize(Initialize cmd, ActorContext<Command> ctx) {
-		for (ScheduleDatasource scheduleDatasource : cmd.schedulatedJobs()) {
-			log.infof(
-				"scheduling jobs for datasource with id %d on tenant %s...",
-				scheduleDatasource.datasourceId(),
-				scheduleDatasource.tenantName()
-			);
-
-			ctx.getSelf().tell(scheduleDatasource);
-		}
-
-		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onUnscheduleJobInternal(
@@ -237,10 +181,10 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onMessageGatewaySubscription(
-		ActorContext<Command> ctx, MessageGatewaySubscription mgs) {
+	private static Behavior<Command> onStartSubscribeResponse(
+		ActorContext<Command> ctx, StartSubscribeResponse cmsr) {
 
-		mgs
+		cmsr
 			.listing
 			.getServiceInstances(MessageGateway.SERVICE_KEY)
 			.stream()
@@ -254,6 +198,27 @@ public class JobScheduler {
 		return Behaviors.same();
 
 	}
+
+	private static Behavior<Command> onInitialSubscribeResponse(
+		ActorContext<Command> ctx, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory,
+		RestHighLevelClient restHighLevelClient, List<String> jobNames,
+		InitialSubscribeResponse isr) {
+
+		ActorRef<MessageGateway.Command> messageGateway = isr
+			.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.filter(JobScheduler::isLocalActorRef)
+			.findFirst()
+			.orElseThrow();
+
+		return initial(
+			ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory,
+			restHighLevelClient, messageGateway, jobNames);
+
+	}
+
 
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,

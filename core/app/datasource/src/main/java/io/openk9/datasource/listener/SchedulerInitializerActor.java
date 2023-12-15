@@ -10,14 +10,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {
-
-	public void initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
-		getSchedulerRef().tell(new JobScheduler.Initialize(schedulatedJobs));
-	}
 
 	public void scheduleDataSource(String tenantName, long datasourceId, boolean schedulable, String cron) {
 		getSchedulerRef().tell(new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
