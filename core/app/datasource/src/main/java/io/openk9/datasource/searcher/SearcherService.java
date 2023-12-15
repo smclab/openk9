@@ -687,6 +687,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				builder.setLabel((String)map.get("label"));
 			}
 
+			if (map.containsKey("extra")) {
+				builder.putAllExtra((Map<String, String>) map.get("extra"));
+			}
+
 			result.add(builder.build());
 		}
 
