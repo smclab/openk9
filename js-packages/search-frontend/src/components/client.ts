@@ -537,6 +537,10 @@ export type AnalysisToken =
       keywordName?: string;
       value: string;
       label: string;
+	  extra?: {
+	  	boost?: string;
+	  	fuzziness?: string
+	  }
     }
   | {
       tokenType: "AUTOCORRECT";

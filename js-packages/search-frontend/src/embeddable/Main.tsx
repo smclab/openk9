@@ -1172,6 +1172,7 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
         keywordKey: token.keywordKey,
         values: [token.value],
         filter: false,
+		extra: token.extra
       };
     case "FILTER":
       return {
