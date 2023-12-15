@@ -450,6 +450,10 @@ export type SearchToken =
       isTab?: boolean;
       isFilter?: boolean;
       isSearch?: boolean;
+	  extra?: {
+		boost?: string;
+		fuzziness?: string
+	  }
     }
   | {
       tokenType: "ENTITY";
