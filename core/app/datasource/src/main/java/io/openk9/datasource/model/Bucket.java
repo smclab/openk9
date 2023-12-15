@@ -63,6 +63,7 @@ import java.util.Set;
 				"join fetch b." + Bucket_.QUERY_ANALYSIS + " qa " +
 				"join fetch qa." + QueryAnalysis_.RULES + " qar " +
 				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa " +
+				"left join fetch qaa." + Annotator_.EXTRA_PARAMS + " extra " +
 				"join fetch qaa." + Annotator_.DOC_TYPE_FIELD + " dtf " +
 				"left join fetch dtf." + DocTypeField_.PARENT_DOC_TYPE_FIELD + " pdtf " +
 				"left join fetch dtf." + DocTypeField_.SUB_DOC_TYPE_FIELDS + " sdtf " +
