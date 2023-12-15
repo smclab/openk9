@@ -43,6 +43,7 @@ public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 		semantics.put("keywordKey", aggregatorName);
 		semantics.put("value", aggregatorKey);
 		semantics.put("score", 50.0f);
+		semantics.put("extra", annotator.getExtraParams());
 
 		return CategorySemantics.of(
 			"$AGGREGATE", Collections.unmodifiableMap(semantics));

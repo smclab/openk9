@@ -109,6 +109,7 @@ message QueryAnalysisSearchToken {
   optional string entityName = 7;
   optional string tenantId = 8;
   optional string label = 9;
+  map<string, string> extra = 10;
 }
 
 message QueryAnalysisResponse {
