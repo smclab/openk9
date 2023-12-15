@@ -73,7 +73,7 @@ public class BucketResource {
 	@Path("/current/tabs")
 	@GET
 	public Uni<List<TabResponseDTO>> getTabs(
-			@QueryParam("translated") @DefaultValue("false") boolean translated) {
+			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
@@ -84,7 +84,7 @@ public class BucketResource {
 	@Path("/current/suggestionCategories")
 	@GET
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
-			@QueryParam("translated") @DefaultValue("false") boolean translated) {
+			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
@@ -96,7 +96,7 @@ public class BucketResource {
 	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortable(
-		@QueryParam("translated") @DefaultValue("false") boolean translated){
+		@QueryParam("translated") @DefaultValue("true") boolean translated){
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
@@ -320,8 +320,9 @@ public class BucketResource {
 
 	}
 
-	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(String virtualhost,
-																			  boolean translated) {
+	private Uni<List<? extends SuggestionCategory>> getSuggestionCategoryList(
+		String virtualhost, boolean translated) {
+
 		return sessionFactory.withTransaction(session -> {
 
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
