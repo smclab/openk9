@@ -167,7 +167,7 @@ public class AnnotatorGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Annotator> addExtraParam(@Id long id, String key, String value) {
+	public Uni<Annotator> addAnnotatorExtraParam(@Id long id, String key, String value) {
 		return annotatorService.addExtraParam(id, key, value);
 	}
 
