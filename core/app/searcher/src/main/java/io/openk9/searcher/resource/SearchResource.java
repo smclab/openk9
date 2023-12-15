@@ -239,6 +239,10 @@ public class SearchResource {
 					token.put("label", queryAnalysisSearchToken.getLabel());
 				}
 
+				if (!queryAnalysisSearchToken.getExtraMap().isEmpty()) {
+					token.put("extra", queryAnalysisSearchToken.getExtraMap());
+				}
+
 				tokens.add(token);
 
 			}
