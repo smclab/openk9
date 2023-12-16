@@ -13,14 +13,13 @@ Build Latest Tika No Ocr Docker Images:
     refs:
       - main
       - tags
-      - 776-ottimizzazione-cancellazione-binario-tika-in-caso-di-errore
     changes:
       - core/app/tika/tika-no-ocr/ci.properties
   except:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-776-SNAPSHOT
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: tika-no-ocr
     paths:
