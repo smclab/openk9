@@ -238,7 +238,7 @@ public class TikaProcessor {
                 else {
                     if (!retainBinaries) {
 //                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-//                        fileManagerClient.delete(resourceId, schemaName);
+                        fileManagerClient.delete(resourceId, schemaName);
                         logger.info("Skipping resource with id: " + resourceId + " and name: " + name
                         + " because not supported by configuration");
                     }
