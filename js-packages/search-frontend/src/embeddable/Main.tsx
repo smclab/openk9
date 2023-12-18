@@ -11,7 +11,6 @@ import {
   getAutoSelections,
   isOverlapping,
   useSelections,
-  useSelectionsOnClick,
 } from "../components/useSelections";
 import { LoginInfoComponentMemo } from "../components/LoginInfo";
 import {
@@ -24,7 +23,6 @@ import {
   SearchToken,
   SortField,
 } from "../components/client";
-import isEqual from "lodash/isEqual";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
 import { FiltersMemo } from "../components/Filters";
@@ -62,14 +60,27 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const { sort, setSortResult } = useSortResult({
-    configuration,
-    onConfigurationChange,
-  });
-  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
-  const useQueryString= configuration.useQueryString;
-  const [selectionsState, selectionsDispatch] = useSelections();
+  const client = useOpenK9Client();
+  const activeLanguage = i18next.language;
 
+  //retrieving information from the configuration.
+  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
+  const numberOfResults = configuration.numberResult || 10;
+  const useQueryString = configuration.useQueryString;
+
+  //state
+  const [currentPage, setCurrentPage] = React.useState<number>(0);
+  const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
+  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
+  const [languageSelect, setLanguageSelect] = React.useState("");
+  const [selectionsState, selectionsDispatch] = useSelections();
+  const [sortAfterKey, setSortAfterKey] = React.useState("");
+  const [totalResult, setTotalResult] = React.useState<number | null>(null);
+
+  
+  const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
     onConfigurationChange,
@@ -77,78 +88,15 @@ export function Main({
     selectionsDispatch,
     useQueryString,
   });
-  const { dateRange, setDateRange, dateTokens } = useDateTokens();
-
-  const client = useOpenK9Client();
-  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
-    return await client.handle_dynamic_filters();
-  });
-  const languageQuery = useQuery(["language", {}], async () => {
-    return await client.getLanguageDefault();
-  });
-
   const { i18n } = useTranslation();
-
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const checkIfMobile = () => {
-      const isMobileDevice =
-        window.innerWidth <= 1024 && window.innerWidth >= 320;
-      if (!isMobileDevice) setDetailMobile(null);
-      setIsMobile(isMobileDevice);
-    };
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkIfMobile);
-    };
-  }, []);
-
-  const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
-  React.useEffect(() => {
-    const checkIfMobile = () => {
-      const isMobileMinWidth = window.innerWidth <= 380;
-      setIsMobileMinWIdth(isMobileMinWidth);
-    };
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkIfMobile);
-    };
-  }, []);
-
-  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
-  const activeLanguage = i18next.language;
-  const languages = useQuery(["date-label-languages", {}], async () => {
-    return await client.getLanguages();
+  const { sort, setSortResult } = useSortResult({
+    configuration,
+    onConfigurationChange,
   });
-  const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
-
-  const whoIsDynamicResponse = useQuery(
-    ["refresh-components", {}],
-    async () => {
-      return await client.getRefreshFilters();
-    },
-  );
-
-  React.useEffect(() => {
-    if (whoIsDynamicResponse.isSuccess) {
-      const newData = factoryWhoIsDynamic({
-        whoIsDynamicResponse: whoIsDynamicResponse.data,
-      });
-      setDynamicData(newData);
-    }
-  }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
-
-  const [languageSelect, setLanguageSelect] = React.useState("");
   const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
     configuration.overrideTabs,
     languageSelect,
   );
-  const [currentPage, setCurrentPage] = React.useState<number>(0);
-
   const {
     searchQuery,
     spans,
@@ -180,6 +128,65 @@ export function Main({
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
     useDetailsMobile(searchQuery);
+
+  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
+    return await client.handle_dynamic_filters();
+  });
+  
+  const languageQuery = useQuery(["language", {}], async () => {
+    return await client.getLanguageDefault();
+  });
+
+  const whoIsDynamicResponse = useQuery(
+    ["refresh-components", {}],
+    async () => {
+      return await client.getRefreshFilters();
+    },
+  );
+
+  React.useEffect(() => {
+    const checkIfMobile = () => {
+      const isMobileDevice =
+        window.innerWidth <= 1024 && window.innerWidth >= 320;
+      if (!isMobileDevice) setDetailMobile(null);
+      setIsMobile(isMobileDevice);
+    };
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const checkIfMobile = () => {
+      const isMobileMinWidth = window.innerWidth <= 380;
+      setIsMobileMinWIdth(isMobileMinWidth);
+    };
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
+
+ 
+
+  
+  const languages = useQuery(["date-label-languages", {}], async () => {
+    return await client.getLanguages();
+  });
+  React.useEffect(() => {
+    if (whoIsDynamicResponse.isSuccess) {
+      const newData = factoryWhoIsDynamic({
+        whoIsDynamicResponse: whoIsDynamicResponse.data,
+      });
+      setDynamicData(newData);
+    }
+  }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
+
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -188,10 +195,7 @@ export function Main({
       setLanguageSelect(languageQuery.data.value);
     }
   }, [languageQuery.data, i18n]);
-  
-  const [sortAfterKey, setSortAfterKey] = React.useState("");
-  const [totalResult, setTotalResult] = React.useState<number | null>(null);
-  const numberOfResults = configuration.numberResult || 10;
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -408,7 +412,9 @@ export function Main({
             sortAfterKey={sortAfterKey}
             numberOfResults={numberOfResults}
             setIdPreview={setIdPreview}
-            counterIsVisible={configuration.resultList?.counterIsVisible||false}
+            counterIsVisible={
+              configuration.resultList?.counterIsVisible || false
+            }
             label={configuration.resultList?.label}
           />
         </I18nextProvider>,
@@ -966,12 +972,16 @@ function useFilters({
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
   selectionsState: SelectionsStateOnClick | SelectionsState;
-  useQueryString:boolean;
+  useQueryString: boolean;
   selectionsDispatch:
     | React.Dispatch<SelectionsActionOnClick>
     | React.Dispatch<SelectionsAction>;
 }) {
-  const filterTokens:SearchToken[] = configuration.useFilterConfiguration? [...configuration.filterTokens, ...selectionsState.filters] :useQueryString? selectionsState.filters :[];
+  const filterTokens: SearchToken[] = configuration.useFilterConfiguration
+    ? [...configuration.filterTokens, ...selectionsState.filters]
+    : useQueryString
+    ? selectionsState.filters
+    : [];
 
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
@@ -1172,7 +1182,7 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
         keywordKey: token.keywordKey,
         values: [token.value],
         filter: false,
-		extra: token.extra
+        extra: token.extra,
       };
     case "FILTER":
       return {
@@ -1180,7 +1190,7 @@ function analysisTokenToSearchToken(token: AnalysisToken): SearchToken | null {
         keywordKey: token.keywordKey,
         values: [token.value],
         filter: false,
-      };  
+      };
     case "AUTOCOMPLETE":
       return null;
     case "AUTOCORRECT":
@@ -1328,8 +1338,7 @@ function factoryWhoIsDynamic({
       }
     | undefined;
 }): WhoIsDynamic[] {
-
-  if (whoIsDynamicResponse === undefined) {    
+  if (whoIsDynamicResponse === undefined) {
     return [];
   }
 
