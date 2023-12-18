@@ -49,6 +49,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -130,7 +131,7 @@ public class JobScheduler {
 		return Behaviors
 			.receive(Command.class)
 			.onMessage(MessageGatewaySubscription.class,
-				mgs -> onMessageGatewaySubscription(ctx, mgs))
+				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
 			.onMessage(Start.class, start -> {
 				Command command = lag.poll();
 
@@ -180,6 +181,7 @@ public class JobScheduler {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
+			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
@@ -240,7 +242,7 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onMessageGatewaySubscription(
+	private static Behavior<Command> onSetupMessageGatewaySubscription(
 		ActorContext<Command> ctx, MessageGatewaySubscription mgs) {
 
 		mgs
@@ -253,6 +255,23 @@ public class JobScheduler {
 			.ifPresentOrElse(
 				cmd -> ctx.getSelf().tell(cmd),
 				() -> log.error("ChannelManager not found"));
+
+		return Behaviors.same();
+
+	}
+
+	private static Behavior<Command> onInitialMessageGatewaySubscription(
+		ActorContext<Command> ctx, MessageGatewaySubscription mgs, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension, HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory, RestHighLevelClient restHighLevelClient, ActorRef<MessageGateway.Command> messageGateway, List<String> jobNames) {
+
+		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.filter(JobScheduler::isLocalActorRef)
+			.findFirst();
+
+		if (actorRefOptional.isPresent()) {
+			return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, actorRefOptional.get(), jobNames);
+		}
 
 		return Behaviors.same();
 
