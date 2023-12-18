@@ -439,7 +439,6 @@ function FiltersHorizontal({
                   })}
               </GridContainer>
               </fieldset>
-
               {suggestions.hasNextPage && (
                 <div
                   className="openk9-container-load-more"

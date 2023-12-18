@@ -269,6 +269,7 @@ export type Configuration = {
   token: string | null;
   useKeycloak: boolean;
   useQueryString: boolean;
+  useFilterConfiguration: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -347,6 +348,7 @@ const defaultConfiguration: Configuration = {
   totalResult: null,
   useKeycloak: true,
   useQueryString: true,
+  useFilterConfiguration:true,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };

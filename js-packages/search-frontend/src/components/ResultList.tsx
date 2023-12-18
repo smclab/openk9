@@ -35,11 +35,11 @@ type ResultsProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
   label?: string | null | undefined;
-  counterIsVisible?:boolean;
+  counterIsVisible?: boolean;
   setIdPreview?:
-  | React.Dispatch<React.SetStateAction<string>>
-  | undefined
-  | null;
+    | React.Dispatch<React.SetStateAction<string>>
+    | undefined
+    | null;
 };
 function Results<E>({
   displayMode,
@@ -56,7 +56,7 @@ function Results<E>({
   setTotalResult,
   numberOfResults,
   label,
-  counterIsVisible=false,
+  counterIsVisible = false,
   setIdPreview,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -81,7 +81,6 @@ function Results<E>({
           label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
-
         />
       );
     case "infinite":
@@ -103,7 +102,6 @@ function Results<E>({
           label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
-
         />
       );
     case "virtual":
@@ -175,33 +173,34 @@ function ResultCount({
         <span>
           <ResultSvg />
         </span>
-        <span className="openk9-result-list-title title">
-          <h2
-            css={css`
-              font-style: normal;
-              font-weight: 700;
-              font-size: 18px;
-              height: 18px;
-              line-height: 22px;
-              align-items: center;
-              color: #3f3f46;
-              margin: 0;
-            `}
-          >
+        <h2
+          css={css`
+            font-style: normal;
+            font-weight: 700;
+            font-size: 18px;
+            height: 18px;
+            line-height: 22px;
+            align-items: center;
+            color: #3f3f46;
+            margin: 0;
+          `}
+        >
+          <span className="openk9-result-list-title title">
             {label || t("result")}
-          </h2>
-        </span>
-        {counterIsVisible && (
-          <span
-            className="openk9-result-list-counter-number"
-            css={css`
-              color: var(--openk9-embeddable-search--active-color);
-              font-weight: 700;
-            `}
-          >
-            {results.data?.pages[0].total || 0}
           </span>
-        )}
+          {" "}
+          {counterIsVisible && (
+            <span
+              className="openk9-result-list-counter-number"
+              css={css`
+                color: var(--openk9-embeddable-search--active-color);
+                font-weight: 700;
+              `}
+            >
+              {results.data?.pages[0].total || 0}
+            </span>
+          )}
+        </h2>
       </div>
       <div
         className="openk9-number-result-list-container-wrapper "
@@ -232,8 +231,11 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList setSortResult={setSortResult}  relevance={t("relevance") || "relevance"}
-              language={language}/>
+            <SortResultList
+              setSortResult={setSortResult}
+              relevance={t("relevance") || "relevance"}
+              language={language}
+            />
           </span>
         </div>
       </div>
@@ -253,7 +255,7 @@ type ResulListProps<E> = {
   language: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
-  setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
+  setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
 };
 
 type FiniteResultsProps<E> = ResulListProps<E> & {
@@ -338,7 +340,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
   label?: string | undefined | null;
   counterIsVisible: boolean;
-  setIdPreview: React.Dispatch<React.SetStateAction<string>> |undefined |null;
+  setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -487,7 +489,7 @@ export function InfiniteResults<E>({
 type VirtualResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
   label?: string | undefined | null;
-  counterIsVisible:boolean;
+  counterIsVisible: boolean;
 };
 export function VirtualResults<E>({
   renderers,
@@ -503,7 +505,7 @@ export function VirtualResults<E>({
   setTotalResult,
   numberOfResults,
   label,
-  counterIsVisible
+  counterIsVisible,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,

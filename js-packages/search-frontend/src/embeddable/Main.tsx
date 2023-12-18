@@ -971,7 +971,7 @@ function useFilters({
     | React.Dispatch<SelectionsActionOnClick>
     | React.Dispatch<SelectionsAction>;
 }) {
-  const filterTokens:SearchToken[] = useQueryString? selectionsState.filters :[];
+  const filterTokens:SearchToken[] = configuration.useFilterConfiguration? [...configuration.filterTokens, ...selectionsState.filters] :useQueryString? selectionsState.filters :[];
 
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
