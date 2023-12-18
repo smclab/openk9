@@ -91,6 +91,8 @@ public class JobScheduler {
 		Mutiny.SessionFactory sessionFactory,
 		RestHighLevelClient restHighLevelClient) {
 
+		log.info("setup job-scheduler");
+
 		return Behaviors.setup(ctx -> {
 
 			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
