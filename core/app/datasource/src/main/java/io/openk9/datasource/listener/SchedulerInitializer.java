@@ -196,6 +196,8 @@ public class SchedulerInitializer {
 	private Uni<? extends List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
 		List<TenantResponse> tenantResponses) {
 
+		logger.info("fetching datasources...");
+
 		return Uni.join()
 			.all(tenantResponses
 				.stream()
