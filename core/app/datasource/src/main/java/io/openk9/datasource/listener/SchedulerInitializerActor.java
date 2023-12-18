@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -65,12 +66,15 @@ public class SchedulerInitializerActor {
 					emitter.complete(actorRef);
 				}
 				catch (Exception e) {
+					log.error("error getting job-scheduler", e);
 					emitter.fail(e);
 				}
 			})
 		);
 	}
 
+	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
+	
 	@Inject
 	HttpPluginDriverClient httpPluginDriverClient;
 
