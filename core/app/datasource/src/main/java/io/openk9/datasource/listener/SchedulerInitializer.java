@@ -62,7 +62,6 @@ public class SchedulerInitializer {
 	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String ignore) {
-		logger.info("init job-scheduler");
 
 		return getTenantList()
 			.flatMap(this::getScheduleDatasourceCommands)
@@ -73,6 +72,7 @@ public class SchedulerInitializer {
 	@ConsumeEvent(value = SPAWN_CONSUMERS)
 	@ActivateRequestContext
 	public Uni<Void> spawnConsumers(String ignore) {
+
 		return getTenantList()
 			.flatMap(tenantList -> {
 				List<Uni<List<Scheduler>>> registrations = new ArrayList<>();

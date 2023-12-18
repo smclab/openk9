@@ -197,6 +197,9 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onInitialize(Initialize cmd, ActorContext<Command> ctx) {
+
+		log.info("init job-scheduler");
+
 		for (ScheduleDatasource scheduleDatasource : cmd.schedulatedJobs()) {
 			log.infof(
 				"scheduling jobs for datasource with id %d on tenant %s...",
