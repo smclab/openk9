@@ -32,7 +32,6 @@ import io.quarkus.grpc.GrpcClient;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.unchecked.Unchecked;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -42,8 +41,10 @@ import javax.enterprise.context.control.ActivateRequestContext;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -59,51 +60,12 @@ public class SchedulerInitializer {
 	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String message) {
-		logger.info("init scheduler");
+		logger.info("init job-scheduler");
 
 		return getTenantList()
-			.flatMap(tenantList -> {
-				List<Uni<Void>> unis = new ArrayList<>(tenantList.size());
-				for (TenantResponse tenantResponse : tenantList) {
-					String schemaName = tenantResponse.getSchemaName();
-					Uni<List<Datasource>> listDatasource = datasourceService.findAll(schemaName);
-
-					Uni<Void> voidUni = listDatasource
-						.onItemOrFailure()
-						.invoke(Unchecked.consumer((tenantDatasourceList, t) -> {
-
-							if (t != null) {
-								logger.error(
-									"error createOrUpdateScheduler in schema: " + schemaName, t);
-								return;
-							}
-
-							for (Datasource datasource : tenantDatasourceList) {
-								try {
-									logger.info("start datasource: " + datasource.getName() + " schema " + schemaName);
-									createOrUpdateScheduler(schemaName, datasource);
-									logger.info("end   datasource: " + datasource.getName() + " schema " + schemaName);
-								}
-								catch (Exception e) {
-									logger.error(
-										"error createOrUpdateScheduler in schema: " +
-										schemaName + " datasource.name: " + datasource.getName(), e);
-								}
-							}
-						}))
-						.replaceWithVoid();
-
-					unis.add(voidUni);
-
-				}
-
-				return Uni
-					.join()
-					.all(unis)
-					.andCollectFailures()
-					.replaceWithVoid();
-
-			});
+			.flatMap(this::getScheduleDatasourceCommands)
+			.invoke(schedulerInitializerActor::initJobScheduler)
+			.replaceWithVoid();
 
 	}
 
@@ -210,6 +172,33 @@ public class SchedulerInitializer {
 		return tenantManager
 			.findTenantList(Empty.getDefaultInstance())
 			.map(TenantListResponse::getTenantResponseList);
+	}
+
+	private JobScheduler.ScheduleDatasource mapScheduleDatasource(Datasource datasource) {
+		return new JobScheduler.ScheduleDatasource(
+			datasource.getTenant(),
+			datasource.getId(),
+			datasource.getSchedulable(),
+			datasource.getScheduling());
+	}
+
+	private Uni<? extends List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
+		List<TenantResponse> tenantResponses) {
+
+		return Uni.join()
+			.all(tenantResponses
+				.stream()
+				.map(TenantResponse::getSchemaName)
+				.map(datasourceService::findAll)
+				.collect(Collectors.toList())
+			)
+			.andCollectFailures()
+			.map(resultSets -> resultSets
+				.stream()
+				.flatMap(Collection::stream)
+				.map(this::mapScheduleDatasource)
+				.collect(Collectors.toList())
+			);
 	}
 
 	@GrpcClient("tenantmanager")
