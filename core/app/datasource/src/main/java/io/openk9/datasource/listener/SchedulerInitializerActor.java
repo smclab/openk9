@@ -5,6 +5,8 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.Vertx;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -15,31 +17,48 @@ import java.util.List;
 @ApplicationScoped
 public class SchedulerInitializerActor {
 
-	public void initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
-		getSchedulerRef().tell(new JobScheduler.Initialize(schedulatedJobs));
+	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
+		return getSchedulerRef()
+			.invoke(ref -> ref.tell(new JobScheduler.Initialize(schedulatedJobs)))
+			.replaceWithVoid();
 	}
 
-	public void scheduleDataSource(String tenantName, long datasourceId, boolean schedulable, String cron) {
-		getSchedulerRef().tell(new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
+	public Uni<Void> scheduleDataSource(
+		String tenantName, long datasourceId, boolean schedulable, String cron) {
+
+		return getSchedulerRef()
+			.invoke(ref -> ref.tell(new JobScheduler.ScheduleDatasource(
+				tenantName, datasourceId, schedulable, cron)))
+			.replaceWithVoid();
 	}
 
-	public void unScheduleDataSource(String tenantName, long datasourceId) {
-		getSchedulerRef().tell(new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
+	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
+		return getSchedulerRef()
+			.invoke(ref -> ref.tell(
+				new JobScheduler.UnScheduleDatasource(tenantName, datasourceId)))
+			.replaceWithVoid();
 	}
 
-	public void triggerDataSource(
+	public Uni<Void> triggerDataSource(
 		String tenantName, long datasourceId, Boolean startFromFirst) {
-		getSchedulerRef().tell(new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
+		return getSchedulerRef()
+			.invoke(ref -> ref.tell(new JobScheduler.TriggerDatasource(
+				tenantName, datasourceId, startFromFirst)))
+			.replaceWithVoid();
 	}
 
-	private ActorRef<JobScheduler.Command> getSchedulerRef() {
-		return ClusterSingleton.get(actorSystemProvider.getActorSystem())
-			.init(
-				SingletonActor.of(
-					JobScheduler.create(
-						httpPluginDriverClient, sessionFactory, restHighLevelClient
-					), "job-scheduler")
-				);
+	private Uni<ActorRef<JobScheduler.Command>> getSchedulerRef() {
+
+		return vertx.executeBlocking(Uni.createFrom().item(
+			ClusterSingleton.get(actorSystemProvider.getActorSystem())
+				.init(
+					SingletonActor.of(
+						JobScheduler.create(
+							httpPluginDriverClient, sessionFactory, restHighLevelClient
+						), "job-scheduler")
+				)
+			)
+		);
 	}
 
 	@Inject
@@ -53,4 +72,6 @@ public class SchedulerInitializerActor {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	Vertx vertx;
 }

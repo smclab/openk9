@@ -51,6 +51,8 @@ public class SchedulerInitializer {
 
 	private static final String INITIALIZE_SCHEDULER = "initialize_scheduler";
 	private static final String SPAWN_CONSUMERS = "spawn_consumers";
+	public static final String UPDATE_SCHEDULER = "update_scheduler";
+	public static final String DELETE_SCHEDULER = "delete_scheduler";
 
 	public void startUp(@Observes StartupEvent event) {
 		eventBus.send(INITIALIZE_SCHEDULER, INITIALIZE_SCHEDULER);
@@ -59,14 +61,74 @@ public class SchedulerInitializer {
 
 	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
 	@ActivateRequestContext
-	public Uni<Void> initScheduler(String message) {
+	public Uni<Void> initScheduler(String ignore) {
 		logger.info("init job-scheduler");
 
 		return getTenantList()
 			.flatMap(this::getScheduleDatasourceCommands)
-			.invoke(schedulerInitializerActor::initJobScheduler)
-			.replaceWithVoid();
+			.flatMap(schedulerInitializerActor::initJobScheduler);
 
+	}
+
+	@ConsumeEvent(value = SPAWN_CONSUMERS)
+	@ActivateRequestContext
+	public Uni<Void> spawnConsumers(String ignore) {
+		return getTenantList()
+			.flatMap(tenantList -> {
+				List<Uni<List<Scheduler>>> registrations = new ArrayList<>();
+
+				for (TenantResponse tenantResponse : tenantList) {
+					Uni<List<Scheduler>> registration = sessionFactory.withTransaction(
+							tenantResponse.getSchemaName(),
+							(session, transaction) -> session
+								.createNamedQuery(Scheduler.FETCH_RUNNING_QUERY, Scheduler.class)
+								.getResultList()
+						)
+						.invoke(schedulers -> {
+							for (Scheduler scheduler : schedulers) {
+								Schedulation.SchedulationKey schedulationKey =
+									SchedulationKeyUtils.getKey(
+										tenantResponse.getSchemaName(),
+										scheduler.getScheduleId()
+									);
+
+								MessageGateway.askRegister(
+									actorSystemProvider.getActorSystem(),
+									schedulationKey
+								);
+							}
+						});
+
+					registrations.add(registration);
+				}
+
+				return Uni.join()
+					.all(registrations)
+					.andCollectFailures()
+					.replaceWithVoid();
+			});
+	}
+
+
+	@ConsumeEvent(UPDATE_SCHEDULER)
+	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
+
+		return schedulerInitializerActor.scheduleDataSource(
+			datasource.getTenant(),
+			datasource.getId(),
+			datasource.getSchedulable(),
+			datasource.getScheduling()
+		);
+
+	}
+
+	@ConsumeEvent(DELETE_SCHEDULER)
+	public Uni<Void> deleteScheduler(Datasource datasource) {
+
+		return schedulerInitializerActor.unScheduleDataSource(
+			datasource.getTenant(),
+			datasource.getId()
+		);
 	}
 
 	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds) {
@@ -104,14 +166,6 @@ public class SchedulerInitializer {
 
 	}
 
-	public void createOrUpdateScheduler(String tenantName, Datasource datasource) {
-
-		schedulerInitializerActor.scheduleDataSource(
-			tenantName, datasource.getId(), datasource.getSchedulable(),
-			datasource.getScheduling());
-
-	}
-
 	public Uni<Void> performTask(
 		String schemaName, Long datasourceId, Boolean startFromFirst) {
 
@@ -119,53 +173,10 @@ public class SchedulerInitializer {
 			schemaName,
 			(s, t) -> datasourceService
 				.findDatasourceByIdWithPluginDriver(datasourceId)
-				.invoke(d -> schedulerInitializerActor.triggerDataSource(schemaName, d.getId(), startFromFirst))
-				.replaceWithVoid()
+				.flatMap(d -> schedulerInitializerActor.triggerDataSource(
+					schemaName, d.getId(), startFromFirst))
 		);
 
-	}
-
-	public void deleteScheduler(String tenantId, Datasource datasource) {
-		schedulerInitializerActor.unScheduleDataSource(tenantId, datasource.getId());
-	}
-
-	@ConsumeEvent(value = SPAWN_CONSUMERS)
-	@ActivateRequestContext
-	public Uni<Void> spawnConsumers(String message) {
-		return getTenantList()
-			.flatMap(tenantList -> {
-				List<Uni<List<Scheduler>>> registrations = new ArrayList<>();
-
-				for (TenantResponse tenantResponse : tenantList) {
-					Uni<List<Scheduler>> registration = sessionFactory.withTransaction(
-							tenantResponse.getSchemaName(),
-							(session, transaction) -> session
-								.createNamedQuery(Scheduler.FETCH_RUNNING_QUERY, Scheduler.class)
-								.getResultList()
-						)
-						.invoke(schedulers -> {
-							for (Scheduler scheduler : schedulers) {
-								Schedulation.SchedulationKey schedulationKey =
-									SchedulationKeyUtils.getKey(
-										tenantResponse.getSchemaName(),
-										scheduler.getScheduleId()
-									);
-
-								MessageGateway.askRegister(
-									actorSystemProvider.getActorSystem(),
-									schedulationKey
-								);
-							}
-						});
-
-					registrations.add(registration);
-				}
-
-				return Uni.join()
-					.all(registrations)
-					.andCollectFailures()
-					.replaceWithVoid();
-			});
 	}
 
 	private Uni<List<TenantResponse>> getTenantList() {
