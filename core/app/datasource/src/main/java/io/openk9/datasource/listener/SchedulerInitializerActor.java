@@ -49,15 +49,25 @@ public class SchedulerInitializerActor {
 
 	private Uni<ActorRef<JobScheduler.Command>> getSchedulerRef() {
 
-		return vertx.executeBlocking(Uni.createFrom().item(
-			ClusterSingleton.get(actorSystemProvider.getActorSystem())
-				.init(
-					SingletonActor.of(
-						JobScheduler.create(
-							httpPluginDriverClient, sessionFactory, restHighLevelClient
-						), "job-scheduler")
-				)
-			)
+		return vertx.executeBlocking(
+			Uni.createFrom().emitter((emitter) -> {
+				try {
+					ActorRef<JobScheduler.Command> actorRef = ClusterSingleton
+						.get(actorSystemProvider.getActorSystem())
+						.init(
+							SingletonActor.of(
+								JobScheduler.create(
+									httpPluginDriverClient, sessionFactory, restHighLevelClient
+								),
+								"job-scheduler"
+							)
+						);
+					emitter.complete(actorRef);
+				}
+				catch (Exception e) {
+					emitter.fail(e);
+				}
+			})
 		);
 	}
 
