@@ -20,43 +20,32 @@ public class SchedulerInitializerActor {
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
 
-		return getSchedulerRef()
-			.invoke(ref -> {
-				log.infof("defining schedulation for %d datasources", schedulatedJobs.size());
-				ref.tell(new JobScheduler.Initialize(schedulatedJobs));
-			})
-			.replaceWithVoid();
+		return askScheduleRef(new JobScheduler.Initialize(schedulatedJobs));
 	}
 
 	public Uni<Void> scheduleDataSource(
 		String tenantName, long datasourceId, boolean schedulable, String cron) {
 
-		return getSchedulerRef()
-			.invoke(ref -> ref.tell(new JobScheduler.ScheduleDatasource(
-				tenantName, datasourceId, schedulable, cron)))
-			.replaceWithVoid();
+		return askScheduleRef(new JobScheduler.ScheduleDatasource(
+			tenantName, datasourceId, schedulable, cron));
 	}
 
 	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
-		return getSchedulerRef()
-			.invoke(ref -> ref.tell(
-				new JobScheduler.UnScheduleDatasource(tenantName, datasourceId)))
-			.replaceWithVoid();
+		return askScheduleRef(new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	public Uni<Void> triggerDataSource(
 		String tenantName, long datasourceId, Boolean startFromFirst) {
-		return getSchedulerRef()
-			.invoke(ref -> ref.tell(new JobScheduler.TriggerDatasource(
-				tenantName, datasourceId, startFromFirst)))
-			.replaceWithVoid();
+		return askScheduleRef(new JobScheduler.TriggerDatasource(
+				tenantName, datasourceId, startFromFirst));
 	}
 
-	private Uni<ActorRef<JobScheduler.Command>> getSchedulerRef() {
+	private Uni<Void> askScheduleRef(JobScheduler.Command command) {
+
 		io.vertx.core.Vertx delegate = vertx.getDelegate();
 
 		return Uni.createFrom().completionStage(delegate
-			.<ActorRef<JobScheduler.Command>>executeBlocking(event -> {
+			.<Void>executeBlocking(event -> {
 				try {
 					ActorRef<JobScheduler.Command> actorRef = ClusterSingleton
 						.get(actorSystemProvider.getActorSystem())
@@ -68,7 +57,8 @@ public class SchedulerInitializerActor {
 								"job-scheduler"
 							)
 						);
-					event.complete(actorRef);
+					actorRef.tell(command);
+					event.complete(null);
 				}
 				catch (Exception e) {
 					log.error("error getting job-scheduler", e);
