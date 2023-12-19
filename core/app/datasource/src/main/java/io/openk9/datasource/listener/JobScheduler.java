@@ -152,6 +152,7 @@ public class JobScheduler {
 					new ArrayList<>()
 				);
 			})
+			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
 			.onAnyMessage(command -> {
 				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
 				newLag.add(command);
