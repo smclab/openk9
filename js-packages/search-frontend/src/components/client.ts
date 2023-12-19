@@ -21,10 +21,12 @@ export function OpenK9Client({
   onAuthenticated,
   tenant,
   useKeycloak = true,
+  waitKeycloackForToken,
 }: {
   onAuthenticated(): void;
   tenant: string;
   useKeycloak?: boolean;
+  waitKeycloackForToken: boolean;
 }) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
@@ -57,7 +59,7 @@ export function OpenK9Client({
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
     }
-    if (!keycloak.authenticated && !useKeycloak && appendToBody.token === "") {
+    if (waitKeycloackForToken && !keycloak.authenticated && !useKeycloak && appendToBody.token === "") {
       await waitForToken();
     }
     return fetch(tenant + route, {

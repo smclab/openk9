@@ -67,7 +67,8 @@ export function Main({
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const numberOfResults = configuration.numberResult || 10;
   const useQueryString = configuration.useQueryString;
-
+  const useKeycloak = configuration.useKeycloak;
+  const waitKeycloackForToken = configuration.waitKeycloackForToken;
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
@@ -75,11 +76,10 @@ export function Main({
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [languageSelect, setLanguageSelect] = React.useState("");
-  const [selectionsState, selectionsDispatch] = useSelections();
+  const [selectionsState, selectionsDispatch] = useSelections({useKeycloak});
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
 
-  
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
@@ -128,22 +128,9 @@ export function Main({
   const { detail, setDetail } = useDetails(searchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
     useDetailsMobile(searchQuery);
-
-  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
-    return await client.handle_dynamic_filters();
-  });
-  
-  const languageQuery = useQuery(["language", {}], async () => {
-    return await client.getLanguageDefault();
-  });
-
-  const whoIsDynamicResponse = useQuery(
-    ["refresh-components", {}],
-    async () => {
-      return await client.getRefreshFilters();
-    },
-  );
-
+  const {dynamicFilters,languageQuery,whoIsDynamicResponse,languages}=recoveryDataBackEnd();
+ 
+  //Effect
   React.useEffect(() => {
     const checkIfMobile = () => {
       const isMobileDevice =
@@ -153,7 +140,6 @@ export function Main({
     };
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
-
     return () => {
       window.removeEventListener("resize", checkIfMobile);
     };
@@ -166,18 +152,11 @@ export function Main({
     };
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
-
     return () => {
       window.removeEventListener("resize", checkIfMobile);
     };
   }, []);
 
- 
-
-  
-  const languages = useQuery(["date-label-languages", {}], async () => {
-    return await client.getLanguages();
-  });
   React.useEffect(() => {
     if (whoIsDynamicResponse.isSuccess) {
       const newData = factoryWhoIsDynamic({
@@ -186,7 +165,7 @@ export function Main({
       setDynamicData(newData);
     }
   }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
-
+  
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -960,6 +939,26 @@ function useTabs(
   }, [selectedTabIndex, tabs, language]);
 
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
+}
+
+function recoveryDataBackEnd(){
+    const client = useOpenK9Client();
+    const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
+    return await client.handle_dynamic_filters();
+  });
+  const languageQuery = useQuery(["language", {}], async () => {
+    return await client.getLanguageDefault();
+  });
+  const whoIsDynamicResponse = useQuery(
+    ["refresh-components", {}],
+    async () => {
+      return await client.getRefreshFilters();
+    },
+  );
+  const languages = useQuery(["date-label-languages", {}], async () => {
+    return await client.getLanguages();
+  });
+  return {dynamicFilters,languageQuery,whoIsDynamicResponse,languages}
 }
 
 function useFilters({

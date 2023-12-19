@@ -8,7 +8,7 @@ import {
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
 
-export function useSelections() {
+export function useSelections({useKeycloak=true}:{useKeycloak?:boolean}) {
   const [state, dispatch] = React.useReducer(
     reducer,
     initial,
@@ -18,14 +18,22 @@ export function useSelections() {
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
-    if (client.authInit)
+    if (useKeycloak && client.authInit){
       client.authInit.then(() => {
         setCanSave(true);
       });
+    }else{
+      if(!useKeycloak){
+        setCanSave(true)
+      }
+    }
   }, []);
   React.useEffect(() => {
-    if (canSave) {
+    if (useKeycloak && canSave) {
       saveQueryString(state);
+    }
+    if(!useKeycloak){
+      saveQueryString(state)
     }
   }, [canSave, state]);
   return [state, dispatch] as const;

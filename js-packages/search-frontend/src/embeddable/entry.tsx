@@ -50,7 +50,8 @@ export class OpenK9 {
         this.queryClient.invalidateQueries();
       },
       tenant: this.configuration.tenant ?? "",
-      useKeycloak: this.configuration.useKeycloak ?? true,
+      useKeycloak: this.configuration.useKeycloak,
+      waitKeycloackForToken: this.configuration.waitKeycloackForToken,
     });
     this.render();
   }
@@ -270,6 +271,7 @@ export type Configuration = {
   useKeycloak: boolean;
   useQueryString: boolean;
   useFilterConfiguration: boolean;
+  waitKeycloackForToken:boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -349,6 +351,7 @@ const defaultConfiguration: Configuration = {
   useKeycloak: true,
   useQueryString: true,
   useFilterConfiguration:true,
+  waitKeycloackForToken:false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };
