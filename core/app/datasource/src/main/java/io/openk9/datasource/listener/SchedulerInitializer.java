@@ -32,6 +32,7 @@ import io.quarkus.grpc.GrpcClient;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -63,9 +64,11 @@ public class SchedulerInitializer {
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String ignore) {
 
-		return getTenantList()
+		return vertx.executeBlocking(
+			getTenantList()
 			.flatMap(this::getScheduleDatasourceCommands)
-			.flatMap(schedulerInitializerActor::initJobScheduler);
+			.flatMap(schedulerInitializerActor::initJobScheduler)
+		);
 
 	}
 
@@ -234,4 +237,7 @@ public class SchedulerInitializer {
 
 	@Inject
 	ActorSystemProvider actorSystemProvider;
+
+	@Inject
+	Vertx vertx;
 }

@@ -6,7 +6,6 @@ import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.Vertx;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -87,6 +86,4 @@ public class SchedulerInitializerActor {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
-	@Inject
-	Vertx vertx;
 }
