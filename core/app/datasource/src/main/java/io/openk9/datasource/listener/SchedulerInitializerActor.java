@@ -19,6 +19,9 @@ import java.util.List;
 public class SchedulerInitializerActor {
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
+
+		log.infof("defining schedulation for % datasources", schedulatedJobs.size());
+
 		return getSchedulerRef()
 			.invoke(ref -> ref.tell(new JobScheduler.Initialize(schedulatedJobs)))
 			.replaceWithVoid();
