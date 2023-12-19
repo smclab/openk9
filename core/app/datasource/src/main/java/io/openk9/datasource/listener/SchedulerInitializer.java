@@ -64,11 +64,9 @@ public class SchedulerInitializer {
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String ignore) {
 
-		return vertx.executeBlocking(
-			getTenantList()
+		return getTenantList()
 			.flatMap(this::getScheduleDatasourceCommands)
-			.flatMap(schedulerInitializerActor::initJobScheduler)
-		);
+			.flatMap(schedulerInitializerActor::initJobScheduler);
 
 	}
 

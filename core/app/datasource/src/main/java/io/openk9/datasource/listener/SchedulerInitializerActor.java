@@ -6,6 +6,7 @@ import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.Vertx;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -52,25 +53,31 @@ public class SchedulerInitializerActor {
 	}
 
 	private Uni<ActorRef<JobScheduler.Command>> getSchedulerRef() {
-		return Uni.createFrom().emitter((emitter) -> {
-			try {
-				ActorRef<JobScheduler.Command> actorRef = ClusterSingleton
-					.get(actorSystemProvider.getActorSystem())
-					.init(
-						SingletonActor.of(
-							JobScheduler.create(
-								httpPluginDriverClient, sessionFactory, restHighLevelClient
-							),
-							"job-scheduler"
-						)
-					);
-				emitter.complete(actorRef);
-			}
-			catch (Exception e) {
-				log.error("error getting job-scheduler", e);
-				emitter.fail(e);
-			}
-		});
+		io.vertx.core.Vertx delegate = vertx.getDelegate();
+
+		return Uni.createFrom().completionStage(delegate
+			.<ActorRef<JobScheduler.Command>>executeBlocking(event -> {
+				try {
+					ActorRef<JobScheduler.Command> actorRef = ClusterSingleton
+						.get(actorSystemProvider.getActorSystem())
+						.init(
+							SingletonActor.of(
+								JobScheduler.create(
+									httpPluginDriverClient, sessionFactory, restHighLevelClient
+								),
+								"job-scheduler"
+							)
+						);
+					event.complete(actorRef);
+				}
+				catch (Exception e) {
+					log.error("error getting job-scheduler", e);
+					event.fail(e);
+				}
+			})
+			.toCompletionStage()
+		);
+
 	}
 
 	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
@@ -86,4 +93,7 @@ public class SchedulerInitializerActor {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+
+	@Inject
+	Vertx vertx;
 }
