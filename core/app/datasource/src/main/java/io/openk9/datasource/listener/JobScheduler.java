@@ -59,7 +59,6 @@ public class JobScheduler {
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 	
 	public sealed interface Command extends CborSerializable {}
-	public record Initialize(List<ScheduleDatasource> schedulatedJobs) implements Command {}
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String cron
 	) implements Command {}
@@ -89,7 +88,8 @@ public class JobScheduler {
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
 		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient) {
+		RestHighLevelClient restHighLevelClient,
+		List<ScheduleDatasource> schedulatedJobs) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -115,7 +115,7 @@ public class JobScheduler {
 				restHighLevelClient,
 				ctx,
 				quartzSchedulerTypedExtension,
-				new ArrayDeque<>()
+				new ArrayDeque<>(schedulatedJobs)
 			);
 
 
@@ -152,7 +152,6 @@ public class JobScheduler {
 					new ArrayList<>()
 				);
 			})
-			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
 			.onAnyMessage(command -> {
 				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
 				newLag.add(command);
@@ -183,7 +182,6 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
 			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
@@ -199,23 +197,6 @@ public class JobScheduler {
 			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
 			.build();
 
-	}
-
-	private static Behavior<Command> onInitialize(Initialize cmd, ActorContext<Command> ctx) {
-
-		log.info("init job-scheduler");
-
-		for (ScheduleDatasource scheduleDatasource : cmd.schedulatedJobs()) {
-			log.infof(
-				"scheduling jobs for datasource with id %d on tenant %s...",
-				scheduleDatasource.datasourceId(),
-				scheduleDatasource.tenantName()
-			);
-
-			ctx.getSelf().tell(scheduleDatasource);
-		}
-
-		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onUnscheduleJobInternal(

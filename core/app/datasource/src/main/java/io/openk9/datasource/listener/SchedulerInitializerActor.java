@@ -19,33 +19,32 @@ import java.util.function.Supplier;
 @ApplicationScoped
 public class SchedulerInitializerActor {
 
-	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
+	private List<JobScheduler.ScheduleDatasource> schedulatedJobs;
 
-		return askScheduleRef(() -> {
-			log.infof("initializing schedulation for % datasources", schedulatedJobs.size());
-			return new JobScheduler.Initialize(schedulatedJobs);
-		});
+	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
+		this.schedulatedJobs = schedulatedJobs;
+		return getScheduleRef(() -> null);
 	}
 
 	public Uni<Void> scheduleDataSource(
 		String tenantName, long datasourceId, boolean schedulable, String cron) {
 
-		return askScheduleRef(() ->
+		return getScheduleRef(() ->
 			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
 	}
 
 	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
-		return askScheduleRef(() ->
+		return getScheduleRef(() ->
 			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	public Uni<Void> triggerDataSource(
 		String tenantName, long datasourceId, Boolean startFromFirst) {
-		return askScheduleRef(() ->
+		return getScheduleRef(() ->
 			new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
 	}
 
-	private Uni<Void> askScheduleRef(Supplier<JobScheduler.Command> command) {
+	private Uni<Void> getScheduleRef(Supplier<JobScheduler.Command> commandSupplier) {
 
 		io.vertx.core.Vertx delegate = vertx.getDelegate();
 
@@ -57,12 +56,18 @@ public class SchedulerInitializerActor {
 						.init(
 							SingletonActor.of(
 								JobScheduler.create(
-									httpPluginDriverClient, sessionFactory, restHighLevelClient
+									httpPluginDriverClient,
+									sessionFactory,
+									restHighLevelClient,
+									schedulatedJobs
 								),
 								"job-scheduler"
 							)
 						);
-					actorRef.tell(command.get());
+					JobScheduler.Command command = commandSupplier.get();
+					if (command != null) {
+						actorRef.tell(command);
+					}
 					event.complete(null);
 				}
 				catch (Exception e) {
