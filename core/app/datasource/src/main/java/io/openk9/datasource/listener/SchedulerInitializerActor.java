@@ -14,33 +14,38 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.function.Supplier;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
 
-		return askScheduleRef(new JobScheduler.Initialize(schedulatedJobs));
+		return askScheduleRef(() -> {
+			log.infof("initializing schedulation for % datasources", schedulatedJobs.size());
+			return new JobScheduler.Initialize(schedulatedJobs);
+		});
 	}
 
 	public Uni<Void> scheduleDataSource(
 		String tenantName, long datasourceId, boolean schedulable, String cron) {
 
-		return askScheduleRef(new JobScheduler.ScheduleDatasource(
-			tenantName, datasourceId, schedulable, cron));
+		return askScheduleRef(() ->
+			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
 	}
 
 	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
-		return askScheduleRef(new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
+		return askScheduleRef(() ->
+			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	public Uni<Void> triggerDataSource(
 		String tenantName, long datasourceId, Boolean startFromFirst) {
-		return askScheduleRef(new JobScheduler.TriggerDatasource(
-				tenantName, datasourceId, startFromFirst));
+		return askScheduleRef(() ->
+			new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
 	}
 
-	private Uni<Void> askScheduleRef(JobScheduler.Command command) {
+	private Uni<Void> askScheduleRef(Supplier<JobScheduler.Command> command) {
 
 		io.vertx.core.Vertx delegate = vertx.getDelegate();
 
@@ -57,7 +62,7 @@ public class SchedulerInitializerActor {
 								"job-scheduler"
 							)
 						);
-					actorRef.tell(command);
+					actorRef.tell(command.get());
 					event.complete(null);
 				}
 				catch (Exception e) {
