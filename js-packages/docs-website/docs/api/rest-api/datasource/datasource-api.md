@@ -1,7 +1,7 @@
 ---
-id: datasource-api-overwiew
-title: Datasource APIs Overwiew
-slug: /api/datasource-api-overwiew
+id: datasource-api
+title: Datasource APIs
+slug: /api/datasource-api
 
 ---
 

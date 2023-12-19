@@ -74,8 +74,7 @@ module.exports = {
       "type": "category",
       "label": "Datasource Apis",
       "items": [
-        "api/rest-api/datasource/datasource-api-overwiew",
-
+        "api/rest-api/datasource/datasource-api",
         {
           "type": "category",
           "label": "Reindex Apis",
@@ -107,7 +106,7 @@ module.exports = {
 			"api/rest-api/datasource/trigger/trigger-api",
 			"api/rest-api/datasource/trigger/trigger"
 		  ]
-		}
+		},
       ]
     },
     {
