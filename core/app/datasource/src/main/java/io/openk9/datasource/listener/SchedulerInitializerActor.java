@@ -20,10 +20,11 @@ public class SchedulerInitializerActor {
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
 
-		log.infof("defining schedulation for %d datasources", schedulatedJobs.size());
-
 		return getSchedulerRef()
-			.invoke(ref -> ref.tell(new JobScheduler.Initialize(schedulatedJobs)))
+			.invoke(ref -> {
+				log.infof("defining schedulation for %d datasources", schedulatedJobs.size());
+				ref.tell(new JobScheduler.Initialize(schedulatedJobs));
+			})
 			.replaceWithVoid();
 	}
 
