@@ -205,6 +205,18 @@ function recoveryValue({
   matchingRules.forEach(({ node: { rhs } }: { node: { rhs: string } }, index) => {
     const data = recoveryValue({ entity: rhs, rules, position: { x: position.x + 200, y: position.y + 200 }, indexElement: index });
     if (data) {
+      data.forEach((element, index) => {
+        if (element.data.hasOwnProperty("fatherLabel")) {
+          const parent = data.find((node) => node.id === element.data.fatherLabel);
+          if (parent) {
+            const sons = data.filter((son) => son.data.fatherLabel === parent.id);
+            const elementIndex = sons.findIndex((son) => son.id === element.id);
+            const toAdd = elementIndex > 0 ? sons[elementIndex].id.length : 0;
+            element.position.x = parent.position.x + toAdd * 50;
+            // element.position.y = parent.position.y + 100 * elementIndex + 10;
+          }
+        }
+      });
       result.push(...data);
     }
   });
