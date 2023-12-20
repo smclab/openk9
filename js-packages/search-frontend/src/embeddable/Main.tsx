@@ -394,6 +394,12 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <TotalResults totalResult={totalResult} />
+        </I18nextProvider>,
+        configuration.totalResultMobile,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ResultsMemo
             setTotalResult={setTotalResult}
             displayMode={configuration.resultsDisplayMode}

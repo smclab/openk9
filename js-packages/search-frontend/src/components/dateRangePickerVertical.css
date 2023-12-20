@@ -45,3 +45,34 @@
 .SingleDatePickerInput__disabled .SingleDatePickerInput_clearDate {
   background-color: #f2f2f2;
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.SingleDatePickerInput__withBorder{
+  border:none;
+}
+
+.SingleDatePickerInput_calendarIcon{
+  margin: 0px;
+  padding:0px;
+  padding-inline: 6px;
+}
+
+.SingleDatePicker{
+  padding-top:12px;
+}
+
+.SingleDatePickerInput_calendarIcon_svg{
+  height: 16px;
+}
+
+.SingleDatePickerInput_clearDate{
+  top:63%;
+}
+
+.SingleDatePickerInput_calendarIcon_1:focus-visible{
+  border:none;
+  outline:none;
+}
