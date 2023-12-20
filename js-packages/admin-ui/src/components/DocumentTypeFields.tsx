@@ -23,7 +23,7 @@ import ClayList from "@clayui/list";
 import DropDown from "@clayui/drop-down";
 import { apolloClient } from "./apolloClient";
 import ClayToolbar from "@clayui/toolbar";
-import { ClayButtonWithIcon } from "@clayui/button";
+import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
 import { ClassNameButton } from "../App";
 import useDebounced from "./useDebounced";
 
@@ -97,23 +97,25 @@ export function DocumentTypeFields() {
           <ClayToolbar.Nav>
             <ClayToolbar.Item expand>
               <div style={{ position: "relative" }}>
-                <ClayToolbar.Input
-                  placeholder="Search..."
-                  sizing="sm"
-                  value={searchText}
-                  onChange={(event) => {
-                    setSearchText(event.currentTarget.value);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && searchText !== "") {
-                      event.preventDefault();
+                {data.docTypeFieldsFromDocTypeByParent.edges.length > 0 && (
+                  <ClayToolbar.Input
+                    placeholder="Search..."
+                    sizing="sm"
+                    value={searchText}
+                    onChange={(event) => {
                       setSearchText(event.currentTarget.value);
-                      navigate(
-                        "/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText
-                      );
-                    }
-                  }}
-                />
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && searchText !== "") {
+                        event.preventDefault();
+                        setSearchText(event.currentTarget.value);
+                        navigate(
+                          "/document-types/" + documentTypeId + "/document-type-fields/search-document-type-field/search/" + searchText
+                        );
+                      }
+                    }}
+                  />
+                )}
                 {searchText !== "" && (
                   <ClayButtonWithIcon
                     aria-label=""
@@ -126,6 +128,16 @@ export function DocumentTypeFields() {
                   />
                 )}
               </div>
+            </ClayToolbar.Item>
+            <ClayToolbar.Item>
+              <Link to={"/document-types/" + documentTypeId + "/document-type-fields/new"}>
+                <ClayButton className={`${ClassNameButton} btn-sm`}>
+                  <span className="inline-item inline-item-before">
+                    <ClayIcon symbol="plus" />
+                  </span>
+                  {"Add New"}
+                </ClayButton>
+              </Link>
             </ClayToolbar.Item>
             <ClayToolbar.Item>
               {searchText !== "" && (
@@ -197,8 +209,8 @@ export function DocumentTypeFields() {
                         <Link to={`newSubFields/${node?.id}/new`}>
                           <button
                             style={{ background: "inherit", backgroundColor: "inherit", border: "none" }}
-                            aria-label="Plus doc type fields"
-                            title="Plus doc type fields"
+                            aria-label="Add doc type fields"
+                            title="Add doc type fields"
                           >
                             <ClayIcon symbol={"plus"} />
                           </button>
