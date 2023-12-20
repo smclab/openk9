@@ -157,6 +157,7 @@ export class OpenK9 {
 type FiltersHorizontalConfiguration = {
   element: Element | string | null;
   callback: () => void | null;
+  actionChecked: ()=> void |null;
 };
 
 type FiltersHorizontalMobileConfiguration = {
@@ -231,6 +232,7 @@ type SearchProps = {
   isShowSyntax?: boolean | undefined | null;
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
+  messageSearchIsVisible?: boolean;
 };
 
 type FilterProps = {

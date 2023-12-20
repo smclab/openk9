@@ -232,6 +232,7 @@ export function Main({
             isSearchOnInputChange={isSearchOnInputChange}
             defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
             htmlKey={configuration.searchConfigurable?.htmlKey}
+            messageSearchIsVisible={configuration?.searchConfigurable?.messageSearchIsVisible ?? true}
           />
         </I18nextProvider>,
         configuration.searchConfigurable

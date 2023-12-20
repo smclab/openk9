@@ -43,6 +43,7 @@ type SearchProps = {
   isSearchOnInputChange?: boolean;
   htmlKey?: string | undefined | null;
   textOnQueryStringOnCLick?: string | null | undefined;
+  messageSearchIsVisible?: boolean;
   saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   actionCloseMobileVersion?:
     | React.Dispatch<React.SetStateAction<boolean>>
@@ -64,6 +65,7 @@ export function Search({
   saveSearchQuery,
   defaultValue,
   htmlKey,
+  messageSearchIsVisible = true,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -437,12 +439,14 @@ export function Search({
                 }
               }}
             ></input>
-            <p className="visually-hidden" id="message-search">
-              {t(
-                "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
-              ) ||
-                "insert text to set the value or use up and down arrow keys to navigate the suggestion box"}
-            </p>
+            {messageSearchIsVisible && (
+              <p className="visually-hidden" id="message-search">
+                {t(
+                  "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
+                ) ||
+                  "insert text to set the value or use up and down arrow keys to navigate the suggestion box"}
+              </p>
+            )}
           </div>
           <button
             className="openk9--search-delete-container-icon"
