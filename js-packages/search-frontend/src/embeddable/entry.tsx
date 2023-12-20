@@ -157,7 +157,6 @@ export class OpenK9 {
 type FiltersHorizontalConfiguration = {
   element: Element | string | null;
   callback: () => void | null;
-  actionChecked: ()=> void |null;
 };
 
 type FiltersHorizontalMobileConfiguration = {
