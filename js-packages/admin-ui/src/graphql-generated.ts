@@ -78,6 +78,7 @@ export type Annotator = {
   description?: Maybe<Scalars['String']>;
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldNotInAnnotator?: Maybe<Connection_DocTypeField>;
+  extraParams?: Maybe<Array<Maybe<AnnotatorExtraParam>>>;
   fieldName?: Maybe<Scalars['String']>;
   fuziness?: Maybe<Fuzziness>;
   id?: Maybe<Scalars['ID']>;
@@ -105,6 +106,12 @@ export type AnnotatorDtoInput = {
   name: Scalars['String'];
   size?: InputMaybe<Scalars['Int']>;
   type: AnnotatorType;
+};
+
+export type AnnotatorExtraParam = {
+  __typename?: 'AnnotatorExtraParam';
+  key?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
 };
 
 export enum AnnotatorType {
@@ -1327,6 +1334,7 @@ export type LanguageDtoInput = {
 /** Mutation root */
 export type Mutation = {
   __typename?: 'Mutation';
+  addAnnotatorExtraParam?: Maybe<Annotator>;
   addAnnotatorToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Annotator>;
   addCharFilterToAnalyzer?: Maybe<Tuple2_Analyzer_CharFilter>;
   addDatasourceToBucket?: Maybe<Tuple2_Bucket_Datasource>;
@@ -1435,6 +1443,14 @@ export type Mutation = {
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
   unbindTokenizerFromAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
   userField?: Maybe<AclMapping>;
+};
+
+
+/** Mutation root */
+export type MutationAddAnnotatorExtraParamArgs = {
+  id: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -2285,6 +2301,7 @@ export type Query = {
   docTypeTemplate?: Maybe<DocTypeTemplate>;
   docTypeTemplates?: Maybe<Connection_DocTypeTemplate>;
   docTypes?: Maybe<Connection_DocType>;
+  enabledBucket?: Maybe<Bucket>;
   enrichItem?: Maybe<EnrichItem>;
   enrichItems?: Maybe<Connection_EnrichItem>;
   enrichPipeline?: Maybe<EnrichPipeline>;
@@ -4944,6 +4961,11 @@ export type AddTabTranslationMutationVariables = Exact<{
 
 
 export type AddTabTranslationMutation = { __typename?: 'Mutation', addTabTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
+
+export type EnabledBucketQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type EnabledBucketQuery = { __typename?: 'Query', enabledBucket?: { __typename?: 'Bucket', name?: string | null, language?: { __typename?: 'Language', name?: string | null, value?: string | null } | null } | null };
 
 export type TokenFilterQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -12574,6 +12596,44 @@ export function useAddTabTranslationMutation(baseOptions?: Apollo.MutationHookOp
 export type AddTabTranslationMutationHookResult = ReturnType<typeof useAddTabTranslationMutation>;
 export type AddTabTranslationMutationResult = Apollo.MutationResult<AddTabTranslationMutation>;
 export type AddTabTranslationMutationOptions = Apollo.BaseMutationOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
+export const EnabledBucketDocument = gql`
+    query enabledBucket {
+  enabledBucket {
+    name
+    language {
+      name
+      value
+    }
+  }
+}
+    `;
+
+/**
+ * __useEnabledBucketQuery__
+ *
+ * To run a query within a React component, call `useEnabledBucketQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEnabledBucketQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEnabledBucketQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useEnabledBucketQuery(baseOptions?: Apollo.QueryHookOptions<EnabledBucketQuery, EnabledBucketQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<EnabledBucketQuery, EnabledBucketQueryVariables>(EnabledBucketDocument, options);
+      }
+export function useEnabledBucketLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnabledBucketQuery, EnabledBucketQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<EnabledBucketQuery, EnabledBucketQueryVariables>(EnabledBucketDocument, options);
+        }
+export type EnabledBucketQueryHookResult = ReturnType<typeof useEnabledBucketQuery>;
+export type EnabledBucketLazyQueryHookResult = ReturnType<typeof useEnabledBucketLazyQuery>;
+export type EnabledBucketQueryResult = Apollo.QueryResult<EnabledBucketQuery, EnabledBucketQueryVariables>;
 export const TokenFilterDocument = gql`
     query TokenFilter($id: ID!) {
   tokenFilter(id: $id) {
@@ -13044,4 +13104,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-12-01T12:41:27+01:00
+// Generated on 2023-12-21T15:31:05+01:00
