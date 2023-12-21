@@ -43,7 +43,7 @@ export function MinioWizard() {
         port: "",
         secretKey: "",
         bucketName: "",
-        reindex: true,
+        reindexRate: 0,
       }),
       []
     ),
@@ -55,7 +55,7 @@ export function MinioWizard() {
           name: data.name,
           scheduling: data.scheduling,
           description: "",
-          reindex: false,
+          reindexRate: 0,
           schedulable: true,
           jsonConfig: JSON.stringify(
             {
