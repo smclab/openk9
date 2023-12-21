@@ -37,17 +37,6 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		return super.onSave(entity, id, state, propertyNames, types);
 	}
 
-	@Override
-	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
-		invalidateLocalCache();
-		super.onCollectionRemove(collection, key);
-	}
-
-	@Override
-	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
-		invalidateLocalCache();
-		super.onCollectionRecreate(collection, key);
-	}
 
 	@Override
 	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
