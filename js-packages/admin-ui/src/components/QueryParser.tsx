@@ -252,6 +252,8 @@ const TemplateQueryParser = [
     Json: `
     {
        "boost": 50.0,
+       "valuesQueryType": "MUST",
+       "globalQueryType": "MUST",
        "fuzziness": "ZERO"
     }`,
     multiselect: `
