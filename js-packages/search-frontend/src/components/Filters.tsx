@@ -216,8 +216,7 @@ function Filters({
           </div>
         )}
         {preFilters}
-        {suggestionCategories.data?.map((suggestionCategory) => {
-          return dynamicFilters ? (
+        {suggestionCategories.data?.map((suggestionCategory) => 
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
               suggestionCategoryName={translateSuggesionCategoryName({
@@ -237,27 +236,8 @@ function Filters({
               isDynamicElement={isDynamicElement}
               noResultMessage={noResultMessage}
             />
-          ) : (
-            <FilterCategoryMemo
-              key={suggestionCategory.id}
-              suggestionCategoryName={translateSuggesionCategoryName({
-                names: suggestionCategory.translationMap,
-                language: language,
-                defaultValue: suggestionCategory.name,
-              })}
-              suggestionCategoryId={suggestionCategory.id}
-              tokens={lastSearchQueryWithResults}
-              onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken}
-              multiSelect={suggestionCategory?.multiSelect}
-              searchQuery={searchQuery}
-              dynamicFilters={dynamicFilters}
-              language={language}
-              isCollapsable={isCollapsable}
-              numberItems={numberItems}
-            />
-          );
-        })}
+         
+        )}
       </div>
     </div>
   );
