@@ -43,7 +43,7 @@ export function MinioWizard() {
         port: "",
         secretKey: "",
         bucketName: "",
-        reindexRate: 0,
+        reindex: true,
       }),
       []
     ),
