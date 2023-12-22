@@ -47,6 +47,7 @@ import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
+import { TotalResultsMobile } from "../components/TotalResultsMobile";
 import { ResultsPaginationMemo } from "../components/ResultListPagination";
 import _ from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
@@ -394,7 +395,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <TotalResults totalResult={totalResult} />
+          <TotalResultsMobile totalResult={totalResult} />
         </I18nextProvider>,
         configuration.totalResultMobile,
       )}
