@@ -759,6 +759,7 @@ function useSearchOnClick({
     onQueryStateChange,
     defaultTokens,
     tabTokens,
+    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
   ]);
@@ -897,6 +898,7 @@ function useSearch({
     onQueryStateChange,
     defaultTokens,
     tabTokens,
+    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
   ]);
