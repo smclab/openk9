@@ -37,7 +37,7 @@ Build Latest K8s Client Docker Images:
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   only:
     refs:
-      - 609-completamento-integrazione-hugging-face
+      - main
   when:
     manual
   except:
