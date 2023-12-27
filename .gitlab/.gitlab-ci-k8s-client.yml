@@ -44,7 +44,7 @@ Build Latest K8s Client Docker Images:
     - schedules
   script:
     - cd core
-    - ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=1.6.0-609-SNAPSHOT
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
   cache:
     key: k8s-client
     paths:
