@@ -32,15 +32,19 @@ function Detail<E>(props: DetailProps<E>) {
     ".openk9-detail-overlay-scrollbars-component",
   );
 
+React.useEffect(()=>{
+  if(isMobile && isMobile===true ){
+    refFocus.current?.focus()
+  }
   if (scrollContainer) {
     scrollContainer.scrollTop = 0;
   }
+},[])
+
   if (!result) {
     return <NoDetail />;
   }
-  if(isMobile && isMobile===true){
-    refFocus.current?.focus()
-  }
+ 
   return (
     <div
       className="openk9-detail-overlay-scrollbars-component"
