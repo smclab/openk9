@@ -261,7 +261,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			getContext().getSelf().tell(command);
 		}
 
-		return this.ready();
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onStart(Start start) {
