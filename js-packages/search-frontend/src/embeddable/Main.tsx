@@ -70,7 +70,8 @@ export function Main({
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const useQueryString= configuration.useQueryString;
   const [selectionsState, selectionsDispatch] = useSelections();
-
+  const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
+  const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
     configuration,
     onConfigurationChange,
@@ -178,9 +179,9 @@ export function Main({
         selectionsDispatch,
         selectionsState,
       });
-  const { detail, setDetail } = useDetails(searchQuery);
+  const { detail, setDetail } = useDetails(searchQuery,setPrevSearchQuery,prevSearchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
-    useDetailsMobile(searchQuery);
+    useDetailsMobile(searchQuery,prevSearchQueryMobile,setPrevSearchQueryMobile);
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -982,7 +983,6 @@ function useFilters({
     | React.Dispatch<SelectionsAction>;
 }) {
   const filterTokens:SearchToken[] = configuration.useFilterConfiguration? [...configuration.filterTokens, ...selectionsState.filters] :useQueryString? selectionsState.filters :[];
-
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       const newFilters = configuration.filterTokens.map((token) => {
@@ -1086,13 +1086,16 @@ function useDateTokens() {
   return { dateRange, setDateRange, dateTokens };
 }
 
-function useDetails(searchQuery: Array<SearchToken>) {
+function useDetails(searchQuery: Array<SearchToken>,setPrevSearchQuery:any,prevSearchQuery:Array<SearchToken>) {
   const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
     null,
   );
   React.useEffect(() => {
-    setDetail(null);
-  }, [searchQuery]);
+     if (prevSearchQuery !== null && !isEqual(searchQuery, prevSearchQuery)) {
+      setDetail(null);
+     }
+    setPrevSearchQuery(searchQuery);
+  }, [searchQuery, prevSearchQuery]);
   return { detail, setDetail };
 }
 
@@ -1113,13 +1116,17 @@ function renderPortal(
   );
 }
 
-function useDetailsMobile(searchQuery: Array<SearchToken>) {
+function useDetailsMobile(searchQuery: Array<SearchToken>,prevSearchQueryMobile:Array<SearchToken>,setPrevSearchQueryMobile:any) {
   const [idPreview, setIdPreview] = React.useState("");
   const [detailMobile, setDetailMobile] =
     React.useState<GenericResultItem<unknown> | null>(null);
   React.useEffect(() => {
+    if (prevSearchQueryMobile !== null && !isEqual(searchQuery, prevSearchQueryMobile)) {
     setDetailMobile(null);
-  }, [searchQuery]);
+    }
+    setPrevSearchQueryMobile(searchQuery)
+  }, [searchQuery,prevSearchQueryMobile]);
+   
   return { detailMobile, setDetailMobile, idPreview, setIdPreview };
 }
 

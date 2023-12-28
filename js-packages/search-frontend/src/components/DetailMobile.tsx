@@ -22,8 +22,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
     React.useEffect(() => {
       const modalElement = modalRef.current as any;
 
-      if (true && modalElement) {
-
+      if (modalElement ) {
         const focusableElements = modalElement?.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
