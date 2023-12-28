@@ -227,7 +227,20 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(FINISH_BEHAVIOR);
 
 		return newReceiveBuilder()
+			.onMessageEquals(Tick.INSTANCE, this::onFinish)
 			.build();
+	}
+
+	private Behavior<Command> onFinish() {
+		if (log.isDebugEnabled()){
+			log.debugf("Busy workers %s, for %s", workers, key);
+		}
+
+		if (workers == 0) {
+			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+		}
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> next() {
@@ -314,8 +327,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			if (!failureTracked) {
 				log.infof("%s ingestion is done, replyTo %s", key, ingest.replyTo);
-
-				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
 
 				return this.finish();
 			}
@@ -482,9 +493,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			log.infof("%s ingestion is expired ", key);
 
 			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
-
-			return this.finish();
 		}
+
 		return Behaviors.same();
 	}
 
