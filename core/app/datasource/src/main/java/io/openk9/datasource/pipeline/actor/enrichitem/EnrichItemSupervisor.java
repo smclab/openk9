@@ -77,6 +77,9 @@ public class EnrichItemSupervisor {
 				return Behaviors.same();
 
 			}
+			else {
+				gvw.replyTo.tell(new Error("validation not satisfied"));
+			}
 
 		}
 		else if (response instanceof GroovyActor.GroovyError groovyError) {
