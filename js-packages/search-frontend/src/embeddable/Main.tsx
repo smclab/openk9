@@ -45,8 +45,9 @@ import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
+import { TotalResultsMobile } from "../components/TotalResultsMobile";
 import { ResultsPaginationMemo } from "../components/ResultListPagination";
-import _ from "lodash";
+import _, { isEqual } from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 
@@ -79,6 +80,8 @@ export function Main({
   const [selectionsState, selectionsDispatch] = useSelections({useKeycloak});
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
+  const [prevSearchQuery,setPrevSearchQuery] =React.useState([]);
+  const [prevSearchQueryMobile,setPrevSearchQueryMobile] =React.useState([]);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
@@ -125,9 +128,9 @@ export function Main({
         selectionsDispatch,
         selectionsState,
       });
-  const { detail, setDetail } = useDetails(searchQuery);
+  const { detail, setDetail } = useDetails(searchQuery,setPrevSearchQuery,prevSearchQuery);
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
-    useDetailsMobile(searchQuery);
+    useDetailsMobile(searchQuery,prevSearchQueryMobile,setPrevSearchQueryMobile);
   const {dynamicFilters,languageQuery,whoIsDynamicResponse,languages}=recoveryDataBackEnd();
  
   //Effect
@@ -215,6 +218,7 @@ export function Main({
             isSearchOnInputChange={isSearchOnInputChange}
             defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
             htmlKey={configuration.searchConfigurable?.htmlKey}
+            messageSearchIsVisible={configuration?.searchConfigurable?.messageSearchIsVisible ?? true}
           />
         </I18nextProvider>,
         configuration.searchConfigurable
@@ -373,6 +377,12 @@ export function Main({
           <TotalResults totalResult={totalResult} />
         </I18nextProvider>,
         configuration.totalResult,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <TotalResultsMobile totalResult={totalResult} />
+        </I18nextProvider>,
+        configuration.totalResultMobile,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -736,6 +746,7 @@ function useSearchOnClick({
     onQueryStateChange,
     defaultTokens,
     tabTokens,
+    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
   ]);
@@ -874,6 +885,7 @@ function useSearch({
     onQueryStateChange,
     defaultTokens,
     tabTokens,
+    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
   ]);
@@ -1085,13 +1097,16 @@ function useDateTokens() {
   return { dateRange, setDateRange, dateTokens };
 }
 
-function useDetails(searchQuery: Array<SearchToken>) {
+function useDetails(searchQuery: Array<SearchToken>,setPrevSearchQuery:any,prevSearchQuery:Array<SearchToken>) {
   const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
     null,
   );
   React.useEffect(() => {
-    setDetail(null);
-  }, [searchQuery]);
+     if (prevSearchQuery !== null && !isEqual(searchQuery, prevSearchQuery)) {
+      setDetail(null);
+     }
+    setPrevSearchQuery(searchQuery);
+  }, [searchQuery, prevSearchQuery]);
   return { detail, setDetail };
 }
 
@@ -1112,13 +1127,17 @@ function renderPortal(
   );
 }
 
-function useDetailsMobile(searchQuery: Array<SearchToken>) {
+function useDetailsMobile(searchQuery: Array<SearchToken>,prevSearchQueryMobile:Array<SearchToken>,setPrevSearchQueryMobile:any) {
   const [idPreview, setIdPreview] = React.useState("");
   const [detailMobile, setDetailMobile] =
     React.useState<GenericResultItem<unknown> | null>(null);
   React.useEffect(() => {
+    if (prevSearchQueryMobile !== null && !isEqual(searchQuery, prevSearchQueryMobile)) {
     setDetailMobile(null);
-  }, [searchQuery]);
+    }
+    setPrevSearchQueryMobile(searchQuery)
+  }, [searchQuery,prevSearchQueryMobile]);
+   
   return { detailMobile, setDetailMobile, idPreview, setIdPreview };
 }
 
@@ -1352,6 +1371,8 @@ function factoryWhoIsDynamic({
   if (whoIsDynamicResponse.refreshOnTab) {
     resultArray.push("tab");
   }
-
+  if(whoIsDynamicResponse.refreshOnDate){
+    resultArray.push("date")
+  }
   return resultArray;
 }

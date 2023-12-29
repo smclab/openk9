@@ -27,6 +27,7 @@ import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
 import { CodeInput } from "./CodeInput";
 import { DocumentTypeFieldsQuery } from "./SubFieldsDocumentType";
+import { DocumentTypeFieldsParentQuery } from "./DocumentTypeFields";
 import { useToast } from "./ToastProvider";
 import { ClayButtonWithIcon } from "@clayui/button";
 import { ClassNameButton } from "../App";
@@ -100,7 +101,7 @@ export function DocumentTypeField() {
   });
   const showToast = useToast();
   const [createOrUpdateDocumentTypeFieldMutate, createOrUpdateDocumentTypeFieldMutation] = useCreateOrUpdateDocumentTypeFieldMutation({
-    refetchQueries: [DocumentTypeFieldQuery, DocumentTypeFieldsQuery],
+    refetchQueries: [DocumentTypeFieldQuery, DocumentTypeFieldsQuery, DocumentTypeFieldsParentQuery],
     onCompleted(data) {
       if (data.docTypeField?.entity) {
         if (documentTypeFieldId === "new") {

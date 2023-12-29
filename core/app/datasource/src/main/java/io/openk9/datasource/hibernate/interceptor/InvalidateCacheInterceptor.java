@@ -4,6 +4,7 @@ import akka.actor.typed.ActorSystem;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.cache.P2PCache;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
+import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 
@@ -34,6 +35,13 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 		invalidateLocalCache();
 		return super.onSave(entity, id, state, propertyNames, types);
+	}
+
+
+	@Override
+	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
+		invalidateLocalCache();
+		super.onCollectionUpdate(collection, key);
 	}
 
 	private void invalidateLocalCache() {

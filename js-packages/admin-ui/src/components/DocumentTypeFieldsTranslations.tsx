@@ -1,7 +1,12 @@
 import { gql } from "@apollo/client";
 import React from "react";
 import { useParams } from "react-router-dom";
-import { useAddDocTypeFieldTranslationMutation, useDocumentTypeFieldQuery, useLanguagesQuery } from "../graphql-generated";
+import {
+  useAddDocTypeFieldTranslationMutation,
+  useDocumentTypeFieldQuery,
+  useLanguagesQuery,
+  useEnabledBucketQuery,
+} from "../graphql-generated";
 import { ContainerFluid, CustomButtom, fromFieldValidators, MainTitle, TextArea, TextInput, useForm } from "./Form";
 import { Link } from "react-router-dom";
 import ClayToolbar from "@clayui/toolbar";
@@ -25,17 +30,6 @@ let mutationCounter = 0;
 let totalTranslations = 0;
 
 export function DocumentTypeFieldsTranslations() {
-  const [flag, setFlag] = React.useState("en-us");
-  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
-  const dataLanguagesQuery = useLanguagesQuery();
-
-  const { documentTypeId, documentTypeFieldId = "new" } = useParams();
-  const showToast = useToast();
-  const documentTypeFieldQuery = useDocumentTypeFieldQuery({
-    variables: { id: documentTypeFieldId as string },
-    skip: !documentTypeFieldId,
-  });
-
   // convert languageCode from en_US to en-us
   const convertLanguageCodeForFrontend = (languageCode: string) => {
     return languageCode.toLowerCase().replace("_", "-");
@@ -45,6 +39,21 @@ export function DocumentTypeFieldsTranslations() {
   const convertLanguageCodeForBackend = (languageCode: string) => {
     return languageCode.replace("-", "_").replace(/([^_]*$)/g, (s: string) => s.toUpperCase());
   };
+  const enabledBucketQuery = useEnabledBucketQuery({
+    variables: {},
+  });
+  const [flag, setFlag] = React.useState(
+    convertLanguageCodeForFrontend(enabledBucketQuery?.data?.enabledBucket?.language?.value || "en_US")
+  );
+  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
+  const dataLanguagesQuery = useLanguagesQuery();
+
+  const { documentTypeId, documentTypeFieldId = "new" } = useParams();
+  const showToast = useToast();
+  const documentTypeFieldQuery = useDocumentTypeFieldQuery({
+    variables: { id: documentTypeFieldId as string },
+    skip: !documentTypeFieldId,
+  });
 
   const originalTranslations = documentTypeFieldQuery.data?.docTypeField?.translations;
   const originalTranslationsLength = originalTranslations?.length;

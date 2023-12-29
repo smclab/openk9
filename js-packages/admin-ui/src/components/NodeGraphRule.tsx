@@ -50,9 +50,10 @@ export default function NodeGraphRule(props: any) {
         borderRadius: "50px",
         cursor: "pointer",
       }}
+      onClick={!isPanelOpen ? handleNodeClick : undefined}
     >
       <Handle type="target" position={Position.Top} isConnectable={true} />
-      <div onClick={handleNodeClick}> {data.label}</div>
+      <div>{data.label}</div>
       <Handle type="source" position={Position.Bottom} isConnectable={true} />
 
       {isPanelOpen && (

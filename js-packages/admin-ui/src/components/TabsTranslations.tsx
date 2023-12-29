@@ -1,7 +1,7 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useParams } from "react-router-dom";
-import { useAddTabTranslationMutation, useLanguagesQuery, useTabQuery } from "../graphql-generated";
+import { useAddTabTranslationMutation, useLanguagesQuery, useTabQuery, useEnabledBucketQuery } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, MainTitle, CustomButtom, ContainerFluid } from "./Form";
 import { useToast } from "./ToastProvider";
 import { TabQuery } from "./Tab";
@@ -17,21 +17,22 @@ gql`
   }
 `;
 
+const EnabledBucketQuery = gql`
+  query enabledBucket {
+    enabledBucket {
+      name
+      language {
+        name
+        value
+      }
+    }
+  }
+`;
+
 let mutationCounter = 0;
-let totalTranslations = 0
+let totalTranslations = 0;
 
 export function TabsTranslations() {
-  const [flag, setFlag] = React.useState("en-us");
-  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
-  const dataLanguagesQuery = useLanguagesQuery();
-
-  const { tabId = "new" } = useParams();
-  const showToast = useToast();
-  const tabQuery = useTabQuery({
-    variables: { id: tabId as string },
-    skip: !tabId,
-  });
-
   // convert languageCode from en_US to en-us
   const convertLanguageCodeForFrontend = (languageCode: string) => {
     return languageCode.toLowerCase().replace("_", "-");
@@ -41,6 +42,21 @@ export function TabsTranslations() {
   const convertLanguageCodeForBackend = (languageCode: string) => {
     return languageCode.replace("-", "_").replace(/([^_]*$)/g, (s: string) => s.toUpperCase());
   };
+  const enabledBucketQuery = useEnabledBucketQuery({
+    variables: {},
+  });
+  const [flag, setFlag] = React.useState(
+    convertLanguageCodeForFrontend(enabledBucketQuery?.data?.enabledBucket?.language?.value || "en_US")
+  );
+  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
+  const dataLanguagesQuery = useLanguagesQuery();
+
+  const { tabId = "new" } = useParams();
+  const showToast = useToast();
+  const tabQuery = useTabQuery({
+    variables: { id: tabId as string },
+    skip: !tabId,
+  });
 
   const originalTranslations = tabQuery.data?.tab?.translations;
   const originalTranslationsLength = originalTranslations?.length;
@@ -52,7 +68,9 @@ export function TabsTranslations() {
       value: element?.value,
     };
 
-    const translationsToPostIndex = translationsToPost.findIndex((item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key);
+    const translationsToPostIndex = translationsToPost.findIndex(
+      (item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key
+    );
     if (translationsToPostIndex === -1) {
       translationsToPost.push(translation);
     }
@@ -91,7 +109,14 @@ export function TabsTranslations() {
       const convertedTranslationsToPost = [];
       for (let index = 0; index < translationsToPostLength; index++) {
         const element = translationsToPost[index];
-        if (!originalTranslations!.some((translation) => convertLanguageCodeForBackend(element?.language!) === translation?.language && element.key === translation?.key && element.value === translation?.value)) {
+        if (
+          !originalTranslations!.some(
+            (translation) =>
+              convertLanguageCodeForBackend(element?.language!) === translation?.language &&
+              element.key === translation?.key &&
+              element.value === translation?.value
+          )
+        ) {
           const convertedTranslation = {
             language: convertLanguageCodeForBackend(element?.language!),
             key: element.key,
@@ -177,8 +202,12 @@ export function TabsTranslations() {
                     style={{ display: "inline-block", width: "100%", outline: "none" }}
                     onClick={() => {
                       setFlag(languageCode!);
-                      const nameInputValue = translationsToPost?.find((element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "name")?.value;
-                      const descriptionInputValue = translationsToPost?.find((element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "description")?.value;
+                      const nameInputValue = translationsToPost?.find(
+                        (element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "name"
+                      )?.value;
+                      const descriptionInputValue = translationsToPost?.find(
+                        (element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "description"
+                      )?.value;
                       form.inputProps("name").onChange(nameInputValue ? nameInputValue : "");
                       form.inputProps("description").onChange(descriptionInputValue ? descriptionInputValue : "");
                     }}

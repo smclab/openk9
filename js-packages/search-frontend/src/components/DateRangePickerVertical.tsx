@@ -10,6 +10,7 @@ import "moment/locale/it";
 import "moment/locale/es";
 import "moment/locale/fr";
 import { DateRangePickerPhrases } from "react-dates/lib/defaultPhrases";
+import { css } from "styled-components/macro";
 export function DataRangePickerVertical({
   onChange,
   calendarDate,
@@ -17,7 +18,7 @@ export function DataRangePickerVertical({
   start,
   end,
   classTab,
-  readOnly=false,
+  readOnly = false,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -25,7 +26,7 @@ export function DataRangePickerVertical({
   start?: any;
   end?: any;
   classTab?: string;
-  readOnly?:boolean;
+  readOnly?: boolean;
 }) {
   const languageCalendar = mappingNameLanguage(language);
   moment.locale(languageCalendar);
@@ -39,13 +40,28 @@ export function DataRangePickerVertical({
     React.useState<boolean>(false);
   const [manageAccessibilityEnd, setManageAccessibilityEnd] =
     React.useState<boolean>(false);
-
+  const [dataEnd, setDataEnd] = React.useState("");
+  const [dataStart, setDataStart] = React.useState("");
+  const [validationStart, setValidationStart] = React.useState("");
+  const [validationEnd, setValidationEnd] = React.useState("");
   React.useEffect(() => {
     onChange({
       startDate: startDate?._d || undefined,
       endDate: endDate?._d || undefined,
       keywordKey: undefined,
     });
+    if (endDate) {
+      setDataEnd(endDate.format("DD/MM/YYYY"));
+      setValidationEnd("");
+    } else {
+      setDataEnd("");
+    }
+    if (startDate) {
+      setDataStart(startDate.format("DD/MM/YYYY"));
+      setValidationStart("");
+    } else {
+      setDataStart("");
+    }
   }, [endDate, startDate]);
 
   const customPhrasesStart = {
@@ -63,6 +79,60 @@ export function DataRangePickerVertical({
       : t("open-calendar-end-date") || "open calendar end date",
   };
 
+  function handleEndDateChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const inputValue = event.target.value;
+    const dateObject = moment(inputValue, "DD/MM/YYYY", true);
+    if (dateObject.isValid() && (!startDate || dateObject >= startDate)) {
+      setEndDate(dateObject);
+      setValidationEnd("");
+    } else {
+      setEndDate(null);
+      setDataEnd("");
+      if (inputValue !== "") {
+      if (!dateObject.isValid()) {
+        setValidationEnd("Formato data non valido");
+      } else {
+        setValidationEnd(
+          "La data di fine non può essere inferiore alla data di inizio",
+        );
+      }
+    }
+  }
+  }
+
+  function handleStartDateChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const inputValue = event.target.value;
+    const dateObject = moment(inputValue, "DD/MM/YYYY", true);
+    if (dateObject.isValid() && (!endDate || dateObject <= endDate)) {
+      setStartDate(dateObject);
+      setValidationStart("");
+    } else {
+      setStartDate(null);
+      setDataStart("");
+      if (inputValue !== "") {
+        if (!dateObject.isValid()) {
+          setValidationStart("Formato data non valido");
+        } else {
+          setValidationStart(
+            "La data di inizio non può essere inferiore alla data di fine",
+          );
+        }
+      }
+    }
+  }
+
+  const [date, setDate] = React.useState(null);
+
+  const renderCustomInput = ({ ref, onFocus, onKeyDown }:{ref:any,onFocus:any,onKeyDown:any}) => (
+    <button
+      ref={ref}
+      onFocus={onFocus}
+      onKeyDown={onKeyDown}
+      className="your-custom-class"
+    >
+      Seleziona una data
+    </button>
+  );
   return (
     <div
       className={`DateRangePickerVertical-container openk9-class-tab-${classTab}`}
@@ -83,30 +153,82 @@ export function DataRangePickerVertical({
           onKeyDown={(e) =>
             e.key === "Tab" ? setManageAccessibilityStart(false) : null
           }
+          css={css`
+            display: flex;
+          `}
         >
-          <SingleDatePicker
-            date={start || startDate}
-            numberOfMonths={1}
-            readOnly={readOnly}
-            onDateChange={(startDate) => setStartDate(startDate)}
-            focused={manageAccessibilityStart ? focusedStartInput : false}
-            onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
-            hideKeyboardShortcutsPanel
-            id="startDate"
-            showClearDate
-            showDefaultInputIcon
-            inputIconPosition="after"
-            isOutsideRange={(day) => {
-              return (
-                day.isAfter(moment().endOf("day")) || (endDate && day.isAfter(endDate))
-              );
+          <label className="visually-hidden" htmlFor={"input-start-date"}>
+            input per data inizio
+          </label>
+          <input
+            type="text"
+            id={"input-start-date"}
+            placeholder="Data Inizio"
+            className="input-start-calendar"
+            value={dataStart}
+            onChange={(event) => {
+              const expression = /^[\/0-9]*$/;
+              const value = event.currentTarget.value;
+              if (expression.test(event.currentTarget.value)) {
+                setDataStart(value);
+              }
             }}
-            placeholder={t("start-day") || "Start day"}
-            openDirection="up"
-            phrases={customPhrasesStart}
+            onBlur={handleStartDateChange}
+            css={css`
+              border-top: 1px solid black;
+              border-left: 1px solid black;
+              border-bottom: 1px solid black;
+              min-width: 130px;
+              height: 42px;
+            `}
           />
+          <div
+            className="openk9-calendar-button"
+            css={css`
+              border-top: 1px solid black;
+              border-bottom: 1px solid black;
+              border-left: none;
+              border-right: 1px solid black;
+            `}
+          >
+            <SingleDatePicker
+              date={start || startDate}
+              numberOfMonths={1}
+              readOnly={readOnly}
+              onDateChange={setStartDate}
+              focused={focusedStartInput}
+              onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
+              hideKeyboardShortcutsPanel
+              id="startDate"
+              showClearDate
+              showDefaultInputIcon
+              inputIconPosition="after"
+              isOutsideRange={(day) => {
+                return (
+                  day.isAfter(moment().endOf("day")) ||
+                  (endDate && day.isAfter(endDate))
+                );
+              }}
+              placeholder={t("start-day") || "Start day"}
+              openDirection="up"
+              phrases={customPhrasesStart}
+            />
+            <style>{`
+                  .DateInput  {
+                     display: none; 
+                   }
+                   .SingleDatePickerInput_clearDate__default_2{
+                      width:88%;
+                    }
+           `}</style>
+          </div>
         </div>
       </div>
+      {validationStart !== "" && (
+        <p id="error-message" role="alert" style={{ color: "red" }}>
+          {validationStart}
+        </p>
+      )}
       <div className="DateRangePickerVertical-endDate-container">
         <p className="DateRangePickerVertical-date-title">
           Al ({t("gg/mm/aaaa")}):
@@ -116,29 +238,82 @@ export function DataRangePickerVertical({
           onKeyDown={(e) =>
             e.key === "Tab" ? setManageAccessibilityEnd(false) : null
           }
+          css={css`
+            display: flex;
+          `}
         >
-          <SingleDatePicker
-            date={end || endDate}
-            numberOfMonths={1}
-            readOnly={readOnly}
-            onDateChange={(endDate) => setEndDate(endDate)}
-            focused={manageAccessibilityEnd ? focusedEndInput : false}
-            onFocusChange={(focus) => setFocusedEndInput(focus.focused)}
-            hideKeyboardShortcutsPanel
-            id="endDate"
-            showClearDate
-            showDefaultInputIcon
-            inputIconPosition="after"
-            isOutsideRange={(day) => {
-              return (
-                day.isAfter(moment().endOf("day")) || (startDate && startDate.isAfter(day))
-              );
+          <label className="visually-hidden" htmlFor={"input-end-date"}>
+            input per data fine
+          </label>
+          <input
+            id={"input-end-date"}
+            type="text"
+            placeholder="Data Fine"
+            className="input-end-calendar"
+            value={dataEnd}
+            onChange={(event) => {
+              const expression = /^[\/0-9]*$/;
+              const value = event.currentTarget.value;
+              if (expression.test(event.currentTarget.value)) {
+                setDataEnd(value);
+              }
             }}
-            placeholder={t("end-day") || "End day"}
-            openDirection="up"
-            phrases={customPhrasesEndDate}
+            onBlur={handleEndDateChange}
+            css={css`
+              border-top: 1px solid black;
+              border-left: 1px solid black;
+              border-bottom: 1px solid black;
+              min-width: 130px;
+              height: 42px;
+            `}
           />
+          <style>{`
+                  .DateInput  {
+                     display: none; 
+                   }
+                   .SingleDatePickerInput_clearDate__default_2{
+                      width:88%;
+                    }
+         `}</style>
+          <div
+            className="openk9-calendar-button"
+            css={css`
+              border-top: 1px solid black;
+              border-bottom: 1px solid black;
+              border-left: none;
+              border-right: 1px solid black;
+            `}
+          >
+            <SingleDatePicker
+              date={end || endDate}
+              numberOfMonths={1}
+              readOnly={readOnly}
+              onDateChange={setEndDate}
+              focused={focusedEndInput}
+              onFocusChange={(focus) => setFocusedEndInput(focus.focused)}
+              hideKeyboardShortcutsPanel
+              id="endDate"
+              showClearDate
+              showDefaultInputIcon
+              aria-describedby="error-message"
+              inputIconPosition="after"
+              isOutsideRange={(day) => {
+                return (
+                  day.isAfter(moment().endOf("day")) ||
+                  (startDate && startDate.isAfter(day))
+                );
+              }}
+              placeholder={t("end-day") || "End day"}
+              openDirection="up"
+              phrases={customPhrasesEndDate}
+            />
+          </div>
         </div>
+        {validationEnd !== "" && (
+          <p id="error-message" role="alert" style={{ color: "red" }}>
+            {validationEnd}
+          </p>
+        )}
       </div>
     </div>
   );

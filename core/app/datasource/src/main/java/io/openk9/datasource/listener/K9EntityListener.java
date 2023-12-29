@@ -20,11 +20,10 @@ package io.openk9.datasource.listener;
 import io.openk9.datasource.event.util.EventType;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.util.K9Entity;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.Hibernate;
-import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
@@ -34,38 +33,32 @@ import javax.persistence.PostUpdate;
 public class K9EntityListener {
 
 	@PostPersist
-	public void beforeAdd(K9Entity k9Entity) throws SchedulerException {
+	public void beforeAdd(K9Entity k9Entity) {
 		_handle(k9Entity, EventType.CREATE);
 	}
 
 	@PostUpdate
-	public void beforeUpdate(K9Entity k9Entity) throws SchedulerException {
+	public void beforeUpdate(K9Entity k9Entity) {
 		_handle(k9Entity, EventType.UPDATE);
 	}
 
 
 	@PostRemove
-	public void postRemove(K9Entity k9Entity) throws SchedulerException {
+	public void postRemove(K9Entity k9Entity) {
 		_handle(k9Entity, EventType.DELETE);
 	}
 
-	private void _handle(K9Entity k9Entity, String create) throws SchedulerException {
+	private void _handle(K9Entity k9Entity, String event) {
 
 		if (_isDatasource(k9Entity)) {
 			Datasource datasource = (Datasource) k9Entity;
-			if (EventType.DELETE.equals(create)) {
-				_schedulerInitializer.get().deleteScheduler(datasource.getTenant(), datasource);
+			if (EventType.DELETE.equals(event)) {
+				bus.send(SchedulerInitializer.DELETE_SCHEDULER, datasource);
 			}
 			else {
-				_createOrUpdateScheduler(datasource);
+				bus.send(SchedulerInitializer.UPDATE_SCHEDULER, datasource);
 			}
 		}
-
-	}
-
-	private void _createOrUpdateScheduler(Datasource datasource) throws SchedulerException {
-
-		_schedulerInitializer.get().createOrUpdateScheduler(datasource.getTenant(), datasource);
 
 	}
 
@@ -75,6 +68,6 @@ public class K9EntityListener {
 	}
 
 	@Inject
-	Instance<SchedulerInitializer> _schedulerInitializer;
+	EventBus bus;
 
 }

@@ -43,6 +43,7 @@ import { LiferayWizard } from "./wizards/LiferayWizard";
 import { GoogleWizard } from "./wizards/GoogleWizard";
 import { GitHubWizard } from "./wizards/GitHubWizard";
 import { SiteMapWizard } from "./wizards/SiteMapWizard";
+import { MinioWizard } from "./wizards/MinioWizard";
 import { Tabs } from "./components/Tabs";
 import { Tab } from "./components/Tab";
 import { TabTokenTabs } from "./components/TabTokens";
@@ -495,6 +496,7 @@ export default function App() {
                       <Route path="database" element={<DatabaseWizard />} />
                       <Route path="google-drive" element={<GoogleWizard />} />
                       <Route path="dropbox" element={<DropBoxWizard />} />
+                      <Route path="minio" element={<MinioWizard />} />
                     </Route>
                     <Route path="monitoring-events" element={<MonitoringEvents />} />
                     <Route path="document-type-templates" element={<DocumentTypeTemplates />} />

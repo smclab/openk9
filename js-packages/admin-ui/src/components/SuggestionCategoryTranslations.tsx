@@ -1,8 +1,23 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useParams } from "react-router-dom";
-import { useAddSuggestionCategoryTranslationMutation, useSuggestionCategoryQuery, useLanguagesQuery } from "../graphql-generated";
-import { useForm, fromFieldValidators, TextInput, TextArea, NumberInput, BooleanInput, CustomButtom, ContainerFluid, MainTitle } from "./Form";
+import {
+  useAddSuggestionCategoryTranslationMutation,
+  useSuggestionCategoryQuery,
+  useLanguagesQuery,
+  useEnabledBucketQuery,
+} from "../graphql-generated";
+import {
+  useForm,
+  fromFieldValidators,
+  TextInput,
+  TextArea,
+  NumberInput,
+  BooleanInput,
+  CustomButtom,
+  ContainerFluid,
+  MainTitle,
+} from "./Form";
 import { useToast } from "./ToastProvider";
 import DropDown from "@clayui/drop-down";
 import ClayIcon from "@clayui/icon";
@@ -18,20 +33,9 @@ gql`
 `;
 
 let mutationCounter = 0;
-let totalTranslations = 0
+let totalTranslations = 0;
 
 export function SuggestionCategoryTranslations() {
-  const [flag, setFlag] = React.useState("en-us");
-  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
-  const dataLanguagesQuery = useLanguagesQuery();
-  
-  const { suggestionCategoryId = "new" } = useParams();
-  const showToast = useToast();
-  const suggestionCategoryQuery = useSuggestionCategoryQuery({
-    variables: { id: suggestionCategoryId as string },
-    skip: !suggestionCategoryId,
-  });
-
   // convert languageCode from en_US to en-us
   const convertLanguageCodeForFrontend = (languageCode: string) => {
     return languageCode.toLowerCase().replace("_", "-");
@@ -41,6 +45,23 @@ export function SuggestionCategoryTranslations() {
   const convertLanguageCodeForBackend = (languageCode: string) => {
     return languageCode.replace("-", "_").replace(/([^_]*$)/g, (s: string) => s.toUpperCase());
   };
+
+  const enabledBucketQuery = useEnabledBucketQuery({
+    variables: {},
+  });
+
+  const [flag, setFlag] = React.useState(
+    convertLanguageCodeForFrontend(enabledBucketQuery?.data?.enabledBucket?.language?.value || "en_US")
+  );
+  const [translationsToPost, setTranslationsToPost] = React.useState<any[]>([]);
+  const dataLanguagesQuery = useLanguagesQuery();
+
+  const { suggestionCategoryId = "new" } = useParams();
+  const showToast = useToast();
+  const suggestionCategoryQuery = useSuggestionCategoryQuery({
+    variables: { id: suggestionCategoryId as string },
+    skip: !suggestionCategoryId,
+  });
 
   const originalTranslations = suggestionCategoryQuery.data?.suggestionCategory?.translations;
   const originalTranslationsLength = originalTranslations?.length;
@@ -52,12 +73,14 @@ export function SuggestionCategoryTranslations() {
       value: element?.value,
     };
 
-    const translationsToPostIndex = translationsToPost.findIndex((item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key);
+    const translationsToPostIndex = translationsToPost.findIndex(
+      (item) => item.language === convertLanguageCodeForFrontend(element?.language!) && item.key === element?.key
+    );
     if (translationsToPostIndex === -1) {
       translationsToPost.push(translation);
     }
-  } 
-  
+  }
+
   const [addSuggestionCategoryMutate, addSuggestionCategoryMutation] = useAddSuggestionCategoryTranslationMutation({
     refetchQueries: [SuggestionCategoryQuery],
     onCompleted(data) {
@@ -69,7 +92,7 @@ export function SuggestionCategoryTranslations() {
   });
 
   const originalValuesArray = translationsToPost?.filter((element) => convertLanguageCodeForFrontend(element?.language!) === flag);
-  const originalValues: { [x: string]: any; } = { language: flag };
+  const originalValues: { [x: string]: any } = { language: flag };
 
   originalValuesArray.forEach((element: any) => {
     originalValues[element.key] = element.value;
@@ -79,7 +102,7 @@ export function SuggestionCategoryTranslations() {
     initialValues: React.useMemo(
       () => ({
         name: "",
-        description: ""
+        description: "",
       }),
       []
     ),
@@ -91,7 +114,14 @@ export function SuggestionCategoryTranslations() {
       const convertedTranslationsToPost = [];
       for (let index = 0; index < translationsToPostLength; index++) {
         const element = translationsToPost[index];
-        if (!originalTranslations!.some((translation) => convertLanguageCodeForBackend(element?.language!) === translation?.language && element.key === translation?.key && element.value === translation?.value)) {
+        if (
+          !originalTranslations!.some(
+            (translation) =>
+              convertLanguageCodeForBackend(element?.language!) === translation?.language &&
+              element.key === translation?.key &&
+              element.value === translation?.value
+          )
+        ) {
           const convertedTranslation = {
             language: convertLanguageCodeForBackend(element?.language!),
             key: element.key,
@@ -133,9 +163,9 @@ export function SuggestionCategoryTranslations() {
       value: form.inputProps("description").value,
     };
 
-    const nameIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "name"));
-    const descriptionIndex = translationsToPost.findIndex((item) => (item.language === languageCode && item.key === "description"));
-    
+    const nameIndex = translationsToPost.findIndex((item) => item.language === languageCode && item.key === "name");
+    const descriptionIndex = translationsToPost.findIndex((item) => item.language === languageCode && item.key === "description");
+
     if (nameIndex !== -1) {
       translationsToPost[nameIndex].value = nameTranslation.value;
     } else {
@@ -146,7 +176,7 @@ export function SuggestionCategoryTranslations() {
       translationsToPost[descriptionIndex].value = descriptionTranslation.value;
     } else {
       translationsToPost.push(descriptionTranslation);
-    }   
+    }
   };
 
   return (
@@ -177,8 +207,12 @@ export function SuggestionCategoryTranslations() {
                     style={{ display: "inline-block", width: "100%", outline: "none" }}
                     onClick={() => {
                       setFlag(languageCode!);
-                      const nameInputValue = translationsToPost?.find((element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "name")?.value;
-                      const descriptionInputValue = translationsToPost?.find((element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "description")?.value;
+                      const nameInputValue = translationsToPost?.find(
+                        (element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "name"
+                      )?.value;
+                      const descriptionInputValue = translationsToPost?.find(
+                        (element) => convertLanguageCodeForFrontend(element?.language) === languageCode && element.key === "description"
+                      )?.value;
                       form.inputProps("name").onChange(nameInputValue ? nameInputValue : "");
                       form.inputProps("description").onChange(descriptionInputValue ? descriptionInputValue : "");
                     }}

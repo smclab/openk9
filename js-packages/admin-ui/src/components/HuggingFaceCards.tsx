@@ -20,6 +20,7 @@ import { AudioClassification } from "../wizards/Logo/AudioClassification";
 import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
 import { ContainerFluid, ContainerFluidWithoutView, SimpleModal } from "./Form";
+import { keycloak } from "./authentication";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
@@ -36,7 +37,10 @@ export function HuggingFaceCard() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, { method: "DELETE" })
+            fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, {
+            headers: new Headers({
+                    Authorization: `Bearer ${keycloak.token}`
+                }),  method: "DELETE" })
               .then((response) => {
                 if (response.ok) {
                   showToast({ displayType: "success", title: "delete done", content: "" });
@@ -180,7 +184,11 @@ function usePodsStatus() {
     }, [run]);
   };
   const updateState = React.useCallback(async () => {
-    const response = await fetch("/api/k8s-client/k8s/get/pods/ml");
+  const requestOptions = {
+				method: "GET",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${keycloak.token}` }
+			  };
+    const response = await fetch("/api/k8s-client/k8s/get/pods/ml", requestOptions);
     const data = await response.json();
     setStatus(data);
   }, []);

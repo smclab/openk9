@@ -35,21 +35,25 @@ public class GrammarProvider {
 				String schemaName = t2.getItem1();
 				Bucket b = t2.getItem2();
 
-				QueryAnalysis queryAnalysis = b.getQueryAnalysis();
+				if (b != null) {
+					QueryAnalysis queryAnalysis = b.getQueryAnalysis();
 
-				Set<Rule> rules = queryAnalysis.getRules();
+					Set<Rule> rules = queryAnalysis.getRules();
 
-				List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
-					_toGrammarRule(rules);
+					List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
+						_toGrammarRule(rules);
 
-				List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-					_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList());
+					List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
+						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList());
 
-				GrammarMixin grammarMixin = GrammarMixin.of(
-					mappedRules, mappedAnnotators);
+					GrammarMixin grammarMixin = GrammarMixin.of(
+						mappedRules, mappedAnnotators);
 
-				return new Grammar(schemaName, List.of(grammarMixin));
-
+					return new Grammar(schemaName, List.of(grammarMixin));
+				}
+				else {
+					return new Grammar(schemaName, List.of());
+				}
 			});
 	}
 
@@ -82,7 +86,17 @@ public class GrammarProvider {
 						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
 						.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
 						.getSingleResult()
-						.map(b -> Tuple2.of(tenantResponse.getSchemaName(), b))))
+						.onItemOrFailure()
+						.transform((bucket, throwable) -> {
+							if (throwable != null) {
+								return Tuple2.of(tenantResponse.getSchemaName(), null);
+							}
+							else {
+								return Tuple2.of(tenantResponse.getSchemaName(), bucket);
+							}
+						})
+					)
+				)
 		);
 	}
 

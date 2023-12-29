@@ -640,7 +640,7 @@ export function mergeAndSortObjects(
   return mergedArray;
 }
 
-export type WhoIsDynamic = "tab" | "filter" | "search";
+export type WhoIsDynamic = "tab" | "filter" | "search" | "date";
 
 export function createSuggestion(
   searchQueryNotFilter: SearchToken[] | null,
@@ -670,6 +670,12 @@ export function createSuggestion(
           }
         });
         break;
+        case "date":
+          searchQueryNotFilter?.forEach((searchToken)=> {
+            if(searchToken.tokenType==="DATE"){
+              searchQuery.push(searchToken)
+            }
+          })
       default:
         return searchQueryNotFilter;
     }

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
 import { ContainerFluid, SimpleModal } from "./Form";
+import { keycloak } from "./authentication";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -31,7 +32,7 @@ export function HuggingFace() {
           actionContinue={() => {
             const requestOptions = {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${keycloak.token}` },
               body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
             };
             fetch("/api/k8s-client/k8s/deploy-ml-model", requestOptions)
@@ -214,18 +215,24 @@ export function HuggingFace() {
               <option className="clay-dropdown-item" value="object-detection">
                 object detection
               </option>
-              <option className="clay-dropdown-item" value="image-classifcation">
+				<option className="clay-dropdown-item" value="video-classification">
+				  video classification
+				</option>
+              <option className="clay-dropdown-item" value="image-classification">
                 image classification
               </option>
-              <option className="clay-dropdown-item" value="summarizzation">
+              <option className="clay-dropdown-item" value="summarization">
                 summarization
               </option>
               <option className="clay-dropdown-item" value="translation">
                 translation
               </option>
-              <option className="clay-dropdown-item" value="audio-speech-recognition">
-                audio speech recognition
+              <option className="clay-dropdown-item" value="audio-classification">
+                audio classification
               </option>
+			<option className="clay-dropdown-item" value="automatic-speech-recognition">
+			  automatic speech recognition
+			</option>
             </select>
           </div>
           {isInvalidateTask && (

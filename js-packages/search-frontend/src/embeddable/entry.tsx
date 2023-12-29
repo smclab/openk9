@@ -232,6 +232,7 @@ type SearchProps = {
   isShowSyntax?: boolean | undefined | null;
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
+  messageSearchIsVisible?: boolean;
 };
 
 type FilterProps = {
@@ -285,6 +286,7 @@ export type Configuration = {
   sortable: Element | string | null;
   tabs: Element | string | null;
   totalResult: Element | string | null;
+  totalResultMobile: Element | string | null;
   removeFilters: Element |string|null;
   // configurable types
   calendarMobile: CalendarMobileConfiguration | null;
@@ -348,6 +350,7 @@ const defaultConfiguration: Configuration = {
   tenant: null,
   token: null,
   totalResult: null,
+  totalResultMobile: null,
   useKeycloak: true,
   useQueryString: true,
   useFilterConfiguration:true,

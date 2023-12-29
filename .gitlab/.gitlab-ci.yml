@@ -21,6 +21,7 @@ include:
   - local: '/.gitlab/.gitlab-ci-resources-validator.yml'
   - local: '/.gitlab/.gitlab-ci-file-manager.yml'
   - local: '/.gitlab/.gitlab-ci-tenant-frontend.yml'
+  - local: '/.gitlab/.gitlab-ci-k8s-client.yml'
 
 sonarqube-check:
   stage: quality

@@ -49,6 +49,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -58,7 +59,6 @@ public class JobScheduler {
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 	
 	public sealed interface Command extends CborSerializable {}
-	public record Initialize(List<ScheduleDatasource> schedulatedJobs) implements Command {}
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String cron
 	) implements Command {}
@@ -88,9 +88,12 @@ public class JobScheduler {
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
 		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient) {
+		RestHighLevelClient restHighLevelClient,
+		List<ScheduleDatasource> schedulatedJobs) {
 
 		return Behaviors.setup(ctx -> {
+
+			log.info("setup job-scheduler");
 
 			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
 				QuartzSchedulerTypedExtension.get(ctx.getSystem());
@@ -112,7 +115,7 @@ public class JobScheduler {
 				restHighLevelClient,
 				ctx,
 				quartzSchedulerTypedExtension,
-				new ArrayDeque<>()
+				new ArrayDeque<>(schedulatedJobs)
 			);
 
 
@@ -130,7 +133,7 @@ public class JobScheduler {
 		return Behaviors
 			.receive(Command.class)
 			.onMessage(MessageGatewaySubscription.class,
-				mgs -> onMessageGatewaySubscription(ctx, mgs))
+				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
 			.onMessage(Start.class, start -> {
 				Command command = lag.poll();
 
@@ -179,7 +182,7 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(Initialize.class, cmd -> onInitialize(cmd, ctx))
+			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
@@ -194,20 +197,6 @@ public class JobScheduler {
 			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
 			.build();
 
-	}
-
-	private static Behavior<Command> onInitialize(Initialize cmd, ActorContext<Command> ctx) {
-		for (ScheduleDatasource scheduleDatasource : cmd.schedulatedJobs()) {
-			log.infof(
-				"scheduling jobs for datasource with id %d on tenant %s...",
-				scheduleDatasource.datasourceId(),
-				scheduleDatasource.tenantName()
-			);
-
-			ctx.getSelf().tell(scheduleDatasource);
-		}
-
-		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onUnscheduleJobInternal(
@@ -237,7 +226,7 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onMessageGatewaySubscription(
+	private static Behavior<Command> onSetupMessageGatewaySubscription(
 		ActorContext<Command> ctx, MessageGatewaySubscription mgs) {
 
 		mgs
@@ -250,6 +239,23 @@ public class JobScheduler {
 			.ifPresentOrElse(
 				cmd -> ctx.getSelf().tell(cmd),
 				() -> log.error("ChannelManager not found"));
+
+		return Behaviors.same();
+
+	}
+
+	private static Behavior<Command> onInitialMessageGatewaySubscription(
+		ActorContext<Command> ctx, MessageGatewaySubscription mgs, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension, HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory, RestHighLevelClient restHighLevelClient, ActorRef<MessageGateway.Command> messageGateway, List<String> jobNames) {
+
+		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.filter(JobScheduler::isLocalActorRef)
+			.findFirst();
+
+		if (actorRefOptional.isPresent()) {
+			return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, actorRefOptional.get(), jobNames);
+		}
 
 		return Behaviors.same();
 
