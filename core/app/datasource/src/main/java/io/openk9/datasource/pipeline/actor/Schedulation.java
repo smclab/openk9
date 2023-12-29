@@ -293,7 +293,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
 				responseActorRef,
 				ingest.replyTo,
-				ingest.payload,
+				Json.encodeToBuffer(dataPayload).getBytes(),
 				scheduler)
 			);
 
