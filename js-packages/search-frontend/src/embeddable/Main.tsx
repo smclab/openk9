@@ -1361,6 +1361,8 @@ function factoryWhoIsDynamic({
   if (whoIsDynamicResponse.refreshOnTab) {
     resultArray.push("tab");
   }
-
+  if(whoIsDynamicResponse.refreshOnDate){
+    resultArray.push("date")
+  }
   return resultArray;
 }
