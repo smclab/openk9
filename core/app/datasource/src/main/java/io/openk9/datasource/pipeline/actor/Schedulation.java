@@ -259,9 +259,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		if (!lag.isEmpty()) {
 			Command command = lag.pop();
 			getContext().getSelf().tell(command);
+			return ready();
 		}
-
-		return Behaviors.same();
+		else {
+			return Behaviors.same();
+		}
 	}
 
 	private Behavior<Command> onStart(Start start) {
