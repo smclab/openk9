@@ -55,7 +55,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String READY_BEHAVIOR = "Ready";
 	private static final String BUSY_BEHAVIOR = "Busy";
 	private static final String NEXT_BEHAVIOR = "Next";
-	private static final String FINISH_BEHAVIOR = "Finish";
+	private static final String CLOSING_BEHAVIOR = "Closing";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Schedulation.class);
 
@@ -86,9 +86,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return SchedulationKeyUtils.getValue(this);
 		}
 
-		public int hash() {
-			return value().hashCode();
-		}
 	}
 
 	private final SchedulationKey key;
@@ -102,6 +99,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
+	private boolean lastReceived = false;
 	private int maxWorkers;
 	private int workers = 0;
 
@@ -223,47 +221,21 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.build();
 	}
 
-	private Receive<Command> finish() {
-		logBehavior(FINISH_BEHAVIOR);
-
-		return newReceiveBuilder()
-			.onMessageEquals(Tick.INSTANCE, this::onFinish)
-			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
-			.onMessage(SetScheduler.class, this::onSetScheduler)
-			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
-			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
-			.onMessageEquals(Stop.INSTANCE, this::onStop)
-			.onSignal(PostStop.class, this::onPostStop)
-			.build();
-	}
-
-	private Behavior<Command> onFinish() {
-		if (log.isDebugEnabled()){
-			log.debugf("Busy workers %s, for %s", workers, key);
-		}
-
-		if (workers == 0) {
-			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
-		}
-
-		return Behaviors.same();
-	}
-
 	private Behavior<Command> next() {
 		logBehavior(NEXT_BEHAVIOR);
 
 		if (!lag.isEmpty()) {
 			Command command = lag.pop();
 			getContext().getSelf().tell(command);
-			return ready();
 		}
-		else {
-			return Behaviors.same();
-		}
+
+		return ready();
+	}
+
+	private Behavior<Command> closing() {
+		logBehavior(CLOSING_BEHAVIOR);
+
+		return newReceiveBuilder().build();
 	}
 
 	private Behavior<Command> onStart(Start start) {
@@ -328,29 +300,18 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			consumers.add(ingest.replyTo());
 			workers++;
 
-			return workers < maxWorkers ? this.next() : this.busy();
 		}
 		else if (!dataPayload.isLast()) {
 			ingest.replyTo.tell(new Failure("content-id is null"));
-			return this.next();
 		}
 		else {
 			ingest.replyTo.tell(Success.INSTANCE);
-
-			if (!failureTracked) {
-				log.infof("%s ingestion is done, replyTo %s", key, ingest.replyTo);
-
-				return this.finish();
-			}
-			else {
-				log.infof(
-					"%s ingestion is done, but a failure was tracked, wait for the next message",
-					key, ingest.replyTo
-				);
-
-				return this.next();
-			}
+			lastReceived = true;
+			log.infof("%s received last message", key);
 		}
+
+		return workers < maxWorkers ? next() : busy();
+
 	}
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
@@ -359,6 +320,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				new PersistStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
 			);
 		}
+
 		return next();
 	}
 
@@ -386,7 +348,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		return finish();
+		return closing();
 	}
 
 	private Behavior<Command> enqueue(Command command) {
@@ -416,7 +378,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		workers--;
 		consumers.remove(response.replyTo());
 
-		return this.next();
+		return next();
 	}
 
 	private Behavior<Command> onPersistDataIndex() {
@@ -474,7 +436,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				NotificationSender.Response.class, NotificationSenderResponseWrapper::new);
 			getContext().spawnAnonymous(
 				NotificationSender.create(scheduler, key, messageAdapter));
-			return Behaviors.same();
 		}
 
 		return Behaviors.same();
@@ -497,14 +458,30 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return Behaviors.same();
 		}
 
+		if (!failureTracked && lastReceived) {
+			if (log.isDebugEnabled()){
+				log.debugf("There are %s busy workers, for %s", workers, key);
+			}
+
+			if (workers == 0) {
+				log.infof("%s is done", key);
+
+				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+
+				return closing();
+			}
+		}
+
 		if (log.isTraceEnabled()) {
 			log.tracef("check %s expiration", key);
 		}
 
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
-			log.infof("%s ingestion is expired ", key);
+			log.infof("%s ingestion is expired", key);
 
 			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+
+			return closing();
 		}
 
 		return Behaviors.same();
