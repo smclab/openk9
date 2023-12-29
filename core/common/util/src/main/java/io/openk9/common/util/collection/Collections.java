@@ -25,7 +25,7 @@ public class Collections {
 			return set;
 		}
 
-		Set<T> tail = new java.util.HashSet<>(set.size() - 1);
+		Set<T> tail = new java.util.LinkedHashSet<>(set.size() - 1);
 
 		java.util.Iterator<T> iterator = set.iterator();
 
