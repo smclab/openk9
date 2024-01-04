@@ -83,7 +83,7 @@ services:
             - '7474:7474'
             - '7687:7687'
     tenant-manager:
-        image: smclab/openk9-tenant-manager:1.5.0
+        image: smclab/openk9-tenant-manager:1.6.0
         hostname: openk9-tenant-manager
         environment:
             QUARKUS_DATASOURCE_USERNAME: 'openk9'
@@ -112,7 +112,7 @@ services:
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
             - "traefik.http.routers.api-tenant-manager.middlewares=api-tenant-manager_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
     datasource:
-        image: smclab/openk9-datasource:1.5.0
+        image: smclab/openk9-datasource:1.6.0
         container_name: datasource
         environment:
             AKKA_CLUSTER_BOOTSTRAP_SERVICE_NAME: datasource
@@ -159,7 +159,7 @@ services:
             - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
             - "traefik.http.routers.api-datasource.middlewares=api-datasource_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
     ingestion:
-        image: smclab/openk9-ingestion:1.5.0
+        image: smclab/openk9-ingestion:1.6.0
         container_name: ingestion
         environment:
             RABBITMQ_HOST: 'rabbitmq'
@@ -188,7 +188,7 @@ services:
         ports:
             - 8188:8080
     entity-manager:
-        image: smclab/openk9-entity-manager:1.5.0
+        image: smclab/openk9-entity-manager:1.6.0
         container_name: entity-manager
         environment:
             RABBITMQ_HOST: 'rabbitmq'
@@ -218,7 +218,7 @@ services:
 #            - "5008:80"
 #            - "6800:6800"
     search-frontend:
-        image: smclab/openk9-search-frontend:latest
+        image: smclab/openk9-search-frontend:1.6.0
         container_name: search-frontend
         ports:
             - "8080:80"
@@ -228,7 +228,7 @@ services:
             - "traefik.http.services.api-aggregator-docker.loadbalancer.server.port=8080"
             - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
     search-admin:
-        image: smclab/openk9-admin-ui:1.5.0
+        image: smclab/openk9-admin-ui:1.6.0
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.admin-ui.entrypoints=web"
@@ -240,7 +240,7 @@ services:
             - "traefik.http.routers.admin-ui.middlewares=admin-ui_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
             - "traefik.http.services.admin-ui.loadbalancer.server.port=8080"
     tenant-admin:
-        image: smclab/openk9-tenant-ui:1.5.0
+        image: smclab/openk9-tenant-ui:1.6.0
         hostname: tenant-admin
         labels:
             - "traefik.enable=true"
