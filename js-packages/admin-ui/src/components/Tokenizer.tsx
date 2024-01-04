@@ -16,6 +16,7 @@ import {
 } from "./Form";
 import { useToast } from "./ToastProvider";
 import { TokenizersQuery } from "./Tokenizers";
+import { tokenizerOptions } from "./Analyzer";
 
 const TokenizerQuery = gql`
   query Tokenizer($id: ID!) {
@@ -54,7 +55,7 @@ export function Tokenizer() {
   });
   const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(tokenizerQuery.data?.tokenizer?.jsonConfig || `{}`));
   const [createOrUpdateTokenizerMutate, createOrUpdateTokenizerMutation] = useCreateOrUpdateTokenizerMutation({
-    refetchQueries: [TokenizerQuery, TokenizersQuery],
+    refetchQueries: [TokenizerQuery, TokenizersQuery, tokenizerOptions],
     onCompleted(data) {
       if (data.tokenizer?.entity) {
         if (tokenizerId === "new") {
