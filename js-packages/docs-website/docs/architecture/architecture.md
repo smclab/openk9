@@ -11,11 +11,11 @@ custom components.
 ### Custom components
 
 - [**Ingestion**](ingestion): is the component that handles data ingestion logic.
-- [**Datasource**](datasource): is the component that handles data source management logic.
-- [**Tenant Manager**](tenant-manager): is the component that handles entities and ontologies extracted from data.
+- [**Datasource**](datasource): is the component that handles data source and enrich pipeline management logic .
+- [**Tenant Manager**](tenant-manager): is the component that handles tenant management activities.
 - [**Entity Manager**](entity-manager): is the component that handles entities and ontologies extracted from data.
 - [**Searcher**](searcher): is the component that defines search logic.
-- [**File Manager**](file-manager): is the component that handles entities and ontologies extracted from data.
+- [**File Manager**](file-manager): is the component that handles binary files management logic.
 
 
 ### Third-party components

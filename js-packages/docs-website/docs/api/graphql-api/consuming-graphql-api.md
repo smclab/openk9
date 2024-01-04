@@ -1,7 +1,7 @@
 ---
 id: consuming-graphql-api
 title: Consuming Graphql APIs
-slug: /rest-api/consuming-graphql-api
+slug: /api/consuming-graphql-api
 
 ---
 
