@@ -69,7 +69,7 @@
     "test": "craco test",
     "eject": "react-scripts eject",
     "compile-graphql": "graphql-codegen --watch --verbose",
-    "compile-openapi": "openapi --input http://test.openk9.io/api/datasource/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
+    "compile-openapi": "openapi --input https://sales.openk9.io/api/datasource/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
   },
   "eslintConfig": {
     "extends": [

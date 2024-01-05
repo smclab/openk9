@@ -21,6 +21,8 @@ import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
 import { ContainerFluid, ContainerFluidWithoutView, SimpleModal } from "./Form";
 import { keycloak } from "./authentication";
+import { useMutation } from "@tanstack/react-query";
+import { useRestClient } from "./queryClient";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
@@ -29,6 +31,7 @@ export function HuggingFaceCard() {
   const [name, setName] = React.useState("");
   const navigate = useNavigate();
   const showToast = useToast();
+  const restClient = useRestClient();
   return (
     <React.Fragment>
       {open && (
@@ -37,7 +40,19 @@ export function HuggingFaceCard() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, {
+          const createDataIndexMutation = useMutation(
+              async ({ name }: { name: string; }) => {
+                return await restClient.mlk8SResource.deleteApiK8SClientK8SDeleteMlModel(
+                  name
+                );
+              },
+              {
+                onSuccess(data, variables, context) {
+                  showToast({ displayType: "info", title: "Data Index created", content: data.message });
+                },
+              }
+            );
+            /* fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, {
             headers: new Headers({
                     Authorization: `Bearer ${keycloak.token}`
                 }),  method: "DELETE" })
@@ -51,7 +66,7 @@ export function HuggingFaceCard() {
               .then((responseJson) => {})
               .catch((error) => {
                 console.log(error);
-              });
+              }); */
             onOpenChange(false);
           }}
           actionCancel={() => {
