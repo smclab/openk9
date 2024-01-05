@@ -21,17 +21,44 @@ import { ClassNameButton } from "../App";
 import { useToast } from "./ToastProvider";
 import { ContainerFluid, ContainerFluidWithoutView, SimpleModal } from "./Form";
 import { keycloak } from "./authentication";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRestClient } from "./queryClient";
+import { MlPodResponse } from "../openapi-generated";
 
 export function HuggingFaceCard() {
   const status = usePodsStatus();
   const { observer, onOpenChange, open } = useModal();
-  const data = React.useMemo(() => Object.values(status).sort((a, b) => a.name.localeCompare(b.name)), [status]);
+  const data = React.useMemo(
+    () =>
+      Object.values(status)
+        .filter((a) => a && a.name)
+        .sort((a, b) => {
+          if (a.name && b.name) {
+            return a.name.localeCompare(b.name);
+          }
+          return 0;
+        }),
+    [status]
+  );
+
   const [name, setName] = React.useState("");
   const navigate = useNavigate();
   const showToast = useToast();
   const restClient = useRestClient();
+  const delateMutation = useMutation(
+    async () => {
+      return await restClient.mlk8SResource.deleteApiK8SClientK8SDeleteMlModel(name);
+    },
+    {
+      onSuccess: (data) => {
+        showToast({ displayType: "info", title: "Data Index created", content: data.message });
+      },
+      onError: (error) => {
+        showToast({ displayType: "info", title: "Error", content: "error" });
+      },
+    }
+  );
+
   return (
     <React.Fragment>
       {open && (
@@ -40,33 +67,7 @@ export function HuggingFaceCard() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-          const createDataIndexMutation = useMutation(
-              async ({ name }: { name: string; }) => {
-                return await restClient.mlk8SResource.deleteApiK8SClientK8SDeleteMlModel(
-                  name
-                );
-              },
-              {
-                onSuccess(data, variables, context) {
-                  showToast({ displayType: "info", title: "Data Index created", content: data.message });
-                },
-              }
-            );
-            /* fetch(`/api/k8s-client/k8s/delete-ml-model/${name}`, {
-            headers: new Headers({
-                    Authorization: `Bearer ${keycloak.token}`
-                }),  method: "DELETE" })
-              .then((response) => {
-                if (response.ok) {
-                  showToast({ displayType: "success", title: "delete done", content: "" });
-                } else {
-                  showToast({ displayType: "danger", title: "Error", content: "" });
-                }
-              })
-              .then((responseJson) => {})
-              .catch((error) => {
-                console.log(error);
-              }); */
+            delateMutation.mutate();
             onOpenChange(false);
           }}
           actionCancel={() => {
@@ -106,7 +107,7 @@ export function HuggingFaceCard() {
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
-                            <GetIconLibrary name={library} />
+                            <GetIconLibrary name={library ?? ""} />
                             <div className="card-description card-subtitle subtitle" style={{ marginLeft: "7px" }}>
                               {library}
                             </div>
@@ -118,7 +119,7 @@ export function HuggingFaceCard() {
                       <div className="autofit-col autofit-col-expand" style={{ marginTop: "10px" }}>
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
-                            <GetIconTask name={task} />
+                            <GetIconTask name={task ?? ""} />
                             <div className="card-description card-subtitle subtitle" style={{ marginLeft: "7px" }}>
                               {task}
                             </div>
@@ -131,7 +132,7 @@ export function HuggingFaceCard() {
                         <section className="autofit-section">
                           <div style={{ display: "flex" }}>
                             <div className="card-caption ">
-                              <span className={`label label-${getStatusDisplayType(status)}`}>{status}</span>
+                              <span className={`label label-${getStatusDisplayType(status ?? "")}`}>{status}</span>
                             </div>
                           </div>
                         </section>
@@ -157,7 +158,7 @@ export function HuggingFaceCard() {
                             style={{ marginLeft: "10px" }}
                             small
                             onClick={() => {
-                              setName(name);
+                              setName(name ?? "");
                               onOpenChange(true);
                             }}
                           >
@@ -178,36 +179,23 @@ export function HuggingFaceCard() {
 }
 
 function usePodsStatus() {
-  const [status, setStatus] = React.useState<Record<string, { name: string; task: string; library: string; status: string }>>({});
+  const [status, setStatus] = React.useState<Array<MlPodResponse>>([]);
+  const restClient = useRestClient();
 
-  const useIntervalAsync = (fn: () => Promise<unknown>, ms: number) => {
-    const timeout = React.useRef<number>();
-    const mountedRef = React.useRef(false);
-    const run = React.useCallback(async () => {
-      await fn();
-      if (mountedRef.current) {
-        timeout.current = window.setTimeout(run, ms);
-      }
-    }, [fn, ms]);
-    React.useEffect(() => {
-      mountedRef.current = true;
-      run();
-      return () => {
-        mountedRef.current = false;
-        window.clearTimeout(timeout.current);
-      };
-    }, [run]);
+  const updateState = async () => {
+    try {
+      const response = await restClient.mlk8SResource.getApiK8SClientK8SGetPodsMl();
+      setStatus(response);
+    } catch (error) {
+      console.error("Errore nell'ottenere lo stato dei pod:", error);
+    }
   };
-  const updateState = React.useCallback(async () => {
-  const requestOptions = {
-				method: "GET",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${keycloak.token}` }
-			  };
-    const response = await fetch("/api/k8s-client/k8s/get/pods/ml", requestOptions);
-    const data = await response.json();
-    setStatus(data);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(updateState, 3000);
+    return () => clearInterval(intervalId);
   }, []);
-  useIntervalAsync(updateState, 3000);
+
   return status;
 }
 
