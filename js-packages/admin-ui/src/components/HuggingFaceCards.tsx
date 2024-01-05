@@ -51,7 +51,7 @@ export function HuggingFaceCard() {
     },
     {
       onSuccess: (data) => {
-        showToast({ displayType: "info", title: "Data Index created", content: data.message });
+        showToast({ displayType: "info", title: "Model created", content: data.message });
       },
       onError: (error) => {
         showToast({ displayType: "info", title: "Error", content: "error" });
@@ -187,7 +187,7 @@ function usePodsStatus() {
       const response = await restClient.mlk8SResource.getApiK8SClientK8SGetPodsMl();
       setStatus(response);
     } catch (error) {
-      console.error("Errore nell'ottenere lo stato dei pod:", error);
+      console.error("Error getting pod status:", error);
     }
   };
 

@@ -37,10 +37,10 @@ export function HuggingFace() {
     },
     {
       onSuccess: (data) => {
-        showToast({ displayType: "info", title: "Data Index created", content: data.message });
+        showToast({ displayType: "info", title: "Model deployed", content: data.message });
       },
       onError: (error) => {
-        showToast({ displayType: "info", title: "Data Index created", content: "error" });
+        showToast({ displayType: "info", title: "Error deploying model", content: "error" });
       },
     }
   );
