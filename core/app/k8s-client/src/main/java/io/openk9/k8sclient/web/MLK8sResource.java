@@ -161,7 +161,7 @@ public class MLK8sResource {
 		String pipelineName = mlDto.getPipelineName();
 		String library = mlDto.getLibrary();
 
-		String configMapName = deploymentName + "-configmap"  + "-" + getTenant();
+		String configMapName = deploymentName + "-configmap";
 
 		String baseMlImage = switch (library) {
 			case "transformers-tensorflow" -> baseMlTransformersTensorflowImage;
@@ -281,7 +281,7 @@ public class MLK8sResource {
 	@Path("/delete-ml-model/{name}")
 	public ModelActionesponse deleteMlModel(@PathParam("name") String name) throws KubernetesClientException {
 
-		String configMapName = name + "-configmap"  + "-" + getTenant();
+		String configMapName = name  + "-" + getTenant() + "-configmap";
 
 		_kubernetesClient.apps()
 			.deployments()
