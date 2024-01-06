@@ -93,7 +93,7 @@ public interface BucketResourceMapper {
 	TabResponseDTO toTabResponseDto(Tab tab);
 
 	@Mapping(
-		target = "keywordKey", source = "docTypeField.fieldName"
+		target = "keywordKey", source = "docTypeField.name"
 	)
 	@Mapping(
 		target = "values", source = "value"
