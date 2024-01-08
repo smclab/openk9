@@ -40,6 +40,8 @@ type SearchProps = {
   mobileVersion?: boolean;
   btnSearch?: boolean;
   defaultValue?: string;
+  actionOnClick?():void; 
+  customMessageSearch?: string;
   isSearchOnInputChange?: boolean;
   htmlKey?: string | undefined | null;
   textOnQueryStringOnCLick?: string | null | undefined;
@@ -65,7 +67,9 @@ export function Search({
   saveSearchQuery,
   defaultValue,
   htmlKey,
+  customMessageSearch,
   messageSearchIsVisible = true,
+  actionOnClick,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -337,6 +341,9 @@ export function Search({
                 }
               }}
               onKeyDown={(event) => {
+                if(event.key==="Enter" && actionOnClick){
+                  actionOnClick();
+                }
                 const span =
                   openedDropdown &&
                   spans.find(
@@ -441,7 +448,7 @@ export function Search({
             ></input>
             {messageSearchIsVisible && (
               <p className="visually-hidden" id="message-search">
-                {t(
+                {customMessageSearch || t(
                   "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
                 ) ||
                   "insert text to set the value or use up and down arrow keys to navigate the suggestion box"}

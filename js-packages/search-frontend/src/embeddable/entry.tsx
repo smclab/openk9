@@ -205,14 +205,14 @@ type DataRangePickerVerticalProps = {
   element: Element | string | null;
   start?: any;
   end?: any;
-  readOnly?:boolean;
+  readOnly?: boolean;
 };
 
 type ResultListProps = {
   element: Element | string | null;
   changeOnOver: boolean;
   counterIsVisible?: boolean;
-  label?:string;
+  label?: string;
 };
 
 type SortResultConfigurableProps = {
@@ -233,6 +233,8 @@ type SearchProps = {
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
+  customMessageSearch?: string;
+  actionOnClick?(): void;
 };
 
 type FilterProps = {
@@ -250,11 +252,16 @@ type ResulListPaginationProps = {
 type TabsProps = {
   element: Element | string | null;
   onAction(): void;
-  scrollMode?:boolean;
+  scrollMode?: boolean;
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?:number;
+  pxHiddenRightArrow?: number;
+};
+
+type totalResultProps = {
+  element: Element | string | null;
+  saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
 export type Configuration = {
@@ -272,7 +279,7 @@ export type Configuration = {
   useKeycloak: boolean;
   useQueryString: boolean;
   useFilterConfiguration: boolean;
-  waitKeycloackForToken:boolean;
+  waitKeycloackForToken: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -287,7 +294,7 @@ export type Configuration = {
   tabs: Element | string | null;
   totalResult: Element | string | null;
   totalResultMobile: Element | string | null;
-  removeFilters: Element |string|null;
+  removeFilters: Element | string | null;
   // configurable types
   calendarMobile: CalendarMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
@@ -304,6 +311,7 @@ export type Configuration = {
   sortableConfigurable: SortableProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
   tabsConfigurable: TabsProps | null;
+  totalResultConfigurable: totalResultProps | null;
   // functions
   changeSortResult: (
     sort: Array<RestApi.SortField>,
@@ -350,11 +358,12 @@ const defaultConfiguration: Configuration = {
   tenant: null,
   token: null,
   totalResult: null,
+  totalResultConfigurable: null,
   totalResultMobile: null,
   useKeycloak: true,
   useQueryString: true,
-  useFilterConfiguration:true,
-  waitKeycloackForToken:false,
+  useFilterConfiguration: true,
+  waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };
