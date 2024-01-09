@@ -300,7 +300,8 @@ function FiltersMobileLiveChange<E>({
           }}
         >
           <div>
-            {t("result-view")} {results.data?.pages[0].total} {t("result")}
+            {t("result-view")} {results.data?.pages[0].total}{" "}
+            {results.data?.pages[0].total !== 1 ? t("results") : t("result")}
           </div>
           <div>
             <AddFiltersSvg size="21px" />
