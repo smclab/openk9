@@ -30,6 +30,7 @@ export type FiltersMobileProps<E> = {
   sortAfterKey: string;
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
+  numberResultOfFilters: number | null | undefined;
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -45,6 +46,7 @@ function FiltersMobile<E>({
   sortAfterKey,
   isDynamicElement,
   selectionsDispatch,
+  numberResultOfFilters,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -132,6 +134,7 @@ function FiltersMobile<E>({
         numberOfResults={10}
         isDynamicElement={isDynamicElement}
         selectionsDispatch={selectionsDispatch}
+        numberResultOfFilters={numberResultOfFilters}
       />
     </React.Fragment>
   );

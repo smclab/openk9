@@ -205,14 +205,14 @@ type DataRangePickerVerticalProps = {
   element: Element | string | null;
   start?: any;
   end?: any;
-  readOnly?:boolean;
+  readOnly?: boolean;
 };
 
 type ResultListProps = {
   element: Element | string | null;
   changeOnOver: boolean;
   counterIsVisible?: boolean;
-  label?:string;
+  label?: string;
 };
 
 type SortResultConfigurableProps = {
@@ -250,11 +250,11 @@ type ResulListPaginationProps = {
 type TabsProps = {
   element: Element | string | null;
   onAction(): void;
-  scrollMode?:boolean;
+  scrollMode?: boolean;
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?:number;
+  pxHiddenRightArrow?: number;
 };
 
 export type Configuration = {
@@ -264,6 +264,7 @@ export type Configuration = {
   filterTokens: Array<SearchToken>;
   isQueryAnalysis: boolean | null;
   numberResult: number | null | undefined;
+  numberResultOfFilters: number | null | undefined;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   sort: Array<RestApi.SortField>;
@@ -272,7 +273,7 @@ export type Configuration = {
   useKeycloak: boolean;
   useQueryString: boolean;
   useFilterConfiguration: boolean;
-  waitKeycloackForToken:boolean;
+  waitKeycloackForToken: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -287,7 +288,7 @@ export type Configuration = {
   tabs: Element | string | null;
   totalResult: Element | string | null;
   totalResultMobile: Element | string | null;
-  removeFilters: Element |string|null;
+  removeFilters: Element | string | null;
   // configurable types
   calendarMobile: CalendarMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
@@ -331,6 +332,7 @@ const defaultConfiguration: Configuration = {
   isQueryAnalysis: true,
   login: null,
   numberResult: null,
+  numberResultOfFilters: null,
   removeFilters: null,
   resultList: null,
   resultListPagination: null,
@@ -353,8 +355,8 @@ const defaultConfiguration: Configuration = {
   totalResultMobile: null,
   useKeycloak: true,
   useQueryString: true,
-  useFilterConfiguration:true,
-  waitKeycloackForToken:false,
+  useFilterConfiguration: true,
+  waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };

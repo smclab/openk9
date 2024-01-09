@@ -41,6 +41,7 @@ type FiltersProps = {
   language: string;
   sortAfterKey: string;
   numberOfResults: number;
+  numberResultOfFilters?: number | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
 };
@@ -56,6 +57,7 @@ function FiltersHorizontal({
   language,
   sortAfterKey,
   numberOfResults,
+  numberResultOfFilters,
   isDynamicElement,
   selectionsDispatch,
 }: FiltersProps) {
@@ -123,6 +125,7 @@ function FiltersHorizontal({
             dynamicFilters,
             suggestion.id,
             language,
+            numberResultOfFilters,
           );
           const suggestionFilters = MemoizedCreateSuggestion(
             index,
@@ -266,10 +269,7 @@ function FiltersHorizontal({
       unknown
     >,
   ) {
-    return React.useMemo(
-      () => CreateSuggestion(index, suggestion, suggestions),
-      [index, suggestion, suggestions],
-    );
+    return CreateSuggestion(index, suggestion, suggestions);
   }
 
   function CreateSuggestion(
@@ -532,8 +532,9 @@ export function useInfiniteSuggestions(
   dynamicFilters: boolean,
   suggestionCategoryId: number,
   language: string,
+  numberResultOfFilters?: number | null | undefined,
 ) {
-  const pageSize = 8;
+  const pageSize = numberResultOfFilters ? numberResultOfFilters : 8;
   const client = useOpenK9Client();
 
   const searchQuery = false

@@ -67,6 +67,7 @@ export function Main({
   //retrieving information from the configuration.
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const numberOfResults = configuration.numberResult || 10;
+  const numberResultOfFilters = configuration.numberResultOfFilters || 10;
   const useQueryString = configuration.useQueryString;
   const useKeycloak = configuration.useKeycloak;
   const waitKeycloackForToken = configuration.waitKeycloackForToken;
@@ -77,11 +78,11 @@ export function Main({
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [languageSelect, setLanguageSelect] = React.useState("");
-  const [selectionsState, selectionsDispatch] = useSelections({useKeycloak});
+  const [selectionsState, selectionsDispatch] = useSelections({ useKeycloak });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
-  const [prevSearchQuery,setPrevSearchQuery] =React.useState([]);
-  const [prevSearchQueryMobile,setPrevSearchQueryMobile] =React.useState([]);
+  const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
+  const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
@@ -128,11 +129,20 @@ export function Main({
         selectionsDispatch,
         selectionsState,
       });
-  const { detail, setDetail } = useDetails(searchQuery,setPrevSearchQuery,prevSearchQuery);
+  const { detail, setDetail } = useDetails(
+    searchQuery,
+    setPrevSearchQuery,
+    prevSearchQuery,
+  );
   const { detailMobile, setDetailMobile, idPreview, setIdPreview } =
-    useDetailsMobile(searchQuery,prevSearchQueryMobile,setPrevSearchQueryMobile);
-  const {dynamicFilters,languageQuery,whoIsDynamicResponse,languages}=recoveryDataBackEnd();
- 
+    useDetailsMobile(
+      searchQuery,
+      prevSearchQueryMobile,
+      setPrevSearchQueryMobile,
+    );
+  const { dynamicFilters, languageQuery, whoIsDynamicResponse, languages } =
+    recoveryDataBackEnd();
+
   //Effect
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -168,7 +178,7 @@ export function Main({
       setDynamicData(newData);
     }
   }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
-  
+
   React.useEffect(() => {
     if (languageQuery.data?.value) {
       i18n.changeLanguage(
@@ -218,7 +228,9 @@ export function Main({
             isSearchOnInputChange={isSearchOnInputChange}
             defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
             htmlKey={configuration.searchConfigurable?.htmlKey}
-            messageSearchIsVisible={configuration?.searchConfigurable?.messageSearchIsVisible ?? true}
+            messageSearchIsVisible={
+              configuration?.searchConfigurable?.messageSearchIsVisible ?? true
+            }
           />
         </I18nextProvider>,
         configuration.searchConfigurable
@@ -276,6 +288,7 @@ export function Main({
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
             numberOfResults={numberOfResults}
+            numberItems={numberResultOfFilters}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
             filtersSelect={configuration.filterTokens}
@@ -304,7 +317,7 @@ export function Main({
             isCollapsable={
               configuration.filtersConfigurable?.isCollapsable ?? true
             }
-            numberItems={configuration.filtersConfigurable?.numberItems}
+            numberItems={numberResultOfFilters}
             numberOfResults={numberOfResults}
             isDynamicElement={dynamicData}
             noResultMessage={configuration.filtersConfigurable?.noResultMessage}
@@ -332,6 +345,7 @@ export function Main({
             onAddFilterToken={addFilterToken}
             isDynamicElement={dynamicData}
             numberOfResults={numberOfResults}
+            numberResultOfFilters={numberResultOfFilters}
             sortAfterKey={sortAfterKey}
             onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
@@ -522,6 +536,7 @@ export function Main({
             language={languageSelect}
             sortAfterKey={sortAfterKey}
             isDynamicElement={dynamicData}
+            numberResultOfFilters={numberResultOfFilters}
           />
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
@@ -541,7 +556,7 @@ export function Main({
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             configuration={configuration}
             whoIsDynamic={dynamicData}
-            numberItems={configuration.filtersConfigurable?.numberItems}
+            numberItems={numberResultOfFilters}
             isVisibleFilters={
               configuration.filtersMobileLiveChange?.isVisible || false
             }
@@ -953,9 +968,9 @@ function useTabs(
   return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
 }
 
-function recoveryDataBackEnd(){
-    const client = useOpenK9Client();
-    const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
+function recoveryDataBackEnd() {
+  const client = useOpenK9Client();
+  const dynamicFilters = useQuery(["handle-dynamic-filters", {}], async () => {
     return await client.handle_dynamic_filters();
   });
   const languageQuery = useQuery(["language", {}], async () => {
@@ -970,7 +985,7 @@ function recoveryDataBackEnd(){
   const languages = useQuery(["date-label-languages", {}], async () => {
     return await client.getLanguages();
   });
-  return {dynamicFilters,languageQuery,whoIsDynamicResponse,languages}
+  return { dynamicFilters, languageQuery, whoIsDynamicResponse, languages };
 }
 
 function useFilters({
@@ -1097,14 +1112,18 @@ function useDateTokens() {
   return { dateRange, setDateRange, dateTokens };
 }
 
-function useDetails(searchQuery: Array<SearchToken>,setPrevSearchQuery:any,prevSearchQuery:Array<SearchToken>) {
+function useDetails(
+  searchQuery: Array<SearchToken>,
+  setPrevSearchQuery: any,
+  prevSearchQuery: Array<SearchToken>,
+) {
   const [detail, setDetail] = React.useState<GenericResultItem<unknown> | null>(
     null,
   );
   React.useEffect(() => {
-     if (prevSearchQuery !== null && !isEqual(searchQuery, prevSearchQuery)) {
+    if (prevSearchQuery !== null && !isEqual(searchQuery, prevSearchQuery)) {
       setDetail(null);
-     }
+    }
     setPrevSearchQuery(searchQuery);
   }, [searchQuery, prevSearchQuery]);
   return { detail, setDetail };
@@ -1127,17 +1146,24 @@ function renderPortal(
   );
 }
 
-function useDetailsMobile(searchQuery: Array<SearchToken>,prevSearchQueryMobile:Array<SearchToken>,setPrevSearchQueryMobile:any) {
+function useDetailsMobile(
+  searchQuery: Array<SearchToken>,
+  prevSearchQueryMobile: Array<SearchToken>,
+  setPrevSearchQueryMobile: any,
+) {
   const [idPreview, setIdPreview] = React.useState("");
   const [detailMobile, setDetailMobile] =
     React.useState<GenericResultItem<unknown> | null>(null);
   React.useEffect(() => {
-    if (prevSearchQueryMobile !== null && !isEqual(searchQuery, prevSearchQueryMobile)) {
-    setDetailMobile(null);
+    if (
+      prevSearchQueryMobile !== null &&
+      !isEqual(searchQuery, prevSearchQueryMobile)
+    ) {
+      setDetailMobile(null);
     }
-    setPrevSearchQueryMobile(searchQuery)
-  }, [searchQuery,prevSearchQueryMobile]);
-   
+    setPrevSearchQueryMobile(searchQuery);
+  }, [searchQuery, prevSearchQueryMobile]);
+
   return { detailMobile, setDetailMobile, idPreview, setIdPreview };
 }
 
@@ -1371,8 +1397,8 @@ function factoryWhoIsDynamic({
   if (whoIsDynamicResponse.refreshOnTab) {
     resultArray.push("tab");
   }
-  if(whoIsDynamicResponse.refreshOnDate){
-    resultArray.push("date")
+  if (whoIsDynamicResponse.refreshOnDate) {
+    resultArray.push("date");
   }
   return resultArray;
 }
