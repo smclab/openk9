@@ -162,7 +162,7 @@ function FiltersHorizontal({
           `}
         >
           <button
-            className="openk9-filter-horizontal-submit"
+            className="openk9-filter-horizontal-submit openk9-filter-button-mobile-remove"
             aria-label="rimuovi filtri"
             css={css`
               font-size: smaller;
@@ -207,7 +207,7 @@ function FiltersHorizontal({
             <TrashSvg size="18px" />
           </button>
           <button
-            className="openk9-filter-horizontal-submit"
+            className="openk9-filter-horizontal-submit openk9-filter-button-mobile-apply"
             aria-label="applica filtri"
             css={css`
               font-size: smaller;
@@ -438,50 +438,50 @@ function FiltersHorizontal({
                     );
                   })}
               </GridContainer>
-              </fieldset>
-              {suggestions.hasNextPage && (
-                <div
-                  className="openk9-container-load-more"
+            </fieldset>
+            {suggestions.hasNextPage && (
+              <div
+                className="openk9-container-load-more"
+                css={css`
+                  text-align: center;
+                  width: 100%;
+                  display: flex;
+                  margin-left: 12px;
+                  margin-top: 10px;
+                  justify-content: center;
+                  @media (max-width: 480px) {
+                    margin-top: 15px;
+                  }
+                `}
+              >
+                <button
+                  className="openk9-load-more-button horizontal-filter-load-more"
+                  aria-label={t("load-more-filter") || "load more filters"}
                   css={css`
-                    text-align: center;
-                    width: 100%;
+                    background: inherit;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 700;
+                    line-height: normal;
                     display: flex;
-                    margin-left: 12px;
-                    margin-top: 10px;
-                    justify-content: center;
-                    @media (max-width: 480px) {
-                      margin-top: 15px;
-                    }
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                    padding: 8px 16px;
+                    border: 1px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    border-radius: 20px;
                   `}
+                  onClick={() => {
+                    suggestions.fetchNextPage();
+                  }}
                 >
-                  <button
-                    className="openk9-load-more-button horizontal-filter-load-more"
-                    aria-label={t("load-more-filter") || "load more filters"}
-                    css={css`
-                      background: inherit;
-                      color: var(--openk9-embeddable-search--primary-color);
-                      font-size: 14px;
-                      font-style: normal;
-                      font-weight: 700;
-                      line-height: normal;
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      cursor: pointer;
-                      padding: 8px 16px;
-                      border: 1px solid
-                        var(--openk9-embeddable-search--primary-color);
-                      border-radius: 20px;
-                    `}
-                    onClick={() => {
-                      suggestions.fetchNextPage();
-                    }}
-                  >
-                    {t("load-more") || "Load More"}
-                    <ArrowDownSvg size="18px" />
-                  </button>
-                </div>
-              )}
+                  {t("load-more") || "Load More"}
+                  <ArrowDownSvg size="18px" />
+                </button>
+              </div>
+            )}
           </React.Fragment>
         )}
       </React.Fragment>

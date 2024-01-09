@@ -214,7 +214,7 @@ function FiltersMobileLiveChange<E>({
           `}
         ></div>
         <button
-          className="openk9-filter-horizontal-submit"
+          className="openk9-filter-horizontal-submit openk9-filter-button-mobile-remove"
           aria-label={t("remove-filters") || "remove filters"}
           css={css`
             font-size: smaller;
@@ -262,7 +262,7 @@ function FiltersMobileLiveChange<E>({
           </div>
         </button>
         <button
-          className="openk9-filter-horizontal-submit"
+          className="openk9-filter-horizontal-submit openk9-filter-button-mobile-apply"
           aria-label="applica filtri"
           css={css`
             font-size: smaller;
