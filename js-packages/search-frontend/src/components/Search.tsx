@@ -450,8 +450,8 @@ export function Search({
           </div>
           <button
             className="openk9--search-delete-container-icon"
-            title="remove text"
-            aria-label={t("remove-text") || "Remove text"}
+            title={t("remove-text") || ""}
+            aria-label={t("remove-text-description") || ""}
             style={{
               paddingRight: "16px",
               display: "flex",

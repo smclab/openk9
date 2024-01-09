@@ -28,7 +28,7 @@ type FilterCategoryDynamicallyProps = {
   loadAll?: boolean;
   language: string;
   isDynamicElement: WhoIsDynamic[];
-  noResultMessage?: string|null|undefined
+  noResultMessage?: string | null | undefined;
   numberItems?: number | null | undefined;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
@@ -177,14 +177,14 @@ function FilterCategoryDynamic({
                 htmlFor={"search-category-" + suggestionCategoryId}
                 className="visually-hidden"
               >
-                Search Filter
+                {t("search-filters")}
               </label>
               <input
                 className="openk9-filter-category-search"
                 type="text"
                 id={"search-category-" + suggestionCategoryId}
                 value={text}
-                placeholder={t("search-filters") || "Search filters..."}
+                placeholder={t("search-filters") || ""}
                 onChange={(event) => setText(event.currentTarget.value)}
                 css={css`
                   margin-top: 17px;
@@ -448,7 +448,7 @@ export function useInfiniteSuggestions(
       activeSuggestionCategory,
       suggestKeyword,
       loadAll,
-      language
+      language,
     ] as const,
     async ({
       queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
@@ -670,12 +670,12 @@ export function createSuggestion(
           }
         });
         break;
-        case "date":
-          searchQueryNotFilter?.forEach((searchToken)=> {
-            if(searchToken.tokenType==="DATE"){
-              searchQuery.push(searchToken)
-            }
-          })
+      case "date":
+        searchQueryNotFilter?.forEach((searchToken) => {
+          if (searchToken.tokenType === "DATE") {
+            searchQuery.push(searchToken);
+          }
+        });
       default:
         return searchQueryNotFilter;
     }

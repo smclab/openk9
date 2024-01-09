@@ -38,6 +38,7 @@
     "remove-data-filter": "quitar el filtro",
     "remove-filters": "Eliminar Filtros",
     "remove-text": "Eliminar texto",
+    "remove-text-description": "the button is used to delete everything you have written in the search",
     "remove-dates": "eliminar fechas",
     "remove-data-start": "borrar filtro de fecha de inicio",
     "remove-data-end": "borrar filtro de fecha de finalización",

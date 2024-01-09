@@ -180,7 +180,7 @@ function FilterCategory({
                 type="text"
                 id={"search-category-" + suggestionCategoryId}
                 value={text}
-                placeholder={t("search-filters") || "Search filters..."}
+                placeholder={t("search-filters") || ""}
                 onChange={(event) => setText(event.currentTarget.value)}
                 css={css`
                   margin-top: 17px;
