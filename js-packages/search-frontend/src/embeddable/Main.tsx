@@ -65,6 +65,8 @@ export function Main({
   const activeLanguage = i18next.language;
 
   //retrieving information from the configuration.
+  const cardDetailsOnOver =
+    configuration.resultList?.changeOnOver === false ? false : true;
   const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
@@ -451,7 +453,11 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DetailMemo result={detail} actionOnCLose={() => {}} />
+          <DetailMemo
+            result={detail}
+            actionOnCLose={() => {}}
+            cardDetailsOnOver={cardDetailsOnOver}
+          />
         </I18nextProvider>,
         configuration.details,
       )}

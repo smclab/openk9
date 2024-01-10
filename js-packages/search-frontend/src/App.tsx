@@ -23,7 +23,7 @@ export function App() {
   const serviceStatus = useServiceStatus();
   if (serviceStatus === "down") {
     return <MaintenancePage />;
-  }  
+  }
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
@@ -212,7 +212,7 @@ export function App() {
               className="openk9-update-configuration"
               ref={(element) =>
                 openk9.updateConfiguration({
-                search:element
+                  search: element,
                 })
               }
             ></div>
@@ -446,10 +446,8 @@ export function App() {
         `}
       ></div>
       <div
-          ref={(element) =>
-            openk9.updateConfiguration({ detailMobile: element })
-          }
-        ></div>
+        ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
+      ></div>
     </div>
   );
 }

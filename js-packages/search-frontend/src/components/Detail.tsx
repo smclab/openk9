@@ -16,35 +16,37 @@ import { useTranslation } from "react-i18next";
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
   setDetailMobile?: any;
-  isMobile?:boolean;
-  actionOnCLose():void;
+  isMobile?: boolean;
+  cardDetailsOnOver?: boolean;
+  actionOnCLose(): void;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile;
-  const actionOnCLose=props.actionOnCLose;
+  const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
-  const isMobile= props.isMobile;
-  const refFocus=React.useRef<HTMLButtonElement>(null);
+  const isMobile = props.isMobile;
+  const cardDetailsOnOver = props.cardDetailsOnOver;
+  const refFocus = React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
 
   const scrollContainer = document.querySelector(
     ".openk9-detail-overlay-scrollbars-component",
   );
 
-React.useEffect(()=>{
-  if(isMobile && isMobile===true ){
-    refFocus.current?.focus()
-  }
-  if (scrollContainer) {
-    scrollContainer.scrollTop = 0;
-  }
-},[])
+  React.useEffect(() => {
+    if (isMobile && isMobile === true) {
+      refFocus.current?.focus();
+    }
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
+    }
+  }, []);
 
   if (!result) {
-    return <NoDetail />;
+    return <NoDetail cardDetailsOnOver />;
   }
- 
+
   return (
     <div
       className="openk9-detail-overlay-scrollbars-component"
@@ -151,7 +153,11 @@ React.useEffect(()=>{
 }
 export const DetailMemo = React.memo(Detail);
 
-export function NoDetail() {
+export function NoDetail({
+  cardDetailsOnOver,
+}: {
+  cardDetailsOnOver: boolean;
+}) {
   const { t } = useTranslation();
   return (
     <React.Fragment>
@@ -201,7 +207,7 @@ export function NoDetail() {
         <Logo size={128} />
 
         <h3>{t("no-details")}</h3>
-        <div>{t("no-result")}</div>
+        <div>{cardDetailsOnOver ? t("no-result") : t("no-result-click")}</div>
       </div>
     </React.Fragment>
   );
