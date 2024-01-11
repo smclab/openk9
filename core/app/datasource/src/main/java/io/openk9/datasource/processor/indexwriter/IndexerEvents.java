@@ -66,6 +66,30 @@ public class IndexerEvents
 	@Inject
 	ActorSystemProvider actorSystemProvider;
 
+	public Uni<Void> generateDocTypeFields(
+		Mutiny.Session session, DataIndex dataIndex)
+	{
+
+		if (dataIndex == null)
+		{
+			return Uni.createFrom().failure(new IllegalArgumentException("dataIndexId is null"));
+		}
+
+		return indexService
+			.getMappings(dataIndex.getName())
+			.map(IndexerEvents::toDocTypeFields)
+			.plug(docTypeFields -> Uni.combine().all()
+				.unis(
+					docTypeFields,
+					_getDocumentTypes(dataIndex.getName())
+				)
+				.asTuple()
+			)
+			.map(IndexerEvents::toDocTypeAndFieldsGroup)
+			.call(map -> _persistDocType(map, dataIndex, session))
+			.replaceWithVoid();
+	}
+
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings)
 	{
 		return _toDocTypeFields(_toFlatFields(mappings));
@@ -377,30 +401,6 @@ public class IndexerEvents
 
 		}
 
-	}
-
-	public Uni<Void> generateDocTypeFields(
-		Mutiny.Session session, DataIndex dataIndex)
-	{
-
-		if (dataIndex == null)
-		{
-			return Uni.createFrom().failure(new IllegalArgumentException("dataIndexId is null"));
-		}
-
-		return indexService
-			.getMappings(dataIndex.getName())
-			.map(IndexerEvents::toDocTypeFields)
-			.plug(docTypeFields -> Uni.combine().all()
-				.unis(
-					docTypeFields,
-					_getDocumentTypes(dataIndex.getName())
-				)
-				.asTuple()
-			)
-			.map(IndexerEvents::toDocTypeAndFieldsGroup)
-			.call(map -> _persistDocType(map, dataIndex, session))
-			.replaceWithVoid();
 	}
 
 	private Uni<List<String>> _getDocumentTypes(String indexName)
