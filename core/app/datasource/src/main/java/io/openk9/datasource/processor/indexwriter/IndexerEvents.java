@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.processor.indexwriter;
 
+import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
@@ -38,8 +40,6 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,58 +47,50 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
-public class IndexerEvents {
+public class IndexerEvents
+{
 
-	public Uni<Void> generateDocTypeFields(
-		Mutiny.Session session, DataIndex dataIndex) {
+	@Inject
+	RestHighLevelClient client;
+	@Inject
+	IndexService indexService;
+	@Inject
+	DocTypeService docTypeService;
+	@Inject
+	ActorSystemProvider actorSystemProvider;
 
-		if (dataIndex == null) {
-			return Uni.createFrom().failure(
-				new IllegalArgumentException("dataIndexId is null"));
-		}
-
-		return indexService.getMappings(dataIndex.getName())
-			.map(IndexerEvents::toDocTypeFields)
-			.plug(docTypeFields -> Uni
-				.combine()
-				.all()
-				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName()))
-				.asTuple()
-			)
-			.map(IndexerEvents::toDocTypeAndFieldsGroup)
-			.call(map -> _persistDocType(map, dataIndex, session))
-			.replaceWithVoid();
-	}
-
-	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
+	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings)
+	{
 		return _toDocTypeFields(_toFlatFields(mappings));
 	}
 
 	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
-		Tuple2<List<DocTypeField>, List<String>> t2) {
+		Tuple2<List<DocTypeField>, List<String>> t2
+	)
+	{
 
 		List<DocTypeField> docTypeFields = t2.getItem1();
 
 		List<String> documentTypes = t2.getItem2();
 
-		Map<String, List<DocTypeField>> grouped = docTypeFields
-			.stream()
-			.collect(
-				Collectors.groupingBy(
-					e ->
-						documentTypes
-							.stream()
-							.filter(dt -> e.getFieldName().startsWith(dt + ".")
-								|| e.getFieldName().equals(dt))
-							.findFirst()
-							.orElse("default"),
-					Collectors.toList()
-				)
-			);
+		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
+			.collect(Collectors.groupingBy(
+				field -> documentTypes.stream()
+					.filter(dt ->
+						field.getFieldName().startsWith(dt + ".")
+						|| field.getFieldName().equals(dt)
+					)
+					.findFirst()
+					.orElse("default"),
+				Collectors.toList()
+			));
 
 		_explodeDocTypeFirstLevel(grouped);
 
@@ -106,14 +98,15 @@ public class IndexerEvents {
 	}
 
 	protected static Set<DocType> mergeDocTypes(
-		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
-		Collection<DocType> existingDocTypes) {
-
+		Map<String, List<DocTypeField>> mappedDocTypeAndFields, Collection<DocType> existingDocTypes
+	)
+	{
 		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
 
 		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
 
-		for (String docTypeName : mappedDocTypeNames) {
+		for (String docTypeName : mappedDocTypeNames)
+		{
 
 			DocType docType =
 				existingDocTypes
@@ -135,18 +128,23 @@ public class IndexerEvents {
 
 			List<DocTypeField> retainedFields = new ArrayList<>();
 
-			for (DocTypeField docTypeField : generatedFields) {
+			for (DocTypeField docTypeField : generatedFields)
+			{
 				boolean retained = true;
-				for (DocTypeField existingField : persistedFields) {
+				for (DocTypeField existingField : persistedFields)
+				{
 
-					if ((DocTypeFieldUtils.fieldPath(docTypeName, docTypeField))
-						.equals(existingField.getPath())) {
-
+					if (Objects.equals(
+						existingField.getPath(),
+						DocTypeFieldUtils.fieldPath(docTypeName, docTypeField)
+					))
+					{
 						retained = false;
 						break;
 					}
 				}
-				if (retained) {
+				if (retained)
+				{
 					retainedFields.add(docTypeField);
 				}
 			}
@@ -162,21 +160,27 @@ public class IndexerEvents {
 
 	}
 
-	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
-		for (String docTypeName : grouped.keySet()) {
-			if (!docTypeName.equals("default")) {
+	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped)
+	{
+		for (String docTypeName : grouped.keySet())
+		{
+			if (!docTypeName.equals("default"))
+			{
 				List<DocTypeField> groupedDocTypeFields = grouped.get(docTypeName);
 				groupedDocTypeFields
 					.stream()
-					.filter(docTypeField -> docTypeField
-						.getFieldName().equals(docTypeName)
-					)
+					.filter(docTypeField -> Objects.equals(
+						docTypeField.getFieldName(),
+						docTypeName
+					))
 					.findFirst()
 					.ifPresent(root -> {
 						Set<DocTypeField> subFields = root.getSubDocTypeFields();
-						if (subFields != null && !subFields.isEmpty()) {
+						if (subFields != null && !subFields.isEmpty())
+						{
 							groupedDocTypeFields.remove(root);
-							for (DocTypeField subField : subFields) {
+							for (DocTypeField subField : subFields)
+							{
 								subField.setParentDocTypeField(null);
 							}
 							groupedDocTypeFields.addAll(subFields);
@@ -186,112 +190,70 @@ public class IndexerEvents {
 		}
 	}
 
-	private Uni<Void> _persistDocType(
-		Map<String, List<DocTypeField>> docTypesGroup, DataIndex dataIndex,
-		Mutiny.Session session) {
-
-		Set<String> docTypeNames = docTypesGroup.keySet();
-
-		return docTypeService.getDocTypesAndDocTypeFieldsByNames(
-				session, docTypeNames)
-			.map(docTypes -> mergeDocTypes(docTypesGroup, docTypes))
-			.flatMap(docTypes -> session
-				.merge(dataIndex)
-				.flatMap(merged -> {
-					merged.setDocTypes(docTypes);
-					return session.persist(merged);
-				})
-			);
-	}
-
 	private static void _setDocTypeToDocTypeFields(
-		DocType docType, Set<DocTypeField> docTypeFields) {
+		DocType docType, Set<DocTypeField> docTypeFields
+	)
+	{
 
-		if (docTypeFields == null) {
+		if (docTypeFields == null)
+		{
 			return;
 		}
 
-		for (DocTypeField docTypeField : docTypeFields) {
+		for (DocTypeField docTypeField : docTypeFields)
+		{
 			docTypeField.setDocType(docType);
 			_setDocTypeToDocTypeFields(docType, docTypeField.getSubDocTypeFields());
 		}
 
 	}
 
-	private Uni<List<String>> _getDocumentTypes(String indexName) {
-		return Uni
-			.createFrom()
-			.item(() -> {
-
-				SearchRequest searchRequest = new SearchRequest(indexName);
-
-				SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-				searchSourceBuilder.size(0);
-
-				searchSourceBuilder.aggregation(
-					AggregationBuilders
-						.terms("documentTypes")
-						.field("documentTypes.keyword")
-						.size(1000));
-
-				searchRequest.source(searchSourceBuilder);
-
-				try {
-					SearchResponse search = client.search(
-						searchRequest, RequestOptions.DEFAULT
-					);
-
-					return search.getAggregations()
-						.<Terms>get("documentTypes")
-						.getBuckets()
-						.stream()
-						.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-						.collect(Collectors.toList());
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
-
-	}
-
-	private static Field _toFlatFields(Map<String, Object> mappings) {
+	private static Field _toFlatFields(Map<String, Object> mappings)
+	{
 		Field root = Field.createRoot();
 		_toFlatFields(mappings, root);
 		return root;
 	}
 
 	private static void _toFlatFields(
-		Map<String, Object> mappings, Field root) {
+		Map<String, Object> mappings, Field root
+	)
+	{
 
-		for (Map.Entry<String, Object> kv : mappings.entrySet()) {
+		for (Map.Entry<String, Object> kv : mappings.entrySet())
+		{
 
 			String key = kv.getKey();
 			Object value = kv.getValue();
 
-			if (key.equals("properties")) {
+			if (key.equals("properties"))
+			{
 				_toFlatFields((Map<String, Object>) value, root);
 			}
-			else if (value instanceof Map && ((Map)value).size() == 1) {
-				Map<String, Object> map = (Map<String, Object>)value;
-				if (map.containsKey("type")) {
-					root.addSubField(Field.of(key, (String)map.get("type")));
+			else if (value instanceof Map && ((Map) value).size() == 1)
+			{
+				Map<String, Object> map = (Map<String, Object>) value;
+				if (map.containsKey("type"))
+				{
+					root.addSubField(Field.of(key, (String) map.get("type")));
 				}
-				else {
+				else
+				{
 					Field newRoot = Field.of(key);
 					root.addSubField(newRoot);
 					_toFlatFields((Map<String, Object>) value, newRoot);
 				}
 			}
-			else if (value instanceof Map && ((Map)value).size() > 1) {
-				Map<String, Object> localMap = ((Map<String, Object>)value);
+			else if (value instanceof Map && ((Map) value).size() > 1)
+			{
+				Map<String, Object> localMap = ((Map<String, Object>) value);
 
 				Field newRoot = Field.of(key);
 
 				root.addSubField(newRoot);
 
-				if (localMap.containsKey("type")) {
+				if (localMap.containsKey("type"))
+				{
 					_populateField(newRoot, localMap);
 				}
 
@@ -301,37 +263,41 @@ public class IndexerEvents {
 
 	}
 
-	private static Field _populateField(Field field, Map<String, Object> props) {
+	private static Field _populateField(
+		Field field, Map<String, Object> props
+	)
+	{
 
-		if (props == null) {
+		if (props == null)
+		{
 			return field;
 		}
 
 		Map<String, Object> extra = new LinkedHashMap<>();
-		for (Map.Entry<String, Object> entry : props.entrySet()) {
+		for (Map.Entry<String, Object> entry : props.entrySet())
+		{
 			String entryKey = entry.getKey();
 			Object entryValue = entry.getValue();
-			switch (entryKey) {
+			switch (entryKey)
+			{
 				case "type" -> field.setType((String) entryValue);
-				case "fields" -> {
-					Map<String, Object> fields =
-						(Map<String, Object>) entryValue;
+				case "fields" ->
+				{
+					Map<String, Object> fields = (Map<String, Object>) entryValue;
 
-					List<Field> subFields = fields
-						.entrySet()
-						.stream()
+					List<Field> subFields = fields.entrySet().stream()
 						.map(e -> _populateField(
 							Field.of(e.getKey()),
-							(Map<String, Object>)e.getValue())
-						)
-						.collect(Collectors.toList());
+							(Map<String, Object>) e.getValue()
+						)).collect(Collectors.toList());
 
 					field.addSubFields(subFields);
 				}
 				default -> extra.put(entryKey, entryValue);
 			}
 		}
-		if (!extra.isEmpty()) {
+		if (!extra.isEmpty())
+		{
 			field.setExtra(extra);
 		}
 
@@ -339,12 +305,15 @@ public class IndexerEvents {
 
 	}
 
-	private static List<DocTypeField> _toDocTypeFields(Field root) {
+	private static List<DocTypeField> _toDocTypeFields(Field root)
+	{
 
 		List<DocTypeField> docTypeFields = new ArrayList<>();
 
-		for (Field subField : root.getSubFields()) {
-			if (!subField.isRoot()) {
+		for (Field subField : root.getSubFields())
+		{
+			if (!subField.isRoot())
+			{
 				_toDocTypeFields(subField, new ArrayList<>(), null, docTypeFields);
 			}
 		}
@@ -354,20 +323,20 @@ public class IndexerEvents {
 	}
 
 	private static void _toDocTypeFields(
-		Field field, List<String> acc, DocTypeField parent,
-		Collection<DocTypeField> docTypeFields) {
+		Field field, List<String> acc, DocTypeField parent, Collection<DocTypeField> docTypeFields
+	)
+	{
 
 		String name = field.getName();
 		acc.add(name);
 
 		String type = field.getType();
 
-		boolean isI18NField =
-			field
-				.getSubFields()
-				.stream()
-				.map(Field::getName)
-				.anyMatch(fieldName -> fieldName.equals("i18n"));
+		boolean isI18NField = field
+			.getSubFields()
+			.stream()
+			.map(Field::getName)
+			.anyMatch(fieldName -> fieldName.equals("i18n"));
 
 		String fieldName = String.join(".", acc);
 
@@ -378,43 +347,124 @@ public class IndexerEvents {
 		FieldType fieldType = isI18NField
 			? FieldType.I18N
 			: type != null
-			? FieldType.fromString(type)
-			: FieldType.OBJECT;
+				? FieldType.fromString(type)
+				: FieldType.OBJECT;
 		docTypeField.setFieldType(fieldType);
 		docTypeField.setDescription("auto-generated");
 		docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
-		if (field.getExtra() != null && !field.getExtra().isEmpty()) {
-			docTypeField.setJsonConfig(
-				new JsonObject(field.getExtra()).toString());
+		if (field.getExtra() != null && !field.getExtra().isEmpty())
+		{
+			docTypeField.setJsonConfig(new JsonObject(field.getExtra()).toString());
 		}
 
-		if (parent != null) {
+		if (parent != null)
+		{
 			docTypeField.setParentDocTypeField(parent);
 		}
 
 		docTypeFields.add(docTypeField);
 
-		switch (fieldType) {
-			case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N -> docTypeField.setSearchable(true);
+		switch (fieldType)
+		{
+			case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N ->
+				docTypeField.setSearchable(true);
 			default -> docTypeField.setSearchable(false);
 		}
 
-		for (Field subField : field.getSubFields()) {
+		for (Field subField : field.getSubFields())
+		{
 			_toDocTypeFields(
-				subField, new ArrayList<>(acc), docTypeField,
-				docTypeField.getSubDocTypeFields());
+				subField,
+				new ArrayList<>(acc),
+				docTypeField,
+				docTypeField.getSubDocTypeFields()
+			);
 
 		}
 
 	}
 
-	@Inject
-	RestHighLevelClient client;
+	public Uni<Void> generateDocTypeFields(
+		Mutiny.Session session, DataIndex dataIndex
+	)
+	{
 
-	@Inject
-	IndexService indexService;
+		if (dataIndex == null)
+		{
+			return Uni.createFrom().failure(new IllegalArgumentException("dataIndexId is null"));
+		}
 
-	@Inject
-	DocTypeService docTypeService;
+		return indexService
+			.getMappings(dataIndex.getName())
+			.map(IndexerEvents::toDocTypeFields)
+			.plug(docTypeFields -> Uni.combine().all()
+				.unis(
+					docTypeFields,
+					_getDocumentTypes(dataIndex.getName())
+				)
+				.asTuple()
+			)
+			.map(IndexerEvents::toDocTypeAndFieldsGroup)
+			.call(map -> _persistDocType(map, dataIndex, session))
+			.replaceWithVoid();
+	}
+
+	private Uni<List<String>> _getDocumentTypes(String indexName)
+	{
+		return Uni.createFrom().item(() -> {
+
+			SearchRequest searchRequest = new SearchRequest(indexName);
+
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+			searchSourceBuilder.size(0);
+
+			searchSourceBuilder.aggregation(AggregationBuilders
+				.terms("documentTypes")
+				.field("documentTypes.keyword")
+				.size(1000)
+			);
+
+			searchRequest.source(searchSourceBuilder);
+
+			try
+			{
+				SearchResponse search = client.search(searchRequest, RequestOptions.DEFAULT);
+
+				return search
+					.getAggregations()
+					.<Terms>get("documentTypes")
+					.getBuckets()
+					.stream()
+					.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+					.collect(Collectors.toList());
+			}
+			catch (IOException e)
+			{
+				throw new RuntimeException(e);
+			}
+		});
+
+	}
+
+	private Uni<Void> _persistDocType(
+		Map<String, List<DocTypeField>> docTypesGroup, DataIndex dataIndex, Mutiny.Session session
+	)
+	{
+
+		Set<String> docTypeNames = docTypesGroup.keySet();
+
+		return docTypeService
+			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
+			.map(docTypes -> mergeDocTypes(docTypesGroup, docTypes))
+			.flatMap(docTypes -> session
+				.merge(dataIndex)
+				.flatMap(merged -> {
+					merged.setDocTypes(docTypes);
+					return session.persist(merged);
+				})
+			)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+	}
 
 }
