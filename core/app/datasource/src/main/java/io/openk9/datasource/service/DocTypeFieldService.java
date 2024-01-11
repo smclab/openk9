@@ -141,26 +141,24 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	}
 
-	public Uni<Collection<DocType>> expandDocTypes(Collection<DocType> docTypes) {
+	public Uni<Collection<DocType>> expandDocTypes(
+		Mutiny.Session session, Collection<DocType> docTypes) {
 
 		 if (docTypes != null && !docTypes.isEmpty()) {
-			 return sessionFactory.withTransaction(s -> {
+			 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
 
-				 Set<Uni<Set<DocTypeField>>> docTypeField = new LinkedHashSet<>();
+			 for (DocType docType : docTypes) {
+				 docTypeField.add(session.fetch(docType.getDocTypeFields()));
+			 }
 
-				 for (DocType docType : docTypes) {
-					 docTypeField.add(s.fetch(docType.getDocTypeFields()));
-				 }
-
-				 return Uni
-					 .combine()
-					 .all()
-					 .unis(docTypeField)
-					 .collectFailures()
-					 .combinedWith(e -> (List<Set<DocTypeField>>) e)
-					 .flatMap(sets -> loadAndExpandDocTypeFields(s, sets))
-					 .replaceWith(docTypes);
-			 });
+			 return Uni
+				 .combine()
+				 .all()
+				 .unis(docTypeField)
+				 .collectFailures()
+				 .combinedWith(e -> (List<Set<DocTypeField>>) e)
+				 .flatMap(sets -> loadAndExpandDocTypeFields(session, sets))
+				 .replaceWith(docTypes);
 		 }
 		 else {
 			 return Uni.createFrom().item(List.of());

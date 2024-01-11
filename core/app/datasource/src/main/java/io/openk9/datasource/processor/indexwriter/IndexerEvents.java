@@ -25,12 +25,9 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DocTypeService;
-import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -42,7 +39,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,22 +48,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class IndexerEvents {
 
-	public void requestAndForget(DataIndex dataIndex, List<String> docTypes) {
-		eventBus.requestAndForget(
-			"createOrUpdateDataIndex",
-			new JsonObject()
-				.put("dataIndex", JsonObject.mapFrom(dataIndex))
-				.put("docTypes", new JsonArray(docTypes))
-		);
-	}
-
-	public Uni<Void> generateDocTypeFields(DataIndex dataIndex) {
+	public Uni<Void> generateDocTypeFields(
+		Mutiny.Session session, DataIndex dataIndex) {
 
 		if (dataIndex == null) {
 			return Uni.createFrom().failure(
@@ -83,21 +70,8 @@ public class IndexerEvents {
 				.asTuple()
 			)
 			.map(IndexerEvents::toDocTypeAndFieldsGroup)
-			.call(_persistDocType(dataIndex))
+			.call(map -> _persistDocType(map, dataIndex, session))
 			.replaceWithVoid();
-	}
-
-	@ConsumeEvent("createOrUpdateDataIndex")
-	@ActivateRequestContext
-	public Uni<Void> createOrUpdateDataIndex(JsonObject jsonObject) {
-
-		return Uni.createFrom().deferred(() -> {
-
-			DataIndex dataIndex = jsonObject.getJsonObject("dataIndex").mapTo(DataIndex.class);
-
-			return generateDocTypeFields(dataIndex);
-
-		});
 	}
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
@@ -212,23 +186,22 @@ public class IndexerEvents {
 		}
 	}
 
-	private Function<Map<String, List<DocTypeField>>, Uni<?>> _persistDocType(
-		DataIndex dataIndex) {
+	private Uni<Void> _persistDocType(
+		Map<String, List<DocTypeField>> docTypesGroup, DataIndex dataIndex,
+		Mutiny.Session session) {
 
-		return m -> sessionFactory.withTransaction(session -> {
+		Set<String> docTypeNames = docTypesGroup.keySet();
 
-			Set<String> docTypeNames = m.keySet();
-
-			return docTypeService.getDocTypesAndDocTypeFieldsByNames(docTypeNames)
-				.map(docTypes -> mergeDocTypes(m, docTypes))
-				.flatMap(docTypes -> session
-					.merge(dataIndex)
-					.map(merged -> {
-						merged.setDocTypes(docTypes);
-						return session.persist(merged);
-					})
-				);
-		});
+		return docTypeService.getDocTypesAndDocTypeFieldsByNames(
+				session, docTypeNames)
+			.map(docTypes -> mergeDocTypes(docTypesGroup, docTypes))
+			.flatMap(docTypes -> session
+				.merge(dataIndex)
+				.flatMap(merged -> {
+					merged.setDocTypes(docTypes);
+					return session.persist(merged);
+				})
+			);
 	}
 
 	private static void _setDocTypeToDocTypeFields(
@@ -437,12 +410,6 @@ public class IndexerEvents {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	EventBus eventBus;
 
 	@Inject
 	IndexService indexService;
