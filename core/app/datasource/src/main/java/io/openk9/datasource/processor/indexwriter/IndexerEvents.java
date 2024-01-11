@@ -66,8 +66,7 @@ public class IndexerEvents
 	@Inject
 	ActorSystemProvider actorSystemProvider;
 
-	public Uni<Void> generateDocTypeFields(
-		Mutiny.Session session, DataIndex dataIndex)
+	public Uni<Void> generateDocTypeFields(Mutiny.Session session, DataIndex dataIndex)
 	{
 
 		if (dataIndex == null)
