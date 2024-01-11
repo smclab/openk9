@@ -72,8 +72,7 @@ public class IndexerEvents
 	}
 
 	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
-		Tuple2<List<DocTypeField>, List<String>> t2
-	)
+		Tuple2<List<DocTypeField>, List<String>> t2)
 	{
 
 		List<DocTypeField> docTypeFields = t2.getItem1();
@@ -98,8 +97,8 @@ public class IndexerEvents
 	}
 
 	protected static Set<DocType> mergeDocTypes(
-		Map<String, List<DocTypeField>> mappedDocTypeAndFields, Collection<DocType> existingDocTypes
-	)
+		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
+		Collection<DocType> existingDocTypes)
 	{
 		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
 
@@ -191,8 +190,7 @@ public class IndexerEvents
 	}
 
 	private static void _setDocTypeToDocTypeFields(
-		DocType docType, Set<DocTypeField> docTypeFields
-	)
+		DocType docType, Set<DocTypeField> docTypeFields)
 	{
 
 		if (docTypeFields == null)
@@ -216,8 +214,7 @@ public class IndexerEvents
 	}
 
 	private static void _toFlatFields(
-		Map<String, Object> mappings, Field root
-	)
+		Map<String, Object> mappings, Field root)
 	{
 
 		for (Map.Entry<String, Object> kv : mappings.entrySet())
@@ -264,8 +261,7 @@ public class IndexerEvents
 	}
 
 	private static Field _populateField(
-		Field field, Map<String, Object> props
-	)
+		Field field, Map<String, Object> props)
 	{
 
 		if (props == null)
@@ -323,8 +319,7 @@ public class IndexerEvents
 	}
 
 	private static void _toDocTypeFields(
-		Field field, List<String> acc, DocTypeField parent, Collection<DocTypeField> docTypeFields
-	)
+		Field field, List<String> acc, DocTypeField parent, Collection<DocTypeField> docTypeFields)
 	{
 
 		String name = field.getName();
@@ -385,8 +380,7 @@ public class IndexerEvents
 	}
 
 	public Uni<Void> generateDocTypeFields(
-		Mutiny.Session session, DataIndex dataIndex
-	)
+		Mutiny.Session session, DataIndex dataIndex)
 	{
 
 		if (dataIndex == null)
@@ -448,8 +442,7 @@ public class IndexerEvents
 	}
 
 	private Uni<Void> _persistDocType(
-		Map<String, List<DocTypeField>> docTypesGroup, DataIndex dataIndex, Mutiny.Session session
-	)
+		Map<String, List<DocTypeField>> docTypesGroup, DataIndex dataIndex, Mutiny.Session session)
 	{
 
 		Set<String> docTypeNames = docTypesGroup.keySet();
