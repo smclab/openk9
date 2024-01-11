@@ -340,6 +340,19 @@ export function Main({
         </I18nextProvider>,
         configuration.activeFilters,
       )}
+       {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <ActiveFilter
+            searchQuery={searchQuery}
+            onRemoveFilterToken={removeFilterToken}
+            onConfigurationChange={onConfigurationChange}
+            actioneRemoveFilters={configuration.activeFiltersConfigurable?.actioneRemoveFilters}
+          />
+        </I18nextProvider>,
+          configuration.activeFiltersConfigurable
+          ? configuration.activeFiltersConfigurable.element
+          : null,
+      )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <FiltersHorizontalMemo
@@ -360,6 +373,7 @@ export function Main({
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
+            refButton={configuration.filtersHorizontal?.refButton}
           />
         </I18nextProvider>,
         configuration.filtersHorizontal
@@ -713,8 +727,8 @@ function useSearchOnClick({
   const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
   const textOnQueryStringOnCLick = "";
   const debounced = useDebounce(selectionsState, 600);
-  const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.text || "",
+  const queryAnalysis =   useQueryAnalysis({
+    searchText: ((debounced.text) && (debounced.text?.length>3))? debounced.text : "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
     ),
@@ -859,11 +873,11 @@ function useSearch({
   });
 
   const spans = React.useMemo(
-    () =>
+    () => debounced.textOnChange?.length||0> 3? 
       calculateSpans(
         debounced.textOnChange || "",
         queryAnalysis.data?.analysis,
-      ),
+      ):[],
     [queryAnalysis.data?.analysis, debounced.textOnChange],
   );
   const searchTokens = React.useMemo(() => {

@@ -14,113 +14,148 @@ export function ActiveFilter({
   searchQuery,
   onRemoveFilterToken,
   onConfigurationChange,
+  actioneRemoveFilters,
 }: {
   searchQuery: SearchToken[];
   onRemoveFilterToken: (searchToken: SearchToken) => void;
   onConfigurationChange: ConfigurationUpdateFunction;
+  actioneRemoveFilters?: () => void;
 }) {
   const { t } = useTranslation();
   if (searchQuery.length === 0) return null;
-  const activeFilters = searchQuery.filter(
+  const filterSearchQuery = searchQuery.filter(
     (search) => "goToSuggestion" in search,
-  ).length;
+  );
+  const activeFilters = filterSearchQuery.length;
   if (activeFilters === 0) return null;
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <div
-        className="openk9-tabs-overlay-scrollbars"
-        style={{
-          overflowX: "auto",
-          height: "50px",
-          width: "91%",
-        }}
+    <div>
+      <h2
+        className="openk9-filters-active-information"
+        css={css`
+          @media (max-width: 769px) {
+            display: none;
+          }
+        `}
       >
-        <div
-          className="openk9-active-filters-chop-container"
+        {t("active-filters")}:{" "}
+        <span
+          className="openk9-number-filters-active"
           css={css`
-            display: flex;
+            color: #d6012e;
           `}
         >
+          {countTotalValues(filterSearchQuery)}
+        </span>
+      </h2>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="openk9-tabs-overlay-scrollbars"
+          style={{
+            overflowX: "auto",
+            height: "50px",
+            width: "91%",
+          }}
+        >
           <div
-            className="openk9-container-active-filters"
+            className="openk9-active-filters-chop-container"
             css={css`
               display: flex;
-              gap: 10px;
-              width: 100%;
             `}
           >
-            {searchQuery.map((selectToken, index) => {
-              if ("goToSuggestion" in selectToken) {
-                return selectToken.values.map((value, valueIndex) => (
-                  <React.Fragment key={valueIndex}>
-                    <div className="openk9-container-active-filter">
-                      <button
-                        className="openk9-active-filter"
-                        css={css`
-                          border: 1px solid red;
-                          background: inherit;
-                          padding: 3px 12px;
-                          border-radius: 50px;
-                          color: #bc0012;
-                          font-weight: 700;
-                          line-height: 24px;
-                          display: flex;
-                          align-items: center;
-                          gap: 10px;
-                          white-space: nowrap;
-                        `}
-                      >
-                        {capitalize(value)}
-                        <span
-                          css={css`
-                            cursor: pointer;
-                          `}
+            <div
+              className="openk9-container-active-filters"
+              css={css`
+                display: flex;
+                gap: 10px;
+                width: 100%;
+              `}
+            >
+              {searchQuery.map((selectToken, index) => {
+                if ("goToSuggestion" in selectToken) {
+                  return selectToken.values.map((value, valueIndex) => (
+                    <React.Fragment key={valueIndex}>
+                      <div className="openk9-container-active-filter">
+                        <button
+                          className="openk9-active-filter"
                           onClick={() =>
                             onRemoveFilterToken({
                               ...selectToken,
                               values: [value],
                             })
                           }
+                          css={css`
+                            border: 1px solid red;
+                            background: inherit;
+                            padding: 3px 12px;
+                            border-radius: 50px;
+                            color: #bc0012;
+                            font-weight: 700;
+                            line-height: 24px;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            white-space: nowrap;
+                            cursor: pointer;
+                          `}
                         >
-                          <DeleteLogo
-                            heightParam={10}
-                            widthParam={10}
-                            colorSvg="#BC0012"
-                          />
-                        </span>
-                      </button>
-                    </div>
-                  </React.Fragment>
-                ));
-              }
-              return null;
-            })}
+                          <span className="visually-hidden">
+                            rimuovi il filtro
+                          </span>
+                          {capitalize(value)}
+                          <span>
+                            <DeleteLogo
+                              heightParam={10}
+                              widthParam={10}
+                              colorSvg="#BC0012"
+                            />
+                          </span>
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  ));
+                }
+                return null;
+              })}
+            </div>
           </div>
         </div>
+        {searchQuery.length !== 0 && (
+          <div>
+            <button
+              className="openk9-active-filter"
+              css={css`
+                border: none;
+                background: inherit;
+                padding: 3px 12px;
+                border-radius: 50px;
+                text-decoration: underline;
+                line-height: 24px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                white-space: nowrap;
+                cursor: pointer;
+              `}
+              onClick={() => {
+                onConfigurationChange({ filterTokens: [] });
+                if (actioneRemoveFilters) actioneRemoveFilters();
+              }}
+            >
+              {t("remove-filters")}
+            </button>
+          </div>
+        )}
       </div>
-      {searchQuery.length !== 0 && (
-        <div>
-          <button
-            className="openk9-active-filter"
-            css={css`
-              border: none;
-              background: inherit;
-              padding: 3px 12px;
-              border-radius: 50px;
-              text-decoration: underline;
-              line-height: 24px;
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              white-space: nowrap;
-              cursor: pointer;
-            `}
-            onClick={() => onConfigurationChange({ filterTokens: [] })}
-          >
-            {t("remove-filters")}
-          </button>
-        </div>
-      )}
     </div>
   );
+}
+
+function countTotalValues(arr: SearchToken[]): number {
+  return arr.reduce((total, token) => {
+    if (token.values && token.values.length > 0) {
+      total += token.values.length;
+    }
+    return total;
+  }, 0);
 }

@@ -158,6 +158,7 @@ export class OpenK9 {
 type FiltersHorizontalConfiguration = {
   element: Element | string | null;
   callback: () => void | null;
+  refButton?: React.RefObject<HTMLButtonElement>;
 };
 
 type FiltersHorizontalMobileConfiguration = {
@@ -264,6 +265,11 @@ type totalResultProps = {
   saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
+type activeFiltersConfigurableProps={
+  element: Element |string |null;
+  actioneRemoveFilters?():void;
+}
+
 export type Configuration = {
   // simple types
   defaultTokens: Array<SearchToken>;
@@ -296,6 +302,7 @@ export type Configuration = {
   totalResultMobile: Element | string | null;
   removeFilters: Element | string | null;
   // configurable types
+  activeFiltersConfigurable: activeFiltersConfigurableProps | null | undefined;
   calendarMobile: CalendarMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
   dataRangePickerVertical: DataRangePickerVerticalProps | null;
@@ -321,6 +328,7 @@ export type Configuration = {
 
 const defaultConfiguration: Configuration = {
   activeFilters: null,
+  activeFiltersConfigurable:null,
   calendar: null,
   calendarMobile: null,
   changeLanguage: null,

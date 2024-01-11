@@ -43,6 +43,7 @@ type FiltersProps = {
   numberOfResults: number;
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
+  refButton?: React.RefObject<HTMLButtonElement>;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -58,6 +59,7 @@ function FiltersHorizontal({
   numberOfResults,
   isDynamicElement,
   selectionsDispatch,
+  refButton,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -163,6 +165,9 @@ function FiltersHorizontal({
         >
           <button
             className="openk9-filter-horizontal-submit"
+            disabled={filterSelect.every(
+              (token) => !token.values || token.values.length === 0,
+            )}
             aria-label="rimuovi filtri"
             css={css`
               font-size: smaller;
@@ -178,6 +183,10 @@ function FiltersHorizontal({
               display: flex;
               align-items: center;
               gap: 3px;
+              &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+              }
               @media (max-width: 480px) {
                 background: white;
                 border: 1px solid #d6012e;
@@ -201,13 +210,19 @@ function FiltersHorizontal({
               onConfigurationChange({ filterTokens: [] });
               onConfigurationChangeExt && onConfigurationChangeExt();
               selectionsDispatch({ type: "reset-filters" });
+              if (refButton && refButton.current) refButton.current.focus();
             }}
           >
             <div>{t("remove-filters")}</div>
             <TrashSvg size="18px" />
           </button>
           <button
-            className="openk9-filter-horizontal-submit"
+            className={`openk9-filter-horizontal-submit ${
+              filterSelect.length === 0 ? "openk9-button-disabled" : ""
+            }`}
+            disabled={filterSelect.every(
+              (token) => !token.values || token.values.length === 0,
+            )}
             aria-label="applica filtri"
             css={css`
               font-size: smaller;
@@ -239,10 +254,15 @@ function FiltersHorizontal({
                 font-weight: 700;
                 line-height: normal;
               }
+              &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+              }
             `}
             onClick={() => {
               onConfigurationChange({ filterTokens: filterSelect });
               onConfigurationChangeExt && onConfigurationChangeExt();
+              if (refButton && refButton.current) refButton.current.focus();
             }}
           >
             <div>{t("add-filters") || "Add Filters"}</div>
@@ -266,10 +286,7 @@ function FiltersHorizontal({
       unknown
     >,
   ) {
-    return React.useMemo(
-      () => CreateSuggestion(index, suggestion, suggestions),
-      [index, suggestion, suggestions],
-    );
+    return CreateSuggestion(index, suggestion, suggestions);
   }
 
   function CreateSuggestion(
@@ -438,50 +455,50 @@ function FiltersHorizontal({
                     );
                   })}
               </GridContainer>
-              </fieldset>
-              {suggestions.hasNextPage && (
-                <div
-                  className="openk9-container-load-more"
+            </fieldset>
+            {suggestions.hasNextPage && (
+              <div
+                className="openk9-container-load-more"
+                css={css`
+                  text-align: center;
+                  width: 100%;
+                  display: flex;
+                  margin-left: 12px;
+                  margin-top: 10px;
+                  justify-content: center;
+                  @media (max-width: 480px) {
+                    margin-top: 15px;
+                  }
+                `}
+              >
+                <button
+                  className="openk9-load-more-button horizontal-filter-load-more"
+                  aria-label={t("load-more-filter") || "load more filters"}
                   css={css`
-                    text-align: center;
-                    width: 100%;
+                    background: inherit;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 700;
+                    line-height: normal;
                     display: flex;
-                    margin-left: 12px;
-                    margin-top: 10px;
-                    justify-content: center;
-                    @media (max-width: 480px) {
-                      margin-top: 15px;
-                    }
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                    padding: 8px 16px;
+                    border: 1px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    border-radius: 20px;
                   `}
+                  onClick={() => {
+                    suggestions.fetchNextPage();
+                  }}
                 >
-                  <button
-                    className="openk9-load-more-button horizontal-filter-load-more"
-                    aria-label={t("load-more-filter") || "load more filters"}
-                    css={css`
-                      background: inherit;
-                      color: var(--openk9-embeddable-search--primary-color);
-                      font-size: 14px;
-                      font-style: normal;
-                      font-weight: 700;
-                      line-height: normal;
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      cursor: pointer;
-                      padding: 8px 16px;
-                      border: 1px solid
-                        var(--openk9-embeddable-search--primary-color);
-                      border-radius: 20px;
-                    `}
-                    onClick={() => {
-                      suggestions.fetchNextPage();
-                    }}
-                  >
-                    {t("load-more") || "Load More"}
-                    <ArrowDownSvg size="18px" />
-                  </button>
-                </div>
-              )}
+                  {t("load-more") || "Load More"}
+                  <ArrowDownSvg size="18px" />
+                </button>
+              </div>
+            )}
           </React.Fragment>
         )}
       </React.Fragment>
