@@ -222,9 +222,10 @@ public class IndexerEvents {
 			return docTypeService.getDocTypesAndDocTypeFieldsByNames(docTypeNames)
 				.map(docTypes -> mergeDocTypes(m, docTypes))
 				.flatMap(docTypes -> session
-					.merge(dataIndex).map(merged -> {
+					.merge(dataIndex)
+					.map(merged -> {
 						merged.setDocTypes(docTypes);
-						return session.persist(dataIndex);
+						return session.persist(merged);
 					})
 				);
 		});
