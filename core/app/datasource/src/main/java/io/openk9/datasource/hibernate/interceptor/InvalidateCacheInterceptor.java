@@ -97,28 +97,6 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		super.onCollectionUpdate(collection, key);
 	}
 
-	@Override
-	public void onCollectionRemove(Object collection, Serializable key)
-		throws CallbackException {
-
-		if (log.isTraceEnabled()) {
-			log.trace("intercepted collectionRemove");
-		}
-
-		super.onCollectionRemove(collection, key);
-	}
-
-	@Override
-	public void onCollectionRecreate(Object collection, Serializable key)
-		throws CallbackException {
-
-		if (log.isTraceEnabled()) {
-			log.trace("intercepted collectionRecreate");
-		}
-
-		super.onCollectionRecreate(collection, key);
-	}
-
 	private void invalidateLocalCache() {
 		ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 		P2PCache.askInvalidation(actorSystem);
