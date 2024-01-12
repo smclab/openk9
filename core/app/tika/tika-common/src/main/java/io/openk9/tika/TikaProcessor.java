@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -39,6 +40,14 @@ import java.time.Instant;
 
 @ApplicationScoped
 public class TikaProcessor {
+
+    @Inject
+    @ConfigProperty(name = "openk9.tika-ocr.character-length")
+    Integer ocrCharacterLength;
+
+    @Inject
+    @ConfigProperty(name = "openk9.tika-ocr.enabled")
+    Boolean ocrEnabled;
 
     public void process(JsonObject jsonObject) {
 
@@ -180,6 +189,20 @@ public class TikaProcessor {
                     }
 
                     String text = tikaContent.getText();
+
+                    if (text.length() < ocrCharacterLength && ocrEnabled) {
+
+                        datasourceClient.sentToPipeline(replyTo, response.toString());
+
+                        logger.info("Send message to datasource with token: "
+                                    + replyTo + " to ocr final destination");
+
+                        long estimatedTime = System.currentTimeMillis() - startTime;
+                        logger.info(estimatedTime);
+
+                        return;
+
+                    }
 
                     text = text.replaceAll("[.,]+", "")
                         .replaceAll("_", "")
