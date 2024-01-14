@@ -13,7 +13,7 @@ export function CustomFontAwesomeIcon<E>({
 }: {
   result: GenericResultItem<E>;
 }) {
-  const realResult = result as any
+  const realResult = result as any;
   if (realResult.source.documentTypes.includes("forum")) {
     return <FontAwesomeIcon icon={faForumbee} />;
   }
