@@ -8,25 +8,25 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 import { faWikipediaW } from "@fortawesome/free-brands-svg-icons";
 
-export function CustomFontAwesomeIcon<E>({
-  result
+export function CustomFontAwesomeIcon({
+  result,
 }: {
-  result: GenericResultItem<E>;
+  result: GenericResultItem;
 }) {
-  const realResult = result as any;
-  if (realResult.source.documentTypes.includes("forum")) {
+	const documentTypesSet : string[] = result.source.documentTypes;
+  if (documentTypesSet.includes("forum")) {
     return <FontAwesomeIcon icon={faForumbee} />;
   }
-  if (realResult.source.documentTypes.includes("calendar")) {
+  if (documentTypesSet.includes("calendar")) {
 	  return <FontAwesomeIcon icon={faCalendar} />;
 	}
-  if (realResult.source.documentTypes.includes("user")) {
+  if (documentTypesSet.includes("user")) {
  	  return <FontAwesomeIcon icon={faUser} />;
  	}
-   if (realResult.source.documentTypes.includes("site")) {
+   if (documentTypesSet.includes("site")) {
   	  return <FontAwesomeIcon icon={faSitemap} />;
   	}
-   if (realResult.source.documentTypes.includes("wiki")) {
+   if (documentTypesSet.includes("wiki")) {
    	  return <FontAwesomeIcon icon={faWikipediaW} />;
    	}
   return <FontAwesomeIcon icon={faFileAlt} />;
