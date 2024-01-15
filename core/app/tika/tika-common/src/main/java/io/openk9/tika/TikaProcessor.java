@@ -192,6 +192,8 @@ public class TikaProcessor {
 
                     if (text.length() < ocrCharacterLength && ocrEnabled) {
 
+                        document.put("toOcr", true);
+
                         datasourceClient.sentToPipeline(replyTo, response.toString());
 
                         logger.info("Send message to datasource with token: "
@@ -202,6 +204,9 @@ public class TikaProcessor {
 
                         return;
 
+                    }
+                    else {
+                        document.put("toOcr", false);
                     }
 
                     text = text.replaceAll("[.,]+", "")
@@ -261,9 +266,7 @@ public class TikaProcessor {
                 else {
                     if (!retainBinaries) {
 //                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                        if (!ocrEnabled) {
-                            fileManagerClient.delete(resourceId, schemaName);
-                        }
+                        fileManagerClient.delete(resourceId, schemaName);
                         logger.info("Skipping resource with id: " + resourceId + " and name: " + name
                         + " because not supported by configuration");
                     }
