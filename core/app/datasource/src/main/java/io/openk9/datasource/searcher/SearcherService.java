@@ -491,7 +491,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		String searchText = request.getSearchText();
 
 		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(request.getVirtualHost());
+			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
 
 		return grammarUni.map(grammar -> {
 

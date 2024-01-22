@@ -60,6 +60,9 @@ import java.util.Set;
 				"join fetch b." + Bucket_.TENANT_BINDING  + " tb " +
 				"join fetch b." + Bucket_.DATASOURCES + " ds " +
 				"join fetch ds." + Datasource_.DATA_INDEX + " di " +
+				"left join fetch ds." + Datasource_.PLUGIN_DRIVER + " pr " +
+				"left join fetch pr." + PluginDriver_.ACL_MAPPINGS + " am " +
+				"left join fetch am." + AclMapping_.DOC_TYPE_FIELD + " amdtf " +
 				"join fetch b." + Bucket_.QUERY_ANALYSIS + " qa " +
 				"join fetch qa." + QueryAnalysis_.RULES + " qar " +
 				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa " +

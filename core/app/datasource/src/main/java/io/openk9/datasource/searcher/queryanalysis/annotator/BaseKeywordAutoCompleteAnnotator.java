@@ -1,9 +1,13 @@
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+import io.openk9.datasource.searcher.util.JWT;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -17,6 +21,7 @@ import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +32,12 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		String includeField, String searchKeyword) {
+		String includeField, String searchKeyword, JWT jwt) {
 		super(bucket, annotator, stopWords, null);
 		this.includeField = includeField;
 		this.searchKeyword = searchKeyword;
 		this.restHighLevelClient = restHighLevelClient;
+		this.jwt = jwt;
 	}
 
 	@Override
@@ -50,6 +56,33 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 		multiMatchQueryBuilder.field(searchKeyword);
 
 		builder.must(multiMatchQueryBuilder);
+
+		Iterator<AclMapping> iterator =
+			bucket.getDatasources()
+				.stream()
+				.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+				.distinct()
+				.iterator();
+
+		BoolQueryBuilder innerQuery =
+			QueryBuilders
+				.boolQuery()
+				.minimumShouldMatch(1)
+				.should(QueryBuilders.matchQuery("acl.public", true));
+
+		while (iterator.hasNext()) {
+
+			AclMapping aclMapping = iterator.next();
+
+			DocTypeField docTypeField = aclMapping.getDocTypeField();
+
+			UserField userField = aclMapping.getUserField();
+
+			userField.apply(docTypeField, jwt, innerQuery);
+
+		}
+
+		builder.filter(innerQuery);
 
 		String[] indexNames =
 			bucket
@@ -179,6 +212,8 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 	protected final String searchKeyword;
 
 	protected final String includeField;
+
+	protected final JWT jwt;
 
 	private static final Logger _log = Logger.getLogger(
 		BaseKeywordAutoCompleteAnnotator.class);

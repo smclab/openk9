@@ -5,6 +5,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
+import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
@@ -25,7 +26,7 @@ import java.util.Set;
 @ApplicationScoped
 public class GrammarProvider {
 
-	public Uni<Grammar> getOrCreateGrammar(String virtualHost) {
+	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
 
 		Uni<Tuple2<String, Bucket>> getTenantUni = _getBucket(virtualHost);
 
@@ -44,7 +45,7 @@ public class GrammarProvider {
 						_toGrammarRule(rules);
 
 					List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList());
+						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList(), jwt);
 
 					GrammarMixin grammarMixin = GrammarMixin.of(
 						mappedRules, mappedAnnotators);
@@ -58,10 +59,10 @@ public class GrammarProvider {
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		String schemaName, Bucket bucket, List<String> stopWords) {
+		String schemaName, Bucket bucket, List<String> stopWords, JWT jwt) {
 		return bucket.getQueryAnalysis().getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords))
+			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords, jwt))
 			.toList();
 	}
 
