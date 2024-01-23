@@ -30,14 +30,13 @@ export function ResultTextContentTwo<E>({
         <div
           className="openk9-embeddable--result-text-content"
           css={css`
-            height: ${isTruncate ? "calc(15.5px * 3)" : "auto"};
+            display: ${isTruncate ? "-webkit-box" : ""};
+            -webkit-line-clamp: ${isTruncate ? "3" : ""};
             overflow: ${isTruncate ? "hidden" : "visible"};
             word-wrap: break-word;
             word-break: break-word;
-            text-overflow: ${isTruncate ? "ellipsis" : "clip"};
             display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: ${isTruncate ? 3 : "inherit"};
           `}
         >
           {text}
