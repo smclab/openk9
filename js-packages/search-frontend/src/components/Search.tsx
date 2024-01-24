@@ -2,7 +2,7 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
-import { TokenSelect } from "../components/TokenSelect";
+import { TokenSelect, getTokenLabel } from "../components/TokenSelect";
 import {
   Configuration,
   ConfigurationUpdateFunction,
@@ -71,6 +71,7 @@ export function Search({
   messageSearchIsVisible = true,
   actionOnClick,
 }: SearchProps) {
+  
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
   const [openedDropdown, setOpenedDropdown] = React.useState<{
@@ -186,10 +187,12 @@ export function Search({
                   );
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
-                    if (isSearchOnInputChange) {
+                    if (isSearchOnInputChange) {  
+                                          
                       selectionsDispatch({
                         type: "set-selection",
                         replaceText,
+                        textEntity:token? getTokenLabel(token):span.text, 
                         selection: {
                           text: span.text,
                           start: span.start,
@@ -343,7 +346,7 @@ export function Search({
               onKeyDown={(event) => {
                 if(event.key==="Enter" && actionOnClick){
                   actionOnClick();
-                }
+                }                
                 const span =
                   openedDropdown &&
                   spans.find(

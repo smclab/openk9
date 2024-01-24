@@ -247,7 +247,7 @@ type Status =
   | "auto-selected"
   | "not-interactive";
 
-function getTokenLabel(token: AnalysisToken) {
+export function getTokenLabel(token: AnalysisToken) {
   switch (token.tokenType) {
     case "DATASOURCE":
       return token.value;

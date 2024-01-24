@@ -728,7 +728,7 @@ function useSearchOnClick({
   const textOnQueryStringOnCLick = "";
   const debounced = useDebounce(selectionsState, 600);
   const queryAnalysis =   useQueryAnalysis({
-    searchText: ((debounced.text) && (debounced.text?.length>3))? debounced.text : "",
+    searchText: debounced.text ? debounced.text : "",
     tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
       token ? [{ text, start, end, token }] : [],
     ),
@@ -775,7 +775,6 @@ function useSearchOnClick({
     selectionsState.text === debounced.text &&
     queryAnalysis.data !== undefined &&
     !queryAnalysis.isPreviousData;
-
   React.useEffect(() => {
     onQueryStateChange({
       defaultTokens,

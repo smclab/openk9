@@ -8,23 +8,27 @@ import {
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
 
-export function useSelections({useKeycloak=true}:{useKeycloak?:boolean}) {
+export function useSelections({
+  useKeycloak = true,
+}: {
+  useKeycloak?: boolean;
+}) {
   const [state, dispatch] = React.useReducer(
     reducer,
     initial,
     (initial) => loadQueryString<SelectionsState>() ?? initial,
   );
-  
+
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
-    if (useKeycloak && client.authInit){
+    if (useKeycloak && client.authInit) {
       client.authInit.then(() => {
         setCanSave(true);
       });
-    }else{
-      if(!useKeycloak){
-        setCanSave(true)
+    } else {
+      if (!useKeycloak) {
+        setCanSave(true);
       }
     }
   }, []);
@@ -32,8 +36,8 @@ export function useSelections({useKeycloak=true}:{useKeycloak?:boolean}) {
     if (useKeycloak && canSave) {
       saveQueryString(state);
     }
-    if(!useKeycloak){
-      saveQueryString(state)
+    if (!useKeycloak) {
+      saveQueryString(state);
     }
   }, [canSave, state]);
   return [state, dispatch] as const;
@@ -46,7 +50,7 @@ export function useSelectionsOnClick() {
     (initialOnClick) =>
       loadQueryString<SelectionsStateOnClick>() || initialOnClick,
   );
-  
+
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
@@ -78,18 +82,24 @@ const initial: SelectionsState = {
 };
 
 export type SelectionsAction =
-  | { type: "set-text"; text?: string; textOnchange?: string, onClick?:boolean }
+  | {
+      type: "set-text";
+      text?: string;
+      textOnchange?: string;
+      onClick?: boolean;
+    }
   | { type: "reset-search" }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: Selection;
+      textEntity?: string | string | undefined;
     }
   | { type: "remove-filter"; filter: SearchToken }
   | { type: "set-filters"; filter: any }
   | { type: "reset-filters" };
 
- type Selection = {
+type Selection = {
   text: string;
   textOnChange: string;
   start: number;
@@ -111,17 +121,18 @@ const initialOnClick: SelectionsStateOnClick = {
 };
 
 export type SelectionsActionOnClick =
-  | { type: "set-text"; text: string; onClick?:boolean }
+  | { type: "set-text"; text: string; onClick?: boolean }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: SelectionOnClick;
+      textEntity?: string;
     }
   | { type: "remove-filter"; filter: SearchToken }
   | { type: "set-filters"; filter: any }
   | { type: "reset-filters" };
 
- type SelectionOnClick = {
+type SelectionOnClick = {
   text: string;
   start: number;
   end: number;
@@ -136,7 +147,9 @@ function reducer(
   switch (action.type) {
     case "set-text": {
       return {
-        text:  action.onClick?   action.text || state.text || "" :action.text || "",
+        text: action.onClick
+          ? action.text || state.text || ""
+          : action.text || "",
         filters: state.filters,
         textOnChange: action.textOnchange || state.textOnChange || "",
         selection: shiftSelection(
@@ -191,9 +204,14 @@ function reducer(
           return { text: state.textOnChange, selection: action.selection };
         }
       })();
+
       return {
-        text,
-        textOnChange: state.textOnChange || "",
+        text: action.replaceText
+        ? action.textEntity || action.selection?.textOnChange || ""
+        : state.text,
+        textOnChange: action.replaceText
+          ? action.textEntity || action.selection?.textOnChange || ""
+          : state.text,
         filters: state.filters,
         selection: shiftSelection(
           state.textOnChange || "",
@@ -454,7 +472,7 @@ function getTokenText(token: AnalysisToken) {
     case "AUTOCOMPLETE":
       return token.value;
     case "FILTER":
-      return token.value;  
+      return token.value;
   }
 }
 
