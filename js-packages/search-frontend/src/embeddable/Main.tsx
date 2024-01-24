@@ -30,7 +30,7 @@ import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { Search } from "../components/Search";
 import { useOpenK9Client } from "../components/client";
 import { useQuery } from "react-query";
-import { SortResultList } from "../components/SortResultList";
+import { SortResultListMemo } from "../components/SortResultList";
 import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
 import { DetailMobileMemo } from "../components/DetailMobile";
 import "../i18n";
@@ -491,7 +491,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultList
+          <SortResultListMemo
             setSortResult={setSortResult}
             relevance={
               configuration.sortResultConfigurable?.relevance || "relevance"
@@ -506,13 +506,13 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultList setSortResult={setSortResult} />
+          <SortResultListMemo setSortResult={setSortResult} />
         </I18nextProvider>,
         configuration.sortable,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultList
+          <SortResultListMemo
             setSortResult={setSortResult}
             relevance={configuration.sortableConfigurable?.relevance}
           />

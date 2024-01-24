@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
 
-export function SortResultList({
+function SortResultList({
   setSortResult,
   relevance = "relevance",
   HtmlString = "",
@@ -144,3 +144,5 @@ export function SortResultList({
     </span>
   );
 }
+
+export const SortResultListMemo= React.memo(SortResultList)

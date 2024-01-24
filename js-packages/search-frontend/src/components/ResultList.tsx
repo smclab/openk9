@@ -10,7 +10,7 @@ import { useOpenK9Client } from "./client";
 import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
-import { SortResultList } from "./SortResultList";
+import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
@@ -231,7 +231,7 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList
+            <SortResultListMemo
               setSortResult={setSortResult}
               relevance={t("relevance") || "relevance"}
               language={language}
