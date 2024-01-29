@@ -222,6 +222,11 @@ type SortResultConfigurableProps = {
   htmlKey?: string | null | undefined;
 };
 
+type SortResultListCustomProps = {
+  selectOptions: Array<{ value: {value: string, sort: string}; label: string; sort: string; isDefault: boolean; hasAscDesc: boolean;}>;
+  element: Element | string | null;
+};
+
 type SortableProps = {
   element: Element | string | null;
   relevance: string;
@@ -265,13 +270,14 @@ type totalResultProps = {
   saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
-type activeFiltersConfigurableProps={
-  element: Element |string |null;
-  actioneRemoveFilters?():void;
-}
+type activeFiltersConfigurableProps = {
+  element: Element | string | null;
+  actioneRemoveFilters?(): void;
+};
 
 export type Configuration = {
   // simple types
+  debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
@@ -284,6 +290,7 @@ export type Configuration = {
   token: string | null;
   useKeycloak: boolean;
   useQueryString: boolean;
+  useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
   waitKeycloackForToken: boolean;
   // element types
@@ -317,6 +324,7 @@ export type Configuration = {
   searchMobile: SearchMobileConfiguration | null;
   sortableConfigurable: SortableProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
+  sortResultListCustom: SortResultListCustomProps | null;
   tabsConfigurable: TabsProps | null;
   totalResultConfigurable: totalResultProps | null;
   // functions
@@ -328,12 +336,13 @@ export type Configuration = {
 
 const defaultConfiguration: Configuration = {
   activeFilters: null,
-  activeFiltersConfigurable:null,
+  activeFiltersConfigurable: null,
   calendar: null,
   calendarMobile: null,
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
+  debounceTimeSearch: null,
   defaultTokens: [],
   detailMobile: null,
   details: null,
@@ -361,6 +370,7 @@ const defaultConfiguration: Configuration = {
   sortable: null,
   sortableConfigurable: null,
   sortResultConfigurable: null,
+  sortResultListCustom: null,
   tabs: null,
   tabsConfigurable: null,
   tenant: null,
@@ -370,6 +380,7 @@ const defaultConfiguration: Configuration = {
   totalResultMobile: null,
   useKeycloak: true,
   useQueryString: true,
+  useQueryStringFilters: true,
   useFilterConfiguration: true,
   waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,

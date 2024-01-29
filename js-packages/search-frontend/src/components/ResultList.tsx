@@ -230,7 +230,7 @@ function ResultCount({
           >
             {children?.toLocaleString("it")}
           </span>
-          <span>
+<span>
             <SortResultListMemo
               setSortResult={setSortResult}
               relevance={t("relevance") || "relevance"}

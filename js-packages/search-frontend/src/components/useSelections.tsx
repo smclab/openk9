@@ -8,11 +8,7 @@ import {
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
 
-export function useSelections({
-  useKeycloak = true,
-}: {
-  useKeycloak?: boolean;
-}) {
+export function useSelections({useKeycloak=true,useQueryString=true}:{useKeycloak?:boolean,useQueryString?:boolean}) {
   const [state, dispatch] = React.useReducer(
     reducer,
     initial,
@@ -33,11 +29,11 @@ export function useSelections({
     }
   }, []);
   React.useEffect(() => {
-    if (useKeycloak && canSave) {
-      saveQueryString(state);
+    if (useKeycloak && canSave && useQueryString) {
+        saveQueryString(state);
     }
-    if (!useKeycloak) {
-      saveQueryString(state);
+    if(!useKeycloak && useQueryString){
+        saveQueryString(state)
     }
   }, [canSave, state]);
   return [state, dispatch] as const;

@@ -169,7 +169,7 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
           >
             {children?.toLocaleString("it")}
           </span>
-          <span>
+<span>
             <SortResultListMemo setSortResult={setSortResult} />
           </span>
         </div>

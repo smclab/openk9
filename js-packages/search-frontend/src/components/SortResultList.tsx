@@ -144,5 +144,4 @@ function SortResultList({
     </span>
   );
 }
-
-export const SortResultListMemo= React.memo(SortResultList)
+export const SortResultListMemo=React.memo(SortResultList)
