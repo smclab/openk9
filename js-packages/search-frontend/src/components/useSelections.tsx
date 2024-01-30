@@ -173,18 +173,16 @@ function reducer(
           action.replaceText ||
           action.selection.token?.tokenType === "AUTOCORRECT"
         ) {
-          // const textOnchange = action.selection.textOnChange;
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
             : state.textOnChange ||
               "".slice(action.selection.start, action.selection.end);
 
           const text =
-            state.textOnChange ||
-            "".slice(0, action.selection.start) +
-              tokenText +
-              state.textOnChange ||
-            "".slice(action.selection.end);
+            state.textOnChange?.slice(0, action.selection.start) +
+            tokenText +
+            state.textOnChange?.slice(action.selection.end);
+
           const selection: Selection | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
               ? null
@@ -196,22 +194,19 @@ function reducer(
                   token: action.selection.token,
                   isAuto: action.selection.isAuto,
                 };
+
           return {
             text,
             selection,
           };
         } else {
-          return { text: state.textOnChange, selection: action.selection };
+          return { text: state.text, selection: action.selection };
         }
       })();
 
       return {
-        text: action.replaceText
-        ? action.textEntity || action.selection?.textOnChange || ""
-        : state.text,
-        textOnChange: action.replaceText
-          ? action.textEntity || action.selection?.textOnChange || ""
-          : state.text,
+        text: text,
+        textOnChange: text,
         filters: state.filters,
         selection: shiftSelection(
           state.textOnChange || "",
