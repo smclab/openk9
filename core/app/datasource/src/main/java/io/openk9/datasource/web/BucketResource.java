@@ -208,7 +208,7 @@ public class BucketResource {
 							return builder.build();
 						}))
 				.chain(docTypeFields -> {
-					List<DocTypeField> docTypeFieldList = docTypeFields.toList();
+					List<DocTypeField> docTypeFieldList = docTypeFields.distinct().toList();
 					if (translated) {
 						return translationService
 							.getTranslationMaps(
