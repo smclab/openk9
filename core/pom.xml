@@ -205,6 +205,11 @@
 				<artifactId>model</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>k8s-crd</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: openk9-foo-parser
+  namespace: helm-controller
+spec:
+  repo: https://registry.acme.com/repository/helm/
+  chart: openk9-foo-parser
+  version: 1.0.0
+  targetNamespace: default
+  authSecret:
+    name: bar-repo-auth
+  set: {
+    "KEY1": "val1",
+    "KEY2": 2,
+    "KEY3": "VAL3"
+  }
