@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.k8s.operator.grpc";
+option java_outer_classname = "K8sOperatorProto";
+
+package grpc;
+
+service K8sOperator {
+  rpc DeployEnrichItem(DeployEnrichItemRequest) returns (DeployEnrichItemResponse) {}
+  rpc DeployMLEnrichItem(DeployMLEnrichItemRequest) returns (DeployMLEnrichItemResponse) {}
+  rpc DeployPluginDriver(DeployPluginDriverRequest) returns (DeployPluginDriverResponse) {}
+}
+
+message DeployEnrichItemRequest {
+  string schemaName = 1;
+  string chart = 2;
+  string version = 3;
+}
+
+message DeployMLEnrichItemRequest {
+  string schemaName = 1;
+  string chart = 2;
+  string version = 3;
+}
+
+message DeployPluginDriverRequest {
+  string schemaName = 1;
+  string chart = 2;
+  string version = 3;
+}
+
+message DeployEnrichItemResponse {
+  string status = 1;
+}
+
+message DeployMLEnrichItemResponse {
+  string status = 1;
+}
+
+message DeployPluginDriverResponse {
+  string status = 1;
+}
