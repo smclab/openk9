@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.datasource.grpc";
+option java_outer_classname = "DatasourceProto";
+
+package grpc;
+
+service Datasource {
+  rpc InitTenant(InitTenantRequest) returns (InitTenantResponse) {}
+  rpc CreateEnrichItem(CreateEnrichItemRequest) returns (CreateEnrichItemResponse) {}
+  rpc CreatePluginDriver(CreatePluginDriverRequest) returns (CreatePluginDriverResponse) {}
+}
+
+message InitTenantRequest {
+  string schemaName = 1;
+}
+
+message CreateEnrichItemRequest {
+  string schemaName = 1;
+  string name = 2;
+  string requestTimeout = 3;
+  string serviceName = 4;
+  string jsonPath = 5;
+  string type = 6;
+  string behaviorMergeType = 7;
+  string behaviorOnErrorType = 8;
+  string json = 9;
+  string script = 10;
+}
+
+message CreatePluginDriverRequest {
+  string schemaName = 1;
+  string name = 2;
+  string type = 3;
+  string host = 4;
+  string port = 5;
+  string secure = 6;
+  string path = 7;
+  string method = 8;
+}
+
+message InitTenantResponse {
+  string status = 1;
+}
+
+message CreateEnrichItemResponse {
+  string status = 1;
+}
+
+message CreatePluginDriverResponse {
+  string status = 1;
+}
