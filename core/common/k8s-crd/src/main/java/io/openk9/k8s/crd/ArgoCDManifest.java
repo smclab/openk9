@@ -26,58 +26,49 @@ import io.argoproj.v1alpha1.applicationspec.source.Helm;
 import io.argoproj.v1alpha1.applicationspec.source.helm.ValuesObject;
 import io.argoproj.v1alpha1.applicationspec.syncpolicy.Automated;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Singular;
 
 import java.util.List;
-import java.util.Map;
 
-@Builder
-public record ArgoCDManifest(
-	@NonNull String targetNamespace,
-	@NonNull String chart,
-	@NonNull String version,
-	String repoURL,
-	@Singular("set") Map<String, Object> values,
-	String tenant
-) implements Manifest<Application> {
+public class ArgoCDManifest {
 
 	private static final String ARGOCD_NAMESPACE = "argocd";
 	private static final String ARGOCD_FINALIZER = "resources-finalizer.argocd.argoproj.io";
 	private static final String DEFAULT_SVC = "https://kubernetes.default.svc";
 	private static final String VALIDATE_FALSE = "Validate=false";
 
-	@Override
-	public Application asResource() {
-		return createApplication(this);
-	}
+	private ArgoCDManifest() {}
 
-	private static Application createApplication(ArgoCDManifest manifest) {
+	static Application createApplication(Manifest manifest) {
 
 		var application = new Application();
 
 		var metadata = new ObjectMeta();
-		metadata.setName(Utils.name(manifest.chart, manifest.tenant));
+		metadata.setName(Utils.name(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(ARGOCD_NAMESPACE);
 		metadata.setFinalizers(List.of(ARGOCD_FINALIZER));
 
-		var valuesObject = new ValuesObject();
-		valuesObject.setAdditionalProperties(manifest.values);
-
-		var helm = new Helm();
-		helm.setValuesObject(valuesObject);
-
 		var source = new Source();
-		source.setRepoURL(manifest.repoURL);
-		source.setChart(manifest.chart);
-		source.setTargetRevision(manifest.version);
 
-		source.setHelm(helm);
+		source.setChart(manifest.chart());
+		source.setTargetRevision(manifest.version());
+
+		if (manifest.repoURL() != null) {
+			source.setRepoURL(manifest.repoURL());
+		}
+
+		if (manifest.values() != null && !manifest.values().isEmpty()) {
+			var valuesObject = new ValuesObject();
+			valuesObject.setAdditionalProperties(manifest.values());
+
+			var helm = new Helm();
+			helm.setValuesObject(valuesObject);
+
+			source.setHelm(helm);
+		}
 
 		var destination = new Destination();
 		destination.setServer(DEFAULT_SVC);
-		destination.setNamespace(manifest.targetNamespace);
+		destination.setNamespace(manifest.targetNamespace());
 
 		var automated = new Automated();
 		automated.setPrune(true);
@@ -87,7 +78,7 @@ public record ArgoCDManifest(
 		syncPolicy.setSyncOptions(List.of(VALIDATE_FALSE));
 
 		var spec = new ApplicationSpec();
-		spec.setProject(manifest.targetNamespace);
+		spec.setProject(manifest.targetNamespace());
 		spec.setSource(source);
 		spec.setDestination(destination);
 		spec.setSyncPolicy(syncPolicy);

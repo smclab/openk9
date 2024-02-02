@@ -22,50 +22,38 @@ import io.cattle.helm.v1.HelmChartSpec;
 import io.cattle.helm.v1.helmchartspec.AuthSecret;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Singular;
 
 import java.util.HashMap;
-import java.util.Map;
 
-@Builder
-public record HelmManifest(
-	@NonNull String targetNamespace,
-	@NonNull String chart,
-	@NonNull String version,
-	String repoURL,
-	String authSecretName,
-	@Singular("set") Map<String, Object> values,
-	String tenant
-) implements Manifest<HelmChart> {
+class HelmManifest {
 
 	private static final String CONTROLLER_NAMESPACE = "helm-controller";
 
-	@Override
-	public HelmChart asResource() {
-		return createHelmChart(this);
-	}
+	private HelmManifest() {}
 
-	private static HelmChart createHelmChart(HelmManifest manifest) {
+	static HelmChart createHelmChart(Manifest manifest) {
 
 		var metadata = new ObjectMeta();
-		metadata.setName(Utils.name(manifest.chart, manifest.tenant));
+		metadata.setName(Utils.name(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(CONTROLLER_NAMESPACE);
 
-		var authSecret = new AuthSecret();
-		authSecret.setName(manifest.authSecretName);
-
 		var spec = new HelmChartSpec();
-		spec.setRepo(manifest.repoURL);
-		spec.setChart(manifest.chart);
-		spec.setVersion(manifest.version);
-		spec.setTargetNamespace(manifest.targetNamespace);
-		spec.setAuthSecret(authSecret);
+		spec.setRepo(manifest.repoURL());
+		spec.setChart(manifest.chart());
+		spec.setVersion(manifest.version());
+		spec.setTargetNamespace(manifest.targetNamespace());
 
-		var set = new HashMap<String, IntOrString>();
-		manifest.values.forEach((s, o) -> set.put(s, new IntOrString(o)));
-		spec.setSet(set);
+		if (manifest.authSecretName() != null) {
+			var authSecret = new AuthSecret();
+			authSecret.setName(manifest.authSecretName());
+			spec.setAuthSecret(authSecret);
+		}
+
+		if (manifest.values() != null) {
+			var set = new HashMap<String, IntOrString>();
+			manifest.values().forEach((s, o) -> set.put(s, new IntOrString(o)));
+			spec.setSet(set);
+		}
 
 		var helmChart = new HelmChart();
 		helmChart.setMetadata(metadata);

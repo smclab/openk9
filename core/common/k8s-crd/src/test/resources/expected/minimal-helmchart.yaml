@@ -1,0 +1,9 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: openk9-foo-parser
+  namespace: helm-controller
+spec:
+  chart: openk9-foo-parser
+  version: 1.0.0
+  targetNamespace: default

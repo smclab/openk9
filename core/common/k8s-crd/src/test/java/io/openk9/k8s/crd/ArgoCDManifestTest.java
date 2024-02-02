@@ -28,15 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ArgoCDManifestTest {
 
 	@Test
-	void createApplication() {
+	void shouldMatchFullApplication() {
 
-		var expected = Serialization.unmarshal(Objects.requireNonNull(
-			getClass()
-				.getClassLoader()
-				.getResourceAsStream("expected/full-application.yaml")
-		), Application.class);
+		var expected = deserialize("expected/full-application.yaml");
 
-		var actual = ArgoCDManifest.builder()
+		var actual = Manifest.asApplication(Manifest.builder()
 			.targetNamespace("default")
 			.repoURL("https://registry.acme.com/repository/helm/")
 			.chart("openk9-foo-parser")
@@ -44,8 +40,9 @@ class ArgoCDManifestTest {
 			.set("K1", "V1")
 			.set("K2", 2)
 			.set("K3", "v3")
+			.type(Manifest.Type.ARGOCD)
 			.build()
-			.asResource();
+		);
 
 		var expectedMetadata = expected.getMetadata();
 		var actualMetadata = actual.getMetadata();
@@ -82,6 +79,46 @@ class ArgoCDManifestTest {
 		assertEquals(expectedAutomated.getPrune(), actualAutomated.getPrune());
 		assertEquals(expectedSyncPolicy.getSyncOptions(), actualSyncPolicy.getSyncOptions());
 
+	}
+
+
+	@Test
+	void shouldMatchAsYaml() {
+
+		var expected = deserialize("expected/minimal-application.yaml");
+
+		var serialized = Serialization.asYaml(Manifest.builder()
+			.targetNamespace("default")
+			.chart("openk9-foo-parser")
+			.version("1.0.0")
+			.type(Manifest.Type.ARGOCD)
+			.build()
+			.asResource()
+		);
+
+
+		var actual = Serialization.unmarshal(serialized, Application.class);
+
+		assertEquals(
+			expected.getSpec().getSource().getChart(),
+			actual.getSpec().getSource().getChart()
+		);
+
+		assertEquals(
+			expected.getSpec().getSource().getRepoURL(),
+			actual.getSpec().getSource().getRepoURL()
+		);
+
+		assertEquals(
+			expected.getSpec().getSource().getHelm(),
+			actual.getSpec().getSource().getHelm()
+		);
+	}
+
+	private Application deserialize(String name) {
+		return Serialization.unmarshal(Objects.requireNonNull(getClass()
+			.getClassLoader()
+			.getResourceAsStream(name)), Application.class);
 	}
 
 }

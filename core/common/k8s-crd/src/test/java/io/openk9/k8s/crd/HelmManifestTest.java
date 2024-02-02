@@ -28,13 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class HelmManifestTest {
 
 	@Test
-	void shouldMatchManifest() {
+	void shouldMatchFullHelmChart() {
 
-		var expected = Serialization.unmarshal(Objects.requireNonNull(getClass()
-			.getClassLoader()
-			.getResourceAsStream("expected/full-helmchart.yaml")), HelmChart.class);
+		var expected = deserialize("expected/full-helmchart.yaml");
 
-		var actual = HelmManifest.builder()
+		var actual = Manifest.asHelmChart(Manifest.builder()
 			.targetNamespace("default")
 			.repoURL("https://registry.acme.com/repository/helm/")
 			.chart("openk9-foo-parser")
@@ -43,8 +41,9 @@ class HelmManifestTest {
 			.set("KEY2", 2)
 			.set("KEY3", "VAL3")
 			.authSecretName("bar-repo-auth")
+			.type(Manifest.Type.HELM)
 			.build()
-			.asResource();
+		);
 
 		var expectedSpec = expected.getSpec();
 		var actualSpec = actual.getSpec();
@@ -61,6 +60,34 @@ class HelmManifestTest {
 		assertEquals(expectedAuthSecret.getName(), actualAuthSecret.getName());
 		assertEquals(expectedSpec.getSet(), actualSpec.getSet());
 
+	}
+
+	@Test
+	void shouldMatchAsYaml() {
+
+		var expected = deserialize("expected/minimal-helmchart.yaml");
+
+		var serialized = Serialization.asYaml(Manifest.builder()
+			.targetNamespace("default")
+			.chart("openk9-foo-parser")
+			.version("1.0.0")
+			.type(Manifest.Type.HELM)
+			.build()
+			.asResource()
+		);
+
+
+		var actual = Serialization.unmarshal(serialized, HelmChart.class);
+
+		assertEquals(expected.getSpec().getChart(), actual.getSpec().getChart());
+		assertEquals(expected.getSpec().getAuthSecret(), actual.getSpec().getAuthSecret());
+
+	}
+
+	private HelmChart deserialize(String name) {
+		return Serialization.unmarshal(Objects.requireNonNull(getClass()
+			.getClassLoader()
+			.getResourceAsStream(name)), HelmChart.class);
 	}
 
 }
