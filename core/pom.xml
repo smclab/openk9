@@ -171,6 +171,16 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>datasource-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>k8s-operator-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.openk9.service</groupId>
 				<artifactId>auth-service</artifactId>
 				<version>${project.version}</version>
