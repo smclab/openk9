@@ -15,19 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.k8s.crd.creator;
+package io.openk9.k8s.crd;
 
 import io.argoproj.v1alpha1.Application;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ArgoCDApplicationCreatorTest {
+class ArgoCDManifestTest {
 
 	@Test
 	void createApplication() {
@@ -38,20 +36,16 @@ class ArgoCDApplicationCreatorTest {
 				.getResourceAsStream("expected/full-application.yaml")
 		), Application.class);
 
-		var mayActual = ArgoCDApplicationCreator.INSTANCE.create(
-			"default",
-			"https://registry.acme.com/repository/helm/",
-			"openk9-foo-parser",
-			"1.0.0",
-			Map.of(
-				"K1", "V1",
-				"K2", 2,
-				"K3", "v3"
-			)
-		);
-
-		assertTrue(mayActual.isPresent());
-		var actual = mayActual.get();
+		var actual = ArgoCDManifest.builder()
+			.targetNamespace("default")
+			.repoURL("https://registry.acme.com/repository/helm/")
+			.chart("openk9-foo-parser")
+			.version("1.0.0")
+			.set("K1", "V1")
+			.set("K2", 2)
+			.set("K3", "v3")
+			.build()
+			.asResource();
 
 		var expectedMetadata = expected.getMetadata();
 		var actualMetadata = actual.getMetadata();
@@ -87,6 +81,7 @@ class ArgoCDApplicationCreatorTest {
 		assertEquals(expectedDestination.getNamespace(), actualDestination.getNamespace());
 		assertEquals(expectedAutomated.getPrune(), actualAutomated.getPrune());
 		assertEquals(expectedSyncPolicy.getSyncOptions(), actualSyncPolicy.getSyncOptions());
+
 	}
 
 }

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.k8s.crd.creator;
+package io.openk9.k8s.crd;
 
 import io.argoproj.v1alpha1.Application;
 import io.argoproj.v1alpha1.ApplicationSpec;
@@ -26,100 +26,58 @@ import io.argoproj.v1alpha1.applicationspec.source.Helm;
 import io.argoproj.v1alpha1.applicationspec.source.helm.ValuesObject;
 import io.argoproj.v1alpha1.applicationspec.syncpolicy.Automated;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.Singular;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
-public class ArgoCDApplicationCreator implements CustomResourceCreator<Application> {
+@Builder
+public record ArgoCDManifest(
+	@NonNull String targetNamespace,
+	@NonNull String chart,
+	@NonNull String version,
+	String repoURL,
+	@Singular("set") Map<String, Object> values,
+	String tenant
+) implements Manifest<Application> {
 
-	public static final ArgoCDApplicationCreator INSTANCE = new ArgoCDApplicationCreator();
 	private static final String ARGOCD_NAMESPACE = "argocd";
 	private static final String ARGOCD_FINALIZER = "resources-finalizer.argocd.argoproj.io";
 	private static final String DEFAULT_SVC = "https://kubernetes.default.svc";
 	private static final String VALIDATE_FALSE = "Validate=false";
 
-	private ArgoCDApplicationCreator() {}
-
 	@Override
-	public Optional<Application> create(
-		String targetNamespace,
-		String repoURL,
-		String chart,
-		String version,
-		String authSecretName,
-		Map<String, Object> values) {
-
-		return create(targetNamespace, repoURL, chart, version, values);
+	public Application asResource() {
+		return createApplication(this);
 	}
 
-	@Override
-	public Optional<Application> create(
-		String targetNamespace,
-		String repoURL,
-		String chart,
-		String version,
-		Map<String, Object> values) {
-
-		return createApplication(targetNamespace, repoURL, chart, version, values);
-	}
-
-	@Override
-	public Optional<Application> create(
-		String targetNamespace,
-		String chart,
-		String version,
-		Map<String, Object> values) {
-
-		return create(targetNamespace, null, chart, version, values);
-	}
-
-	@Override
-	public Optional<Application> create(String targetNamespace, String chart, String version) {
-		return create(targetNamespace, null, chart, version, null);
-	}
-
-	protected static Optional<Application> createApplication(
-		String targetNamespace,
-		String repoURL,
-		String chart,
-		String version,
-		Map<String, Object> values) {
-
-		if (Objects.isNull(targetNamespace)
-			|| Objects.isNull(chart)
-			|| Objects.isNull(version)
-			|| targetNamespace.isBlank()
-			|| chart.isBlank()
-			|| version.isBlank()) {
-
-			return Optional.empty();
-		}
+	private static Application createApplication(ArgoCDManifest manifest) {
 
 		var application = new Application();
 
 		var metadata = new ObjectMeta();
-		metadata.setName(chart);
+		metadata.setName(Utils.name(manifest.chart, manifest.tenant));
 		metadata.setNamespace(ARGOCD_NAMESPACE);
 		metadata.setFinalizers(List.of(ARGOCD_FINALIZER));
 
 		var valuesObject = new ValuesObject();
-		valuesObject.setAdditionalProperties(values);
+		valuesObject.setAdditionalProperties(manifest.values);
 
 		var helm = new Helm();
 		helm.setValuesObject(valuesObject);
 
 		var source = new Source();
-		source.setRepoURL(repoURL);
-		source.setChart(chart);
-		source.setTargetRevision(version);
+		source.setRepoURL(manifest.repoURL);
+		source.setChart(manifest.chart);
+		source.setTargetRevision(manifest.version);
 
 		source.setHelm(helm);
 
 		var destination = new Destination();
 		destination.setServer(DEFAULT_SVC);
-		destination.setNamespace(targetNamespace);
+		destination.setNamespace(manifest.targetNamespace);
 
 		var automated = new Automated();
 		automated.setPrune(true);
@@ -129,7 +87,7 @@ public class ArgoCDApplicationCreator implements CustomResourceCreator<Applicati
 		syncPolicy.setSyncOptions(List.of(VALIDATE_FALSE));
 
 		var spec = new ApplicationSpec();
-		spec.setProject(targetNamespace);
+		spec.setProject(manifest.targetNamespace);
 		spec.setSource(source);
 		spec.setDestination(destination);
 		spec.setSyncPolicy(syncPolicy);
@@ -137,7 +95,6 @@ public class ArgoCDApplicationCreator implements CustomResourceCreator<Applicati
 		application.setMetadata(metadata);
 		application.setSpec(spec);
 
-		return Optional.of(application);
+		return application;
 	}
-
 }

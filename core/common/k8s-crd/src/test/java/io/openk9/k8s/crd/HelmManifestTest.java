@@ -15,43 +15,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.k8s.crd.creator;
+package io.openk9.k8s.crd;
 
 import io.cattle.helm.v1.HelmChart;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class HelmChartCreatorTest {
+class HelmManifestTest {
 
 	@Test
 	void shouldMatchManifest() {
 
 		var expected = Serialization.unmarshal(Objects.requireNonNull(getClass()
 			.getClassLoader()
-			.getResourceAsStream("expected/full-helmchart.yaml")
-		), HelmChart.class);
+			.getResourceAsStream("expected/full-helmchart.yaml")), HelmChart.class);
 
-		var mayActual = HelmChartCreator.INSTANCE.create(
-			"default",
-			"https://registry.acme.com/repository/helm/",
-			"openk9-foo-parser",
-			"1.0.0",
-			"bar-repo-auth",
-			Map.of(
-				"KEY1", "val1",
-				"KEY2", 2,
-				"KEY3", "VAL3"
-			)
-		);
-
-		assertTrue(mayActual.isPresent());
-		var actual = mayActual.get();
+		var actual = HelmManifest.builder()
+			.targetNamespace("default")
+			.repoURL("https://registry.acme.com/repository/helm/")
+			.chart("openk9-foo-parser")
+			.version("1.0.0")
+			.set("KEY1", "val1")
+			.set("KEY2", 2)
+			.set("KEY3", "VAL3")
+			.authSecretName("bar-repo-auth")
+			.build()
+			.asResource();
 
 		var expectedSpec = expected.getSpec();
 		var actualSpec = actual.getSpec();
