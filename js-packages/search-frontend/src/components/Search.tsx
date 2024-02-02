@@ -170,9 +170,12 @@ export function Search({
                 padding: var(--openk9-embeddable-search--input-padding);
                 display: flex;
                 position: absolute;
+                @media (max-width: 480px) {
+                  display:none
+                }
               `}
             >
-              {!isMobile &&
+              {
                 showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
