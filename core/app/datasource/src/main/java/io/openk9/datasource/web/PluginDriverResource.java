@@ -24,6 +24,7 @@ import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
@@ -43,7 +44,7 @@ public class PluginDriverResource {
 			.build();
 	}
 
-	@GET
+	@POST
 	@Path("health")
 	public PluginDriverHealthDTO getHealth(PluginDriverDTO pluginDriverDTO) {
 		// return service.getHealth(pluginDriverDTO);
