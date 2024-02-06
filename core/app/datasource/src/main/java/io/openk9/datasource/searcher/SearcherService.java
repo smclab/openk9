@@ -421,24 +421,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 									long docCount = bucket.getDocCount();
 
-									if ("documentTypes".equals(key.replace(".keyword", ""))) {
-										addSuggestions.accept(
-											value,
-											SuggestionsUtil.docType(
-												value,
-												suggestionCategoryId,
-												docCount)
-										);
-									}
-									else {
-										addSuggestions.accept(
-											value,
-											SuggestionsUtil.filter(
-												value, suggestionCategoryId,
-												key, docCount
-											)
-										);
-									}
+									addSuggestions.accept(
+										value,
+										SuggestionsUtil.filter(
+											value, suggestionCategoryId,
+											key, docCount
+										)
+									);
 								}
 
 							}
