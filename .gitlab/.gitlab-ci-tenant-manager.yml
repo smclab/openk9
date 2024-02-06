@@ -41,12 +41,37 @@ Build Latest Tenant Manager Docker Images:
   only:
     refs:
       - main
-      - /^\d+-.+$/
   when:
     manual
   script:
     - cd core
     - ./mvnw package $MAVEN_CLI_OPTS -pl app/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+  after_script:
+    - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEV_TRIGGER_URL
+  cache:
+    key: tenant-manager
+    paths:
+      - .m2/repository
+
+Build Tenant Manager [DEV]:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  only:
+    refs:
+      - /^\d+-.+$/
+  when:
+    manual
+  script:
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/tenant-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT
   after_script:
     - curl -X POST -F token=$DEV_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEV_TRIGGER_URL
   cache:
