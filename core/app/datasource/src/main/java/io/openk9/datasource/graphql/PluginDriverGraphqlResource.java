@@ -93,7 +93,7 @@ public class PluginDriverGraphqlResource {
 	}
 
 	@Query
-	public Uni<Page<PluginDriver>> getPluginDriversByProvisioning(
+	public Uni<Page<PluginDriver>> getPluginDriversPageFilter(
 		Pageable pageable, Filter filter) {
 
 		return pluginDriverService.findAllPaginated(pageable, filter);
