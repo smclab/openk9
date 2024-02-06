@@ -15,9 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.graphql.dto;
 
-import lombok.Builder;
+import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,10 +37,11 @@ public class PipelineWithItemsDTO extends EnrichPipelineDTO {
 
 	private Collection<ItemDTO> items;
 
-	@Builder
+	@SuperBuilder
 	@Getter
 	@Setter
 	@ToString
+	@NoArgsConstructor
 	public static class ItemDTO implements Comparable<ItemDTO> {
 		private long enrichItemId;
 		private float weight;

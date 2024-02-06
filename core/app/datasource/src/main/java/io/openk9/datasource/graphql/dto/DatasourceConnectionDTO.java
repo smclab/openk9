@@ -18,7 +18,6 @@
 package io.openk9.datasource.graphql.dto;
 
 import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
