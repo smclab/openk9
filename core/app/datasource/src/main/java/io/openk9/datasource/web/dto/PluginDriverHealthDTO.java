@@ -17,11 +17,9 @@
 
 package io.openk9.datasource.web.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 @Builder
-@AllArgsConstructor(staticName = "of")
 public record PluginDriverHealthDTO(Status status) {
 	public enum Status {
 		UP,

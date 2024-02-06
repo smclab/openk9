@@ -38,14 +38,18 @@ public class PluginDriverResource {
 	@Path("health/{id}")
 	public PluginDriverHealthDTO getHealth(@PathParam("id") long id) {
 		// return service.getHealth(id);
-		return PluginDriverHealthDTO.of(PluginDriverHealthDTO.Status.UNKOWN);
+		return PluginDriverHealthDTO.builder()
+			.status(PluginDriverHealthDTO.Status.UNKOWN)
+			.build();
 	}
 
 	@GET
 	@Path("health")
 	public PluginDriverHealthDTO getHealth(PluginDriverDTO pluginDriverDTO) {
 		// return service.getHealth(pluginDriverDTO);
-		return PluginDriverHealthDTO.of(PluginDriverHealthDTO.Status.UNKOWN);
+		return PluginDriverHealthDTO.builder()
+			.status(PluginDriverHealthDTO.Status.UNKOWN)
+			.build();
 	}
 
 }
