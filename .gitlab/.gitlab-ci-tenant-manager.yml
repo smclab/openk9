@@ -41,6 +41,7 @@ Build Latest Tenant Manager Docker Images:
   only:
     refs:
       - main
+      - /^\d+-.+$/
   when:
     manual
   script:
