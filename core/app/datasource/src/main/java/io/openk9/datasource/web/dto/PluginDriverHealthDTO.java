@@ -17,13 +17,16 @@
 
 package io.openk9.datasource.web.dto;
 
-import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
-public record DocTypeFieldResponseDTO(
-	String field,
-	Long id,
-	String label,
-	Map<String, String> translationMap
-) {
+@Builder
+@AllArgsConstructor(staticName = "of")
+public record PluginDriverHealthDTO(Status status) {
+	public enum Status {
+		UP,
+		DOWN,
+		UNKOWN
+	}
 
 }
