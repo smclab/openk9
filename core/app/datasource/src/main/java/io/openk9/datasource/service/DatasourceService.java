@@ -18,7 +18,9 @@
 package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -31,218 +33,233 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
-	 DatasourceService(DatasourceMapper mapper) {
-		 this.mapper = mapper;
+	@Inject
+	DataIndexService dataIndexService;
+	@Inject
+	EnrichPipelineService enrichPipelineService;
+	@Inject
+	PluginDriverService pluginDriverService;
+	@Inject
+	SchedulerService schedulerService;
+
+	DatasourceService(DatasourceMapper mapper) {
+		this.mapper = mapper;
 	}
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {Datasource_.NAME, Datasource_.DESCRIPTION};
+		return new String[]{Datasource_.NAME, Datasource_.DESCRIPTION};
+	}
+
+	@Override
+	public Class<Datasource> getEntityClass() {
+		return Datasource.class;
 	}
 
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(datasource.getDataIndex()));
+		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndex()));
 	}
 
 	public Uni<Set<DataIndex>> getDataIndexes(Datasource datasource) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(datasource.getDataIndexes()));
+		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndexes()));
 	}
 
 	public Uni<DataIndex> getDataIndex(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getDataIndex())));
+		return sessionFactory.withTransaction(s -> findById(
+			s,
+			datasourceId
+		).flatMap(datasource -> s.fetch(datasource.getDataIndex())));
 	}
-
 
 	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
 		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))
-			.map(ArrayList::new)
-		);
+			.map(ArrayList::new));
 	}
 
 	public Uni<Connection<DataIndex>> getDataIndexConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		Long id,
+		String after,
+		String before,
+		Integer first,
+		Integer last,
+		String searchText,
+		Set<SortBy> sortByList,
+		boolean notEqual) {
 		return findJoinConnection(
-			id, Datasource_.DATA_INDEXES, DataIndex.class,
-			dataIndexService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
+			id,
+			Datasource_.DATA_INDEXES,
+			DataIndex.class,
+			dataIndexService.getSearchFields(),
+			after,
+			before,
+			first,
+			last,
+			searchText,
+			sortByList,
+			notEqual
+		);
 	}
 
 	public Uni<Connection<Scheduler>> getSchedulerConnection(
-		Long id, String after, String before, Integer first, Integer last, String searchText,
-		Set<SortBy> sortByList, boolean notEqual) {
+		Long id,
+		String after,
+		String before,
+		Integer first,
+		Integer last,
+		String searchText,
+		Set<SortBy> sortByList,
+		boolean notEqual) {
 
 		return findJoinConnection(
-			id, Datasource_.SCHEDULERS, Scheduler.class,
-			schedulerService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
+			id,
+			Datasource_.SCHEDULERS,
+			Scheduler.class,
+			schedulerService.getSearchFields(),
+			after,
+			before,
+			first,
+			last,
+			searchText,
+			sortByList,
+			notEqual
+		);
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(datasource.getEnrichPipeline()));
+		return sessionFactory.withTransaction(s -> s.fetch(datasource.getEnrichPipeline()));
 	}
 
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline()))
-		);
+		return sessionFactory.withTransaction(s -> findById(
+			s,
+			datasourceId
+		).flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> dataIndexService.findById(s, dataIndexId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(dataIndex -> {
-						datasource.setDataIndex(dataIndex);
-						return persist(s, datasource)
-							.map(d -> Tuple2.of(d, dataIndex));
-					})
-				)
-		);
-	}
-
-	public Uni<Datasource> unsetDataIndex(long datasourceId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> {
-					datasource.setDataIndex(null);
-					return persist(s, datasource);
-				})
-		);
-	}
-
-	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(long datasourceId, long enrichPipelineId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> enrichPipelineService.findById(s, enrichPipelineId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(enrichPipeline -> {
-						datasource.setEnrichPipeline(enrichPipeline);
-						return persist(s, datasource)
-							.map(d -> Tuple2.of(d, enrichPipeline));
-					})
-				)
-		);
-	}
-
-	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> {
-					datasource.setEnrichPipeline(null);
-					return persist(s, datasource);
-				})
-		);
-	}
-
-	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getPluginDriver()))
-		);
-	}
-
-	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(long datasourceId, long pluginDriverId) {
 		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(datasource -> pluginDriverService.findById(s, pluginDriverId)
+			.transformToUni(datasource -> dataIndexService
+				.findById(s, dataIndexId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(dataIndex -> {
+					datasource.setDataIndex(dataIndex);
+					return persist(s, datasource).map(d -> Tuple2.of(d, dataIndex));
+				})));
+	}
+
+	public Uni<Datasource> unsetDataIndex(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
+				datasource.setDataIndex(null);
+				return persist(s, datasource);
+			}));
+	}
+
+	public Uni<Tuple2<Datasource, EnrichPipeline>> setEnrichPipeline(
+		long datasourceId, long enrichPipelineId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> enrichPipelineService
+				.findById(s, enrichPipelineId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(enrichPipeline -> {
+					datasource.setEnrichPipeline(enrichPipeline);
+					return persist(s, datasource).map(d -> Tuple2.of(d, enrichPipeline));
+				})));
+	}
+
+	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
+				datasource.setEnrichPipeline(null);
+				return persist(s, datasource);
+			}));
+	}
+
+	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(
+			s,
+			datasourceId
+		).flatMap(datasource -> s.fetch(datasource.getPluginDriver())));
+	}
+
+	public Uni<Tuple2<Datasource, PluginDriver>> setPluginDriver(
+		long datasourceId, long pluginDriverId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> pluginDriverService
+				.findById(s, pluginDriverId)
 				.flatMap(pluginDriver -> {
 					datasource.setPluginDriver(pluginDriver);
-					return persist(s, datasource)
-						.map(d -> Tuple2.of(d, pluginDriver));
-				})
-			));
+					return persist(s, datasource).map(d -> Tuple2.of(d, pluginDriver));
+				})));
 	}
 
 	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> {
-					datasource.setPluginDriver(null);
-					return persist(s, datasource);
-				})
-		);
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
+				datasource.setPluginDriver(null);
+				return persist(s, datasource);
+			}));
 	}
 
 	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
 		DatasourceDTO datasourceDTO, long pluginDriverId) {
 
-		 return sessionFactory.withTransaction(s ->
-			 pluginDriverService.findById(s, pluginDriverId)
-				 .onItem()
-				 .ifNotNull()
-				 .transformToUni(pluginDriver-> {
-					 Datasource dataSource = mapper.create(datasourceDTO);
-					 dataSource.setPluginDriver(pluginDriver);
-					 return persist(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
-				 })
-		 );
+		return sessionFactory.withTransaction(s -> pluginDriverService
+			.findById(s, pluginDriverId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(pluginDriver -> {
+				Datasource dataSource = mapper.create(datasourceDTO);
+				dataSource.setPluginDriver(pluginDriver);
+				return persist(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
+			}));
 
 	}
 
 	public Uni<Datasource> findDatasourceByIdWithPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction(
-			(s) -> s.createQuery(
-				"select d " +
-				"from Datasource d " +
-				"left join fetch d.pluginDriver where d.id = :id", Datasource.class)
-			.setParameter("id", datasourceId)
-			.getSingleResult()
-		);
+		return sessionFactory.withTransaction((s) -> s.createQuery(
+			"select d " + "from Datasource d " + "left join fetch d.pluginDriver where d.id = :id",
+			Datasource.class
+		).setParameter("id", datasourceId).getSingleResult());
 	}
 
 	public Uni<List<DataIndex>> getDataIndexOrphans(long datasourceId) {
 		return sessionFactory.withTransaction((s) -> s.createQuery(
-			"select di " +
-				"from DataIndex di " +
-				"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
-				"where d.id = :id", DataIndex.class)
-			.setParameter("id", datasourceId)
-			.getResultList()
-		);
+			"select di "
+			+ "from DataIndex di "
+			+ "inner join di.datasource d on di.datasource = d and d.dataIndex <> di "
+			+ "where d.id = :id",
+			DataIndex.class
+		).setParameter("id", datasourceId).getResultList());
 	}
 
-	@Inject
-	DataIndexService dataIndexService;
+	public Uni<Response<Datasource>> createDatasourceConnection(
+		DatasourceConnectionDTO datasourceConnection) {
 
-	@Inject
-	EnrichPipelineService enrichPipelineService;
-
-	@Inject
-	PluginDriverService pluginDriverService;
-
-	@Inject
-	SchedulerService schedulerService;
-
-	@Override
-	public Class<Datasource> getEntityClass() {
-		return Datasource.class;
+		return Uni.createFrom().item(Response.of(new Datasource(), List.of()));
 	}
 
 }
