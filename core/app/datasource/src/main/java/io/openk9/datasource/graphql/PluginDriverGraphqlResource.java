@@ -59,36 +59,40 @@ public class PluginDriverGraphqlResource {
 
 	@Query
 	public Uni<Connection<PluginDriver>> getPluginDrivers(
-		@Description("fetching only nodes after this node (exclusive)")
-		String after,
-		@Description("fetching only nodes before this node (exclusive)")
-		String before,
-		@Description("fetching only the first certain number of nodes")
-		Integer first,
-		@Description("fetching only the last certain number of nodes")
-		Integer last,
-		String searchText, Set<SortBy> sortByList) {
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText,
+		Set<SortBy> sortByList) {
 		return pluginDriverService.findConnection(
-			after, before, first, last, searchText, sortByList);
+			after,
+			before,
+			first,
+			last,
+			searchText,
+			sortByList
+		);
 	}
 
 	public Uni<Connection<DocTypeField>> docTypeFields(
-		@Source
-		PluginDriver pluginDriver,
-		@Description("fetching only nodes after this node (exclusive)")
-		String after,
-		@Description("fetching only nodes before this node (exclusive)")
-		String before,
-		@Description("fetching only the first certain number of nodes")
-		Integer first,
-		@Description("fetching only the last certain number of nodes")
-		Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@DefaultValue("false")
-		boolean not) {
+		@Source PluginDriver pluginDriver,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText,
+		Set<SortBy> sortByList,
+		@DefaultValue("false") boolean not) {
 		return pluginDriverService.getDocTypeFieldsConnection(
-			pluginDriver.getId(), after, before, first, last,
-			searchText, sortByList, not
+			pluginDriver.getId(),
+			after,
+			before,
+			first,
+			last,
+			searchText,
+			sortByList,
+			not
 		);
 	}
 
@@ -100,36 +104,26 @@ public class PluginDriverGraphqlResource {
 	}
 
 	public Uni<List<PluginDriverAclMapping>> aclMappings(
-		@Source
-		PluginDriver pluginDriver) {
-		return pluginDriverService
-			.getAclMappings(pluginDriver)
-			.map(l -> l
-				.stream()
-				.map(t -> new PluginDriverAclMapping(
-					t.getDocTypeField(),
-					t.getUserField()
-				))
-				.toList()
-			);
+		@Source PluginDriver pluginDriver) {
+		return pluginDriverService.getAclMappings(pluginDriver).map(l -> l
+			.stream()
+			.map(t -> new PluginDriverAclMapping(t.getDocTypeField(), t.getUserField()))
+			.toList());
 	}
 
 	@Query
 	public Uni<PluginDriver> getPluginDriver(
-		@Id
-		long id) {
+		@Id long id) {
 		return pluginDriverService.findById(id);
 	}
 
 	public Uni<Response<PluginDriver>> patchPluginDriver(
-		@Id
-		long id, PluginDriverDTO pluginDriverDTO) {
+		@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().patch(id, pluginDriverDTO);
 	}
 
 	public Uni<Response<PluginDriver>> updatePluginDriver(
-		@Id
-		long id, PluginDriverDTO pluginDriverDTO) {
+		@Id long id, PluginDriverDTO pluginDriverDTO) {
 		return pluginDriverService.getValidator().update(id, pluginDriverDTO);
 	}
 
@@ -140,58 +134,42 @@ public class PluginDriverGraphqlResource {
 
 	@Mutation
 	public Uni<Response<PluginDriver>> pluginDriver(
-		@Id
-		Long id, PluginDriverDTO pluginDriverDTO,
-		@DefaultValue("false")
-		boolean patch) {
+		@Id Long id, PluginDriverDTO pluginDriverDTO, @DefaultValue("false") boolean patch) {
 
 		if (id == null) {
 			return createPluginDriver(pluginDriverDTO);
 		}
 		else {
-			return patch
-				? patchPluginDriver(id, pluginDriverDTO)
-				: updatePluginDriver(id, pluginDriverDTO);
+			return patch ? patchPluginDriver(id, pluginDriverDTO) : updatePluginDriver(
+				id,
+				pluginDriverDTO
+			);
 		}
 
 	}
 
 	@Mutation
 	public Uni<PluginDriver> deletePluginDriver(
-		@Id
-		long pluginDriverId) {
+		@Id long pluginDriverId) {
 		return pluginDriverService.deleteById(pluginDriverId);
 	}
 
 	@Mutation
 	public Uni<AclMapping> setUserField(
-		@Id
-		long pluginDriverId,
-		@Id
-		long docTypeFieldId, UserField userField) {
-		return pluginDriverService.setUserField(
-			pluginDriverId, docTypeFieldId, userField);
+		@Id long pluginDriverId, @Id long docTypeFieldId, UserField userField) {
+		return pluginDriverService.setUserField(pluginDriverId, docTypeFieldId, userField);
 	}
 
 	@Mutation
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeFieldToPluginDriver(
-		@Id
-		long pluginDriverId,
-		@Id
-		long docTypeFieldId,
-		UserField userField) {
-		return pluginDriverService.addDocTypeField(
-			pluginDriverId, docTypeFieldId, userField);
+		@Id long pluginDriverId, @Id long docTypeFieldId, UserField userField) {
+		return pluginDriverService.addDocTypeField(pluginDriverId, docTypeFieldId, userField);
 	}
 
 	@Mutation
 	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeFieldFromPluginDriver(
-		@Id
-		long pluginDriverId,
-		@Id
-		long docTypeFieldId) {
-		return pluginDriverService.removeDocTypeField(
-			pluginDriverId, docTypeFieldId);
+		@Id long pluginDriverId, @Id long docTypeFieldId) {
+		return pluginDriverService.removeDocTypeField(pluginDriverId, docTypeFieldId);
 	}
 
 	@Subscription
