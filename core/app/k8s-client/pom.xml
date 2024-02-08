@@ -109,6 +109,13 @@
       <artifactId>reactor-core</artifactId>
       <version>3.4.24</version>
     </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-test-kubernetes-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>
