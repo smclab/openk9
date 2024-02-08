@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.resource;
 
 import io.openk9.common.util.RandomGenerator;
@@ -8,6 +25,7 @@ import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 
+import java.util.UUID;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -18,7 +36,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.UUID;
 
 @Path("/tenant-manager/tenant")
 @RolesAllowed("admin")
@@ -143,21 +160,21 @@ public class TenantManagerResource {
 	DeleteTenantActorSystem deleteTenantActorSystem;
 
 	@RegisterForReflection
-	record RequestId(UUID requestId) { }
+	public record RequestId(UUID requestId) {}
 
 	@RegisterForReflection
-	record CreateTenantRequest(String virtualHost) { }
+	public record CreateTenantRequest(String virtualHost) {}
 
 	@RegisterForReflection
-	record DeleteTenantRequest(String virtualHost) { }
+	public record DeleteTenantRequest(String virtualHost) {}
 
 	@RegisterForReflection
-	record EffectiveDeleteTenantRequest(String virtualHost, String token) { }
+	public record EffectiveDeleteTenantRequest(String virtualHost, String token) {}
 
 	@RegisterForReflection
-	record DeleteTenantResponse(String message) { }
+	public record DeleteTenantResponse(String message) {}
 
 	@RegisterForReflection
-	record CreateTablesResponse(String message) { }
+	public record CreateTablesResponse(String message) {}
 
 }
