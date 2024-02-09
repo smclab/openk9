@@ -24,11 +24,12 @@ import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
+import io.quarkus.test.vertx.RunOnVertxContext;
+import io.quarkus.test.vertx.UniAsserter;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
 
 @WithKubernetesTestServer
 @QuarkusTest
@@ -39,19 +40,63 @@ class K8sOperatorServiceTest {
 	@GrpcClient
 	K8sOperator client;
 
+	private static final DeployEnrichItemRequest goodRequest = DeployEnrichItemRequest
+		.newBuilder()
+		.setSchemaName("mew")
+		.setChart("openk9-foo-enrich")
+		.setVersion("1.0.0")
+		.build();
+
+	private static final DeployEnrichItemRequest badRequest = DeployEnrichItemRequest
+		.newBuilder()
+		.setChart("openk9-foo-enrich")
+		.build();
+
 	@Test
-	void deployEnrichItem() throws ExecutionException, InterruptedException, TimeoutException {
+	@RunOnVertxContext
+	void deployEnrichItemSuccess(UniAsserter asserter) {
 
-		var message = new CompletableFuture<>();
-
-		client.deployEnrichItem(DeployEnrichItemRequest
-			.newBuilder()
-			.setSchemaName("mew")
-			.setChart("openk9-foo-enrich")
-			.setVersion("1.0.0")
-			.build()
-		).subscribe().with(message::complete);
+		asserter.assertThat(
+			() -> client.deployEnrichItem(goodRequest),
+			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich-mew")
+		);
 
 	}
+
+	@Test
+	@RunOnVertxContext
+	void deployEnrichItemFailure(UniAsserter asserter) {
+
+		mockServer.expect()
+			.post()
+			.withPath("/apis/argoproj.io/v1alpha1/namespaces/argocd/applications")
+			.andReturn(500, List.of())
+			.once();
+
+		mockServer.expect()
+			.put()
+			.withPath(
+				"/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/openk9-foo-enrich-mew")
+			.andReturn(500, List.of())
+			.once();
+
+		asserter.assertFailedWith(
+			() -> client.deployEnrichItem(goodRequest),
+			throwable -> {}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void deployEnrichItemBadRequest(UniAsserter asserter) {
+
+		asserter.assertFailedWith(
+			() -> client.deployEnrichItem(badRequest),
+			throwable -> {}
+		);
+
+	}
+
 
 }

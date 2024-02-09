@@ -17,6 +17,7 @@
 
 package io.openk9.k8sclient.grpc;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.openk9.k8s.crd.Manifest;
 import io.openk9.k8s.operator.grpc.DeployEnrichItemRequest;
@@ -30,6 +31,7 @@ import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.util.function.Function;
 import javax.inject.Inject;
 
 @GrpcService
@@ -47,39 +49,86 @@ public class K8sOperatorService implements K8sOperator {
 
 	@Override
 	public Uni<DeployEnrichItemResponse> deployEnrichItem(DeployEnrichItemRequest request) {
+
 		var chart = request.getChart();
-		var schemaName = request.getSchemaName();
 		var version = request.getVersion();
+		var schemaName = request.getSchemaName();
 
-		return Uni
-			.createFrom()
-			.emitter(emitter -> {
-				var resource = k8sClient.resource(Manifest.builder()
-					.targetNamespace(namespace)
-					.chart(chart)
-					.version(version)
-					.tenant(schemaName)
-					.type(manifestType)
-					.build()
-					.asResource()
-				).createOrReplace();
+		return createResource(
+			Manifest.builder()
+				.targetNamespace(namespace)
+				.chart(chart)
+				.version(version)
+				.tenant(schemaName)
+				.type(manifestType)
+				.build(),
+			hasMetadata -> DeployEnrichItemResponse
+				.newBuilder()
+				.setStatus(hasMetadata.getMetadata().getName())
+				.build()
+		);
 
-				emitter.complete(DeployEnrichItemResponse
-					.newBuilder()
-					.setStatus(resource.getMetadata().getName())
-					.build()
-				);
-			});
 	}
 
 	@Override
 	public Uni<DeployMLEnrichItemResponse> deployMLEnrichItem(DeployMLEnrichItemRequest request) {
-		return null;
+
+		var chart = request.getChart();
+		var version = request.getVersion();
+		var schemaName = request.getSchemaName();
+
+		return createResource(
+			Manifest.builder()
+				.targetNamespace(namespace)
+				.chart(chart)
+				.version(version)
+				.tenant(schemaName)
+				.type(manifestType)
+				.build(),
+			hasMetadata -> DeployMLEnrichItemResponse
+				.newBuilder()
+				.setStatus(hasMetadata.getMetadata().getName())
+				.build()
+		);
+
 	}
 
 	@Override
 	public Uni<DeployPluginDriverResponse> deployPluginDriver(DeployPluginDriverRequest request) {
-		return null;
+
+		var chart = request.getChart();
+		var version = request.getVersion();
+		var schemaName = request.getSchemaName();
+
+		return createResource(
+			Manifest.builder()
+				.targetNamespace(namespace)
+				.chart(chart)
+				.version(version)
+				.tenant(schemaName)
+				.type(manifestType)
+				.build(),
+			hasMetadata -> DeployPluginDriverResponse
+				.newBuilder()
+				.setStatus(hasMetadata.getMetadata().getName())
+				.build()
+		);
+
+	}
+
+	private <T> Uni<T> createResource(Manifest manifest, Function<HasMetadata, T> responseMapper) {
+		return Uni
+			.createFrom()
+			.emitter(emitter -> {
+				try {
+					var resource = k8sClient.resource(manifest.asResource()).createOrReplace();
+
+					emitter.complete(responseMapper.apply(resource));
+				}
+				catch (Exception e) {
+					emitter.fail(e);
+				}
+			});
 	}
 
 }
