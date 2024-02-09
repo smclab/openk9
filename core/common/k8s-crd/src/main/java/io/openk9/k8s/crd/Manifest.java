@@ -21,22 +21,37 @@ import io.argoproj.v1alpha1.Application;
 import io.cattle.helm.v1.HelmChart;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import lombok.Builder;
-import lombok.NonNull;
 import lombok.Singular;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Builder(toBuilder = true)
 public record Manifest(
-	@NonNull String targetNamespace,
-	@NonNull String chart,
-	@NonNull String version,
+	String targetNamespace,
+	String chart,
+	String version,
 	String repoURL,
 	String authSecretName,
 	@Singular("set") Map<String, Object> values,
 	String tenant,
 	Type type
 ) {
+
+	public Manifest {
+		Objects.requireNonNull(targetNamespace);
+		Objects.requireNonNull(chart);
+		Objects.requireNonNull(version);
+		if (targetNamespace.isBlank()) {
+			throw new IllegalArgumentException("targetNamespace cannot be blank");
+		}
+		if (chart.isBlank()) {
+			throw new IllegalArgumentException("chart cannot be blank");
+		}
+		if (version.isBlank()) {
+			throw new IllegalArgumentException("version cannot be blank");
+		}
+	}
 
 	public static Application asApplication(Manifest manifest) {
 		return (Application) manifest.asResource();
