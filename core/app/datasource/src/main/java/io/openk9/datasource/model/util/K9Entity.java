@@ -19,7 +19,6 @@ package io.openk9.datasource.model.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -30,18 +29,18 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.OffsetDateTime;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.MappedSuperclass;
-import java.time.OffsetDateTime;
-import java.util.Objects;
 
 @MappedSuperclass
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
-public abstract class K9Entity extends PanacheEntityBase implements GraphqlId {
+public abstract class K9Entity implements GraphqlId {
 
 
 	@Type(type = "io.openk9.datasource.type.TenantUserType")

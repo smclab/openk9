@@ -30,8 +30,6 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.quarkus.panache.common.Sort;
-import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -39,6 +37,14 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.reactivestreams.Processor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -48,14 +54,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends GraphQLService<ENTITY>
@@ -395,7 +393,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Long> count() {
 
 		return sessionFactory.withTransaction(s -> s.createQuery(
-			"SELECT COUNT(*) FROM " + PanacheJpaUtil.getEntityName(getEntityClass()), Long.class)
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
 			.getSingleResult());
 
 	}
@@ -404,7 +402,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Long> count(String tenantId) {
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> s.createQuery(
-			"SELECT COUNT(*) FROM " + PanacheJpaUtil.getEntityName(getEntityClass()), Long.class)
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
 			.getSingleResult());
 
 	}
@@ -465,25 +463,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected Uni<Void> remove(ENTITY entity) {
 
 		return sessionFactory.withTransaction((s, t) -> remove(s, entity));
-
-	}
-
-	private static Sort createSort(String sortBy) {
-
-		return createSort("", sortBy);
-
-	}
-
-	private static Sort createSort(String prefix, String sortBy) {
-
-		prefix = (prefix == null || prefix.isEmpty()) ? "" : prefix + ".";
-
-		if (sortBy != null && !sortBy.isBlank()) {
-			return Sort.by(prefix + K9Entity_.ID);
-		}
-		else {
-			return Sort.by(prefix + sortBy).and(prefix + K9Entity_.ID);
-		}
 
 	}
 

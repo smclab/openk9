@@ -15,10 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource;
 
-public interface K9EntityBase<ID> {
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
 
-	ID getId();
+@QuarkusTest
+public class QuarkusTestSample {
+
+	@Test
+	void sample() {
+		System.out.println("hello");
+	}
 
 }

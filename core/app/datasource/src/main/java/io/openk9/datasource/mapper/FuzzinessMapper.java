@@ -15,35 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.mapper;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.LocalizedEntity;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.Delegate;
+import org.elasticsearch.common.unit.Fuzziness;
 
-import java.util.Map;
+public final class FuzzinessMapper {
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-public class LocalizedSuggestionCategory
-	extends SuggestionCategory
-	implements LocalizedEntity<SuggestionCategory> {
-
-	@JsonIgnore
-	@Delegate
-	private final SuggestionCategory wrappee;
-	private final Map<String, String> translationMap;
-
-	@Override
-	public Class<SuggestionCategory> getWrappeeClass() {
-		return SuggestionCategory.class;
-	}
-
-	@Override
-	public Map<String, String> getTranslationMap() {
-		return translationMap;
+	public static Fuzziness map(io.openk9.datasource.model.util.Fuzziness source) {
+		return switch (source) {
+			case ZERO -> Fuzziness.ZERO;
+			case ONE -> Fuzziness.ONE;
+			case TWO -> Fuzziness.TWO;
+			case AUTO -> Fuzziness.AUTO;
+		};
 	}
 
 }

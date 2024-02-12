@@ -1,5 +1,23 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.mapper.FuzzinessMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -15,14 +33,14 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
-import javax.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Default;
+import javax.inject.Named;
 
 @ApplicationScoped
 @Named("TextQueryParser")
@@ -179,7 +197,7 @@ public class TextQueryParser implements QueryParser {
 
 	private static boolean isI18nOrNotBase(String fieldPath, String language) {
 		return fieldPath.contains(".i18n." + language)
-			|| !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
+			   || !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
 	}
 
 	private static float getBoost(
@@ -205,13 +223,15 @@ public class TextQueryParser implements QueryParser {
 			.orElse(QueryType.MUST);
 	}
 
-	private static org.elasticsearch.common.unit.Fuzziness getFuzziness(
+	private org.elasticsearch.common.unit.Fuzziness getFuzziness(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
-		return ParserContext.getString(token, jsonConfig, FUZZINESS)
+		return FuzzinessMapper.map(ParserContext
+			.getString(token, jsonConfig, FUZZINESS)
 			.map(Fuzziness::valueOf)
 			.orElse(Fuzziness.ZERO)
-			.toElasticType();
+		);
+
 	}
 
 }

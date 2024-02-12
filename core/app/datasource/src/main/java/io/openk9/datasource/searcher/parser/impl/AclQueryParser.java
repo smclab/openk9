@@ -1,26 +1,60 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher.parser.impl;
+
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
+import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.openk9.datasource.searcher.util.JWT;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import javax.enterprise.context.ApplicationScoped;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class AclQueryParser implements QueryParser {
 
-	@ConfigProperty(name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL")
+	@ConfigProperty(
+		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
+	)
 	String extraParamsKey;
-	@ConfigProperty(name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false")
+	@ConfigProperty(
+		name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false"
+	)
 	boolean extraParamsEnabled;
+
+	public static void apply(
+		DocTypeField docTypeField,
+		List<String> terms,
+		BoolQueryBuilder boolQueryBuilder) {
+
+		if (terms != null && !terms.isEmpty()) {
+			boolQueryBuilder.should(
+				QueryBuilders.termsQuery(docTypeField.getPath(), terms));
+		}
+
+	}
 
 	@Override
 	public String getType() {
@@ -56,11 +90,12 @@ public class AclQueryParser implements QueryParser {
 
 				UserField userField = aclMapping.getUserField();
 
-				userField.apply(docTypeField, jwt, innerQuery);
+				apply(docTypeField, userField.getTerms(jwt), innerQuery);
 
 			}
 
-		}else{
+		}
+		else {
 
 			if (extraParamsEnabled) {
 
@@ -74,9 +109,13 @@ public class AclQueryParser implements QueryParser {
 							.getDatasources()
 							.stream()
 							.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
-							.filter(aclMapping -> aclMapping.getUserField() == UserField.ROLES )
+							.filter(aclMapping -> aclMapping.getUserField() == UserField.ROLES)
 							.findFirst()
-							.ifPresent((aclMapping)-> UserField.apply(aclMapping.getDocTypeField(), roles, innerQuery));
+							.ifPresent((aclMapping) -> apply(
+								aclMapping.getDocTypeField(),
+								roles,
+								innerQuery
+							));
 					}
 				}
 			}
