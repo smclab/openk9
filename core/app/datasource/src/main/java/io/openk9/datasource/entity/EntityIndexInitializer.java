@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.entity;
 
-import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -29,17 +29,15 @@ import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
 import java.io.IOException;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 
-@Dependent
-@Startup
+@ApplicationScoped
 public class EntityIndexInitializer {
 
-	@PostConstruct
-	public void init() throws IOException {
+	public void init(@Observes StartupEvent event) throws IOException {
 
 		IndicesClient indices = client.indices();
 
