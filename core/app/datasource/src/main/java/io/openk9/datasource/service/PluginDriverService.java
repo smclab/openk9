@@ -37,6 +37,10 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -47,14 +51,13 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+
 	PluginDriverService(PluginDriverMapper mapper) {
 		this.mapper = mapper;
 	}
@@ -67,7 +70,8 @@ public class PluginDriverService
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{
-			PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE};
+			PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE
+		};
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
@@ -86,16 +90,17 @@ public class PluginDriverService
 				pluginDriverRoot
 					.getJoins()
 					.stream()
-					.filter(e -> Objects.equals(e.getAttribute(),
-						PluginDriver_.aclMappings))
+					.filter(e -> Objects.equals(
+						e.getAttribute(),
+						PluginDriver_.aclMappings
+					))
 					.map(e -> (Join<PluginDriver, AclMapping>) e)
 					.map(e -> e.get(AclMapping_.userField))
 					.map(cb::asc)
-					.collect(Collectors.toList()));
+					.collect(Collectors.toList())
+		);
 
 	}
-
-	
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long pluginDriverId, Pageable pageable) {
@@ -110,7 +115,8 @@ public class PluginDriverService
 			PluginDriver_.ACL_MAPPINGS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
-			searchText);
+			searchText
+		);
 	}
 
 	public Uni<Set<DocTypeField>> getDocTypeFieldsInPluginDriver(
@@ -174,11 +180,12 @@ public class PluginDriverService
 		Filter filter) {
 
 		return findAllPaginatedJoin(
-			new Long[] { pluginDriverId },
+			new Long[]{pluginDriverId},
 			PluginDriver_.ACL_MAPPINGS, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(),
-			filter);
+			filter
+		);
 	}
 
 	public Uni<Tuple2<PluginDriver, DocTypeField>> addDocTypeField(
@@ -192,30 +199,37 @@ public class PluginDriverService
 					.onItem()
 					.ifNotNull()
 					.transformToUni(docTypeField -> s
-							.fetch(pluginDriver.getAclMappings())
-							.flatMap(aclMappings -> {
+						.fetch(pluginDriver.getAclMappings())
+						.flatMap(aclMappings -> {
 
-								AclMapping newAclMapping =
-									AclMapping.of(
-										PluginDriverDocTypeFieldKey.of(
-											pluginDriverId, docTypeFieldId),
-										pluginDriver, docTypeField, userField
-									);
+							AclMapping newAclMapping =
+								AclMapping.of(
+									PluginDriverDocTypeFieldKey.of(
+										pluginDriverId, docTypeFieldId),
+									pluginDriver, docTypeField, userField
+								);
 
-								if (aclMappings.add(newAclMapping)) {
-									pluginDriver.setAclMappings(aclMappings);
-									return persist(s, pluginDriver).map(ep -> Tuple2.of(ep, docTypeField));
-								} else {
-									return Uni.createFrom().nullItem();
-								}
+							if (aclMappings.add(newAclMapping)) {
+								pluginDriver.setAclMappings(aclMappings);
+								return persist(s, pluginDriver).map(ep -> Tuple2.of(
+									ep,
+									docTypeField
+								));
+							}
+							else {
+								return Uni.createFrom().nullItem();
+							}
 
-							})
+						})
 					)
 			)
 		);
 	}
 
-	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeField(long pluginDriverId, long docTypeFieldId) {
+	public Uni<Tuple2<PluginDriver, DocTypeField>> removeDocTypeField(
+		long pluginDriverId,
+		long docTypeFieldId) {
+
 		return sessionFactory.withTransaction((s) -> findById(s, pluginDriverId)
 			.onItem()
 			.ifNotNull()
@@ -224,25 +238,26 @@ public class PluginDriverService
 					.onItem()
 					.ifNotNull()
 					.transformToUni(docTypeField -> s
-							.fetch(pluginDriver.getAclMappings())
-							.flatMap(aclMappings -> {
+						.fetch(pluginDriver.getAclMappings())
+						.flatMap(aclMappings -> {
 
-								boolean removed = aclMappings.removeIf(
-									epi -> epi.getKey().getDocTypeFieldId() == docTypeFieldId
-										   && epi.getKey().getPluginDriverId() == pluginDriverId);
+							boolean removed = aclMappings.removeIf(
+								epi -> epi.getKey().getDocTypeFieldId() == docTypeFieldId
+									   && epi.getKey().getPluginDriverId() == pluginDriverId);
 
-								if (removed) {
-									return s.find(
-											AclMapping.class,
-											PluginDriverDocTypeFieldKey.of(pluginDriverId,docTypeFieldId)
-										)
-										.call(s::remove)
-										.map(ep -> Tuple2.of(pluginDriver, docTypeField));
-								} else {
-									return Uni.createFrom().nullItem();
-								}
+							if (removed) {
+								return s.find(
+										AclMapping.class,
+										PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId)
+									)
+									.call(s::remove)
+									.map(ep -> Tuple2.of(pluginDriver, docTypeField));
+							}
+							else {
+								return Uni.createFrom().nullItem();
+							}
 
-							}))));
+						}))));
 	}
 
 	public Uni<Set<AclMapping>> getAclMappings(PluginDriver pluginDriver) {
@@ -254,10 +269,10 @@ public class PluginDriverService
 
 	public Uni<AclMapping> setUserField(
 		long pluginDriverId,
-		long docTypeFieldId, UserField userField){
+		long docTypeFieldId, UserField userField) {
 
-		return sessionFactory.withTransaction(s-> {
-			CriteriaBuilder criteria= sessionFactory.getCriteriaBuilder();
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder criteria = sessionFactory.getCriteriaBuilder();
 
 			CriteriaUpdate<AclMapping> query =
 				criteria.createCriteriaUpdate(AclMapping.class);
@@ -265,24 +280,27 @@ public class PluginDriverService
 			Root<AclMapping> from = query.from(AclMapping.class);
 
 			query.where(criteria.and(
-				criteria.equal(from.get(AclMapping_.key).get(PluginDriverDocTypeFieldKey_.pluginDriverId),pluginDriverId),
-				criteria.equal(from.get(AclMapping_.key).get(PluginDriverDocTypeFieldKey_.docTypeFieldId),docTypeFieldId),
+				criteria.equal(from
+					.get(AclMapping_.key)
+					.get(PluginDriverDocTypeFieldKey_.pluginDriverId), pluginDriverId),
+				criteria.equal(from
+					.get(AclMapping_.key)
+					.get(PluginDriverDocTypeFieldKey_.docTypeFieldId), docTypeFieldId),
 				criteria.notEqual(from.get(AclMapping_.userField), userField)
 			));
 
-			query.set(from.get(AclMapping_.userField),userField);
+			query.set(from.get(AclMapping_.userField), userField);
 
 			return s.createQuery(query).executeUpdate().call(s::flush).flatMap(rowCount -> {
-				if(rowCount==0){
+				if (rowCount == 0) {
 					return Uni.createFrom().nullItem();
 				}
-				return s.find(AclMapping.class, PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId));
+				return s.find(
+					AclMapping.class,
+					PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId)
+				);
 			});
 		});
 	}
-
-
-	@Inject
-	DocTypeFieldService docTypeFieldService;
 
 }

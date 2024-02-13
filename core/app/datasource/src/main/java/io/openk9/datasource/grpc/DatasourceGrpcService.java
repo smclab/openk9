@@ -17,9 +17,11 @@
 
 package io.openk9.datasource.grpc;
 
-import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
+import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
+import io.openk9.datasource.service.TenantInitializerService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 
@@ -28,25 +30,49 @@ import javax.inject.Inject;
 @GrpcService
 public class DatasourceGrpcService implements Datasource {
 	@Inject
-	DatasourceService datasourceService;
+	TenantInitializerService tenantInitializerService;
 	@Inject
 	EnrichItemService enrichItemService;
 	@Inject
 	PluginDriverService pluginDriverService;
+	@Inject
+	EnrichItemMapper enrichItemMapper;
+	@Inject
+	PluginDriverMapper pluginDriverMapper;
 
 	@Override
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
-		return null;
+
+		return tenantInitializerService.createDefault(request.getSchemaName())
+			.map(integer -> InitTenantResponse.newBuilder()
+				.setItemsCreated(integer)
+				.build());
 	}
 
 	@Override
 	public Uni<CreateEnrichItemResponse> createEnrichItem(CreateEnrichItemRequest request) {
-		return null;
+
+		var enrichItemDTO = enrichItemMapper.map(request);
+
+		return enrichItemService
+			.create(request.getSchemaName(), enrichItemDTO)
+			.map(enrichItem -> CreateEnrichItemResponse.newBuilder()
+				.setEnrichItemId(enrichItem.getId())
+				.build()
+			);
 	}
 
 	@Override
 	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
-		return null;
+
+		var pluginDriverDTO = pluginDriverMapper.map(request);
+
+		return pluginDriverService
+			.create(request.getSchemaName(), pluginDriverDTO)
+			.map(pluginDriver -> CreatePluginDriverResponse.newBuilder()
+				.setPluginDriverId(pluginDriver.getId())
+				.build()
+			);
 	}
 
 }

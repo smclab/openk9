@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
+
 option java_multiple_files = true;
 option java_package = "io.openk9.datasource.grpc";
 option java_outer_classname = "DatasourceProto";
@@ -19,35 +21,58 @@ message InitTenantRequest {
 message CreateEnrichItemRequest {
   string schemaName = 1;
   string name = 2;
-  string requestTimeout = 3;
-  string serviceName = 4;
-  string jsonPath = 5;
-  string type = 6;
-  string behaviorMergeType = 7;
-  string behaviorOnErrorType = 8;
-  string json = 9;
+  string description = 3;
+  int64 requestTimeout = 4;
+  string serviceName = 5;
+  string jsonPath = 6;
+  EnrichItemType type = 7;
+  BehaviorMergeType behaviorMergeType = 8;
+  BehaviorOnError behaviorOnErrorType = 9;
   string script = 10;
+  .google.protobuf.Struct jsonConfig = 11;
 }
 
 message CreatePluginDriverRequest {
   string schemaName = 1;
   string name = 2;
-  string type = 3;
-  string host = 4;
-  string port = 5;
-  string secure = 6;
-  string path = 7;
-  string method = 8;
+  string description = 3;
+  PluginDriverType type = 4;
+  string host = 5;
+  string port = 6;
+  string secure = 7;
+  string path = 8;
+  string method = 9;
 }
 
 message InitTenantResponse {
-  string status = 1;
+  uint32 itemsCreated = 2;
 }
 
 message CreateEnrichItemResponse {
-  string status = 1;
+  int64 enrichItemId = 2;
 }
 
 message CreatePluginDriverResponse {
-  string status = 1;
+  int64 pluginDriverId = 2;
+}
+
+enum EnrichItemType {
+  HTTP_ASYNC = 0;
+  HTTP_SYNC = 1;
+  GROOVY_SCRIPT = 2;
+}
+
+enum BehaviorMergeType {
+  MERGE = 0;
+  REPLACE = 1;
+}
+
+enum BehaviorOnError {
+  SKIP = 0;
+  FAIL = 1;
+  REJECT = 2;
+}
+
+enum PluginDriverType {
+  HTTP = 0;
 }
