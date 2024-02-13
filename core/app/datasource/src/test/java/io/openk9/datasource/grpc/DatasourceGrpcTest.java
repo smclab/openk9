@@ -42,10 +42,11 @@ import static org.mockito.Mockito.times;
 @QuarkusTest
 public class DatasourceGrpcTest {
 
-	public static final String SCHEMA_NAME_VALUE = "mew";
+	private static final String SCHEMA_NAME_VALUE = "mew";
 	private static final int TENANT_ITEMS_COUNT_VALUE = 345;
 	private static final long ENRICH_ITEM_ID_VALUE = 1234124L;
 	private static final long PLUGIN_DRIVER_ID_VALUE = 1231389L;
+
 	@GrpcClient
 	Datasource datasource;
 
@@ -55,7 +56,6 @@ public class DatasourceGrpcTest {
 	PluginDriverService pluginDriverService;
 	@InjectMock
 	TenantInitializerService tenantInitializerService;
-
 
 	@Test
 	@RunOnVertxContext
