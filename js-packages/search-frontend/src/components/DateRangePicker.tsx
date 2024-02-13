@@ -63,8 +63,8 @@ export function DataRangePicker({
         padding="10px 6px"
         label={t("today")}
         action={() => {
-          setStartDate(moment());
-          setEndDate(moment());
+          setStartDate(moment().startOf("day"));
+          setEndDate(moment().endOf("day"));
         }}
       />
 
