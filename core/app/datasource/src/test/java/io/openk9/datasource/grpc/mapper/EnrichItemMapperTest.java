@@ -18,19 +18,30 @@
 package io.openk9.datasource.grpc.mapper;
 
 import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
 import io.openk9.datasource.grpc.BehaviorMergeType;
 import io.openk9.datasource.grpc.BehaviorOnError;
 import io.openk9.datasource.grpc.CreateEnrichItemRequest;
+import io.openk9.grpc.utils.StructUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EnrichItemMapperTest {
+	private static final Struct SAMPLE_STRUCT = StructUtils.fromJson("""
+			{
+				"k1": "v1",
+				"k2": {
+					"k3": false,
+					"k4": 2
+				}
+			}
+		""");
+
 
 	@Test
 	void map() {
+
 		var enrichItemDTO = EnrichItemMapper.INSTANCE.map(CreateEnrichItemRequest.newBuilder()
 			.setSchemaName("mew")
 			.setName("item1")
@@ -38,21 +49,9 @@ class EnrichItemMapperTest {
 			.setBehaviorMergeType(BehaviorMergeType.MERGE)
 			.setBehaviorOnErrorType(BehaviorOnError.FAIL)
 			.setJsonPath("$.root")
-			.setJsonConfig(Struct.newBuilder()
-				.putFields("k1", Value.newBuilder()
-					.setStringValue("v1")
-					.build()
-				)
-				.putFields("k2", Value.newBuilder()
-					.setStructValue(Struct.newBuilder()
-						.putFields("k3", Value.newBuilder()
-							.setBoolValue(false)
-							.build())
-						.build())
-					.build())
-				.build()
-			)
-			.build());
+			.setJsonConfig(SAMPLE_STRUCT)
+			.build()
+		);
 
 		var jsonConfig = enrichItemDTO.getJsonConfig();
 		var jsonObject = new JsonObject(jsonConfig);

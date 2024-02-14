@@ -260,11 +260,6 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-serialization-jackson_${scala.version}</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java-util</artifactId>
-      <version>3.21.5</version>
-    </dependency>
   </dependencies>
   <build>
     <plugins>

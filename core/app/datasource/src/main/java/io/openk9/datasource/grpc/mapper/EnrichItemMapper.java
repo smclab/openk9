@@ -17,15 +17,14 @@
 
 package io.openk9.datasource.grpc.mapper;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Struct;
-import com.google.protobuf.util.JsonFormat;
 import io.openk9.datasource.grpc.BehaviorMergeType;
 import io.openk9.datasource.grpc.BehaviorOnError;
 import io.openk9.datasource.grpc.CreateEnrichItemRequest;
 import io.openk9.datasource.grpc.EnrichItemType;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.grpc.utils.StructUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
@@ -64,8 +63,8 @@ public interface EnrichItemMapper {
 	)
 	EnrichItem.BehaviorOnError map(BehaviorOnError source);
 
-	default String map(Struct value) throws InvalidProtocolBufferException {
-		return JsonFormat.printer().print(value);
+	default String map(Struct value) {
+		return StructUtils.toJsonString(value);
 	}
 
 }
