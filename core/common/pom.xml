@@ -37,6 +37,6 @@
 		<module>graphql-util</module>
 		<module>model</module>
 		<module>util</module>
-		<module>k8s-crd</module>
+		<module>k8s-manifest</module>
 	</modules>
 </project>

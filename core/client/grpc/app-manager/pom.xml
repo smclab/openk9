@@ -26,8 +26,8 @@
 		<version>1.7.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>k8s-operator-client-grpc</artifactId>
-	<name>OpenK9 :: Client :: Grpc :: K8s Operator Client Grpc</name>
+	<artifactId>app-manager</artifactId>
+	<name>OpenK9 :: Client :: Grpc :: App Manager</name>
 
 	<properties>
 		<maven.compiler.source>17</maven.compiler.source>

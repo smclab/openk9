@@ -69,11 +69,11 @@
     </dependency>
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>k8s-operator-client-grpc</artifactId>
+      <artifactId>app-manager</artifactId>
     </dependency>
     <dependency>
       <groupId>io.openk9.common</groupId>
-      <artifactId>k8s-crd</artifactId>
+      <artifactId>k8s-manifest</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

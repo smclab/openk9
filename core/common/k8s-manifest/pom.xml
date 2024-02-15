@@ -26,7 +26,7 @@
 		<version>1.7.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>k8s-crd</artifactId>
+	<artifactId>k8s-manifest</artifactId>
 
 	<name>OpenK9 :: Common :: K8s CRDs</name>
 
