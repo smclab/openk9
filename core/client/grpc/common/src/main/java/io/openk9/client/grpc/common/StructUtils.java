@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.grpc.utils;
+package io.openk9.client.grpc.common;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Struct;

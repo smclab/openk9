@@ -18,13 +18,13 @@
 package io.openk9.datasource.grpc.mapper;
 
 import com.google.protobuf.Struct;
+import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.grpc.BehaviorMergeType;
 import io.openk9.datasource.grpc.BehaviorOnError;
 import io.openk9.datasource.grpc.CreateEnrichItemRequest;
 import io.openk9.datasource.grpc.EnrichItemType;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
-import io.openk9.grpc.utils.StructUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;

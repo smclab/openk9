@@ -18,10 +18,10 @@
 package io.openk9.datasource.grpc.mapper;
 
 import com.google.protobuf.Struct;
+import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.grpc.BehaviorMergeType;
 import io.openk9.datasource.grpc.BehaviorOnError;
 import io.openk9.datasource.grpc.CreateEnrichItemRequest;
-import io.openk9.grpc.utils.StructUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 

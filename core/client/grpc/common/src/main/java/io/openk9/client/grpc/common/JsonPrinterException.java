@@ -15,27 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.grpc.utils;
+package io.openk9.client.grpc.common;
 
-public class JsonParseException extends RuntimeException {
+public class JsonPrinterException extends RuntimeException {
 
-	public JsonParseException() {
+	public JsonPrinterException() {
 		super();
 	}
 
-	public JsonParseException(String message) {
+	public JsonPrinterException(String message) {
 		super(message);
 	}
 
-	public JsonParseException(String message, Throwable cause) {
+	public JsonPrinterException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public JsonParseException(Throwable cause) {
+	public JsonPrinterException(Throwable cause) {
 		super(cause);
 	}
 
-	protected JsonParseException(
+	protected JsonPrinterException(
 		String message,
 		Throwable cause,
 		boolean enableSuppression,
