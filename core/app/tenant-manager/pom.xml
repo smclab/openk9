@@ -166,6 +166,20 @@
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>tenant-manager-client-grpc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>datasource-client-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>app-manager</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor-testkit-typed_2.13</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
