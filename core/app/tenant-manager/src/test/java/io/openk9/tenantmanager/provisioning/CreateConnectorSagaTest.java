@@ -49,7 +49,7 @@ public class CreateConnectorSagaTest {
 			mockPersistence.first()
 		));
 
-		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Response.class);
+		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Responses.class);
 
 		saga.tell(new CreateConnectorSaga.Exec(sagaProbe.ref()));
 
@@ -66,7 +66,7 @@ public class CreateConnectorSagaTest {
 	}
 
 	@Test
-	void should_install_ok_and_persist_ko_rollback_and_compesate() {
+	void should_install_ok_and_persist_ko_rollback_and_compensate() {
 		var mockOperator = mockOperator();
 		var mockPersistence = mockPersistenceFailure();
 
@@ -75,7 +75,7 @@ public class CreateConnectorSagaTest {
 			mockPersistence.first()
 		));
 
-		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Response.class);
+		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Responses.class);
 
 		saga.tell(new CreateConnectorSaga.Exec(sagaProbe.ref()));
 
@@ -93,7 +93,7 @@ public class CreateConnectorSagaTest {
 	}
 
 	@Test
-	void should_install_ok_and_persist_ko_rollback_and_not_compesate() {
+	void should_install_ok_and_persist_ko_rollback_and_not_compensate() {
 		var mockOperator = mockOperatorCompensateFailure();
 		var mockPersistence = mockPersistenceFailure();
 
@@ -102,7 +102,7 @@ public class CreateConnectorSagaTest {
 			mockPersistence.first()
 		));
 
-		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Response.class);
+		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Responses.class);
 
 		saga.tell(new CreateConnectorSaga.Exec(sagaProbe.ref()));
 
@@ -129,7 +129,7 @@ public class CreateConnectorSagaTest {
 			mockPersistence.first()
 		));
 
-		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Response.class);
+		var sagaProbe = testKit.createTestProbe(CreateConnectorSaga.Responses.class);
 
 		saga.tell(new CreateConnectorSaga.Exec(sagaProbe.ref()));
 
