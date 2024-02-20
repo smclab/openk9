@@ -26,7 +26,7 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePluginDriverRequest;
-import io.openk9.datasource.grpc.DatasourceClient;
+import io.openk9.datasource.grpc.Datasource;
 import org.jboss.logging.Logger;
 
 public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Command> {
@@ -36,12 +36,12 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 	private final ActorRef<Persistence.Response> persistenceAdapter;
 	private final ActorRef<Operator.Command> operator;
 	private final ActorRef<Persistence.Command> persistence;
-	private ActorRef<Response> replyTo;
+	private ActorRef<Responses> replyTo;
 
 	public CreateConnectorSaga(
 		ActorContext<Command> context,
 		AppManager operatorClient,
-		DatasourceClient persistenceClient,
+		Datasource persistenceClient,
 		AppManifest operatorRequest,
 		CreatePluginDriverRequest persistenceRequest) {
 
@@ -92,7 +92,7 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 	public static Behavior<Command> create(
 		AppManager opsClient,
 		AppManifest opsRequest,
-		DatasourceClient persistenceClient,
+		Datasource persistenceClient,
 		CreatePluginDriverRequest persistenceRequest) {
 
 		return Behaviors.setup(ctx -> new CreateConnectorSaga(
@@ -185,6 +185,6 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 
 	public sealed interface Response {}
 
-	public record Exec(ActorRef<CreateConnectorSaga.Response> replyTo) implements Command {}
+	public record Exec(ActorRef<CreateConnectorSaga.Responses> replyTo) implements Command {}
 
 }

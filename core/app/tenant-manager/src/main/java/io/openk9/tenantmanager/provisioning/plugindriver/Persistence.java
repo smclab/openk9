@@ -26,17 +26,17 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
-import io.openk9.datasource.grpc.DatasourceClient;
+import io.openk9.datasource.grpc.Datasource;
 
 public class Persistence extends AbstractBehavior<Persistence.Command> {
 
-	private final DatasourceClient client;
+	private final Datasource client;
 	private final CreatePluginDriverRequest request;
 	private long pluginDriverId;
 
 	public Persistence(
 		ActorContext<Command> context,
-		DatasourceClient client,
+		Datasource client,
 		CreatePluginDriverRequest request) {
 
 		super(context);
@@ -45,7 +45,7 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 	}
 
 	public static Behavior<Command> create(
-		DatasourceClient client,
+		Datasource client,
 		CreatePluginDriverRequest request) {
 
 		return Behaviors.setup(ctx -> new Persistence(ctx, client, request));
