@@ -46,6 +46,7 @@ public class AppManagerService implements AppManager {
 	@Override
 	public Uni<ApplyResponse> applyResource(AppManifest request) {
 		var manifest = Manifest.builder()
+			.repoURL("https://registry.smc.it/repository/helm-private")
 			.chart(request.getChart())
 			.version(request.getVersion())
 			.tenant(request.getSchemaName())
@@ -72,6 +73,7 @@ public class AppManagerService implements AppManager {
 	@Override
 	public Uni<Empty> deleteResource(AppManifest appManifest) {
 		var manifest = Manifest.builder()
+			.repoURL("https://registry.smc.it/repository/helm-private")
 			.chart(appManifest.getChart())
 			.version(appManifest.getVersion())
 			.tenant(appManifest.getSchemaName())

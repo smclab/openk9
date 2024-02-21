@@ -47,9 +47,9 @@ class AppManagerServiceTest {
 		.setChart("openk9-foo-enrich")
 		.build();
 	private static final String APPLICATION_INSTANCE_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/openk9-foo-enrich-mew";
+		"/apis/argoproj.io/v1alpha1/namespaces/default/applications/openk9-foo-enrich-mew";
 	private static final String APPLICATIONS_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/argocd/applications";
+		"/apis/argoproj.io/v1alpha1/namespaces/default/applications";
 	private static final int INTERNAL_SERVER_ERROR = 500;
 	private static final List<Object> EMPTY_ARRAY = List.of();
 
