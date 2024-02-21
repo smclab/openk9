@@ -36,6 +36,7 @@ public class ArgoCDManifest {
 	private static final String ARGOCD_FINALIZER = "resources-finalizer.argocd.argoproj.io";
 	private static final String DEFAULT_SVC = "https://kubernetes.default.svc";
 	private static final String VALIDATE_FALSE = "Validate=false";
+	public static final String DEFAULT_PROJECT = "default";
 
 	private ArgoCDManifest() {}
 
@@ -78,7 +79,7 @@ public class ArgoCDManifest {
 		syncPolicy.setSyncOptions(List.of(VALIDATE_FALSE));
 
 		var spec = new ApplicationSpec();
-		spec.setProject(manifest.targetNamespace());
+		spec.setProject(DEFAULT_PROJECT);
 		spec.setSource(source);
 		spec.setDestination(destination);
 		spec.setSyncPolicy(syncPolicy);
