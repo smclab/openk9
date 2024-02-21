@@ -23,11 +23,12 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.vertx.core.json.JsonObject;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
 import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface PluginDriverMapper {
 
 	PluginDriverMapper INSTANCE = Mappers.getMapper(PluginDriverMapper.class);

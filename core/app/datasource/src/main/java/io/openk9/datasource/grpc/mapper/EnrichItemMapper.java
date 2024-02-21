@@ -26,11 +26,12 @@ import io.openk9.datasource.grpc.EnrichItemType;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
 import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface EnrichItemMapper {
 
 	EnrichItemMapper INSTANCE = Mappers.getMapper(EnrichItemMapper.class);

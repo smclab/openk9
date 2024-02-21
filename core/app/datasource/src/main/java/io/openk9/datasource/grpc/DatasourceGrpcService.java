@@ -35,6 +35,10 @@ public class DatasourceGrpcService implements Datasource {
 	EnrichItemService enrichItemService;
 	@Inject
 	PluginDriverService pluginDriverService;
+	@Inject
+	EnrichItemMapper enrichItemMapper;
+	@Inject
+	PluginDriverMapper pluginDriverMapper;
 
 	@Override
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
@@ -48,7 +52,7 @@ public class DatasourceGrpcService implements Datasource {
 	@Override
 	public Uni<CreateEnrichItemResponse> createEnrichItem(CreateEnrichItemRequest request) {
 
-		var enrichItemDTO = EnrichItemMapper.INSTANCE.map(request);
+		var enrichItemDTO = enrichItemMapper.map(request);
 
 		return enrichItemService
 			.create(request.getSchemaName(), enrichItemDTO)
@@ -61,7 +65,7 @@ public class DatasourceGrpcService implements Datasource {
 	@Override
 	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
 
-		var pluginDriverDTO = PluginDriverMapper.INSTANCE.map(request);
+		var pluginDriverDTO = pluginDriverMapper.map(request);
 
 		return pluginDriverService
 			.create(request.getSchemaName(), pluginDriverDTO)
