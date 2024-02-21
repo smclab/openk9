@@ -44,7 +44,7 @@ public class ArgoCDManifest {
 
 		var metadata = new ObjectMeta();
 		metadata.setName(Utils.name(manifest.chart(), manifest.tenant()));
-		metadata.setNamespace(ARGOCD_NAMESPACE);
+		metadata.setNamespace(manifest.targetNamespace());
 		metadata.setFinalizers(List.of(ARGOCD_FINALIZER));
 
 		var source = new Source();
