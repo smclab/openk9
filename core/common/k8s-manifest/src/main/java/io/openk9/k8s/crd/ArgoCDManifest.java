@@ -28,6 +28,7 @@ import io.argoproj.v1alpha1.applicationspec.syncpolicy.Automated;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ArgoCDManifest {
 
@@ -52,9 +53,8 @@ public class ArgoCDManifest {
 		source.setChart(manifest.chart());
 		source.setTargetRevision(manifest.version());
 
-		if (manifest.repoURL() != null) {
-			source.setRepoURL(manifest.repoURL());
-		}
+		Objects.requireNonNull(manifest.repoURL(), "repoUrl cannot be null!");
+		source.setRepoURL(manifest.repoURL());
 
 		if (manifest.values() != null && !manifest.values().isEmpty()) {
 			var valuesObject = new ValuesObject();

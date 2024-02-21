@@ -8,6 +8,7 @@ metadata:
 spec:
   project: default
   source:
+    repoURL: https://registry.acme.com/repository/helm/
     chart: openk9-foo-parser
     targetRevision: 1.0.0
   destination:

@@ -89,6 +89,7 @@ class ArgoCDManifestTest {
 
 		var serialized = Serialization.asYaml(Manifest.builder()
 			.targetNamespace("default")
+			.repoURL("https://registry.acme.com/repository/helm/")
 			.chart("openk9-foo-parser")
 			.version("1.0.0")
 			.type(Manifest.Type.ARGOCD)
