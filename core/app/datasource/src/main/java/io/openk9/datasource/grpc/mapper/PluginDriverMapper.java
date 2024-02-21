@@ -26,12 +26,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface PluginDriverMapper {
-
-	PluginDriverMapper INSTANCE = Mappers.getMapper(PluginDriverMapper.class);
 
 	default PluginDriverDTO map(CreatePluginDriverRequest source) {
 		var jsonConfig = JsonObject.of(

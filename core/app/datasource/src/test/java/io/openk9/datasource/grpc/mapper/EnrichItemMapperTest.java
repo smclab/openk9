@@ -24,6 +24,7 @@ import io.openk9.datasource.grpc.BehaviorOnError;
 import io.openk9.datasource.grpc.CreateEnrichItemRequest;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -38,11 +39,11 @@ class EnrichItemMapperTest {
 			}
 		""");
 
-
+	private static final EnrichItemMapper INSTANCE = Mappers.getMapper(EnrichItemMapper.class);
 	@Test
 	void map() {
 
-		var enrichItemDTO = EnrichItemMapper.INSTANCE.map(CreateEnrichItemRequest.newBuilder()
+		var enrichItemDTO = INSTANCE.map(CreateEnrichItemRequest.newBuilder()
 			.setSchemaName("mew")
 			.setName("item1")
 			.setDescription("desc1")
