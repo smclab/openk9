@@ -41,7 +41,7 @@ public class ProvisioningResource {
 
 	@GrpcClient
 	Datasource datasource;
-	@GrpcClient
+	@GrpcClient("appmanager")
 	AppManager appManager;
 
 	@POST
