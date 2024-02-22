@@ -207,7 +207,7 @@ function Home() {
                     instant.
                   </>
                 }
-                imgSrc="img/search1.png"
+                imgSrc="img/simple-search.png"
                 isDxImage={true}
               />
             </div>
@@ -225,7 +225,7 @@ function Home() {
                     entities and predicates using plugins.
                   </>
                 }
-                imgSrc="img/tokens.png"
+                imgSrc="img/semantic-search.png"
                 isDxImage={false}
               />
             </div>
@@ -243,7 +243,7 @@ function Home() {
                     of the search system at a glance.
                   </>
                 }
-                imgSrc="img/admin1.png"
+                imgSrc="img/admin-new.png"
                 isDxImage={true}
               />
             </div>
