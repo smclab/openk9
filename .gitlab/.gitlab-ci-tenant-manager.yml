@@ -95,7 +95,7 @@ trigger_deploy_tenant-manager:
   script:
     - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEPLOY_TRIGGER_URL
 
-argocd-restart:
+argocd-restart-tenant-manager:
   image: argoproj/argocd
   stage: deploy
   needs: [ 'Build Tenant Manager [DEV]' ]

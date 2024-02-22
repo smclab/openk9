@@ -92,7 +92,7 @@ trigger_deploy_k8s_client:
   script:
     - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-k8s-client" -F ref=master $DEPLOY_TRIGGER_URL
 
-argocd-restart:
+argocd-restart-k8s-client:
   image: argoproj/argocd
   stage: deploy
   needs: [ 'Build K8s Client [DEV]' ]
