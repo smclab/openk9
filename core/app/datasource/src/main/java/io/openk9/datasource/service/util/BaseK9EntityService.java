@@ -545,7 +545,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> persist(mapper.update(prev, dto))
+				(prev) -> persist(s, mapper.update(prev, dto))
 					.invoke(newEntity -> processor.onNext(
 						K9EntityEvent.of(
 							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
