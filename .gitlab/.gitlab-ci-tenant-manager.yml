@@ -94,3 +94,25 @@ trigger_deploy_tenant-manager:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEPLOY_TRIGGER_URL
+
+argocd-restart:
+  image: argoproj/argocd
+  stage: deploy
+  needs: [ 'Build Tenant Manager [DEV]' ]
+  variables:
+    GIT_STRATEGY: none
+    ARGOCD_SERVER: "argocd.openk9.io"
+    ARGOCD_APP_NAME: "tenant-manager"
+  before_script:
+    - echo "ARGOCD_SERVER:$ARGOCD_SERVER"
+    - echo "ARGOCD_APP_NAME:$ARGOCD_APP_NAME"
+    - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
+  script:
+    - argocd login "${ARGOCD_SERVER}" --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
+    - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
+    - cat response.txt
+    # if response.txt have content, exit with error, empty response means success
+    - if [ -s response.txt ]; then exit 1; fi
+  only:
+    refs:
+      - /^\d+-.+$/
