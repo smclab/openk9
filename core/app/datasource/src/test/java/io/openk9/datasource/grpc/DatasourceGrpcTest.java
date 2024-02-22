@@ -36,7 +36,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
@@ -46,6 +49,10 @@ public class DatasourceGrpcTest {
 	private static final int TENANT_ITEMS_COUNT_VALUE = 345;
 	private static final long ENRICH_ITEM_ID_VALUE = 1234124L;
 	private static final long PLUGIN_DRIVER_ID_VALUE = 1231389L;
+	private static PluginDriver CREATED_PLUGIN_DRIVER;
+	private static PluginDriver UPDATED_PLUGIN_DRIVER;
+	private static EnrichItem CREATED_ENRICH_ITEM;
+	private static EnrichItem UPDATED_ENRICH_ITEM;
 
 	@GrpcClient
 	Datasource datasource;
@@ -59,7 +66,7 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void initTenantSuccess(UniAsserter asserter) {
+	void should_init_tenant(UniAsserter asserter) {
 
 		BDDMockito.given(tenantInitializerService.createDefault(eq(SCHEMA_NAME_VALUE)))
 			.willReturn(Uni.createFrom().item(TENANT_ITEMS_COUNT_VALUE));
@@ -85,7 +92,7 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void initTenantFailure(UniAsserter asserter) {
+	void should_fail_on_init_tenant(UniAsserter asserter) {
 
 		BDDMockito.given(tenantInitializerService.createDefault(eq(SCHEMA_NAME_VALUE)))
 			.willReturn(Uni.createFrom().failure(InternalServiceMockException::new));
@@ -102,7 +109,7 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void createEnrichItemSuccess(UniAsserter asserter) {
+	void should_create_enrich_item(UniAsserter asserter) {
 
 		var enrichItem = new EnrichItem();
 		enrichItem.setId(ENRICH_ITEM_ID_VALUE);
@@ -118,6 +125,14 @@ public class DatasourceGrpcTest {
 			response -> {
 				BDDMockito.then(enrichItemService)
 					.should(times(1))
+					.findByName(anyString(), anyString());
+
+				BDDMockito.then(enrichItemService)
+					.should(never())
+					.update(anyString(), anyLong(), any(EnrichItemDTO.class));
+
+				BDDMockito.then(enrichItemService)
+					.should(times(1))
 					.create(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class));
 
 				Assertions.assertEquals(ENRICH_ITEM_ID_VALUE, response.getEnrichItemId());
@@ -128,7 +143,7 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void createEnrichItemFailure(UniAsserter asserter) {
+	void should_fail_on_create_enrich_item(UniAsserter asserter) {
 
 		BDDMockito.given(enrichItemService.create(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class)))
 			.willReturn(Uni.createFrom().failure(InternalServiceMockException::new));
@@ -144,22 +159,27 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void createPluginDriverSuccess(UniAsserter asserter) {
-
-		var pluginDriver = new PluginDriver();
-		pluginDriver.setId(PLUGIN_DRIVER_ID_VALUE);
+	void should_create_plugin_driver(UniAsserter asserter) {
 
 		BDDMockito.given(pluginDriverService.create(
 				eq(SCHEMA_NAME_VALUE),
 				any(PluginDriverDTO.class)
 			))
-			.willReturn(Uni.createFrom().item(pluginDriver));
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedPluginDriver));
 
 		asserter.assertThat(
 			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
 				.setSchemaName(SCHEMA_NAME_VALUE)
 				.build()),
 			response -> {
+				BDDMockito.then(pluginDriverService)
+					.should(times(1))
+					.findByName(anyString(), anyString());
+
+				BDDMockito.then(pluginDriverService)
+					.should(never())
+					.update(anyString(), anyLong(), any(PluginDriverDTO.class));
+
 				BDDMockito.then(pluginDriverService)
 					.should(times(1))
 					.create(eq(SCHEMA_NAME_VALUE), any(PluginDriverDTO.class));
@@ -172,7 +192,7 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void createPluginDriverFailure(UniAsserter asserter) {
+	void should_fail_on_create_plugin_driver(UniAsserter asserter) {
 
 		BDDMockito.given(pluginDriverService.create(
 				eq(SCHEMA_NAME_VALUE),
@@ -190,6 +210,72 @@ public class DatasourceGrpcTest {
 
 	}
 
+	@Test
+	@RunOnVertxContext
+	void should_update_plugin_driver_when_exist_with_same_name(UniAsserter asserter) {
+
+		BDDMockito.given(pluginDriverService.findByName(eq(SCHEMA_NAME_VALUE), anyString()))
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedPluginDriver));
+
+		BDDMockito.given(pluginDriverService.update(
+				eq(SCHEMA_NAME_VALUE),
+				eq(PLUGIN_DRIVER_ID_VALUE),
+				any(PluginDriverDTO.class)
+			))
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getUpdatedPluginDriver));
+
+		asserter.assertThat(
+			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
+				.setSchemaName(SCHEMA_NAME_VALUE)
+				.build()),
+			response -> {
+				BDDMockito.then(pluginDriverService)
+					.should(never())
+					.create(anyString(), any(PluginDriverDTO.class));
+
+				BDDMockito.then(pluginDriverService)
+					.should(times(1))
+					.update(anyString(), anyLong(), any(PluginDriverDTO.class));
+
+				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());
+			}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_update_enrichh_item_when_exist_with_same_name(UniAsserter asserter) {
+
+		BDDMockito.given(enrichItemService.findByName(eq(SCHEMA_NAME_VALUE), anyString()))
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedEnrichItem));
+
+		BDDMockito.given(enrichItemService.update(
+				eq(SCHEMA_NAME_VALUE),
+				eq(ENRICH_ITEM_ID_VALUE),
+				any(EnrichItemDTO.class)
+			))
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getUpdatedEnrichItem));
+
+		asserter.assertThat(
+			() -> datasource.createEnrichItem(CreateEnrichItemRequest.newBuilder()
+				.setSchemaName(SCHEMA_NAME_VALUE)
+				.build()),
+			response -> {
+				BDDMockito.then(enrichItemService)
+					.should(never())
+					.create(anyString(), any(EnrichItemDTO.class));
+
+				BDDMockito.then(enrichItemService)
+					.should(times(1))
+					.update(anyString(), anyLong(), any(EnrichItemDTO.class));
+
+				Assertions.assertEquals(ENRICH_ITEM_ID_VALUE, response.getEnrichItemId());
+			}
+		);
+
+	}
+
 	private static void failureAssertions(Throwable throwable) {
 		Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
 
@@ -199,6 +285,54 @@ public class DatasourceGrpcTest {
 			.getMessage()
 			.contains(InternalServiceMockException.class.getName())
 		);
+	}
+
+	private static PluginDriver getCreatedPluginDriver() {
+		if (CREATED_PLUGIN_DRIVER == null) {
+			var pluginDriver = new PluginDriver();
+			pluginDriver.setId(PLUGIN_DRIVER_ID_VALUE);
+			pluginDriver.setName("openk9-foo-parser");
+			pluginDriver.setDescription("created");
+			CREATED_PLUGIN_DRIVER = pluginDriver;
+		}
+
+		return CREATED_PLUGIN_DRIVER;
+	}
+
+	private static PluginDriver getUpdatedPluginDriver() {
+		if (UPDATED_PLUGIN_DRIVER == null) {
+			var pluginDriver = new PluginDriver();
+			pluginDriver.setId(PLUGIN_DRIVER_ID_VALUE);
+			pluginDriver.setName("openk9-foo-parser");
+			pluginDriver.setDescription("updated");
+			UPDATED_PLUGIN_DRIVER = pluginDriver;
+		}
+
+		return UPDATED_PLUGIN_DRIVER;
+	}
+
+	private static EnrichItem getCreatedEnrichItem() {
+		if (CREATED_ENRICH_ITEM == null) {
+			var enrichItem = new EnrichItem();
+			enrichItem.setId(ENRICH_ITEM_ID_VALUE);
+			enrichItem.setName("openk9-translator");
+			enrichItem.setDescription("created");
+			CREATED_ENRICH_ITEM = enrichItem;
+		}
+
+		return CREATED_ENRICH_ITEM;
+	}
+
+	private static EnrichItem getUpdatedEnrichItem() {
+		if (UPDATED_ENRICH_ITEM == null) {
+			var enrichItem = new EnrichItem();
+			enrichItem.setId(ENRICH_ITEM_ID_VALUE);
+			enrichItem.setName("openk9-translator");
+			enrichItem.setDescription("updated");
+			UPDATED_ENRICH_ITEM = enrichItem;
+		}
+
+		return CREATED_ENRICH_ITEM;
 	}
 
 }

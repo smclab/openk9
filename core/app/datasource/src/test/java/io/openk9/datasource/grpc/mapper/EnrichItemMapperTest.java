@@ -40,6 +40,7 @@ class EnrichItemMapperTest {
 		""");
 
 	private static final EnrichItemMapper INSTANCE = Mappers.getMapper(EnrichItemMapper.class);
+
 	@Test
 	void map() {
 

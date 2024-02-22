@@ -31,16 +31,28 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-@Entity
-@Table(name = "plugin_driver")
+@Entity(name = PluginDriver.ENTITY_NAME)
+@Table(name = PluginDriver.TABLE_NAME)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
+@NamedQueries(
+	@NamedQuery(
+		name = PluginDriver.FIND_BY_NAME_QUERY,
+		query = "from " + PluginDriver.ENTITY_NAME + " p where p." + PluginDriver_.NAME + " = ?1"
+	)
+)
 public class PluginDriver extends K9Entity {
+
+	public static final String ENTITY_NAME = "PluginDriver";
+	public static final String TABLE_NAME = "plugin_driver";
+	public static final String FIND_BY_NAME_QUERY = "findByName#" + ENTITY_NAME;
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;

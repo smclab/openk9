@@ -55,7 +55,12 @@ public class DatasourceGrpcService implements Datasource {
 		var enrichItemDTO = enrichItemMapper.map(request);
 
 		return enrichItemService
-			.create(request.getSchemaName(), enrichItemDTO)
+			.findByName(request.getSchemaName(), enrichItemDTO.getName())
+			.onItem()
+			.transformToUni((item) -> enrichItemService.update(
+				request.getSchemaName(), item.id, enrichItemDTO))
+			.onFailure()
+			.recoverWithUni(() -> enrichItemService.create(request.getSchemaName(), enrichItemDTO))
 			.map(enrichItem -> CreateEnrichItemResponse.newBuilder()
 				.setEnrichItemId(enrichItem.getId())
 				.build()
@@ -68,7 +73,16 @@ public class DatasourceGrpcService implements Datasource {
 		var pluginDriverDTO = pluginDriverMapper.map(request);
 
 		return pluginDriverService
-			.create(request.getSchemaName(), pluginDriverDTO)
+			.findByName(request.getSchemaName(), pluginDriverDTO.getName())
+			.onItem()
+			.transformToUni((item) -> pluginDriverService.update(
+				request.getSchemaName(), item.getId(), pluginDriverDTO
+			))
+			.onFailure()
+			.recoverWithUni(() -> pluginDriverService.create(
+				request.getSchemaName(),
+				pluginDriverDTO
+			))
 			.map(pluginDriver -> CreatePluginDriverResponse.newBuilder()
 				.setPluginDriverId(pluginDriver.getId())
 				.build()

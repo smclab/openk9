@@ -28,15 +28,27 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-@Entity
-@Table(name = "enrich_item")
+@Entity(name = EnrichItem.ENTITY_NAME)
+@Table(name = EnrichItem.TABLE_NAME)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
+@NamedQueries(
+	@NamedQuery(
+		name = EnrichItem.FIND_BY_NAME_QUERY,
+		query = "from " + EnrichItem.ENTITY_NAME + " e where e." + EnrichItem_.NAME + " = ?1"
+	)
+)
 public class EnrichItem extends K9Entity {
+
+	public static final String TABLE_NAME = "enrich_item";
+	public static final String ENTITY_NAME = "EnrichItem";
+	public static final String FIND_BY_NAME_QUERY = "findByName#" + ENTITY_NAME;
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
