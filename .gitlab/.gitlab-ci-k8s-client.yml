@@ -91,3 +91,17 @@ trigger_deploy_k8s_client:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-k8s-client" -F ref=master $DEPLOY_TRIGGER_URL
+
+trigger_restart_k8s-client:
+  image: curlimages/curl
+  stage: deploy
+  needs: [ 'Build K8s Client [DEV]' ]
+  only:
+    refs:
+      - /^\d+-.+$/
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-k8s-client" -F ref=master $RESTART_TRIGGER_URL

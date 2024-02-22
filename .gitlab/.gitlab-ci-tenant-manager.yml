@@ -94,3 +94,18 @@ trigger_deploy_tenant-manager:
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
     - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-tenant-manager" -F ref=master $DEPLOY_TRIGGER_URL
+
+trigger_restart_tenant-manager:
+  image: curlimages/curl
+  stage: deploy
+  needs: [ 'Build Tenant Manager [DEV]' ]
+  only:
+    refs:
+      - /^\d+-.+$/
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tenant-manager" -F ref=master $RESTART_TRIGGER_URL
+
