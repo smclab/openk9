@@ -102,10 +102,7 @@ argocd-restart-datasource:
     - echo "ARGOCD_USERNAME:$ARGOCD_USERNAME"
   script:
     - argocd login "${ARGOCD_SERVER}" --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}"
-    - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment |& tee response.txt
-    - cat response.txt
-    # if response.txt have content, exit with error, empty response means success
-    - if [ -s response.txt ]; then exit 1; fi
+    - argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment
   only:
     refs:
       - /^\d+-.+$/
