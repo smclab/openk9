@@ -1,26 +1,21 @@
 ---
 id: api
-title: Api
+title: Rest APIs overview
 slug: /api
+
 ---
 
-```mermaid
-erDiagram
-    BUCKET ||--o{ DATASOURCE : contains
-    DATASOURCE ||--|{ "ENRICH PIPELINE" : has
-    DATASOURCE ||--|{ "DOC TYPE" : has
-    DATASOURCE ||--|{ "PLUGIN DRIVER" : has
-    "ENRICH PIPELINE" ||--|{ "ENRICH ITEM" : "made by"
-    BUCKET ||--o{ "SUGGESTION CATEGORY" : has
-    BUCKET ||--o{ TAB : has
-    "DOC TYPE" ||--o{ "DOC TYPE FIELD" : has
-    "DOC TYPE FIELD" ||--o{ "ANALYZER": use
-    "ANALYZER" ||--o{ "TOKENIZER": "made by"
-    "ANALYZER" ||--o{ "TOKENIZER": "made by"
-    "ANALYZER" ||--o{ "TOKEN FILTER": "made by"
-    "ANALYZER" ||--o{ "CHAR FILTER": "made by"
-    "SUGGESTION CATEGORY" ||--o{ "DOC TYPE FIELD" : has
-    BUCKET ||--o{ "QUERY ANALYSIS" : contains
-    "QUERY ANALYSIS" ||--o{ "RULE" : contains
-    "QUERY ANALYSIS" ||--o{ "ANNOTATOR" : contains
-```
+Openk9 exposes REST APIs that are used by the UI components and
+can be called directly to configure and access Openk9 features.
+
+
+Openk9 exposes also GRAPHQL APIs that are used to handle configurations by Admin Panel.
+
+:::info
+We are working on including more Openk9 APIs in this section.
+Some content might not be included yet.
+:::
+
+
+- [REST APIs](api/rest-api)
+- [GRAPHQL APIs](api/graphql-api)
