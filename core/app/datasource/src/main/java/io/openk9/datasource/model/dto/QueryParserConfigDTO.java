@@ -21,9 +21,7 @@ import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotNull;
@@ -31,6 +29,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class QueryParserConfigDTO extends K9EntityDTO {
 
 	@NotNull

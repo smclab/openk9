@@ -23,6 +23,7 @@ import io.openk9.datasource.model.util.Fuzziness;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
@@ -31,6 +32,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class AnnotatorDTO extends K9EntityDTO {
 	@NotNull
 	private AnnotatorType type;
