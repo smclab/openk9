@@ -99,8 +99,6 @@ trigger_restart_k8s-client:
   only:
     refs:
       - /^\d+-.+$/
-  when:
-    manual
   except:
     - schedules
   before_script:
