@@ -17,5 +17,5 @@ Some content might not be included yet.
 :::
 
 
-- [REST APIs](api/rest-api)
-- [GRAPHQL APIs](api/graphql-api)
+- [REST APIs](rest-api)
+- [GRAPHQL APIs](graphql-api)
