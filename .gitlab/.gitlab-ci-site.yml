@@ -16,6 +16,7 @@ Build Latest Site Docker Image:
   except:
     - schedules
   before_script:
+    - sleep 5
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
