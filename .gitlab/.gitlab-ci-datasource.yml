@@ -95,6 +95,8 @@ trigger_restart_datasource:
   only:
     refs:
       - /^\d+-.+$/
+  when:
+    manual
   except:
     - schedules
   before_script:

@@ -102,6 +102,8 @@ trigger_restart_tenant-manager:
   only:
     refs:
       - /^\d+-.+$/
+  when:
+    manual
   except:
     - schedules
   before_script:
