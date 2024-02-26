@@ -21,6 +21,7 @@ import io.openk9.datasource.grpc.CreateEnrichItemRequest;
 import io.openk9.datasource.grpc.CreateEnrichItemResponse;
 import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
@@ -45,6 +46,11 @@ public final class DatasourceProxy
 	@Override
 	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
 		return getMock().createPluginDriver(request);
+	}
+
+	@Override
+	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(CreatePresetPluginDriverRequest request) {
+		return getMock().createPresetPluginDriver(request);
 	}
 
 }

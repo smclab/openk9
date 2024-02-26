@@ -89,4 +89,9 @@ public class DatasourceGrpcService implements Datasource {
 			);
 	}
 
+	@Override
+	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(CreatePresetPluginDriverRequest request) {
+		return null;
+	}
+
 }

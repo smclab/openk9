@@ -21,6 +21,7 @@ import io.openk9.datasource.grpc.CreateEnrichItemRequest;
 import io.openk9.datasource.grpc.CreateEnrichItemResponse;
 import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
 import io.smallrye.mutiny.Uni;
@@ -39,6 +40,10 @@ public class MockableDatasource {
 	}
 
 	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
+		throw new UnsupportedOperationException();
+	}
+
+	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(CreatePresetPluginDriverRequest request) {
 		throw new UnsupportedOperationException();
 	}
 
