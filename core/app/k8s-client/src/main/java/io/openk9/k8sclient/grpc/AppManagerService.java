@@ -49,7 +49,6 @@ public class AppManagerService implements AppManager {
 			.repoURL("https://registry.smc.it/repository/helm-private")
 			.chart(request.getChart())
 			.version(request.getVersion())
-			.tenant(request.getSchemaName())
 			.targetNamespace(namespace)
 			.type(manifestType)
 			.build();
@@ -76,7 +75,6 @@ public class AppManagerService implements AppManager {
 			.repoURL("https://registry.smc.it/repository/helm-private")
 			.chart(appManifest.getChart())
 			.version(appManifest.getVersion())
-			.tenant(appManifest.getSchemaName())
 			.targetNamespace(namespace)
 			.type(manifestType)
 			.build();
