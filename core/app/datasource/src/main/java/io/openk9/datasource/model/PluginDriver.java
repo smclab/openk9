@@ -75,7 +75,7 @@ public class PluginDriver extends K9Entity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "provisioning")
-	private Provisioning provisioning;
+	private Provisioning provisioning = Provisioning.USER;
 
 	public enum PluginDriverType {
 		HTTP

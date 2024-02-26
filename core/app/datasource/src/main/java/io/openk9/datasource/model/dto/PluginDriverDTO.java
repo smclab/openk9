@@ -36,6 +36,7 @@ import javax.validation.constraints.NotNull;
 public class PluginDriverDTO extends K9EntityDTO {
 	@NotNull
 	private PluginDriver.PluginDriverType type;
+	private PluginDriver.Provisioning provisioning;
 	@Json
 	private String jsonConfig;
 }
