@@ -21,17 +21,20 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.AskPattern;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
-import io.openk9.datasource.grpc.CreatePluginDriverRequest;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
+import io.openk9.datasource.grpc.Preset;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
 import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
@@ -44,15 +47,21 @@ public class ProvisioningResource {
 	@GrpcClient("appmanager")
 	AppManager appManager;
 
+	@Inject
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
+
 	@POST
 	@Path("/connector")
 	public Uni<CreateConnectorResponse> createConnector(@Valid CreateConnectorRequest request) {
 
+		var latestMinorPatchedVersion = applicationVersion.split("\\.")[0] + ".x.x";
+
 		var connectorName = String.format(
 			"%s-%s-%s",
 			request.tenantName,
-			request.chartName,
-			request.chartVersion.replace('.', '_')
+			request.preset,
+			latestMinorPatchedVersion.replace('.', '_')
 		);
 
 		var actorSystem = ActorSystem.apply(
@@ -60,18 +69,13 @@ public class ProvisioningResource {
 				appManager,
 				AppManifest.newBuilder()
 					.setSchemaName(request.tenantName)
-					.setChart(request.chartName)
-					.setVersion(request.chartVersion)
+					.setChart(PresetPluginDrivers.CONNECTOR_MAP.get(request.preset))
+					.setVersion(latestMinorPatchedVersion)
 					.build(),
 				datasource,
-				CreatePluginDriverRequest.newBuilder()
+				CreatePresetPluginDriverRequest.newBuilder()
 					.setSchemaName(request.tenantName)
-					.setName(connectorName)
-					.setHost(request.chartName)
-					.setPort(request.port)
-					.setPath(request.path)
-					.setMethod(request.method)
-					.setSecure(String.valueOf(request.secure))
+					.setPreset(request.preset)
 					.build()
 			),
 			connectorName
@@ -97,12 +101,7 @@ public class ProvisioningResource {
 
 	public record CreateConnectorRequest(
 		@NotEmpty String tenantName,
-		@NotEmpty String chartName,
-		@NotEmpty String chartVersion,
-		@NotEmpty String port,
-		@NotEmpty String method,
-		@NotEmpty String path,
-		@NotNull boolean secure
+		Preset preset
 	) {}
 
 	public record CreateConnectorResponse(String result) {}

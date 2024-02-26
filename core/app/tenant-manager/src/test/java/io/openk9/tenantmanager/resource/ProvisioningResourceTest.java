@@ -204,21 +204,21 @@ public class ProvisioningResourceTest {
 	}
 
 	private void createPluginDriverSuccess() {
-		BDDMockito.given(datasource.createPluginDriver(any()))
+		BDDMockito.given(datasource.createPresetPluginDriver(any()))
 			.willReturn(Uni.createFrom().item(CreatePluginDriverResponse.newBuilder()
 				.setPluginDriverId(1001L)
 				.build()));
 	}
 
 	private void createPluginDriverFailure() {
-		BDDMockito.given(datasource.createPluginDriver(any()))
+		BDDMockito.given(datasource.createPresetPluginDriver(any()))
 			.willReturn(Uni.createFrom().failure(RuntimeException::new));
 	}
 
 	private void createPluginDriverVerify() {
 		BDDMockito.then(datasource)
 			.should(times(1))
-			.createPluginDriver(eq(Constants.CREATE_PLUGIN_DRIVER_REQUEST));
+			.createPresetPluginDriver(eq(Constants.CREATE_PRESET_REQUEST));
 	}
 
 	private void applyResourceVerify() {

@@ -25,7 +25,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
-import io.openk9.datasource.grpc.CreatePluginDriverRequest;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
 import org.jboss.logging.Logger;
 
@@ -43,7 +43,7 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 		AppManager operatorClient,
 		Datasource persistenceClient,
 		AppManifest operatorRequest,
-		CreatePluginDriverRequest persistenceRequest) {
+		CreatePresetPluginDriverRequest persistenceRequest) {
 
 		this(
 			context,
@@ -93,7 +93,7 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 		AppManager opsClient,
 		AppManifest opsRequest,
 		Datasource persistenceClient,
-		CreatePluginDriverRequest persistenceRequest) {
+		CreatePresetPluginDriverRequest persistenceRequest) {
 
 		return Behaviors.setup(ctx -> new CreateConnectorSaga(
 			ctx,

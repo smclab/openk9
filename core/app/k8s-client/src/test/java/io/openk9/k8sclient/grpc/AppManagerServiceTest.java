@@ -47,7 +47,7 @@ class AppManagerServiceTest {
 		.setChart("openk9-foo-enrich")
 		.build();
 	private static final String APPLICATION_INSTANCE_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/default/applications/openk9-foo-enrich-mew";
+		"/apis/argoproj.io/v1alpha1/namespaces/default/applications/openk9-foo-enrich";
 	private static final String APPLICATIONS_PATH =
 		"/apis/argoproj.io/v1alpha1/namespaces/default/applications";
 	private static final int INTERNAL_SERVER_ERROR = 500;
@@ -64,7 +64,7 @@ class AppManagerServiceTest {
 
 		asserter.assertThat(
 			() -> client.applyResource(goodRequest),
-			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich-mew")
+			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich")
 		);
 
 	}

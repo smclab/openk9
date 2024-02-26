@@ -19,6 +19,8 @@ package io.openk9.datasource.grpc;
 
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
 import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
@@ -70,28 +72,34 @@ public class DatasourceGrpcService implements Datasource {
 	@Override
 	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
 
+		var tenantId = request.getSchemaName();
 		var pluginDriverDTO = pluginDriverMapper.map(request);
 
-		return pluginDriverService
-			.findByName(request.getSchemaName(), pluginDriverDTO.getName())
-			.onItem()
-			.transformToUni((item) -> pluginDriverService.update(
-				request.getSchemaName(), item.getId(), pluginDriverDTO
-			))
-			.onFailure()
-			.recoverWithUni(() -> pluginDriverService.create(
-				request.getSchemaName(),
-				pluginDriverDTO
-			))
-			.map(pluginDriver -> CreatePluginDriverResponse.newBuilder()
-				.setPluginDriverId(pluginDriver.getId())
-				.build()
-			);
+		return upsertPluginDriver(tenantId, pluginDriverDTO);
 	}
 
 	@Override
 	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(CreatePresetPluginDriverRequest request) {
-		return null;
+		var tenantId = request.getSchemaName();
+		var pluginDriverDTO = PluginDrivers.DRIVER_ENUM_MAP.get(request.getPreset());
+		return upsertPluginDriver(tenantId, pluginDriverDTO);
+	}
+
+	private Uni<CreatePluginDriverResponse> upsertPluginDriver(
+		String tenantId,
+		PluginDriverDTO pluginDriverDTO) {
+		return pluginDriverService
+			.findByName(tenantId, pluginDriverDTO.getName())
+			.onItem()
+			.transformToUni((item) -> pluginDriverService.update(
+				tenantId, item.getId(), pluginDriverDTO
+			))
+			.onFailure()
+			.recoverWithUni(() -> pluginDriverService.create(tenantId, pluginDriverDTO))
+			.map(pluginDriver -> CreatePluginDriverResponse.newBuilder()
+				.setPluginDriverId(pluginDriver.getId())
+				.build()
+			);
 	}
 
 }

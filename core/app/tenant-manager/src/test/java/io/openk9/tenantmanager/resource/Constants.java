@@ -18,64 +18,42 @@
 package io.openk9.tenantmanager.resource;
 
 import io.openk9.app.manager.grpc.AppManifest;
-import io.openk9.datasource.grpc.CreatePluginDriverRequest;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
+import io.openk9.datasource.grpc.Preset;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.vertx.core.json.JsonObject;
 
 public class Constants {
 	static final String CREATE_CONNECTOR_PATH = "/connector";
 	private static final String TENANT_NAME = "mew";
-	private static final String CHART_NAME = "openk9-foo-parser";
+	public static final String INVALID_PRESET = "INVALID_VALUE";
+	static final CreatePresetPluginDriverRequest CREATE_PRESET_REQUEST =
+		CreatePresetPluginDriverRequest.newBuilder()
+			.setSchemaName(TENANT_NAME)
+			.setPreset(Preset.CRAWLER)
+			.build();
+	private static final String PRESET_VALUE = "CRAWLER";
 	private static final String CONNECTOR_NAME = String.format(
 		"%s-%s-%s",
 		TENANT_NAME,
-		CHART_NAME,
-		"999_999_999"
+		PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER),
+		"1_x_x"
 	);
-	private static final String CHART_VERSION = "999.999.999";
+	private static final String CHART_VERSION = "1.x.x";
+	private static final String TENANT_NAME_KEY = "tenantName";
 	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
 		.setSchemaName(TENANT_NAME)
-		.setChart(CHART_NAME)
+		.setChart(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER))
 		.setVersion(CHART_VERSION)
 		.build();
-	private static final String TENANT_NAME_KEY = "tenantName";
-	private static final String CHART_NAME_KEY = "chartName";
-	private static final String CHART_VERSION_KEY = "chartVersion";
-	private static final String CONNECTOR_PORT = "8080";
-	private static final String CONNECTOR_METHOD = "POST";
-	private static final String CONNECTOR_PATH = "/crawl";
-	private static final String CONNECTOR_SECURE = "true";
-	static final CreatePluginDriverRequest CREATE_PLUGIN_DRIVER_REQUEST =
-		CreatePluginDriverRequest.newBuilder()
-			.setSchemaName(TENANT_NAME)
-			.setName(CONNECTOR_NAME)
-			.setHost(CHART_NAME)
-			.setPort(CONNECTOR_PORT)
-			.setMethod(CONNECTOR_METHOD)
-			.setPath(CONNECTOR_PATH)
-			.setSecure(CONNECTOR_SECURE)
-			.build();
-	private static final String CONNECTOR_HOST_KEY = "host";
-	private static final String CONNECTOR_PORT_KEY = "port";
-	private static final String CONNECTOR_PATH_KEY = "path";
-	private static final String CONNECTOR_METHOD_KEY = "method";
-	private static final String CONNECTOR_SECURE_KEY = "secure";
+	private static final String PRESET_KEY = "preset";
 	static final String VALID_JSON_BODY = JsonObject.of(
 		TENANT_NAME_KEY, TENANT_NAME,
-		CHART_NAME_KEY, CHART_NAME,
-		CHART_VERSION_KEY, CHART_VERSION,
-		CONNECTOR_HOST_KEY, CHART_NAME,
-		CONNECTOR_PORT_KEY, CONNECTOR_PORT,
-		CONNECTOR_PATH_KEY, CONNECTOR_PATH,
-		CONNECTOR_METHOD_KEY, CONNECTOR_METHOD,
-		CONNECTOR_SECURE_KEY, CONNECTOR_SECURE
+		PRESET_KEY, PRESET_VALUE
 	).toString();
 
 	static final String INVALID_JSON_BODY = JsonObject.of(
-		CHART_NAME_KEY, CHART_NAME,
-		CONNECTOR_HOST_KEY, CHART_NAME,
-		CONNECTOR_PORT_KEY, CONNECTOR_PORT,
-		CONNECTOR_METHOD_KEY, CONNECTOR_METHOD,
-		CONNECTOR_SECURE_KEY, CONNECTOR_SECURE
+		PRESET_KEY, INVALID_PRESET
 	).toString();
 
 }

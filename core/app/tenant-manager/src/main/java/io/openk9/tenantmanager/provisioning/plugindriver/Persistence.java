@@ -24,20 +24,20 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.VertxUtil;
-import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
+import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
 
 public class Persistence extends AbstractBehavior<Persistence.Command> {
 
 	private final Datasource client;
-	private final CreatePluginDriverRequest request;
+	private final CreatePresetPluginDriverRequest request;
 	private long pluginDriverId;
 
 	public Persistence(
 		ActorContext<Command> context,
 		Datasource client,
-		CreatePluginDriverRequest request) {
+		CreatePresetPluginDriverRequest request) {
 
 		super(context);
 		this.client = client;
@@ -46,7 +46,7 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 
 	public static Behavior<Command> create(
 		Datasource client,
-		CreatePluginDriverRequest request) {
+		CreatePresetPluginDriverRequest request) {
 
 		return Behaviors.setup(ctx -> new Persistence(ctx, client, request));
 	}
@@ -63,7 +63,7 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 		var replyTo = persist.replyTo;
 
 		VertxUtil.runOnContext(() -> client
-			.createPluginDriver(request)
+			.createPresetPluginDriver(request)
 			.invoke((response) -> tell(Persisted.of(response, replyTo)))
 			.onFailure()
 			.invoke(throwable -> replyTo.tell(Response.ERROR))

@@ -17,9 +17,13 @@
 
 package io.openk9.datasource.model.init;
 
+import io.openk9.datasource.grpc.Preset;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.vertx.core.json.Json;
 
 import java.util.EnumMap;
 
@@ -47,30 +51,19 @@ public class PluginDrivers {
 		DRIVER_ENUM_MAP.put(Preset.DATABASE, Database.PLUGIN_DRIVER_DTO);
 	}
 
-	public enum Preset {
-		LIFERAY,
-		CRAWLER,
-		EMAIL,
-		GITLAB,
-		SITEMAP,
-		DATABASE
-	}
-
 	public static class Liferay {
 		public static final String NAME = "Liferay";
 		public static final String DESCRIPTION = "Plugin Driver for Liferay Portal";
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-liferay-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/execute",
-				"method": "POST"
-			}
-			""";
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.LIFERAY))
+			.port(5000)
+			.secure(false)
+			.path("/execute")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -82,7 +75,7 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
@@ -93,15 +86,14 @@ public class PluginDrivers {
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-web-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/startUrlsCrawling",
-				"method": "POST"
-			}
-			""";
+
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER))
+			.port(5000)
+			.secure(false)
+			.path("/startUrlsCrawling")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -113,7 +105,7 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
@@ -124,15 +116,13 @@ public class PluginDrivers {
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-email-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/execute",
-				"method": "POST"
-			}
-			""";
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.EMAIL))
+			.port(5000)
+			.secure(false)
+			.path("/execute")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -144,7 +134,7 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
@@ -155,15 +145,13 @@ public class PluginDrivers {
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-gitlab-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/execute",
-				"method": "POST"
-			}
-			""";
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.GITLAB))
+			.port(5000)
+			.secure(false)
+			.path("/execute")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -175,7 +163,7 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
@@ -186,15 +174,13 @@ public class PluginDrivers {
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-web-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/startSitemapCrawling",
-				"method": "POST"
-			}
-			""";
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.SITEMAP))
+			.port(5000)
+			.secure(false)
+			.path("/startSitemapCrawling")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -206,27 +192,26 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
 
 	public static class Database {
-		public static final String NAME = "Gitlab";
+		public static final String NAME = "Database";
 		public static final String DESCRIPTION =
 			"Plugin Driver for Database. Supporting PostgreSql, Mysql, MariaDB.";
 		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
-		public static final String JSON_CONFIG = """
-			{
-				"host": "openk9-database-parser",
-				"port": 5000,
-				"secure": false,
-				"path": "/execute",
-				"method": "POST"
-			}
-			""";
+
+		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.DATABASE))
+			.port(5000)
+			.secure(false)
+			.path("/execute")
+			.method(HttpPluginDriverInfo.Method.POST)
+			.build();
 
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
@@ -238,7 +223,7 @@ public class PluginDrivers {
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
-			.jsonConfig(JSON_CONFIG)
+			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
 	}
