@@ -5,9 +5,7 @@ import { DetailMemo } from "../components/Detail";
 import { ResultsMemo } from "../components/ResultList";
 import {
   SelectionsAction,
-  SelectionsActionOnClick,
   SelectionsState,
-  SelectionsStateOnClick,
   getAutoSelections,
   isOverlapping,
   useSelections,
@@ -205,7 +203,6 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
-            onDetail={setDetail}
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
@@ -227,7 +224,6 @@ export function Main({
                 ? false
                 : isQueryAnalysisComplete
             }
-            onDetail={setDetail}
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
@@ -729,10 +725,8 @@ function useSearchOnClick({
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState: SelectionsStateOnClick | SelectionsState;
-  selectionsDispatch:
-    | React.Dispatch<SelectionsActionOnClick>
-    | React.Dispatch<SelectionsAction>;
+  selectionsState: SelectionsState;
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -868,10 +862,8 @@ function useSearch({
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
   onQueryStateChange(queryState: QueryState): void;
-  selectionsState: SelectionsStateOnClick | SelectionsState;
-  selectionsDispatch:
-    | React.Dispatch<SelectionsActionOnClick>
-    | React.Dispatch<SelectionsAction>;
+  selectionsState: SelectionsState;
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -1042,11 +1034,9 @@ function useFilters({
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
-  selectionsState: SelectionsStateOnClick | SelectionsState;
+  selectionsState: SelectionsState;
   useQueryStringFilters: boolean;
-  selectionsDispatch:
-    | React.Dispatch<SelectionsActionOnClick>
-    | React.Dispatch<SelectionsAction>;
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 }) {
   const filterTokens: SearchToken[] = configuration.useFilterConfiguration
     ? [...configuration.filterTokens, ...selectionsState.filters]
