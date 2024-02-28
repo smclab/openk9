@@ -115,6 +115,11 @@ public class TenantInitializerService {
 			.flatMap(queryParserConfigs -> searchConfigService
 				.upsert(s, searchConfigDTO)
 				.flatMap(searchConfig -> {
+
+					for (QueryParserConfig queryParserConfig : queryParserConfigs) {
+						queryParserConfig.setSearchConfig(searchConfig);
+					}
+
 					searchConfig.setQueryParserConfigs(new HashSet<>(queryParserConfigs));
 					return searchConfigService.persist(s, searchConfig);
 				})
