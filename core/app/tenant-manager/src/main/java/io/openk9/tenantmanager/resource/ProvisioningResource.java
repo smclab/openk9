@@ -23,7 +23,6 @@ import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
-import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
@@ -54,8 +53,11 @@ public class ProvisioningResource {
 
 	@POST
 	@Path("/initTenant")
-	public Uni<Void> initTenant(@Valid InitTenantRequest request) {
-		return datasource.initTenant(request).replaceWithVoid();
+	public Uni<InitTenantResponse> initTenant(@Valid InitTenantRequest request) {
+		return datasource.initTenant(io.openk9.datasource.grpc.InitTenantRequest.newBuilder()
+			.setSchemaName(request.tenantName)
+			.build()
+		).map(initTenantResponse -> new InitTenantResponse(initTenantResponse.getItemsCreated()));
 	}
 
 	@POST
@@ -106,6 +108,9 @@ public class ProvisioningResource {
 			});
 	}
 
+	public record InitTenantRequest(@NotEmpty String tenantName) {}
+
+	public record InitTenantResponse(int results) {}
 	public record CreateConnectorRequest(
 		@NotEmpty String tenantName,
 		Preset preset
