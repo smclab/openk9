@@ -36,10 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
@@ -115,7 +112,7 @@ public class DatasourceGrpcTest {
 		enrichItem.setId(ENRICH_ITEM_ID_VALUE);
 		enrichItem.setName("enrichItemTest");
 
-		BDDMockito.given(enrichItemService.create(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class)))
+		BDDMockito.given(enrichItemService.upsert(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class)))
 			.willReturn(Uni.createFrom().item(enrichItem));
 
 		asserter.assertThat(
@@ -125,15 +122,7 @@ public class DatasourceGrpcTest {
 			response -> {
 				BDDMockito.then(enrichItemService)
 					.should(times(1))
-					.findByName(anyString(), anyString());
-
-				BDDMockito.then(enrichItemService)
-					.should(never())
-					.update(anyString(), anyLong(), any(EnrichItemDTO.class));
-
-				BDDMockito.then(enrichItemService)
-					.should(times(1))
-					.create(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class));
+					.upsert(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class));
 
 				Assertions.assertEquals(ENRICH_ITEM_ID_VALUE, response.getEnrichItemId());
 			}
@@ -145,7 +134,7 @@ public class DatasourceGrpcTest {
 	@RunOnVertxContext
 	void should_fail_on_create_enrich_item(UniAsserter asserter) {
 
-		BDDMockito.given(enrichItemService.create(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class)))
+		BDDMockito.given(enrichItemService.upsert(eq(SCHEMA_NAME_VALUE), any(EnrichItemDTO.class)))
 			.willReturn(Uni.createFrom().failure(InternalServiceMockException::new));
 
 		asserter.assertFailedWith(
@@ -161,7 +150,7 @@ public class DatasourceGrpcTest {
 	@RunOnVertxContext
 	void should_create_plugin_driver(UniAsserter asserter) {
 
-		BDDMockito.given(pluginDriverService.create(
+		BDDMockito.given(pluginDriverService.upsert(
 				eq(SCHEMA_NAME_VALUE),
 				any(PluginDriverDTO.class)
 			))
@@ -174,15 +163,7 @@ public class DatasourceGrpcTest {
 			response -> {
 				BDDMockito.then(pluginDriverService)
 					.should(times(1))
-					.findByName(anyString(), anyString());
-
-				BDDMockito.then(pluginDriverService)
-					.should(never())
-					.update(anyString(), anyLong(), any(PluginDriverDTO.class));
-
-				BDDMockito.then(pluginDriverService)
-					.should(times(1))
-					.create(eq(SCHEMA_NAME_VALUE), any(PluginDriverDTO.class));
+					.upsert(eq(SCHEMA_NAME_VALUE), any(PluginDriverDTO.class));
 
 				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());
 			}
@@ -194,7 +175,7 @@ public class DatasourceGrpcTest {
 	@RunOnVertxContext
 	void should_fail_on_create_plugin_driver(UniAsserter asserter) {
 
-		BDDMockito.given(pluginDriverService.create(
+		BDDMockito.given(pluginDriverService.upsert(
 				eq(SCHEMA_NAME_VALUE),
 				any(PluginDriverDTO.class)
 			))
@@ -206,72 +187,6 @@ public class DatasourceGrpcTest {
 				.setSchemaName(SCHEMA_NAME_VALUE)
 				.build()),
 			DatasourceGrpcTest::failureAssertions
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_update_plugin_driver_when_exist_with_same_name(UniAsserter asserter) {
-
-		BDDMockito.given(pluginDriverService.findByName(eq(SCHEMA_NAME_VALUE), anyString()))
-			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedPluginDriver));
-
-		BDDMockito.given(pluginDriverService.update(
-				eq(SCHEMA_NAME_VALUE),
-				eq(PLUGIN_DRIVER_ID_VALUE),
-				any(PluginDriverDTO.class)
-			))
-			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getUpdatedPluginDriver));
-
-		asserter.assertThat(
-			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
-				.setSchemaName(SCHEMA_NAME_VALUE)
-				.build()),
-			response -> {
-				BDDMockito.then(pluginDriverService)
-					.should(never())
-					.create(anyString(), any(PluginDriverDTO.class));
-
-				BDDMockito.then(pluginDriverService)
-					.should(times(1))
-					.update(anyString(), anyLong(), any(PluginDriverDTO.class));
-
-				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_update_enrichh_item_when_exist_with_same_name(UniAsserter asserter) {
-
-		BDDMockito.given(enrichItemService.findByName(eq(SCHEMA_NAME_VALUE), anyString()))
-			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedEnrichItem));
-
-		BDDMockito.given(enrichItemService.update(
-				eq(SCHEMA_NAME_VALUE),
-				eq(ENRICH_ITEM_ID_VALUE),
-				any(EnrichItemDTO.class)
-			))
-			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getUpdatedEnrichItem));
-
-		asserter.assertThat(
-			() -> datasource.createEnrichItem(CreateEnrichItemRequest.newBuilder()
-				.setSchemaName(SCHEMA_NAME_VALUE)
-				.build()),
-			response -> {
-				BDDMockito.then(enrichItemService)
-					.should(never())
-					.create(anyString(), any(EnrichItemDTO.class));
-
-				BDDMockito.then(enrichItemService)
-					.should(times(1))
-					.update(anyString(), anyLong(), any(EnrichItemDTO.class));
-
-				Assertions.assertEquals(ENRICH_ITEM_ID_VALUE, response.getEnrichItemId());
-			}
 		);
 
 	}
