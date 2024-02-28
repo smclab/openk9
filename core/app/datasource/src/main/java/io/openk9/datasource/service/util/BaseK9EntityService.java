@@ -473,6 +473,35 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
+	public Uni<ENTITY> findByName(String tenantId, String name) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> findByName(s, name));
+	}
+
+	public Uni<ENTITY> findByName(Mutiny.Session session, String name) {
+		var criteriaBuilder = sessionFactory.getCriteriaBuilder();
+		var query = criteriaBuilder.createQuery(getEntityClass());
+		var root = query.from(getEntityClass());
+		query.where(criteriaBuilder.equal(
+				criteriaBuilder.lower(root.get("name")),
+				name.toLowerCase()
+			)
+		);
+
+		return session.createQuery(query).getSingleResult();
+	}
+
+	public Uni<ENTITY> upsert(Mutiny.Session session, DTO dto) {
+		return findByName(session, dto.getName())
+			.onItem()
+			.transformToUni((item) -> update(session, item.getId(), dto))
+			.onFailure()
+			.recoverWithUni(() -> create(session, mapper.create(dto)));
+	}
+
+	public Uni<ENTITY> upsert(String tenantId, DTO dto) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> upsert(s, dto));
+	}
+
 	@Override
 	protected Mutiny.SessionFactory getSessionFactory() {
 		return sessionFactory;

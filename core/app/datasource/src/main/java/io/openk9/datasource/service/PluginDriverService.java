@@ -303,12 +303,4 @@ public class PluginDriverService
 		});
 	}
 
-	public Uni<PluginDriver> findByName(String tenantId, String name) {
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createNamedQuery(PluginDriver.FIND_BY_NAME_QUERY, PluginDriver.class)
-			.setParameter(1, name)
-			.getSingleResult()
-		);
-	}
-
 }

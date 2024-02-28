@@ -22,7 +22,6 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -40,14 +39,6 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
-	}
-
-	public Uni<EnrichItem> findByName(String tenantId, String name) {
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createNamedQuery(EnrichItem.FIND_BY_NAME_QUERY, EnrichItem.class)
-			.setParameter(1, name)
-			.getSingleResult()
-		);
 	}
 
 }

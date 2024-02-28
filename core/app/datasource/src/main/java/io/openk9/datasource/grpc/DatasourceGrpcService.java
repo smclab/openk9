@@ -56,13 +56,7 @@ public class DatasourceGrpcService implements Datasource {
 
 		var enrichItemDTO = enrichItemMapper.map(request);
 
-		return enrichItemService
-			.findByName(request.getSchemaName(), enrichItemDTO.getName())
-			.onItem()
-			.transformToUni((item) -> enrichItemService.update(
-				request.getSchemaName(), item.id, enrichItemDTO))
-			.onFailure()
-			.recoverWithUni(() -> enrichItemService.create(request.getSchemaName(), enrichItemDTO))
+		return enrichItemService.upsert(request.getSchemaName(), enrichItemDTO)
 			.map(enrichItem -> CreateEnrichItemResponse.newBuilder()
 				.setEnrichItemId(enrichItem.getId())
 				.build()
@@ -70,7 +64,8 @@ public class DatasourceGrpcService implements Datasource {
 	}
 
 	@Override
-	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
+	public Uni<CreatePluginDriverResponse> createPluginDriver(
+		CreatePluginDriverRequest request) {
 
 		var tenantId = request.getSchemaName();
 		var pluginDriverDTO = pluginDriverMapper.map(request);
@@ -79,23 +74,19 @@ public class DatasourceGrpcService implements Datasource {
 	}
 
 	@Override
-	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(CreatePresetPluginDriverRequest request) {
+	public Uni<CreatePluginDriverResponse> createPresetPluginDriver(
+		CreatePresetPluginDriverRequest request) {
+
 		var tenantId = request.getSchemaName();
-		var pluginDriverDTO = PluginDrivers.DRIVER_ENUM_MAP.get(request.getPreset());
+		var pluginDriverDTO = PluginDrivers.getPresetPluginDriver(request.getPreset());
+
 		return upsertPluginDriver(tenantId, pluginDriverDTO);
 	}
 
 	private Uni<CreatePluginDriverResponse> upsertPluginDriver(
-		String tenantId,
-		PluginDriverDTO pluginDriverDTO) {
-		return pluginDriverService
-			.findByName(tenantId, pluginDriverDTO.getName())
-			.onItem()
-			.transformToUni((item) -> pluginDriverService.update(
-				tenantId, item.getId(), pluginDriverDTO
-			))
-			.onFailure()
-			.recoverWithUni(() -> pluginDriverService.create(tenantId, pluginDriverDTO))
+		String tenantId, PluginDriverDTO pluginDriverDTO) {
+
+		return pluginDriverService.upsert(tenantId, pluginDriverDTO)
 			.map(pluginDriver -> CreatePluginDriverResponse.newBuilder()
 				.setPluginDriverId(pluginDriver.getId())
 				.build()
