@@ -23,6 +23,7 @@ import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
+import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
@@ -50,6 +51,12 @@ public class ProvisioningResource {
 	@Inject
 	@ConfigProperty(name = "quarkus.application.version")
 	String applicationVersion;
+
+	@POST
+	@Path("/initTenant")
+	public Uni<Void> initTenant(@Valid InitTenantRequest request) {
+		return datasource.initTenant(request).replaceWithVoid();
+	}
 
 	@POST
 	@Path("/connector")
