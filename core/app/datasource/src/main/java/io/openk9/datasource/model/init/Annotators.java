@@ -21,7 +21,7 @@ import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.dto.AnnotatorDTO;
 import io.openk9.datasource.model.util.Fuzziness;
 
-import java.util.List;
+import java.util.Set;
 
 public class Annotators {
 
@@ -50,7 +50,7 @@ public class Annotators {
 		.type(AnnotatorType.STOPWORD)
 		.build();
 
-	public static final List<AnnotatorDTO> INSTANCE = List.of(
+	public static final Set<AnnotatorDTO> INSTANCE = Set.of(
 		TOKEN_ANNOTATOR,
 		KEYWORD_ANNOTATOR,
 		STOPWORD_ANNOTATOR

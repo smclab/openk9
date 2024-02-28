@@ -17,15 +17,10 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
-
-import java.util.List;
 
 public class SearchConfig {
 
-	public static final List<QueryParserConfigDTO> QUERY_PARSER_CONFIGS =
-		QueryParserConfigs.INSTANCE;
 	private static final String NAME = "Default Search Config";
 	private static final String DESCRIPTION =
 		"Default Search Config Configuration for OpenK9";

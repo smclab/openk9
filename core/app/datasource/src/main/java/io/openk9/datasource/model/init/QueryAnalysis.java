@@ -17,16 +17,10 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.AnnotatorDTO;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.dto.RuleDTO;
-
-import java.util.List;
 
 public class QueryAnalysis {
 
-	public static final List<AnnotatorDTO> ANNOTATORS = Annotators.INSTANCE;
-	public static final List<RuleDTO> RULES = Rules.INSTANCE;
 	private static final String NAME = "Default Query Analysis";
 	private static final String DESCRIPTION = "Default Query Analysis Configuration";
 	private static final String STOP_WORDS = "";

@@ -18,21 +18,16 @@
 package io.openk9.datasource.model.init;
 
 import io.openk9.datasource.model.dto.BucketDTO;
-import io.openk9.datasource.model.dto.LanguageDTO;
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.dto.SearchConfigDTO;
 
-import java.util.List;
+import java.util.Set;
 
 public class Bucket {
-	public static final QueryAnalysisDTO QUERY_ANALYSIS = QueryAnalysis.INSTANCE;
-	public static final SearchConfigDTO SEARCH_CONFIG = SearchConfig.INSTANCE;
-	public static final List<LanguageDTO> LANGUAGES = List.of(
-		Languages.ITALIAN,
-		Languages.ENGLISH,
-		Languages.FRENCH,
-		Languages.GERMAN,
-		Languages.SPANISH
+	public static final Set<String> LANGUAGE_NAMES = Set.of(
+		Languages.ITALIAN.getName(),
+		Languages.ENGLISH.getName(),
+		Languages.FRENCH.getName(),
+		Languages.GERMAN.getName(),
+		Languages.SPANISH.getName()
 	);
 	private static final String NAME = "Default Bucket";
 	private static final String DESCRIPTION = "";

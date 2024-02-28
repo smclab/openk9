@@ -17,8 +17,29 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.dto.AnnotatorDTO;
+import io.openk9.datasource.model.dto.LanguageDTO;
+import io.openk9.datasource.model.dto.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.RuleDTO;
+import io.openk9.datasource.model.init.Annotators;
+import io.openk9.datasource.model.init.Languages;
+import io.openk9.datasource.model.init.QueryParserConfigs;
+import io.openk9.datasource.model.init.Rules;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -26,15 +47,126 @@ import javax.inject.Inject;
 public class TenantInitializerService {
 
 	@Inject
+	AnnotatorService annotatorService;
+	@Inject
 	BucketService bucketService;
+	@Inject
+	LanguageService languageService;
+	@Inject
+	QueryAnalysisService queryAnalysisService;
+	@Inject
+	QueryParserConfigService queryParserConfigService;
+	@Inject
+	RuleService ruleService;
 	@Inject
 	SearchConfigService searchConfigService;
 	@Inject
-	QueryAnalysisService queryAnalysisService;
+	Mutiny.SessionFactory sessionFactory;
+
 
 	public Uni<Integer> createDefault(String tenantId) {
-		return Uni.createFrom().item(-1);
+
+		return sessionFactory
+			.withTransaction(tenantId, (s, t) -> defaultBucket(s))
+			.map(bucket -> 1);
 	}
 
+	private Uni<Bucket> defaultBucket(Mutiny.Session s) {
+		var bucketDTO = io.openk9.datasource.model.init.Bucket.INSTANCE;
+
+		return defaultLanguages(s)
+			.map(this::onlyBucketAvailableLanguages)
+			.flatMap(availableLanguages -> defaultQueryAnalysis(s)
+				.flatMap(queryAnalysis -> defaultSearchConfig(s)
+					.flatMap(searchConfig -> bucketService
+						.upsert(s, bucketDTO)
+						.flatMap(bucket -> {
+							bucket.setAvailableLanguages(availableLanguages);
+							bucket.setQueryAnalysis(queryAnalysis);
+							bucket.setSearchConfig(searchConfig);
+							return bucketService.persist(bucket);
+						})
+					)
+				)
+			);
+	}
+
+	private Uni<io.openk9.datasource.model.QueryAnalysis> defaultQueryAnalysis(Mutiny.Session s) {
+
+		var queryAnalysisDTO = io.openk9.datasource.model.init.QueryAnalysis.INSTANCE;
+
+		return defaultRules(s)
+			.flatMap(rules -> defaultAnnotators(s)
+				.flatMap(annotators -> queryAnalysisService
+					.upsert(s, queryAnalysisDTO)
+					.flatMap(queryAnalysis -> {
+						queryAnalysis.setAnnotators(new HashSet<>(annotators));
+						queryAnalysis.setRules(new HashSet<>(rules));
+						return queryAnalysisService.persist(queryAnalysis);
+					})
+				)
+			);
+	}
+
+	private Uni<SearchConfig> defaultSearchConfig(Mutiny.Session s) {
+		var searchConfigDTO = io.openk9.datasource.model.init.SearchConfig.INSTANCE;
+
+		return defaultQueryParserConfigs(s)
+			.flatMap(queryParserConfigs -> searchConfigService
+				.upsert(s, searchConfigDTO)
+				.flatMap(searchConfig -> {
+					searchConfig.setQueryParserConfigs(new HashSet<>(queryParserConfigs));
+					return searchConfigService.persist(searchConfig);
+				})
+			);
+	}
+
+	private Uni<List<Annotator>> defaultAnnotators(Mutiny.Session s) {
+		var upserts = new ArrayList<Uni<Annotator>>();
+
+		for (AnnotatorDTO annotatorDTO : Annotators.INSTANCE) {
+			upserts.add(annotatorService.upsert(s, annotatorDTO));
+		}
+
+		return Uni.join().all(upserts).andCollectFailures();
+	}
+
+	private Uni<List<Language>> defaultLanguages(Mutiny.Session s) {
+		var upserts = new ArrayList<Uni<Language>>();
+
+		for (LanguageDTO languageDTO : Languages.INSTANCE) {
+			upserts.add(languageService.upsert(s, languageDTO));
+		}
+
+		return Uni.join().all(upserts).andCollectFailures();
+	}
+
+	private Uni<List<Rule>> defaultRules(Mutiny.Session s) {
+		var upserts = new ArrayList<Uni<Rule>>();
+
+		for (RuleDTO ruleDTO : Rules.INSTANCE) {
+			upserts.add(ruleService.upsert(s, ruleDTO));
+		}
+
+		return Uni.join().all(upserts).andCollectFailures();
+	}
+
+	private Uni<List<QueryParserConfig>> defaultQueryParserConfigs(Mutiny.Session s) {
+		var upserts = new ArrayList<Uni<QueryParserConfig>>();
+
+		for (QueryParserConfigDTO queryParserConfigDTO : QueryParserConfigs.INSTANCE) {
+			upserts.add(queryParserConfigService.upsert(s, queryParserConfigDTO));
+		}
+
+		return Uni.join().all(upserts).andCollectFailures();
+	}
+
+	private Set<Language> onlyBucketAvailableLanguages(Collection<Language> languages) {
+		return languages
+			.stream()
+			.filter(language -> io.openk9.datasource.model.init.Bucket.LANGUAGE_NAMES.contains(
+				language.getName()))
+			.collect(Collectors.toSet());
+	}
 
 }

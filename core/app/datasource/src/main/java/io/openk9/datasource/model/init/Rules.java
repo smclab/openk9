@@ -19,7 +19,7 @@ package io.openk9.datasource.model.init;
 
 import io.openk9.datasource.model.dto.RuleDTO;
 
-import java.util.List;
+import java.util.Set;
 
 public class Rules {
 
@@ -99,7 +99,7 @@ public class Rules {
 		.rhs("$DOCTYPE")
 		.build();
 
-	public static final List<RuleDTO> INSTANCE = List.of(
+	public static final Set<RuleDTO> INSTANCE = Set.of(
 		$ROOT_$Query,
 		$Query_$Collection,
 		$Part_$Intent,

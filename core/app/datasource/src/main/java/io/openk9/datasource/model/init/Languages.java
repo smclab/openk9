@@ -19,7 +19,7 @@ package io.openk9.datasource.model.init;
 
 import io.openk9.datasource.model.dto.LanguageDTO;
 
-import java.util.List;
+import java.util.Set;
 
 public class Languages {
 
@@ -81,7 +81,7 @@ public class Languages {
 		.build();
 
 
-	public static final List<LanguageDTO> INSTANCE = List.of(
+	public static final Set<LanguageDTO> INSTANCE = Set.of(
 		ARABIC,
 		CATALAN,
 		CHINESE,

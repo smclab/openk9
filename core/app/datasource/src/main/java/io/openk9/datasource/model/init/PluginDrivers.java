@@ -29,26 +29,34 @@ import java.util.EnumMap;
 
 public class PluginDrivers {
 
-	public static final EnumMap<Preset, PluginDriverDTO> DRIVER_ENUM_MAP =
+	private static final EnumMap<Preset, PluginDriverDTO> PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP =
 		new EnumMap<>(Preset.class);
 
-	public static final EnumMap<Preset, K9EntityDTO> DESCRIPTION_ENUM_MAP =
+	private static final EnumMap<Preset, K9EntityDTO> PRESET_K9_ENTITY_DTO_MAP =
 		new EnumMap<>(Preset.class);
 
 	static {
-		DESCRIPTION_ENUM_MAP.put(Preset.LIFERAY, Liferay.K9_ENTITY);
-		DESCRIPTION_ENUM_MAP.put(Preset.CRAWLER, Crawler.K9_ENTITY);
-		DESCRIPTION_ENUM_MAP.put(Preset.EMAIL, Email.K9_ENTITY);
-		DESCRIPTION_ENUM_MAP.put(Preset.GITLAB, Gitlab.K9_ENTITY);
-		DESCRIPTION_ENUM_MAP.put(Preset.SITEMAP, Sitemap.K9_ENTITY);
-		DESCRIPTION_ENUM_MAP.put(Preset.DATABASE, Database.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.LIFERAY, Liferay.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.CRAWLER, Crawler.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.EMAIL, Email.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.GITLAB, Gitlab.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.SITEMAP, Sitemap.K9_ENTITY);
+		PRESET_K9_ENTITY_DTO_MAP.put(Preset.DATABASE, Database.K9_ENTITY);
 
-		DRIVER_ENUM_MAP.put(Preset.LIFERAY, Liferay.PLUGIN_DRIVER_DTO);
-		DRIVER_ENUM_MAP.put(Preset.CRAWLER, Crawler.PLUGIN_DRIVER_DTO);
-		DRIVER_ENUM_MAP.put(Preset.EMAIL, Email.PLUGIN_DRIVER_DTO);
-		DRIVER_ENUM_MAP.put(Preset.GITLAB, Gitlab.PLUGIN_DRIVER_DTO);
-		DRIVER_ENUM_MAP.put(Preset.SITEMAP, Sitemap.PLUGIN_DRIVER_DTO);
-		DRIVER_ENUM_MAP.put(Preset.DATABASE, Database.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.LIFERAY, Liferay.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.CRAWLER, Crawler.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.EMAIL, Email.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.GITLAB, Gitlab.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.SITEMAP, Sitemap.PLUGIN_DRIVER_DTO);
+		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.DATABASE, Database.PLUGIN_DRIVER_DTO);
+	}
+
+	public static PluginDriverDTO getPresetPluginDriver(Preset preset) {
+		return PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.get(preset);
+	}
+
+	public static EnumMap<Preset, K9EntityDTO> getPresets() {
+		return PRESET_K9_ENTITY_DTO_MAP;
 	}
 
 	public static class Liferay {

@@ -20,11 +20,11 @@ package io.openk9.datasource.model.init;
 
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 
-import java.util.List;
+import java.util.Set;
 
 public class QueryParserConfigs {
 
-	public static List<QueryParserConfigDTO> INSTANCE = List.of(
+	public static Set<QueryParserConfigDTO> INSTANCE = Set.of(
 		DateOrder.INSTANCE,
 		Entity.INSTANCE,
 		Text.INSTANCE,
