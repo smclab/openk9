@@ -20,6 +20,10 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.form.FormField;
+import io.openk9.datasource.web.dto.form.FormFieldValue;
+import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
+import io.openk9.datasource.web.dto.form.Type;
 import io.smallrye.mutiny.Uni;
 
 import javax.annotation.security.RolesAllowed;
@@ -56,6 +60,56 @@ public class PluginDriverResource {
 			.status(PluginDriverHealthDTO.Status.UNKOWN)
 			.build()
 		);
+	}
+
+	@GET
+	@Path("/form/{id}")
+	public Uni<PluginDriverFormDTO> getForm(@PathParam("id") long id) {
+		// return service.getHealth(id);
+		return Uni.createFrom().item(PluginDriverFormDTO.builder()
+			.field(FormField.builder()
+				.name("key1")
+				.type(Type.SELECT)
+				.size(2)
+				.required(false)
+				.value(FormFieldValue.builder()
+					.value("value1")
+					.isDefault(true)
+					.build()
+				)
+				.value(FormFieldValue.builder()
+					.value("value2")
+					.isDefault(false)
+					.build()
+				)
+				.build()
+			)
+			.build());
+	}
+
+	@POST
+	@Path("/form")
+	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+		// return service.getHealth(pluginDriverDTO);
+		return Uni.createFrom().item(PluginDriverFormDTO.builder()
+			.field(FormField.builder()
+				.name("key1")
+				.type(Type.SELECT)
+				.size(2)
+				.required(false)
+				.value(FormFieldValue.builder()
+					.value("value1")
+					.isDefault(true)
+					.build()
+				)
+				.value(FormFieldValue.builder()
+					.value("value2")
+					.isDefault(false)
+					.build()
+				)
+				.build()
+			)
+			.build());
 	}
 
 }
