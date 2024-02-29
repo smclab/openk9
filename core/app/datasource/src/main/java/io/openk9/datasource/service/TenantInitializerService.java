@@ -86,6 +86,7 @@ public class TenantInitializerService {
 							bucket.setSearchConfig(searchConfig);
 							return bucketService.persist(s, bucket);
 						})
+						.flatMap(bucket -> bucketService.enableTenant(s, bucket.getId()))
 					)
 				)
 			);

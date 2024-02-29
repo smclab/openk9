@@ -45,6 +45,10 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -52,10 +56,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -439,8 +439,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			}));
 	}
 
-	public Uni<Bucket> enableTenant(long id) {
-		return sessionFactory.withTransaction(s -> findById(s, id)
+	public Uni<Bucket> enableTenant(Mutiny.Session s, long id) {
+		return findById(s, id)
 			.flatMap(bucket -> {
 
 				if (bucket == null) {
@@ -467,7 +467,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							if (tb == null) {
 								return Uni
 									.createFrom()
-									.failure(new NotFoundException("Tenant binding not found create one first"));
+									.failure(new NotFoundException(
+										"Tenant binding not found create one first"));
 							}
 
 							bucket.setTenantBinding(tb);
@@ -484,7 +485,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 				return Uni.createFrom().item(bucket);
 
-			}));
+			});
+	}
+
+	public Uni<Bucket> enableTenant(long id) {
+		return sessionFactory.withTransaction((s, t) -> enableTenant(s, id));
 	}
 
 	public Uni<Long> getDocCountFromBucket(Long bucketId) {
