@@ -36,7 +36,7 @@ import javax.ws.rs.PathParam;
 
 @ApplicationScoped
 @Path("/pluginDrivers")
-@RolesAllowed("admin")
+@RolesAllowed("k9-admin")
 public class PluginDriverResource {
 
 	@Inject
