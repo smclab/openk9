@@ -20,7 +20,9 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.smallrye.mutiny.Uni;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -30,27 +32,30 @@ import javax.ws.rs.PathParam;
 
 @ApplicationScoped
 @Path("/pluginDrivers")
+@RolesAllowed("admin")
 public class PluginDriverResource {
 
 	@Inject
 	PluginDriverService service;
 
 	@GET
-	@Path("health/{id}")
-	public PluginDriverHealthDTO getHealth(@PathParam("id") long id) {
+	@Path("/health/{id}")
+	public Uni<PluginDriverHealthDTO> getHealth(@PathParam("id") long id) {
 		// return service.getHealth(id);
-		return PluginDriverHealthDTO.builder()
+		return Uni.createFrom().item(PluginDriverHealthDTO.builder()
 			.status(PluginDriverHealthDTO.Status.UNKOWN)
-			.build();
+			.build()
+		);
 	}
 
 	@POST
-	@Path("health")
-	public PluginDriverHealthDTO getHealth(PluginDriverDTO pluginDriverDTO) {
+	@Path("/health")
+	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		// return service.getHealth(pluginDriverDTO);
-		return PluginDriverHealthDTO.builder()
+		return Uni.createFrom().item(PluginDriverHealthDTO.builder()
 			.status(PluginDriverHealthDTO.Status.UNKOWN)
-			.build();
+			.build()
+		);
 	}
 
 }
