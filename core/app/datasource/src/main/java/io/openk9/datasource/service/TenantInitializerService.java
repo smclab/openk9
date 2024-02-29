@@ -64,11 +64,11 @@ public class TenantInitializerService {
 	Mutiny.SessionFactory sessionFactory;
 
 
-	public Uni<Integer> createDefault(String tenantId) {
+	public Uni<Long> createDefault(String tenantId) {
 
 		return sessionFactory
 			.withTransaction(tenantId, (s, t) -> defaultBucket(s))
-			.map(bucket -> 1);
+			.map(bucket -> 1L);
 	}
 
 	private Uni<Bucket> defaultBucket(Mutiny.Session s) {

@@ -57,7 +57,7 @@ public class ProvisioningResource {
 		return datasource.initTenant(io.openk9.datasource.grpc.InitTenantRequest.newBuilder()
 			.setSchemaName(request.tenantName)
 			.build()
-		).map(initTenantResponse -> new InitTenantResponse(initTenantResponse.getItemsCreated()));
+		).map(initTenantResponse -> new InitTenantResponse(initTenantResponse.getBucketId()));
 	}
 
 	@POST
@@ -110,7 +110,7 @@ public class ProvisioningResource {
 
 	public record InitTenantRequest(@NotEmpty String tenantName) {}
 
-	public record InitTenantResponse(int results) {}
+	public record InitTenantResponse(long bucketId) {}
 	public record CreateConnectorRequest(
 		@NotEmpty String tenantName,
 		Preset preset

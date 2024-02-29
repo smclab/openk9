@@ -33,12 +33,13 @@ public class Constants {
 			.setPreset(Preset.CRAWLER)
 			.build();
 	private static final String PRESET_VALUE = "CRAWLER";
+	private static final String CHART_VERSION = "1.x.x";
+
 	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
 		.setSchemaName(TENANT_NAME)
 		.setChart(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
 		.setVersion(CHART_VERSION)
 		.build();
-	private static final String CHART_VERSION = "1.x.x";
 	private static final String TENANT_NAME_KEY = "tenantName";
 	private static final String CONNECTOR_NAME = String.format(
 		"%s-%s-%s",

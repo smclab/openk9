@@ -51,15 +51,15 @@ message CreatePresetPluginDriverRequest {
 }
 
 message InitTenantResponse {
-  uint32 itemsCreated = 2;
+  int64 bucketId = 1;
 }
 
 message CreateEnrichItemResponse {
-  int64 enrichItemId = 2;
+  int64 enrichItemId = 1;
 }
 
 message CreatePluginDriverResponse {
-  int64 pluginDriverId = 2;
+  int64 pluginDriverId = 1;
 }
 
 enum EnrichItemType {

@@ -46,8 +46,8 @@ public class DatasourceGrpcService implements Datasource {
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
 
 		return tenantInitializerService.createDefault(request.getSchemaName())
-			.map(integer -> InitTenantResponse.newBuilder()
-				.setItemsCreated(integer)
+			.map(bucketId -> InitTenantResponse.newBuilder()
+				.setBucketId(bucketId)
 				.build());
 	}
 

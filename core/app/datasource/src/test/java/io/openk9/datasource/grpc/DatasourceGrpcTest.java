@@ -43,7 +43,7 @@ import static org.mockito.Mockito.times;
 public class DatasourceGrpcTest {
 
 	private static final String SCHEMA_NAME_VALUE = "mew";
-	private static final int TENANT_ITEMS_COUNT_VALUE = 345;
+	private static final long BUCKET_ID_VALUE = 345L;
 	private static final long ENRICH_ITEM_ID_VALUE = 1234124L;
 	private static final long PLUGIN_DRIVER_ID_VALUE = 1231389L;
 	private static PluginDriver CREATED_PLUGIN_DRIVER;
@@ -66,7 +66,7 @@ public class DatasourceGrpcTest {
 	void should_init_tenant(UniAsserter asserter) {
 
 		BDDMockito.given(tenantInitializerService.createDefault(eq(SCHEMA_NAME_VALUE)))
-			.willReturn(Uni.createFrom().item(TENANT_ITEMS_COUNT_VALUE));
+			.willReturn(Uni.createFrom().item(BUCKET_ID_VALUE));
 
 		asserter.assertThat(
 			() -> datasource.initTenant(InitTenantRequest.newBuilder()
@@ -79,8 +79,8 @@ public class DatasourceGrpcTest {
 					.createDefault(eq(SCHEMA_NAME_VALUE));
 
 				Assertions.assertEquals(
-					TENANT_ITEMS_COUNT_VALUE,
-					response.getItemsCreated()
+					BUCKET_ID_VALUE,
+					response.getBucketId()
 				);
 			}
 		);
