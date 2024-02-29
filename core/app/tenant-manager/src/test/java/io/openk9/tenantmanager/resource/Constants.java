@@ -33,19 +33,19 @@ public class Constants {
 			.setPreset(Preset.CRAWLER)
 			.build();
 	private static final String PRESET_VALUE = "CRAWLER";
+	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
+		.setSchemaName(TENANT_NAME)
+		.setChart(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
+		.setVersion(CHART_VERSION)
+		.build();
+	private static final String CHART_VERSION = "1.x.x";
+	private static final String TENANT_NAME_KEY = "tenantName";
 	private static final String CONNECTOR_NAME = String.format(
 		"%s-%s-%s",
 		TENANT_NAME,
-		PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER),
+		PresetPluginDrivers.getPluginDriver(Preset.CRAWLER),
 		"1_x_x"
 	);
-	private static final String CHART_VERSION = "1.x.x";
-	private static final String TENANT_NAME_KEY = "tenantName";
-	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
-		.setSchemaName(TENANT_NAME)
-		.setChart(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER))
-		.setVersion(CHART_VERSION)
-		.build();
 	private static final String PRESET_KEY = "preset";
 	static final String VALID_JSON_BODY = JsonObject.of(
 		TENANT_NAME_KEY, TENANT_NAME,

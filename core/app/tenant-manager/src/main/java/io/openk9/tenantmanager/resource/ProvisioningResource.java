@@ -78,7 +78,7 @@ public class ProvisioningResource {
 				appManager,
 				AppManifest.newBuilder()
 					.setSchemaName(request.tenantName)
-					.setChart(PresetPluginDrivers.CONNECTOR_MAP.get(request.preset))
+					.setChart(PresetPluginDrivers.getPluginDriver(request.preset))
 					.setVersion(latestMinorPatchedVersion)
 					.build(),
 				datasource,

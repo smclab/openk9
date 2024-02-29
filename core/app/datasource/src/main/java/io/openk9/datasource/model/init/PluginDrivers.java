@@ -66,7 +66,7 @@ public class PluginDrivers {
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.LIFERAY))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
@@ -96,7 +96,7 @@ public class PluginDrivers {
 			PluginDriver.Provisioning.SYSTEM;
 
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.CRAWLER))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
 			.port(5000)
 			.secure(false)
 			.path("/startUrlsCrawling")
@@ -125,7 +125,7 @@ public class PluginDrivers {
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.EMAIL))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
@@ -154,7 +154,7 @@ public class PluginDrivers {
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.GITLAB))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
@@ -183,7 +183,7 @@ public class PluginDrivers {
 		public static final PluginDriver.Provisioning PROVISIONING =
 			PluginDriver.Provisioning.SYSTEM;
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.SITEMAP))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
 			.port(5000)
 			.secure(false)
 			.path("/startSitemapCrawling")
@@ -214,7 +214,7 @@ public class PluginDrivers {
 			PluginDriver.Provisioning.SYSTEM;
 
 		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.CONNECTOR_MAP.get(Preset.DATABASE))
+			.host(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
 			.port(5000)
 			.secure(false)
 			.path("/execute")

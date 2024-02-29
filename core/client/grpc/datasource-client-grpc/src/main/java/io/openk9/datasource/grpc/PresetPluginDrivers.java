@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class PresetPluginDrivers {
 
-	public static final Map<Preset, String> CONNECTOR_MAP = new EnumMap<>(Preset.class);
+	private static final Map<Preset, String> CONNECTOR_MAP = new EnumMap<>(Preset.class);
 
 	static {
 		CONNECTOR_MAP.put(Preset.LIFERAY, "openk9-liferay-parser");
@@ -33,6 +33,9 @@ public class PresetPluginDrivers {
 		CONNECTOR_MAP.put(Preset.DATABASE, "openk9-database-parser");
 	}
 
+	public static String getPluginDriver(Preset preset) {
+		return CONNECTOR_MAP.get(preset);
+	}
 	private PresetPluginDrivers() {}
 
 }
