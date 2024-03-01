@@ -12,8 +12,9 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
-import { result } from "lodash";
 import "../components/Scrollbar.css";
+import CustomSkeleton from "./Skeleton";
+import { ResultTitleTwo } from "../renderer-components";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -70,26 +71,28 @@ function ResultsPagination<E>({
     case "virtual":
     case "infinite":
       return (
-        <InfiniteResults
-          setTotalResult={setTotalResult}
-          renderers={renderers}
-          searchQuery={searchQuery}
-          onDetail={onDetail}
-          setDetailMobile={setDetailMobile}
-          sort={sort}
-          setSortResult={setSortResult}
-          isMobile={isMobile}
-          overChangeCard={overChangeCard}
-          language={language}
-          setSortAfterKey={setSortAfterKey}
-          sortAfterKey={sortAfterKey}
-          numberOfResults={numberOfResults}
-          currentPage={currentPage}
-          changePage={changePage}
-          elementForPage={pagination}
-          setCurrentPage={setCurrentPage}
-          anchor={anchor}
-        />
+        <React.Suspense fallback={<SkeletonResult />}>
+          <InfiniteResults
+            setTotalResult={setTotalResult}
+            renderers={renderers}
+            searchQuery={searchQuery}
+            onDetail={onDetail}
+            setDetailMobile={setDetailMobile}
+            sort={sort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={overChangeCard}
+            language={language}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
+            currentPage={currentPage}
+            changePage={changePage}
+            elementForPage={pagination}
+            setCurrentPage={setCurrentPage}
+            anchor={anchor}
+          />
+        </React.Suspense>
       );
   }
 }
@@ -169,7 +172,7 @@ function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
           >
             {children?.toLocaleString("it")}
           </span>
-<span>
+          <span>
             <SortResultListMemo setSortResult={setSortResult} />
           </span>
         </div>
@@ -246,7 +249,6 @@ export function InfiniteResults<E>({
       resetClick();
     }
   }, [currentPage]);
-
 
   function scrollToOverlay() {
     if (anchor && anchor.current) {
@@ -533,5 +535,98 @@ function CreateButton({
     >
       {value}
     </button>
+  );
+}
+
+function SkeletonResult() {
+  const { t } = useTranslation();
+  return (
+    <React.Fragment>
+      <div className="openk9-skeleton">
+        <div
+          className="openk9-result-list-container-title box-title openk9-skeleton-container-result"
+          css={css`
+            padding: 0px 16px;
+            width: 100%;
+            background: #fafafa;
+            padding-top: 20.7px;
+            padding-bottom: 12.7px;
+            display: flex;
+            margin-bottom: 8px;
+          `}
+        >
+          <span>
+            <ResultSvg />
+          </span>
+          <span
+            className="openk9-result-list-title title openk9-skeleton-container-title"
+            css={css`
+              margin-left: 5px;
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin-left: 8px;
+            `}
+          >
+            {t("result")}
+          </span>
+        </div>
+      </div>
+      <div
+        className="openk9-number-result-list-container-wrapper openk9-skeleton-container-wrapper"
+        css={css`
+          padding: 8px 16px;
+          font-weight: Helvetica;
+          font-weight: 700;
+        `}
+      >
+        <div
+          className="openk9-number-result-list-container more-detail-content openk9-skeleton-container-more-detail"
+          css={css`
+            padding: 8px 5px;
+            border: 1px solid var(--openk9-embeddable-search--border-color);
+            display: flex;
+            justify-content: space-between;
+            border-radius: 8px;
+            align-items: center;
+          `}
+        >
+          <span
+            className="openk9-number-result-list-number-of-results openk9-skeleton-container-number-of-results"
+            css={css`
+              color: var(--openk9-embeddable-search--active-color);
+              margin-left: 5px;
+            `}
+          >
+            <CustomSkeleton width="150px" />
+          </span>
+          <span>
+            <CustomSkeleton width="100px" />
+          </span>
+        </div>
+      </div>
+      {new Array(3).fill(null).map((_, index) => (
+        <div
+          className="openk9-embeddable-search--result-container openk9-skeleton-container--result-container"
+          key={index}
+        >
+          <div
+            css={css`
+              padding: 16px 16px;
+              overflow: hidden;
+            `}
+          >
+            <ResultTitleTwo>
+              <CustomSkeleton />
+            </ResultTitleTwo>
+            <CustomSkeleton counter={3} width="100%" />
+          </div>
+        </div>
+      ))}
+    </React.Fragment>
   );
 }
