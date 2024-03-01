@@ -21,5 +21,6 @@ public enum Type {
 	STRING,
 	NUMBER,
 	SELECT,
-	MULTISELECT
+	MULTISELECT,
+	LIST
 }

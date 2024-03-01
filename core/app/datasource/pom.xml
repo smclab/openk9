@@ -260,6 +260,12 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-serialization-jackson_${scala.version}</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock-jre8</artifactId>
+      <scope>test</scope>
+      <version>3.0.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
