@@ -5,6 +5,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";
 import { SelectionsAction } from "./useSelections";
 import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 type TokenSelectProps = {
   span: AnalysisResponseEntry;
@@ -219,7 +220,7 @@ export function TokenSelect({
                     {option.keywordName}:
                   </strong>
                 )}
-                <FactoryTokenType option={option} />
+                <FactoryTokenType option={option} t={t} />
               </div>
             );
           })}
@@ -254,10 +255,12 @@ export function getTokenLabel(token: AnalysisToken) {
 
 function FactoryTokenType({
   option,
+  t,
 }: {
   option: AnalysisToken & {
     score: number;
   };
+  t: TFunction<"translation", undefined, "translation">;
 }) {
   switch (option.tokenType) {
     case "AUTOCOMPLETE":
@@ -282,7 +285,7 @@ function FactoryTokenType({
     case "AUTOCORRECT":
       return (
         <span className="openk9-token-select-factory-autocorrect">
-          Did you mean? <strong>{option.value}</strong>
+          {t("did-you-mean")} <strong>{option.value}</strong>
         </span>
       );
     default:
