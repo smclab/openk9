@@ -20,6 +20,7 @@ package io.openk9.datasource.plugindriver;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.FormField;
 import io.openk9.datasource.web.dto.form.FormFieldValidator;
@@ -75,7 +76,7 @@ class HttpPluginDriverClientTest {
 
 		PluginDriverHealthDTO expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
 			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverHealthDTO.class);
 		}
 
@@ -137,7 +138,7 @@ class HttpPluginDriverClientTest {
 
 		Buffer expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
 			expected = Buffer.buffer(in.readAllBytes());
 		}
 
@@ -154,7 +155,7 @@ class HttpPluginDriverClientTest {
 
 		PluginDriverFormDTO expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
 			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverFormDTO.class);
 		}
 
@@ -211,12 +212,6 @@ class HttpPluginDriverClientTest {
 			}
 		);
 
-	}
-
-	private static InputStream getResourceAsStream(String path) {
-		return HttpPluginDriverClientTest.class
-			.getClassLoader()
-			.getResourceAsStream(path);
 	}
 
 }
