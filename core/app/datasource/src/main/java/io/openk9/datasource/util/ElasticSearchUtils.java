@@ -54,7 +54,7 @@ public class ElasticSearchUtils {
 	public static JsonObject getDynamicMapping(byte[] payload) {
 
 		DocumentMapper documentMapper = getMapperService()
-			.documentMapperWithAutoCreate(MapperService.SINGLE_MAPPING_NAME)
+			.documentMapperWithAutoCreate(DOCUMENT_TYPE)
 			.getDocumentMapper();
 
 		ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
