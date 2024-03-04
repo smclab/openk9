@@ -217,7 +217,7 @@ function Filters({
           </div>
         )}
         {preFilters}
-        {suggestionCategories.data?.map((suggestionCategory) => (
+        {suggestionCategories.data?.map((suggestionCategory, index) => (
           // <React.Suspense fallback={<div>sdcxz</div>}>
           //   <FilterCategoryDynamicMemo
           //     key={suggestionCategory.id}
@@ -239,7 +239,7 @@ function Filters({
           //     noResultMessage={noResultMessage}
           //   />
           // </React.Suspense>ù
-          <SkeletonFilters />
+          <SkeletonFilters key={index} />
         ))}
       </div>
     </div>
