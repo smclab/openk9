@@ -32,7 +32,6 @@ import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
 import io.vertx.mutiny.core.buffer.Buffer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -212,11 +211,6 @@ class HttpPluginDriverClientTest {
 			}
 		);
 
-	}
-
-	@AfterEach
-	void clearContext() {
-		wireMockServer.resetScenarios();
 	}
 
 	private static InputStream getResourceAsStream(String path) {
