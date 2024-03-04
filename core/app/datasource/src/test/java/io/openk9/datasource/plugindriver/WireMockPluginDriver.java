@@ -53,7 +53,6 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 		stubForm();
 		stubInvoke();
 
-		//		return Map.of("wiremock.plugindriver.port", String.valueOf(wireMockServer.port()));
 		return Map.of();
 	}
 
@@ -62,6 +61,17 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 		if (Objects.nonNull(wireMockServer)) {
 			wireMockServer.stop();
 		}
+	}
+
+	@Override
+	public void inject(TestInjector testInjector) {
+		testInjector.injectIntoFields(
+			wireMockServer,
+			new TestInjector.AnnotatedAndMatchesType(
+				InjectWireMock.class,
+				WireMockServer.class
+			)
+		);
 	}
 
 	private void stubInvoke() {

@@ -19,8 +19,10 @@ package io.openk9.datasource.web.dto;
 
 import lombok.Builder;
 
+import javax.validation.constraints.NotNull;
+
 @Builder
-public record PluginDriverHealthDTO(Status status) {
+public record PluginDriverHealthDTO(@NotNull Status status) {
 	public enum Status {
 		UP,
 		DOWN,

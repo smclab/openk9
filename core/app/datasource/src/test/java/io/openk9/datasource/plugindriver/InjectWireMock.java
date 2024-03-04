@@ -15,21 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto.form;
+package io.openk9.datasource.plugindriver;
 
-import lombok.Builder;
-import lombok.Singular;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.Collection;
-
-@Builder
-public record FormField(
-	String info,
-	String label,
-	String name,
-	Type type,
-	int size,
-	boolean required,
-	@Singular Collection<FormFieldValue> values,
-	FormFieldValidator validator
-) {}
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface InjectWireMock {
+}

@@ -17,20 +17,29 @@
 
 package io.openk9.datasource.plugindriver;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.form.FormField;
+import io.openk9.datasource.web.dto.form.FormFieldValidator;
+import io.openk9.datasource.web.dto.form.FormFieldValue;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
+import io.openk9.datasource.web.dto.form.Type;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
 import io.vertx.mutiny.core.buffer.Buffer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import javax.inject.Inject;
+import javax.validation.ValidationException;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)
@@ -44,9 +53,12 @@ class HttpPluginDriverClientTest {
 	@Inject
 	HttpPluginDriverClient httpPluginDriverClient;
 
+	@InjectWireMock
+	WireMockServer wireMockServer;
+
 	@Test
 	@RunOnVertxContext
-	void should_invoke(UniAsserter asserter) {
+	void should_invoke_success(UniAsserter asserter) {
 
 		asserter.assertThat(
 			() -> httpPluginDriverClient.invoke(
@@ -77,6 +89,51 @@ class HttpPluginDriverClientTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_get_health_unkonwn_when_response_body_is_invalid(UniAsserter asserter) {
+
+		var invalidBodyStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.HEALTH_PATH)
+			.willReturn(ResponseDefinitionBuilder.okForEmptyJson()));
+
+		asserter.assertThat(
+			() -> httpPluginDriverClient.getHealth(pluginDriverInfo),
+			res -> {
+				Assertions.assertEquals(PluginDriverHealthDTO.builder()
+					.status(PluginDriverHealthDTO.Status.UNKOWN)
+					.build(), res);
+				wireMockServer.removeStub(invalidBodyStub);
+			}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_health_fail_when_response_status_is_not_200(UniAsserter asserter) {
+
+		var invalidStatusStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.HEALTH_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(500)
+				.withStatusMessage("PluginDriver internal error")
+			)
+		);
+
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.getHealth(pluginDriverInfo),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
+				wireMockServer.removeStub(invalidStatusStub);
+			}
+		);
+
+	}
+
+
+	@Test
+	@RunOnVertxContext
 	void should_get_sample(UniAsserter asserter) throws IOException {
 
 		Buffer expected;
@@ -104,9 +161,62 @@ class HttpPluginDriverClientTest {
 
 		asserter.assertThat(
 			() -> httpPluginDriverClient.getForm(pluginDriverInfo),
-			res -> Assertions.assertEquals(expected, res)
+			res -> {
+				Assertions.assertEquals(expected, res);
+				Assertions.assertTrue(expected
+					.fields()
+					.contains(FormField.builder()
+						.label("Title tag")
+						.name("titleTag")
+						.type(Type.STRING)
+						.size(10)
+						.required(true)
+						.info("")
+						.value(
+							FormFieldValue.builder()
+								.value("title::text")
+								.isDefault(true)
+								.build()
+						)
+						.validator(FormFieldValidator.builder()
+							.min(0)
+							.max(100)
+							.regex("/[[:alnum:]]+/")
+							.build())
+						.build())
+				);
+			}
 		);
 
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_form_fail_when_response_status_is_not_200(UniAsserter asserter) {
+
+		var invalidStatusStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(500)
+				.withStatusMessage("PluginDriver internal error")
+			)
+		);
+
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.getForm(pluginDriverInfo),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
+				wireMockServer.removeStub(invalidStatusStub);
+			}
+		);
+
+	}
+
+	@AfterEach
+	void clearContext() {
+		wireMockServer.resetScenarios();
 	}
 
 	private static InputStream getResourceAsStream(String path) {

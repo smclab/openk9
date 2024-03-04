@@ -28,6 +28,9 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
 
 @ApplicationScoped
 public class HttpPluginDriverClient {
@@ -40,6 +43,8 @@ public class HttpPluginDriverClient {
 	WebClient webClient;
 	@Inject
 	Logger logger;
+	@Inject
+	Validator validator;
 
 	public Uni<HttpResponse<Buffer>> invoke(
 		HttpPluginDriverInfo httpPluginDriverInfo,
@@ -111,7 +116,15 @@ public class HttpPluginDriverClient {
 			)
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
-			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class));
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
+			.flatMap(this::validateDto)
+			.onFailure(ConstraintViolationException.class)
+			.recoverWithItem(PluginDriverHealthDTO
+				.builder()
+				.status(PluginDriverHealthDTO.Status.UNKOWN)
+				.build()
+			);
 	}
 
 	public Uni<HttpResponse<Buffer>> getSample(HttpPluginDriverInfo pluginDriverInfo) {
@@ -136,7 +149,34 @@ public class HttpPluginDriverClient {
 			)
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
-			.map(res -> res.bodyAsJson(PluginDriverFormDTO.class));
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(PluginDriverFormDTO.class))
+			.flatMap(this::validateDto);
+	}
+
+	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
+		if (response.statusCode() == 200) {
+			return Uni.createFrom().item(response);
+		}
+		else {
+			return Uni.createFrom().failure(new ValidationException(
+				String.format(
+					"Unexpected Response Status: %d, Message: %s",
+					response.statusCode(),
+					response.statusMessage()
+				))
+			);
+		}
+	}
+
+	private <T> Uni<T> validateDto(T dto) {
+		var violations = validator.validate(dto);
+		if (violations.isEmpty()) {
+			return Uni.createFrom().item(dto);
+		}
+		else {
+			return Uni.createFrom().failure(new ConstraintViolationException(violations));
+		}
 	}
 
 }

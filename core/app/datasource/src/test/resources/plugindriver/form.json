@@ -2,7 +2,7 @@
 	"fields": [
 		{
 			"label": "Sitemap Urls",
-			"field": "sitemapUrls",
+			"name": "sitemapUrls",
 			"type": "LIST",
 			"size": 5,
 			"required": true,
