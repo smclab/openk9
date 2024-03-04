@@ -20,15 +20,17 @@ interface CustomSkeletonProps {
   circle?: boolean;
   backgroundColor?: string;
   itereitorKey?: string;
+  containerMax?: boolean;
 }
 
 const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
-  width = "500px",
+  width = "100%",
   height = "20px",
   counter = 1,
   circle = false,
   backgroundColor = "red",
   itereitorKey,
+  containerMax = false,
 }) => {
   return (
     <div
@@ -38,6 +40,7 @@ const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
         display: flex;
         flex-direction: column;
         gap: 5px;
+        width: ${containerMax ? "100%" : ""};
       `}
     >
       {Array.from({ length: counter }).map((_, index) => (
@@ -47,7 +50,7 @@ const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
           css={css`
             background-color: ${backgroundColor};
             border-radius: ${circle ? "50%" : "5px"};
-            min-width: ${width};
+            width: ${width};
             min-height: ${height};
             animation: ${pulse} 1.5s ease-in-out infinite;
           `}

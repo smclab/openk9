@@ -71,28 +71,29 @@ function ResultsPagination<E>({
     case "virtual":
     case "infinite":
       return (
-        <React.Suspense fallback={<SkeletonResult />}>
-          <InfiniteResults
-            setTotalResult={setTotalResult}
-            renderers={renderers}
-            searchQuery={searchQuery}
-            onDetail={onDetail}
-            setDetailMobile={setDetailMobile}
-            sort={sort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={overChangeCard}
-            language={language}
-            setSortAfterKey={setSortAfterKey}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={numberOfResults}
-            currentPage={currentPage}
-            changePage={changePage}
-            elementForPage={pagination}
-            setCurrentPage={setCurrentPage}
-            anchor={anchor}
-          />
-        </React.Suspense>
+        // <React.Suspense fallback={<SkeletonResult />}>
+        //   <InfiniteResults
+        //     setTotalResult={setTotalResult}
+        //     renderers={renderers}
+        //     searchQuery={searchQuery}
+        //     onDetail={onDetail}
+        //     setDetailMobile={setDetailMobile}
+        //     sort={sort}
+        //     setSortResult={setSortResult}
+        //     isMobile={isMobile}
+        //     overChangeCard={overChangeCard}
+        //     language={language}
+        //     setSortAfterKey={setSortAfterKey}
+        //     sortAfterKey={sortAfterKey}
+        //     numberOfResults={numberOfResults}
+        //     currentPage={currentPage}
+        //     changePage={changePage}
+        //     elementForPage={pagination}
+        //     setCurrentPage={setCurrentPage}
+        //     anchor={anchor}
+        //   />
+        // </React.Suspense>
+        <SkeletonResult />
       );
   }
 }
@@ -602,10 +603,10 @@ function SkeletonResult() {
               margin-left: 5px;
             `}
           >
-            <CustomSkeleton width="150px" />
+            <CustomSkeleton width="80px" />
           </span>
           <span>
-            <CustomSkeleton width="100px" />
+            <CustomSkeleton width="80px" />
           </span>
         </div>
       </div>
@@ -614,6 +615,17 @@ function SkeletonResult() {
           className="openk9-embeddable-search--result-container openk9-skeleton-container--result-container"
           key={index}
         >
+          <div
+            className=""
+            css={css`
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 16px;
+            `}
+          >
+            <CustomSkeleton width="80px" />
+            <CustomSkeleton width="150px" />
+          </div>
           <div
             css={css`
               padding: 16px 16px;

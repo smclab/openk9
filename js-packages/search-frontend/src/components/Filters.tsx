@@ -16,6 +16,7 @@ import {
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { SelectionsAction } from "./useSelections";
+import CustomSkeleton from "./Skeleton";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -216,28 +217,30 @@ function Filters({
           </div>
         )}
         {preFilters}
-        {suggestionCategories.data?.map((suggestionCategory) => 
-            <FilterCategoryDynamicMemo
-              key={suggestionCategory.id}
-              suggestionCategoryName={translateSuggesionCategoryName({
-                names: suggestionCategory.translationMap,
-                language: language,
-                defaultValue: suggestionCategory.name,
-              })}
-              suggestionCategoryId={suggestionCategory.id}
-              tokens={lastSearchQueryWithResults}
-              onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken}
-              multiSelect={suggestionCategory?.multiSelect}
-              searchQuery={searchQuery}
-              language={language}
-              isCollapsable={isCollapsable}
-              numberItems={numberItems}
-              isDynamicElement={isDynamicElement}
-              noResultMessage={noResultMessage}
-            />
-         
-        )}
+        {suggestionCategories.data?.map((suggestionCategory) => (
+          // <React.Suspense fallback={<div>sdcxz</div>}>
+          //   <FilterCategoryDynamicMemo
+          //     key={suggestionCategory.id}
+          //     suggestionCategoryName={translateSuggesionCategoryName({
+          //       names: suggestionCategory.translationMap,
+          //       language: language,
+          //       defaultValue: suggestionCategory.name,
+          //     })}
+          //     suggestionCategoryId={suggestionCategory.id}
+          //     tokens={lastSearchQueryWithResults}
+          //     onAdd={onAddFilterToken}
+          //     onRemove={onRemoveFilterToken}
+          //     multiSelect={suggestionCategory?.multiSelect}
+          //     searchQuery={searchQuery}
+          //     language={language}
+          //     isCollapsable={isCollapsable}
+          //     numberItems={numberItems}
+          //     isDynamicElement={isDynamicElement}
+          //     noResultMessage={noResultMessage}
+          //   />
+          // </React.Suspense>ù
+          <SkeletonFilters />
+        ))}
       </div>
     </div>
   );
@@ -372,5 +375,41 @@ function translateSuggesionCategoryName({
     return names[desiredKey];
   }
   return defaultValue;
-  return "";
+}
+
+function SkeletonFilters() {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="openk9-filters-container-internal"
+      css={css`
+        padding-inline: 16px;
+        padding-top: 16px;
+      `}
+    >
+      <div
+        css={css`
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        `}
+      >
+        <CustomSkeleton />
+
+        {new Array(5).fill(null).map((_, index) => (
+          <div
+            key={index}
+            css={css`
+              display: flex;
+              gap: 10px;
+              width: 100%;
+            `}
+          >
+            <CustomSkeleton width="20px" />
+            <CustomSkeleton containerMax />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
