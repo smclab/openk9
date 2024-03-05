@@ -112,7 +112,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}
@@ -156,7 +156,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}
@@ -200,7 +200,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}
@@ -244,7 +244,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}
@@ -288,7 +288,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}
@@ -333,7 +333,7 @@ public class PluginDrivers {
 				tenant
 			));
 
-			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
 
 	}

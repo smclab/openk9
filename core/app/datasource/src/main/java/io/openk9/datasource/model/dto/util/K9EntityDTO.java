@@ -27,7 +27,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 public class K9EntityDTO {
 
 	@Length(max = 255)
