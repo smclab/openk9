@@ -64,13 +64,11 @@ public class ProvisioningResource {
 	@Path("/connector")
 	public Uni<CreateConnectorResponse> createConnector(@Valid CreateConnectorRequest request) {
 
-		var latestMinorPatchedVersion = applicationVersion.split("\\.")[0] + ".x.x";
-
 		var connectorName = String.format(
 			"%s-%s-%s",
 			request.tenantName,
 			request.preset,
-			latestMinorPatchedVersion.replace('.', '_')
+			applicationVersion.replace('.', '_')
 		);
 
 		var actorSystem = ActorSystem.apply(
@@ -79,7 +77,7 @@ public class ProvisioningResource {
 				AppManifest.newBuilder()
 					.setSchemaName(request.tenantName)
 					.setChart(PresetPluginDrivers.getPluginDriver(request.preset))
-					.setVersion(latestMinorPatchedVersion)
+					.setVersion(applicationVersion)
 					.build(),
 				datasource,
 				CreatePresetPluginDriverRequest.newBuilder()

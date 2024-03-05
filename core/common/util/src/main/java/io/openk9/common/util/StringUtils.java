@@ -15,19 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.k8s.crd;
+package io.openk9.common.util;
 
 import lombok.NonNull;
 
-final class Utils {
+public class StringUtils {
 
-	private Utils() {}
+	private StringUtils() {}
 
-	static String name(@NonNull String chart, String suffix) {
-		if (suffix == null) {return chart;}
-		if (suffix.isBlank()) {return chart;}
 
-		return String.format("%s-%s", chart, suffix);
+	public static String withSuffix(@NonNull String value, String suffix) {
+		if (suffix == null) {
+			return value;
+		}
+
+		if (suffix.isBlank()) {
+			return value;
+		}
+
+		return String.format("%s-%s", value, suffix);
 	}
 
 }

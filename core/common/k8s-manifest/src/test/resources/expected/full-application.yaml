@@ -16,7 +16,7 @@ spec:
         K2: 2,
         K3: "v3"
       }
-    targetRevision: 1.0.0
+    targetRevision: 1.x.x
   destination:
     server: https://kubernetes.default.svc
     namespace: default

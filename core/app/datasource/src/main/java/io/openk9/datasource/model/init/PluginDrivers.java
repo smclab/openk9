@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.init;
 
+import io.openk9.common.util.StringUtils;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.datasource.model.PluginDriver;
@@ -29,7 +30,7 @@ import java.util.EnumMap;
 
 public class PluginDrivers {
 
-	private static final EnumMap<Preset, PluginDriverDTO> PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP =
+	private static final EnumMap<Preset, PluginDriverPreset> PLUGIN_DRIVER_PRESET_MAP =
 		new EnumMap<>(Preset.class);
 
 	private static final EnumMap<Preset, K9EntityDTO> PRESET_K9_ENTITY_DTO_MAP =
@@ -43,42 +44,52 @@ public class PluginDrivers {
 		PRESET_K9_ENTITY_DTO_MAP.put(Preset.SITEMAP, Sitemap.K9_ENTITY);
 		PRESET_K9_ENTITY_DTO_MAP.put(Preset.DATABASE, Database.K9_ENTITY);
 
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.LIFERAY, Liferay.PLUGIN_DRIVER_DTO);
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.CRAWLER, Crawler.PLUGIN_DRIVER_DTO);
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.EMAIL, Email.PLUGIN_DRIVER_DTO);
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.GITLAB, Gitlab.PLUGIN_DRIVER_DTO);
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.SITEMAP, Sitemap.PLUGIN_DRIVER_DTO);
-		PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.put(Preset.DATABASE, Database.PLUGIN_DRIVER_DTO);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.LIFERAY, Liferay.INSTANCE);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.CRAWLER, Crawler.INSTANCE);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.EMAIL, Email.INSTANCE);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.GITLAB, Gitlab.INSTANCE);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.SITEMAP, Sitemap.INSTANCE);
+		PLUGIN_DRIVER_PRESET_MAP.put(Preset.DATABASE, Database.INSTANCE);
 	}
 
-	public static PluginDriverDTO getPresetPluginDriver(Preset preset) {
-		return PRESET_PLUGIN_DRIVER_DTO_ENUM_MAP.get(preset);
+	public static PluginDriverDTO getPluginDriverDTO(String schemaName, Preset preset) {
+		return PLUGIN_DRIVER_PRESET_MAP.get(preset).getPresetByTenant(schemaName);
+	}
+
+	public static PluginDriverDTO getPluginDriverDTO(Preset preset) {
+		return PLUGIN_DRIVER_PRESET_MAP.get(preset).getPreset();
 	}
 
 	public static EnumMap<Preset, K9EntityDTO> getPresets() {
 		return PRESET_K9_ENTITY_DTO_MAP;
 	}
 
-	public static class Liferay {
-		public static final String NAME = "Liferay";
-		public static final String DESCRIPTION = "Plugin Driver for Liferay Portal";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+	private sealed interface PluginDriverPreset {
+		PluginDriverDTO getPreset();
+
+		PluginDriverDTO getPresetByTenant(String tenant);
+
+	}
+
+	private static final class Liferay implements PluginDriverPreset {
+		static final Liferay INSTANCE = new Liferay();
+
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
+		private static final String NAME = "Liferay";
+		private static final String DESCRIPTION = "Plugin Driver for Liferay Portal";
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.build();
-
-		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
@@ -86,29 +97,44 @@ public class PluginDrivers {
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
+		private Liferay() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
+
 	}
 
-	public static class Crawler {
-		public static final String NAME = "Crawler";
-		public static final String DESCRIPTION = "Plugin Driver for Generic Crawling";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+	private static final class Crawler implements PluginDriverPreset {
+		static final Crawler INSTANCE = new Crawler();
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
 			.port(5000)
 			.secure(false)
 			.path("/startUrlsCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
+		private static final String NAME = "Crawler";
+		private static final String DESCRIPTION = "Plugin Driver for Generic Crawling";
 		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.build();
-
-		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
@@ -116,27 +142,42 @@ public class PluginDrivers {
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
+		private Crawler() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
+
 	}
 
-	public static class Email {
-		public static final String NAME = "Email";
-		public static final String DESCRIPTION = "Plugin Driver for Imap Server";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+	private static final class Email implements PluginDriverPreset {
+		static final Email INSTANCE = new Email();
+		private static final String NAME = "Email";
+		private static final String DESCRIPTION = "Plugin Driver for Imap Server";
+		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.build();
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
-		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.build();
-
 		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
@@ -145,27 +186,42 @@ public class PluginDrivers {
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
+		private Email() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
+
 	}
 
-	public static class Gitlab {
-		public static final String NAME = "Gitlab";
-		public static final String DESCRIPTION = "Plugin Driver for Gitlab Server";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+	private static final class Gitlab implements PluginDriverPreset {
+		static final Gitlab INSTANCE = new Gitlab();
+		private static final String NAME = "Gitlab";
+		private static final String DESCRIPTION = "Plugin Driver for Gitlab Server";
+		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.build();
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
-		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.build();
-
 		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
@@ -174,27 +230,42 @@ public class PluginDrivers {
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
+		private Gitlab() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
+
 	}
 
-	public static class Sitemap {
-		public static final String NAME = "Sitemap";
-		public static final String DESCRIPTION = "Plugin Driver for Sitemap Server";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+	private static final class Sitemap implements PluginDriverPreset {
+		static final Sitemap INSTANCE = new Sitemap();
+		private static final String NAME = "Sitemap";
+		private static final String DESCRIPTION = "Plugin Driver for Sitemap Server";
+		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.build();
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
 			.port(5000)
 			.secure(false)
 			.path("/startSitemapCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
-		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.build();
-
 		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
@@ -203,29 +274,43 @@ public class PluginDrivers {
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
 
+		private Sitemap() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
+
 	}
 
-	public static class Database {
-		public static final String NAME = "Database";
-		public static final String DESCRIPTION =
+	private static final class Database implements PluginDriverPreset {
+		static final Database INSTANCE = new Database();
+		private static final String NAME = "Database";
+		private static final String DESCRIPTION =
 			"Plugin Driver for Database. Supporting PostgreSql, Mysql, MariaDB.";
-		public static final PluginDriver.PluginDriverType TYPE = PluginDriver.PluginDriverType.HTTP;
-		public static final PluginDriver.Provisioning PROVISIONING =
-			PluginDriver.Provisioning.SYSTEM;
-
-		public static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
+		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.build();
+		private static final PluginDriver.PluginDriverType TYPE =
+			PluginDriver.PluginDriverType.HTTP;
+		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
 			.host(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
 			.port(5000)
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
 			.build();
-
-		static final K9EntityDTO K9_ENTITY = K9EntityDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.build();
-
 		static final PluginDriverDTO PLUGIN_DRIVER_DTO = PluginDriverDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
@@ -233,6 +318,23 @@ public class PluginDrivers {
 			.provisioning(PluginDriver.Provisioning.SYSTEM)
 			.jsonConfig(Json.encode(JSON_CONFIG))
 			.build();
+
+		private Database() {}
+
+		@Override
+		public PluginDriverDTO getPreset() {
+			return PLUGIN_DRIVER_DTO;
+		}
+
+		@Override
+		public PluginDriverDTO getPresetByTenant(String tenant) {
+			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
+				JSON_CONFIG.getHost(),
+				tenant
+			));
+
+			return PLUGIN_DRIVER_DTO.withJsonConfig(Json.encode(jsonConfig));
+		}
 
 	}
 

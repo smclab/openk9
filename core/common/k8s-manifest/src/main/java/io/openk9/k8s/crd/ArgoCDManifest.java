@@ -26,6 +26,8 @@ import io.argoproj.v1alpha1.applicationspec.source.Helm;
 import io.argoproj.v1alpha1.applicationspec.source.helm.ValuesObject;
 import io.argoproj.v1alpha1.applicationspec.syncpolicy.Automated;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.openk9.common.util.StringUtils;
+import lombok.NonNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,14 +47,14 @@ public class ArgoCDManifest {
 		var application = new Application();
 
 		var metadata = new ObjectMeta();
-		metadata.setName(Utils.name(manifest.chart(), manifest.tenant()));
+		metadata.setName(StringUtils.withSuffix(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(manifest.targetNamespace());
 		metadata.setFinalizers(List.of(ARGOCD_FINALIZER));
 
 		var source = new Source();
 
 		source.setChart(manifest.chart());
-		source.setTargetRevision(manifest.version());
+		source.setTargetRevision(latestMinorPatchedVersion(manifest.version()));
 
 		Objects.requireNonNull(manifest.repoURL(), "repoUrl cannot be null!");
 		source.setRepoURL(manifest.repoURL());
@@ -89,4 +91,9 @@ public class ArgoCDManifest {
 
 		return application;
 	}
+
+	static String latestMinorPatchedVersion(@NonNull String version) {
+		return version.split("\\.")[0] + ".x.x";
+	}
+
 }

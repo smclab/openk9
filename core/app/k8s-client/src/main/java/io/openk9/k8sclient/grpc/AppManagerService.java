@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.ApplyResponse;
+import io.openk9.common.util.StringUtils;
 import io.openk9.k8s.crd.Manifest;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
@@ -51,6 +52,11 @@ public class AppManagerService implements AppManager {
 			.version(request.getVersion())
 			.targetNamespace(namespace)
 			.type(manifestType)
+			.tenant(request.getSchemaName())
+			.set(
+				"nameOverride",
+				StringUtils.withSuffix(request.getChart(), request.getSchemaName())
+			)
 			.build();
 
 		return Uni.createFrom()
@@ -77,6 +83,7 @@ public class AppManagerService implements AppManager {
 			.version(appManifest.getVersion())
 			.targetNamespace(namespace)
 			.type(manifestType)
+			.tenant(appManifest.getSchemaName())
 			.build();
 
 		return Uni.createFrom()

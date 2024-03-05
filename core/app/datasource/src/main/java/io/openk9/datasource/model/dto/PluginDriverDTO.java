@@ -20,18 +20,22 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.With;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
+@With
 @EqualsAndHashCode(callSuper = true)
 public class PluginDriverDTO extends K9EntityDTO {
 	@NotNull
