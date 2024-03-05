@@ -44,6 +44,8 @@ type FiltersProps = {
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   refButton?: React.RefObject<HTMLButtonElement>;
+  callbackSubmit?: () => void | null;
+  callbackReset?: () => void | null;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -60,6 +62,8 @@ function FiltersHorizontal({
   isDynamicElement,
   selectionsDispatch,
   refButton,
+  callbackReset,
+  callbackSubmit,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -210,6 +214,7 @@ function FiltersHorizontal({
               onConfigurationChange({ filterTokens: [] });
               onConfigurationChangeExt && onConfigurationChangeExt();
               selectionsDispatch({ type: "reset-filters" });
+              if (callbackReset) callbackReset();
               if (refButton && refButton.current) refButton.current.focus();
             }}
           >
@@ -262,6 +267,7 @@ function FiltersHorizontal({
             onClick={() => {
               onConfigurationChange({ filterTokens: filterSelect });
               onConfigurationChangeExt && onConfigurationChangeExt();
+              if (callbackSubmit) callbackSubmit();
               if (refButton && refButton.current) refButton.current.focus();
             }}
           >

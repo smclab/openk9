@@ -380,6 +380,16 @@ export function Main({
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
             refButton={configuration.filtersHorizontal?.refButton}
+            callbackSubmit={
+              configuration.filtersHorizontal
+                ? configuration.filtersHorizontal.callbackSubmit
+                : () => {}
+            }
+            callbackReset={
+              configuration.filtersHorizontal
+                ? configuration.filtersHorizontal.callbackReset
+                : () => {}
+            }
           />
         </I18nextProvider>,
         configuration.filtersHorizontal

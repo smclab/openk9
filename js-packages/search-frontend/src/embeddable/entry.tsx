@@ -158,6 +158,8 @@ export class OpenK9 {
 type FiltersHorizontalConfiguration = {
   element: Element | string | null;
   callback: () => void | null;
+  callbackSubmit: () => void | null;
+  callbackReset: () => void | null;
   refButton?: React.RefObject<HTMLButtonElement>;
 };
 
@@ -223,7 +225,13 @@ type SortResultConfigurableProps = {
 };
 
 type SortResultListCustomProps = {
-  selectOptions: Array<{ value: {value: string, sort: string}; label: string; sort: string; isDefault: boolean; hasAscDesc: boolean;}>;
+  selectOptions: Array<{
+    value: { value: string; sort: string };
+    label: string;
+    sort: string;
+    isDefault: boolean;
+    hasAscDesc: boolean;
+  }>;
   element: Element | string | null;
 };
 
