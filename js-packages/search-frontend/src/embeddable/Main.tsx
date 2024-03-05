@@ -539,6 +539,20 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <SortResultListMemo
+            setSortResult={setSortResult}
+            relevance={configuration.sortResultConfigurable?.relevance}
+            HtmlString={
+              configuration.sortResultConfigurable?.htmlKey || undefined
+            }
+          />
+        </I18nextProvider>,
+        configuration.sortResultConfigurable
+          ? configuration.sortResultConfigurable?.sort
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <ChangeLanguage
             setChangeLanguage={setLanguageSelect}
             languages={languages.data}
