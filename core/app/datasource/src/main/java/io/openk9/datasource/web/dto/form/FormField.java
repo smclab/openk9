@@ -27,7 +27,7 @@ public record FormField(
 	String info,
 	String label,
 	String name,
-	Type type,
+	FormType type,
 	int size,
 	boolean required,
 	@Singular Collection<FormFieldValue> values,

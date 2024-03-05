@@ -3,7 +3,7 @@
 		{
 			"label": "Sitemap Urls",
 			"name": "sitemapUrls",
-			"type": "LIST",
+			"type": "list",
 			"size": 5,
 			"required": true,
 			"values": [],
@@ -18,7 +18,7 @@
 		{
 			"label": "Allowed Domains",
 			"name": "allowedDomains",
-			"type": "LIST",
+			"type": "list",
 			"size": 10,
 			"required": true,
 			"values": [],
@@ -32,7 +32,7 @@
 		{
 			"label": "Body Tag",
 			"name": "bodyTag",
-			"type": "STRING",
+			"type": "text",
 			"size": 10,
 			"required": true,
 			"values": [
@@ -51,7 +51,7 @@
 		{
 			"label": "Title tag",
 			"name": "titleTag",
-			"type": "STRING",
+			"type": "text",
 			"size": 10,
 			"required": true,
 			"info": "",
@@ -70,7 +70,7 @@
 		{
 			"label": "Max Length",
 			"name": "maxLength",
-			"type": "NUMBER",
+			"type": "number",
 			"size": 10,
 			"required": true,
 			"info": "",
@@ -89,7 +89,7 @@
 		{
 			"label": "Page Count",
 			"name": "pageCount",
-			"type": "NUMBER",
+			"type": "number",
 			"size": 10,
 			"required": true,
 			"info": "",
@@ -108,7 +108,7 @@
 		{
 			"label": "Document File Extensions",
 			"name": "documentFileExtensions",
-			"type": "LIST",
+			"type": "list",
 			"size": 10,
 			"required": true,
 			"info": "",

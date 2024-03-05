@@ -25,8 +25,8 @@ import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.FormField;
 import io.openk9.datasource.web.dto.form.FormFieldValidator;
 import io.openk9.datasource.web.dto.form.FormFieldValue;
+import io.openk9.datasource.web.dto.form.FormType;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
-import io.openk9.datasource.web.dto.form.Type;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -168,7 +168,7 @@ class HttpPluginDriverClientTest {
 					.contains(FormField.builder()
 						.label("Title tag")
 						.name("titleTag")
-						.type(Type.STRING)
+						.type(FormType.TEXT)
 						.size(10)
 						.required(true)
 						.info("")

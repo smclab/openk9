@@ -17,10 +17,28 @@
 
 package io.openk9.datasource.web.dto.form;
 
-public enum Type {
-	STRING,
-	NUMBER,
-	SELECT,
-	MULTISELECT,
-	LIST
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public enum FormType {
+	TEXT("text"),
+	NUMBER("number"),
+	SELECT("select"),
+	MULTISELECT("multiselect"),
+	LIST("list"),
+	DATE("date"),
+	EMAIL("email"),
+	PASSWORD("password"),
+	TIME("time"),
+	URL("url");
+
+	private final String value;
+
+	FormType(String value) {
+		this.value = value;
+	}
+
+	@JsonValue
+	public String getValue() {
+		return value;
+	}
 }
