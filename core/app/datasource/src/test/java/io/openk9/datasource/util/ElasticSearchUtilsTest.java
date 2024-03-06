@@ -18,7 +18,6 @@
 package io.openk9.datasource.util;
 
 import io.openk9.datasource.TestUtils;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
@@ -29,43 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ElasticSearchUtilsTest {
 
-	private static final JsonObject expected = (JsonObject) Json.decodeValue("""
-		{
-			"properties" :
-			{
-				"age" : {
-				  "type" : "long"
-				},
-				"email" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				},
-				"firstName" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				},
-				"lastName" : {
-				  "type" : "text",
-				  "fields" : {
-					"keyword" : {
-					  "type" : "keyword",
-					  "ignore_above" : 256
-					}
-				  }
-				}
-			}
-		}
-		""");
+	private static final JsonObject expected =
+		TestUtils.getResourceAsJsonObject("es/expected_mapping.json");
 
 	@Test
 	void should_create_dynamic_mapping_for_json() throws IOException {
