@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Singular;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
@@ -35,6 +36,7 @@ import java.util.Collection;
 @EqualsAndHashCode(callSuper = true)
 public class PipelineWithItemsDTO extends EnrichPipelineDTO {
 
+	@Singular
 	private Collection<ItemDTO> items;
 
 	@SuperBuilder

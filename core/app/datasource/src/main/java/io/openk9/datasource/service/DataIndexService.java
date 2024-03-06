@@ -23,6 +23,7 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.resource.util.Filter;
@@ -36,16 +37,24 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
+
+	@Inject
+	DocTypeService docTypeService;
+	@Inject
+	IndexService indexService;
+	@Inject
+	RestHighLevelClient client;
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -71,7 +80,8 @@ public class DataIndexService
 		return findJoinConnection(
 			id, DataIndex_.DOC_TYPES, DocType.class,
 			docTypeService.getSearchFields(),
-			after, before, first, last, searchText, sortByList, not);
+			after, before, first, last, searchText, sortByList, not
+		);
 	}
 
 	public Uni<Long> getCountIndexDocuments(String name) {
@@ -85,7 +95,8 @@ public class DataIndexService
 			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
 			pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
+			pageable.getBeforeId(), searchText
+		);
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
@@ -95,7 +106,8 @@ public class DataIndexService
 			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
 			pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
+			pageable.getBeforeId(), filter
+		);
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
@@ -153,53 +165,50 @@ public class DataIndexService
 	public Uni<DataIndex> deleteById(long entityId) {
 		return sessionFactory.withTransaction(s ->
 			findById(s, entityId)
-			.onItem()
-			.transformToUni(dataIndex -> Uni.createFrom()
-				.<AcknowledgedResponse>emitter(emitter -> {
+				.onItem()
+				.transformToUni(dataIndex -> Uni.createFrom()
+					.<AcknowledgedResponse>emitter(emitter -> {
 
-					DeleteIndexRequest deleteIndexRequest =
-						new DeleteIndexRequest(dataIndex.getName());
+						DeleteIndexRequest deleteIndexRequest =
+							new DeleteIndexRequest(dataIndex.getName());
 
-					deleteIndexRequest
-						.indicesOptions(
-							IndicesOptions.fromMap(
-								Map.of("ignore_unavailable", true),
-								deleteIndexRequest.indicesOptions()
-							)
-						);
+						deleteIndexRequest
+							.indicesOptions(
+								IndicesOptions.fromMap(
+									Map.of("ignore_unavailable", true),
+									deleteIndexRequest.indicesOptions()
+								)
+							);
 
-					try {
-						AcknowledgedResponse delete = client.indices().delete(
-							deleteIndexRequest,
-							RequestOptions.DEFAULT);
+						try {
+							AcknowledgedResponse delete = client.indices().delete(
+								deleteIndexRequest,
+								RequestOptions.DEFAULT
+							);
 
-						emitter.complete(delete);
-					}
-					catch (IOException e) {
-						emitter.fail(e);
-					}
+							emitter.complete(delete);
+						}
+						catch (IOException e) {
+							emitter.fail(e);
+						}
+					})
+				)
+				.onItem()
+				.transformToUni(ignore -> findById(s, entityId)
+					.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
+				.onItem()
+				.transformToUni(dataIndex -> {
+					dataIndex.getDocTypes().clear();
+					return s.persist(dataIndex);
 				})
-			)
-			.onItem()
-			.transformToUni(ignore -> findById(s, entityId)
-				.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
-			.onItem()
-			.transformToUni(dataIndex -> {
-				dataIndex.getDocTypes().clear();
-				return s.persist(dataIndex);
-			})
-			.onItem()
-			.transformToUni(ignore -> deleteById(s, entityId))
+				.onItem()
+				.transformToUni(ignore -> deleteById(s, entityId))
 		);
 	}
 
-	@Inject
-	DocTypeService docTypeService;
+	public Uni<DataIndex> createByDatasource(Mutiny.Session session, Datasource datasource) {
 
-	@Inject
-	IndexService indexService;
-
-	@Inject
-	RestHighLevelClient client;
+		return null;
+	}
 
 }

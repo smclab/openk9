@@ -382,6 +382,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	@Override
+	public Uni<ENTITY> create(Mutiny.Session s, DTO dto) {
+		var entity = mapper.create(dto);
+
+		return create(s, entity);
+	}
+
+	@Override
 	public Uni<ENTITY> deleteById(long entityId) {
 
 		return sessionFactory.withTransaction((s) -> deleteById(s, entityId));
