@@ -17,6 +17,11 @@
 
 package io.openk9.datasource;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
+
+import java.io.IOException;
 import java.io.InputStream;
 
 public class TestUtils {
@@ -24,6 +29,15 @@ public class TestUtils {
 		return TestUtils.class
 			.getClassLoader()
 			.getResourceAsStream(path);
+	}
+
+	public static JsonObject getResourceAsJsonObject(String path) {
+		try (InputStream in = getResourceAsStream(path)) {
+			return (JsonObject) Json.decodeValue(Buffer.buffer(in.readAllBytes()));
+		}
+		catch (IOException ioe) {
+			return null;
+		}
 	}
 
 }
