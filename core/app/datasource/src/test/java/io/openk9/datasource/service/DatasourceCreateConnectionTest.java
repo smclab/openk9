@@ -18,8 +18,11 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
+import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -50,9 +53,8 @@ class DatasourceCreateConnectionTest {
 	@InjectMock
 	DataIndexService dataIndexService;
 
-
 	@Inject
-	DatasourceService datasourceService;
+	MockDatasourceService datasourceService;
 
 	@Test
 	@RunOnVertxContext
@@ -163,7 +165,7 @@ class DatasourceCreateConnectionTest {
 					eq(CreateConnection.CREATE_PIPELINE_IDX_DTO.getPluginDriverId())
 				);
 
-				then(pluginDriverService).shouldHaveNoInteractions();
+				then(pluginDriverService).shouldHaveNoMoreInteractions();
 
 				then(enrichPipelineService)
 					.should(times(1))
@@ -227,4 +229,27 @@ class DatasourceCreateConnectionTest {
 
 	}
 
+	@Mock
+	public static final class MockDatasourceService extends DatasourceService {
+
+		public MockDatasourceService() {
+			super(null);
+		}
+
+		public MockDatasourceService(DatasourceMapper mapper) {
+			super(null);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
+			return Uni.createFrom().item((T) CreateConnection.DATASOURCE);
+		}
+
+		@Inject
+		void setDatasourceMapper(DatasourceMapper datasourceMapper) {
+			this.mapper = datasourceMapper;
+		}
+
+	}
 }

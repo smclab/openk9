@@ -20,8 +20,14 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.grpc.Preset;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
+
+import java.util.Set;
 
 public class CreateConnection {
 	public static final String DATASOURCE_NAME = "My New Connection";
@@ -47,6 +53,7 @@ public class CreateConnection {
 			.build();
 	public static final long PLUGIN_DRIVER_ID = 100L;
 	public static final long PIPELINE_ID = 10L;
+	public static final long DATASOURCE_ID = 12312L;
 	public static final long DATA_INDEX_ID = 1111L;
 
 	public static final DatasourceConnectionDTO CREATE_ALL_DTO = DatasourceConnectionDTO.builder()
@@ -109,5 +116,36 @@ public class CreateConnection {
 			.pluginDriver(PLUGIN_DRIVER_DTO)
 			.pipeline(PIPELINE_WITH_ITEMS_DTO)
 			.build();
+
+	public static PluginDriver PLUGIN_DRIVER;
+	public static EnrichPipeline PIPELINE;
+	public static Datasource DATASOURCE;
+	public static DataIndex DATAINDEX;
+
+	static {
+		var pluginDriver = new PluginDriver();
+		pluginDriver.setId(PLUGIN_DRIVER_ID);
+		pluginDriver.setName(PLUGIN_DRIVER_DTO.getName());
+		pluginDriver.setJsonConfig(PLUGIN_DRIVER_DTO.getJsonConfig());
+		PLUGIN_DRIVER = pluginDriver;
+
+		var enrichPipeline = new EnrichPipeline();
+		enrichPipeline.setId(PIPELINE_ID);
+		enrichPipeline.setName(PIPELINE_WITH_ITEMS_DTO.getName());
+		enrichPipeline.setEnrichPipelineItems(Set.of());
+		PIPELINE = enrichPipeline;
+
+		var datasource = new Datasource();
+		datasource.setId(DATASOURCE_ID);
+		datasource.setName(CREATE_ALL_DTO.getName());
+		datasource.setPluginDriver(PLUGIN_DRIVER);
+		datasource.setEnrichPipeline(PIPELINE);
+		DATASOURCE = datasource;
+
+		var dataIndex = new DataIndex();
+		dataIndex.setName(DATASOURCE_NAME + " DataIndex");
+		dataIndex.setDatasource(DATASOURCE);
+		DATAINDEX = dataIndex;
+	}
 
 }
