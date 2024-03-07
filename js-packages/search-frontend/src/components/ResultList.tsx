@@ -62,6 +62,7 @@ function Results<E>({
   const renderers = useRenderers();
 
   if (!renderers) return null;
+
   switch (displayMode.type) {
     case "finite":
       return (
@@ -187,8 +188,7 @@ function ResultCount({
         >
           <span className="openk9-result-list-title title">
             {label || t("result")}
-          </span>
-          {" "}
+          </span>{" "}
           {counterIsVisible && (
             <span
               className="openk9-result-list-counter-number"
@@ -230,7 +230,7 @@ function ResultCount({
           >
             {children?.toLocaleString("it")}
           </span>
-<span>
+          <span>
             <SortResultListMemo
               setSortResult={setSortResult}
               relevance={t("relevance") || "relevance"}

@@ -71,6 +71,7 @@ export function Main({
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
   const waitKeycloackForToken = configuration.waitKeycloackForToken;
+
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
@@ -193,6 +194,12 @@ export function Main({
     }
   }, [languageQuery.data, i18n]);
 
+  const isSearchLoading =
+    dynamicFilters.isLoading ||
+    languageQuery.isLoading ||
+    whoIsDynamicResponse.isLoading ||
+    languages.isLoading ||
+    languageSelect === "";
   return (
     <React.Fragment>
       {renderPortal(
@@ -213,32 +220,37 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <Search
-            configuration={configuration}
-            spans={spans}
-            selectionsState={selectionsState}
-            selectionsDispatch={selectionsDispatch}
-            textOnQueryStringOnCLick={textOnQueryStringOnCLick}
-            showSyntax={
-              configuration.searchConfigurable?.isShowSyntax === false
-                ? false
-                : isQueryAnalysisComplete
-            }
-            isMobile={isMobile}
-            filtersSelect={configuration.filterTokens}
-            isVisibleFilters={isVisibleFilters}
-            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
-            isSearchOnInputChange={isSearchOnInputChange}
-            defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
-            htmlKey={configuration.searchConfigurable?.htmlKey}
-            messageSearchIsVisible={
-              configuration?.searchConfigurable?.messageSearchIsVisible ?? true
-            }
-            customMessageSearch={
-              configuration?.searchConfigurable?.customMessageSearch
-            }
-            actionOnClick={configuration?.searchConfigurable?.actionOnClick}
-          />
+          {isSearchLoading ? null : (
+            <Search
+              configuration={configuration}
+              spans={spans}
+              selectionsState={selectionsState}
+              selectionsDispatch={selectionsDispatch}
+              textOnQueryStringOnCLick={textOnQueryStringOnCLick}
+              showSyntax={
+                configuration.searchConfigurable?.isShowSyntax === false
+                  ? false
+                  : isQueryAnalysisComplete
+              }
+              isMobile={isMobile}
+              filtersSelect={configuration.filterTokens}
+              isVisibleFilters={isVisibleFilters}
+              btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+              isSearchOnInputChange={isSearchOnInputChange}
+              defaultValue={
+                configuration.searchConfigurable?.defaultValue ?? ""
+              }
+              htmlKey={configuration.searchConfigurable?.htmlKey}
+              messageSearchIsVisible={
+                configuration?.searchConfigurable?.messageSearchIsVisible ??
+                true
+              }
+              customMessageSearch={
+                configuration?.searchConfigurable?.customMessageSearch
+              }
+              actionOnClick={configuration?.searchConfigurable?.actionOnClick}
+            />
+          )}
         </I18nextProvider>,
         configuration.searchConfigurable
           ? configuration.searchConfigurable.element
@@ -291,44 +303,54 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <FiltersMemo
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            numberOfResults={numberOfResults}
-            onRemoveFilterToken={removeFilterToken}
-            onConfigurationChange={onConfigurationChange}
-            filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            sortAfterKey={sortAfterKey}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-            language={languageSelect}
-            isDynamicElement={dynamicData}
-            selectionsDispatch={selectionsDispatch}
-          />
+          {isSearchLoading ? null : (
+            <FiltersMemo
+              searchQuery={searchQuery}
+              onAddFilterToken={addFilterToken}
+              numberOfResults={numberOfResults}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              sortAfterKey={sortAfterKey}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              language={languageSelect}
+              isDynamicElement={dynamicData}
+              selectionsDispatch={selectionsDispatch}
+            />
+          )}
         </I18nextProvider>,
         configuration.filters,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <FiltersMemo
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            onRemoveFilterToken={removeFilterToken}
-            onConfigurationChange={onConfigurationChange}
-            filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            sortAfterKey={sortAfterKey}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-            language={languageSelect}
-            isCollapsable={
-              configuration.filtersConfigurable?.isCollapsable ?? true
-            }
-            numberItems={configuration.filtersConfigurable?.numberItems}
-            numberOfResults={numberOfResults}
-            isDynamicElement={dynamicData}
-            noResultMessage={configuration.filtersConfigurable?.noResultMessage}
-            selectionsDispatch={selectionsDispatch}
-          />
+          {isSearchLoading ? null : (
+            <FiltersMemo
+              searchQuery={searchQuery}
+              onAddFilterToken={addFilterToken}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              sortAfterKey={sortAfterKey}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              language={languageSelect}
+              isCollapsable={
+                configuration.filtersConfigurable?.isCollapsable ?? true
+              }
+              numberItems={configuration.filtersConfigurable?.numberItems}
+              numberOfResults={numberOfResults}
+              isDynamicElement={dynamicData}
+              noResultMessage={
+                configuration.filtersConfigurable?.noResultMessage
+              }
+              selectionsDispatch={selectionsDispatch}
+            />
+          )}
         </I18nextProvider>,
         configuration.filtersConfigurable
           ? configuration.filtersConfigurable.element
@@ -398,22 +420,24 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <ResultsMemo
-            setTotalResult={setTotalResult}
-            displayMode={configuration.resultsDisplayMode}
-            searchQuery={searchQuery}
-            onDetail={setDetail}
-            setDetailMobile={setDetailMobile}
-            sort={completelySort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={true}
-            language={languageSelect}
-            setSortAfterKey={setSortAfterKey}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={numberOfResults}
-            setIdPreview={setIdPreview}
-          />
+          {isSearchLoading ? null : (
+            <ResultsMemo
+              setTotalResult={setTotalResult}
+              displayMode={configuration.resultsDisplayMode}
+              searchQuery={searchQuery}
+              onDetail={setDetail}
+              setDetailMobile={setDetailMobile}
+              sort={completelySort}
+              setSortResult={setSortResult}
+              isMobile={isMobile}
+              overChangeCard={true}
+              language={languageSelect}
+              setSortAfterKey={setSortAfterKey}
+              sortAfterKey={sortAfterKey}
+              numberOfResults={numberOfResults}
+              setIdPreview={setIdPreview}
+            />
+          )}
         </I18nextProvider>,
         configuration.results,
       )}
@@ -444,50 +468,54 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <ResultsMemo
-            setTotalResult={setTotalResult}
-            displayMode={configuration.resultsDisplayMode}
-            searchQuery={searchQuery}
-            onDetail={setDetail}
-            setDetailMobile={setDetailMobile}
-            sort={completelySort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={configuration.resultList?.changeOnOver || false}
-            language={languageSelect}
-            setSortAfterKey={setSortAfterKey}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={numberOfResults}
-            setIdPreview={setIdPreview}
-            counterIsVisible={
-              configuration.resultList?.counterIsVisible || false
-            }
-            label={configuration.resultList?.label}
-          />
+          {isSearchLoading ? null : (
+            <ResultsMemo
+              setTotalResult={setTotalResult}
+              displayMode={configuration.resultsDisplayMode}
+              searchQuery={searchQuery}
+              onDetail={setDetail}
+              setDetailMobile={setDetailMobile}
+              sort={completelySort}
+              setSortResult={setSortResult}
+              isMobile={isMobile}
+              overChangeCard={configuration.resultList?.changeOnOver || false}
+              language={languageSelect}
+              setSortAfterKey={setSortAfterKey}
+              sortAfterKey={sortAfterKey}
+              numberOfResults={numberOfResults}
+              setIdPreview={setIdPreview}
+              counterIsVisible={
+                configuration.resultList?.counterIsVisible || false
+              }
+              label={configuration.resultList?.label}
+            />
+          )}
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <ResultsPaginationMemo
-            setTotalResult={setTotalResult}
-            displayMode={configuration.resultsDisplayMode}
-            searchQuery={searchQuery}
-            onDetail={setDetail}
-            setDetailMobile={setDetailMobile}
-            sort={completelySort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={false}
-            language={languageSelect}
-            setSortAfterKey={setSortAfterKey}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={totalResult || 0}
-            pagination={numberOfResults}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            anchor={configuration.resultListPagination?.anchor}
-          />
+          {isSearchLoading ? null : (
+            <ResultsPaginationMemo
+              setTotalResult={setTotalResult}
+              displayMode={configuration.resultsDisplayMode}
+              searchQuery={searchQuery}
+              onDetail={setDetail}
+              setDetailMobile={setDetailMobile}
+              sort={completelySort}
+              setSortResult={setSortResult}
+              isMobile={isMobile}
+              overChangeCard={false}
+              language={languageSelect}
+              setSortAfterKey={setSortAfterKey}
+              sortAfterKey={sortAfterKey}
+              numberOfResults={totalResult || 0}
+              pagination={numberOfResults}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              anchor={configuration.resultListPagination?.anchor}
+            />
+          )}
         </I18nextProvider>,
         configuration.resultListPagination
           ? configuration.resultListPagination.element
@@ -579,22 +607,26 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <FiltersMobileMemo
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            onRemoveFilterToken={removeFilterToken}
-            onConfigurationChange={onConfigurationChange}
-            filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            selectionsDispatch={selectionsDispatch}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-            configuration={configuration}
-            isVisibleFilters={configuration.filtersMobile?.isVisible || false}
-            setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
-            language={languageSelect}
-            sortAfterKey={sortAfterKey}
-            isDynamicElement={dynamicData}
-          />
+          {isSearchLoading ? null : (
+            <FiltersMobileMemo
+              searchQuery={searchQuery}
+              onAddFilterToken={addFilterToken}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              selectionsDispatch={selectionsDispatch}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              configuration={configuration}
+              isVisibleFilters={configuration.filtersMobile?.isVisible || false}
+              setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
+              language={languageSelect}
+              sortAfterKey={sortAfterKey}
+              isDynamicElement={dynamicData}
+            />
+          )}
         </I18nextProvider>,
         configuration.filtersMobile?.element !== undefined
           ? configuration.filtersMobile?.element
@@ -602,35 +634,41 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <FiltersMobileLiveChangeMemo
-            searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
-            onRemoveFilterToken={removeFilterToken}
-            onConfigurationChange={onConfigurationChange}
-            sortAfterKey={sortAfterKey}
-            filtersSelect={configuration.filterTokens}
-            sort={completelySort}
-            dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
-            configuration={configuration}
-            whoIsDynamic={dynamicData}
-            numberItems={configuration.filtersConfigurable?.numberItems}
-            isVisibleFilters={
-              configuration.filtersMobileLiveChange?.isVisible || false
-            }
-            setIsVisibleFilters={
-              configuration.filtersMobileLiveChange?.setIsVisible
-            }
-            tabs={tabs}
-            onSelectedTabIndexChange={setSelectedTabIndex}
-            selectedTabIndex={selectedTabIndex}
-            viewTabs={configuration.filtersMobileLiveChange?.viewTabs ?? false}
-            language={languageSelect}
-            isCollapsable={
-              configuration.filtersMobileLiveChange?.isCollapsable ?? true
-            }
-            numberOfResults={numberOfResults}
-            selectionsDispatch={selectionsDispatch}
-          />
+          {isSearchLoading ? null : (
+            <FiltersMobileLiveChangeMemo
+              searchQuery={searchQuery}
+              onAddFilterToken={addFilterToken}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              sortAfterKey={sortAfterKey}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              configuration={configuration}
+              whoIsDynamic={dynamicData}
+              numberItems={configuration.filtersConfigurable?.numberItems}
+              isVisibleFilters={
+                configuration.filtersMobileLiveChange?.isVisible || false
+              }
+              setIsVisibleFilters={
+                configuration.filtersMobileLiveChange?.setIsVisible
+              }
+              tabs={tabs}
+              onSelectedTabIndexChange={setSelectedTabIndex}
+              selectedTabIndex={selectedTabIndex}
+              viewTabs={
+                configuration.filtersMobileLiveChange?.viewTabs ?? false
+              }
+              language={languageSelect}
+              isCollapsable={
+                configuration.filtersMobileLiveChange?.isCollapsable ?? true
+              }
+              numberOfResults={numberOfResults}
+              selectionsDispatch={selectionsDispatch}
+            />
+          )}
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
           ? configuration.filtersMobileLiveChange?.element
