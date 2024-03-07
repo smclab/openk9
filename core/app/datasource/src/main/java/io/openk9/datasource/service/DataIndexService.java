@@ -26,12 +26,20 @@ import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.util.ElasticSearchUtils;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -40,6 +48,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
@@ -55,6 +64,10 @@ public class DataIndexService
 	IndexService indexService;
 	@Inject
 	RestHighLevelClient client;
+	@Inject
+	HttpPluginDriverClient pluginDriverClient;
+	@Inject
+	IndexerEvents indexerEvents;
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -208,7 +221,37 @@ public class DataIndexService
 
 	public Uni<DataIndex> createByDatasource(Mutiny.Session session, Datasource datasource) {
 
-		return null;
+		var pluginDriver = datasource.getPluginDriver();
+		var jsonConfig = pluginDriver.getJsonConfig();
+		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+
+		return pluginDriverClient.getSample(pluginDriverInfo)
+			.map(HttpResponse::body)
+			.map(Buffer::getBytes)
+			.flatMap(bytes -> {
+
+				var sample = (JsonObject) Json.decodeValue(new String(bytes));
+
+				var documentTypes = new ArrayList<String>();
+				for (Object documentType : sample.getJsonArray("documentTypes")) {
+					if (documentType instanceof String) {
+						documentTypes.add((String) documentType);
+					}
+				}
+
+				var mappings = ElasticSearchUtils.getDynamicMapping(bytes);
+
+				var transientDataIndex = new DataIndex();
+				transientDataIndex.setName(datasource.getName() + " DataIndex");
+				transientDataIndex.setDatasource(datasource);
+
+				return create(session, transientDataIndex)
+					.flatMap(dataIndex -> indexerEvents
+						.generateDocTypeFields(
+							session, dataIndex, mappings.getMap(), documentTypes)
+						.flatMap(__ -> findById(session, dataIndex.getId()))
+					);
+			});
 	}
 
 }

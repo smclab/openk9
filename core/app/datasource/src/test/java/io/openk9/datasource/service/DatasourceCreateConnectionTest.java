@@ -236,10 +236,6 @@ class DatasourceCreateConnectionTest {
 			super(null);
 		}
 
-		public MockDatasourceService(DatasourceMapper mapper) {
-			super(null);
-		}
-
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {

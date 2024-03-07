@@ -26,6 +26,7 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
+import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 
 import java.util.Set;
 
@@ -126,7 +127,14 @@ public class CreateConnection {
 		var pluginDriver = new PluginDriver();
 		pluginDriver.setId(PLUGIN_DRIVER_ID);
 		pluginDriver.setName(PLUGIN_DRIVER_DTO.getName());
-		pluginDriver.setJsonConfig(PLUGIN_DRIVER_DTO.getJsonConfig());
+		pluginDriver.setJsonConfig(String
+			.format(
+				"{\"host\": \"%s\", \"port\": \"%s\", \"secure\": \"%s\"}",
+				WireMockPluginDriver.HOST,
+				WireMockPluginDriver.PORT,
+				false
+			)
+		);
 		PLUGIN_DRIVER = pluginDriver;
 
 		var enrichPipeline = new EnrichPipeline();
@@ -143,6 +151,7 @@ public class CreateConnection {
 		DATASOURCE = datasource;
 
 		var dataIndex = new DataIndex();
+		dataIndex.setId(DATA_INDEX_ID);
 		dataIndex.setName(DATASOURCE_NAME + " DataIndex");
 		dataIndex.setDatasource(DATASOURCE);
 		DATAINDEX = dataIndex;

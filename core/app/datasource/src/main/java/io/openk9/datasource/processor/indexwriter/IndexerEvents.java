@@ -86,6 +86,21 @@ public class IndexerEvents {
 			.replaceWithVoid();
 	}
 
+	public Uni<Void> generateDocTypeFields(
+		Mutiny.Session session,
+		DataIndex dataIndex,
+		Map<String, Object> mappings,
+		List<String> documentTypes) {
+
+		var docTypeFields = IndexerEvents.toDocTypeFields(mappings);
+
+		var docTypeAndFieldsGroup = IndexerEvents.toDocTypeAndFieldsGroup(Tuple2.of(
+			docTypeFields,
+			documentTypes
+		));
+
+		return _persistDocType(docTypeAndFieldsGroup, dataIndex, session);
+	}
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
 		return _toDocTypeFields(_toFlatFields(mappings));
 	}

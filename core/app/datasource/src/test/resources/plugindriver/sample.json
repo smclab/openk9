@@ -2,5 +2,8 @@
 	"firstName": "John",
 	"lastName": "Doe",
 	"email": "john.doe@acme.com",
-	"age": 20
+	"age": 20,
+	"documentTypes": [
+		"sample"
+	]
 }
