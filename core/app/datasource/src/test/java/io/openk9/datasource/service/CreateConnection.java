@@ -39,15 +39,19 @@ public class CreateConnection {
 	public static final String SCHEDULING = "0 0 * ? * * *";
 	public static final PluginDriverDTO PLUGIN_DRIVER_DTO =
 		PluginDrivers.getPluginDriverDTO(Preset.CRAWLER);
+	public static final String PIPELINE_NAME = "Connection Pipeline";
+	public static final long FIRST_ITEM_ID = 34L;
+	public static final long SECOND_ITEM_ID = 65L;
 	public static final PipelineWithItemsDTO PIPELINE_WITH_ITEMS_DTO =
 		PipelineWithItemsDTO.builder()
+			.name(PIPELINE_NAME)
 			.item(PipelineWithItemsDTO.ItemDTO.builder()
-				.enrichItemId(34L)
+				.enrichItemId(FIRST_ITEM_ID)
 				.weight(13)
 				.build()
 			)
 			.item(PipelineWithItemsDTO.ItemDTO.builder()
-				.enrichItemId(65L)
+				.enrichItemId(SECOND_ITEM_ID)
 				.weight(54)
 				.build()
 			)
