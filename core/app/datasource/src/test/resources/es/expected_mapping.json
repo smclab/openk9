@@ -1,5 +1,35 @@
 {
 	"properties": {
+		"contentId": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
+				}
+			}
+		},
+		"datasourceId": {
+			"type": "long"
+		},
+		"documentTypes": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
+				}
+			}
+		},
+		"last": {
+			"type": "boolean"
+		},
+		"parsingDate": {
+			"type": "long"
+		},
+		"resources": {
+			"type": "object"
+		},
 		"sample": {
 			"properties": {
 				"age": {
@@ -31,6 +61,15 @@
 							"ignore_above": 256
 						}
 					}
+				}
+			}
+		},
+		"scheduleId": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
 				}
 			}
 		}

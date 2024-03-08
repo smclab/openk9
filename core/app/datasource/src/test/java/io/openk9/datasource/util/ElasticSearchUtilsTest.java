@@ -18,8 +18,12 @@
 package io.openk9.datasource.util;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,11 +35,19 @@ class ElasticSearchUtilsTest {
 	private static final JsonObject expected =
 		TestUtils.getResourceAsJsonObject("es/expected_mapping.json");
 
+	private static final IngestionPayloadMapper mapper =
+		Mappers.getMapper(IngestionPayloadMapper.class);
+
 	@Test
 	void should_create_dynamic_mapping_for_json() throws IOException {
 		try (InputStream in = TestUtils.getResourceAsStream("plugindriver/sample.json")) {
 
-			var dynamicMapping = ElasticSearchUtils.getDynamicMapping(in.readAllBytes());
+			var ingestionPayload = Json.decodeValue(
+				new String(in.readAllBytes()),
+				IngestionPayload.class
+			);
+
+			var dynamicMapping = ElasticSearchUtils.getDynamicMapping(ingestionPayload, mapper);
 
 			assertEquals(expected, dynamicMapping);
 		}

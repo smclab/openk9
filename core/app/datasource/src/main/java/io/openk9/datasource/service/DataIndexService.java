@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.mapper.DataIndexMapper;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
@@ -37,9 +38,6 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.ElasticSearchUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.ext.web.client.HttpResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
@@ -48,7 +46,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
@@ -68,6 +65,8 @@ public class DataIndexService
 	HttpPluginDriverClient pluginDriverClient;
 	@Inject
 	IndexerEvents indexerEvents;
+	@Inject
+	IngestionPayloadMapper ingestionPayloadMapper;
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -226,19 +225,14 @@ public class DataIndexService
 		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
 
 		return pluginDriverClient.getSample(pluginDriverInfo)
-			.map(HttpResponse::body)
-			.map(Buffer::getBytes)
-			.flatMap(bytes -> {
+			.flatMap(ingestionPayload -> {
 
-				var payload = (JsonObject) Json.decodeValue(new String(bytes));
+				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
 
-				var documentTypes = Arrays.asList(payload
-					.getMap()
-					.keySet()
-					.toArray(new String[0])
+				var mappings = ElasticSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
 				);
-
-				var mappings = ElasticSearchUtils.getDynamicMapping(bytes);
 
 				var transientDataIndex = new DataIndex();
 				transientDataIndex.setName(datasource.getName() + " DataIndex");

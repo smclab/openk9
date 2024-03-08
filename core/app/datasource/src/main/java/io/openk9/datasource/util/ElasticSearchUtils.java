@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.util;
 
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -49,6 +51,17 @@ public class ElasticSearchUtils {
 	private static MapperService mapperService = null;
 
 	private ElasticSearchUtils() {
+	}
+
+	public static JsonObject getDynamicMapping(
+		IngestionPayload ingestionPayload,
+		IngestionPayloadMapper mapper) {
+
+		var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+		var dataPayload = mapper.map(ingestionPayload, documentTypes);
+
+		return ElasticSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
 	}
 
 	public static JsonObject getDynamicMapping(byte[] payload) {

@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.plugindriver;
 
+import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
 import io.smallrye.mutiny.Uni;
@@ -127,7 +128,7 @@ public class HttpPluginDriverClient {
 			);
 	}
 
-	public Uni<HttpResponse<Buffer>> getSample(HttpPluginDriverInfo pluginDriverInfo) {
+	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
 			.request(
 				HttpMethod.GET,
@@ -136,7 +137,10 @@ public class HttpPluginDriverClient {
 				SAMPLE_PATH
 			)
 			.ssl(pluginDriverInfo.isSecure())
-			.send();
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(IngestionPayload.class))
+			.flatMap(this::validateDto);
 	}
 
 	public Uni<PluginDriverFormDTO> getForm(HttpPluginDriverInfo pluginDriverInfo) {
