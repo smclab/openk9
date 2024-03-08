@@ -352,12 +352,16 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		DatasourceConnectionDTO datasourceConnectionDTO) {
 
 		var pipelineDto = datasourceConnectionDTO.getPipeline();
+		var pipelineId = datasourceConnectionDTO.getPipelineId();
 
 		if (pipelineDto != null) {
 			return enrichPipelineService.create(session, pipelineDto);
 		}
+		else if (pipelineId != null) {
+			return enrichPipelineService.findById(session, pipelineId);
+		}
 		else {
-			return enrichPipelineService.findById(session, datasourceConnectionDTO.getPipelineId());
+			return Uni.createFrom().nullItem();
 		}
 	}
 
@@ -366,6 +370,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 		var pluginDriver = datasourceConnectionDTO.getPluginDriver();
 		var pluginDriverId = datasourceConnectionDTO.getPluginDriverId();
+
+
+		if (pluginDriver == null && pluginDriverId == null) {
+			throw new ValidationException(
+				"Request must defines one of pluginDriverId or pluginDriver");
+		}
 
 		if (pluginDriver != null && pluginDriverId != null) {
 			throw new ValidationException(

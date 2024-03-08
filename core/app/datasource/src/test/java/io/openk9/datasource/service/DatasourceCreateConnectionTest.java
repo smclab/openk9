@@ -30,7 +30,6 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -61,20 +60,20 @@ class DatasourceCreateConnectionTest {
 	void should_create_everything(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.CREATE_ALL_DTO),
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_DTO),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
 						any(Mutiny.Session.class),
-						eq(CreateConnection.CREATE_ALL_DTO.getPluginDriver())
+						eq(CreateConnection.NEW_ENTITIES_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
 					.should(times(1))
 					.create(
 						any(Mutiny.Session.class),
-						eq(CreateConnection.CREATE_ALL_DTO.getPipeline())
+						eq(CreateConnection.NEW_ENTITIES_DTO.getPipeline())
 					);
 
 				then(dataIndexService)
@@ -91,13 +90,13 @@ class DatasourceCreateConnectionTest {
 
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.CREATE_PLUGIN_IDX_DTO),
+				CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
 						any(Mutiny.Session.class),
-						eq(CreateConnection.CREATE_PLUGIN_IDX_DTO.getPluginDriver())
+						eq(CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
@@ -117,39 +116,6 @@ class DatasourceCreateConnectionTest {
 
 	}
 
-	@Test
-	@Disabled // TODO: Probably pointless
-	@RunOnVertxContext
-	void should_create_plugin_and_pipeline(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.CREATE_PLUGIN_PIPELINE_DTO),
-			response -> {
-				then(pluginDriverService)
-					.should(times(1))
-					.create(
-						any(Mutiny.Session.class),
-						eq(CreateConnection.CREATE_PLUGIN_PIPELINE_DTO.getPluginDriver())
-					);
-
-				then(enrichPipelineService)
-					.should(times(1))
-					.create(
-						any(Mutiny.Session.class),
-						eq(CreateConnection.CREATE_PLUGIN_PIPELINE_DTO.getPipeline())
-					);
-
-				then(dataIndexService).should(times(1)).findById(
-					any(Mutiny.Session.class),
-					eq(CreateConnection.DATA_INDEX_ID)
-				);
-
-				then(dataIndexService).shouldHaveNoMoreInteractions();
-			}
-		);
-
-	}
 
 	@Test
 	@RunOnVertxContext
@@ -157,12 +123,12 @@ class DatasourceCreateConnectionTest {
 
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.CREATE_PIPELINE_IDX_DTO),
+				CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO),
 			response -> {
 
 				then(pluginDriverService).should(times(1)).findById(
 					any(Mutiny.Session.class),
-					eq(CreateConnection.CREATE_PIPELINE_IDX_DTO.getPluginDriverId())
+					eq(CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO.getPluginDriverId())
 				);
 
 				then(pluginDriverService).shouldHaveNoMoreInteractions();
@@ -179,6 +145,29 @@ class DatasourceCreateConnectionTest {
 
 	}
 
+	@Test
+	@RunOnVertxContext
+	void should_not_associate_any_pipeline(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_PLUGIN_NO_PIPELINE_DTO),
+			response -> {
+				then(pluginDriverService)
+					.should(times(1))
+					.create(
+						any(Mutiny.Session.class),
+						eq(CreateConnection.NEW_PLUGIN_NO_PIPELINE_DTO.getPluginDriver())
+					);
+
+				then(enrichPipelineService).shouldHaveNoInteractions();
+
+				then(dataIndexService)
+					.should(times(1))
+					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+			}
+		);
+
+	}
 
 	@Test
 	@RunOnVertxContext
@@ -201,6 +190,23 @@ class DatasourceCreateConnectionTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_fail_with_validation_exception_when_no_plugin_driver_dto(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NO_PLUGIN_NO_PIPELINE_DTO),
+			response -> {
+				Assertions.assertFalse(response.getFieldValidators().isEmpty());
+
+				then(pluginDriverService).shouldHaveNoInteractions();
+				then(enrichPipelineService).shouldHaveNoInteractions();
+				then(dataIndexService).shouldHaveNoInteractions();
+			}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
 	void should_fail_with_K9Error_when_transaction_exception(UniAsserter asserter) {
 
 		given(enrichPipelineService
@@ -208,19 +214,19 @@ class DatasourceCreateConnectionTest {
 			.willReturn(Uni.createFrom().failure(RuntimeException::new));
 
 		asserter.assertFailedWith(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.CREATE_ALL_DTO),
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_DTO),
 			failure -> {
 
 				Assertions.assertInstanceOf(K9Error.class, failure);
 
 				then(pluginDriverService).should(times(1)).create(
 					any(Mutiny.Session.class),
-					eq(CreateConnection.CREATE_ALL_DTO.getPluginDriver())
+					eq(CreateConnection.NEW_ENTITIES_DTO.getPluginDriver())
 				);
 
 				then(enrichPipelineService).should(times(1)).create(
 					any(Mutiny.Session.class),
-					eq(CreateConnection.CREATE_ALL_DTO.getPipeline())
+					eq(CreateConnection.NEW_ENTITIES_DTO.getPipeline())
 				);
 
 				then(dataIndexService).shouldHaveNoInteractions();

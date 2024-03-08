@@ -43,10 +43,6 @@ public class DatasourceConnectionDTO extends DatasourceDTO {
 	private Long pipelineId;
 
 	@Nullable
-	@Description("DataIndex to be associated (optional)")
-	private Long dataIndexId;
-
-	@Nullable
 	@Description(("PluginDriver to be created and associated (optional)"))
 	private PluginDriverDTO pluginDriver;
 

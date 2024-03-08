@@ -57,18 +57,17 @@ public class CreateConnection {
 	public static final long DATASOURCE_ID = 12312L;
 	public static final long DATA_INDEX_ID = 1111L;
 
-	public static final DatasourceConnectionDTO CREATE_ALL_DTO = DatasourceConnectionDTO.builder()
+	public static final DatasourceConnectionDTO NEW_ENTITIES_DTO = DatasourceConnectionDTO.builder()
 		.name(DATASOURCE_NAME)
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
 		.schedulable(SCHEDULABLE)
 		.jsonConfig(DATASOURCE_JSON_CONFIG)
 		.scheduling(SCHEDULING)
-		.dataIndexId(null)
 		.pluginDriver(PLUGIN_DRIVER_DTO)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
-	public static final DatasourceConnectionDTO CREATE_PIPELINE_IDX_DTO =
+	public static final DatasourceConnectionDTO PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME)
 			.description(DATASOURCE_DESCRIPTION)
@@ -76,7 +75,6 @@ public class CreateConnection {
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
-			.dataIndexId(null)
 			.pluginDriverId(PLUGIN_DRIVER_ID)
 			.pipeline(PIPELINE_WITH_ITEMS_DTO)
 			.build();
@@ -87,13 +85,12 @@ public class CreateConnection {
 		.schedulable(SCHEDULABLE)
 		.jsonConfig(DATASOURCE_JSON_CONFIG)
 		.scheduling(SCHEDULING)
-		.dataIndexId(null)
 		.pluginDriverId(PLUGIN_DRIVER_ID)
 		.pluginDriver(PLUGIN_DRIVER_DTO)
 		.pipelineId(PIPELINE_ID)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
-	public static final DatasourceConnectionDTO CREATE_PLUGIN_IDX_DTO =
+	public static final DatasourceConnectionDTO NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME)
 			.description(DATASOURCE_DESCRIPTION)
@@ -101,11 +98,11 @@ public class CreateConnection {
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
-			.dataIndexId(null)
 			.pluginDriver(PLUGIN_DRIVER_DTO)
 			.pipelineId(PIPELINE_ID)
 			.build();
-	public static final DatasourceConnectionDTO CREATE_PLUGIN_PIPELINE_DTO =
+
+	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME)
 			.description(DATASOURCE_DESCRIPTION)
@@ -113,11 +110,18 @@ public class CreateConnection {
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
-			.dataIndexId(DATA_INDEX_ID)
 			.pluginDriver(PLUGIN_DRIVER_DTO)
-			.pipeline(PIPELINE_WITH_ITEMS_DTO)
 			.build();
 
+	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
+		DatasourceConnectionDTO.builder()
+			.name(DATASOURCE_NAME)
+			.description(DATASOURCE_DESCRIPTION)
+			.reindexRate(REINDEX_RATE)
+			.schedulable(SCHEDULABLE)
+			.jsonConfig(DATASOURCE_JSON_CONFIG)
+			.scheduling(SCHEDULING)
+			.build();
 	public static PluginDriver PLUGIN_DRIVER;
 	public static EnrichPipeline PIPELINE;
 	public static Datasource DATASOURCE;
@@ -145,7 +149,7 @@ public class CreateConnection {
 
 		var datasource = new Datasource();
 		datasource.setId(DATASOURCE_ID);
-		datasource.setName(CREATE_ALL_DTO.getName());
+		datasource.setName(NEW_ENTITIES_DTO.getName());
 		datasource.setPluginDriver(PLUGIN_DRIVER);
 		datasource.setEnrichPipeline(PIPELINE);
 		DATASOURCE = datasource;
