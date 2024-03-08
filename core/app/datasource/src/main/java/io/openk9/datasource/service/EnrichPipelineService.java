@@ -89,6 +89,13 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						enrichPipelineItem.setEnrichItem(enrichItem);
 						enrichPipelineItem.setWeight(item.getWeight());
 						enrichPipelineItems.add(enrichPipelineItem);
+
+						var key = EnrichPipelineItemKey.of(
+							pipeline.getId(),
+							enrichItem.getId()
+						);
+
+						enrichPipelineItem.setKey(key);
 					}
 
 					pipeline.setEnrichPipelineItems(enrichPipelineItems);
