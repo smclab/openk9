@@ -77,13 +77,28 @@ public class ElasticSearchUtils {
 			doc.addDynamicMappingsUpdate(mapping);
 		}
 
-		return ((JsonObject) Json
+		var mappings = ((JsonObject) Json
 			.decodeValue(doc
 				.dynamicMappingsUpdate()
 				.toString()
 			)
 		).getJsonObject(DOCUMENT_TYPE);
 
+		mappings.put(
+			"settings",
+			JsonObject.of(
+				"index",
+				JsonObject.of(
+					"number_of_shards", "1",
+					"number_of_replicas", "1",
+					"highlight", JsonObject.of(
+						"max_analyzed_offset", "10000000"
+					)
+				)
+			)
+		);
+
+		return mappings;
 	}
 
 	private static SourceToParse sourceToParse(byte[] payload) {
