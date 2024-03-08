@@ -40,6 +40,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -83,8 +84,8 @@ class DynamicMappingDataIndexTest {
 					.generateDocTypeFields(
 						any(Mutiny.Session.class),
 						any(DataIndex.class),
-						any(Map.class),
-						any(List.class)
+						argThat(DynamicMappingDataIndexTest::isAnIndexMapping),
+						argThat(DynamicMappingDataIndexTest::isADocumentTypeList)
 					);
 
 			}
@@ -116,6 +117,14 @@ class DynamicMappingDataIndexTest {
 			this.mapper = mapper;
 		}
 
+	}
+
+	private static boolean isAnIndexMapping(Map<String, Object> map) {
+		return map != null && !map.isEmpty() && map.containsKey("properties");
+	}
+
+	private static boolean isADocumentTypeList(List<String> list) {
+		return list != null && !list.isEmpty() && list.contains("sample");
 	}
 
 }

@@ -48,7 +48,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
@@ -230,14 +230,13 @@ public class DataIndexService
 			.map(Buffer::getBytes)
 			.flatMap(bytes -> {
 
-				var sample = (JsonObject) Json.decodeValue(new String(bytes));
+				var payload = (JsonObject) Json.decodeValue(new String(bytes));
 
-				var documentTypes = new ArrayList<String>();
-				for (Object documentType : sample.getJsonArray("documentTypes")) {
-					if (documentType instanceof String) {
-						documentTypes.add((String) documentType);
-					}
-				}
+				var documentTypes = Arrays.asList(payload
+					.getMap()
+					.keySet()
+					.toArray(new String[0])
+				);
 
 				var mappings = ElasticSearchUtils.getDynamicMapping(bytes);
 

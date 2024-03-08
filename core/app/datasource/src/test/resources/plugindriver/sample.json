@@ -1,9 +1,8 @@
 {
-	"firstName": "John",
-	"lastName": "Doe",
-	"email": "john.doe@acme.com",
-	"age": 20,
-	"documentTypes": [
-		"sample"
-	]
+	"sample": {
+		"firstName": "John",
+		"lastName": "Doe",
+		"email": "john.doe@acme.com",
+		"age": 20
+	}
 }
