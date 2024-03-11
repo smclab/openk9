@@ -218,28 +218,27 @@ function Filters({
         )}
         {preFilters}
         {suggestionCategories.data?.map((suggestionCategory, index) => (
-          // <React.Suspense fallback={<div>sdcxz</div>}>
-          //   <FilterCategoryDynamicMemo
-          //     key={suggestionCategory.id}
-          //     suggestionCategoryName={translateSuggesionCategoryName({
-          //       names: suggestionCategory.translationMap,
-          //       language: language,
-          //       defaultValue: suggestionCategory.name,
-          //     })}
-          //     suggestionCategoryId={suggestionCategory.id}
-          //     tokens={lastSearchQueryWithResults}
-          //     onAdd={onAddFilterToken}
-          //     onRemove={onRemoveFilterToken}
-          //     multiSelect={suggestionCategory?.multiSelect}
-          //     searchQuery={searchQuery}
-          //     language={language}
-          //     isCollapsable={isCollapsable}
-          //     numberItems={numberItems}
-          //     isDynamicElement={isDynamicElement}
-          //     noResultMessage={noResultMessage}
-          //   />
-          // </React.Suspense>ù
-          <SkeletonFilters key={index} />
+          <React.Suspense fallback={<div>sdcxz</div>}>
+            <FilterCategoryDynamicMemo
+              key={suggestionCategory.id}
+              suggestionCategoryName={translateSuggesionCategoryName({
+                names: suggestionCategory.translationMap,
+                language: language,
+                defaultValue: suggestionCategory.name,
+              })}
+              suggestionCategoryId={suggestionCategory.id}
+              tokens={lastSearchQueryWithResults}
+              onAdd={onAddFilterToken}
+              onRemove={onRemoveFilterToken}
+              multiSelect={suggestionCategory?.multiSelect}
+              searchQuery={searchQuery}
+              language={language}
+              isCollapsable={isCollapsable}
+              numberItems={numberItems}
+              isDynamicElement={isDynamicElement}
+              noResultMessage={noResultMessage}
+            />
+          </React.Suspense>
         ))}
       </div>
     </div>

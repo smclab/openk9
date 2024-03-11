@@ -71,29 +71,28 @@ function ResultsPagination<E>({
     case "virtual":
     case "infinite":
       return (
-        // <React.Suspense fallback={<SkeletonResult />}>
-        //   <InfiniteResults
-        //     setTotalResult={setTotalResult}
-        //     renderers={renderers}
-        //     searchQuery={searchQuery}
-        //     onDetail={onDetail}
-        //     setDetailMobile={setDetailMobile}
-        //     sort={sort}
-        //     setSortResult={setSortResult}
-        //     isMobile={isMobile}
-        //     overChangeCard={overChangeCard}
-        //     language={language}
-        //     setSortAfterKey={setSortAfterKey}
-        //     sortAfterKey={sortAfterKey}
-        //     numberOfResults={numberOfResults}
-        //     currentPage={currentPage}
-        //     changePage={changePage}
-        //     elementForPage={pagination}
-        //     setCurrentPage={setCurrentPage}
-        //     anchor={anchor}
-        //   />
-        // </React.Suspense>
-        <SkeletonResult />
+        <React.Suspense fallback={<SkeletonResult />}>
+          <InfiniteResults
+            setTotalResult={setTotalResult}
+            renderers={renderers}
+            searchQuery={searchQuery}
+            onDetail={onDetail}
+            setDetailMobile={setDetailMobile}
+            sort={sort}
+            setSortResult={setSortResult}
+            isMobile={isMobile}
+            overChangeCard={overChangeCard}
+            language={language}
+            setSortAfterKey={setSortAfterKey}
+            sortAfterKey={sortAfterKey}
+            numberOfResults={numberOfResults}
+            currentPage={currentPage}
+            changePage={changePage}
+            elementForPage={pagination}
+            setCurrentPage={setCurrentPage}
+            anchor={anchor}
+          />
+        </React.Suspense>
       );
   }
 }
