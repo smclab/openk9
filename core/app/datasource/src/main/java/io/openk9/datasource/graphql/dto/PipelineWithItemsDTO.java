@@ -26,7 +26,7 @@ import lombok.Singular;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Collection;
+import java.util.SortedSet;
 
 @SuperBuilder
 @NoArgsConstructor
@@ -37,7 +37,7 @@ import java.util.Collection;
 public class PipelineWithItemsDTO extends EnrichPipelineDTO {
 
 	@Singular
-	private Collection<ItemDTO> items;
+	private SortedSet<ItemDTO> items;
 
 	@SuperBuilder
 	@Getter

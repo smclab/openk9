@@ -39,7 +39,7 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -79,7 +79,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 			return super.create(s, transientPipeline)
 				.flatMap(pipeline -> {
-					var enrichPipelineItems = new HashSet<EnrichPipelineItem>();
+					var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
 
 					for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
 						var enrichItem = s.getReference(EnrichItem.class, item.getEnrichItemId());

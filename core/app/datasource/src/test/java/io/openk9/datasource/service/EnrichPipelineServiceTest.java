@@ -19,6 +19,8 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.EnrichPipelineItemKey;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.Mock;
@@ -31,6 +33,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import javax.inject.Inject;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -70,22 +73,23 @@ class EnrichPipelineServiceTest {
 								pipeline.getName()
 							);
 
-							//							var items = pipeline
-							//								.getEnrichPipelineItems()
-							//								.toArray(new EnrichPipelineItem[]{});
-
 							var items = pipeline.getEnrichPipelineItems();
 
 							Assertions.assertEquals(2, items.size());
 
-							//							Assertions.assertEquals(
-							//								CreateConnection.FIRST_ITEM_ID,
-							//								items[0].getEnrichItem().getId()
-							//							);
-							//							Assertions.assertEquals(
-							//								CreateConnection.SECOND_ITEM_ID,
-							//								items[1].getEnrichItem().getId()
-							//							);
+							var orderedItemIds = items
+								.stream()
+								.map(EnrichPipelineItem::getKey)
+								.map(EnrichPipelineItemKey::getEnrichItemId)
+								.toList();
+
+							Assertions.assertEquals(
+								orderedItemIds,
+								List.of(
+									CreateConnection.FIRST_ITEM_ID,
+									CreateConnection.SECOND_ITEM_ID
+								)
+							);
 
 							return true;
 						})
@@ -119,4 +123,5 @@ class EnrichPipelineServiceTest {
 		}
 
 	}
+
 }
