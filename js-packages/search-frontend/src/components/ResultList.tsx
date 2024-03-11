@@ -62,7 +62,6 @@ function Results<E>({
   const renderers = useRenderers();
 
   if (!renderers) return null;
-
   switch (displayMode.type) {
     case "finite":
       return (
@@ -287,8 +286,11 @@ export function FiniteResults<E>({
     sortAfterKey,
     numberOfResults,
   );
-
-  setTotalResult(results.data?.pages[0].total ?? null);
+  React.useEffect(() => {
+    if (results.data && results.data.pages[0].total) {
+      setTotalResult(results.data.pages[0].total);
+    }
+  }, [results.data, setTotalResult]);
 
   return (
     <div
@@ -367,9 +369,12 @@ export function InfiniteResults<E>({
     sortAfterKey,
     numberOfResults,
   );
-
+  React.useEffect(() => {
+    if (results.data && results.data.pages[0].total) {
+      setTotalResult(results.data.pages[0].total);
+    }
+  }, [results.data, setTotalResult]);
   const { t } = useTranslation();
-  setTotalResult(results.data?.pages[0].total ?? null);
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -405,7 +410,7 @@ export function InfiniteResults<E>({
           </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
             return (
-              <React.Fragment key={pageIndex}>
+              <React.Fragment key={`page-${pageIndex}`}>
                 {page.result.map((result, resultIndex) => {
                   return (
                     <ResultMemo<E>

@@ -24,7 +24,7 @@ function Result<E>(props: ResultProps<E>) {
   const result = props.result as any;
   const { onDetail, renderers } = props;
   const isMobile = props.isMobile;
-  const setIdPreview= props.setIdPreview;
+  const setIdPreview = props.setIdPreview;
   const setDetailMobile = props.setDetailMobile;
   const overChangeCard = props.overChangeCard;
   return (
@@ -116,7 +116,10 @@ function CreateButton({
 }: {
   setDetailMobile: (result: GenericResultItem<any> | null) => void;
   result: GenericResultItem<any>;
-  setIdPreview?: React.Dispatch<React.SetStateAction<string>>|undefined|null;
+  setIdPreview?:
+    | React.Dispatch<React.SetStateAction<string>>
+    | undefined
+    | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -132,7 +135,7 @@ function CreateButton({
       `}
     >
       <button
-        id={"preview-card-"+result?.source?.id}
+        id={"preview-card-" + result?.source?.id}
         css={css`
           display: flex;
           align-items: center;
@@ -148,8 +151,7 @@ function CreateButton({
           cursor: pointer;
         `}
         onClick={() => {
-          if(setIdPreview)
-          setIdPreview(result?.source?.id||"")
+          if (setIdPreview) setIdPreview(result?.source?.id || "");
           setDetailMobile(result);
         }}
       >
