@@ -46,6 +46,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
@@ -235,7 +236,14 @@ public class DataIndexService
 				);
 
 				var transientDataIndex = new DataIndex();
-				transientDataIndex.setName(datasource.getName() + " DataIndex");
+
+				transientDataIndex.setName(String.format(
+					"%s-%d-data-%d",
+					datasource.getTenant(),
+					datasource.getId(),
+					Instant.now().toEpochMilli()
+				));
+				
 				transientDataIndex.setDatasource(datasource);
 
 				return create(session, transientDataIndex)
