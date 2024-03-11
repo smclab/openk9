@@ -774,12 +774,8 @@ function useSearch({
     ),
   });
   const spans = React.useMemo(
-    () =>
-      calculateSpans(
-        selectionsState.textOnChange,
-        queryAnalysis.data?.analysis,
-      ),
-    [queryAnalysis.data?.analysis, selectionsState.textOnChange],
+    () => calculateSpans(selectionsState.text, queryAnalysis.data?.analysis),
+    [queryAnalysis.data?.analysis, selectionsState.text],
   );
   const searchTokens = React.useMemo(
     () =>
