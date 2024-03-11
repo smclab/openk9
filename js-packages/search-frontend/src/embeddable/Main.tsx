@@ -774,9 +774,14 @@ function useSearch({
     ),
   });
   const spans = React.useMemo(
-    () => calculateSpans(selectionsState.text, queryAnalysis.data?.analysis),
-    [queryAnalysis.data?.analysis, selectionsState.text],
+    () =>
+      calculateSpans(
+        selectionsState.textOnChange,
+        queryAnalysis.data?.analysis,
+      ),
+    [queryAnalysis.data?.analysis, selectionsState.textOnChange],
   );
+
   const searchTokens = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -788,10 +793,17 @@ function useSearch({
     [spans, selectionsState.selection],
   );
 
-  const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
-    searchTokenS.isSearch = true;
-    return searchTokenS;
-  });
+  const newSearch: SearchToken[] = selectionsState.text
+    ? [
+        {
+          isSearch: true,
+          tokenType: "TEXT",
+          filter: false,
+          values: [selectionsState.text],
+        },
+      ]
+    : [];
+
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],
