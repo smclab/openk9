@@ -295,6 +295,7 @@ export function Main({
               configuration.tabsConfigurable?.pxHiddenRightArrow
             }
             filterResetOnChange={selectionsDispatch}
+            reset={configuration.tabsConfigurable?.reset}
           />
         </I18nextProvider>,
         configuration.tabsConfigurable
