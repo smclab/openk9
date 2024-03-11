@@ -92,7 +92,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 						var key = EnrichPipelineItemKey.of(
 							pipeline.getId(),
-							enrichItem.getId()
+							item.getEnrichItemId()
 						);
 
 						enrichPipelineItem.setKey(key);
