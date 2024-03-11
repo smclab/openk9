@@ -17,21 +17,13 @@ type SearchProps = {
   selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
   isMobile: boolean;
-  filtersSelect: SearchToken[];
   isVisibleFilters: boolean;
-  mobileVersion?: boolean;
   btnSearch?: boolean;
-  defaultValue?: string;
   actionOnClick?(): void;
   customMessageSearch?: string;
   isSearchOnInputChange?: boolean;
   htmlKey?: string | undefined | null;
-  textOnQueryStringOnCLick?: string | null | undefined;
   messageSearchIsVisible?: boolean;
-  saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
-  actionCloseMobileVersion?:
-    | React.Dispatch<React.SetStateAction<boolean>>
-    | undefined;
 };
 export function Search({
   configuration,
