@@ -22,8 +22,8 @@ import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Schedulation;
-import io.openk9.datasource.pipeline.util.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
@@ -86,8 +86,8 @@ public class SchedulerInitializer {
 						)
 						.invoke(schedulers -> {
 							for (Scheduler scheduler : schedulers) {
-								Schedulation.SchedulationKey schedulationKey =
-									SchedulationKeyUtils.getKey(
+								Scheduling.Key schedulationKey =
+									SchedulingKeyUtils.fromStrings(
 										tenantResponse.getSchemaName(),
 										scheduler.getScheduleId()
 									);

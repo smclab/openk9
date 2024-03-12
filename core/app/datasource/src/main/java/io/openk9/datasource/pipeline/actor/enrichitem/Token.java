@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import akka.actor.Cancellable;
@@ -9,7 +26,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.util.CborSerializable;
 
 import java.time.Duration;
@@ -38,10 +55,10 @@ public class Token extends AbstractBehavior<Token.Command> {
 		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
 
 	private final Cancellable cancellable;
-	private final Schedulation.SchedulationKey key;
+	private final Scheduling.Key key;
 	private final Map<String, TokenInfo> tokens = new HashMap<>();
 
-	public Token(ActorContext<Command> context, Schedulation.SchedulationKey key) {
+	public Token(ActorContext<Command> context, Scheduling.Key key) {
 		super(context);
 
 		this.key = key;
@@ -63,7 +80,7 @@ public class Token extends AbstractBehavior<Token.Command> {
 			.build();
 	}
 
-	public static Behavior<Command> create(Schedulation.SchedulationKey key) {
+	public static Behavior<Command> create(Scheduling.Key key) {
 
 		return Behaviors
 			.<Command>supervise(Behaviors.setup(ctx -> new Token(ctx, key)))

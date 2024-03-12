@@ -27,8 +27,8 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Schedulation;
-import io.openk9.datasource.pipeline.util.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -118,12 +118,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-						Schedulation.ENTITY_TYPE_KEY,
-						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					EntityRef<Scheduling.Command> schedulationRef = clusterSharding.entityRefFor(
+						Scheduling.ENTITY_TYPE_KEY,
+						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Schedulation.PersistDataIndex.INSTANCE);
+					schedulationRef.tell(Scheduling.PersistDataIndex.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
@@ -139,12 +139,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-						Schedulation.ENTITY_TYPE_KEY,
-						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					EntityRef<Scheduling.Command> schedulationRef = clusterSharding.entityRefFor(
+						Scheduling.ENTITY_TYPE_KEY,
+						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+					schedulationRef.tell(Scheduling.Cancel.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
@@ -160,7 +160,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					MessageGateway.askReroute(
 						actorSystem,
-						SchedulationKeyUtils.getKey(tenantId, scheduler.getScheduleId())
+						SchedulingKeyUtils.fromStrings(tenantId, scheduler.getScheduleId())
 					);
 				}
 				return Uni.createFrom().voidItem();

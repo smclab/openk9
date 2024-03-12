@@ -8,7 +8,7 @@ import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -65,8 +65,8 @@ public class RetryConsumer extends BaseConsumer {
 			getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 
 			AskPattern.ask(
-				getSchedulation(),
-				Schedulation.TrackError::new,
+				getScheduling(),
+				Scheduling.TrackError::new,
 				timeout,
 				context.getSystem().scheduler()
 			).whenComplete((r, t) -> {
@@ -77,11 +77,11 @@ public class RetryConsumer extends BaseConsumer {
 						queueBind.schedulationKey()
 					);
 				}
-				else if (r instanceof Schedulation.Failure) {
+				else if (r instanceof Scheduling.Failure) {
 					log.warnf(
 						"Error cannot be tracked for schedulation: %s, cause: %s",
 						queueBind.schedulationKey(),
-						((Schedulation.Failure) r).error()
+						((Scheduling.Failure) r).error()
 					);
 				}
 				else {

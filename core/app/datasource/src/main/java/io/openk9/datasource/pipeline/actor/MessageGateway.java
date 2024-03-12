@@ -46,7 +46,7 @@ public class MessageGateway
 	public static final ServiceKey<Command> SERVICE_KEY =
 		ServiceKey.create(Command.class, "message-gateway");
 
-	public static void askReroute(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+	public static void askReroute(ActorSystem<?> actorSystem, Scheduling.Key schedulationKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -72,7 +72,7 @@ public class MessageGateway
 		);
 	}
 
-	public static void askRegister(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+	public static void askRegister(ActorSystem<?> actorSystem, Scheduling.Key schedulationKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -217,17 +217,17 @@ public class MessageGateway
 
 		ClusterSharding clusterSharding = ClusterSharding.get(system);
 
-		EntityRef<Schedulation.Command> entityRef = clusterSharding.entityRefFor(
-			Schedulation.ENTITY_TYPE_KEY, queueBind.schedulationKey());
+		EntityRef<Scheduling.Command> entityRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulationKey());
 
 		AskPattern.ask(
 			entityRef,
-			Schedulation.Restart::new,
+			Scheduling.Restart::new,
 			Duration.ofSeconds(10),
 			system.scheduler()
 		).whenComplete((r, t) -> {
 			try {
-				if (t != null || r instanceof Schedulation.Failure) {
+				if (t != null || r instanceof Scheduling.Failure) {
 					log.warnf(
 						"error when restart schedulation %s",
 						queueBind.schedulationKey()
@@ -359,6 +359,10 @@ public class MessageGateway
 	private int getWorkersPerNode(ActorContext<Command> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getInteger(config, Schedulation.WORKERS_PER_NODE, Schedulation.WORKERS_PER_NODE_DEFAULT);
+		return AkkaUtils.getInteger(
+			config,
+			Scheduling.WORKERS_PER_NODE,
+			Scheduling.WORKERS_PER_NODE_DEFAULT
+		);
 	}
 }

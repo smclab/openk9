@@ -33,8 +33,8 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Schedulation;
-import io.openk9.datasource.pipeline.util.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -753,7 +753,7 @@ public class JobScheduler {
 							.persist(scheduler)
 							.invoke(() -> {
 								messageGateway.tell(new MessageGateway.Register(
-									SchedulationKeyUtils.getValue(
+									SchedulingKeyUtils.asString(
 										tenantName, scheduler.getScheduleId())));
 								ctx
 									.getSelf()
@@ -774,10 +774,10 @@ public class JobScheduler {
 
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
-		EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-			Schedulation.ENTITY_TYPE_KEY, SchedulationKeyUtils.getValue(tenantName, scheduleId));
+		EntityRef<Scheduling.Command> schedulationRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY, SchedulingKeyUtils.asString(tenantName, scheduleId));
 
-		schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+		schedulationRef.tell(Scheduling.Cancel.INSTANCE);
 
 		return Behaviors.same();
 	}

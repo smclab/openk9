@@ -42,7 +42,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
-import io.openk9.datasource.pipeline.util.SchedulationKeyUtils;
+import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -61,7 +61,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Schedulation extends AbstractBehavior<Schedulation.Command> {
+public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Command.class, "schedulation");
@@ -74,7 +74,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String NEXT_BEHAVIOR = "Next";
 	private static final String CLOSING_BEHAVIOR = "Closing";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
-	private static final Logger log = Logger.getLogger(Schedulation.class);
+	private static final Logger log = Logger.getLogger(Scheduling.class);
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
@@ -97,32 +97,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
 	public record Failure(String error) implements Response {}
+	private final Key key;
 
-	public record SchedulationKey(String tenantId, String scheduleId) {
-		public String value() {
-			return SchedulationKeyUtils.getValue(this);
-		}
-
-	}
-
-	private final SchedulationKey key;
-	private final Mutiny.SessionFactory sessionFactory;
-	private final Deque<Command> lag = new ArrayDeque<>();
-	private final Set<ActorRef<Response>> consumers = new HashSet<>();
-	private final SchedulerMapper schedulerMapper;
-	private final Duration timeout;
-	private final int workersPerNode;
-	private SchedulerDTO scheduler;
-	private LocalDateTime lastRequest = LocalDateTime.now();
-	private OffsetDateTime lastIngestionDate;
-	private boolean failureTracked = false;
-	private boolean lastReceived = false;
-	private int maxWorkers;
-	private int workers = 0;
-
-	public Schedulation(
+	public Scheduling(
 		ActorContext<Command> context,
-		SchedulationKey key,
+		Key key,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper) {
 
@@ -145,16 +124,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey,
+		Key schedulingKey,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper
 	) {
 
 		return Behaviors
 			.<Command>supervise(
-				Behaviors.setup(ctx -> new Schedulation(
+				Behaviors.setup(ctx -> new Scheduling(
 					ctx,
-					schedulationKey,
+					schedulingKey,
 					sessionFactory,
 					schedulerMapper
 				))
@@ -607,7 +586,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static Duration getTimeout(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getDuration(config, SCHEDULATION_TIMEOUT, Duration.ofHours(6));
+		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
+			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
+
+		queueManager.tell(new QueueManager.DestroyQueue(
+			SchedulingKeyUtils.asString(key.tenantId(), key.scheduleId())));
 	}
 
 	private void updateLastIngestionDate(DataPayload dataPayload) {
@@ -625,10 +608,5 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private void destroyQueue() {
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
-		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
-			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
-
-		queueManager.tell(new QueueManager.DestroyQueue(
-			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 	}
 }

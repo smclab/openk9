@@ -17,21 +17,25 @@
 
 package io.openk9.datasource.pipeline.util;
 
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 
-public class SchedulationKeyUtils {
+public class SchedulingKeyUtils {
 
-	public static String getValue(Schedulation.SchedulationKey key) {
-		return getValue(key.tenantId(), key.scheduleId());
+	public static String asString(Scheduling.Key key) {
+		return asString(key.tenantId(), key.scheduleId());
 	}
 
-	public static String getValue(String tenantId, String scheduleId) {
+	public static String asString(String tenantId, String scheduleId) {
 		return tenantId + "#" + scheduleId;
 	}
 
-	public static Schedulation.SchedulationKey getKey(
-		String tenantId, String scheduleId) {
-
-		return new Schedulation.SchedulationKey(tenantId, scheduleId);
+	public static Scheduling.Key fromStrings(String tenantId, String scheduleId) {
+		return new Scheduling.Key(tenantId, scheduleId);
 	}
+
+	public static Scheduling.Key fromString(String entityId) {
+		String[] strings = entityId.split("#");
+		return new Scheduling.Key(strings[0], strings[1]);
+	}
+
 }

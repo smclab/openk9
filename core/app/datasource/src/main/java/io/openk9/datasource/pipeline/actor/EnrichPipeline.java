@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
@@ -33,13 +50,16 @@ public class EnrichPipeline {
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
 	public sealed interface Command extends CborSerializable {}
-	public record Setup(
-		ActorRef<Response> schedulation,
-		ActorRef<Schedulation.Response> consumer,
-		byte[] ingestPayload,
-		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
-
-	) implements Command {}
+	public static Behavior<Command> create(
+		Scheduling.Key schedulingKey,
+		String contentId
+	) {
+		return Behaviors.setup(ctx -> Behaviors
+			.receive(Command.class)
+			.onMessage(Setup.class, setup -> onSetup(ctx, schedulingKey, contentId, setup))
+			.build()
+		);
+	}
 	private record IndexWriterResponseWrapper(
 		IndexWriterActor.Response response
 	) implements Command {}
@@ -52,40 +72,10 @@ public class EnrichPipeline {
 	) implements Command {}
 	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
 	private record InternalError(String error) implements Command {}
-	public sealed interface Response extends CborSerializable {
-		ActorRef<Schedulation.Response> replyTo();
-
-		String scheduleId();
-		String tenantId();
-	}
-	public record Success(
-		String contentId,
-		ActorRef<Schedulation.Response> replyTo,
-		String scheduleId,
-		String tenantId
-	) implements Response {}
-
-	public record Failure(
-		Throwable exception,
-		ActorRef<Schedulation.Response> replyTo,
-		String scheduleId,
-		String tenantId
-	) implements Response {}
-
-	public static Behavior<Command> create(
-		Schedulation.SchedulationKey schedulationKey,
-		String contentId
-	) {
-		return Behaviors.setup(ctx -> Behaviors
-			.receive(Command.class)
-			.onMessage(Setup.class, setup -> onSetup(ctx, schedulationKey, contentId, setup))
-			.build()
-		);
-	}
 
 	public static Behavior<Command> onSetup(
 		ActorContext<EnrichPipeline.Command> ctx,
-		Schedulation.SchedulationKey key,
+		Scheduling.Key key,
 		String contentId,
 		Setup setup
 	) {
@@ -97,7 +87,7 @@ public class EnrichPipeline {
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
 		ActorRef<Response> schedulation = setup.schedulation();
-		ActorRef<Schedulation.Response> consumer = setup.consumer();
+		ActorRef<Scheduling.Response> consumer = setup.consumer();
 
 		ActorRef<IndexWriterActor.Response> responseActorRef =
 			ctx.messageAdapter(
@@ -133,7 +123,7 @@ public class EnrichPipeline {
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriterActor.Response> responseActorRef,
 		ActorRef<Response> replyTo,
-		ActorRef<Schedulation.Response> consumer,
+		ActorRef<Scheduling.Response> consumer,
 		DataPayload dataPayload,
 		SchedulerDTO scheduler,
 		Set<EnrichItemDTO> enrichPipelineItems
@@ -378,6 +368,35 @@ public class EnrichPipeline {
 			.build();
 
 	}
+
+	public sealed interface Response extends CborSerializable {
+		ActorRef<Scheduling.Response> replyTo();
+
+		String scheduleId();
+		String tenantId();
+	}
+
+	public record Setup(
+		ActorRef<Response> schedulation,
+		ActorRef<Scheduling.Response> consumer,
+		byte[] ingestPayload,
+		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
+
+	) implements Command {}
+
+	public record Success(
+		String contentId,
+		ActorRef<Scheduling.Response> replyTo,
+		String scheduleId,
+		String tenantId
+	) implements Response {}
+
+	public record Failure(
+		Throwable exception,
+		ActorRef<Scheduling.Response> replyTo,
+		String scheduleId,
+		String tenantId
+	) implements Response {}
 
 	private static DataPayload mergeResponse(
 		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
