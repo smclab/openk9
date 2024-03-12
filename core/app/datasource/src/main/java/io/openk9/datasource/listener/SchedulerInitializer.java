@@ -86,7 +86,7 @@ public class SchedulerInitializer {
 						)
 						.invoke(schedulers -> {
 							for (Scheduler scheduler : schedulers) {
-								Scheduling.Key schedulationKey =
+								Scheduling.Key schedulingKey =
 									SchedulingKeyUtils.fromStrings(
 										tenantResponse.getSchemaName(),
 										scheduler.getScheduleId()
@@ -94,7 +94,7 @@ public class SchedulerInitializer {
 
 								MessageGateway.askRegister(
 									actorSystemProvider.getActorSystem(),
-									schedulationKey
+									schedulingKey
 								);
 							}
 						});

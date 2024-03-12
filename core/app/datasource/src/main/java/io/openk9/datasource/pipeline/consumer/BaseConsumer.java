@@ -54,7 +54,7 @@ public abstract class BaseConsumer extends DefaultConsumer {
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 		return clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulationKey());
+			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulingKey());
 	}
 
 	private static Duration getTimeout(Config config) {

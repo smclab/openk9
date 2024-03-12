@@ -36,18 +36,18 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
-	private final Scheduling.Key schedulationKey;
+	private final Scheduling.Key schedulingKey;
 	private final SchedulerDTO scheduler;
 	private final ActorRef<Response> replyTo;
 
 	public NotificationSender(
 		ActorContext<Command> context,
 		SchedulerDTO scheduler,
-		Scheduling.Key schedulationKey, ActorRef<Response> replyTo) {
+		Scheduling.Key schedulingKey, ActorRef<Response> replyTo) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
-		this.schedulationKey = schedulationKey;
+		this.schedulingKey = schedulingKey;
 		this.scheduler = scheduler;
 		this.replyTo = replyTo;
 		context.getSelf().tell(Start.INSTANCE);
@@ -69,8 +69,8 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 	private Behavior<Command> onStart() {
 
-		String tenantName = schedulationKey.tenantId();
-		String scheduleId = schedulationKey.scheduleId();
+		String tenantName = schedulingKey.tenantId();
+		String scheduleId = schedulingKey.scheduleId();
 
 		getContext()
 			.getLog()
