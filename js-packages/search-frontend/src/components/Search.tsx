@@ -17,7 +17,6 @@ type SearchProps = {
   selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
   isMobile: boolean;
-  isVisibleFilters: boolean;
   btnSearch?: boolean;
   actionOnClick?(): void;
   customMessageSearch?: string;

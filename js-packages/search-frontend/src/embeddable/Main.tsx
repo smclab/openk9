@@ -70,14 +70,12 @@ export function Main({
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
-  const waitKeycloackForToken = configuration.waitKeycloackForToken;
 
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
-  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [languageSelect, setLanguageSelect] = React.useState("");
   const [selectionsState, selectionsDispatch] = useSelections({
     useKeycloak,
@@ -98,7 +96,7 @@ export function Main({
       useQueryStringFilters,
     });
   const { i18n } = useTranslation();
-  const { sort, setSortResult, resetSort } = useSortResult({
+  const { setSortResult, resetSort } = useSortResult({
     configuration,
     onConfigurationChange,
     setSortAfterKey,
@@ -196,7 +194,6 @@ export function Main({
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
             isMobile={isMobile}
-            isVisibleFilters={isVisibleFilters}
             isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
@@ -212,7 +209,6 @@ export function Main({
               selectionsDispatch={selectionsDispatch}
               showSyntax={isQueryAnalysisComplete}
               isMobile={isMobile}
-              isVisibleFilters={isVisibleFilters}
               btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
               isSearchOnInputChange={isSearchOnInputChange}
               htmlKey={configuration.searchConfigurable?.htmlKey}
@@ -237,9 +233,7 @@ export function Main({
             tabs={tabs}
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
-            onConfigurationChange={onConfigurationChange}
             language={languageSelect}
-            filterResetOnChange={selectionsDispatch}
             resetFilter={resetFilter}
             resetSort={resetSort}
             selectionsDispatch={selectionsDispatch}
@@ -262,7 +256,6 @@ export function Main({
             tabs={tabs}
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
-            onConfigurationChange={onConfigurationChange}
             language={languageSelect}
             resetFilter={resetFilter}
             onAction={configuration.tabsConfigurable?.onAction}
@@ -270,10 +263,6 @@ export function Main({
             speed={configuration.tabsConfigurable?.speed}
             distance={configuration.tabsConfigurable?.distance}
             step={configuration.tabsConfigurable?.step}
-            pxHiddenRightArrow={
-              configuration.tabsConfigurable?.pxHiddenRightArrow
-            }
-            filterResetOnChange={selectionsDispatch}
             reset={configuration.tabsConfigurable?.reset}
             resetSort={resetSort}
             selectionsDispatch={selectionsDispatch}

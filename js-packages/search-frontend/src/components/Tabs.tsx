@@ -14,15 +14,12 @@ type TabsProps = {
   tabs: Array<Tab>;
   selectedTabIndex: number;
   onSelectedTabIndexChange(index: number): void;
-  onConfigurationChange: ConfigurationUpdateFunction;
   language: string;
   scrollMode?: boolean;
   onAction?(): void;
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?: number;
-  filterResetOnChange: React.Dispatch<SelectionsAction>;
   reset?: {
     filters: boolean;
     calendar: boolean;
@@ -37,7 +34,6 @@ function Tabs({
   tabs,
   selectedTabIndex,
   onSelectedTabIndexChange,
-  onConfigurationChange,
   language,
   onAction,
   scrollMode = true,
@@ -55,8 +51,6 @@ function Tabs({
   let scrollAmount = 0;
   const handleHorizantalScroll = ({
     element,
-    speed,
-    distance,
     step,
   }: {
     element: any;
