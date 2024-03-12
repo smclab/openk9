@@ -23,7 +23,15 @@ type TabsProps = {
   step?: number;
   pxHiddenRightArrow?: number;
   filterResetOnChange: React.Dispatch<SelectionsAction>;
-  reset?: { filters: boolean; calendar: boolean; sort: boolean };
+  reset?: {
+    filters: boolean;
+    calendar: boolean;
+    sort: boolean;
+    search: boolean;
+  };
+  resetFilter: () => void;
+  resetSort: () => void;
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 };
 function Tabs({
   tabs,
@@ -36,9 +44,10 @@ function Tabs({
   speed = 10,
   distance = 700,
   step = 30,
-  pxHiddenRightArrow = 91,
   reset,
-  filterResetOnChange,
+  resetFilter,
+  resetSort,
+  selectionsDispatch,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
@@ -192,9 +201,16 @@ function Tabs({
                 `}
                 onClick={() => {
                   onSelectedTabIndexChange(index);
-                  onConfigurationChange({ filterTokens: [], sort: [] });
+                  if (reset) {
+                    if (reset.filters) resetFilter();
+                    if (reset?.calendar) resetFilterCalendar();
+                    if (reset?.search)
+                      selectionsDispatch({
+                        type: "reset-search",
+                      });
+                    if (reset?.sort) resetSort();
+                  }
                   if (onAction) onAction();
-                  resetFilterCalendar();
                 }}
               >
                 {tabTraslation.toUpperCase()}
@@ -237,14 +253,14 @@ function Tabs({
             `}
             onClick={() => {
               onSelectedTabIndexChange(index);
-              onConfigurationChange({ filterTokens: [], sort: [] });
               if (reset) {
-                const configurationChanges = {
-                  filterTokens: reset.filters ? [] : undefined,
-                  sort: reset.sort ? [] : undefined,
-                };
+                if (reset.filters) resetFilter();
                 if (reset?.calendar) resetFilterCalendar();
-                onConfigurationChange(configurationChanges);
+                if (reset?.search)
+                  selectionsDispatch({
+                    type: "reset-search",
+                  });
+                if (reset?.sort) resetSort();
               }
               if (onAction) onAction();
             }}

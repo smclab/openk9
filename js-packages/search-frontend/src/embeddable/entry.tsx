@@ -271,7 +271,12 @@ type TabsProps = {
   distance?: number;
   step?: number;
   pxHiddenRightArrow?: number;
-  reset?: { filters: boolean; calendar: boolean; sort: boolean };
+  reset?: {
+    filters: boolean;
+    calendar: boolean;
+    sort: boolean;
+    search: boolean;
+  };
 };
 
 type totalResultProps = {

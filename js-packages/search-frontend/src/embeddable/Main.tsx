@@ -89,17 +89,19 @@ export function Main({
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
-  const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
-    configuration,
-    onConfigurationChange,
-    selectionsState,
-    selectionsDispatch,
-    useQueryStringFilters,
-  });
+  const { filterTokens, addFilterToken, removeFilterToken, resetFilter } =
+    useFilters({
+      configuration,
+      onConfigurationChange,
+      selectionsState,
+      selectionsDispatch,
+      useQueryStringFilters,
+    });
   const { i18n } = useTranslation();
-  const { sort, setSortResult } = useSortResult({
+  const { sort, setSortResult, resetSort } = useSortResult({
     configuration,
     onConfigurationChange,
+    setSortAfterKey,
   });
   const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
     configuration.overrideTabs,
@@ -238,6 +240,9 @@ export function Main({
             onConfigurationChange={onConfigurationChange}
             language={languageSelect}
             filterResetOnChange={selectionsDispatch}
+            resetFilter={resetFilter}
+            resetSort={resetSort}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.tabs,
@@ -259,6 +264,7 @@ export function Main({
             onSelectedTabIndexChange={setSelectedTabIndex}
             onConfigurationChange={onConfigurationChange}
             language={languageSelect}
+            resetFilter={resetFilter}
             onAction={configuration.tabsConfigurable?.onAction}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
@@ -269,6 +275,8 @@ export function Main({
             }
             filterResetOnChange={selectionsDispatch}
             reset={configuration.tabsConfigurable?.reset}
+            resetSort={resetSort}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.tabsConfigurable
@@ -792,7 +800,6 @@ function useSearch({
       ),
     [spans, selectionsState.selection],
   );
-
   const newSearch: SearchToken[] = selectionsState.text
     ? [
         {
@@ -993,16 +1000,29 @@ function useFilters({
     [onConfigurationChange],
   );
 
+  const resetFilter = React.useCallback(() => {
+    selectionsDispatch({ type: "reset-filters" });
+    onConfigurationChange(() => ({ filterTokens: [] }));
+  }, [onConfigurationChange]);
+
   const defaultTokens = configuration.defaultTokens;
-  return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
+  return {
+    defaultTokens,
+    filterTokens,
+    addFilterToken,
+    removeFilterToken,
+    resetFilter,
+  };
 }
 
 function useSortResult({
   configuration,
   onConfigurationChange,
+  setSortAfterKey,
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
+  setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const sort = configuration.sort;
   const setSortResult = React.useCallback(
@@ -1011,10 +1031,15 @@ function useSortResult({
         sort: [sortResultNew],
       }));
     },
-    [onConfigurationChange, sort],
+    [onConfigurationChange],
   );
-
-  return { sort, setSortResult };
+  const resetSort = React.useCallback(() => {
+    setSortAfterKey("");
+    onConfigurationChange(() => ({
+      sort: [],
+    }));
+  }, [configuration]);
+  return { sort, setSortResult, resetSort };
 }
 
 export type SearchDateRange = {

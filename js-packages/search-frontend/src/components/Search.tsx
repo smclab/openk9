@@ -433,12 +433,3 @@ function setValueSearch({
 }
 
 export const SearchMemo = React.memo(Search);
-
-type Selection = {
-  text: string;
-  textOnChange: string;
-  start: number;
-  end: number;
-  token: AnalysisToken | null;
-  isAuto: boolean;
-};
