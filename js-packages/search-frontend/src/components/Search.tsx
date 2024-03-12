@@ -16,13 +16,12 @@ type SearchProps = {
   selectionsState: SelectionsState;
   selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
-  isMobile: boolean;
   btnSearch?: boolean;
   actionOnClick?(): void;
   customMessageSearch?: string;
-  isSearchOnInputChange?: boolean;
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
+  viewColor?: boolean;
 };
 export function Search({
   configuration,
@@ -30,12 +29,11 @@ export function Search({
   selectionsState,
   selectionsDispatch,
   showSyntax,
-  isMobile,
   btnSearch = false,
-  isSearchOnInputChange = false,
   htmlKey,
   customMessageSearch,
   messageSearchIsVisible = true,
+  viewColor = true,
   actionOnClick,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -184,13 +182,9 @@ export function Search({
                       optionIndex={optionIndex}
                       selected={selected}
                       onSelect={onSelect}
-                      // onSelectText={onSelectText}
                       isAutoSlected={isAutoSelected}
                       setOpenedDropdown={setOpenedDropdown}
-                      selectionsDispatch={selectionsDispatch}
-                      isColorSearch={isSearchOnInputChange}
-                      isBtnSearch={btnSearch}
-                      search={search}
+                      isColorSearch={viewColor}
                     />
                   );
                 })}
@@ -220,12 +214,10 @@ export function Search({
                 font-size: inherit;
                 font-family: inherit;
                 background-color: inherit;
-                color: ${isMobile
-                  ? "black"
-                  : btnSearch
-                  ? "black"
-                  : showSyntax
-                  ? "transparent"
+                color: ${viewColor
+                  ? showSyntax
+                    ? "transparent"
+                    : "black"
                   : "black"};
               `}
               spellCheck="false"

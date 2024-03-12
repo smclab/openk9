@@ -243,7 +243,6 @@ type SortableProps = {
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
-  isShowSyntax?: boolean | undefined | null;
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
@@ -300,8 +299,10 @@ export type Configuration = {
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   sort: Array<RestApi.SortField>;
+  showSyntax: boolean;
   tenant: string | null;
   token: string | null;
+  useQueryAnalysis: boolean;
   useKeycloak: boolean;
   useQueryString: boolean;
   useQueryStringFilters: boolean;
@@ -380,6 +381,7 @@ const defaultConfiguration: Configuration = {
   searchConfigurable: null,
   searchMobile: null,
   searchReplaceText: true,
+  showSyntax: true,
   sort: [],
   sortable: null,
   sortableConfigurable: null,
@@ -392,6 +394,7 @@ const defaultConfiguration: Configuration = {
   totalResult: null,
   totalResultConfigurable: null,
   totalResultMobile: null,
+  useQueryAnalysis: true,
   useKeycloak: true,
   useQueryString: true,
   useQueryStringFilters: true,

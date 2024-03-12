@@ -60,7 +60,6 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const client = useOpenK9Client();
   const activeLanguage = i18next.language;
 
   //retrieving information from the configuration.
@@ -193,8 +192,6 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
-            isMobile={isMobile}
-            isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
         configuration.search,
@@ -208,10 +205,9 @@ export function Main({
               selectionsState={selectionsState}
               selectionsDispatch={selectionsDispatch}
               showSyntax={isQueryAnalysisComplete}
-              isMobile={isMobile}
               btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
-              isSearchOnInputChange={isSearchOnInputChange}
               htmlKey={configuration.searchConfigurable?.htmlKey}
+              viewColor={configuration.showSyntax}
               messageSearchIsVisible={
                 configuration?.searchConfigurable?.messageSearchIsVisible ??
                 true
@@ -764,12 +760,14 @@ function useSearch({
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
-  const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.textOnChange,
-    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-      token ? [{ text, start, end, token }] : [],
-    ),
-  });
+  const queryAnalysis = !configuration.useQueryAnalysis
+    ? { data: undefined }
+    : useQueryAnalysis({
+        searchText: debounced.textOnChange,
+        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      });
   const spans = React.useMemo(
     () =>
       calculateSpans(
