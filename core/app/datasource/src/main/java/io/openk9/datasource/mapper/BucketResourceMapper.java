@@ -3,11 +3,13 @@ package io.openk9.datasource.mapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.web.BucketResource;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
+import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
@@ -56,6 +58,29 @@ public interface BucketResourceMapper {
 		}
 	}
 
+	default List<SortingResponseDTO> toSortingResponseDtoList(List<Sorting> sortingList) {
+		return toSortingResponseDtoList(sortingList, null);
+	}
+
+	default List<SortingResponseDTO> toSortingResponseDtoList(List<Sorting> sortingList, Map<Long, Map<String, String>> translations) {
+		if (translations != null) {
+			return sortingList
+				.stream()
+				.map(sorting -> new SortingResponseDTO(
+					sorting.getName(),
+					sorting.getType().getValue(),
+					translations.get(sorting.getId()))
+				)
+				.toList();
+		}
+		else {
+			return sortingList
+				.stream()
+				.map(this::toSortingResponseDTO)
+				.toList();
+		}
+	}
+
 	default List<DocTypeFieldResponseDTO> toDocTypeFieldResponseDtoList(List<DocTypeField> docTypeFieldList) {
 		return toDocTypeFieldResponseDtoList(docTypeFieldList, null);
 	}
@@ -91,6 +116,12 @@ public interface BucketResourceMapper {
 		target = "tokens", source = "tokenTabs"
 	)
 	TabResponseDTO toTabResponseDto(Tab tab);
+
+
+	@Mapping(
+		target = "label", source = "name"
+	)
+	SortingResponseDTO toSortingResponseDTO(Sorting sorting);
 
 	@Mapping(
 		target = "keywordKey", source = "docTypeField.name"

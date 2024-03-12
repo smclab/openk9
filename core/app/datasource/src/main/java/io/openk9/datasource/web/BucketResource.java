@@ -13,6 +13,8 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.LocalizedSuggestionCategory;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
@@ -26,6 +28,7 @@ import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
+import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.quarkus.cache.Cache;
@@ -101,6 +104,16 @@ public class BucketResource {
 			cache,
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
 			getDocTypeFieldsSortableList(request.host(), translated));
+	}
+
+	@Path("/current/sortings")
+	@GET
+	public Uni<List<SortingResponseDTO>> getSortings(
+		@QueryParam("translated") @DefaultValue("true") boolean translated){
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getSortings", translated),
+			getSortingList(request.host(), translated));
 	}
 
 	@Path("/current/defaultLanguage")
@@ -222,6 +235,58 @@ public class BucketResource {
 						return Uni
 							.createFrom()
 							.item(mapper.toDocTypeFieldResponseDtoList(docTypeFieldList));
+					}
+				});
+		});
+
+	}
+
+	private Uni<List<SortingResponseDTO>> getSortingList(String virtualhost, boolean translated) {
+		return sessionFactory.withTransaction(session -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Sorting> query = cb.createQuery(Sorting.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Sorting> sortingsJoin = from.join(Bucket_.sortings);
+
+			sortingsJoin.fetch(Sorting_.docTypeField, JoinType.LEFT);
+
+			query.select(sortingsJoin);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			query.orderBy(cb.desc(sortingsJoin.get(Sorting_.priority)));
+
+			query.distinct(true);
+
+			return session
+				.createQuery(query)
+				.getResultList()
+				.chain(sortings -> {
+					if (translated) {
+						return translationService
+							.getTranslationMaps(
+								Sorting.class,
+								sortings.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toSortingResponseDtoList(sortings, maps));
+					}
+					else {
+						return Uni
+							.createFrom()
+							.item(mapper.toSortingResponseDtoList(sortings));
 					}
 				});
 		});

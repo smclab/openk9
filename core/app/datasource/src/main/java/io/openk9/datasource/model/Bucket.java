@@ -148,6 +148,16 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private List<Tab> tabs = new LinkedList<>();
 
+	@ManyToMany(cascade = {
+		CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH,
+		CascadeType.DETACH})
+	@JoinTable(name = "buckets_sortings",
+		joinColumns = @JoinColumn(name = "buckets_id"),
+		inverseJoinColumns = @JoinColumn(name = "sortings_id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private List<Sorting> sortings = new LinkedList<>();
+
 	@OneToOne(mappedBy = "bucket")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
@@ -184,6 +194,23 @@ public class Bucket extends K9Entity {
 		while (iterator.hasNext()) {
 			Tab tab = iterator.next();
 			if (tab.getId() == tabId) {
+				iterator.remove();
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+
+	public boolean removeSorting(
+		Collection<Sorting> sortings, long sortingId) {
+
+		Iterator<Sorting> iterator = sortings.iterator();
+
+		while (iterator.hasNext()) {
+			Sorting sorting = iterator.next();
+			if (sorting.getId() == sortingId) {
 				iterator.remove();
 				return true;
 			}
