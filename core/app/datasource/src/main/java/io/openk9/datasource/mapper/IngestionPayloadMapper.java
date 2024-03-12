@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.mapper;
 
+import io.openk9.common.util.IngestionUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import org.mapstruct.Mapper;
@@ -29,19 +30,17 @@ import java.util.List;
 @Mapper(componentModel = "cdi")
 public interface IngestionPayloadMapper {
 
+	static List<String> getDocumentTypes(IngestionPayload ingestionPayload) {
+		return Arrays.asList(IngestionUtils.getDocumentTypes(
+			ingestionPayload.getDatasourcePayload())
+		);
+	}
+
 	@Mapping(
 		target = "rest",
 		source = "datasourcePayload"
 	)
 	DataPayload map(IngestionPayload ingestionPayload);
-
-	static List<String> getDocumentTypes(IngestionPayload ingestionPayload) {
-		return Arrays.asList(ingestionPayload
-			.getDatasourcePayload()
-			.keySet()
-			.toArray(new String[0])
-		);
-	}
 
 	@Mappings(
 		{

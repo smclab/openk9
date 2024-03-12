@@ -17,17 +17,26 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.ingestion.dto.*;
+import io.openk9.common.util.IngestionUtils;
+import io.openk9.ingestion.dto.BinaryDTO;
+import io.openk9.ingestion.dto.BinaryPayload;
+import io.openk9.ingestion.dto.IngestionDTO;
+import io.openk9.ingestion.dto.IngestionPayload;
+import io.openk9.ingestion.dto.IngestionPayloadWrapper;
+import io.openk9.ingestion.dto.ResourcesDTO;
+import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.*;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Metadata;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +44,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class IngestionEmitter {
@@ -81,9 +92,7 @@ public class IngestionEmitter {
 				dto.getRawContent(),
 				datasourcePayload,
 				dto.getTenantId(),
-				datasourcePayload
-					.keySet()
-					.toArray(new String[0]),
+				IngestionUtils.getDocumentTypes(datasourcePayload),
 				_dtoToPayload(dto.getResources()),
 				mappingAcl,
 				dto.getScheduleId(),
@@ -102,9 +111,7 @@ public class IngestionEmitter {
 				dto.getRawContent(),
 				dto.getDatasourcePayload(),
 				dto.getTenantId(),
-				dto.getDatasourcePayload()
-					.keySet()
-					.toArray(new String[0]),
+				IngestionUtils.getDocumentTypes(dto.getDatasourcePayload()),
 				_dtoToPayload(dto.getResources()),
 				dto.getAcl(),
 				dto.getScheduleId(),
