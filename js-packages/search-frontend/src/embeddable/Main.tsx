@@ -79,6 +79,7 @@ export function Main({
   const [selectionsState, selectionsDispatch] = useSelections({
     useKeycloak,
     useQueryString,
+    defaultString: configuration.defaultString || "",
   });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);

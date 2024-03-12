@@ -11,14 +11,23 @@ import { containsAtLeastOne } from "../embeddable/Main";
 export function useSelections({
   useKeycloak = true,
   useQueryString = true,
+  defaultString = "",
 }: {
   useKeycloak?: boolean;
   useQueryString?: boolean;
+  defaultString?: string;
 }) {
+  const defaultSearch = {
+    text: defaultString,
+    selection: [],
+    textOnChange: defaultString,
+    filters: [],
+  };
+
   const [state, dispatch] = React.useReducer(
     reducer,
-    initial,
-    (initial) => loadQueryString<SelectionsState>() ?? initial,
+    defaultSearch,
+    () => loadQueryString<SelectionsState>() ?? defaultSearch,
   );
 
   const [canSave, setCanSave] = React.useState(false);

@@ -292,6 +292,7 @@ export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
+  defaultString: string | null | undefined;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
   isQueryAnalysis: boolean | null;
@@ -357,6 +358,7 @@ const defaultConfiguration: Configuration = {
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
+  defaultString: null,
   debounceTimeSearch: null,
   defaultTokens: [],
   detailMobile: null,
