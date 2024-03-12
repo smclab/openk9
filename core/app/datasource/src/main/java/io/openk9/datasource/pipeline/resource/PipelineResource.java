@@ -44,15 +44,16 @@ public class PipelineResource {
 		ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
-		Token.SchedulationToken schedulationToken = TokenUtils.decode(tokenId);
+		Token.SchedulingToken schedulingToken = TokenUtils.decode(tokenId);
 
 		EntityRef<Token.Command> tokenEntityRef = clusterSharding.entityRefFor(
 			Token.ENTITY_TYPE_KEY,
 			SchedulingKeyUtils.asString(
-				schedulationToken.tenantId(), schedulationToken.scheduleId()));
+				schedulingToken.tenantId(), schedulingToken.scheduleId())
+		);
 
 		tokenEntityRef.tell(
-			new Token.Callback(schedulationToken.token(), body.toBuffer().getBytes()));
+			new Token.Callback(schedulingToken.token(), body.toBuffer().getBytes()));
 
 	}
 

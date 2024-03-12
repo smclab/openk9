@@ -49,7 +49,20 @@ public class Token extends AbstractBehavior<Token.Command> {
 	public record TokenCallback(byte[] jsonObject) implements Response {}
 	public enum TokenState implements Response {EXPIRED, VALID}
 
-	public record SchedulationToken(String tenantId, String scheduleId, String token) {}
+	private Behavior<Command> onGenerate(Generate generate) {
+
+		SchedulingToken schedulingToken = generateToken();
+
+		ActorRef<Response> replyTo = generate.replyTo;
+
+		tokens.put(
+			schedulingToken.token,
+			new TokenInfo(LocalDateTime.now(), generate.expiredDate, replyTo));
+
+		replyTo.tell(new TokenGenerated(TokenUtils.encode(schedulingToken)));
+
+		return Behaviors.same();
+	}
 
 	private record TokenInfo(
 		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
@@ -147,19 +160,9 @@ public class Token extends AbstractBehavior<Token.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onGenerate(Generate generate) {
-
-		SchedulationToken schedulationToken = generateToken();
-
-		ActorRef<Response> replyTo = generate.replyTo;
-
-		tokens.put(
-			schedulationToken.token,
-			new TokenInfo(LocalDateTime.now(), generate.expiredDate, replyTo));
-
-		replyTo.tell(new TokenGenerated(TokenUtils.encode(schedulationToken)));
-
-		return Behaviors.same();
+	private SchedulingToken generateToken() {
+		return new SchedulingToken(
+			key.tenantId(), key.scheduleId(), UUID.randomUUID().toString());
 	}
 
 	private static boolean isValid(TokenInfo tokenInfo) {
@@ -170,9 +173,6 @@ public class Token extends AbstractBehavior<Token.Command> {
 		return tokenInfo.expiredDate().isBefore(LocalDateTime.now());
 	}
 
-	private SchedulationToken generateToken() {
-		return new SchedulationToken(
-			key.tenantId(), key.scheduleId(), UUID.randomUUID().toString());
-	}
+	public record SchedulingToken(String tenantId, String scheduleId, String token) {}
 
 }
