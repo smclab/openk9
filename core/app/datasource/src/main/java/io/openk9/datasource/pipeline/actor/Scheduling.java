@@ -123,6 +123,20 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
+	private final Mutiny.SessionFactory sessionFactory;
+	private final Deque<Command> lag = new ArrayDeque<>();
+	private final Set<ActorRef<Response>> consumers = new HashSet<>();
+	private final SchedulerMapper schedulerMapper;
+	private final Duration timeout;
+	private final int workersPerNode;
+	private SchedulerDTO scheduler;
+	private LocalDateTime lastRequest = LocalDateTime.now();
+	private OffsetDateTime lastIngestionDate;
+	private boolean failureTracked = false;
+	private boolean lastReceived = false;
+	private int maxWorkers;
+	private int workers = 0;
+
 	public static Behavior<Command> create(
 		Key schedulingKey,
 		Mutiny.SessionFactory sessionFactory,
@@ -143,6 +157,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				Duration.ofSeconds(60),
 				0.2)
 			);
+	}
+
+	private static Duration getTimeout(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getDuration(config, SCHEDULING_TIMEOUT, Duration.ofHours(6));
 	}
 
 
@@ -583,8 +603,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
 	}
 
-	private static Duration getTimeout(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
+	private void destroyQueue() {
+		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
 		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
 			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
@@ -605,8 +625,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 	}
 
-	private void destroyQueue() {
-		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
+	public record Key(String tenantId, String scheduleId) {
+		public String value() {
+			return SchedulingKeyUtils.asString(this);
+		}
 
 	}
 }
