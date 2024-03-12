@@ -63,7 +63,7 @@ export function TokenSelect({
     `,
     "not-interactive": css`
       display: ${isColorSearch ? "default" : "none"};
-      color: green;
+      color: black;
     `,
   };
   const status: Status = isInteractive
