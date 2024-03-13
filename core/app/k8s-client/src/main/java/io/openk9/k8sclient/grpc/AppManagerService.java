@@ -44,10 +44,14 @@ public class AppManagerService implements AppManager {
 	@ConfigProperty(name = "openk9.kubernetes-client.manifest-type")
 	Manifest.Type manifestType;
 
+	@Inject
+	@ConfigProperty(name = "openk9.kubernetes-client.repository-url")
+	String repositoryUrl;
+
 	@Override
 	public Uni<ApplyResponse> applyResource(AppManifest request) {
 		var manifest = Manifest.builder()
-			.repoURL("https://registry.smc.it/repository/helm-private")
+			.repoURL(repositoryUrl)
 			.chart(request.getChart())
 			.version(request.getVersion())
 			.targetNamespace(namespace)
@@ -78,7 +82,7 @@ public class AppManagerService implements AppManager {
 	@Override
 	public Uni<Empty> deleteResource(AppManifest appManifest) {
 		var manifest = Manifest.builder()
-			.repoURL("https://registry.smc.it/repository/helm-private")
+			.repoURL(repositoryUrl)
 			.chart(appManifest.getChart())
 			.version(appManifest.getVersion())
 			.targetNamespace(namespace)
