@@ -86,7 +86,7 @@ public class EnrichPipeline {
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
-		ActorRef<Response> schedulation = setup.schedulation();
+		ActorRef<Response> scheduling = setup.scheduling();
 		ActorRef<Scheduling.Response> consumer = setup.consumer();
 
 		ActorRef<IndexWriterActor.Response> responseActorRef =
@@ -109,7 +109,7 @@ public class EnrichPipeline {
 			ctx,
 			supervisorActorRef,
 			responseActorRef,
-			schedulation,
+			scheduling,
 			consumer,
 			dataPayload,
 			scheduler,
@@ -377,7 +377,7 @@ public class EnrichPipeline {
 	}
 
 	public record Setup(
-		ActorRef<Response> schedulation,
+		ActorRef<Response> scheduling,
 		ActorRef<Scheduling.Response> consumer,
 		byte[] ingestPayload,
 		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler

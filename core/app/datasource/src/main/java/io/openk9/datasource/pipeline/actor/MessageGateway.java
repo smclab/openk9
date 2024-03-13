@@ -83,7 +83,7 @@ public class MessageGateway
 							new Reroute(new QueueManager.QueueBind(schedulingKey.value()))));
 				}
 				else {
-					log.warnf("Cannot reroute schedulation %s", schedulingKey);
+					log.warnf("Cannot reroute scheduling %s", schedulingKey);
 				}
 			}
 		);
@@ -108,7 +108,7 @@ public class MessageGateway
 						.forEach(ref -> ref.tell(new Register(schedulingKey.value())));
 				}
 				else {
-					log.warnf("Cannot register schedulation %s", schedulingKey);
+					log.warnf("Cannot register scheduling %s", schedulingKey);
 				}
 			}
 		);
@@ -143,7 +143,7 @@ public class MessageGateway
 				}
 				else {
 					log.infof(
-						"restart schedulation with key %s",
+						"restart scheduling with key %s",
 						queueBind.schedulingKey()
 					);
 

@@ -553,7 +553,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				}
 				else {
 					log.infof(
-						"status updated to %s for schedulation with id %s",
+						"status updated to %s for scheduling with id %s",
 						status,
 						r.getId()
 					);

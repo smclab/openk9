@@ -90,20 +90,20 @@ public class RetryConsumer extends BaseConsumer {
 				if (t != null) {
 					log.warnf(
 						t,
-						"Error cannot be tracked for schedulation: %s",
+						"Error cannot be tracked for scheduling: %s",
 						queueBind.schedulingKey()
 					);
 				}
 				else if (r instanceof Scheduling.Failure) {
 					log.warnf(
-						"Error cannot be tracked for schedulation: %s, cause: %s",
+						"Error cannot be tracked for scheduling: %s, cause: %s",
 						queueBind.schedulingKey(),
 						((Scheduling.Failure) r).error()
 					);
 				}
 				else {
 					log.infof(
-						"Error tracked for schedulation: %s",
+						"Error tracked for scheduling: %s",
 						queueBind.schedulingKey()
 					);
 				}

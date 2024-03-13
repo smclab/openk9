@@ -110,7 +110,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.flatMap(this::indexesDiff);
 	}
 
-	public Uni<Void> closeSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
 				case STARTED, ERROR -> {
@@ -118,12 +118,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Scheduling.Command> schedulationRef = clusterSharding.entityRefFor(
+					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
 						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Scheduling.PersistDataIndex.INSTANCE);
+					schedulingRef.tell(Scheduling.PersistDataIndex.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
@@ -131,7 +131,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 
-	public Uni<Void> cancelSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
 				case STARTED, ERROR -> {
@@ -139,19 +139,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Scheduling.Command> schedulationRef = clusterSharding.entityRefFor(
+					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
 						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Scheduling.Cancel.INSTANCE);
+					schedulingRef.tell(Scheduling.Cancel.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
 			});
 	}
 
-	public Uni<Void> rereouteSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> rereouteScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> {
 				if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
@@ -178,7 +178,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.getResultList()
 			.map(ids -> datasourceIds
 				.stream()
-				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULATION))
+				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULING))
 				.map(djs -> ids
 					.stream()
 					.filter(id -> djs.id() == id)
@@ -251,7 +251,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public enum JobStatus {
 		ALREADY_RUNNING,
-		ON_SCHEDULATION
+		ON_SCHEDULING
 	}
 
 	public record DatasourceJobStatus(long id, JobStatus status) {}
