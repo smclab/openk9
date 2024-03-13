@@ -21,11 +21,13 @@ import java.util.Objects;
 
 public record SchedulingKey(String tenantId, String scheduleId) {
 
+	public static final char SEPARATOR = '#';
+
 	public SchedulingKey {
 		Objects.requireNonNull(tenantId);
 		Objects.requireNonNull(scheduleId);
-		assert tenantId.isBlank() : "tenantId is blank";
-		assert scheduleId.isBlank() : "scheduleId is blank";
+		assert !tenantId.isBlank() : "tenantId is blank";
+		assert !scheduleId.isBlank() : "scheduleId is blank";
 	}
 
 	public static String asString(SchedulingKey key) {
@@ -33,7 +35,7 @@ public record SchedulingKey(String tenantId, String scheduleId) {
 	}
 
 	public static String asString(String tenantId, String scheduleId) {
-		return tenantId + "#" + scheduleId;
+		return tenantId + SEPARATOR + scheduleId;
 	}
 
 	public static SchedulingKey fromStrings(String tenantId, String scheduleId) {
@@ -41,7 +43,7 @@ public record SchedulingKey(String tenantId, String scheduleId) {
 	}
 
 	public static SchedulingKey fromString(String entityId) {
-		String[] strings = entityId.split("#");
+		String[] strings = entityId.split(String.valueOf(SEPARATOR));
 		return new SchedulingKey(strings[0], strings[1]);
 	}
 
