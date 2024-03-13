@@ -37,7 +37,7 @@ public class RetryConsumer extends BaseConsumer {
 
 	private static final Logger log = Logger.getLogger(RetryConsumer.class);
 	private static final String CONSUMER_MAX_RETRIES =
-		"io.openk9.schedulation.consumer.max-retries";
+		"io.openk9.scheduling.consumer.max-retries";
 	private final int maxRetries;
 
 	public RetryConsumer(

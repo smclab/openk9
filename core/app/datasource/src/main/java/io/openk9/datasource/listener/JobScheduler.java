@@ -789,7 +789,7 @@ public class JobScheduler {
 	private static String getPurgeCron(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 
-		String configPath = "io.openk9.schedulation.purge.cron";
+		String configPath = "io.openk9.scheduling.purge.cron";
 
 		if (config.hasPathOrNull(configPath)) {
 			if (config.getIsNull(configPath)) {

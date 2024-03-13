@@ -32,7 +32,7 @@ import java.time.Duration;
 
 public abstract class BaseConsumer extends DefaultConsumer {
 
-	private static final String CONSUMER_TIMEOUT = "io.openk9.schedulation.consumer.timeout";
+	private static final String CONSUMER_TIMEOUT = "io.openk9.scheduling.consumer.timeout";
 
 	protected final ActorContext<?> context;
 	protected final Config config;
