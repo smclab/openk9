@@ -26,6 +26,7 @@ import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -34,7 +35,6 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -414,7 +414,7 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, SchedulingKeyUtils.asString(tenantName, scheduleId));
+			Scheduling.ENTITY_TYPE_KEY, SchedulingKey.asString(tenantName, scheduleId));
 
 		schedulingRef.tell(Scheduling.Cancel.INSTANCE);
 
@@ -769,7 +769,7 @@ public class JobScheduler {
 							.persist(scheduler)
 							.invoke(() -> {
 								messageGateway.tell(new MessageGateway.Register(
-									SchedulingKeyUtils.asString(
+									SchedulingKey.asString(
 										tenantName, scheduler.getScheduleId())));
 								ctx
 									.getSelf()

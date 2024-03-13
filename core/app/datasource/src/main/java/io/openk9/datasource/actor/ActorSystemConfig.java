@@ -22,6 +22,7 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
@@ -29,7 +30,6 @@ import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
-import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
@@ -82,7 +82,7 @@ public class ActorSystemConfig {
 
 			clusterSharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				var schedulingKey = SchedulingKeyUtils.fromString(entityId);
+				var schedulingKey = SchedulingKey.fromString(entityId);
 				return Scheduling.create(
 					schedulingKey,
 					sessionFactory,
@@ -92,14 +92,14 @@ public class ActorSystemConfig {
 
 			clusterSharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				var schedulingKey = SchedulingKeyUtils.fromString(entityId);
+				var schedulingKey = SchedulingKey.fromString(entityId);
 				return Token.create(schedulingKey);
 			}));
 
 			clusterSharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				String[] strings = entityId.split("#");
-				var schedulingKey = SchedulingKeyUtils.fromString(entityId);
+				var schedulingKey = SchedulingKey.fromString(entityId);
 				String contentId = strings[2];
 
 				return EnrichPipeline.create(schedulingKey, contentId);

@@ -26,7 +26,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.util.CborSerializable;
 
 import java.time.LocalDateTime;
@@ -36,14 +36,14 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 
 	public HttpSupervisor(
-		ActorContext<Command> context, Scheduling.Key key) {
+		ActorContext<Command> context, SchedulingKey key) {
 
 		super(context);
 		ClusterSharding clusterSharding = ClusterSharding.get(context.getSystem());
-		this.tokenActorRef = clusterSharding.entityRefFor(Token.ENTITY_TYPE_KEY, key.value());
+		this.tokenActorRef = clusterSharding.entityRefFor(Token.ENTITY_TYPE_KEY, key.asString());
 	}
 
-	public static Behavior<Command> create(Scheduling.Key key) {
+	public static Behavior<Command> create(SchedulingKey key) {
 		return Behaviors
 			.<Command>supervise(Behaviors.setup(ctx -> new HttpSupervisor(ctx, key)))
 			.onFailure(SupervisorStrategy.resume());

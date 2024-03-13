@@ -18,12 +18,11 @@
 package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
@@ -86,8 +85,8 @@ public class SchedulerInitializer {
 						)
 						.invoke(schedulers -> {
 							for (Scheduler scheduler : schedulers) {
-								Scheduling.Key schedulingKey =
-									SchedulingKeyUtils.fromStrings(
+								SchedulingKey schedulingKey =
+									SchedulingKey.fromStrings(
 										tenantResponse.getSchemaName(),
 										scheduler.getScheduleId()
 									);

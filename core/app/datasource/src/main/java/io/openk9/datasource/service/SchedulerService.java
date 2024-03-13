@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -28,7 +29,6 @@ import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -120,7 +120,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
-						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
+						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
 					schedulingRef.tell(Scheduling.PersistDataIndex.INSTANCE);
@@ -141,7 +141,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
-						SchedulingKeyUtils.asString(tenantId, scheduler.getScheduleId())
+						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
 					schedulingRef.tell(Scheduling.Cancel.INSTANCE);
@@ -160,7 +160,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					MessageGateway.askReroute(
 						actorSystem,
-						SchedulingKeyUtils.fromStrings(tenantId, scheduler.getScheduleId())
+						SchedulingKey.fromStrings(tenantId, scheduler.getScheduleId())
 					);
 				}
 				return Uni.createFrom().voidItem();

@@ -39,6 +39,7 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.Channel;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
@@ -63,7 +64,7 @@ public class MessageGateway
 	public static final ServiceKey<Command> SERVICE_KEY =
 		ServiceKey.create(Command.class, "message-gateway");
 
-	public static void askReroute(ActorSystem<?> actorSystem, Scheduling.Key schedulingKey) {
+	public static void askReroute(ActorSystem<?> actorSystem, SchedulingKey schedulingKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -80,7 +81,7 @@ public class MessageGateway
 						.stream()
 						.filter(ref -> ref.path().address().port().isEmpty())
 						.forEach(ref -> ref.tell(
-							new Reroute(new QueueManager.QueueBind(schedulingKey.value()))));
+							new Reroute(new QueueManager.QueueBind(schedulingKey.asString()))));
 				}
 				else {
 					log.warnf("Cannot reroute scheduling %s", schedulingKey);
@@ -89,7 +90,7 @@ public class MessageGateway
 		);
 	}
 
-	public static void askRegister(ActorSystem<?> actorSystem, Scheduling.Key schedulingKey) {
+	public static void askRegister(ActorSystem<?> actorSystem, SchedulingKey schedulingKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -105,7 +106,7 @@ public class MessageGateway
 						.getServiceInstances(MessageGateway.SERVICE_KEY)
 						.stream()
 						.filter(ref -> ref.path().address().port().isEmpty())
-						.forEach(ref -> ref.tell(new Register(schedulingKey.value())));
+						.forEach(ref -> ref.tell(new Register(schedulingKey.asString())));
 				}
 				else {
 					log.warnf("Cannot register scheduling %s", schedulingKey);

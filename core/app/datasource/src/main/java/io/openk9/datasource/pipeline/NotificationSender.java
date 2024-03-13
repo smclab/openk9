@@ -23,10 +23,10 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.service.SchedulerService;
 
@@ -36,14 +36,14 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
-	private final Scheduling.Key schedulingKey;
+	private final SchedulingKey schedulingKey;
 	private final SchedulerDTO scheduler;
 	private final ActorRef<Response> replyTo;
 
 	public NotificationSender(
 		ActorContext<Command> context,
 		SchedulerDTO scheduler,
-		Scheduling.Key schedulingKey, ActorRef<Response> replyTo) {
+		SchedulingKey schedulingKey, ActorRef<Response> replyTo) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
@@ -54,7 +54,7 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 	}
 
 	public static Behavior<Command> create(
-		SchedulerDTO scheduler, Scheduling.Key key, ActorRef<Response> replyTo) {
+		SchedulerDTO scheduler, SchedulingKey key, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key, replyTo));
 	}

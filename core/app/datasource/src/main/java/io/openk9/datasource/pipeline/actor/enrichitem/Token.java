@@ -26,7 +26,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
-import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.util.CborSerializable;
 
 import java.time.Duration;
@@ -68,10 +68,10 @@ public class Token extends AbstractBehavior<Token.Command> {
 		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
 
 	private final Cancellable cancellable;
-	private final Scheduling.Key key;
+	private final SchedulingKey key;
 	private final Map<String, TokenInfo> tokens = new HashMap<>();
 
-	public Token(ActorContext<Command> context, Scheduling.Key key) {
+	public Token(ActorContext<Command> context, SchedulingKey key) {
 		super(context);
 
 		this.key = key;
@@ -93,7 +93,7 @@ public class Token extends AbstractBehavior<Token.Command> {
 			.build();
 	}
 
-	public static Behavior<Command> create(Scheduling.Key key) {
+	public static Behavior<Command> create(SchedulingKey key) {
 
 		return Behaviors
 			.<Command>supervise(Behaviors.setup(ctx -> new Token(ctx, key)))

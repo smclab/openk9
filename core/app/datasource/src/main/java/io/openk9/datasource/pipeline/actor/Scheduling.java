@@ -34,6 +34,7 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.DataIndex;
@@ -42,7 +43,6 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
-import io.openk9.datasource.pipeline.util.SchedulingKeyUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -97,11 +97,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public sealed interface Response extends CborSerializable {}
 	public enum Success implements Response {INSTANCE}
 	public record Failure(String error) implements Response {}
-	private final Key key;
+
+	private final SchedulingKey key;
 
 	public Scheduling(
 		ActorContext<Command> context,
-		Key key,
+		SchedulingKey key,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper) {
 
@@ -138,7 +139,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private int workers = 0;
 
 	public static Behavior<Command> create(
-		Key schedulingKey,
+		SchedulingKey schedulingKey,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper
 	) {
@@ -256,9 +257,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onStart(Start start) {
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withStatelessTransaction(key.tenantId, (s, t) -> s
+			.withStatelessTransaction(key.tenantId(), (s, t) -> s
 				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-				.setParameter("scheduleId", key.scheduleId)
+				.setParameter("scheduleId", key.scheduleId())
 				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 				.getSingleResult()
 				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
@@ -303,7 +304,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				key.value() + "#" + contentId
+				key.asString() + "#" + contentId
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
@@ -353,7 +354,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onCancel() {
 
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId, (s, t) -> s
+			.withTransaction(key.tenantId(), (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(scheduler -> {
 					scheduler.setStatus(Scheduler.SchedulerStatus.CANCELLED);
@@ -402,7 +403,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Long datasourceId = scheduler.getDatasourceId();
 
 		if (newDataIndexId != null) {
-			String tenantId = key.tenantId;
+			String tenantId = key.tenantId();
 
 			log.infof(
 				"replacing dataindex %s for datasource %s on tenant %s",
@@ -433,7 +434,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onPersistStatusFinished() {
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId, (s, t) -> s
+			key.tenantId(), (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(entity -> {
 					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
@@ -507,7 +508,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
 		Long datasourceId = scheduler.getDatasourceId();
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId, (s, tx) -> s
+			key.tenantId(), (s, tx) -> s
 				.find(Datasource.class, datasourceId)
 				.chain(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);
@@ -610,7 +611,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 
 		queueManager.tell(new QueueManager.DestroyQueue(
-			SchedulingKeyUtils.asString(key.tenantId(), key.scheduleId())));
+			SchedulingKey.asString(key.tenantId(), key.scheduleId())));
 	}
 
 	private void updateLastIngestionDate(DataPayload dataPayload) {
@@ -625,10 +626,4 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 	}
 
-	public record Key(String tenantId, String scheduleId) {
-		public String value() {
-			return SchedulingKeyUtils.asString(this);
-		}
-
-	}
 }

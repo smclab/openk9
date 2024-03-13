@@ -23,6 +23,7 @@ import akka.actor.typed.ChildFailed;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO;
@@ -51,7 +52,7 @@ public class EnrichPipeline {
 
 	public sealed interface Command extends CborSerializable {}
 	public static Behavior<Command> create(
-		Scheduling.Key schedulingKey,
+		SchedulingKey schedulingKey,
 		String contentId
 	) {
 		return Behaviors.setup(ctx -> Behaviors
@@ -75,7 +76,7 @@ public class EnrichPipeline {
 
 	public static Behavior<Command> onSetup(
 		ActorContext<EnrichPipeline.Command> ctx,
-		Scheduling.Key key,
+		SchedulingKey key,
 		String contentId,
 		Setup setup
 	) {

@@ -15,13 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.util;
+package io.openk9.common.util;
 
-import io.openk9.datasource.pipeline.actor.Scheduling;
+import java.util.Objects;
 
-public class SchedulingKeyUtils {
+public record SchedulingKey(String tenantId, String scheduleId) {
 
-	public static String asString(Scheduling.Key key) {
+	public SchedulingKey {
+		Objects.requireNonNull(tenantId);
+		Objects.requireNonNull(scheduleId);
+		assert tenantId.isBlank() : "tenantId is blank";
+		assert scheduleId.isBlank() : "scheduleId is blank";
+	}
+
+	public static String asString(SchedulingKey key) {
 		return asString(key.tenantId(), key.scheduleId());
 	}
 
@@ -29,13 +36,17 @@ public class SchedulingKeyUtils {
 		return tenantId + "#" + scheduleId;
 	}
 
-	public static Scheduling.Key fromStrings(String tenantId, String scheduleId) {
-		return new Scheduling.Key(tenantId, scheduleId);
+	public static SchedulingKey fromStrings(String tenantId, String scheduleId) {
+		return new SchedulingKey(tenantId, scheduleId);
 	}
 
-	public static Scheduling.Key fromString(String entityId) {
+	public static SchedulingKey fromString(String entityId) {
 		String[] strings = entityId.split("#");
-		return new Scheduling.Key(strings[0], strings[1]);
+		return new SchedulingKey(strings[0], strings[1]);
+	}
+
+	public String asString() {
+		return asString(this);
 	}
 
 }

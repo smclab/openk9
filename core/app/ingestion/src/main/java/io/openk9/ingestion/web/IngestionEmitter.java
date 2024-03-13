@@ -18,6 +18,7 @@
 package io.openk9.ingestion.web;
 
 import io.openk9.common.util.IngestionUtils;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.BinaryPayload;
 import io.openk9.ingestion.dto.IngestionDTO;
@@ -49,6 +50,12 @@ import javax.inject.Inject;
 
 @ApplicationScoped
 public class IngestionEmitter {
+
+	@Channel("ingestion")
+	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
+	Emitter<IngestionPayloadWrapper> _emitter;
+	@Inject
+	Logger logger;
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
@@ -136,7 +143,8 @@ public class IngestionEmitter {
 					.stream()
 					.map(binaryDTO -> BinaryPayload.of(
 						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()))
+						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+					))
 					.collect(Collectors.toList());
 		}
 
@@ -159,7 +167,8 @@ public class IngestionEmitter {
 					.stream()
 					.map(binaryDTO -> BinaryPayload.of(
 						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()))
+						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+					))
 					.collect(Collectors.toList());
 		}
 
@@ -181,16 +190,11 @@ public class IngestionEmitter {
 
 	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
 		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
-		return ingestionPayload.getTenantId() + "#" + ingestionPayload.getScheduleId();
+
+		return SchedulingKey.asString(
+			ingestionPayload.getTenantId(),
+			ingestionPayload.getScheduleId()
+		);
 	}
-
-
-	@Channel("ingestion")
-	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _emitter;
-
-
-	@Inject
-	Logger logger;
 
 }
