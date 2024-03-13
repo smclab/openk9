@@ -26,6 +26,7 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
+import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -98,11 +99,8 @@ public class ActorSystemConfig {
 
 			clusterSharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				String[] strings = entityId.split("#");
-				var schedulingKey = SchedulingKey.fromString(entityId);
-				String contentId = strings[2];
-
-				return EnrichPipeline.create(schedulingKey, contentId);
+				var enrichPipelineKey = EnrichPipelineKey.fromString(entityId);
+				return EnrichPipeline.create(enrichPipelineKey);
 			}));
 		};
 	}

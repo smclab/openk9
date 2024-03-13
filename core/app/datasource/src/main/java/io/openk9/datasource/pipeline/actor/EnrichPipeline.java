@@ -50,29 +50,18 @@ public class EnrichPipeline {
 		EntityTypeKey.create(EnrichPipeline.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
-	public sealed interface Command extends CborSerializable {}
-	public static Behavior<Command> create(
-		SchedulingKey schedulingKey,
-		String contentId
-	) {
+	public static Behavior<Command> create(EnrichPipelineKey enrichPipelineKey) {
 		return Behaviors.setup(ctx -> Behaviors
 			.receive(Command.class)
-			.onMessage(Setup.class, setup -> onSetup(ctx, schedulingKey, contentId, setup))
+			.onMessage(Setup.class, setup -> onSetup(
+				ctx,
+				enrichPipelineKey.key(),
+				enrichPipelineKey.contentId(),
+				setup
+			))
 			.build()
 		);
 	}
-	private record IndexWriterResponseWrapper(
-		IndexWriterActor.Response response
-	) implements Command {}
-	private record EnrichItemSupervisorResponseWrapper(
-		EnrichItemSupervisor.Response response
-	) implements Command {}
-	private record EnrichItemError(
-		EnrichItemDTO enrichItem,
-		Throwable exception
-	) implements Command {}
-	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
-	private record InternalError(String error) implements Command {}
 
 	public static Behavior<Command> onSetup(
 		ActorContext<EnrichPipeline.Command> ctx,
@@ -93,7 +82,8 @@ public class EnrichPipeline {
 		ActorRef<IndexWriterActor.Response> responseActorRef =
 			ctx.messageAdapter(
 				IndexWriterActor.Response.class,
-				IndexWriterResponseWrapper::new);
+				IndexWriterResponseWrapper::new
+			);
 
 		String oldDataIndexName = scheduler.getOldDataIndexName();
 		if (oldDataIndexName != null) {
@@ -150,34 +140,35 @@ public class EnrichPipeline {
 			);
 
 			return Behaviors.receive(Command.class)
-					.onMessage(
-						IndexWriterResponseWrapper.class,
-						indexWriterResponseWrapper -> {
+				.onMessage(
+					IndexWriterResponseWrapper.class,
+					indexWriterResponseWrapper -> {
 
-							IndexWriterActor.Response response =
-									indexWriterResponseWrapper.response();
+						IndexWriterActor.Response response =
+							indexWriterResponseWrapper.response();
 
-							if (response instanceof IndexWriterActor.Success) {
-								replyTo.tell(new Success(
+						if (response instanceof IndexWriterActor.Success) {
+							replyTo.tell(new Success(
 									dataPayload.getContentId(),
 									consumer,
 									scheduleId,
 									dataPayload.getTenantId()
-									)
-								);
-							}
-							else if (response instanceof IndexWriterActor.Failure failure) {
-								replyTo.tell(new Failure(
+								)
+							);
+						}
+						else if (response instanceof IndexWriterActor.Failure failure) {
+							replyTo.tell(new Failure(
 									failure.exception(),
 									consumer,
 									scheduleId,
 									dataPayload.getTenantId()
-									)
-								);
-							}
+								)
+							);
+						}
 
-							return Behaviors.stopped();
-						})
+						return Behaviors.stopped();
+					}
+				)
 				.onSignal(ChildFailed.class, childFailed -> {
 					replyTo.tell(new Failure(
 						childFailed.cause(),
@@ -224,7 +215,7 @@ public class EnrichPipeline {
 					return new EnrichItemError(enrichItem, t);
 				}
 				else if (r instanceof EnrichItemSupervisor.Error) {
-					EnrichItemSupervisor.Error error =(EnrichItemSupervisor.Error)r;
+					EnrichItemSupervisor.Error error = (EnrichItemSupervisor.Error) r;
 					return new EnrichItemError(enrichItem, new RuntimeException(error.error()));
 				}
 				else {
@@ -255,7 +246,8 @@ public class EnrichPipeline {
 
 						return initPipeline(
 							ctx, supervisorActorRef, responseActorRef, replyTo,
-							consumer, dataPayload, scheduler, tail);
+							consumer, dataPayload, scheduler, tail
+						);
 
 					}
 					case FAIL -> {
@@ -310,7 +302,7 @@ public class EnrichPipeline {
 					ctx.getSelf().tell(new InternalResponseWrapper(body.body()));
 				}
 				else {
-					EnrichItemSupervisor.Error error = (EnrichItemSupervisor.Error)response;
+					EnrichItemSupervisor.Error error = (EnrichItemSupervisor.Error) response;
 					ctx.getSelf().tell(new InternalError(error.error()));
 				}
 
@@ -336,7 +328,8 @@ public class EnrichPipeline {
 				DataPayload newDataPayload =
 					mergeResponse(
 						jsonPath, behaviorMergeType, dataPayload,
-						newJsonPayload.mapTo(DataPayload.class));
+						newJsonPayload.mapTo(DataPayload.class)
+					);
 
 				return initPipeline(
 					ctx,
@@ -346,7 +339,8 @@ public class EnrichPipeline {
 					consumer,
 					newDataPayload,
 					scheduler,
-					tail);
+					tail
+				);
 
 			})
 			.onMessage(InternalError.class, srw -> {
@@ -370,12 +364,57 @@ public class EnrichPipeline {
 
 	}
 
+	private static DataPayload mergeResponse(
+		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
+		DataPayload prevDataPayload, DataPayload newDataPayload) {
+
+		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
+		JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
+
+		if (jsonPath == null || jsonPath.isBlank()) {
+			jsonPath = "$";
+		}
+
+		if (behaviorMergeType == null) {
+			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
+		}
+
+		JsonMerge jsonMerge = JsonMerge.of(
+			behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
+			prevJsonObject, newJsonObject
+		);
+
+		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
+
+	}
+
+	public sealed interface Command extends CborSerializable {}
+
 	public sealed interface Response extends CborSerializable {
 		ActorRef<Scheduling.Response> replyTo();
 
 		String scheduleId();
+
 		String tenantId();
+
 	}
+
+	private record IndexWriterResponseWrapper(
+		IndexWriterActor.Response response
+	) implements Command {}
+
+	private record EnrichItemSupervisorResponseWrapper(
+		EnrichItemSupervisor.Response response
+	) implements Command {}
+
+	private record EnrichItemError(
+		EnrichItemDTO enrichItem,
+		Throwable exception
+	) implements Command {}
+
+	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
+
+	private record InternalError(String error) implements Command {}
 
 	public record Setup(
 		ActorRef<Response> scheduling,
@@ -398,28 +437,5 @@ public class EnrichPipeline {
 		String scheduleId,
 		String tenantId
 	) implements Response {}
-
-	private static DataPayload mergeResponse(
-		String jsonPath, EnrichItem.BehaviorMergeType behaviorMergeType,
-		DataPayload prevDataPayload, DataPayload newDataPayload) {
-
-		JsonObject prevJsonObject = new JsonObject(new LinkedHashMap<>(prevDataPayload.getRest()));
-		JsonObject newJsonObject = new JsonObject(new LinkedHashMap<>(newDataPayload.getRest()));
-
-		if (jsonPath == null || jsonPath.isBlank()) {
-			jsonPath = "$";
-		}
-
-		if (behaviorMergeType == null) {
-			behaviorMergeType = EnrichItem.BehaviorMergeType.REPLACE;
-		}
-
-		JsonMerge jsonMerge = JsonMerge.of(
-			behaviorMergeType == EnrichItem.BehaviorMergeType.REPLACE,
-			prevJsonObject, newJsonObject);
-
-		return prevDataPayload.rest(jsonMerge.merge(jsonPath).getMap());
-
-	}
 
 }

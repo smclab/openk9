@@ -304,7 +304,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				key.asString() + "#" + contentId
+				EnrichPipelineKey.of(key, contentId).asString()
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
