@@ -31,10 +31,10 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class ArgoCDManifest {
 
-	private static final String ARGOCD_NAMESPACE = "argocd";
 	private static final String ARGOCD_FINALIZER = "resources-finalizer.argocd.argoproj.io";
 	private static final String DEFAULT_SVC = "https://kubernetes.default.svc";
 	private static final String VALIDATE_FALSE = "Validate=false";
@@ -81,7 +81,7 @@ public class ArgoCDManifest {
 		syncPolicy.setSyncOptions(List.of(VALIDATE_FALSE));
 
 		var spec = new ApplicationSpec();
-		spec.setProject(DEFAULT_PROJECT);
+		spec.setProject(getProject(manifest));
 		spec.setSource(source);
 		spec.setDestination(destination);
 		spec.setSyncPolicy(syncPolicy);
@@ -90,6 +90,20 @@ public class ArgoCDManifest {
 		application.setSpec(spec);
 
 		return application;
+	}
+
+	private static String getProject(Manifest manifest) {
+		var namespace = manifest.targetNamespace();
+		var nsRegex = Pattern.compile("^(?:open)?k9-(?<id>[A-Za-z0-9]+)$");
+		var matcher = nsRegex.matcher(namespace);
+
+		if (matcher.find()) {
+			var id = matcher.group("id");
+
+			return String.format("openk9-%s", id);
+		}
+
+		return DEFAULT_PROJECT;
 	}
 
 	static String latestMinorPatchedVersion(@NonNull String version) {

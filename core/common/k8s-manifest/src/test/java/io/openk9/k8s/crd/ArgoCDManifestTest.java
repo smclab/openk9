@@ -33,7 +33,7 @@ class ArgoCDManifestTest {
 		var expected = deserialize("expected/full-application.yaml");
 
 		var actual = Manifest.asApplication(Manifest.builder()
-			.targetNamespace("default")
+			.targetNamespace("k9-baz")
 			.repoURL("https://registry.acme.com/repository/helm/")
 			.chart("openk9-foo-parser")
 			.version("1.0.0")
@@ -88,7 +88,7 @@ class ArgoCDManifestTest {
 		var expected = deserialize("expected/minimal-application.yaml");
 
 		var serialized = Serialization.asYaml(Manifest.builder()
-			.targetNamespace("default")
+			.targetNamespace("fooBar")
 			.repoURL("https://registry.acme.com/repository/helm/")
 			.chart("openk9-foo-parser")
 			.version("1.0.0")
@@ -113,6 +113,16 @@ class ArgoCDManifestTest {
 		assertEquals(
 			expected.getSpec().getSource().getHelm(),
 			actual.getSpec().getSource().getHelm()
+		);
+
+		assertEquals(
+			expected.getMetadata().getNamespace(),
+			actual.getMetadata().getNamespace()
+		);
+
+		assertEquals(
+			expected.getSpec().getProject(),
+			actual.getSpec().getProject()
 		);
 	}
 

@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: openk9-foo-parser
-  namespace: default
+  namespace: fooBar
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -13,7 +13,7 @@ spec:
     targetRevision: 1.0.0
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: fooBar
   syncPolicy:
     automated:
       prune: true
