@@ -29,7 +29,7 @@ import javax.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface KeyName {
 
-	String message() default "is not an alphanumeric string";
+	String message() default "is not a valid key name";
 
 	Class<?>[] groups() default {};
 
