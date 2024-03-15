@@ -49,6 +49,7 @@ import _, { isEqual } from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
+import SelectComponent from "../components/Select";
 
 type MainProps = {
   configuration: Configuration;
@@ -589,6 +590,18 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.changeLanguage,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SelectComponent
+            language={languageSelect}
+            selectOptions={configuration.select?.options ?? []}
+            extraClass={configuration.select?.extraClass}
+            setSortResult={setSortResult}
+            labelDefault=""
+          />
+        </I18nextProvider>,
+        configuration.select ? configuration.select?.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

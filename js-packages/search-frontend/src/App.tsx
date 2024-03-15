@@ -23,7 +23,7 @@ export function App() {
   const serviceStatus = useServiceStatus();
   if (serviceStatus === "down") {
     return <MaintenancePage />;
-  }  
+  }
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
@@ -212,7 +212,7 @@ export function App() {
               className="openk9-update-configuration"
               ref={(element) =>
                 openk9.updateConfiguration({
-                search:element
+                  search: element,
                 })
               }
             ></div>
@@ -424,7 +424,60 @@ export function App() {
       ></div>
       <div
         className="openk9-preview-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ details: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            select: {
+              element,
+              options: [
+                {
+                  field: "relevance",
+                  id: 368,
+                  isDefault: true,
+                  hasAsc: false,
+                  hasDesc: false,
+                  labels: {
+                    default: {
+                      label: "Rilevanza",
+                      translationMap: {
+                        "label.en_US": "Relevance",
+                        "label.es_ES": "Rilevanzas",
+                        "label.it_IT": "rilevanza",
+                      },
+                    },
+                    asc: {},
+                    desc: {},
+                  },
+                },
+                {
+                  field: "file.lastModifiedDate",
+                  id: 369,
+                  isDefault: true,
+                  hasAsc: true,
+                  hasDesc: true,
+                  labels: {
+                    default: {},
+                    asc: {
+                      label: "Più recenti",
+                      translationMap: {
+                        "label.en_US": "More recent",
+                        "label.es_ES": "Piùs Recentis",
+                        "label.it_IT": "più recenti",
+                      },
+                    },
+                    desc: {
+                      label: "Meno recenti",
+                      translationMap: {
+                        "label.en_US": "Less recent",
+                        "label.es_ES": "Menos Recentis",
+                        "label.it_IT": "meno recenti",
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          })
+        }
         css={css`
           grid-area: detail;
           overflow-y: auto;
@@ -446,10 +499,8 @@ export function App() {
         `}
       ></div>
       <div
-          ref={(element) =>
-            openk9.updateConfiguration({ detailMobile: element })
-          }
-        ></div>
+        ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
+      ></div>
     </div>
   );
 }
