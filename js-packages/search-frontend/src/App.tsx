@@ -191,7 +191,7 @@ export function App() {
             width: 100%;
             justify-content: center;
             align-items: baseline;
-            @media (max-width: 480px) {
+            @media (max-width: 768px) {
               flex-direction: column;
             }
           `}
