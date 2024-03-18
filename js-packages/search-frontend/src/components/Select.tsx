@@ -2,25 +2,16 @@ import React from "react";
 import { css } from "styled-components/macro";
 import { SortField } from "./client";
 
-type FieldLabel = {
-  label?: string;
-  translationMap?: {
-    "label.en_US"?: string;
-    "label.es_ES"?: string;
-    "label.it_IT"?: string;
-  };
-};
-
 type Field = {
   field: string;
   id: number;
   isDefault: boolean;
-  hasAsc: boolean;
-  hasDesc: {};
-  labels: {
-    default?: FieldLabel;
-    asc?: FieldLabel;
-    desc?: FieldLabel;
+  type: string;
+  label: string;
+  translationMap: {
+    "label.en_US"?: string;
+    "label.es_ES"?: string;
+    "label.it_IT"?: string;
   };
 };
 
@@ -40,19 +31,23 @@ function SelectComponent({
   language,
   setSortResult,
 }: TypeSelectComponent) {
-  const keyLanguage = ("label." + language) as
-    | "label.en_US"
-    | "label.es_ES"
-    | "label.it_IT";
+  const keyLanguage = `label.${language}` as keyof Field["translationMap"];
+
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    //   setSortResult({
-    //     value: {
-    //       sort: "asc",
-    //       missing: "_last",
-    //     },
-    //   });
+    const [label, type] = value.split(",");
+    if (label && (type === "asc" || type === "desc")) {
+      setSortResult({
+        [label]: {
+          sort: type,
+          missing: "_last",
+        },
+      });
+    } else {
+      setSortResult({});
+    }
   };
+
   return (
     <div
       className="container-select"
@@ -107,30 +102,15 @@ function SelectComponent({
               {labelDefault}
             </option>
           )}
-          {selectOptions.map((option) => (
+          {selectOptions.map((option, index) => (
             <>
-              {option?.labels?.default?.translationMap?.[keyLanguage] && (
+              {option?.translationMap?.[keyLanguage] && (
                 <option
-                  value={option.labels.default.label}
+                  value={[option.field, option.type]}
                   defaultChecked={option.isDefault}
+                  key={index}
                 >
-                  {option?.labels?.default?.translationMap?.[keyLanguage]}
-                </option>
-              )}
-              {option.hasAsc && (
-                <option
-                  value={option.labels.asc?.label}
-                  defaultChecked={option.isDefault}
-                >
-                  {option?.labels?.asc?.translationMap?.[keyLanguage] || ""}
-                </option>
-              )}
-              {option.hasDesc && (
-                <option
-                  value={option.labels.desc?.label}
-                  defaultChecked={option.isDefault}
-                >
-                  {option?.labels?.desc?.translationMap?.[keyLanguage] || ""}
+                  {option?.translationMap?.[keyLanguage]}
                 </option>
               )}
             </>

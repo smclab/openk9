@@ -430,48 +430,39 @@ export function App() {
               element,
               options: [
                 {
-                  field: "relevance",
+                  field: "",
                   id: 368,
                   isDefault: true,
-                  hasAsc: false,
-                  hasDesc: false,
-                  labels: {
-                    default: {
-                      label: "Rilevanza",
-                      translationMap: {
-                        "label.en_US": "Relevance",
-                        "label.es_ES": "Rilevanzas",
-                        "label.it_IT": "rilevanza",
-                      },
-                    },
-                    asc: {},
-                    desc: {},
+                  type: "",
+                  label: "Rilevanza",
+                  translationMap: {
+                    "label.en_US": "Relevance",
+                    "label.es_ES": "Rilevanzas",
+                    "label.it_IT": "Rilevanza",
                   },
                 },
                 {
                   field: "file.lastModifiedDate",
                   id: 369,
-                  isDefault: true,
-                  hasAsc: true,
-                  hasDesc: true,
-                  labels: {
-                    default: {},
-                    asc: {
-                      label: "Più recenti",
-                      translationMap: {
-                        "label.en_US": "More recent",
-                        "label.es_ES": "Piùs Recentis",
-                        "label.it_IT": "più recenti",
-                      },
-                    },
-                    desc: {
-                      label: "Meno recenti",
-                      translationMap: {
-                        "label.en_US": "Less recent",
-                        "label.es_ES": "Menos Recentis",
-                        "label.it_IT": "meno recenti",
-                      },
-                    },
+                  isDefault: false,
+                  type: "asc",
+                  label: "Più recenti",
+                  translationMap: {
+                    "label.en_US": "More recent",
+                    "label.es_ES": "Piùs Recentis",
+                    "label.it_IT": "Più recenti",
+                  },
+                },
+                {
+                  field: "file.lastModifiedDate",
+                  id: 370,
+                  isDefault: false,
+                  type: "desc",
+                  label: "Meno recenti",
+                  translationMap: {
+                    "label.en_US": "Less recent",
+                    "label.es_ES": "Menos Recentis",
+                    "label.it_IT": "Meno Recenti",
                   },
                 },
               ],
