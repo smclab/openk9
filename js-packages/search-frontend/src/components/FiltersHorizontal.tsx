@@ -214,6 +214,7 @@ function FiltersHorizontal({
               onConfigurationChange({ filterTokens: [] });
               onConfigurationChangeExt && onConfigurationChangeExt();
               selectionsDispatch({ type: "reset-filters" });
+              setFilterSelect([]);
               if (callbackReset) callbackReset();
               if (refButton && refButton.current) refButton.current.focus();
             }}

@@ -204,9 +204,14 @@ export function Search({
                   );
                 })}
             </div>
-            <label htmlFor="search-openk9" className="visually-hidden">
-              Search
-            </label>
+            {!htmlKey && (
+              <label
+                htmlFor="search-openk9"
+                className="visually-hidden label-search"
+              >
+                Search
+              </label>
+            )}
             <input
               className="openk9--input-search"
               autoComplete="off"
