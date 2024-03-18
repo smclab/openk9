@@ -34,10 +34,15 @@ public class ActorSystemProvider {
 
 	@PostConstruct
 	void init() {
+		var clusterConfig = ConfigFactory.load(clusterFile);
+		var application = ConfigFactory.load();
 
-		var applicationConfig = ConfigFactory.load();
-		var defaultClusterConfig = ConfigFactory.load(clusterFile);
-		var combined = applicationConfig.withFallback(defaultClusterConfig);
+		var combined = ConfigFactory
+			.parseApplicationReplacement()
+			.map(external -> external.withFallback(clusterConfig))
+			.orElse(clusterConfig)
+			.withFallback(application);
+
 		var complete = ConfigFactory.load(combined);
 
 		actorSystem = ActorSystem.create(
