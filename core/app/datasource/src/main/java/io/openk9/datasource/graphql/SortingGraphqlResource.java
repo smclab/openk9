@@ -62,11 +62,6 @@ public class SortingGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Sorting> deleteTokenTab(@Id long sortingId) {
-		return sortingService.deleteById(sortingId);
-	}
-
-	@Mutation
 	public Uni<Response<Sorting>> sorting(
 		@Id Long id, SortingDTO sortingDTO,
 		@DefaultValue("false") boolean patch) {
