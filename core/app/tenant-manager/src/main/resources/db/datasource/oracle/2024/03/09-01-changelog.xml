@@ -9,14 +9,14 @@
 >
 	<changeSet id="1710009174795-1" author="openk9">
 		<createTable tableName="sorting">
-			<column name="id" type="BIGINT">
+			<column name="id" type="NUMBER(38)">
 				<constraints nullable="false" primaryKey="true"
 							 primaryKeyName="sorting_pkey"/>
 			</column>
-			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
-			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
-			<column name="description" type="VARCHAR(4096)"/>
-			<column name="default_sort" type="BOOLEAN">
+			<column name="create_date" type="TIMESTAMP"/>
+			<column name="modified_date" type="TIMESTAMP"/>
+			<column name="description" type="VARCHAR2(4000)"/>
+			<column name="default_sort" type="NUMBER(1)">
 				<constraints nullable="false"/>
 			</column>
 			<column name="name" type="VARCHAR(255)">
@@ -25,18 +25,18 @@
 			<column name="type" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="priority" type="FLOAT4">
+			<column name="priority" type="FLOAT(8)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="doc_type_field_id" type="BIGINT"/>
+			<column name="doc_type_field_id" type="NUMBER(38)"/>
 		</createTable>
 	</changeSet>
 	<changeSet id="1710009174795-2" author="openk9">
 		<createTable tableName="buckets_sortings">
-			<column name="buckets_id" type="BIGINT">
+			<column name="buckets_id" type="NUMBER(38)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="sortings_id" type="BIGINT">
+			<column name="sortings_id" type="NUMBER(38)">
 				<constraints nullable="false"/>
 			</column>
 		</createTable>

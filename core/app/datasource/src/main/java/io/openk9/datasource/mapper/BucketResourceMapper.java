@@ -6,7 +6,6 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.web.BucketResource;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.SortingResponseDTO;
@@ -67,8 +66,11 @@ public interface BucketResourceMapper {
 			return sortingList
 				.stream()
 				.map(sorting -> new SortingResponseDTO(
+					sorting.getId(),
 					sorting.getName(),
 					sorting.getType().getValue(),
+					sorting.getDocTypeField().getPath(),
+					sorting.isDefaultSort(),
 					translations.get(sorting.getId()))
 				)
 				.toList();

@@ -35,7 +35,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "suggestion_category")
+@Table(name = "sorting")
 @Getter
 @Setter
 @ToString
@@ -65,19 +65,6 @@ public class Sorting extends K9Entity {
 	@JsonIgnore
 	@ToString.Exclude
 	private DocTypeField docTypeField;
-
-	@ToString.Exclude
-	@ManyToOne(
-		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH
-		}
-	)
-	@JsonIgnore
-	@JoinColumn(name = "bucket_id")
-	private Bucket bucket;
 
 	public enum SortingType {
 		ASC("asc"), 

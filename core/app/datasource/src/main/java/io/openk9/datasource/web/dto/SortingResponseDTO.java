@@ -4,5 +4,5 @@ import java.util.List;
 import java.util.Map;
 
 public record SortingResponseDTO(
-	String label, String type, Map<String, String> translationMap) {
+	Long id, String label, String type, String field, boolean idDefault, Map<String, String> translationMap) {
 }
