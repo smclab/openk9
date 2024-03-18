@@ -426,47 +426,7 @@ export function App() {
         className="openk9-preview-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            select: {
-              element,
-              options: [
-                {
-                  field: "",
-                  id: 368,
-                  isDefault: true,
-                  type: "",
-                  label: "Rilevanza",
-                  translationMap: {
-                    "label.en_US": "Relevance",
-                    "label.es_ES": "Rilevanzas",
-                    "label.it_IT": "Rilevanza",
-                  },
-                },
-                {
-                  field: "file.lastModifiedDate",
-                  id: 369,
-                  isDefault: false,
-                  type: "asc",
-                  label: "Più recenti",
-                  translationMap: {
-                    "label.en_US": "More recent",
-                    "label.es_ES": "Piùs Recentis",
-                    "label.it_IT": "Più recenti",
-                  },
-                },
-                {
-                  field: "file.lastModifiedDate",
-                  id: 370,
-                  isDefault: false,
-                  type: "desc",
-                  label: "Meno recenti",
-                  translationMap: {
-                    "label.en_US": "Less recent",
-                    "label.es_ES": "Menos Recentis",
-                    "label.it_IT": "Meno Recenti",
-                  },
-                },
-              ],
-            },
+            details: element,
           })
         }
         css={css`
