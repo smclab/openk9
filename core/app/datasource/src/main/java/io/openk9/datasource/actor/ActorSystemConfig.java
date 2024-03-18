@@ -54,6 +54,7 @@ public class ActorSystemConfig {
 	@ApplicationScoped
 	@Priority(Integer.MAX_VALUE)
 	@IfBuildProperty(name = AKKA_CLUSTER_MODE, stringValue = "local", enableIfMissing = true)
+	@IfBuildProperty(name = AKKA_CLUSTER_MODE, stringValue = "test")
 	public ActorSystemInitializer local() {
 		logger.info("create local cluster actor system");
 		return actorSystem -> {
