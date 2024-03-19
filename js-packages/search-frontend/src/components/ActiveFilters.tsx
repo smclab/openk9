@@ -15,11 +15,13 @@ export function ActiveFilter({
   onRemoveFilterToken,
   onConfigurationChange,
   actioneRemoveFilters,
+  callbackRemoveFilter,
 }: {
   searchQuery: SearchToken[];
   onRemoveFilterToken: (searchToken: SearchToken) => void;
   onConfigurationChange: ConfigurationUpdateFunction;
   actioneRemoveFilters?: () => void;
+  callbackRemoveFilter?: () => void;
 }) {
   const { t } = useTranslation();
   if (searchQuery.length === 0) return null;
@@ -80,12 +82,13 @@ export function ActiveFilter({
                       <div className="openk9-container-active-filter">
                         <button
                           className="openk9-active-filter"
-                          onClick={() =>
+                          onClick={() => {
                             onRemoveFilterToken({
                               ...selectToken,
                               values: [value],
-                            })
-                          }
+                            });
+                            if (callbackRemoveFilter) callbackRemoveFilter();
+                          }}
                           css={css`
                             border: 1px solid red;
                             background: inherit;

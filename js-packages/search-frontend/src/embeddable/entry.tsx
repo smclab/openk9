@@ -288,6 +288,7 @@ type totalResultProps = {
 type activeFiltersConfigurableProps = {
   element: Element | string | null;
   actioneRemoveFilters?(): void;
+  callbackRemoveFilter?(): void;
 };
 
 export type Configuration = {

@@ -376,6 +376,9 @@ export function Main({
             actioneRemoveFilters={
               configuration.activeFiltersConfigurable?.actioneRemoveFilters
             }
+            callbackRemoveFilter={
+              configuration.activeFiltersConfigurable?.callbackRemoveFilter
+            }
           />
         </I18nextProvider>,
         configuration.activeFiltersConfigurable
