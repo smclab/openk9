@@ -72,6 +72,31 @@ class HttpPluginDriverClientTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_post_invoke_fail_when_status_code_is_not_200(UniAsserter asserter) {
+
+		var invalidInvokeRequest = wireMockServer.stubFor(WireMock
+			.post(HttpPluginDriverClient.INVOKE_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(400)
+				.withStatusMessage("Invalid Request")
+			)
+		);
+
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.invoke(
+				pluginDriverInfo,
+				HttpPluginDriverContext.builder().build()
+			),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				wireMockServer.removeStub(invalidInvokeRequest);
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
 	void should_get_health_up(UniAsserter asserter) throws IOException {
 
 		PluginDriverHealthDTO expected;

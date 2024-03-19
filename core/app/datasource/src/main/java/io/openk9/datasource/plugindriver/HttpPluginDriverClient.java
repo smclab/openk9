@@ -82,7 +82,8 @@ public class HttpPluginDriverClient {
 				path
 			)
 			.ssl(httpPluginDriverInfo.isSecure())
-			.sendJson(httpPluginDriverContext);
+			.sendJson(httpPluginDriverContext)
+			.flatMap(this::validateResponse);
 	}
 
 	public void invokeAndForget(
