@@ -5,6 +5,7 @@ import { useRenderers } from "./useRenderers";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { DetailMemo } from "./Detail";
 import { ModalDetail } from "./ModalDetail";
+import { useTranslation } from "react-i18next";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
@@ -18,6 +19,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
   const renderers = useRenderers();
   const modalRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(true);
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     const modalElement = modalRef.current as any;
@@ -65,6 +67,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
       ref={modalRef}
       style={{ height: "100%" }}
       id="dialog-modal-detail"
+      aria-labelledby={t("detail-modal") || "detail modal"}
       role="dialog"
       className="modal"
       aria-modal={isOpen ? "true" : "false"}
