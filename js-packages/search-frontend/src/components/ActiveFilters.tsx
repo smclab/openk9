@@ -36,7 +36,7 @@ export function ActiveFilter({
         className="openk9-filters-active-information"
         css={css`
           @media (max-width: 769px) {
-            display: none;
+            font-size: 20px;
           }
         `}
       >
