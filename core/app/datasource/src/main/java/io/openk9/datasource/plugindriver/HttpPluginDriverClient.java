@@ -160,7 +160,7 @@ public class HttpPluginDriverClient {
 	}
 
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
-		if (response.statusCode() == 200) {
+		if (response.statusCode() >= 200 && response.statusCode() <= 299) {
 			return Uni.createFrom().item(response);
 		}
 		else {
