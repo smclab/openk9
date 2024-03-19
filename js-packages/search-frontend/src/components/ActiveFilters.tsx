@@ -48,15 +48,16 @@ export function ActiveFilter({
           {countTotalValues(filterSearchQuery)}
         </span>
       </h2>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div
-          className="openk9-tabs-overlay-scrollbars"
-          style={{
-            overflowX: "auto",
-            height: "50px",
-            width: "91%",
-          }}
-        >
+      <div
+        className="openk9-active-container-box"
+        css={css`
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        `}
+      >
+        <div className="openk9-tabs-overlay-scrollbars">
           <div
             className="openk9-active-filters-chop-container"
             css={css`
@@ -69,6 +70,7 @@ export function ActiveFilter({
                 display: flex;
                 gap: 10px;
                 width: 100%;
+                flex-wrap: wrap;
               `}
             >
               {searchQuery.map((selectToken, index) => {
