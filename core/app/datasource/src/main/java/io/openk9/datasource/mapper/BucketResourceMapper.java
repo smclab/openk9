@@ -65,13 +65,19 @@ public interface BucketResourceMapper {
 		if (translations != null) {
 			return sortingList
 				.stream()
-				.map(sorting -> new SortingResponseDTO(
-					sorting.getId(),
-					sorting.getName(),
-					sorting.getType().getValue(),
-					sorting.getDocTypeField().getPath(),
-					sorting.isDefaultSort(),
-					translations.get(sorting.getId()))
+				.map(sorting -> {
+					String path = null;
+					if (sorting.getDocTypeField() != null) {
+						path = sorting.getDocTypeField().getPath();
+					}
+					return new SortingResponseDTO(
+						sorting.getId(),
+						sorting.getName(),
+						sorting.getType().getValue(),
+						path,
+						sorting.isDefaultSort(),
+						translations.get(sorting.getId()));
+					}
 				)
 				.toList();
 		}
