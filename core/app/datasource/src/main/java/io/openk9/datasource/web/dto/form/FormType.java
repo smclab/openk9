@@ -29,7 +29,8 @@ public enum FormType {
 	EMAIL("email"),
 	PASSWORD("password"),
 	TIME("time"),
-	URL("url");
+	URL("url"),
+	CHECKBOX("checkbox");
 
 	private final String value;
 
