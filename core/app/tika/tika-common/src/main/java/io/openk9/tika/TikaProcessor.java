@@ -209,11 +209,14 @@ public class TikaProcessor {
                         document.put("toOcr", false);
                     }
 
-                    text = text.replaceAll("[.,]+", "")
+                    String rawText = text.replaceAll("[.,]+", "")
                         .replaceAll("_", "")
                         .replaceAll("\\s+", " ")
                         .replaceAll("\\n", " ")
                         .replaceAll("\\t", " ");
+
+                    text = text.replaceAll("\\t", " ")
+                        .replaceAll("\\s+", " ");
 
                     document.put("content", text);
 
@@ -228,13 +231,13 @@ public class TikaProcessor {
                         document.put("title", title);
                     }
 
-                    if (text.length() > maxLength && maxLength > 0) {
+                    if (rawText.length() > maxLength && maxLength > 0) {
 
                         responsePayload.put(
-                                "rawContent", text.substring(0, maxLength));
+                                "rawContent", rawText.substring(0, maxLength));
 
                     } else {
-                        responsePayload.put("rawContent", text);
+                        responsePayload.put("rawContent", rawText);
                     }
 
                     JsonObject resources =
