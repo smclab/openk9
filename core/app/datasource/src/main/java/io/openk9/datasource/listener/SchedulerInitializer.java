@@ -67,7 +67,7 @@ public class SchedulerInitializer {
 
 	}
 
-	@ConsumeEvent(value = SPAWN_CONSUMERS, blocking = true)
+	@ConsumeEvent(value = SPAWN_CONSUMERS)
 	@ActivateRequestContext
 	public Uni<Void> spawnConsumers(String ignore) {
 
