@@ -349,6 +349,10 @@ public class BucketResource {
 
 			tokenTabFetch.fetch(TokenTab_.extraParams, JoinType.LEFT);
 
+			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
+
+			sortingFetch.fetch(Sorting_.docTypeField, JoinType.LEFT);
+
 			query.select(tabsJoin);
 
 			query.where(

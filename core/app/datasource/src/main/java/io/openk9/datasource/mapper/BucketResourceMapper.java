@@ -45,6 +45,10 @@ public interface BucketResourceMapper {
 						.stream()
 						.map(this::toTokenTabResponseDto)
 						.toList(),
+					tab.getSortings()
+						.stream()
+						.map(this::toSortingResponseDTO)
+						.toList(),
 					translations.get(tab.getId()))
 				)
 				.toList();
@@ -122,6 +126,9 @@ public interface BucketResourceMapper {
 	)
 	@Mapping(
 		target = "tokens", source = "tokenTabs"
+	)
+	@Mapping(
+		target = "sortings", source = "sortings"
 	)
 	TabResponseDTO toTabResponseDto(Tab tab);
 
