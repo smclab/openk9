@@ -61,7 +61,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 	@Override
 	public List<CategorySemantics> annotate(String...tokens) {
 
-		String token = String.join(" ", tokens);
+		String token = String.join("", tokens);
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
