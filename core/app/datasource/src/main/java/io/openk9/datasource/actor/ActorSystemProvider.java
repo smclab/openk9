@@ -20,6 +20,7 @@ package io.openk9.datasource.actor;
 import akka.actor.typed.ActorSystem;
 import com.typesafe.config.ConfigFactory;
 import io.quarkus.runtime.Startup;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.annotation.PostConstruct;
@@ -31,6 +32,22 @@ import javax.inject.Inject;
 @ApplicationScoped
 @Startup
 public class ActorSystemProvider {
+
+	public static final String INITIALIZED =
+		"io.openk9.datasource.actor.ActorSystemProvider#INITIALIZED";
+	@Inject
+	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
+	@Inject
+	Instance<ActorSystemBehaviorInitializer> actorSystemBehaviorInitializerInstance;
+	@Inject
+	EventBus eventBus;
+	@ConfigProperty(name = "akka.cluster.file")
+	String clusterFile;
+	private ActorSystem<?> actorSystem;
+
+	public ActorSystem<?> getActorSystem() {
+		return actorSystem;
+	}
 
 	@PostConstruct
 	void init() {
@@ -55,26 +72,12 @@ public class ActorSystemProvider {
 			actorSystemInitializer.init(actorSystem);
 		}
 
+		eventBus.send(INITIALIZED, INITIALIZED);
 	}
 
 	@PreDestroy
 	void destroy() {
 		actorSystem.terminate();
 	}
-
-	public ActorSystem<?> getActorSystem() {
-		return actorSystem;
-	}
-
-	private ActorSystem<?> actorSystem;
-
-	@Inject
-	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
-	@Inject
-	Instance<ActorSystemBehaviorInitializer> actorSystemBehaviorInitializerInstance;
-
-
-	@ConfigProperty(name = "akka.cluster.file")
-	String clusterFile;
 
 }
