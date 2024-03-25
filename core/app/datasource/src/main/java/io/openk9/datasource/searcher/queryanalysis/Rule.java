@@ -57,11 +57,11 @@ public class Rule {
 	}
 
 	public Rule(String lhs, String rhs) {
-		this(lhs, Utils.split(rhs));
+		this(lhs, Utils.splitRule(rhs));
 	}
 
 	public Rule(String lhs, String rhs, Semantic sem) {
-		this(lhs, Utils.split(rhs), sem);
+		this(lhs, Utils.splitRule(rhs), sem);
 	}
 
 	public Semantic applySemantics(SemanticTypes sems) {

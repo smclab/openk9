@@ -74,7 +74,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 			token = tokens[0];
 		}
 		else {
-			token = String.join(" ", tokens);
+			token = String.join("", tokens);
 		}
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();

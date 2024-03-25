@@ -503,7 +503,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			List<Parse> parses = grammar.parseInput(request.getSearchText());
 
-			if (logger.isDebugEnabled()) {
+				parses = parses
+					.stream()
+					.limit(20)
+					.toList();
+
+
+				if (logger.isDebugEnabled()) {
 
 				JsonArray reduce = parses
 					.stream()
