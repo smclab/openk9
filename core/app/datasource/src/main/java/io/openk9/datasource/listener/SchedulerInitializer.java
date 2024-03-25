@@ -29,22 +29,20 @@ import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
-import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -54,7 +52,8 @@ public class SchedulerInitializer {
 	public static final String UPDATE_SCHEDULER = "update_scheduler";
 	public static final String DELETE_SCHEDULER = "delete_scheduler";
 
-	public void startUp(@Observes StartupEvent event) {
+	@ConsumeEvent(value = ActorSystemProvider.INITIALIZED)
+	public void startUp(String ignore) {
 		eventBus.send(INITIALIZE_SCHEDULER, INITIALIZE_SCHEDULER);
 		eventBus.send(SPAWN_CONSUMERS, SPAWN_CONSUMERS);
 	}
@@ -69,7 +68,7 @@ public class SchedulerInitializer {
 
 	}
 
-	@ConsumeEvent(value = SPAWN_CONSUMERS)
+	@ConsumeEvent(value = SPAWN_CONSUMERS, blocking = true)
 	@ActivateRequestContext
 	public Uni<Void> spawnConsumers(String ignore) {
 
