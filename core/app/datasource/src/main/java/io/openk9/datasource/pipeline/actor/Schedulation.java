@@ -158,15 +158,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	@Override
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
-			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
-			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
-			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
@@ -201,10 +194,22 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			.build();
 	}
 
+	private ReceiveBuilder<Command> afterSetupReceiver() {
+
+		return newReceiveBuilder()
+			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
+			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
+			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
+	}
+
 	private Receive<Command> ready() {
 		logBehavior(READY_BEHAVIOR);
 
-		return newReceiveBuilder()
+		return afterSetupReceiver()
 			.onMessage(Ingest.class, this::onIngest)
 			.onMessage(TrackError.class, this::onTrackError)
 			.onMessage(Restart.class, this::onRestart)
@@ -216,7 +221,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Receive<Command> busy() {
 		logBehavior(BUSY_BEHAVIOR);
 
-		return newReceiveBuilder()
+		return afterSetupReceiver()
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
@@ -235,7 +240,15 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
-		return newReceiveBuilder().build();
+		return afterSetupReceiver()
+			.onAnyMessage(this::discard)
+			.build();
+	}
+
+	private Behavior<Command> discard(Command command) {
+		log.warnf("A message of type %s has been discarded.", command.getClass());
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onStart(Start start) {
@@ -249,15 +262,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			)
 		);
 
-		return Behaviors.withTimers(timer -> {
-			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
-			return Behaviors.same();
-		});
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
 		this.scheduler = schedulerMapper.map(setScheduler.scheduler);
-		return this.next();
+
+		return Behaviors.withTimers(timer -> {
+			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
+			return this.next();
+		});
 	}
 
 	private Behavior<Command> onIngest(Ingest ingest) {
