@@ -301,25 +301,13 @@ public class MessageGateway
 
 		QueueManager.Response response = queueManagerResponseWrapper.response();
 
-		if (response instanceof QueueManager.QueueBind queueBind) {
+		if (response instanceof QueueManager.QueueBind) {
 			for (ActorRef<Command> messageGateway : messageGateways) {
-				messageGateway.tell(new SpawnConsumer(queueBind));
+				messageGateway.tell(new SpawnConsumer((QueueManager.QueueBind) response));
 			}
-
-			triggerScheduling(queueBind);
 		}
 
 		return Behaviors.same();
-	}
-
-	private void triggerScheduling(QueueManager.QueueBind queueBind) {
-		var system = getContext().getSystem();
-		var clusterSharding = ClusterSharding.get(system);
-
-		clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY,
-			queueBind.schedulingKey()
-		);
 	}
 
 	private Behavior<Command> onStartup(Command command) {
