@@ -88,7 +88,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
-	private int workers = 0;
+	private int busyWorkers = 0;
 
 	public Scheduling(
 		ActorContext<Command> context,
@@ -315,7 +315,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			consumers.add(ingest.replyTo());
-			workers++;
+			busyWorkers++;
 
 		}
 		else if (!dataPayload.isLast()) {
@@ -327,7 +327,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.infof("%s received last message", key);
 		}
 
-		return workers < maxWorkers ? next() : busy();
+		return busyWorkers < maxWorkers ? next() : busy();
 
 	}
 
@@ -392,7 +392,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
-		workers--;
+		busyWorkers--;
 		consumers.remove(response.replyTo());
 
 		return next();
@@ -480,9 +480,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			return Behaviors.same();
 		}
 
-		if (workers > 0) {
+		if (busyWorkers > 0) {
 			if (log.isDebugEnabled()) {
-				log.debugf("There are %s busy workers, for %s", workers, key);
+				log.debugf("There are %s busy workers, for %s", busyWorkers, key);
 			}
 
 			return Behaviors.same();
