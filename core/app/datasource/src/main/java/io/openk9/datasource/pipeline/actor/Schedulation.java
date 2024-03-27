@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
@@ -101,7 +118,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
-	private int workers = 0;
+	private int busyWorkers = 0;
 
 	public Schedulation(
 		ActorContext<Command> context,
@@ -312,7 +329,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			);
 
 			consumers.add(ingest.replyTo());
-			workers++;
+			busyWorkers++;
 
 		}
 		else if (!dataPayload.isLast()) {
@@ -324,7 +341,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			log.infof("%s received last message", key);
 		}
 
-		return workers < maxWorkers ? next() : busy();
+		return busyWorkers < maxWorkers ? next() : busy();
 
 	}
 
@@ -389,7 +406,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
-		workers--;
+		busyWorkers--;
 		consumers.remove(response.replyTo());
 
 		return next();
@@ -474,10 +491,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		if (!failureTracked && lastReceived) {
 			if (log.isDebugEnabled()){
-				log.debugf("There are %s busy workers, for %s", workers, key);
+				log.debugf("There are %s busy workers, for %s", busyWorkers, key);
 			}
 
-			if (workers == 0) {
+			if (busyWorkers == 0) {
 				log.infof("%s is done", key);
 
 				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
