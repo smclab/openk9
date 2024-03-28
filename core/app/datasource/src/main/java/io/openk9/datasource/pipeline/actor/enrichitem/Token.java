@@ -109,14 +109,18 @@ public class Token extends AbstractBehavior<Token.Command> {
 
 		tokens.remove(token, tokenInfo);
 
-		getContext().getLog().info(
-			"Token found: {}, elapsed: {} ms",
-			token,
-			Duration.between(tokenInfo.createDate, LocalDateTime.now()).toMillis()
-		);
+		if (getContext().getLog().isDebugEnabled()) {
+			getContext().getLog().debug(
+				"Token found: {}, elapsed: {} ms",
+				token,
+				Duration.between(tokenInfo.createDate, LocalDateTime.now()).toMillis()
+			);
+		}
 
 		if (isValid(tokenInfo)) {
-			getContext().getLog().info("Valid token, response ready to be processed");
+			if (getContext().getLog().isDebugEnabled()) {
+				getContext().getLog().debug("Valid token, response ready to be processed");
+			}
 
 			tokenInfo.replyTo.tell(new TokenCallback(callback.jsonObject));
 		}
