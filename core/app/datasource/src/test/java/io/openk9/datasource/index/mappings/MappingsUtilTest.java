@@ -64,7 +64,8 @@ class MappingsUtilTest {
 		descriptionEn,
 		descriptionEnKeyword,
 		descriptionDe,
-		descriptionDeKeyword;
+		descriptionDeKeyword,
+		emptyObject;
 
 	static {
 		defaultDocType = new DocType();
@@ -209,6 +210,11 @@ class MappingsUtilTest {
 		descriptionDeKeyword.setParentDocTypeField(descriptionDe);
 		descriptionDeKeyword.setJsonConfig("{\"ignore_above\":256}");
 
+		emptyObject = new DocTypeField();
+		emptyObject.setDocType(webDocType);
+		emptyObject.setFieldName("emptyObject");
+		emptyObject.setFieldType(FieldType.OBJECT);
+
 		descriptionDe.setSubDocTypeFields(Set.of(descriptionDeKeyword));
 
 		descriptionI18n.setSubDocTypeFields(new LinkedHashSet<>(List.of(
@@ -240,7 +246,8 @@ class MappingsUtilTest {
 			descriptionEn,
 			descriptionEnKeyword,
 			descriptionDe,
-			descriptionDeKeyword
+			descriptionDeKeyword,
+			emptyObject
 		)));
 	}
 
