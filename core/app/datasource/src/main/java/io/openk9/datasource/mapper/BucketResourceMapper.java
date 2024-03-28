@@ -32,6 +32,7 @@ import io.openk9.datasource.web.dto.TokenTabResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,10 @@ import java.util.Map;
 	componentModel = "cdi"
 )
 public interface BucketResourceMapper {
+
+	static List<String> toValues(String value) {
+		return value == null ? List.of() : List.of(value);
+	}
 
 	List<TemplateResponseDTO> toTemplateResponseDtoList(
 		List<DocTypeTemplate> docTypeTemplateList);
@@ -67,11 +72,11 @@ public interface BucketResourceMapper {
 						.map(this::toTokenTabResponseDto)
 						.toList(),
 					this.toSortingResponseDtoList(
-						tab.getSortings().stream().toList(),
+						new ArrayList<>(tab.getSortings()),
 						sortingsTranslationMaps
 					),
-					translations.get(tab.getId()))
-				)
+					translations.get(tab.getId())
+				))
 				.toList();
 		}
 		else {
@@ -86,7 +91,9 @@ public interface BucketResourceMapper {
 		return toSortingResponseDtoList(sortingList, null);
 	}
 
-	default List<SortingResponseDTO> toSortingResponseDtoList(List<Sorting> sortingList, Map<Long, Map<String, String>> translations) {
+	default List<SortingResponseDTO> toSortingResponseDtoList(
+		List<Sorting> sortingList,
+		Map<Long, Map<String, String>> translations) {
 		if (translations != null) {
 			return sortingList
 				.stream()
@@ -101,7 +108,8 @@ public interface BucketResourceMapper {
 						sorting.getType().getValue(),
 						path,
 						sorting.isDefaultSort(),
-						translations.get(sorting.getId()));
+						translations.get(sorting.getId())
+					);
 					}
 				)
 				.toList();
@@ -118,7 +126,9 @@ public interface BucketResourceMapper {
 		return toDocTypeFieldResponseDtoList(docTypeFieldList, null);
 	}
 
-	default List<DocTypeFieldResponseDTO> toDocTypeFieldResponseDtoList(List<DocTypeField> docTypeFieldList, Map<Long, Map<String, String>> translations) {
+	default List<DocTypeFieldResponseDTO> toDocTypeFieldResponseDtoList(
+		List<DocTypeField> docTypeFieldList,
+		Map<Long, Map<String, String>> translations) {
 		if (translations != null) {
 			return docTypeFieldList
 				.stream()
@@ -126,8 +136,8 @@ public interface BucketResourceMapper {
 					docTypeField.getPath(),
 					docTypeField.getId(),
 					docTypeField.getName(),
-					translations.get(docTypeField.getId()))
-				)
+					translations.get(docTypeField.getId())
+				))
 				.toList();
 		}
 		else {
@@ -137,41 +147,23 @@ public interface BucketResourceMapper {
 					docTypeField.getPath(),
 					docTypeField.getId(),
 					docTypeField.getName(),
-					null)))
+					null
+				)))
 				.toList();
 		}
 	}
 
-	@Mapping(
-		target = "label", source = "name"
-	)
-	@Mapping(
-		target = "tokens", source = "tokenTabs"
-	)
-	@Mapping(
-		target = "sortings", source = "sortings"
-	)
+	@Mapping(target = "label", source = "name")
+	@Mapping(target = "tokens", source = "tokenTabs")
+	@Mapping(target = "sortings", source = "sortings")
 	TabResponseDTO toTabResponseDto(Tab tab);
 
-
-	@Mapping(
-		target = "label", source = "name"
-	)
+	@Mapping(target = "label", source = "name")
 	SortingResponseDTO toSortingResponseDTO(Sorting sorting);
 
-	@Mapping(
-		target = "keywordKey", source = "docTypeField.name"
-	)
-	@Mapping(
-		target = "values", source = "value"
-	)
-	@Mapping(
-		target = "extra", source = "extraParams"
-	)
+	@Mapping(target = "keywordKey", source = "docTypeField.name")
+	@Mapping(target = "values", source = "value")
+	@Mapping(target = "extra", source = "extraParams")
 	TokenTabResponseDTO toTokenTabResponseDto(TokenTab tokenTab);
-
-	static List<String> toValues(String value) {
-		return value == null ? List.of() : List.of(value);
-	}
 
 }
