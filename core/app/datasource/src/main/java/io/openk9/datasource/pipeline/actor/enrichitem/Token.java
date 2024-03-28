@@ -39,34 +39,6 @@ public class Token extends AbstractBehavior<Token.Command> {
 
 	public static final EntityTypeKey<Token.Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Token.Command.class, "tokenKey");
-
-	public sealed interface Command extends CborSerializable {}
-	public record Generate(LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
-	public record Callback(String token, byte[] jsonObject) implements Command {}
-	private enum Tick implements Command {INSTANCE}
-	public sealed interface Response extends CborSerializable {}
-	public record TokenGenerated(String token) implements Response {}
-	public record TokenCallback(byte[] jsonObject) implements Response {}
-	public enum TokenState implements Response {EXPIRED, VALID}
-
-	private Behavior<Command> onGenerate(Generate generate) {
-
-		SchedulingToken schedulingToken = generateToken();
-
-		ActorRef<Response> replyTo = generate.replyTo;
-
-		tokens.put(
-			schedulingToken.token,
-			new TokenInfo(LocalDateTime.now(), generate.expiredDate, replyTo));
-
-		replyTo.tell(new TokenGenerated(TokenUtils.encode(schedulingToken)));
-
-		return Behaviors.same();
-	}
-
-	private record TokenInfo(
-		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo) implements CborSerializable {}
-
 	private final Cancellable cancellable;
 	private final SchedulingKey key;
 	private final Map<String, TokenInfo> tokens = new HashMap<>();
@@ -81,7 +53,15 @@ public class Token extends AbstractBehavior<Token.Command> {
 			.scheduleAtFixedRate(
 				Duration.ZERO, Duration.ofMinutes(15),
 				() -> getContext().getSelf().tell(Tick.INSTANCE),
-				getContext().getExecutionContext());
+				getContext().getExecutionContext()
+			);
+	}
+
+	public static Behavior<Command> create(SchedulingKey key) {
+
+		return Behaviors
+			.<Command>supervise(Behaviors.setup(ctx -> new Token(ctx, key)))
+			.onFailure(SupervisorStrategy.resume());
 	}
 
 	@Override
@@ -93,17 +73,33 @@ public class Token extends AbstractBehavior<Token.Command> {
 			.build();
 	}
 
-	public static Behavior<Command> create(SchedulingKey key) {
+	private static boolean isValid(TokenInfo tokenInfo) {
+		return tokenInfo.expiredDate().isAfter(LocalDateTime.now());
+	}
 
-		return Behaviors
-			.<Command>supervise(Behaviors.setup(ctx -> new Token(ctx, key)))
-			.onFailure(SupervisorStrategy.resume());
+	private static boolean isExpired(TokenInfo tokenInfo) {
+		return tokenInfo.expiredDate().isBefore(LocalDateTime.now());
+	}
+
+	private Behavior<Command> onGenerate(Generate generate) {
+
+		SchedulingToken schedulingToken = generateToken();
+
+		ActorRef<Response> replyTo = generate.replyTo;
+
+		tokens.put(
+			schedulingToken.token,
+			new TokenInfo(LocalDateTime.now(), generate.expiredDate, replyTo)
+		);
+
+		replyTo.tell(new TokenGenerated(TokenUtils.encode(schedulingToken)));
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onCallback(Callback callback) {
 
 		String token = callback.token;
-
 		TokenInfo tokenInfo = tokens.get(token);
 
 		if (tokenInfo == null) {
@@ -111,22 +107,22 @@ public class Token extends AbstractBehavior<Token.Command> {
 			return Behaviors.same();
 		}
 
-		if (isValid(tokenInfo)) {
+		tokens.remove(token, tokenInfo);
 
-			getContext().getLog()
-				.info(
-					"Token found: {}, elapsed: {} ms",
-					token, Duration.between(
-						tokenInfo.createDate,
-						LocalDateTime.now()
-					).toMillis());
+		getContext().getLog().info(
+			"Token found: {}, elapsed: {} ms",
+			token,
+			Duration.between(tokenInfo.createDate, LocalDateTime.now()).toMillis()
+		);
+
+		if (isValid(tokenInfo)) {
+			getContext().getLog().info("Valid token, response ready to be processed");
 
 			tokenInfo.replyTo.tell(new TokenCallback(callback.jsonObject));
-
 		}
 		else {
-			tokens.remove(token, tokenInfo);
 			getContext().getLog().warn("Token expired: {}", token);
+
 			tokenInfo.replyTo.tell(TokenState.EXPIRED);
 		}
 
@@ -165,13 +161,31 @@ public class Token extends AbstractBehavior<Token.Command> {
 			key.tenantId(), key.scheduleId(), UUID.randomUUID().toString());
 	}
 
-	private static boolean isValid(TokenInfo tokenInfo) {
-		return tokenInfo.expiredDate().isAfter(LocalDateTime.now());
+	private enum Tick implements Command {
+		INSTANCE
 	}
 
-	private static boolean isExpired(TokenInfo tokenInfo) {
-		return tokenInfo.expiredDate().isBefore(LocalDateTime.now());
+	public enum TokenState implements Response {
+		EXPIRED,
+		VALID
 	}
+
+	public sealed interface Command extends CborSerializable {}
+
+	public sealed interface Response extends CborSerializable {}
+
+	public record Generate(LocalDateTime expiredDate, ActorRef<Response> replyTo)
+		implements Command {}
+
+	public record Callback(String token, byte[] jsonObject) implements Command {}
+
+	public record TokenGenerated(String token) implements Response {}
+
+	public record TokenCallback(byte[] jsonObject) implements Response {}
+
+	private record TokenInfo(
+		LocalDateTime createDate, LocalDateTime expiredDate, ActorRef<Response> replyTo
+	) implements CborSerializable {}
 
 	public record SchedulingToken(String tenantId, String scheduleId, String token) {}
 
