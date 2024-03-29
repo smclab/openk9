@@ -46,6 +46,7 @@ import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -84,7 +85,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final int workersPerNode;
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
-	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
@@ -191,7 +191,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessageEquals(Start.INSTANCE, this::onStart)
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
@@ -202,8 +202,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
-			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
+			.onMessage(PersistStatus.class, this::onPersistStatus)
+			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
+			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
@@ -215,8 +216,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(Ingest.class, this::onIngest)
 			.onMessage(TrackError.class, this::onTrackError)
 			.onMessage(Restart.class, this::onRestart)
-			.onMessage(PersistStatus.class, this::onPersistStatus)
-			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.build();
 	}
 
@@ -253,15 +252,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onStart(Start start) {
+	private Behavior<Command> onStart() {
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withStatelessTransaction(key.tenantId(), (s, t) -> s
-				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-				.setParameter("scheduleId", key.scheduleId())
-				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-				.getSingleResult()
-				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
-			)
+			.withSession(key.tenantId(), (s) -> {
+					s.setDefaultReadOnly(true);
+					return fetchScheduler(s);
+				}
+			).invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
 		);
 
 		return Behaviors.same();
@@ -288,6 +285,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		if (dataPayload.getContentId() != null) {
 
+			// TODO maybe could be asked to self
 			updateLastIngestionDate(dataPayload);
 
 			dataPayload.setIndexName(indexName);
@@ -398,36 +396,45 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private Behavior<Command> onPersistDataIndex() {
-		Long newDataIndexId = scheduler.getNewDataIndexId();
-		Long datasourceId = scheduler.getDatasourceId();
+	private Behavior<Command> onPersistDatasource() {
+		var newDataIndexId = scheduler.getNewDataIndexId();
+		var datasourceId = scheduler.getDatasourceId();
+		var lastIngestionDate = scheduler.getLastIngestionDate();
 
-		if (newDataIndexId != null) {
+		if (lastIngestionDate != null) {
 			String tenantId = key.tenantId();
 
-			log.infof(
-				"replacing dataindex %s for datasource %s on tenant %s",
-				newDataIndexId, datasourceId, tenantId
-			);
 			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
-					tenantId,
-					(s, t) -> s
-						.find(Datasource.class, datasourceId)
-						.onItem()
-						.transformToUni(ds -> s
-							.find(DataIndex.class, newDataIndexId)
-							.onItem()
-							.transformToUni(di -> {
-								ds.setDataIndex(di);
-								return s.persist(ds);
-							}))
+					tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
+						.map(datasource -> {
+							datasource.setLastIngestionDate(lastIngestionDate);
+							if (newDataIndexId != null) {
+								return s.find(DataIndex.class, newDataIndexId)
+									.map(newDataIndex -> {
+										log.infof(
+											"replacing dataindex %s for datasource %s on tenant %s",
+											newDataIndexId, datasourceId, tenantId
+										);
+										datasource.setDataIndex(newDataIndex);
+										return datasource;
+									});
+							}
+							return datasource;
+						})
+						.flatMap(s::merge)
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
 		}
 		else {
-			getContext().getSelf().tell(PersistStatusFinished.INSTANCE);
+			log.warnf(
+				"LastIngestionDate was null, " +
+				"means that no content was received in this Scheduling. " +
+				"%s would be Cancelled",
+				key
+			);
+			getContext().getSelf().tell(Cancel.INSTANCE);
 		}
 
 		return Behaviors.same();
@@ -491,7 +498,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (!failureTracked && lastReceived) {
 			log.infof("%s is done", key);
 
-			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+			getContext().getSelf().tell(PersistDatasource.INSTANCE);
 
 			return closing();
 		}
@@ -503,7 +510,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
 			log.infof("%s ingestion is expired", key);
 
-			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+			getContext().getSelf().tell(PersistDatasource.INSTANCE);
 
 			return closing();
 		}
@@ -513,13 +520,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
-		Long datasourceId = scheduler.getDatasourceId();
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId(), (s, tx) -> s
-				.find(Datasource.class, datasourceId)
-				.chain(entity -> {
+			key.tenantId(), (s, tx) -> fetchScheduler(s)
+				.flatMap(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);
-					return s.persist(entity);
+					return s.merge(entity);
 				})
 				.onItemOrFailure()
 				.invoke((r, t) -> {
@@ -528,10 +533,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					}
 					else {
 						log.infof(
-							"update last ingestion date for datasource with id %s",
-							datasourceId
+							"update last ingestion date for scheduler with id %s",
+							r.getId()
 						);
-						getContext().getSelf().tell(new SetLastIngestionDate(lastIngestionDate));
+						getContext().getSelf().tell(new SetScheduler(r));
 					}
 				})
 			)
@@ -542,22 +547,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
 		Scheduler.SchedulerStatus status = persistStatus.status;
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId(), (s, tx) -> s
-				.find(Scheduler.class, scheduler.getId())
+			.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setStatus(status);
-					return s
-						.persist(entity)
-						.flatMap(ignore -> s.createNamedQuery(
-								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-							.setParameter("scheduleId", entity.getScheduleId())
-							.setPlan(s.getEntityGraph(
-								Scheduler.class,
-								Scheduler.ENRICH_ITEMS_ENTITY_GRAPH
-							))
-							.getSingleResult()
-							.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
-						);
+					return s.merge(entity);
 				})
 			)
 			.onItemOrFailure()
@@ -572,16 +565,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						r.getId()
 					);
 
+					getContext().getSelf().tell(new SetScheduler(r));
 					persistStatus.replyTo.tell(Success.INSTANCE);
 				}
 			})
 		);
 
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onSetLastIngestionDate(SetLastIngestionDate setLastIngestionDate) {
-		this.lastIngestionDate = setLastIngestionDate.lastIngestionDate;
 		return Behaviors.same();
 	}
 
@@ -627,16 +616,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				ZoneOffset.UTC
 			);
 
-		if (this.lastIngestionDate == null || !this.lastIngestionDate.isEqual(parsingDate)) {
+		var lastIngestionDate = this.scheduler.getLastIngestionDate();
+
+		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 		}
+	}
+
+	private Uni<Scheduler> fetchScheduler(Mutiny.Session s) {
+		return s
+			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+			.setParameter("scheduleId", key.scheduleId())
+			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+			.getSingleResult();
 	}
 
 	public enum Cancel implements Command {
 		INSTANCE
 	}
 
-	public enum PersistDataIndex implements Command {
+	public enum PersistDatasource implements Command {
 		INSTANCE
 	}
 
@@ -674,8 +673,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
 		implements Command {}
-
-	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 
 	private record SetScheduler(Scheduler scheduler) implements Command {}
 
