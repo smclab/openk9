@@ -36,6 +36,7 @@ import akka.cluster.typed.SingletonActor;
 import com.typesafe.config.Config;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -283,6 +284,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
+		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
+			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
+
+			getContext().getSelf().tell(Cancel.INSTANCE);
+
+			return closing();
+		}
+
 		if (dataPayload.getContentId() != null) {
 
 			// TODO maybe could be asked to self
@@ -431,10 +440,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.warnf(
 				"LastIngestionDate was null, " +
 				"means that no content was received in this Scheduling. " +
-				"%s would be Cancelled",
+				"%s will be cancelled",
 				key
 			);
 			getContext().getSelf().tell(Cancel.INSTANCE);
+
+			return closing();
 		}
 
 		return Behaviors.same();
