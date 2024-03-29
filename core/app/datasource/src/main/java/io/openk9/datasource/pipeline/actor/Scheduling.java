@@ -422,7 +422,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 							}
 							return datasource;
 						})
-						.flatMap(s::merge)
+						.flatMap(s::persist)
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
