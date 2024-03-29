@@ -23,6 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.OffsetDateTime;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -113,7 +114,8 @@ public class Scheduler extends K9Entity {
 	private DataIndex newDataIndex;
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
-
+	@Column(name = "last_ingestion_date")
+	private OffsetDateTime lastIngestionDate;
 	public enum SchedulerStatus {
 		STARTED,
 		FINISHED,
