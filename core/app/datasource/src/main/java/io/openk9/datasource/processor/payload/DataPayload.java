@@ -20,6 +20,7 @@ package io.openk9.datasource.processor.payload;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -55,6 +56,7 @@ public class DataPayload {
 	private boolean last = false;
 	private String scheduleId;
 	private String oldIndexName = null;
+	private PayloadType type;
 
 	public static DataPayload copy(DataPayload dataPayload) {
 		return DataPayload.builder()
@@ -72,6 +74,7 @@ public class DataPayload {
 			.last(dataPayload.last)
 			.scheduleId(dataPayload.scheduleId)
 			.oldIndexName(dataPayload.oldIndexName)
+			.type(dataPayload.type)
 			.build();
 	}
 
@@ -90,6 +93,8 @@ public class DataPayload {
 			.indexName(indexName)
 			.last(last)
 			.scheduleId(scheduleId)
+			.oldIndexName(oldIndexName)
+			.type(type)
 			.build();
 	}
 

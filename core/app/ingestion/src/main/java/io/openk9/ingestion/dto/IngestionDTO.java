@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.dto;
 
+import io.openk9.common.util.ingestion.PayloadType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,4 +43,5 @@ public class IngestionDTO {
 	private Map<String, List<String>> acl;
 	private String scheduleId;
 	private boolean last = false;
+	private PayloadType type;
 }

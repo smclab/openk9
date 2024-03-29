@@ -19,6 +19,7 @@ package io.openk9.ingestion.web;
 
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.ingestion.IngestionUtils;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.BinaryPayload;
 import io.openk9.ingestion.dto.IngestionDTO;
@@ -103,9 +104,19 @@ public class IngestionEmitter {
 				_dtoToPayload(dto.getResources()),
 				mappingAcl,
 				dto.getScheduleId(),
-				dto.getLast()
+				dto.getLast(),
+				_mapType(dto.getType())
 			)
 		);
+	}
+
+	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
+		return switch (type) {
+			case DOCUMENT -> PayloadType.DOCUMENT;
+			case LAST -> PayloadType.LAST;
+			case HALT -> PayloadType.HALT;
+			case UNRECOGNIZED -> null;
+		};
 	}
 
 	private IngestionPayloadWrapper _of(IngestionDTO dto) {
@@ -122,7 +133,8 @@ public class IngestionEmitter {
 				_dtoToPayload(dto.getResources()),
 				dto.getAcl(),
 				dto.getScheduleId(),
-				dto.isLast()
+				dto.isLast(),
+				dto.getType()
 			)
 		);
 	}
