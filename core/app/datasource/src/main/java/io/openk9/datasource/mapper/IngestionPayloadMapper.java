@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.common.util.IngestionUtils;
+import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import org.mapstruct.Mapper;

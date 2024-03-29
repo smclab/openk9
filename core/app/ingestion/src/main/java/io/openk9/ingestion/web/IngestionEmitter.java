@@ -17,8 +17,8 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.common.util.IngestionUtils;
 import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.BinaryPayload;
 import io.openk9.ingestion.dto.IngestionDTO;

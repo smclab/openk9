@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.common.util.ingestion;
 
 import java.util.Map;
 
@@ -23,5 +23,7 @@ public class IngestionUtils {
 	public static String[] getDocumentTypes(Map<String, Object> datasourcePayload) {
 		return datasourcePayload.keySet().toArray(new String[0]);
 	}
+
+	private IngestionUtils() {}
 
 }
