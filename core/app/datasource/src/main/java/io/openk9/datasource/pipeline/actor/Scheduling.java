@@ -407,22 +407,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
 					tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
-						.map(datasource -> {
+						.flatMap(datasource -> {
 							datasource.setLastIngestionDate(lastIngestionDate);
+
 							if (newDataIndexId != null) {
-								return s.find(DataIndex.class, newDataIndexId)
-									.map(newDataIndex -> {
-										log.infof(
-											"replacing dataindex %s for datasource %s on tenant %s",
-											newDataIndexId, datasourceId, tenantId
-										);
-										datasource.setDataIndex(newDataIndex);
-										return datasource;
-									});
+								var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
+
+								log.infof(
+									"replacing dataindex %s for datasource %s on tenant %s",
+									newDataIndexId, datasourceId, tenantId
+								);
+
+								datasource.setDataIndex(newDataIndex);
 							}
-							return datasource;
+
+							return s.persist(datasource);
 						})
-						.flatMap(s::persist)
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
