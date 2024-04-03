@@ -238,7 +238,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 	@Override
 	public int getLastTokenCount() {
-		return 3;
+		return 5;
 	}
 
 }
