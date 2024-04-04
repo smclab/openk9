@@ -35,8 +35,8 @@ function SelectComponent({
   classLabel = "visually-hidden",
   label = "Ordinamento",
 }: TypeSelectComponent) {
+  if (selectOptions.length === 0) return null;
   const keyLanguage = `label.${language}` as keyof Field["translationMap"];
-
   return (
     <div>
       <label htmlFor="custom-select-sort" className={classLabel}>
