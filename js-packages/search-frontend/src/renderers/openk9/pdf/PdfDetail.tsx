@@ -75,7 +75,7 @@ export function PdfDetail({ result }: PdfDetailProps) {
         </ResultLinkTwo>
       </div>
       <div style={{ marginTop: "15px" }}>
-        {result.source.resources.binaries.map((binary) => {
+        {result.source.resources?.binaries.map((binary) => {
           const url = `/api/file-manager/v1/download/byte/${binary.resourceId}/${result.source.tenantId}`;
           return (
             <ViewIfUrlOk key={binary.id} url={url}>
