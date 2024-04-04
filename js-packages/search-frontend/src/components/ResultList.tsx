@@ -13,6 +13,7 @@ import { ResultSvg } from "../svgElement/ResultSvg";
 import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
+import SortResults, { Options } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -25,7 +26,7 @@ type ResultsProps<E> = {
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
   sort: SortField[];
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: (sortResultNew: SortField | undefined) => void;
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
   overChangeCard?: boolean;
@@ -36,6 +37,7 @@ type ResultsProps<E> = {
   numberOfResults: number;
   label?: string | null | undefined;
   counterIsVisible?: boolean;
+  selectOptions: Options;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -57,6 +59,7 @@ function Results<E>({
   numberOfResults,
   label,
   counterIsVisible = false,
+  selectOptions,
   setIdPreview,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -82,6 +85,7 @@ function Results<E>({
           label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
+          selectOptions={selectOptions}
         />
       );
     case "infinite":
@@ -103,6 +107,7 @@ function Results<E>({
           label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
+          selectOptions={selectOptions}
         />
       );
     case "virtual":
@@ -123,6 +128,7 @@ function Results<E>({
           label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
+          selectOptions={selectOptions}
         />
       );
   }
@@ -132,24 +138,24 @@ export const ResultsMemo = React.memo(Results);
 
 type ResultCountProps = {
   children: number | undefined;
-  setSortResult: (sortResultNew: SortField) => void;
-  isMobile: boolean;
   addClass?: string;
   label?: string | undefined | null;
   results: any;
   counterIsVisible: boolean;
-  language?: string;
+  selectOptions: Options;
+  language: string;
+  setSortResult: (sortResultNew: SortField | undefined) => void;
 };
 
 function ResultCount({
   children,
-  setSortResult,
-  isMobile,
   addClass,
   label,
-  language,
   results,
   counterIsVisible,
+  selectOptions,
+  language,
+  setSortResult,
 }: ResultCountProps) {
   const client = useOpenK9Client();
   const { t } = useTranslation();
@@ -231,10 +237,11 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultListMemo
-              setSortResult={setSortResult}
-              relevance={t("relevance") || "relevance"}
+            <SortResults
               language={language}
+              selectOptions={selectOptions}
+              setSortResult={setSortResult}
+              labelDefault=""
             />
           </span>
         </div>
@@ -262,6 +269,9 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
   label: string | null | undefined;
   counterIsVisible: boolean;
+  selectOptions: Options;
+  language: string;
+  setSortResult: (sortResultNew: SortField | undefined) => void;
 };
 export function FiniteResults<E>({
   renderers,
@@ -269,7 +279,6 @@ export function FiniteResults<E>({
   onDetail,
   setDetailMobile,
   sort,
-  setSortResult,
   isMobile,
   overChangeCard = false,
   language,
@@ -279,6 +288,8 @@ export function FiniteResults<E>({
   label,
   counterIsVisible,
   setIdPreview,
+  selectOptions,
+  setSortResult,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -308,11 +319,11 @@ export function FiniteResults<E>({
         >
           <ResultCount
             counterIsVisible={counterIsVisible}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
             label={label}
             results={results}
             language={language}
+            selectOptions={selectOptions}
+            setSortResult={setSortResult}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -344,6 +355,9 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   label?: string | undefined | null;
   counterIsVisible: boolean;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
+  selectOptions: Options;
+  language: string;
+  setSortResult: (sortResultNew: SortField | undefined) => void;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -362,6 +376,7 @@ export function InfiniteResults<E>({
   label,
   counterIsVisible,
   setIdPreview,
+  selectOptions,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -401,11 +416,11 @@ export function InfiniteResults<E>({
         >
           <ResultCount
             counterIsVisible={counterIsVisible}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
             label={label}
             results={results}
             language={language}
+            selectOptions={selectOptions}
+            setSortResult={setSortResult}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -476,12 +491,13 @@ export function InfiniteResults<E>({
       ) : (
         <React.Fragment>
           <ResultCount
-            setSortResult={setSortResult}
-            isMobile={isMobile}
             addClass="openk9-container-no-results"
             label={label}
             results={result}
             counterIsVisible={counterIsVisible}
+            language={language}
+            selectOptions={selectOptions}
+            setSortResult={setSortResult}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -496,6 +512,9 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
   label?: string | undefined | null;
   counterIsVisible: boolean;
+  selectOptions: Options;
+  language: string;
+  setSortResult: (sortResultNew: SortField | undefined) => void;
 };
 export function VirtualResults<E>({
   renderers,
@@ -512,6 +531,7 @@ export function VirtualResults<E>({
   numberOfResults,
   label,
   counterIsVisible,
+  selectOptions,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -536,11 +556,11 @@ export function VirtualResults<E>({
     >
       {thereAreResults && (
         <ResultCount
-          setSortResult={setSortResult}
-          isMobile={isMobile}
           label={label}
           results={results}
           counterIsVisible={counterIsVisible}
+          selectOptions={selectOptions}
+          setSortResult={setSortResult}
           language={language}
         >
           {results.data?.pages[0].total}
@@ -627,6 +647,8 @@ export function useInfiniteResults<E>(
 ) {
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
+  const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
+
   return useInfiniteQuery(
     ["results", searchQuery, sort, language, sortAfterKey] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
@@ -635,8 +657,8 @@ export function useInfiniteResults<E>(
       return client.doSearch<E>({
         range: RangePage,
         language,
-        searchQuery,
-        sort,
+        searchQuery: searchQueryData,
+        sort: sortData && [sortData],
         sortAfterKey: sortAfterKey || "",
       });
     },
@@ -655,4 +677,19 @@ export function useInfiniteResults<E>(
       notifyOnChangeProps: ["isFetching"],
     },
   );
+}
+function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {
+  const searchQueryData = searchQuery.filter(
+    (info) => !info.hasOwnProperty("isSort"),
+  );
+  const sortData = searchQuery.find((info) => info.hasOwnProperty("isSort"));
+  const sort =
+    sortData && sortData.hasOwnProperty("sort")
+      ? (sortData as any).sort
+      : undefined;
+
+  return {
+    searchQueryData,
+    sortData: sort ? sort : undefined,
+  };
 }

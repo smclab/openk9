@@ -278,6 +278,12 @@ type SelectProps = {
   element: Element | string | null;
   options: Options;
   extraClass?: string;
+  handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+};
+
+type SortResultsProps = {
+  element: Element | string | null;
+  extraClass?: string;
 };
 
 type totalResultProps = {
@@ -340,6 +346,7 @@ export type Configuration = {
   searchMobile: SearchMobileConfiguration | null;
   select: SelectProps | null;
   sortableConfigurable: SortableProps | null;
+  sortResults: SortResultsProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
   sortResultListCustom: SortResultListCustomProps | null;
   tabsConfigurable: TabsProps | null;
@@ -385,6 +392,7 @@ const defaultConfiguration: Configuration = {
   searchMobile: null,
   searchReplaceText: true,
   sort: [],
+  sortResults: null,
   sortable: null,
   sortableConfigurable: null,
   sortResultConfigurable: null,

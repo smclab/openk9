@@ -2,12 +2,13 @@ import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { SearchToken } from "./client";
+import { SearchToken, SortField } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";
 import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
+import { Options } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -21,8 +22,8 @@ type TabsProps = {
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?:number
-  filterResetOnChange:React.Dispatch<SelectionsAction>;
+  pxHiddenRightArrow?: number;
+  filterResetOnChange: React.Dispatch<SelectionsAction>;
 };
 function Tabs({
   tabs,
@@ -32,10 +33,11 @@ function Tabs({
   language,
   onAction,
   scrollMode = true,
-  speed=10,
-  distance=700,
-  step=30,
-  pxHiddenRightArrow=91,
+  speed = 10,
+  distance = 700,
+  step = 30,
+  pxHiddenRightArrow = 91,
+
   filterResetOnChange,
 }: TabsProps) {
   const elementRef = React.useRef(null);
@@ -52,14 +54,14 @@ function Tabs({
     speed: number;
     distance: number;
     step: number;
-  }) => {    
-      element.scrollLeft += step;
-      scrollAmount += Math.abs(step);
-      if (element.scrollLeft === 0) {
-        setArrowDisable(true);
-      } else {
-        setArrowDisable(false);
-      }
+  }) => {
+    element.scrollLeft += step;
+    scrollAmount += Math.abs(step);
+    if (element.scrollLeft === 0) {
+      setArrowDisable(true);
+    } else {
+      setArrowDisable(false);
+    }
   };
 
   return !scrollMode ? (
@@ -191,7 +193,7 @@ function Tabs({
                 onClick={() => {
                   onSelectedTabIndexChange(index);
                   onConfigurationChange({ filterTokens: [] });
-                  filterResetOnChange({type:"reset-filters"})
+                  filterResetOnChange({ type: "reset-filters" });
                   if (onAction) onAction();
                   resetFilterCalendar();
                 }}
@@ -295,6 +297,7 @@ export type Tab = {
   label: string;
   tokens: Array<SearchToken>;
   translationMap: { [key: string]: string };
+  sortings: Options;
 };
 
 export function useTabTokens(): Array<Tab> {

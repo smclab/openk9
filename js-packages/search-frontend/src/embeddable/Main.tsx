@@ -50,6 +50,7 @@ import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
+import SortResults, { Options } from "../components/SortResults";
 
 type MainProps = {
   configuration: Configuration;
@@ -98,14 +99,17 @@ export function Main({
     useQueryStringFilters,
   });
   const { i18n } = useTranslation();
-  const { sort, setSortResult } = useSortResult({
-    configuration,
-    onConfigurationChange,
-  });
-  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
-    configuration.overrideTabs,
-    languageSelect,
-  );
+
+  const {
+    tabs,
+    selectedTabIndex,
+    setSelectedTabIndex,
+    tabTokens,
+    sortList,
+    tabSelected,
+    setSort,
+  } = useTabs(configuration.overrideTabs, languageSelect);
+
   const {
     searchQuery,
     spans,
@@ -117,7 +121,7 @@ export function Main({
     ? useSearchOnClick({
         configuration,
         debounceTimeSearch,
-        tabTokens,
+        tabTokens: { tabToken: tabTokens.tabTokens, sort: tabTokens.sort },
         filterTokens,
         dateTokens,
         onQueryStateChange,
@@ -128,7 +132,7 @@ export function Main({
     : useSearch({
         configuration,
         debounceTimeSearch,
-        tabTokens,
+        tabTokens: { tabToken: tabTokens.tabTokens, sort: tabTokens.sort },
         filterTokens,
         dateTokens,
         onQueryStateChange,
@@ -432,7 +436,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={true}
               language={languageSelect}
@@ -440,6 +444,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
+              selectOptions={sortList}
             />
           )}
         </I18nextProvider>,
@@ -480,7 +485,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={configuration.resultList?.changeOnOver || false}
               language={languageSelect}
@@ -492,6 +497,7 @@ export function Main({
                 configuration.resultList?.counterIsVisible || false
               }
               label={configuration.resultList?.label}
+              selectOptions={sortList}
             />
           )}
         </I18nextProvider>,
@@ -507,7 +513,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={false}
               language={languageSelect}
@@ -542,7 +548,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <SortResultListCustom
             classTab={tabs[selectedTabIndex]?.label}
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             selectOptions={
               configuration.sortResultListCustom?.selectOptions ?? []
             }
@@ -554,14 +560,14 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultListMemo setSortResult={setSortResult} />
+          <SortResultListMemo setSortResult={setSort} />
         </I18nextProvider>,
         configuration.sortable,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListMemo
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             relevance={configuration.sortableConfigurable?.relevance}
           />
         </I18nextProvider>,
@@ -572,7 +578,7 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListMemo
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             relevance={configuration.sortResultConfigurable?.relevance}
             HtmlString={
               configuration.sortResultConfigurable?.htmlKey || undefined
@@ -598,13 +604,25 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <SelectComponent
             language={languageSelect}
-            selectOptions={configuration.select?.options ?? []}
+            selectOptions={[]}
             extraClass={configuration.select?.extraClass}
-            setSortResult={setSortResult}
             labelDefault=""
+            handleChange={configuration.select?.handleChange}
           />
         </I18nextProvider>,
         configuration.select ? configuration.select?.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SortResults
+            language={languageSelect}
+            selectOptions={sortList ?? []}
+            extraClass={configuration.sortResults?.extraClass}
+            setSortResult={setSort}
+            labelDefault=""
+          />
+        </I18nextProvider>,
+        configuration.sortResults ? configuration.sortResults?.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -766,7 +784,7 @@ export function Main({
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             isMobile={isMobile}
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
             onRemoveFilterToken={removeFilterToken}
@@ -798,7 +816,7 @@ function useSearchOnClick({
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
-  tabTokens: SearchToken[];
+  tabTokens: { tabToken: any; sort: any };
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
@@ -846,12 +864,19 @@ function useSearchOnClick({
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
-      ...tabTokens,
+      ...(tabTokens?.tabToken ?? []),
       ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
+      ...(tabTokens?.sort ? [tabTokens.sort] : []),
     ],
-    [defaultTokens, tabTokens, newTokenFilter, searchTokens, dateTokens],
+    [
+      defaultTokens,
+      tabTokens?.tabToken,
+      newTokenFilter,
+      searchTokens,
+      dateTokens,
+    ],
   );
 
   const searchQuery = useDebounce(searchQueryMemo, 600);
@@ -862,7 +887,7 @@ function useSearchOnClick({
   React.useEffect(() => {
     onQueryStateChange({
       defaultTokens,
-      tabTokens,
+      tabTokens: tabTokens?.tabToken ?? [],
       filterTokens,
       searchTokens,
     });
@@ -870,7 +895,7 @@ function useSearchOnClick({
   }, [
     onQueryStateChange,
     defaultTokens,
-    tabTokens,
+    // tabTokens.tabToken,
     //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
@@ -935,7 +960,7 @@ function useSearch({
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
-  tabTokens: SearchToken[];
+  tabTokens: { tabToken: any; sort: any };
   filterTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   dateTokens: SearchToken[];
@@ -989,10 +1014,11 @@ function useSearch({
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
-      ...tabTokens,
+      ...tabTokens?.tabToken,
       ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
+      ...tabTokens?.sort,
     ],
     [defaultTokens, tabTokens, newTokenFilter, dateTokens, searchTokens],
   );
@@ -1006,7 +1032,7 @@ function useSearch({
   React.useEffect(() => {
     onQueryStateChange({
       defaultTokens,
-      tabTokens,
+      tabTokens: tabTokens?.tabToken,
       filterTokens,
       searchTokens,
     });
@@ -1014,7 +1040,7 @@ function useSearch({
   }, [
     onQueryStateChange,
     defaultTokens,
-    tabTokens,
+    tabTokens?.tabToken,
     //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
@@ -1074,13 +1100,50 @@ function useTabs(
     [tenantTabs, overrideTabs, language],
   );
 
+  const tabSelected = React.useMemo(
+    () => tabs[selectedTabIndex],
+    [tabs, selectedTabIndex],
+  );
+  const sortList = tabSelected?.sortings;
+
   const tabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
+    const sort = sortList && sortList[0] ? { ...sortList[0] } : undefined;
+    const sortField: SortField = {
+      [sort?.field || ""]: {
+        sort: sort?.type as "asc" | "desc",
+        missing: "_last",
+      },
+    };
     const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
-    return completeTab ?? [];
-  }, [selectedTabIndex, tabs, language]);
 
-  return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
+    return (
+      {
+        tabTokens: completeTab,
+        sort: sort?.field ? { sort: sortField, isSort: true } : undefined,
+      } ?? {}
+    );
+  }, [selectedTabIndex, tabs, language]);
+  const [tabsValue, setTabsValue] = React.useState(tabTokens);
+  React.useEffect(() => {
+    setTabsValue(tabTokens);
+  }, [tabTokens]);
+
+  const setSort = (sortField: SortField | undefined) => {
+    setTabsValue({
+      ...tabTokens,
+      sort: sortField ? { sort: sortField, isSort: true } : undefined,
+    });
+  };
+  return {
+    tabTokens: tabsValue,
+    tabs,
+    selectedTabIndex,
+    setSelectedTabIndex,
+    sortList,
+    tabSelected,
+    setSort,
+  };
 }
 
 function recoveryDataBackEnd() {
@@ -1100,7 +1163,13 @@ function recoveryDataBackEnd() {
   const languages = useQuery(["date-label-languages", {}], async () => {
     return await client.getLanguages();
   });
-  return { dynamicFilters, languageQuery, whoIsDynamicResponse, languages };
+
+  return {
+    dynamicFilters,
+    languageQuery,
+    whoIsDynamicResponse,
+    languages,
+  };
 }
 
 function useFilters({
@@ -1172,23 +1241,22 @@ function useFilters({
 }
 
 function useSortResult({
-  configuration,
   onConfigurationChange,
 }: {
-  configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
+  tabSelected: Tab;
+  sortList: Options;
 }) {
-  const sort = configuration.sort;
   const setSortResult = React.useCallback(
-    (sortResultNew: SortField) => {
-      onConfigurationChange((configuration) => ({
-        sort: [sortResultNew],
+    (sortResultNew: SortField | undefined) => {
+      onConfigurationChange(() => ({
+        sort: sortResultNew ? [sortResultNew] : undefined,
       }));
     },
-    [onConfigurationChange, sort],
+    [onConfigurationChange],
   );
 
-  return { sort, setSortResult };
+  return { setSortResult };
 }
 
 export type SearchDateRange = {
