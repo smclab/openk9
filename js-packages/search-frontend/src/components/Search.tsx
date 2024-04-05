@@ -3,36 +3,18 @@ import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { TokenSelect } from "../components/TokenSelect";
-import {
-  Configuration,
-  ConfigurationUpdateFunction,
-} from "../embeddable/entry";
-import { useClickAway } from "./useClickAway";
-import {
-  AnalysisResponseEntry,
-  AnalysisToken,
-  GenericResultItem,
-  SearchToken,
-  SortField,
-} from "./client";
-import {
-  SelectionsAction,
-  SelectionsActionOnClick,
-  SelectionsState,
-  SelectionsStateOnClick,
-} from "./useSelections";
-import { SearchDateRange } from "../embeddable/Main";
+import { Configuration } from "../embeddable/entry";
+import { AnalysisResponseEntry, AnalysisToken, SearchToken } from "./client";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
-import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
-import { divide } from "lodash";
+import { useClickAway } from "./useClickAway";
 
 type SearchProps = {
   configuration: Configuration;
-  onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState | SelectionsStateOnClick;
-  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
+  selectionsState: SelectionsState;
+  selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
   isMobile: boolean;
   filtersSelect: SearchToken[];
@@ -40,6 +22,8 @@ type SearchProps = {
   mobileVersion?: boolean;
   btnSearch?: boolean;
   defaultValue?: string;
+  actionOnClick?(): void;
+  customMessageSearch?: string;
   isSearchOnInputChange?: boolean;
   htmlKey?: string | undefined | null;
   textOnQueryStringOnCLick?: string | null | undefined;
@@ -54,34 +38,24 @@ export function Search({
   spans,
   selectionsState,
   selectionsDispatch,
-  onDetail,
   showSyntax,
   isMobile,
-  textOnQueryStringOnCLick,
-  mobileVersion = false,
   btnSearch = false,
-  actionCloseMobileVersion,
   isSearchOnInputChange = false,
-  saveSearchQuery,
-  defaultValue,
   htmlKey,
+  customMessageSearch,
   messageSearchIsVisible = true,
+  actionOnClick,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
   const [openedDropdown, setOpenedDropdown] = React.useState<{
     textPosition: number;
     optionPosition: number;
-  } | null>(null);
+  } | null>({ textPosition: 0, optionPosition: 1 });
 
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
-
-  const text =
-    textOnQueryStringOnCLick && textOnQueryStringOnCLick !== ""
-      ? textOnQueryStringOnCLick
-      : defaultValue;
-  const [textBtn, setTextBtn] = React.useState<string | undefined>(text);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -93,19 +67,13 @@ export function Search({
       inputRef.current.selectionEnd = adjustedSelection.selectionEnd;
     }
   }, [adjustedSelection]);
-  React.useEffect(() => {
-    if ((defaultValue !== null || defaultValue !== undefined) && btnSearch) {
-      selectionsDispatch({
-        type: "set-text",
-        text: defaultValue,
-        textOnchange: defaultValue,
-        onClick: btnSearch,
-      });
-      if (defaultValue !== "") setTextBtn(defaultValue);
-    }
-  }, [defaultValue]);
 
+  const { setText, search, clearSearch } = setValueSearch({
+    isBtn: btnSearch,
+    selectionsDispatch: selectionsDispatch,
+  });
   const { t } = useTranslation();
+
   return (
     <React.Fragment>
       <div
@@ -165,49 +133,39 @@ export function Search({
                 padding: var(--openk9-embeddable-search--input-padding);
                 display: flex;
                 position: absolute;
+                @media (max-width: 480px) {
+                  display: none;
+                }
               `}
             >
-              {!isMobile &&
-                showSyntax &&
+              {showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
                     openedDropdown !== null &&
                     openedDropdown.textPosition > span.start &&
-                    openedDropdown.textPosition <= span.end;
+                    openedDropdown.textPosition <= span.end &&
+                    span.tokens.length > 0;
                   const optionIndex = openedDropdown?.optionPosition ?? null;
                   const selection = selectionsState.selection.find(
                     (selection) =>
                       selection.start === span.start &&
                       selection.end === span.end,
                   );
+
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
-                    if (isSearchOnInputChange) {
-                      selectionsDispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token,
-                          isAuto: false,
-                        },
-                      });
-                    } else {
-                      selectionsDispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          textOnChange: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token,
-                          isAuto: false,
-                        },
-                      });
-                    }
+                    selectionsDispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        textOnChange: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token,
+                        isAuto: autoSelect,
+                      },
+                    });
                     if (
                       inputRef.current?.selectionStart &&
                       inputRef.current?.selectionEnd
@@ -217,25 +175,6 @@ export function Search({
                         selectionEnd: inputRef.current.selectionEnd,
                       });
                     }
-                    setOpenedDropdown(null);
-                  };
-                  const onSelectText = (token: AnalysisToken | null): void => {
-                    if (token)
-                      selectionsDispatch({
-                        type: "set-text",
-                        text: token.value,
-                        onClick: btnSearch,
-                      });
-                    if (
-                      inputRef.current?.selectionStart &&
-                      inputRef.current?.selectionEnd
-                    ) {
-                      setAdjustedSelection({
-                        selectionStart: inputRef.current.selectionStart,
-                        selectionEnd: inputRef.current.selectionEnd,
-                      });
-                    }
-                    setOpenedDropdown(null);
                   };
                   const isAutoSelected = selection?.isAuto ?? false;
                   const onOptionIndexChange = (optionIndex: number) => {
@@ -254,20 +193,25 @@ export function Search({
                       optionIndex={optionIndex}
                       selected={selected}
                       onSelect={onSelect}
-                      onSelectText={onSelectText}
+                      // onSelectText={onSelectText}
                       isAutoSlected={isAutoSelected}
                       setOpenedDropdown={setOpenedDropdown}
                       selectionsDispatch={selectionsDispatch}
                       isColorSearch={isSearchOnInputChange}
-                      setTextBtn={setTextBtn}
                       isBtnSearch={btnSearch}
+                      search={search}
                     />
                   );
                 })}
             </div>
-            <label htmlFor="search-openk9" className="visually-hidden">
-              Search
-            </label>
+            {!htmlKey && (
+              <label
+                htmlFor="search-openk9"
+                className="visually-hidden label-search"
+              >
+                Search
+              </label>
+            )}
             <input
               className="openk9--input-search"
               autoComplete="off"
@@ -276,33 +220,9 @@ export function Search({
               aria-describedby="message-search"
               type="text"
               placeholder={t("search") || "search..."}
-              value={btnSearch ? textBtn ?? "" : selectionsState.text}
+              value={selectionsState.textOnChange}
               onChange={(event) => {
-                if (!btnSearch) {
-                  selectionsDispatch({
-                    type: "set-text",
-                    text: event.currentTarget.value,
-                    textOnchange: event.currentTarget.value,
-                    onClick: btnSearch,
-                  });
-                  onDetail(null);
-                  setOpenedDropdown(null);
-                } else {
-                  setTextBtn(event.currentTarget.value);
-                  if (isSearchOnInputChange) {
-                    selectionsDispatch({
-                      type: "set-text",
-                      text: event.currentTarget.value,
-                      onClick: btnSearch,
-                    });
-                  } else {
-                    selectionsDispatch({
-                      type: "set-text",
-                      textOnchange: event.currentTarget.value,
-                      onClick: btnSearch,
-                    });
-                  }
-                }
+                setText(event.currentTarget.value);
               }}
               css={css`
                 position: relative;
@@ -355,7 +275,7 @@ export function Search({
                       optionPosition:
                         openedDropdown.optionPosition < span.tokens.length
                           ? openedDropdown.optionPosition + 1
-                          : 0,
+                          : 1,
                     });
                   }
                 } else if (event.key === "ArrowUp") {
@@ -363,56 +283,31 @@ export function Search({
                   if (openedDropdown && openedDropdown.optionPosition > 0) {
                     setOpenedDropdown({
                       textPosition: openedDropdown.textPosition,
-                      optionPosition: openedDropdown.optionPosition - 1,
+                      optionPosition:
+                        openedDropdown.optionPosition === 1
+                          ? span?.tokens.length || 1
+                          : openedDropdown.optionPosition - 1,
                     });
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
-                  if (btnSearch) {
-                    if (textBtn === "") {
-                      selectionsDispatch({
-                        type: "reset-search",
-                      });
-                    } else {
-                      selectionsDispatch({
-                        type: "set-text",
-                        text: option?.value,
-                        textOnchange: option?.value,
-                        onClick: btnSearch,
-                      });
-                    }
+                  if (actionOnClick) {
+                    actionOnClick();
                   }
-
-                  if (btnSearch && option?.value) setTextBtn(option?.value);
-
-                  if (span) {
-                    if (isSearchOnInputChange) {
-                      selectionsDispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span.text,
-                          start: span.start,
-                          end: span.end,
-                          token: option ?? null,
-                          isAuto: false,
-                        },
-                      });
-                    } else {
-                      selectionsDispatch({
-                        type: "set-selection",
-                        replaceText,
-                        selection: {
-                          text: span?.text || "",
-                          textOnChange: span?.text || "",
-                          start: span?.start || 0,
-                          end: span?.end || 0,
-                          token: option ?? null,
-                          isAuto: false,
-                        },
-                      });
-                    }
-                    if (replaceText) {
+                  if (span && option) {
+                    selectionsDispatch({
+                      type: "set-selection",
+                      replaceText,
+                      selection: {
+                        text: span.text,
+                        textOnChange: span.text,
+                        start: span.start,
+                        end: span.end,
+                        token: option ?? null,
+                        isAuto: false,
+                      },
+                    });
+                    if (replaceText && option) {
                       const text =
                         option &&
                         (option.tokenType === "ENTITY"
@@ -432,18 +327,16 @@ export function Search({
                         selectionEnd: event.currentTarget.selectionEnd,
                       });
                     }
-                    setOpenedDropdown(null);
                   }
-                } else if (event.key === "Escape") {
-                  setOpenedDropdown(null);
                 }
               }}
             ></input>
             {messageSearchIsVisible && (
               <p className="visually-hidden" id="message-search">
-                {t(
-                  "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
-                ) ||
+                {customMessageSearch ||
+                  t(
+                    "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",
+                  ) ||
                   "insert text to set the value or use up and down arrow keys to navigate the suggestion box"}
               </p>
             )}
@@ -464,23 +357,7 @@ export function Search({
               border: "none",
             }}
             onClick={() => {
-              if (!btnSearch) {
-                selectionsDispatch({
-                  type: "set-text",
-                  text: "",
-                  onClick: btnSearch,
-                });
-              } else {
-                selectionsDispatch({
-                  type: "set-text",
-                  textOnchange: " ",
-                  text: " ",
-                  onClick: btnSearch,
-                });
-                setTextBtn("");
-                onDetail(null);
-                setOpenedDropdown(null);
-              }
+              clearSearch();
             }}
           >
             <div>
@@ -516,20 +393,9 @@ export function Search({
                 cursor: pointer;
               `}
               onClick={() => {
-                if (textBtn === "") {
-                  selectionsDispatch({
-                    type: "reset-search",
-                  });
-                } else {
-                  selectionsDispatch({
-                    type: "set-text",
-                    text: textBtn,
-                    textOnchange: textBtn,
-                    onClick: btnSearch,
-                  });
-                }
-                onDetail(null);
-                setOpenedDropdown(null);
+                inputRef &&
+                  inputRef.current &&
+                  search(inputRef?.current?.value || "");
               }}
             >
               <svg
@@ -547,3 +413,45 @@ export function Search({
     </React.Fragment>
   );
 }
+
+function setValueSearch({
+  isBtn,
+  selectionsDispatch,
+}: {
+  isBtn: boolean;
+  selectionsDispatch: (action: SelectionsAction) => void;
+}) {
+  const setText = (text: string) =>
+    !isBtn
+      ? selectionsDispatch({
+          type: "set-text",
+          text: text,
+          textOnchange: text,
+        })
+      : selectionsDispatch({
+          type: "set-text-btn",
+          textOnchange: text,
+        });
+  const search = (text: string) =>
+    selectionsDispatch({
+      type: "set-text",
+      text: text,
+      textOnchange: text,
+    });
+  const clearSearch = () =>
+    selectionsDispatch({
+      type: "reset-search",
+    });
+  return { setText, search, clearSearch };
+}
+
+export const SearchMemo = React.memo(Search);
+
+type Selection = {
+  text: string;
+  textOnChange: string;
+  start: number;
+  end: number;
+  token: AnalysisToken | null;
+  isAuto: boolean;
+};

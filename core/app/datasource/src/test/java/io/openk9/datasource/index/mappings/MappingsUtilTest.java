@@ -1,10 +1,27 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.index.mappings;
 
+import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,94 +40,8 @@ class MappingsUtilTest {
 		Assertions.assertEquals(expectedJson, JsonObject.mapFrom(result));
 	}
 
-	private static final Object expectedJson = Json.decodeValue("""
-	{
-	  "properties": {
-		"complexNumber": {
-		  "properties": {
-			"realPart": {
-			  "type": "integer"
-			},
-			"imaginaryPart": {
-			  "type": "integer"
-			}
-		  }
-		},
-		"title": {
-		  "type": "text",
-		  "fields": {
-			"keyword": {
-			  "type": "keyword"
-			},
-			"trigram": {
-			  "type": "text",
-			  "analyzer": "trigram"
-			}
-		  }
-		},
-		"address": {
-		  "properties": {
-			"street": {
-			  "type": "text",
-			  "fields": {
-				"keyword": {
-				  "type": "keyword"
-				},
-				"search_as_you_type": {
-				  "type": "search_as_you_type"
-				}
-			  }
-			},
-			"number": {
-			  "type": "integer"
-			}
-		  }
-		},
-		"web": {
-		  "properties": {
-		  	"title": {
-		  		"type": "text"
-		  	},
-			"description": {
-			  "properties": {
-				"base": {
-				  "type": "text",
-				  "fields": {
-					"keyword": {
-					  "type": "keyword",
-					  "ignore_above": 256
-					}
-				  }
-				},
-				"i18n": {
-				  "properties": {
-					"en_US": {
-					  "type": "text",
-					  "fields": {
-						"keyword": {
-						  "type": "keyword",
-						  "ignore_above": 256
-						}
-					  }
-					},
-					"de_DE": {
-					  "type": "text",
-					  "fields": {
-						"keyword": {
-						  "type": "keyword",
-						  "ignore_above": 256
-						}
-					  }
-					}
-				  }
-				}
-			  }
-			}
-		  }
-		}
-	  }
-	}
-	""");
+	private static final Object expectedJson = TestUtils.getResourceAsJsonObject(
+		"es/mappings_request.json");
 
 	private static final DocType defaultDocType, webDocType;
 	private static final DocTypeField
@@ -133,7 +64,8 @@ class MappingsUtilTest {
 		descriptionEn,
 		descriptionEnKeyword,
 		descriptionDe,
-		descriptionDeKeyword;
+		descriptionDeKeyword,
+		emptyObject;
 
 	static {
 		defaultDocType = new DocType();
@@ -278,6 +210,11 @@ class MappingsUtilTest {
 		descriptionDeKeyword.setParentDocTypeField(descriptionDe);
 		descriptionDeKeyword.setJsonConfig("{\"ignore_above\":256}");
 
+		emptyObject = new DocTypeField();
+		emptyObject.setDocType(webDocType);
+		emptyObject.setFieldName("emptyObject");
+		emptyObject.setFieldType(FieldType.OBJECT);
+
 		descriptionDe.setSubDocTypeFields(Set.of(descriptionDeKeyword));
 
 		descriptionI18n.setSubDocTypeFields(new LinkedHashSet<>(List.of(
@@ -309,7 +246,8 @@ class MappingsUtilTest {
 			descriptionEn,
 			descriptionEnKeyword,
 			descriptionDe,
-			descriptionDeKeyword
+			descriptionDeKeyword,
+			emptyObject
 		)));
 	}
 

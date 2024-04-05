@@ -29,13 +29,14 @@ import lombok.experimental.SuperBuilder;
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class PluginDriverDTO extends K9EntityDTO {
 	@NotNull
 	private PluginDriver.PluginDriverType type;
+	private PluginDriver.Provisioning provisioning;
 	@Json
 	private String jsonConfig;
 }

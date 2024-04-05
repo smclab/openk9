@@ -1,5 +1,24 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.processor.indexwriter;
 
+import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
@@ -8,12 +27,9 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DocTypeService;
-import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -24,9 +40,6 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,55 +47,60 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class IndexerEvents {
 
-	public void requestAndForget(DataIndex dataIndex, List<String> docTypes) {
-		eventBus.requestAndForget(
-			"createOrUpdateDataIndex",
-			new JsonObject()
-				.put("dataIndex", JsonObject.mapFrom(dataIndex))
-				.put("docTypes", new JsonArray(docTypes))
-		);
-	}
+	@Inject
+	RestHighLevelClient client;
+	@Inject
+	IndexService indexService;
+	@Inject
+	DocTypeService docTypeService;
+	@Inject
+	ActorSystemProvider actorSystemProvider;
 
-	public Uni<Void> generateDocTypeFields(DataIndex dataIndex) {
+	public Uni<Void> generateDocTypeFields(Mutiny.Session session, DataIndex dataIndex) {
 
 		if (dataIndex == null) {
-			return Uni.createFrom().failure(
-				new IllegalArgumentException("dataIndexId is null"));
+			return Uni.createFrom().failure(new IllegalArgumentException("dataIndexId is null"));
 		}
 
-		return indexService.getMappings(dataIndex.getName())
+		return indexService
+			.getMappings(dataIndex.getName())
 			.map(IndexerEvents::toDocTypeFields)
-			.plug(docTypeFields -> Uni
-				.combine()
-				.all()
-				.unis(docTypeFields, _getDocumentTypes(dataIndex.getName()))
+			.plug(docTypeFields -> Uni.combine().all()
+				.unis(
+					docTypeFields,
+					_getDocumentTypes(dataIndex.getName())
+				)
 				.asTuple()
 			)
 			.map(IndexerEvents::toDocTypeAndFieldsGroup)
-			.call(_persistDocType(dataIndex))
+			.call(map -> _persistDocType(map, dataIndex, session))
 			.replaceWithVoid();
 	}
 
-	@ConsumeEvent("createOrUpdateDataIndex")
-	@ActivateRequestContext
-	public Uni<Void> createOrUpdateDataIndex(JsonObject jsonObject) {
+	public Uni<Void> generateDocTypeFields(
+		Mutiny.Session session,
+		DataIndex dataIndex,
+		Map<String, Object> mappings,
+		List<String> documentTypes) {
 
-		return Uni.createFrom().deferred(() -> {
+		var docTypeFields = IndexerEvents.toDocTypeFields(mappings);
 
-			DataIndex dataIndex = jsonObject.getJsonObject("dataIndex").mapTo(DataIndex.class);
+		var docTypeAndFieldsGroup = IndexerEvents.toDocTypeAndFieldsGroup(Tuple2.of(
+			docTypeFields,
+			documentTypes
+		));
 
-			return generateDocTypeFields(dataIndex);
-
-		});
+		return _persistDocType(docTypeAndFieldsGroup, dataIndex, session);
 	}
-
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
 		return _toDocTypeFields(_toFlatFields(mappings));
 	}
@@ -94,20 +112,17 @@ public class IndexerEvents {
 
 		List<String> documentTypes = t2.getItem2();
 
-		Map<String, List<DocTypeField>> grouped = docTypeFields
-			.stream()
-			.collect(
-				Collectors.groupingBy(
-					e ->
-						documentTypes
-							.stream()
-							.filter(dt -> e.getFieldName().startsWith(dt + ".")
-								|| e.getFieldName().equals(dt))
-							.findFirst()
-							.orElse("default"),
-					Collectors.toList()
-				)
-			);
+		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
+			.collect(Collectors.groupingBy(
+				field -> documentTypes.stream()
+					.filter(dt ->
+						field.getFieldName().startsWith(dt + ".")
+						|| field.getFieldName().equals(dt)
+					)
+					.findFirst()
+					.orElse("default"),
+				Collectors.toList()
+			));
 
 		_explodeDocTypeFirstLevel(grouped);
 
@@ -117,7 +132,6 @@ public class IndexerEvents {
 	protected static Set<DocType> mergeDocTypes(
 		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
 		Collection<DocType> existingDocTypes) {
-
 		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
 
 		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
@@ -148,9 +162,10 @@ public class IndexerEvents {
 				boolean retained = true;
 				for (DocTypeField existingField : persistedFields) {
 
-					if ((DocTypeFieldUtils.fieldPath(docTypeName, docTypeField))
-						.equals(existingField.getPath())) {
-
+					if (Objects.equals(
+						existingField.getPath(),
+						DocTypeFieldUtils.fieldPath(docTypeName, docTypeField)
+					)) {
 						retained = false;
 						break;
 					}
@@ -177,9 +192,10 @@ public class IndexerEvents {
 				List<DocTypeField> groupedDocTypeFields = grouped.get(docTypeName);
 				groupedDocTypeFields
 					.stream()
-					.filter(docTypeField -> docTypeField
-						.getFieldName().equals(docTypeName)
-					)
+					.filter(docTypeField -> Objects.equals(
+						docTypeField.getFieldName(),
+						docTypeName
+					))
 					.findFirst()
 					.ifPresent(root -> {
 						Set<DocTypeField> subFields = root.getSubDocTypeFields();
@@ -195,23 +211,6 @@ public class IndexerEvents {
 		}
 	}
 
-	private Function<Map<String, List<DocTypeField>>, Uni<?>> _persistDocType(
-		DataIndex dataIndex) {
-
-		return m -> sessionFactory.withTransaction(session -> {
-
-			Set<String> docTypeNames = m.keySet();
-
-			return docTypeService.getDocTypesAndDocTypeFieldsByNames(docTypeNames)
-				.map(docTypes -> mergeDocTypes(m, docTypes))
-				.flatMap(docTypes -> {
-					dataIndex.setDocTypes(docTypes);
-					return session.merge(dataIndex)
-						.call(session::flush);
-				});
-		});
-	}
-
 	private static void _setDocTypeToDocTypeFields(
 		DocType docType, Set<DocTypeField> docTypeFields) {
 
@@ -223,44 +222,6 @@ public class IndexerEvents {
 			docTypeField.setDocType(docType);
 			_setDocTypeToDocTypeFields(docType, docTypeField.getSubDocTypeFields());
 		}
-
-	}
-
-	private Uni<List<String>> _getDocumentTypes(String indexName) {
-		return Uni
-			.createFrom()
-			.item(() -> {
-
-				SearchRequest searchRequest = new SearchRequest(indexName);
-
-				SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-				searchSourceBuilder.size(0);
-
-				searchSourceBuilder.aggregation(
-					AggregationBuilders
-						.terms("documentTypes")
-						.field("documentTypes.keyword")
-						.size(1000));
-
-				searchRequest.source(searchSourceBuilder);
-
-				try {
-					SearchResponse search = client.search(
-						searchRequest, RequestOptions.DEFAULT
-					);
-
-					return search.getAggregations()
-						.<Terms>get("documentTypes")
-						.getBuckets()
-						.stream()
-						.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-						.collect(Collectors.toList());
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			});
 
 	}
 
@@ -281,10 +242,10 @@ public class IndexerEvents {
 			if (key.equals("properties")) {
 				_toFlatFields((Map<String, Object>) value, root);
 			}
-			else if (value instanceof Map && ((Map)value).size() == 1) {
-				Map<String, Object> map = (Map<String, Object>)value;
+			else if (value instanceof Map && ((Map) value).size() == 1) {
+				Map<String, Object> map = (Map<String, Object>) value;
 				if (map.containsKey("type")) {
-					root.addSubField(Field.of(key, (String)map.get("type")));
+					root.addSubField(Field.of(key, (String) map.get("type")));
 				}
 				else {
 					Field newRoot = Field.of(key);
@@ -292,8 +253,8 @@ public class IndexerEvents {
 					_toFlatFields((Map<String, Object>) value, newRoot);
 				}
 			}
-			else if (value instanceof Map && ((Map)value).size() > 1) {
-				Map<String, Object> localMap = ((Map<String, Object>)value);
+			else if (value instanceof Map && ((Map) value).size() > 1) {
+				Map<String, Object> localMap = ((Map<String, Object>) value);
 
 				Field newRoot = Field.of(key);
 
@@ -309,7 +270,8 @@ public class IndexerEvents {
 
 	}
 
-	private static Field _populateField(Field field, Map<String, Object> props) {
+	private static Field _populateField(
+		Field field, Map<String, Object> props) {
 
 		if (props == null) {
 			return field;
@@ -322,17 +284,13 @@ public class IndexerEvents {
 			switch (entryKey) {
 				case "type" -> field.setType((String) entryValue);
 				case "fields" -> {
-					Map<String, Object> fields =
-						(Map<String, Object>) entryValue;
+					Map<String, Object> fields = (Map<String, Object>) entryValue;
 
-					List<Field> subFields = fields
-						.entrySet()
-						.stream()
+					List<Field> subFields = fields.entrySet().stream()
 						.map(e -> _populateField(
 							Field.of(e.getKey()),
-							(Map<String, Object>)e.getValue())
-						)
-						.collect(Collectors.toList());
+							(Map<String, Object>) e.getValue()
+						)).collect(Collectors.toList());
 
 					field.addSubFields(subFields);
 				}
@@ -362,7 +320,9 @@ public class IndexerEvents {
 	}
 
 	private static void _toDocTypeFields(
-		Field field, List<String> acc, DocTypeField parent,
+		Field field,
+		List<String> acc,
+		DocTypeField parent,
 		Collection<DocTypeField> docTypeFields) {
 
 		String name = field.getName();
@@ -370,12 +330,11 @@ public class IndexerEvents {
 
 		String type = field.getType();
 
-		boolean isI18NField =
-			field
-				.getSubFields()
-				.stream()
-				.map(Field::getName)
-				.anyMatch(fieldName -> fieldName.equals("i18n"));
+		boolean isI18NField = field
+			.getSubFields()
+			.stream()
+			.map(Field::getName)
+			.anyMatch(fieldName -> fieldName.equals("i18n"));
 
 		String fieldName = String.join(".", acc);
 
@@ -386,14 +345,13 @@ public class IndexerEvents {
 		FieldType fieldType = isI18NField
 			? FieldType.I18N
 			: type != null
-			? FieldType.fromString(type)
-			: FieldType.OBJECT;
+				? FieldType.fromString(type)
+				: FieldType.OBJECT;
 		docTypeField.setFieldType(fieldType);
 		docTypeField.setDescription("auto-generated");
 		docTypeField.setSubDocTypeFields(new LinkedHashSet<>());
 		if (field.getExtra() != null && !field.getExtra().isEmpty()) {
-			docTypeField.setJsonConfig(
-				new JsonObject(field.getExtra()).toString());
+			docTypeField.setJsonConfig(new JsonObject(field.getExtra()).toString());
 		}
 
 		if (parent != null) {
@@ -403,32 +361,76 @@ public class IndexerEvents {
 		docTypeFields.add(docTypeField);
 
 		switch (fieldType) {
-			case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N -> docTypeField.setSearchable(true);
+			case TEXT, KEYWORD, WILDCARD, CONSTANT_KEYWORD, I18N ->
+				docTypeField.setSearchable(true);
 			default -> docTypeField.setSearchable(false);
 		}
 
 		for (Field subField : field.getSubFields()) {
 			_toDocTypeFields(
-				subField, new ArrayList<>(acc), docTypeField,
-				docTypeField.getSubDocTypeFields());
+				subField,
+				new ArrayList<>(acc),
+				docTypeField,
+				docTypeField.getSubDocTypeFields()
+			);
 
 		}
 
 	}
 
-	@Inject
-	RestHighLevelClient client;
+	private Uni<List<String>> _getDocumentTypes(String indexName) {
+		return Uni.createFrom().item(() -> {
 
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
+			SearchRequest searchRequest = new SearchRequest(indexName);
 
-	@Inject
-	EventBus eventBus;
+			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-	@Inject
-	IndexService indexService;
+			searchSourceBuilder.size(0);
 
-	@Inject
-	DocTypeService docTypeService;
+			searchSourceBuilder.aggregation(AggregationBuilders
+				.terms("documentTypes")
+				.field("documentTypes.keyword")
+				.size(1000)
+			);
+
+			searchRequest.source(searchSourceBuilder);
+
+			try {
+				SearchResponse search = client.search(searchRequest, RequestOptions.DEFAULT);
+
+				return search
+					.getAggregations()
+					.<Terms>get("documentTypes")
+					.getBuckets()
+					.stream()
+					.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+					.collect(Collectors.toList());
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+
+	}
+
+	private Uni<Void> _persistDocType(
+		Map<String, List<DocTypeField>> docTypesGroup,
+		DataIndex dataIndex,
+		Mutiny.Session session) {
+
+		Set<String> docTypeNames = docTypesGroup.keySet();
+
+		return docTypeService
+			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
+			.map(docTypes -> mergeDocTypes(docTypesGroup, docTypes))
+			.flatMap(docTypes -> session
+				.merge(dataIndex)
+				.flatMap(merged -> {
+					merged.setDocTypes(docTypes);
+					return session.persist(merged);
+				})
+			)
+			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+	}
 
 }

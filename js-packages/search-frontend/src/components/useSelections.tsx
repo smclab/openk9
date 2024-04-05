@@ -8,65 +8,48 @@ import {
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
 
-export function useSelections({useKeycloak=true}:{useKeycloak?:boolean}) {
+export function useSelections({
+  useKeycloak = true,
+  useQueryString = true,
+}: {
+  useKeycloak?: boolean;
+  useQueryString?: boolean;
+}) {
   const [state, dispatch] = React.useReducer(
     reducer,
     initial,
     (initial) => loadQueryString<SelectionsState>() ?? initial,
   );
-  
+
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
   React.useEffect(() => {
-    if (useKeycloak && client.authInit){
+    if (useKeycloak && client.authInit) {
       client.authInit.then(() => {
         setCanSave(true);
       });
-    }else{
-      if(!useKeycloak){
-        setCanSave(true)
+    } else {
+      if (!useKeycloak) {
+        setCanSave(true);
       }
     }
   }, []);
   React.useEffect(() => {
-    if (useKeycloak && canSave) {
+    if (useKeycloak && canSave && useQueryString) {
       saveQueryString(state);
-    }
-    if(!useKeycloak){
-      saveQueryString(state)
-    }
-  }, [canSave, state]);
-  return [state, dispatch] as const;
-}
-
-export function useSelectionsOnClick() {
-  const [state, dispatch] = React.useReducer(
-    reducerOnClick,
-    initialOnClick,
-    (initialOnClick) =>
-      loadQueryString<SelectionsStateOnClick>() || initialOnClick,
-  );
-  
-  const [canSave, setCanSave] = React.useState(false);
-  const client = useOpenK9Client();
-  React.useEffect(() => {
-    if (client.authInit)
-      client.authInit.then(() => {
-        setCanSave(true);
-      });
-  }, []);
-  React.useEffect(() => {
-    if (canSave) {
-      saveQueryString(state);
+    } else {
+      if (!useKeycloak && useQueryString) {
+        saveQueryString(state);
+      }
     }
   }, [canSave, state]);
   return [state, dispatch] as const;
 }
 
 export type SelectionsState = {
-  text?: string;
+  text: string;
   selection: Array<Selection>;
-  textOnChange?: string;
+  textOnChange: string;
   filters: SearchToken[];
 };
 
@@ -78,51 +61,29 @@ const initial: SelectionsState = {
 };
 
 export type SelectionsAction =
-  | { type: "set-text"; text?: string; textOnchange?: string, onClick?:boolean }
+  | {
+      type: "set-text";
+      text: string;
+      textOnchange: string;
+    }
+  | {
+      type: "set-text-btn";
+      textOnchange: string;
+    }
   | { type: "reset-search" }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: Selection;
+      textEntity?: string | string | undefined;
     }
   | { type: "remove-filter"; filter: SearchToken }
   | { type: "set-filters"; filter: any }
   | { type: "reset-filters" };
 
- type Selection = {
+type Selection = {
   text: string;
   textOnChange: string;
-  start: number;
-  end: number;
-  token: AnalysisToken | null;
-  isAuto: boolean;
-};
-
-export type SelectionsStateOnClick = {
-  text: string;
-  selection: Array<SelectionOnClick>;
-  filters: SearchToken[];
-};
-
-const initialOnClick: SelectionsStateOnClick = {
-  text: "",
-  selection: [],
-  filters: [],
-};
-
-export type SelectionsActionOnClick =
-  | { type: "set-text"; text: string; onClick?:boolean }
-  | {
-      type: "set-selection";
-      replaceText: boolean;
-      selection: SelectionOnClick;
-    }
-  | { type: "remove-filter"; filter: SearchToken }
-  | { type: "set-filters"; filter: any }
-  | { type: "reset-filters" };
-
- type SelectionOnClick = {
-  text: string;
   start: number;
   end: number;
   token: AnalysisToken | null;
@@ -136,14 +97,22 @@ function reducer(
   switch (action.type) {
     case "set-text": {
       return {
-        text:  action.onClick?   action.text || state.text || "" :action.text || "",
+        text: action.text,
         filters: state.filters,
-        textOnChange: action.textOnchange || state.textOnChange || "",
+        textOnChange: action.textOnchange,
         selection: shiftSelection(
-          state.textOnChange ?? "",
-          action.textOnchange || state.textOnChange || "",
+          state.textOnChange,
+          action.textOnchange || state.textOnChange,
           state.selection,
         ),
+      };
+    }
+    case "set-text-btn": {
+      return {
+        text: state.text,
+        filters: state.filters,
+        textOnChange: action.textOnchange,
+        selection: [],
       };
     }
     case "reset-search": {
@@ -160,18 +129,18 @@ function reducer(
           action.replaceText ||
           action.selection.token?.tokenType === "AUTOCORRECT"
         ) {
-          // const textOnchange = action.selection.textOnChange;
           const tokenText = action.selection.token
             ? getTokenText(action.selection.token)
-            : state.textOnChange ||
-              "".slice(action.selection.start, action.selection.end);
+            : (state.textOnChange?.slice(
+                action.selection.start,
+                action.selection.end,
+              ) as string);
 
           const text =
-            state.textOnChange ||
-            "".slice(0, action.selection.start) +
-              tokenText +
-              state.textOnChange ||
-            "".slice(action.selection.end);
+            state.textOnChange?.slice(0, action.selection.start) +
+            tokenText +
+            state.textOnChange?.slice(action.selection.end);
+
           const selection: Selection | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
               ? null
@@ -183,17 +152,19 @@ function reducer(
                   token: action.selection.token,
                   isAuto: action.selection.isAuto,
                 };
+
           return {
             text,
             selection,
           };
         } else {
-          return { text: state.textOnChange, selection: action.selection };
+          return { text: state.text, selection: action.selection };
         }
       })();
+
       return {
-        text,
-        textOnChange: state.textOnChange || "",
+        text: text,
+        textOnChange: text,
         filters: state.filters,
         selection: shiftSelection(
           state.textOnChange || "",
@@ -207,6 +178,7 @@ function reducer(
     case "set-filters": {
       return {
         text: state.text,
+        textOnChange: state.textOnChange,
         filters: [...state.filters, action.filter],
         selection: state.selection,
       };
@@ -214,6 +186,7 @@ function reducer(
     case "reset-filters": {
       return {
         text: state.text,
+        textOnChange: state.textOnChange,
         filters: [],
         selection: state.selection,
       };
@@ -233,103 +206,9 @@ function reducer(
       });
       return {
         filters: filters,
+        textOnChange: state.textOnChange,
         selection: state.selection,
         text: state.text,
-      };
-    }
-  }
-}
-
-function reducerOnClick(
-  state: SelectionsStateOnClick,
-  action: SelectionsActionOnClick,
-): SelectionsStateOnClick {
-  switch (action.type) {
-    case "set-text": {
-      return {
-        text: action.text,
-        filters: state.filters,
-        selection: shiftSelectionOnCLick(
-          state.text,
-          action.text,
-          state.selection,
-        ),
-      };
-    }
-    case "set-filters": {
-      return {
-        text: state.text,
-        filters: [...state.filters, action.filter],
-        selection: state.selection,
-      };
-    }
-    case "reset-filters": {
-      return {
-        text: state.text,
-        filters: [],
-        selection: state.selection,
-      };
-    }
-    case "remove-filter": {
-      const filters = state.filters.filter((token) => {
-        const searchToken = action.filter;
-        if (searchToken && searchToken.values && token && token.values)
-          return !(
-            token.suggestionCategoryId === searchToken.suggestionCategoryId &&
-            token.isFilter === searchToken.isFilter &&
-            token.keywordKey === searchToken.keywordKey &&
-            token.tokenType === searchToken.tokenType &&
-            containsAtLeastOne(searchToken.values, token.values)
-          );
-        return true;
-      });
-      return {
-        filters: filters,
-        selection: state.selection,
-        text: state.text,
-      };
-    }
-    case "set-selection": {
-      const { text, selection } = (() => {
-        if (
-          action.replaceText ||
-          action.selection.token?.tokenType === "AUTOCORRECT"
-        ) {
-          const tokenText = action.selection.token
-            ? getTokenText(action.selection.token)
-            : state.text.slice(action.selection.start, action.selection.end);
-          const text =
-            state.text.slice(0, action.selection.start) +
-            tokenText +
-            state.text.slice(action.selection.end);
-          const selection: SelectionOnClick | null =
-            action.selection.token?.tokenType === "AUTOCORRECT"
-              ? null
-              : {
-                  text: tokenText,
-                  start: action.selection.start,
-                  end: action.selection.start + tokenText.length,
-                  token: action.selection.token,
-                  isAuto: action.selection.isAuto,
-                };
-          return {
-            text,
-            selection,
-          };
-        } else {
-          return { text: state.text, selection: action.selection };
-        }
-      })();
-      return {
-        text,
-        filters: state.filters,
-        selection: shiftSelectionOnCLick(
-          state.text,
-          text,
-          selection
-            ? state.selection.filter((s) => !isOverlapping(s, selection))
-            : state.selection,
-        ).concat(selection ? [selection] : []),
       };
     }
   }
@@ -340,43 +219,6 @@ function shiftSelection(
   nextText: string,
   prevSelection: Array<Selection>,
 ): Array<Selection> {
-  if (prevText === nextText) {
-    return prevSelection;
-  }
-  const commonPrefixLength = findCommonPrefixLength(prevText, nextText);
-  const commonSuffixLength = findCommonSuffixLength(
-    prevText,
-    nextText,
-    commonPrefixLength,
-  );
-  const changeStart = commonPrefixLength;
-  const changePrevEnd = prevText.length - commonSuffixLength;
-  const changeNextEnd = nextText.length - commonSuffixLength;
-  const changeDelta = changeNextEnd - changePrevEnd;
-  const prefixAttributes = prevSelection.filter(
-    (attribute) =>
-      attribute.start <= changeStart && attribute.end <= changeStart,
-  );
-  // const deletedAttributes = prevSelection.filter(
-  //   (attribute) =>
-  //     !(attribute.start <= changeStart && attribute.end <= changeStart) &&
-  //     !(attribute.start >= changePrevEnd),
-  // );
-  const suffixAttributes = prevSelection
-    .filter((attribute) => attribute.start >= changePrevEnd)
-    .map((attribute) => ({
-      ...attribute,
-      start: attribute.start + changeDelta,
-      end: attribute.end + changeDelta,
-    }));
-  return prefixAttributes.concat(suffixAttributes);
-}
-
-function shiftSelectionOnCLick(
-  prevText: string,
-  nextText: string,
-  prevSelection: Array<SelectionOnClick>,
-): Array<SelectionOnClick> {
   if (prevText === nextText) {
     return prevSelection;
   }
@@ -454,7 +296,7 @@ function getTokenText(token: AnalysisToken) {
     case "AUTOCOMPLETE":
       return token.value;
     case "FILTER":
-      return token.value;  
+      return token.value;
   }
 }
 

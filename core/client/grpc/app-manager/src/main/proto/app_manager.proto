@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.app.manager.grpc";
+option java_outer_classname = "AppManagerProto";
+
+package grpc;
+
+service AppManager {
+  rpc ApplyResource(AppManifest) returns (ApplyResponse) {}
+  rpc DeleteResource(AppManifest) returns (google.protobuf.Empty) {}
+}
+
+message AppManifest {
+  string schemaName = 1;
+  string chart = 2;
+  string version = 3;
+  optional string appName = 4;
+  optional google.protobuf.Struct values = 5;
+}
+
+message ApplyResponse {
+  string status = 1;
+}

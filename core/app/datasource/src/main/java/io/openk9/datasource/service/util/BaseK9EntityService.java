@@ -30,8 +30,6 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.quarkus.panache.common.Sort;
-import io.quarkus.panache.hibernate.common.runtime.PanacheJpaUtil;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.tuples.Tuple2;
@@ -39,6 +37,14 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.reactivestreams.Processor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -48,14 +54,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.validation.Validator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends GraphQLService<ENTITY>
@@ -63,6 +61,19 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public static final DefaultPageInfo DEFAULT_PAGE_INFO =
 		new DefaultPageInfo(null, null, false, false);
+	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =
+		BroadcastProcessor.create();
+	protected K9EntityMapper<ENTITY, DTO> mapper;
+	@Inject
+	protected Mutiny.SessionFactory sessionFactory;
+	@Inject
+	protected Validator validator;
+	@Inject
+	Logger logger;
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
+		new AtomicReference<>();
 
 	public abstract Class<ENTITY> getEntityClass();
 
@@ -112,7 +123,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return findAllPaginated(
 			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(), filter);
+			pageable.getAfterId(), pageable.getBeforeId(), filter
+		);
 
 	}
 
@@ -151,13 +163,15 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			tenantId, entityIds, joinField, joinType, limit, sortBy, afterId, beforeId, filter);
 
 	}
+
 	@Override
 	public <T extends K9Entity> Uni<Page<T>> findAllPaginatedJoin(
 		Long[] entityIds, String joinField, Class<T> joinType, int limit,
 		String sortBy, long afterId, long beforeId, Filter filter) {
 
 		return findAllPaginatedJoin(null, entityIds, joinField, joinType, limit, sortBy,
-			afterId, beforeId, filter);
+			afterId, beforeId, filter
+		);
 
 	}
 
@@ -195,7 +209,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			return _pageCriteriaQuery(
 				tenantId, limit, sortBy, afterId, beforeId, filter, builder, join,
-				criteriaQuery, countQuery);
+				criteriaQuery, countQuery
+			);
 
 		});
 
@@ -228,7 +243,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			return _pageCriteriaQuery(
 				tenantId, limit, sortBy, afterId, beforeId,
 				filter == null ? Filter.DEFAULT : filter, builder, root,
-				criteriaQuery, countQuery);
+				criteriaQuery, countQuery
+			);
 		});
 
 	}
@@ -236,7 +252,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public String[] getSearchFields() {
 
-		return new String[] {};
+		return new String[]{};
 
 	}
 
@@ -265,8 +281,10 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<List<ENTITY>> findByIds(String tenantId, Set<Long> ids) {
 
-		return sessionFactory.withTransaction(tenantId,
-			(s, t) -> s.find(getEntityClass(), ids.toArray(new Object[0])));
+		return sessionFactory.withTransaction(
+			tenantId,
+			(s, t) -> s.find(getEntityClass(), ids.toArray(new Object[0]))
+		);
 
 	}
 
@@ -354,7 +372,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-
 	@Override
 	public Uni<ENTITY> create(Mutiny.Session s, ENTITY entity) {
 
@@ -362,6 +379,13 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
 
+	}
+
+	@Override
+	public Uni<ENTITY> create(Mutiny.Session s, DTO dto) {
+		var entity = mapper.create(dto);
+
+		return create(s, entity);
 	}
 
 	@Override
@@ -395,7 +419,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Long> count() {
 
 		return sessionFactory.withTransaction(s -> s.createQuery(
-			"SELECT COUNT(*) FROM " + PanacheJpaUtil.getEntityName(getEntityClass()), Long.class)
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
 			.getSingleResult());
 
 	}
@@ -404,7 +428,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Long> count(String tenantId) {
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> s.createQuery(
-			"SELECT COUNT(*) FROM " + PanacheJpaUtil.getEntityName(getEntityClass()), Long.class)
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
 			.getSingleResult());
 
 	}
@@ -427,6 +451,62 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return sessionFactory.getCriteriaBuilder();
 
+	}
+
+	public Uni<ENTITY> findById(Mutiny.Session s, long id) {
+
+		return s.find(getEntityClass(), id);
+
+	}
+
+	public <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
+
+		return s.persist(entity)
+			.map(v -> entity)
+			.call(s::flush);
+	}
+
+	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
+
+		return findById(s, entityId)
+			.onItem().ifNotNull()
+			.call(entity -> remove(s, entity))
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
+			.onItem().ifNull()
+			.failWith(() -> new IllegalStateException("entity with id: " + entityId
+													  + " for service: " +
+													  getClass().getSimpleName() + " not found"));
+
+	}
+
+	public Uni<ENTITY> findByName(String tenantId, String name) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> findByName(s, name));
+	}
+
+	public Uni<ENTITY> findByName(Mutiny.Session session, String name) {
+		var criteriaBuilder = sessionFactory.getCriteriaBuilder();
+		var query = criteriaBuilder.createQuery(getEntityClass());
+		var root = query.from(getEntityClass());
+		query.where(criteriaBuilder.equal(
+				criteriaBuilder.lower(root.get("name")),
+				name.toLowerCase()
+			)
+		);
+
+		return session.createQuery(query).getSingleResult();
+	}
+
+	public Uni<ENTITY> upsert(Mutiny.Session session, DTO dto) {
+		return findByName(session, dto.getName())
+			.onItem()
+			.transformToUni((item) -> update(session, item.getId(), dto))
+			.onFailure()
+			.recoverWithUni(() -> create(session, mapper.create(dto)));
+	}
+
+	public Uni<ENTITY> upsert(String tenantId, DTO dto) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> upsert(s, dto));
 	}
 
 	@Override
@@ -468,22 +548,75 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	private static Sort createSort(String sortBy) {
+	protected Uni<List<ENTITY>> findAll(Mutiny.Session s) {
 
-		return createSort("", sortBy);
+		CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
+
+		CriteriaQuery<ENTITY> query =
+			criteriaBuilder.createQuery(getEntityClass());
+
+		query.from(getEntityClass());
+
+		return s.createQuery(query)
+			.getResultList();
 
 	}
 
-	private static Sort createSort(String prefix, String sortBy) {
+	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
+		return findById(s, id)
+			.onItem().ifNotNull()
+			.transformToUni(
+				(prev) -> persist(s, mapper.patch(prev, dto))
+					.invoke(newEntity -> processor.onNext(
+						K9EntityEvent.of(
+							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
+			.onItem().ifNull()
+			.failWith(
+				() -> new IllegalStateException(
+					"dto: " + dto.getClass().getSimpleName() + " with id: " +
+					id + " not found"));
+	}
 
-		prefix = (prefix == null || prefix.isEmpty()) ? "" : prefix + ".";
+	protected Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
+		return findById(s, id)
+			.onItem().ifNotNull()
+			.transformToUni(
+				(prev) -> persist(s, mapper.update(prev, dto))
+					.invoke(newEntity -> processor.onNext(
+						K9EntityEvent.of(
+							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
+			.onItem().ifNull().failWith(
+				() -> new IllegalStateException(
+					"entity: " + dto.getClass().getSimpleName() + " with id: " +
+					id + " not found"));
+	}
 
-		if (sortBy != null && !sortBy.isBlank()) {
-			return Sort.by(prefix + K9Entity_.ID);
-		}
-		else {
-			return Sort.by(prefix + sortBy).and(prefix + K9Entity_.ID);
-		}
+	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+
+		return s.merge(entity)
+			.call(s::flush);
+	}
+
+	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
+
+		return s.remove(entity);
+	}
+
+	private static <T extends K9Entity>
+	Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
+		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery, Mutiny.Session s) {
+
+		Uni<List<T>> resultList = (limit >= 0
+			? s.createQuery(criteriaQuery).setMaxResults(limit)
+			: s.createQuery(criteriaQuery)).getResultList();
+
+		Uni<Long> count = s.createQuery(countQuery).getSingleResult();
+
+		return Uni
+			.combine()
+			.all()
+			.unis(count, resultList)
+			.asTuple();
 
 	}
 
@@ -593,131 +726,22 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		Uni<Tuple2<Long, List<T>>> tuple2Results;
 
 		if (tenantId != null) {
-			tuple2Results = sessionFactory.withTransaction(tenantId, (s, t) -> _executePagedQuery(limit, criteriaQuery, countQuery, s));
+			tuple2Results = sessionFactory.withTransaction(
+				tenantId,
+				(s, t) -> _executePagedQuery(limit, criteriaQuery, countQuery, s)
+			);
 		}
 		else {
-			tuple2Results = sessionFactory.withTransaction((s) -> _executePagedQuery(limit, criteriaQuery, countQuery, s));
+			tuple2Results = sessionFactory.withTransaction((s) -> _executePagedQuery(
+				limit,
+				criteriaQuery,
+				countQuery,
+				s
+			));
 		}
 
 		return tuple2Results.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
 
 	}
 
-	private static <T extends K9Entity>
-		Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
-		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery, Mutiny.Session s) {
-
-		Uni<List<T>> resultList = (limit >= 0
-			? s.createQuery(criteriaQuery).setMaxResults(limit)
-			: s.createQuery(criteriaQuery)).getResultList();
-
-		Uni<Long> count = s.createQuery(countQuery).getSingleResult();
-
-		return Uni
-			.combine()
-			.all()
-			.unis(count, resultList)
-			.asTuple();
-
-	}
-
-	public Uni<ENTITY> findById(Mutiny.Session s, long id) {
-
-		return s.find(getEntityClass(), id);
-
-	}
-
-	protected Uni<List<ENTITY>> findAll(Mutiny.Session s) {
-
-		CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
-
-		CriteriaQuery<ENTITY> query =
-			criteriaBuilder.createQuery(getEntityClass());
-
-		query.from(getEntityClass());
-
-		return s.createQuery(query)
-			.getResultList();
-
-	}
-
-	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
-		return findById(s, id)
-			.onItem().ifNotNull()
-			.transformToUni(
-				(prev) -> persist(s, mapper.patch(prev, dto))
-					.invoke(newEntity -> processor.onNext(
-						K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
-			.onItem().ifNull()
-			.failWith(
-				() -> new IllegalStateException(
-					"dto: " + dto.getClass().getSimpleName() + " with id: " +
-						id + " not found"));
-	}
-
-	protected Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
-		return findById(s, id)
-			.onItem().ifNotNull()
-			.transformToUni(
-				(prev) -> persist(mapper.update(prev, dto))
-					.invoke(newEntity -> processor.onNext(
-						K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
-			.onItem().ifNull().failWith(
-				() -> new IllegalStateException(
-					"entity: " + dto.getClass().getSimpleName() + " with id: " +
-						id + " not found"));
-	}
-
-	protected  <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
-
-		return s.merge(entity)
-			.call(s::flush);
-	}
-
-	public  <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
-
-		return s.persist(entity)
-			.map(v -> entity)
-			.call(s::flush);
-	}
-
-	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
-
-		return s.remove(entity);
-	}
-
-	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
-
-		return findById(s, entityId)
-			.onItem().ifNotNull()
-			.call(entity -> remove(s, entity))
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
-			.onItem().ifNull()
-			.failWith(() -> new IllegalStateException("entity with id: " + entityId
-				+ " for service: " + getClass().getSimpleName() + " not found"));
-
-	}
-
-	protected K9EntityMapper<ENTITY, DTO> mapper;
-
-	@Inject
-	protected Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	Logger logger;
-
-	@Inject
-	protected Validator validator;
-
-	@Inject
-	ActorSystemProvider actorSystemProvider;
-
-	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =
-		BroadcastProcessor.create();
-
-	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
-		new AtomicReference<>();
 }

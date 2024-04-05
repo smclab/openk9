@@ -191,7 +191,7 @@ export function App() {
             width: 100%;
             justify-content: center;
             align-items: baseline;
-            @media (max-width: 480px) {
+            @media (max-width: 768px) {
               flex-direction: column;
             }
           `}
@@ -424,7 +424,11 @@ export function App() {
       ></div>
       <div
         className="openk9-preview-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ details: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            details: element,
+          })
+        }
         css={css`
           grid-area: detail;
           overflow-y: auto;

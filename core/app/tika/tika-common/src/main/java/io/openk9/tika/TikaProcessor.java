@@ -27,6 +27,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -39,6 +40,14 @@ import java.time.Instant;
 
 @ApplicationScoped
 public class TikaProcessor {
+
+    @Inject
+    @ConfigProperty(name = "openk9.tika-ocr.character-length")
+    Integer ocrCharacterLength;
+
+    @Inject
+    @ConfigProperty(name = "openk9.tika-ocr.enabled")
+    Boolean ocrEnabled;
 
     public void process(JsonObject jsonObject) {
 
@@ -181,11 +190,33 @@ public class TikaProcessor {
 
                     String text = tikaContent.getText();
 
-                    text = text.replaceAll("[.,]+", "")
+                    if (text.length() < ocrCharacterLength && ocrEnabled) {
+
+                        document.put("toOcr", true);
+
+                        datasourceClient.sentToPipeline(replyTo, response.toString());
+
+                        logger.info("Send message to datasource with token: "
+                                    + replyTo + " to ocr final destination");
+
+                        long estimatedTime = System.currentTimeMillis() - startTime;
+                        logger.info(estimatedTime);
+
+                        return;
+
+                    }
+                    else {
+                        document.put("toOcr", false);
+                    }
+
+                    String rawText = text.replaceAll("[.,]+", "")
                         .replaceAll("_", "")
                         .replaceAll("\\s+", " ")
                         .replaceAll("\\n", " ")
                         .replaceAll("\\t", " ");
+
+                    text = text.replaceAll("\\t", " ")
+                        .replaceAll("\\s+", " ");
 
                     document.put("content", text);
 
@@ -200,13 +231,13 @@ public class TikaProcessor {
                         document.put("title", title);
                     }
 
-                    if (text.length() > maxLength && maxLength > 0) {
+                    if (rawText.length() > maxLength && maxLength > 0) {
 
                         responsePayload.put(
-                                "rawContent", text.substring(0, maxLength));
+                                "rawContent", rawText.substring(0, maxLength));
 
                     } else {
-                        responsePayload.put("rawContent", text);
+                        responsePayload.put("rawContent", rawText);
                     }
 
                     JsonObject resources =

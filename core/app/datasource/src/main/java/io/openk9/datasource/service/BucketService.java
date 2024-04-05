@@ -31,6 +31,7 @@ import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TenantBinding;
@@ -45,6 +46,10 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -52,10 +57,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -149,6 +150,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return findJoinConnection(
 			id, Bucket_.TABS, Tab.class,
 			tabService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Connection<Sorting>> getSortings(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Bucket_.SORTINGS, Sorting.class,
+			sortingService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
 	}
 
@@ -263,6 +274,55 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.transformToUni(tabs -> {
 
 					if (bucket.removeTab(tabs, tabId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, Sorting>> addSortingToBucket(long id, long sortingId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> sortingService.findById(s, sortingId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sorting ->
+					s.fetch(bucket.getSortings())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(sortings -> {
+
+							if (sortings.add(sorting)) {
+
+								bucket.setSortings(sortings);
+
+								return persist(s, bucket)
+									.map(newSC -> Tuple2.of(newSC, sorting));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
+	}
+
+	public Uni<Tuple2<Bucket, Sorting>> removeSortingFromBucket(long id, long sortingId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getSortings())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sortings -> {
+
+					if (bucket.removeSorting(sortings, sortingId)) {
 
 						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -439,8 +499,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			}));
 	}
 
-	public Uni<Bucket> enableTenant(long id) {
-		return sessionFactory.withTransaction(s -> findById(s, id)
+	public Uni<Bucket> enableTenant(Mutiny.Session s, long id) {
+		return findById(s, id)
 			.flatMap(bucket -> {
 
 				if (bucket == null) {
@@ -467,7 +527,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							if (tb == null) {
 								return Uni
 									.createFrom()
-									.failure(new NotFoundException("Tenant binding not found create one first"));
+									.failure(new NotFoundException(
+										"Tenant binding not found create one first"));
 							}
 
 							bucket.setTenantBinding(tb);
@@ -484,7 +545,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 				return Uni.createFrom().item(bucket);
 
-			}));
+			});
+	}
+
+	public Uni<Bucket> enableTenant(long id) {
+		return sessionFactory.withTransaction((s, t) -> enableTenant(s, id));
 	}
 
 	public Uni<Long> getDocCountFromBucket(Long bucketId) {
@@ -601,6 +666,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	TabService tabService;
+
+	@Inject
+	SortingService sortingService;
+
 
 	@Inject
 	Logger logger;

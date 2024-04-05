@@ -21,12 +21,14 @@ import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class SearchConfigDTO extends K9EntityDTO {
 	@NotNull
 	private Float minScore;

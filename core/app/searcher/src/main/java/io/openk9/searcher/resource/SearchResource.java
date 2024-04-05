@@ -265,6 +265,7 @@ public class SearchResource {
 
 		builder.setSearchText(searchRequest.getSearchText());
 		builder.setVirtualHost(request.host());
+		builder.setJwt(rawToken == null ? "" : rawToken);
 
 		if (searchRequest.getTokens() != null) {
 

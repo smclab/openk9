@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 import { useDeleteTokenizerMutation, useTokenizersQuery } from "../graphql-generated";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
+import { tokenizerOptions } from "./Analyzer";
 
 export const TokenizersQuery = gql`
   query Tokenizers($searchText: String, $cursor: String) {
@@ -35,7 +36,7 @@ export function Tokenizers() {
   const showToast = useToast();
   const tokenizersQuery = useTokenizersQuery();
   const [deleteTokenizersMutate] = useDeleteTokenizerMutation({
-    refetchQueries: [TokenizersQuery],
+    refetchQueries: [TokenizersQuery, tokenizerOptions],
     onCompleted(data) {
       if (data.deleteTokenizer?.id) {
         showToast({ displayType: "success", title: "Tokenizer deleted", content: data.deleteTokenizer.name ?? "" });

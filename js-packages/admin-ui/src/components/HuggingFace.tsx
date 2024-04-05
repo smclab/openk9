@@ -11,6 +11,8 @@ import { useToast } from "./ToastProvider";
 import { ClassNameButton } from "../App";
 import { ContainerFluid, SimpleModal } from "./Form";
 import { keycloak } from "./authentication";
+import { useRestClient } from "./queryClient";
+import { useMutation } from "@tanstack/react-query";
 
 export function HuggingFace() {
   const [name, setName] = React.useState("");
@@ -22,6 +24,26 @@ export function HuggingFace() {
   const { observer, onOpenChange, open } = useModal();
   const showToast = useToast();
   const navigate = useNavigate();
+  const restClient = useRestClient();
+
+  const mutation = useMutation(
+    async () => {
+      return await restClient.mlk8SResource.postApiK8SClientK8SDeployMlModel({
+        library,
+        modelName: name,
+        pipelineName: task,
+        tokenizerName: "string",
+      });
+    },
+    {
+      onSuccess: (data) => {
+        showToast({ displayType: "info", title: "Model deployed", content: data.message });
+      },
+      onError: (error) => {
+        showToast({ displayType: "info", title: "Error deploying model", content: "error" });
+      },
+    }
+  );
   return (
     <React.Fragment>
       {open && (
@@ -30,20 +52,7 @@ export function HuggingFace() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            const requestOptions = {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${keycloak.token}` },
-              body: JSON.stringify({ pipelineName: task, modelName: name, tokenizerName: "string", library: library }),
-            };
-            fetch("/api/k8s-client/k8s/deploy-ml-model", requestOptions)
-              .then((response) => response.json())
-              .then((data) => {
-                if (data?.status === "DANGER") {
-                  showToast({ displayType: "danger", title: "error released", content: "" + data?.message });
-                } else {
-                  showToast({ displayType: "success", title: "successfully released", content: "" });
-                }
-              });
+            mutation.mutate();
             onOpenChange(false);
             navigate(`/maching-learning/hugging-face-view`, { replace: true });
           }}
@@ -117,20 +126,20 @@ export function HuggingFace() {
                 <Trasformers />
                 <span style={{ marginLeft: "10px" }}> Transformers with Pytorch</span>
               </Button>
-			  <Button
-				  displayType={null}
-				  className={library === "transformers-tensorflow" ? "btn-info" : ""}
-				  onClick={(event) => {
-					if (library === "transformers-tensorflow") {
-					  setLibrary("");
-					} else {
-					  setLibrary("transformers-tensorflow");
-					}
-				  }}
-				>
-				  <Trasformers />
-				  <span style={{ marginLeft: "10px" }}> Transformers with Tensorflow</span>
-				</Button>
+              <Button
+                displayType={null}
+                className={library === "transformers-tensorflow" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "transformers-tensorflow") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("transformers-tensorflow");
+                  }
+                }}
+              >
+                <Trasformers />
+                <span style={{ marginLeft: "10px" }}> Transformers with Tensorflow</span>
+              </Button>
               <Button
                 displayType={null}
                 className={library === "flair" ? "btn-info" : ""}
@@ -145,20 +154,20 @@ export function HuggingFace() {
                 <Flair />
                 Flair
               </Button>
-				<Button
-				  displayType={null}
-				  className={library === "spacy" ? "btn-info" : ""}
-				  onClick={(event) => {
-					if (library === "spacy") {
-					  setLibrary("");
-					} else {
-					  setLibrary("spacy");
-					}
-				  }}
-				>
-				  <Spacy />
-				  Spacy
-				</Button>
+              <Button
+                displayType={null}
+                className={library === "spacy" ? "btn-info" : ""}
+                onClick={(event) => {
+                  if (library === "spacy") {
+                    setLibrary("");
+                  } else {
+                    setLibrary("spacy");
+                  }
+                }}
+              >
+                <Spacy />
+                Spacy
+              </Button>
               <Button
                 displayType={null}
                 className={library === "stanza" ? "btn-info" : ""}
@@ -215,9 +224,9 @@ export function HuggingFace() {
               <option className="clay-dropdown-item" value="object-detection">
                 object detection
               </option>
-				<option className="clay-dropdown-item" value="video-classification">
-				  video classification
-				</option>
+              <option className="clay-dropdown-item" value="video-classification">
+                video classification
+              </option>
               <option className="clay-dropdown-item" value="image-classification">
                 image classification
               </option>
@@ -230,9 +239,9 @@ export function HuggingFace() {
               <option className="clay-dropdown-item" value="audio-classification">
                 audio classification
               </option>
-			<option className="clay-dropdown-item" value="automatic-speech-recognition">
-			  automatic speech recognition
-			</option>
+              <option className="clay-dropdown-item" value="automatic-speech-recognition">
+                automatic speech recognition
+              </option>
             </select>
           </div>
           {isInvalidateTask && (

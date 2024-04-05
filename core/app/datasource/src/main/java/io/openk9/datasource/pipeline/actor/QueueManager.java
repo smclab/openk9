@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
@@ -13,12 +30,12 @@ import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.inject.spi.CDI;
 import java.io.IOException;
 import java.util.Map;
+import javax.enterprise.inject.spi.CDI;
 
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
-	public static final String INSTANCE_NAME = "schedulationKey-manager";
+	public static final String INSTANCE_NAME = "schedulingKey-manager";
 	public static final String AMQ_TOPIC_EXCHANGE = "amq.topic";
 	private static final String DLX_EXCHANGE = "dlx";
 	private static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
@@ -28,35 +45,47 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	private enum Start implements Command {INSTANCE}
 	private record ChannelInit(Channel c) implements Command {}
 
-	public record GetQueue(String schedulationKey, ActorRef<Response> replyTo) implements Command {}
-	public record DestroyQueue(String schedulationKey) implements Command {}
-	public sealed interface Response extends CborSerializable {}
-	public record QueueBind(String schedulationKey) implements Response {
-		public String getMainQueue() {
-			return schedulationKey;
+	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
+		try {
+			QueueBind queueBind = new QueueBind(destroyQueue.schedulingKey());
+
+			channel.queueDelete(queueBind.getMainQueue());
+			channel.queueDelete(queueBind.getRetryQueue());
+			channel.queueDelete(queueBind.getErrorQueue());
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 
-		public String getMainKey() {
-			return getMainQueue();
-		}
-
-		public String getRetryQueue() {
-			return schedulationKey + ".dlq.retry";
-		}
-
-		public String getRetryKey() {
-			return getRetryQueue();
-		}
-
-		public String getErrorQueue() {
-			return schedulationKey + ".dlq.error";
-		}
-
-		public String getErrorKey() {
-			return getErrorQueue();
-		}
-
+		return Behaviors.same();
 	}
+
+	private Behavior<Command> onGetQueue(GetQueue getQueue) {
+		QueueBind queueBind = new QueueBind(getQueue.schedulingKey());
+
+		try {
+			log.infof("register: %s", queueBind);
+
+			_declareDeadLetterExchange();
+
+			_bindMainQueue(queueBind);
+
+			_bindRetryQueue(queueBind);
+
+			_bindErrorQueue(queueBind);
+
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		getQueue.replyTo.tell(queueBind);
+
+		return Behaviors.same();
+	}
+	public sealed interface Response extends CborSerializable {}
+
+	public record GetQueue(String schedulingKey, ActorRef<Response> replyTo) implements Command {}
 
 	private Channel channel;
 	private final QueueConnectionProvider connectionProvider;
@@ -110,43 +139,33 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
-		try {
-			QueueBind queueBind = new QueueBind(destroyQueue.schedulationKey());
+	public record DestroyQueue(String schedulingKey) implements Command {}
 
-			channel.queueDelete(queueBind.getMainQueue());
-			channel.queueDelete(queueBind.getRetryQueue());
-			channel.queueDelete(queueBind.getErrorQueue());
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+	public record QueueBind(String schedulingKey) implements Response {
+		public String getMainQueue() {
+			return schedulingKey;
 		}
 
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onGetQueue(GetQueue getQueue) {
-		QueueBind queueBind = new QueueBind(getQueue.schedulationKey());
-
-		try {
-			log.infof("register: %s", queueBind);
-
-			_declareDeadLetterExchange();
-
-			_bindMainQueue(queueBind);
-
-			_bindRetryQueue(queueBind);
-
-			_bindErrorQueue(queueBind);
-
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+		public String getMainKey() {
+			return getMainQueue();
 		}
 
-		getQueue.replyTo.tell(queueBind);
+		public String getRetryQueue() {
+			return schedulingKey + ".dlq.retry";
+		}
 
-		return Behaviors.same();
+		public String getRetryKey() {
+			return getRetryQueue();
+		}
+
+		public String getErrorQueue() {
+			return schedulingKey + ".dlq.error";
+		}
+
+		public String getErrorKey() {
+			return getErrorQueue();
+		}
+
 	}
 
 

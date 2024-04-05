@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline;
 
 import akka.actor.typed.ActorRef;
@@ -6,10 +23,10 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.actor.Schedulation;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.service.SchedulerService;
 
@@ -19,25 +36,25 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
-	private final Schedulation.SchedulationKey schedulationKey;
+	private final SchedulingKey schedulingKey;
 	private final SchedulerDTO scheduler;
 	private final ActorRef<Response> replyTo;
 
 	public NotificationSender(
 		ActorContext<Command> context,
 		SchedulerDTO scheduler,
-		Schedulation.SchedulationKey schedulationKey, ActorRef<Response> replyTo) {
+		SchedulingKey schedulingKey, ActorRef<Response> replyTo) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
-		this.schedulationKey = schedulationKey;
+		this.schedulingKey = schedulingKey;
 		this.scheduler = scheduler;
 		this.replyTo = replyTo;
 		context.getSelf().tell(Start.INSTANCE);
 	}
 
 	public static Behavior<Command> create(
-		SchedulerDTO scheduler, Schedulation.SchedulationKey key, ActorRef<Response> replyTo) {
+		SchedulerDTO scheduler, SchedulingKey key, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key, replyTo));
 	}
@@ -52,8 +69,8 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 
 	private Behavior<Command> onStart() {
 
-		String tenantName = schedulationKey.tenantId();
-		String scheduleId = schedulationKey.scheduleId();
+		String tenantName = schedulingKey.tenantId();
+		String scheduleId = schedulingKey.scheduleId();
 
 		getContext()
 			.getLog()

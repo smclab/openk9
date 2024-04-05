@@ -20,7 +20,12 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.model.*;
+import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -38,10 +43,9 @@ import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -182,6 +186,13 @@ public class DatasourceGraphqlResource {
 
 		return datasourceService.createDatasourceAndAddPluginDriver(
 			datasourceDTO, id);
+	}
+
+	@Mutation
+	public Uni<Response<Datasource>> createDatasourceConnection(
+		DatasourceConnectionDTO datasourceConnection) {
+
+		return datasourceService.createDatasourceConnection(datasourceConnection);
 	}
 
 	@Subscription

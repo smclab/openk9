@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
@@ -22,6 +39,7 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.Channel;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
@@ -46,7 +64,7 @@ public class MessageGateway
 	public static final ServiceKey<Command> SERVICE_KEY =
 		ServiceKey.create(Command.class, "message-gateway");
 
-	public static void askReroute(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+	public static void askReroute(ActorSystem<?> actorSystem, SchedulingKey schedulingKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -63,16 +81,16 @@ public class MessageGateway
 						.stream()
 						.filter(ref -> ref.path().address().port().isEmpty())
 						.forEach(ref -> ref.tell(
-							new Reroute(new QueueManager.QueueBind(schedulationKey.value()))));
+							new Reroute(new QueueManager.QueueBind(schedulingKey.asString()))));
 				}
 				else {
-					log.warnf("Cannot reroute schedulation %s", schedulationKey);
+					log.warnf("Cannot reroute scheduling %s", schedulingKey);
 				}
 			}
 		);
 	}
 
-	public static void askRegister(ActorSystem<?> actorSystem, Schedulation.SchedulationKey schedulationKey) {
+	public static void askRegister(ActorSystem<?> actorSystem, SchedulingKey schedulingKey) {
 		Receptionist receptionist = Receptionist.get(actorSystem);
 
 		AskPattern.ask(
@@ -88,10 +106,10 @@ public class MessageGateway
 						.getServiceInstances(MessageGateway.SERVICE_KEY)
 						.stream()
 						.filter(ref -> ref.path().address().port().isEmpty())
-						.forEach(ref -> ref.tell(new Register(schedulationKey.value())));
+						.forEach(ref -> ref.tell(new Register(schedulingKey.asString())));
 				}
 				else {
-					log.warnf("Cannot register schedulation %s", schedulationKey);
+					log.warnf("Cannot register scheduling %s", schedulingKey);
 				}
 			}
 		);
@@ -99,8 +117,58 @@ public class MessageGateway
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Start implements Command {INSTANCE}
-	public record Register(String schedulationKey) implements Command {}
-	public record Deregister(String schedulationKey) implements Command {}
+
+	private Behavior<Command> onReroute(Reroute reroute) {
+
+		QueueManager.QueueBind queueBind = reroute.queueBind;
+
+		ActorSystem<Void> system = getContext().getSystem();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(system);
+
+		EntityRef<Scheduling.Command> entityRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulingKey());
+
+		AskPattern.ask(
+			entityRef,
+			Scheduling.Restart::new,
+			Duration.ofSeconds(10),
+			system.scheduler()
+		).whenComplete((r, t) -> {
+			try {
+				if (t != null || r instanceof Scheduling.Failure) {
+					log.warnf(
+						"error when restart scheduling %s",
+						queueBind.schedulingKey()
+					);
+				}
+				else {
+					log.infof(
+						"restart scheduling with key %s",
+						queueBind.schedulingKey()
+					);
+
+					channel.basicQos(1);
+					channel.basicConsume(
+						queueBind.getErrorQueue(),
+						false,
+						new ErrorConsumer(channel, getContext(), queueBind)
+					);
+				}
+			} catch (Exception e) {
+				log.error(
+					"cannot consume from errorQueue", e
+				);
+			}
+		});
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onDeregister(Deregister deregister) {
+		queueManager.tell(new QueueManager.DestroyQueue(deregister.schedulingKey()));
+		return Behaviors.same();
+	}
 	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command {}
 	private record Reroute(QueueManager.QueueBind queueBind) implements Command {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
@@ -209,49 +277,9 @@ public class MessageGateway
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onReroute(Reroute reroute) {
+	private Behavior<Command> onRegister(Register register) {
 
-		QueueManager.QueueBind queueBind = reroute.queueBind;
-
-		ActorSystem<Void> system = getContext().getSystem();
-
-		ClusterSharding clusterSharding = ClusterSharding.get(system);
-
-		EntityRef<Schedulation.Command> entityRef = clusterSharding.entityRefFor(
-			Schedulation.ENTITY_TYPE_KEY, queueBind.schedulationKey());
-
-		AskPattern.ask(
-			entityRef,
-			Schedulation.Restart::new,
-			Duration.ofSeconds(10),
-			system.scheduler()
-		).whenComplete((r, t) -> {
-			try {
-				if (t != null || r instanceof Schedulation.Failure) {
-					log.warnf(
-						"error when restart schedulation %s",
-						queueBind.schedulationKey()
-					);
-				}
-				else {
-					log.infof(
-						"restart schedulation with key %s",
-						queueBind.schedulationKey()
-					);
-
-					channel.basicQos(1);
-					channel.basicConsume(
-						queueBind.getErrorQueue(),
-						false,
-						new ErrorConsumer(channel, getContext(), queueBind)
-					);
-				}
-			} catch (Exception e) {
-				log.error(
-					"cannot consume from errorQueue", e
-				);
-			}
-		});
+		queueManager.tell(new QueueManager.GetQueue(register.schedulingKey, queueManagerAdapter));
 
 		return Behaviors.same();
 	}
@@ -266,10 +294,7 @@ public class MessageGateway
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onDeregister(Deregister deregister) {
-		queueManager.tell(new QueueManager.DestroyQueue(deregister.schedulationKey()));
-		return Behaviors.same();
-	}
+	public record Register(String schedulingKey) implements Command {}
 
 	private Behavior<Command> onQueueManagerResponse(
 		QueueManagerResponseWrapper queueManagerResponseWrapper) {
@@ -349,16 +374,15 @@ public class MessageGateway
 
 	}
 
-	private Behavior<Command> onRegister(Register register) {
-
-		queueManager.tell(new QueueManager.GetQueue(register.schedulationKey, queueManagerAdapter));
-
-		return Behaviors.same();
-	}
+	public record Deregister(String schedulingKey) implements Command {}
 
 	private int getWorkersPerNode(ActorContext<Command> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getInteger(config, Schedulation.WORKERS_PER_NODE, Schedulation.WORKERS_PER_NODE_DEFAULT);
+		return AkkaUtils.getInteger(
+			config,
+			Scheduling.WORKERS_PER_NODE,
+			Scheduling.WORKERS_PER_NODE_DEFAULT
+		);
 	}
 }

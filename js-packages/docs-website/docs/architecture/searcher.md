@@ -32,4 +32,4 @@ Elastic maps Elasticsearch APIs to be used in Openk9. See
 
 ### Rest Api
 
-See more on [Api Documentation](/docs/api/searcher-api)
+See more on [Api Documentation](/docs/api/rest-api/searcher/searcher-api)

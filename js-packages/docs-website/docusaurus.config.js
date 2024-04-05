@@ -8,6 +8,12 @@ module.exports = {
   favicon: "img/favicon.ico",
   organizationName: "smc",
   projectName: "openk9",
+  customFields: {
+  	 markdown: {
+          mermaid: true,
+        },
+        themes: ['@docusaurus/theme-mermaid']
+  },
   themeConfig: {
     colorMode: {
       disableSwitch: true,

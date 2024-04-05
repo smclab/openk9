@@ -11,6 +11,7 @@ import * as RendererComponents from "../renderer-components";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
+import { Options } from "../components/Select";
 
 export const rendererComponents = RendererComponents;
 
@@ -158,6 +159,9 @@ export class OpenK9 {
 type FiltersHorizontalConfiguration = {
   element: Element | string | null;
   callback: () => void | null;
+  callbackSubmit: () => void | null;
+  callbackReset: () => void | null;
+  refButton?: React.RefObject<HTMLButtonElement>;
 };
 
 type FiltersHorizontalMobileConfiguration = {
@@ -221,6 +225,17 @@ type SortResultConfigurableProps = {
   htmlKey?: string | null | undefined;
 };
 
+type SortResultListCustomProps = {
+  selectOptions: Array<{
+    value: { value: string; sort: string };
+    label: string;
+    sort: string;
+    isDefault: boolean;
+    hasAscDesc: boolean;
+  }>;
+  element: Element | string | null;
+};
+
 type SortableProps = {
   element: Element | string | null;
   relevance: string;
@@ -233,6 +248,8 @@ type SearchProps = {
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
+  customMessageSearch?: string;
+  actionOnClick?(): void;
 };
 
 type FilterProps = {
@@ -257,8 +274,26 @@ type TabsProps = {
   pxHiddenRightArrow?: number;
 };
 
+type SelectProps = {
+  element: Element | string | null;
+  options: Options;
+  extraClass?: string;
+};
+
+type totalResultProps = {
+  element: Element | string | null;
+  saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
+};
+
+type activeFiltersConfigurableProps = {
+  element: Element | string | null;
+  actioneRemoveFilters?(): void;
+  callbackRemoveFilter?(): void;
+};
+
 export type Configuration = {
   // simple types
+  debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
@@ -272,6 +307,7 @@ export type Configuration = {
   token: string | null;
   useKeycloak: boolean;
   useQueryString: boolean;
+  useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
   waitKeycloackForToken: boolean;
   // element types
@@ -290,6 +326,7 @@ export type Configuration = {
   totalResultMobile: Element | string | null;
   removeFilters: Element | string | null;
   // configurable types
+  activeFiltersConfigurable: activeFiltersConfigurableProps | null | undefined;
   calendarMobile: CalendarMobileConfiguration | null;
   dataRangePicker: DataRangePickerProps | null;
   dataRangePickerVertical: DataRangePickerVerticalProps | null;
@@ -302,9 +339,12 @@ export type Configuration = {
   resultsDisplayMode: ResultsDisplayMode;
   searchConfigurable: SearchProps | null;
   searchMobile: SearchMobileConfiguration | null;
+  select: SelectProps | null;
   sortableConfigurable: SortableProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
+  sortResultListCustom: SortResultListCustomProps | null;
   tabsConfigurable: TabsProps | null;
+  totalResultConfigurable: totalResultProps | null;
   // functions
   changeSortResult: (
     sort: Array<RestApi.SortField>,
@@ -314,11 +354,13 @@ export type Configuration = {
 
 const defaultConfiguration: Configuration = {
   activeFilters: null,
+  activeFiltersConfigurable: null,
   calendar: null,
   calendarMobile: null,
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
+  debounceTimeSearch: null,
   defaultTokens: [],
   detailMobile: null,
   details: null,
@@ -339,6 +381,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   resultsDisplayMode: { type: "infinite" },
   search: null,
+  select: null,
   searchAutoselect: true,
   searchConfigurable: null,
   searchMobile: null,
@@ -347,14 +390,17 @@ const defaultConfiguration: Configuration = {
   sortable: null,
   sortableConfigurable: null,
   sortResultConfigurable: null,
+  sortResultListCustom: null,
   tabs: null,
   tabsConfigurable: null,
   tenant: null,
   token: null,
   totalResult: null,
+  totalResultConfigurable: null,
   totalResultMobile: null,
   useKeycloak: true,
   useQueryString: true,
+  useQueryStringFilters: true,
   useFilterConfiguration: true,
   waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,

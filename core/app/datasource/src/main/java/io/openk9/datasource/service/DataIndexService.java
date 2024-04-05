@@ -21,31 +21,53 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.mapper.DataIndexMapper;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.util.ElasticSearchUtils;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
+
+	@Inject
+	DocTypeService docTypeService;
+	@Inject
+	IndexService indexService;
+	@Inject
+	RestHighLevelClient client;
+	@Inject
+	HttpPluginDriverClient pluginDriverClient;
+	@Inject
+	IndexerEvents indexerEvents;
+	@Inject
+	IngestionPayloadMapper ingestionPayloadMapper;
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -71,7 +93,8 @@ public class DataIndexService
 		return findJoinConnection(
 			id, DataIndex_.DOC_TYPES, DocType.class,
 			docTypeService.getSearchFields(),
-			after, before, first, last, searchText, sortByList, not);
+			after, before, first, last, searchText, sortByList, not
+		);
 	}
 
 	public Uni<Long> getCountIndexDocuments(String name) {
@@ -85,7 +108,8 @@ public class DataIndexService
 			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
 			pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
+			pageable.getBeforeId(), searchText
+		);
 	}
 
 	public Uni<Page<DocType>> getDocTypes(
@@ -95,7 +119,8 @@ public class DataIndexService
 			new Long[]{dataIndexId}, DataIndex_.DOC_TYPES, DocType.class,
 			pageable.getLimit(),
 			pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
+			pageable.getBeforeId(), filter
+		);
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
@@ -153,53 +178,75 @@ public class DataIndexService
 	public Uni<DataIndex> deleteById(long entityId) {
 		return sessionFactory.withTransaction(s ->
 			findById(s, entityId)
-			.onItem()
-			.transformToUni(dataIndex -> Uni.createFrom()
-				.<AcknowledgedResponse>emitter(emitter -> {
+				.onItem()
+				.transformToUni(dataIndex -> Uni.createFrom()
+					.<AcknowledgedResponse>emitter(emitter -> {
 
-					DeleteIndexRequest deleteIndexRequest =
-						new DeleteIndexRequest(dataIndex.getName());
+						DeleteIndexRequest deleteIndexRequest =
+							new DeleteIndexRequest(dataIndex.getName());
 
-					deleteIndexRequest
-						.indicesOptions(
-							IndicesOptions.fromMap(
-								Map.of("ignore_unavailable", true),
-								deleteIndexRequest.indicesOptions()
-							)
-						);
+						deleteIndexRequest
+							.indicesOptions(
+								IndicesOptions.fromMap(
+									Map.of("ignore_unavailable", true),
+									deleteIndexRequest.indicesOptions()
+								)
+							);
 
-					try {
-						AcknowledgedResponse delete = client.indices().delete(
-							deleteIndexRequest,
-							RequestOptions.DEFAULT);
+						try {
+							AcknowledgedResponse delete = client.indices().delete(
+								deleteIndexRequest,
+								RequestOptions.DEFAULT
+							);
 
-						emitter.complete(delete);
-					}
-					catch (IOException e) {
-						emitter.fail(e);
-					}
+							emitter.complete(delete);
+						}
+						catch (IOException e) {
+							emitter.fail(e);
+						}
+					})
+				)
+				.onItem()
+				.transformToUni(ignore -> findById(s, entityId)
+					.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
+				.onItem()
+				.transformToUni(dataIndex -> {
+					dataIndex.getDocTypes().clear();
+					return s.persist(dataIndex);
 				})
-			)
-			.onItem()
-			.transformToUni(ignore -> findById(s, entityId)
-				.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
-			.onItem()
-			.transformToUni(dataIndex -> {
-				dataIndex.getDocTypes().clear();
-				return s.persist(dataIndex);
-			})
-			.onItem()
-			.transformToUni(ignore -> deleteById(s, entityId))
+				.onItem()
+				.transformToUni(ignore -> deleteById(s, entityId))
 		);
 	}
 
-	@Inject
-	DocTypeService docTypeService;
+	public Uni<DataIndex> createByDatasource(Mutiny.Session session, Datasource datasource) {
 
-	@Inject
-	IndexService indexService;
+		var pluginDriver = datasource.getPluginDriver();
+		var jsonConfig = pluginDriver.getJsonConfig();
+		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
 
-	@Inject
-	RestHighLevelClient client;
+		return pluginDriverClient.getSample(pluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = ElasticSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				var transientDataIndex = new DataIndex();
+
+				transientDataIndex.setName(String.format("dataindex-%s", UUID.randomUUID()));
+				transientDataIndex.setDatasource(datasource);
+
+				return create(session, transientDataIndex)
+					.flatMap(dataIndex -> indexerEvents
+						.generateDocTypeFields(
+							session, dataIndex, mappings.getMap(), documentTypes)
+						.flatMap(__ -> findById(session, dataIndex.getId()))
+					);
+			});
+	}
 
 }

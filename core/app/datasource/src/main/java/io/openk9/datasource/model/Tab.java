@@ -64,4 +64,33 @@ public class Tab extends K9Entity {
 
 	}
 
+	@ManyToMany(cascade = {
+		javax.persistence.CascadeType.PERSIST,
+		javax.persistence.CascadeType.MERGE,
+		javax.persistence.CascadeType.DETACH,
+		javax.persistence.CascadeType.REFRESH})
+	@JoinTable(name = "tab_sorting",
+		joinColumns = @JoinColumn(name = "tab_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "sorting_id", referencedColumnName = "id"))
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<Sorting> sortings = new LinkedHashSet<>();
+
+	public boolean removeSorting(
+		Collection<Sorting> sortings, long sortingId) {
+
+		Iterator<Sorting> iterator = sortings.iterator();
+
+		while (iterator.hasNext()) {
+			Sorting sorting = iterator.next();
+			if (sorting.getId() == sortingId) {
+				iterator.remove();
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+
 }

@@ -1,0 +1,123 @@
+{
+	"fields": [
+		{
+			"label": "Sitemap Urls",
+			"name": "sitemapUrls",
+			"type": "list",
+			"size": 5,
+			"required": true,
+			"values": [],
+			"info": "",
+			"placeholder": "string",
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Allowed Domains",
+			"name": "allowedDomains",
+			"type": "list",
+			"size": 10,
+			"required": true,
+			"values": [],
+			"info": "",
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Body Tag",
+			"name": "bodyTag",
+			"type": "text",
+			"size": 10,
+			"required": true,
+			"values": [
+				{
+					"value": "body",
+					"isDefault": true
+				}
+			],
+			"info": "",
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Title tag",
+			"name": "titleTag",
+			"type": "text",
+			"size": 10,
+			"required": true,
+			"info": "",
+			"values": [
+				{
+					"value": "title::text",
+					"isDefault": true
+				}
+			],
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Max Length",
+			"name": "maxLength",
+			"type": "number",
+			"size": 10,
+			"required": true,
+			"info": "",
+			"values": [
+				{
+					"value": "10000",
+					"isDefault": true
+				}
+			],
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Page Count",
+			"name": "pageCount",
+			"type": "number",
+			"size": 10,
+			"required": true,
+			"info": "",
+			"values": [
+				{
+					"value": "0",
+					"isDefault": true
+				}
+			],
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		},
+		{
+			"label": "Document File Extensions",
+			"name": "documentFileExtensions",
+			"type": "list",
+			"size": 10,
+			"required": true,
+			"info": "",
+			"values": [],
+			"validator": {
+				"min": 0,
+				"max": 100,
+				"regex": "/[[:alnum:]]+/"
+			}
+		}
+	]
+}

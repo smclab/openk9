@@ -1,9 +1,27 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher.queryanalysis;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
+import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.tenantmanager.grpc.TenantManager;
@@ -16,16 +34,16 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class GrammarProvider {
 
-	public Uni<Grammar> getOrCreateGrammar(String virtualHost) {
+	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
 
 		Uni<Tuple2<String, Bucket>> getTenantUni = _getBucket(virtualHost);
 
@@ -44,7 +62,7 @@ public class GrammarProvider {
 						_toGrammarRule(rules);
 
 					List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList());
+						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList(), jwt);
 
 					GrammarMixin grammarMixin = GrammarMixin.of(
 						mappedRules, mappedAnnotators);
@@ -58,10 +76,10 @@ public class GrammarProvider {
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		String schemaName, Bucket bucket, List<String> stopWords) {
+		String schemaName, Bucket bucket, List<String> stopWords, JWT jwt) {
 		return bucket.getQueryAnalysis().getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords))
+			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords, jwt))
 			.toList();
 	}
 

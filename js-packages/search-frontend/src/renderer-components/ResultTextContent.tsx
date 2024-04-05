@@ -32,11 +32,10 @@ export function ResultTextContent<E>({
           css={
             isTruncate
               ? css`
-                  height: calc(21px * 5);
+                  display: -webkit-box;
+                  -webkit-line-clamp: 3;
+                  -webkit-box-orient: vertical;
                   overflow: hidden;
-                  word-wrap: break-word;
-                  word-break: break-word;
-                  text-overflow: ellipsis;
                 `
               : undefined
           }

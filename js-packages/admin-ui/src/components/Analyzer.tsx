@@ -66,7 +66,9 @@ export function Analyzer() {
     variables: { id: analyzerId as string },
     skip: !analyzerId || analyzerId === "new",
   });
-  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(JSON.parse(analyzerQuery.data?.analyzer?.jsonConfig || `${TemplateAnalyzers[0].Json}`));
+  const [templateChoice, setTemplateChoice] = React.useState<KeyValue>(
+    JSON.parse(analyzerQuery.data?.analyzer?.jsonConfig || `${TemplateAnalyzers[0].Json}`)
+  );
   const [IsEmpty, setIsEmpty] = React.useState(false);
   const [isCustom, setIsCustom] = React.useState(false);
   const [createOrUpdateAnalyzerMutate, createOrUpdateanalyzerMutation] = useCreateOrUpdateAnalyzerMutation({
@@ -96,7 +98,7 @@ export function Analyzer() {
     isLoading: analyzerQuery.loading || createOrUpdateanalyzerMutation.loading,
     onSubmit(data) {
       createOrUpdateAnalyzerMutate({
-      variables: { id: analyzerId !== "new" ? analyzerId : undefined, ...data },
+        variables: { id: analyzerId !== "new" ? analyzerId : undefined, ...data },
       });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateanalyzerMutation.data?.analyzer?.fieldValidators),
@@ -236,7 +238,7 @@ export function Analyzer() {
   );
 }
 
-gql`
+export const tokenizerOptions = gql`
   query TokenizerOptions($searchText: String, $cursor: String) {
     options: tokenizers(searchText: $searchText, first: 5, after: $cursor) {
       edges {

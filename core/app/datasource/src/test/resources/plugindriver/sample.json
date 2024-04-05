@@ -1,0 +1,17 @@
+{
+	"parsingDate": 1705326198961,
+	"datasourceId": "1",
+	"contentId": 3062252989527342,
+	"datasourcePayload": {
+		"sample": {
+			"firstName": "John",
+			"lastName": "Doe",
+			"email": "john.doe@acme.com",
+			"age": 20
+		}
+	},
+	"resources": {
+		"binaries": []
+	},
+	"scheduleId": "1"
+}

@@ -87,6 +87,30 @@ enum fuzziness {
 const fuzzinessDefaultValue = fuzziness.ZERO.toString();
 const boostDefaultValue = "50";
 
+enum valuesQueryType {
+  MUST = "MUST",
+  SHOULD = "SHOULD",
+  MIN_SHOULD_1 = "MIN_SHOULD_1",
+  MIN_SHOULD_2 = "MIN_SHOULD_2",
+  MIN_SHOULD_3 = "MIN_SHOULD_3",
+  MUST_NOT = "MUST_NOT",
+  FILTER = "FILTER",
+}
+
+const valuesQueryTypeDefaultValue = valuesQueryType.MUST.toString();
+
+enum globalQueryType {
+  MUST = "MUST",
+  SHOULD = "SHOULD",
+  MIN_SHOULD_1 = "MIN_SHOULD_1",
+  MIN_SHOULD_2 = "MIN_SHOULD_2",
+  MIN_SHOULD_3 = "MIN_SHOULD_3",
+  MUST_NOT = "MUST_NOT",
+  FILTER = "FILTER",
+}
+
+const globalQueryTypeDefaultValue = globalQueryType.MUST.toString();
+
 export function TabToken() {
   const { tabTokenId = "new" } = useParams();
   const navigate = useNavigate();
@@ -118,6 +142,12 @@ export function TabToken() {
   const fuzzinessValue = tabTokenTabQuery.data?.tokenTab?.extraParams
     ?.find((element: any) => element.key === "fuzziness")
     ?.value?.toString();
+  const valuesQueryTypeValue = tabTokenTabQuery.data?.tokenTab?.extraParams
+    ?.find((element: any) => element.key === "valuesQueryType")
+    ?.value?.toString();
+  const globalQueryTypeValue = tabTokenTabQuery.data?.tokenTab?.extraParams
+    ?.find((element: any) => element.key === "globalQueryType")
+    ?.value?.toString();
   const tokenTypeInitialValue = tabTokenTabQuery.data?.tokenTab?.tokenType;
 
   const originalValues = {
@@ -128,6 +158,8 @@ export function TabToken() {
     tokenType: tabTokenTabQuery.data?.tokenTab?.tokenType,
     boost: boostValue,
     fuzziness: fuzzinessValue,
+    valuesQueryType: valuesQueryTypeValue,
+    globalQueryType: globalQueryTypeValue,
   };
 
   const form = useForm({
@@ -140,6 +172,8 @@ export function TabToken() {
         tokenType: TokenType.Autocomplete,
         boost: boostDefaultValue,
         fuzziness: fuzzinessDefaultValue,
+        valuesQueryType: valuesQueryTypeDefaultValue,
+        globalQueryType: globalQueryTypeDefaultValue,
       }),
       []
     ),
@@ -166,6 +200,20 @@ export function TabToken() {
             id: tabTokenId,
             key: "boost",
             value: data.boost ? data.boost : boostDefaultValue,
+          },
+        });
+        addExtraParamMutate({
+          variables: {
+            id: tabTokenId,
+            key: "valuesQueryType",
+            value: data.valuesQueryType ? data.valuesQueryType : valuesQueryTypeDefaultValue,
+          },
+        });
+        addExtraParamMutate({
+          variables: {
+            id: tabTokenId,
+            key: "globalQueryType",
+            value: data.globalQueryType ? data.globalQueryType : globalQueryTypeDefaultValue,
           },
         });
       }
@@ -195,9 +243,13 @@ export function TabToken() {
               if (tokenType !== tokenTypeInitialValue) {
                 form.inputProps("boost").onChange(boostDefaultValue);
                 form.inputProps("fuzziness").onChange(fuzzinessDefaultValue);
+                form.inputProps("valuesQueryType").onChange(valuesQueryTypeDefaultValue);
+                form.inputProps("globalQueryType").onChange(globalQueryTypeDefaultValue);
               } else {
                 form.inputProps("boost").onChange(boostValue ? boostValue : boostDefaultValue);
                 form.inputProps("fuzziness").onChange(fuzzinessValue ? fuzzinessValue : fuzzinessDefaultValue);
+                form.inputProps("valuesQueryType").onChange(valuesQueryTypeValue ? valuesQueryTypeValue : valuesQueryTypeDefaultValue);
+                form.inputProps("globalQueryType").onChange(globalQueryTypeValue ? globalQueryTypeValue : globalQueryTypeDefaultValue);
               }
             }}
           />
@@ -228,6 +280,8 @@ export function TabToken() {
           {(form.inputProps("tokenType").value === "TEXT" || form.inputProps("tokenType").value === "FILTER") && (
             <div>
               <TextInput label="boost" {...form.inputProps("boost")} />
+              <EnumSelect label="valuesQueryType" dict={valuesQueryType} {...form.inputProps("valuesQueryType")} />
+              <EnumSelect label="globalQueryType" dict={globalQueryType} {...form.inputProps("globalQueryType")} />
               <EnumSelect label="fuzziness" dict={fuzziness} {...form.inputProps("fuzziness")} />
             </div>
           )}

@@ -1,8 +1,30 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.UserField;
+import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -17,6 +39,7 @@ import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -27,17 +50,18 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		String includeField, String searchKeyword) {
+		String includeField, String searchKeyword, JWT jwt) {
 		super(bucket, annotator, stopWords, null);
 		this.includeField = includeField;
 		this.searchKeyword = searchKeyword;
 		this.restHighLevelClient = restHighLevelClient;
+		this.jwt = jwt;
 	}
 
 	@Override
 	public List<CategorySemantics> annotate(String...tokens) {
 
-		String token = String.join(" ", tokens);
+		String token = String.join("", tokens);
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 
@@ -50,6 +74,33 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 		multiMatchQueryBuilder.field(searchKeyword);
 
 		builder.must(multiMatchQueryBuilder);
+
+		Iterator<AclMapping> iterator =
+			bucket.getDatasources()
+				.stream()
+				.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+				.distinct()
+				.iterator();
+
+		BoolQueryBuilder innerQuery =
+			QueryBuilders
+				.boolQuery()
+				.minimumShouldMatch(1)
+				.should(QueryBuilders.matchQuery("acl.public", true));
+
+		while (iterator.hasNext()) {
+
+			AclMapping aclMapping = iterator.next();
+
+			DocTypeField docTypeField = aclMapping.getDocTypeField();
+
+			UserField userField = aclMapping.getUserField();
+
+			AclQueryParser.apply(docTypeField, userField.getTerms(jwt), innerQuery);
+
+		}
+
+		builder.filter(innerQuery);
 
 		String[] indexNames =
 			bucket
@@ -180,12 +231,14 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 	protected final String includeField;
 
+	protected final JWT jwt;
+
 	private static final Logger _log = Logger.getLogger(
 		BaseKeywordAutoCompleteAnnotator.class);
 
 	@Override
 	public int getLastTokenCount() {
-		return 3;
+		return 5;
 	}
 
 }

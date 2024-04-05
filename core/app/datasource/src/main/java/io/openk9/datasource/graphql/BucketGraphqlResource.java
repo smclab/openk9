@@ -26,6 +26,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.BucketDTO;
@@ -124,6 +125,20 @@ public class BucketGraphqlResource {
 			sortByList, notEqual);
 	}
 
+	public Uni<Connection<Sorting>> sortings(
+		@Source Bucket bucket,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@DefaultValue("false") boolean notEqual) {
+
+		return bucketService.getSortings(
+			bucket.getId(), after, before, first, last, searchText,
+			sortByList, notEqual);
+	}
+
 	public Uni<Language> language(@Source Bucket bucket) {
 		return bucketService.getLanguage(bucket.getId());
 	}
@@ -181,6 +196,18 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(
 		@Id long id, @Id long tabId) {
 		return bucketService.removeTabFromBucket(id, tabId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Sorting>> addSortingToBucket(
+		@Id long id, @Id long sortingId) {
+		return bucketService.addSortingToBucket(id, sortingId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Sorting>> removeSortingFromBucket(
+		@Id long id, @Id long sortingId) {
+		return bucketService.removeSortingFromBucket(id, sortingId);
 	}
 
 	@Mutation

@@ -20,15 +20,15 @@ package io.openk9.datasource.service;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
-import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -44,11 +44,11 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
@@ -110,7 +110,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.flatMap(this::indexesDiff);
 	}
 
-	public Uni<Void> closeSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
 				case STARTED, ERROR -> {
@@ -118,12 +118,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-						Schedulation.ENTITY_TYPE_KEY,
-						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+						Scheduling.ENTITY_TYPE_KEY,
+						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Schedulation.PersistDataIndex.INSTANCE);
+					schedulingRef.tell(Scheduling.PersistDatasource.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
@@ -131,7 +131,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 
-	public Uni<Void> cancelSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
 				case STARTED, ERROR -> {
@@ -139,19 +139,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-					EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-						Schedulation.ENTITY_TYPE_KEY,
-						SchedulationKeyUtils.getValue(tenantId, scheduler.getScheduleId())
+					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+						Scheduling.ENTITY_TYPE_KEY,
+						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulationRef.tell(Schedulation.Cancel.INSTANCE);
+					schedulingRef.tell(Scheduling.Cancel.INSTANCE);
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
 			});
 	}
 
-	public Uni<Void> rereouteSchedulation(String tenantId, long schedulerId) {
+	public Uni<Void> rereouteScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> {
 				if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
@@ -160,7 +160,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					MessageGateway.askReroute(
 						actorSystem,
-						SchedulationKeyUtils.getKey(tenantId, scheduler.getScheduleId())
+						SchedulingKey.fromStrings(tenantId, scheduler.getScheduleId())
 					);
 				}
 				return Uni.createFrom().voidItem();
@@ -178,7 +178,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.getResultList()
 			.map(ids -> datasourceIds
 				.stream()
-				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULATION))
+				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULING))
 				.map(djs -> ids
 					.stream()
 					.filter(id -> djs.id() == id)
@@ -251,7 +251,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public enum JobStatus {
 		ALREADY_RUNNING,
-		ON_SCHEDULATION
+		ON_SCHEDULING
 	}
 
 	public record DatasourceJobStatus(long id, JobStatus status) {}

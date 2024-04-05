@@ -22,7 +22,10 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import org.jboss.logging.Logger;
 
+import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +33,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Utils {
@@ -105,7 +110,7 @@ public class Utils {
 					continue;
 				}
 
-				stringBuilderTokenIndex.setEndIndex(i);
+				stringBuilderTokenIndex.setEndIndex(i+1);
 
 				count++;
 
@@ -131,10 +136,59 @@ public class Utils {
 		return Collections.unmodifiableMap(map);
 
 	}
+
+
+	public static String[] splitRule(String rule) {
+
+		if ((_countQuote(rule) % 2) != 0) {
+			return rule.strip().split("\\s+");
+		}
+
+		boolean quoted = false;
+		int nStr = 0;
+
+		Map<Integer, StringBuilder> map = new HashMap<>();
+
+		for (int i = 0; i < rule.length(); i++) {
+			char c = rule.charAt(i);
+			if (isQuote(c)) {
+				quoted = !quoted;
+			}
+			if (quoted) {
+				map.computeIfAbsent(nStr, pos -> new StringBuilder()).append(c);
+			}
+			else if (Character.isWhitespace(c)) {
+				nStr++;
+			}
+			else {
+				map.computeIfAbsent(nStr, pos -> new StringBuilder()).append(c);
+			}
+		}
+		return map
+			.values()
+			.stream().map(StringBuilder::toString)
+			.toArray(String[]::new);
+	}
+
+
+
 	public static String[] split(String searchText) {
 
-		if ((_countQuote(searchText) % 2) != 0) {
-			return searchText.strip().split("\\s+");
+		if ((_countQuote(searchText) % 2) != 0 || _countQuote(searchText) == 0) {
+
+			Pattern pattern = Pattern.compile("\\S*\\s*");
+			// String test = "bonus tele   visione";
+			Matcher matcher = pattern.matcher(searchText);
+			List<String> strings = new ArrayList<>();
+
+			while (matcher.find()) {
+				String group = matcher.group();
+				if (!group.isBlank()) {
+					strings.add(group);
+				}
+			}
+
+			return strings.toArray(new String[]{});
 		}
 
 		boolean quoted = false;
@@ -157,11 +211,13 @@ public class Utils {
 				map.computeIfAbsent(nStr, pos -> new StringBuilder()).append(c);
 			}
 		}
+
 		return map
 			.values()
 			.stream().map(StringBuilder::toString)
 			.toArray(String[]::new);
 	}
+
 
 	public static final List<Character> QUOTE_CHARACTER_LIST =
 		List.of('"', '\'', '`');
@@ -335,5 +391,8 @@ public class Utils {
 		int getPos();
 
 	}
+
+	@Inject
+	static Logger logger;
 
 }

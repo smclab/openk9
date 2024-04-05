@@ -40,6 +40,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -55,8 +56,6 @@ import javax.persistence.criteria.Subquery;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
-;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -210,24 +209,21 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		});
 	}
 
-	public Uni<List<DocType>> getDocTypeListByNames(String[] docTypeNames) {
-		return sessionFactory.withTransaction(s -> {
+	public Uni<List<DocType>> getDocTypeListByNames(
+		Mutiny.Session session, String[] docTypeNames) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		Class<DocType> entityClass = getEntityClass();
 
-			Class<DocType> entityClass = getEntityClass();
+		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
 
-			CriteriaQuery<DocType> query = cb.createQuery(entityClass);
+		Root<DocType> from = query.from(entityClass);
 
-			Root<DocType> from = query.from(entityClass);
+		query.where(from.get(DocType_.name).in(List.of(docTypeNames)));
 
-			query.where(from.get(DocType_.name).in(List.of(docTypeNames)));
-
-			return s
-				.createQuery(query)
-				.getResultList();
-
-		});
+		return session
+			.createQuery(query)
+			.getResultList();
 	}
 
 	public Uni<Boolean> existsByName(String name) {
@@ -253,13 +249,19 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		});
 	}
 
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(Collection<Long> ids) {
-		return findByIds(Set.copyOf(ids)).chain(dts -> docTypeFieldService.expandDocTypes(dts));
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(
+		Mutiny.Session session, Collection<Long> ids) {
+		return findByIds(Set.copyOf(ids)).chain(
+			dts -> docTypeFieldService.expandDocTypes(
+				session, dts));
 	}
 
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(Collection<String> docTypeNames) {
-		return getDocTypeListByNames(docTypeNames.toArray(String[]::new))
-			.chain(dts -> docTypeFieldService.expandDocTypes(dts));
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
+		Mutiny.Session session, Collection<String> docTypeNames) {
+
+		return getDocTypeListByNames(
+			session, docTypeNames.toArray(String[]::new))
+			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
 	}
 
 	@Override

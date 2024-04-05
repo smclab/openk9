@@ -11,12 +11,11 @@ custom components.
 ### Custom components
 
 - [**Ingestion**](ingestion): is the component that handles data ingestion logic.
-- [**Datasource**](datasource): is the component that handles data source management logic.
-- [**Plugin Driver Manager**](plugin-driver-manager): is the component that handles plugin management logic and enrichment activity.
-- [**Index Writer**](index-writer): is the component which manages the writing of data on elastic.
+- [**Datasource**](datasource): is the component that handles data source and enrich pipeline management logic .
+- [**Tenant Manager**](tenant-manager): is the component that handles tenant management activities.
 - [**Entity Manager**](entity-manager): is the component that handles entities and ontologies extracted from data.
 - [**Searcher**](searcher): is the component that defines search logic.
-- **Api Gateway**: routes http to delegated components and handles authentication via keycloak
+- [**File Manager**](file-manager): is the component that handles binary files management logic.
 
 
 ### Third-party components
@@ -24,9 +23,8 @@ custom components.
 - [**Elasticsearch**](https://www.elastic.co/): open source search and analytics engine.
 - [**Neo4j**](https://neo4j.com/): open source graph database.
 - [**RabbitMQ**](https://www.rabbitmq.com/): open source message broker.
-- [**Consul**](https://www.consul.io/): service networking solution to automate network configurations,
-discover services, and enable secure connectivity across any cloud or runtime.
 - [**Keycloak**](https://www.keycloak.org/): open source identity and access management.
+- [**MinIo**](https://min.io/): high-performance, S3 compatible object storage.
 
 <br />
 <br />

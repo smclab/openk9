@@ -5,11 +5,11 @@ import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";
 import { SelectionsAction } from "./useSelections";
 import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 
 type TokenSelectProps = {
   span: AnalysisResponseEntry;
   onSelect(token: AnalysisToken | null): void;
-  onSelectText(token: AnalysisToken | null): void;
   selected: AnalysisToken | null;
   isOpen: boolean;
   selectionsDispatch: (action: SelectionsAction) => void;
@@ -25,7 +25,7 @@ type TokenSelectProps = {
       optionPosition: number;
     } | null>
   >;
-  setTextBtn: React.Dispatch<React.SetStateAction<string | undefined>>;
+  search: (text: string) => void;
 };
 export function TokenSelect({
   span,
@@ -36,16 +36,16 @@ export function TokenSelect({
   onOptionIndexChange,
   isAutoSlected,
   setOpenedDropdown,
-  onSelectText,
   selectionsDispatch,
   saveSearchQuery,
   isColorSearch = true,
   isBtnSearch = false,
-  setTextBtn,
+  search,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
   const { t } = useTranslation();
+
   const statusStyles: Record<Status, any> = {
     "can-select": css`
       display: ${isColorSearch ? "default" : "none"};
@@ -63,7 +63,7 @@ export function TokenSelect({
     `,
     "not-interactive": css`
       display: ${isColorSearch ? "default" : "none"};
-      color: black;
+      color: green;
     `,
   };
   const status: Status = isInteractive
@@ -116,7 +116,7 @@ export function TokenSelect({
       >
         {span.text}
       </div>
-      {isOpen && isInteractive && (
+      {isOpen && (
         <div
           className="openk9-token-select-is-open"
           css={css`
@@ -195,20 +195,8 @@ export function TokenSelect({
               <div
                 key={index}
                 onClick={() => {
-                  if (isBtnSearch) setTextBtn(getTokenLabel(option) || "");
-                  isBtnSearch
-                    ? selectionsDispatch({
-                        type: "set-text",
-                        text: option?.value,
-                        textOnchange: option?.value,
-                      })
-                    : null;
-                  if (option.tokenType === "AUTOCOMPLETE") {
-                    onSelectText(option);
-                  } else {
-                    if (saveSearchQuery) saveSearchQuery((save) => !save);
+                  if (!isSelected) {
                     onSelect(option);
-                    setOpenedDropdown(null);
                   }
                 }}
                 onMouseEnter={() => {
@@ -232,7 +220,7 @@ export function TokenSelect({
                     {option.keywordName}:
                   </strong>
                 )}
-                <FactoryTokenType option={option} />
+                <FactoryTokenType option={option} t={t} />
               </div>
             );
           })}
@@ -247,7 +235,7 @@ type Status =
   | "auto-selected"
   | "not-interactive";
 
-function getTokenLabel(token: AnalysisToken) {
+export function getTokenLabel(token: AnalysisToken) {
   switch (token.tokenType) {
     case "DATASOURCE":
       return token.value;
@@ -260,17 +248,19 @@ function getTokenLabel(token: AnalysisToken) {
     case "AUTOCOMPLETE":
       return token.value;
     case "FILTER":
-      return token.value;  
+      return token.value;
   }
   return token.value;
 }
 
 function FactoryTokenType({
   option,
+  t,
 }: {
   option: AnalysisToken & {
     score: number;
   };
+  t: TFunction<"translation", undefined, "translation">;
 }) {
   switch (option.tokenType) {
     case "AUTOCOMPLETE":
@@ -295,7 +285,7 @@ function FactoryTokenType({
     case "AUTOCORRECT":
       return (
         <span className="openk9-token-select-factory-autocorrect">
-          Did you mean? <strong>{option.value}</strong>
+          {t("did-you-mean")} <strong>{option.value}</strong>
         </span>
       );
     default:

@@ -30,13 +30,16 @@ import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-@Entity
-@Table(name = "enrich_item")
+@Entity(name = EnrichItem.ENTITY_NAME)
+@Table(name = EnrichItem.TABLE_NAME)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 public class EnrichItem extends K9Entity {
+
+	public static final String TABLE_NAME = "enrich_item";
+	public static final String ENTITY_NAME = "EnrichItem";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;

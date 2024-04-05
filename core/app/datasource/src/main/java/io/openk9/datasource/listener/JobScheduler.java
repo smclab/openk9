@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.listener;
 
 import akka.actor.typed.ActorRef;
@@ -9,15 +26,15 @@ import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -83,7 +100,33 @@ public class JobScheduler {
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 	private record PersistSchedulerInternal(
 		String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
-	private record CancelSchedulation(String tenantName, Scheduler scheduler) implements Command {}
+
+	private static Behavior<Command> initial(
+		ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		HttpPluginDriverClient httpPluginDriverClient,
+		Mutiny.SessionFactory sessionFactory,
+		RestHighLevelClient restHighLevelClient,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		return Behaviors.receive(Command.class)
+			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
+			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
+			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
+			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, sessionFactory))
+			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(UnScheduleJobInternal.class, rd -> onUnscheduleJobInternal(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, sessionFactory, messageGateway))
+			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(ctx, httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
+			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, sessionFactory, messageGateway, ssi))
+			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
+			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, sessionFactory, messageGateway, pndi))
+			.onMessage(CancelScheduling.class, cs -> onCancelScheduling(ctx, cs))
+			.build();
+
+	}
 
 	public static Behavior<Command> create(
 		HttpPluginDriverClient httpPluginDriverClient,
@@ -172,31 +215,50 @@ public class JobScheduler {
 			.build();
 	}
 
-	private static Behavior<Command> initial(
-		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
-		ActorRef<MessageGateway.Command> messageGateway,
-		List<String> jobNames) {
+	private static Behavior<Command> onInvokePluginDriverInternal(
+		ActorContext<Command> ctx, HttpPluginDriverClient httpPluginDriverClient,
+		String tenantName, Scheduler scheduler,
+		boolean startFromFirst) {
 
-		return Behaviors.receive(Command.class)
-			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
-			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
-			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
-			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, sessionFactory))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(UnScheduleJobInternal.class, rd -> onUnscheduleJobInternal(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, sessionFactory, messageGateway))
-			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(ctx, httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
-			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, sessionFactory, messageGateway, ssi))
-			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
-			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, sessionFactory, messageGateway, pndi))
-			.onMessage(CancelSchedulation.class, cs -> onCancelSchedulation(ctx, cs))
-			.build();
+		Datasource datasource = scheduler.getDatasource();
+		PluginDriver pluginDriver = datasource.getPluginDriver();
 
+		OffsetDateTime lastIngestionDate;
+
+		if (startFromFirst || datasource.getLastIngestionDate() == null) {
+			lastIngestionDate = OffsetDateTime.ofInstant(
+				Instant.ofEpochMilli(0), ZoneId.systemDefault());
+		}
+		else {
+			lastIngestionDate = datasource.getLastIngestionDate();
+		}
+
+		switch (pluginDriver.getType()) {
+			case HTTP: {
+				VertxUtil.runOnContext(
+					() -> httpPluginDriverClient.invoke(
+						Json.decodeValue(
+							pluginDriver.getJsonConfig(),
+							HttpPluginDriverInfo.class),
+						HttpPluginDriverContext
+							.builder()
+							.timestamp(lastIngestionDate)
+							.tenantId(tenantName)
+							.datasourceId(datasource.getId())
+							.scheduleId(scheduler.getScheduleId())
+							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
+							.build()
+					)
+					.onFailure()
+					.invoke(throwable -> ctx
+						.getSelf()
+						.tell(new CancelScheduling(tenantName, scheduler))
+					)
+				);
+			}
+		}
+
+		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onUnscheduleJobInternal(
@@ -342,48 +404,19 @@ public class JobScheduler {
 			.map(integer -> integer.equals(0));
 	}
 
-	private static Behavior<Command> onInvokePluginDriverInternal(
-		ActorContext<Command> ctx, HttpPluginDriverClient httpPluginDriverClient,
-		String tenantName, Scheduler scheduler,
-		boolean startFromFirst) {
+	private static Behavior<Command> onCancelScheduling(
+		ActorContext<Command> ctx, CancelScheduling cs) {
 
-		Datasource datasource = scheduler.getDatasource();
-		PluginDriver pluginDriver = datasource.getPluginDriver();
+		String tenantName = cs.tenantName;
+		Scheduler scheduler = cs.scheduler;
+		String scheduleId = scheduler.getScheduleId();
 
-		OffsetDateTime lastIngestionDate;
+		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
-		if (startFromFirst || datasource.getLastIngestionDate() == null) {
-			lastIngestionDate = OffsetDateTime.ofInstant(
-				Instant.ofEpochMilli(0), ZoneId.systemDefault());
-		}
-		else {
-			lastIngestionDate = datasource.getLastIngestionDate();
-		}
+		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY, SchedulingKey.asString(tenantName, scheduleId));
 
-		switch (pluginDriver.getType()) {
-			case HTTP: {
-				VertxUtil.runOnContext(
-					() -> httpPluginDriverClient.invoke(
-						Json.decodeValue(
-							pluginDriver.getJsonConfig(),
-							HttpPluginDriverInfo.class),
-						HttpPluginDriverContext
-							.builder()
-							.timestamp(lastIngestionDate)
-							.tenantId(tenantName)
-							.datasourceId(datasource.getId())
-							.scheduleId(scheduler.getScheduleId())
-							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
-							.build()
-					)
-					.onFailure()
-					.invoke(throwable -> ctx
-						.getSelf()
-						.tell(new CancelSchedulation(tenantName, scheduler))
-					)
-				);
-			}
-		}
+		schedulingRef.tell(Scheduling.Cancel.INSTANCE);
 
 		return Behaviors.same();
 	}
@@ -736,7 +769,7 @@ public class JobScheduler {
 							.persist(scheduler)
 							.invoke(() -> {
 								messageGateway.tell(new MessageGateway.Register(
-									SchedulationKeyUtils.getValue(
+									SchedulingKey.asString(
 										tenantName, scheduler.getScheduleId())));
 								ctx
 									.getSelf()
@@ -748,22 +781,7 @@ public class JobScheduler {
 		);
 	}
 
-	private static Behavior<Command> onCancelSchedulation(
-		ActorContext<Command> ctx, CancelSchedulation cs) {
-
-		String tenantName = cs.tenantName;
-		Scheduler scheduler = cs.scheduler;
-		String scheduleId = scheduler.getScheduleId();
-
-		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
-
-		EntityRef<Schedulation.Command> schedulationRef = clusterSharding.entityRefFor(
-			Schedulation.ENTITY_TYPE_KEY, SchedulationKeyUtils.getValue(tenantName, scheduleId));
-
-		schedulationRef.tell(Schedulation.Cancel.INSTANCE);
-
-		return Behaviors.same();
-	}
+	private record CancelScheduling(String tenantName, Scheduler scheduler) implements Command {}
 
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
 		return actorRef.path().address().port().isEmpty();
@@ -772,7 +790,7 @@ public class JobScheduler {
 	private static String getPurgeCron(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 
-		String configPath = "io.openk9.schedulation.purge.cron";
+		String configPath = "io.openk9.scheduling.purge.cron";
 
 		if (config.hasPathOrNull(configPath)) {
 			if (config.getIsNull(configPath)) {

@@ -27,8 +27,8 @@ import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {
-	 EnrichItemService(EnrichItemMapper mapper) {
-		 this.mapper = mapper;
+	EnrichItemService(EnrichItemMapper mapper) {
+		this.mapper = mapper;
 	}
 
 	@Override
@@ -38,6 +38,7 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[] {EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
+		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
+
 }

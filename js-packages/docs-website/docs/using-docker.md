@@ -1,6 +1,6 @@
 ---
 id: using-docker
-title: Getting Started using Docker
+title: Install on Docker
 ---
 
 The fastest way to try OpenK9 is by using our prebuilt Docker images and our docker-compose configuration.

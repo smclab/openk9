@@ -1,8 +1,31 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import io.openk9.datasource.mapper.FuzzinessMapper;
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.UserField;
+import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Tuple;
 import org.elasticsearch.action.search.SearchRequest;
@@ -24,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -33,10 +57,10 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		String tenantId,
+		String tenantId, JWT jwt,
 		String...keywords) {
 		this(
-			bucket, annotator, stopWords, restHighLevelClient, tenantId,
+			bucket, annotator, stopWords, restHighLevelClient, tenantId, jwt,
 			List.of(keywords));
 	}
 
@@ -44,19 +68,12 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		Bucket bucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		String tenantId,
+		String tenantId, JWT jwt,
 		List<String> keywords) {
 		super(bucket, annotator, stopWords, tenantId);
 		this.keywords = keywords;
 		this.restHighLevelClient = restHighLevelClient;
-	}
-
-	@Override
-	protected QueryBuilder query(
-		String field, String token) {
-		return QueryBuilders
-			.fuzzyQuery(field, token)
-			.fuzziness(annotator.getFuziness().toElasticType());
+		this.jwt = jwt;
 	}
 
 	@Override
@@ -74,7 +91,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 			token = tokens[0];
 		}
 		else {
-			token = String.join(" ", tokens);
+			token = String.join("", tokens);
 		}
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
@@ -86,6 +103,33 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		}
 
 		builder.must(boolQueryBuilder);
+
+		Iterator<AclMapping> iterator =
+			bucket.getDatasources()
+				.stream()
+				.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
+				.distinct()
+				.iterator();
+
+		BoolQueryBuilder innerQuery =
+			QueryBuilders
+				.boolQuery()
+				.minimumShouldMatch(1)
+				.should(QueryBuilders.matchQuery("acl.public", true));
+
+		while (iterator.hasNext()) {
+
+			AclMapping aclMapping = iterator.next();
+
+			DocTypeField docTypeField = aclMapping.getDocTypeField();
+
+			UserField userField = aclMapping.getUserField();
+
+			AclQueryParser.apply(docTypeField, userField.getTerms(jwt), innerQuery);
+
+		}
+
+		builder.filter(innerQuery);
 
 		String[] indexNames =
 			bucket
@@ -174,6 +218,14 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	}
 
+	@Override
+	protected QueryBuilder query(
+		String field, String token) {
+		return QueryBuilders
+			.fuzzyQuery(field, token)
+			.fuzziness(FuzzinessMapper.map(annotator.getFuziness()));
+	}
+
 	protected abstract CategorySemantics _createCategorySemantics(
 		String aggregatorName, String aggregatorKey, String fieldName);
 	private static double _levenshteinDistance(String x, String y) {
@@ -214,6 +266,8 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	private final RestHighLevelClient restHighLevelClient;
 	private final List<String> keywords;
+
+	protected final JWT jwt;
 
 	private static final Logger _log = Logger.getLogger(
 		BaseAggregatorAnnotator.class);

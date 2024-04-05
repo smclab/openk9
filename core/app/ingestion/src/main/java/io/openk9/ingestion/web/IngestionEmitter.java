@@ -17,17 +17,28 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.ingestion.dto.*;
+import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ingestion.IngestionUtils;
+import io.openk9.common.util.ingestion.PayloadType;
+import io.openk9.ingestion.dto.BinaryDTO;
+import io.openk9.ingestion.dto.BinaryPayload;
+import io.openk9.ingestion.dto.IngestionDTO;
+import io.openk9.ingestion.dto.IngestionPayload;
+import io.openk9.ingestion.dto.IngestionPayloadWrapper;
+import io.openk9.ingestion.dto.ResourcesDTO;
+import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.reactive.messaging.*;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Message;
+import org.eclipse.microprofile.reactive.messaging.Metadata;
+import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +46,17 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class IngestionEmitter {
+
+	@Channel("ingestion")
+	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
+	Emitter<IngestionPayloadWrapper> _emitter;
+	@Inject
+	Logger logger;
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
@@ -81,15 +100,23 @@ public class IngestionEmitter {
 				dto.getRawContent(),
 				datasourcePayload,
 				dto.getTenantId(),
-				datasourcePayload
-					.keySet()
-					.toArray(new String[0]),
+				IngestionUtils.getDocumentTypes(datasourcePayload),
 				_dtoToPayload(dto.getResources()),
 				mappingAcl,
 				dto.getScheduleId(),
-				dto.getLast()
+				dto.getLast(),
+				_mapType(dto.getType())
 			)
 		);
+	}
+
+	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
+		return switch (type) {
+			case DOCUMENT -> PayloadType.DOCUMENT;
+			case LAST -> PayloadType.LAST;
+			case HALT -> PayloadType.HALT;
+			case UNRECOGNIZED -> null;
+		};
 	}
 
 	private IngestionPayloadWrapper _of(IngestionDTO dto) {
@@ -102,13 +129,12 @@ public class IngestionEmitter {
 				dto.getRawContent(),
 				dto.getDatasourcePayload(),
 				dto.getTenantId(),
-				dto.getDatasourcePayload()
-					.keySet()
-					.toArray(new String[0]),
+				IngestionUtils.getDocumentTypes(dto.getDatasourcePayload()),
 				_dtoToPayload(dto.getResources()),
 				dto.getAcl(),
 				dto.getScheduleId(),
-				dto.isLast()
+				dto.isLast(),
+				dto.getType()
 			)
 		);
 	}
@@ -129,7 +155,8 @@ public class IngestionEmitter {
 					.stream()
 					.map(binaryDTO -> BinaryPayload.of(
 						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()))
+						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+					))
 					.collect(Collectors.toList());
 		}
 
@@ -152,7 +179,8 @@ public class IngestionEmitter {
 					.stream()
 					.map(binaryDTO -> BinaryPayload.of(
 						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()))
+						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+					))
 					.collect(Collectors.toList());
 		}
 
@@ -174,16 +202,11 @@ public class IngestionEmitter {
 
 	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
 		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
-		return ingestionPayload.getTenantId() + "#" + ingestionPayload.getScheduleId();
+
+		return SchedulingKey.asString(
+			ingestionPayload.getTenantId(),
+			ingestionPayload.getScheduleId()
+		);
 	}
-
-
-	@Channel("ingestion")
-	@OnOverflow(value = OnOverflow.Strategy.BUFFER, bufferSize = 1000)
-	Emitter<IngestionPayloadWrapper> _emitter;
-
-
-	@Inject
-	Logger logger;
 
 }

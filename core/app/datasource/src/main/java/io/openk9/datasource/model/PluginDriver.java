@@ -24,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -31,16 +33,17 @@ import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "plugin_driver")
+@Entity(name = PluginDriver.ENTITY_NAME)
+@Table(name = PluginDriver.TABLE_NAME)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 public class PluginDriver extends K9Entity {
+
+	public static final String ENTITY_NAME = "PluginDriver";
+	public static final String TABLE_NAME = "plugin_driver";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -61,8 +64,17 @@ public class PluginDriver extends K9Entity {
 	private Set<AclMapping> aclMappings
 		= new LinkedHashSet<>();
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "provisioning")
+	private Provisioning provisioning = Provisioning.USER;
+
 	public enum PluginDriverType {
 		HTTP
+	}
+
+	public enum Provisioning {
+		SYSTEM,
+		USER
 	}
 
 }

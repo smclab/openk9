@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.model;
 
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -32,7 +32,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
-import java.util.Objects;
 
 @Entity
 @Table(name = "enrich_pipeline_item")
@@ -41,8 +40,7 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
-public class EnrichPipelineItem
-	extends PanacheEntityBase {
+public class EnrichPipelineItem {
 
 	@EmbeddedId
 	private EnrichPipelineItemKey key;
@@ -79,4 +77,5 @@ public class EnrichPipelineItem
 	public int hashCode() {
 		return Objects.hash(key);
 	}
+
 }

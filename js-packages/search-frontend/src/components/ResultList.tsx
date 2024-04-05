@@ -10,7 +10,7 @@ import { useOpenK9Client } from "./client";
 import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
-import { SortResultList } from "./SortResultList";
+import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
@@ -62,6 +62,7 @@ function Results<E>({
   const renderers = useRenderers();
 
   if (!renderers) return null;
+
   switch (displayMode.type) {
     case "finite":
       return (
@@ -187,8 +188,7 @@ function ResultCount({
         >
           <span className="openk9-result-list-title title">
             {label || t("result")}
-          </span>
-          {" "}
+          </span>{" "}
           {counterIsVisible && (
             <span
               className="openk9-result-list-counter-number"
@@ -231,7 +231,7 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResultList
+            <SortResultListMemo
               setSortResult={setSortResult}
               relevance={t("relevance") || "relevance"}
               language={language}
@@ -287,8 +287,11 @@ export function FiniteResults<E>({
     sortAfterKey,
     numberOfResults,
   );
-
-  setTotalResult(results.data?.pages[0].total ?? null);
+  React.useEffect(() => {
+    if (results.data && results.data.pages[0].total) {
+      setTotalResult(results.data.pages[0].total);
+    }
+  }, [results.data, setTotalResult]);
 
   return (
     <div
@@ -367,9 +370,12 @@ export function InfiniteResults<E>({
     sortAfterKey,
     numberOfResults,
   );
-
+  React.useEffect(() => {
+    if (results.data && results.data.pages[0].total) {
+      setTotalResult(results.data.pages[0].total);
+    }
+  }, [results.data, setTotalResult]);
   const { t } = useTranslation();
-  setTotalResult(results.data?.pages[0].total ?? null);
   return (
     <OverlayScrollbarsComponentDockerFix
       className="openk9-infinite-results-overlay-scrollbars"
@@ -405,7 +411,7 @@ export function InfiniteResults<E>({
           </ResultCount>
           {results.data?.pages.map((page, pageIndex) => {
             return (
-              <React.Fragment key={pageIndex}>
+              <React.Fragment key={`page-${pageIndex}`}>
                 {page.result.map((result, resultIndex) => {
                   return (
                     <ResultMemo<E>

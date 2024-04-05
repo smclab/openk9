@@ -44,6 +44,9 @@ type FiltersProps = {
   numberResultOfFilters?: number | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
+  refButton?: React.RefObject<HTMLButtonElement>;
+  callbackSubmit?: () => void | null;
+  callbackReset?: () => void | null;
 };
 function FiltersHorizontal({
   searchQuery,
@@ -60,6 +63,9 @@ function FiltersHorizontal({
   numberResultOfFilters,
   isDynamicElement,
   selectionsDispatch,
+  refButton,
+  callbackReset,
+  callbackSubmit,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -166,6 +172,9 @@ function FiltersHorizontal({
         >
           <button
             className="openk9-filter-horizontal-submit openk9-filter-button-mobile-remove"
+            disabled={filterSelect.every(
+              (token) => !token.values || token.values.length === 0,
+            )}
             aria-label="rimuovi filtri"
             css={css`
               font-size: smaller;
@@ -181,6 +190,10 @@ function FiltersHorizontal({
               display: flex;
               align-items: center;
               gap: 3px;
+              &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+              }
               @media (max-width: 480px) {
                 background: white;
                 border: 1px solid #d6012e;
@@ -204,13 +217,21 @@ function FiltersHorizontal({
               onConfigurationChange({ filterTokens: [] });
               onConfigurationChangeExt && onConfigurationChangeExt();
               selectionsDispatch({ type: "reset-filters" });
+              setFilterSelect([]);
+              if (callbackReset) callbackReset();
+              if (refButton && refButton.current) refButton.current.focus();
             }}
           >
             <div>{t("remove-filters")}</div>
             <TrashSvg size="18px" />
           </button>
           <button
-            className="openk9-filter-horizontal-submit openk9-filter-button-mobile-apply"
+            className={`openk9-filter-horizontal-submit openk9-filter-button-mobile-apply ${
+              filterSelect.length === 0 ? "openk9-button-disabled" : ""
+            }`}
+            disabled={filterSelect.every(
+              (token) => !token.values || token.values.length === 0,
+            )}
             aria-label="applica filtri"
             css={css`
               font-size: smaller;
@@ -242,10 +263,16 @@ function FiltersHorizontal({
                 font-weight: 700;
                 line-height: normal;
               }
+              &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+              }
             `}
             onClick={() => {
               onConfigurationChange({ filterTokens: filterSelect });
               onConfigurationChangeExt && onConfigurationChangeExt();
+              if (callbackSubmit) callbackSubmit();
+              if (refButton && refButton.current) refButton.current.focus();
             }}
           >
             <div>{t("add-filters") || "Add Filters"}</div>

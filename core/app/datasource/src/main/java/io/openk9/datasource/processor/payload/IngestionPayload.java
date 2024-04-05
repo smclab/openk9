@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.processor.payload;
 
+import io.openk9.common.util.ingestion.PayloadType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,4 +45,5 @@ public class IngestionPayload {
 	private Map<String, List<String>> acl;
 	private boolean last = false;
 	private String scheduleId;
+	private PayloadType type;
 }

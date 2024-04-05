@@ -22,11 +22,14 @@ export function ResultTextContentThree<E>({
     >
       {hihglithTextLines ? (
         <React.Fragment>
-          <div css={truncatedLineStyle} className="openk9--result-text-content-three">
+          <div
+            css={truncatedLineStyle}
+            className="openk9--result-text-content-three"
+          >
             {hihglithTextLines.map((text, index) => (
               <HighlightedText text={text} key={index} />
-            ))} 
-        </div>
+            ))}
+          </div>
         </React.Fragment>
       ) : (
         <div
@@ -34,11 +37,10 @@ export function ResultTextContentThree<E>({
           css={
             isTruncate
               ? css`
-                  height: calc(21px * 5);
+                  display: -webkit-box;
+                  -webkit-line-clamp: 3;
+                  -webkit-box-orient: vertical;
                   overflow: hidden;
-                  word-wrap: break-word;
-                  word-break: break-word;
-                  text-overflow: ellipsis;
                 `
               : undefined
           }
