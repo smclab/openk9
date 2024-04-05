@@ -22,6 +22,7 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
@@ -150,11 +151,7 @@ public class DatasourceGrpcTest {
 	@RunOnVertxContext
 	void should_create_plugin_driver(UniAsserter asserter) {
 
-		BDDMockito.given(pluginDriverService.upsert(
-				eq(SCHEMA_NAME_VALUE),
-				any(PluginDriverDTO.class)
-			))
-			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedPluginDriver));
+		givenUpsertSuccess();
 
 		asserter.assertThat(
 			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
@@ -187,6 +184,31 @@ public class DatasourceGrpcTest {
 				.setSchemaName(SCHEMA_NAME_VALUE)
 				.build()),
 			DatasourceGrpcTest::failureAssertions
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_create_preset_plugin_driver(UniAsserter asserter) {
+		givenUpsertSuccess();
+
+		asserter.assertThat(
+			() -> datasource.createPresetPluginDriver(
+				CreatePresetPluginDriverRequest.newBuilder()
+					.setSchemaName(SCHEMA_NAME_VALUE)
+					.setPreset(Preset.LIFERAY)
+					.build()),
+			response -> {
+				BDDMockito.then(pluginDriverService)
+					.should(times(1))
+					.upsert(
+						eq(SCHEMA_NAME_VALUE),
+						eq(PluginDrivers.getPluginDriverDTO(SCHEMA_NAME_VALUE, Preset.LIFERAY))
+					);
+
+				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());
+			}
 		);
 
 	}
@@ -248,6 +270,14 @@ public class DatasourceGrpcTest {
 		}
 
 		return CREATED_ENRICH_ITEM;
+	}
+
+	private void givenUpsertSuccess() {
+		BDDMockito.given(pluginDriverService.upsert(
+				eq(SCHEMA_NAME_VALUE),
+				any(PluginDriverDTO.class)
+			))
+			.willReturn(Uni.createFrom().item(DatasourceGrpcTest::getCreatedPluginDriver));
 	}
 
 }

@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -6,6 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.OffsetDateTime;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -76,7 +94,7 @@ import javax.persistence.OneToOne;
 })
 public class Scheduler extends K9Entity {
 
-	public static final String FETCH_BY_SCHEDULE_ID = "Scheduler.fetchSchedulation";
+	public static final String FETCH_BY_SCHEDULE_ID = "Scheduler.fetchScheduling";
 	public static final String FETCH_RUNNING_QUERY = "Scheduler.fetchRunning";
 	public static final String ENRICH_ITEMS_ENTITY_GRAPH = "Scheduler.fetchEnrichItems";
 
@@ -96,7 +114,8 @@ public class Scheduler extends K9Entity {
 	private DataIndex newDataIndex;
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
-
+	@Column(name = "last_ingestion_date")
+	private OffsetDateTime lastIngestionDate;
 	public enum SchedulerStatus {
 		STARTED,
 		FINISHED,

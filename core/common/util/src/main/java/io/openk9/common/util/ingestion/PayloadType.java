@@ -15,12 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto.form;
+package io.openk9.common.util.ingestion;
 
-public enum Type {
-	STRING,
-	NUMBER,
-	SELECT,
-	MULTISELECT,
-	LIST
+public enum PayloadType {
+
+	DOCUMENT,
+	LAST,
+	HALT
 }

@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.web;
 
 
@@ -13,6 +30,8 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.LocalizedSuggestionCategory;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
@@ -26,6 +45,7 @@ import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
+import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.quarkus.cache.Cache;
@@ -35,6 +55,9 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.Tuple;
@@ -50,8 +73,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import java.util.List;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -101,6 +122,16 @@ public class BucketResource {
 			cache,
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
 			getDocTypeFieldsSortableList(request.host(), translated));
+	}
+
+	@Path("/current/sortings")
+	@GET
+	public Uni<List<SortingResponseDTO>> getSortings(
+		@QueryParam("translated") @DefaultValue("true") boolean translated){
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request.host(), "getSortings", translated),
+			getSortingList(request.host(), translated));
 	}
 
 	@Path("/current/defaultLanguage")
@@ -228,6 +259,58 @@ public class BucketResource {
 
 	}
 
+	private Uni<List<SortingResponseDTO>> getSortingList(String virtualhost, boolean translated) {
+		return sessionFactory.withTransaction(session -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Sorting> query = cb.createQuery(Sorting.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Sorting> sortingsJoin = from.join(Bucket_.sortings);
+
+			sortingsJoin.fetch(Sorting_.docTypeField, JoinType.LEFT);
+
+			query.select(sortingsJoin);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			query.orderBy(cb.desc(sortingsJoin.get(Sorting_.priority)));
+
+			query.distinct(true);
+
+			return session
+				.createQuery(query)
+				.getResultList()
+				.chain(sortings -> {
+					if (translated) {
+						return translationService
+							.getTranslationMaps(
+								Sorting.class,
+								sortings.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.map(maps -> mapper.toSortingResponseDtoList(sortings, maps));
+					}
+					else {
+						return Uni
+							.createFrom()
+							.item(mapper.toSortingResponseDtoList(sortings));
+					}
+				});
+		});
+
+	}
+
 	private Uni<List<TemplateResponseDTO>> getDocTypeTemplateList(String virtualhost) {
 		return sessionFactory.withTransaction(session -> {
 
@@ -284,6 +367,10 @@ public class BucketResource {
 
 			tokenTabFetch.fetch(TokenTab_.extraParams, JoinType.LEFT);
 
+			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
+
+			sortingFetch.fetch(Sorting_.docTypeField, JoinType.LEFT);
+
 			query.select(tabsJoin);
 
 			query.where(
@@ -302,13 +389,30 @@ public class BucketResource {
 				.getResultList()
 				.chain(tabs -> {
 					if (translated) {
+						var sortings = tabs.stream()
+							.map(Tab::getSortings)
+							.flatMap(Collection::stream)
+							.map(K9Entity::getId)
+							.distinct()
+							.toList();
+
+
 						return translationService
 							.getTranslationMaps(
 								Tab.class,
 								tabs.stream()
 									.map(K9Entity::getId)
 									.toList())
-							.map(maps -> mapper.toTabResponseDtoList(tabs, maps));
+							.flatMap(tabTranslationMaps -> translationService.getTranslationMaps(
+										Sorting.class,
+										sortings
+									)
+									.map(sortingsTranslationMaps -> mapper.toTabResponseDtoList(
+										tabs,
+										tabTranslationMaps,
+										sortingsTranslationMaps
+									))
+							);
 					}
 					else {
 						return Uni

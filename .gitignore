@@ -195,5 +195,6 @@ nb-configuration.xml
 .jbang
 .sdkmanrc
 .envrc
+.quarkus
 
 release.properties

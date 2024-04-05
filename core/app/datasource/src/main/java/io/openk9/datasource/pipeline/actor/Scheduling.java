@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
@@ -17,18 +34,20 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import com.typesafe.config.Config;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.NotificationSender;
-import io.openk9.datasource.pipeline.SchedulationKeyUtils;
 import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -44,12 +63,12 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Schedulation extends AbstractBehavior<Schedulation.Command> {
+public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
-		EntityTypeKey.create(Command.class, "schedulation");
-	public static final String SCHEDULATION_TIMEOUT = "io.openk9.schedulation.timeout";
-	public static final String WORKERS_PER_NODE = "io.openk9.schedulation.workers-per-node";
+		EntityTypeKey.create(Command.class, "scheduling");
+	public static final String SCHEDULING_TIMEOUT = "io.openk9.scheduling.timeout";
+	public static final String WORKERS_PER_NODE = "io.openk9.scheduling.workers-per-node";
 	public static final int WORKERS_PER_NODE_DEFAULT = 2;
 	private static final String INIT_BEHAVIOR = "Init";
 	private static final String READY_BEHAVIOR = "Ready";
@@ -57,38 +76,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String NEXT_BEHAVIOR = "Next";
 	private static final String CLOSING_BEHAVIOR = "Closing";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
-	private static final Logger log = Logger.getLogger(Schedulation.class);
-
-	public sealed interface Command extends CborSerializable {}
-	public enum Cancel implements Command {INSTANCE}
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
-	public record TrackError(ActorRef<Response> replyTo) implements Command {}
-	public record Restart(ActorRef<Response> replyTo) implements Command {}
-	public enum PersistDataIndex implements Command {INSTANCE}
-	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
-	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo) implements Command {}
-	private enum PersistStatusFinished implements Command {INSTANCE}
-	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
-	private record SetScheduler(Scheduler scheduler) implements Command {}
-	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
-	private record NotificationSenderResponseWrapper(NotificationSender.Response response) implements Command {}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-	private enum Start implements Command {INSTANCE}
-	private enum Stop implements Command {INSTANCE}
-	private enum Tick implements Command {INSTANCE}
-
-	public sealed interface Response extends CborSerializable {}
-	public enum Success implements Response {INSTANCE}
-	public record Failure(String error) implements Response {}
-
-	public record SchedulationKey(String tenantId, String scheduleId) {
-		public String value() {
-			return SchedulationKeyUtils.getValue(this);
-		}
-
-	}
-
-	private final SchedulationKey key;
+	private static final Logger log = Logger.getLogger(Scheduling.class);
+	private final SchedulingKey key;
 	private final Mutiny.SessionFactory sessionFactory;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Set<ActorRef<Response>> consumers = new HashSet<>();
@@ -97,15 +86,14 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private final int workersPerNode;
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
-	private OffsetDateTime lastIngestionDate;
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
-	private int workers = 0;
+	private int busyWorkers = 0;
 
-	public Schedulation(
+	public Scheduling(
 		ActorContext<Command> context,
-		SchedulationKey key,
+		SchedulingKey key,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper) {
 
@@ -118,7 +106,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		this.maxWorkers = workersPerNode;
 
 		ActorRef<Receptionist.Listing> messageAdapter =
-			getContext().messageAdapter(Receptionist.Listing.class, MessageGatewaySubscription::new);
+			getContext().messageAdapter(
+				Receptionist.Listing.class,
+				MessageGatewaySubscription::new
+			);
 
 		getContext().getSystem().receptionist().tell(
 			Receptionist.subscribe(MessageGateway.SERVICE_KEY, messageAdapter)
@@ -128,27 +119,27 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	}
 
 	public static Behavior<Command> create(
-		SchedulationKey schedulationKey,
+		SchedulingKey schedulingKey,
 		Mutiny.SessionFactory sessionFactory,
 		SchedulerMapper schedulerMapper
 	) {
 
 		return Behaviors
 			.<Command>supervise(
-				Behaviors.setup(ctx -> new Schedulation(
+				Behaviors.setup(ctx -> new Scheduling(
 					ctx,
-					schedulationKey,
+					schedulingKey,
 					sessionFactory,
 					schedulerMapper
 				))
 			)
 			.onFailure(SupervisorStrategy.restartWithBackoff(
-				Duration.ofSeconds(3),
-				Duration.ofSeconds(60),
-				0.2)
+					Duration.ofSeconds(3),
+					Duration.ofSeconds(60),
+					0.2
+				)
 			);
 	}
-
 
 	@Override
 	public Receive<Command> createReceive() {
@@ -158,17 +149,22 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	@Override
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
-			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(SetLastIngestionDate.class, this::onSetLastIngestionDate)
 			.onMessage(SetScheduler.class, this::onSetScheduler)
-			.onMessageEquals(PersistDataIndex.INSTANCE, this::onPersistDataIndex)
-			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
+	}
+
+	private static Duration getTimeout(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getDuration(config, SCHEDULING_TIMEOUT, Duration.ofHours(6));
+	}
+
+	private static int getWorkersPerNode(ActorContext<Command> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
 	}
 
 	private Behavior<Command> onMessageGatewaySubscription(
@@ -196,27 +192,38 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessageEquals(Start.INSTANCE, this::onStart)
 			.onAnyMessage(this::enqueue)
 			.build();
+	}
+
+	private ReceiveBuilder<Command> afterSetupReceiver() {
+
+		return newReceiveBuilder()
+			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+			.onMessage(PersistStatus.class, this::onPersistStatus)
+			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
+			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
+			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
 
 	private Receive<Command> ready() {
 		logBehavior(READY_BEHAVIOR);
 
-		return newReceiveBuilder()
+		return afterSetupReceiver()
 			.onMessage(Ingest.class, this::onIngest)
 			.onMessage(TrackError.class, this::onTrackError)
 			.onMessage(Restart.class, this::onRestart)
-			.onMessage(PersistStatus.class, this::onPersistStatus)
-			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
 			.build();
 	}
 
 	private Receive<Command> busy() {
 		logBehavior(BUSY_BEHAVIOR);
 
-		return newReceiveBuilder()
+		return afterSetupReceiver()
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
@@ -235,29 +242,36 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
-		return newReceiveBuilder().build();
+		return afterSetupReceiver()
+			.onAnyMessage(this::discard)
+			.build();
 	}
 
-	private Behavior<Command> onStart(Start start) {
+	private Behavior<Command> discard(Command command) {
+		log.warnf("A message of type %s has been discarded.", command.getClass());
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onStart() {
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withStatelessTransaction(key.tenantId, (s, t) -> s
-				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-				.setParameter("scheduleId", key.scheduleId)
-				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-				.getSingleResult()
-				.invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
-			)
+			.withSession(key.tenantId(), (s) -> {
+					s.setDefaultReadOnly(true);
+					return fetchScheduler(s);
+				}
+			).invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
 		);
 
-		return Behaviors.withTimers(timer -> {
-			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
-			return Behaviors.same();
-		});
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
 		this.scheduler = schedulerMapper.map(setScheduler.scheduler);
-		return this.next();
+
+		return Behaviors.withTimers(timer -> {
+			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
+			return this.next();
+		});
 	}
 
 	private Behavior<Command> onIngest(Ingest ingest) {
@@ -270,8 +284,17 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
+		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
+			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
+
+			getContext().getSelf().tell(Cancel.INSTANCE);
+
+			return closing();
+		}
+
 		if (dataPayload.getContentId() != null) {
 
+			// TODO maybe could be asked to self
 			updateLastIngestionDate(dataPayload);
 
 			dataPayload.setIndexName(indexName);
@@ -287,18 +310,19 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				key.value() + "#" + contentId
+				EnrichPipelineKey.of(key, contentId).asString()
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
-				responseActorRef,
-				ingest.replyTo,
-				Json.encodeToBuffer(dataPayload).getBytes(),
-				scheduler)
+					responseActorRef,
+					ingest.replyTo,
+					Json.encodeToBuffer(dataPayload).getBytes(),
+					scheduler
+				)
 			);
 
 			consumers.add(ingest.replyTo());
-			workers++;
+			busyWorkers++;
 
 		}
 		else if (!dataPayload.isLast()) {
@@ -310,7 +334,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			log.infof("%s received last message", key);
 		}
 
-		return workers < maxWorkers ? next() : busy();
+		return busyWorkers < maxWorkers ? next() : busy();
 
 	}
 
@@ -337,7 +361,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onCancel() {
 
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId, (s, t) -> s
+			.withTransaction(key.tenantId(), (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(scheduler -> {
 					scheduler.setStatus(Scheduler.SchedulerStatus.CANCELLED);
@@ -375,41 +399,53 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
 		}
 
-		workers--;
+		busyWorkers--;
 		consumers.remove(response.replyTo());
 
 		return next();
 	}
 
-	private Behavior<Command> onPersistDataIndex() {
-		Long newDataIndexId = scheduler.getNewDataIndexId();
-		Long datasourceId = scheduler.getDatasourceId();
+	private Behavior<Command> onPersistDatasource() {
+		var newDataIndexId = scheduler.getNewDataIndexId();
+		var datasourceId = scheduler.getDatasourceId();
+		var lastIngestionDate = scheduler.getLastIngestionDate();
 
-		if (newDataIndexId != null) {
-			String tenantId = key.tenantId;
+		if (lastIngestionDate != null) {
+			String tenantId = key.tenantId();
 
-			log.infof(
-				"replacing dataindex %s for datasource %s on tenant %s",
-				newDataIndexId, datasourceId, tenantId);
 			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
-					tenantId,
-					(s, t) -> s
-						.find(Datasource.class, datasourceId)
-						.onItem()
-						.transformToUni(ds -> s
-							.find(DataIndex.class, newDataIndexId)
-							.onItem()
-							.transformToUni(di -> {
-								ds.setDataIndex(di);
-								return s.persist(ds);
-							}))
+					tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
+						.flatMap(datasource -> {
+							datasource.setLastIngestionDate(lastIngestionDate);
+
+							if (newDataIndexId != null) {
+								var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
+
+								log.infof(
+									"replacing dataindex %s for datasource %s on tenant %s",
+									newDataIndexId, datasourceId, tenantId
+								);
+
+								datasource.setDataIndex(newDataIndex);
+							}
+
+							return s.persist(datasource);
+						})
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
 		}
 		else {
-			getContext().getSelf().tell(PersistStatusFinished.INSTANCE);
+			log.warnf(
+				"LastIngestionDate was null, " +
+				"means that no content was received in this Scheduling. " +
+				"%s will be cancelled",
+				key
+			);
+			getContext().getSelf().tell(Cancel.INSTANCE);
+
+			return closing();
 		}
 
 		return Behaviors.same();
@@ -417,7 +453,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onPersistStatusFinished() {
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId, (s, t) -> s
+			key.tenantId(), (s, t) -> s
 				.find(Scheduler.class, scheduler.getId())
 				.chain(entity -> {
 					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
@@ -453,23 +489,29 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onTick() {
 		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
 			if (log.isTraceEnabled()) {
-				log.tracef("a manual operation is needed for scheduler with id %s", scheduler.getId());
+				log.tracef(
+					"a manual operation is needed for scheduler with id %s",
+					scheduler.getId()
+				);
 			}
+
+			return Behaviors.same();
+		}
+
+		if (busyWorkers > 0) {
+			if (log.isDebugEnabled()) {
+				log.debugf("There are %s busy workers, for %s", busyWorkers, key);
+			}
+
 			return Behaviors.same();
 		}
 
 		if (!failureTracked && lastReceived) {
-			if (log.isDebugEnabled()){
-				log.debugf("There are %s busy workers, for %s", workers, key);
-			}
+			log.infof("%s is done", key);
 
-			if (workers == 0) {
-				log.infof("%s is done", key);
+			getContext().getSelf().tell(PersistDatasource.INSTANCE);
 
-				getContext().getSelf().tell(PersistDataIndex.INSTANCE);
-
-				return closing();
-			}
+			return closing();
 		}
 
 		if (log.isTraceEnabled()) {
@@ -479,7 +521,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
 			log.infof("%s ingestion is expired", key);
 
-			getContext().getSelf().tell(PersistDataIndex.INSTANCE);
+			getContext().getSelf().tell(PersistDatasource.INSTANCE);
 
 			return closing();
 		}
@@ -489,13 +531,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
-		Long datasourceId = scheduler.getDatasourceId();
 		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId, (s, tx) -> s
-				.find(Datasource.class, datasourceId)
-				.chain(entity -> {
+			key.tenantId(), (s, tx) -> fetchScheduler(s)
+				.flatMap(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);
-					return s.persist(entity);
+					return s.merge(entity);
 				})
 				.onItemOrFailure()
 				.invoke((r, t) -> {
@@ -503,8 +543,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 						log.warn("last ingestion date cannot be persisted", t);
 					}
 					else {
-						log.infof("update last ingestion date for datasource with id %s", datasourceId);
-						getContext().getSelf().tell(new SetLastIngestionDate(lastIngestionDate));
+						log.infof(
+							"update last ingestion date for scheduler with id %s",
+							r.getId()
+						);
+						getContext().getSelf().tell(new SetScheduler(r));
 					}
 				})
 			)
@@ -515,19 +558,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
 		Scheduler.SchedulerStatus status = persistStatus.status;
 		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId(), (s, tx) -> s
-				.find(Scheduler.class, scheduler.getId())
+			.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setStatus(status);
-					return s
-						.persist(entity)
-						.flatMap(ignore -> s.createNamedQuery(
-								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-							.setParameter("scheduleId", entity.getScheduleId())
-							.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-							.getSingleResult()
-							.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
-						);
+					return s.merge(entity);
 				})
 			)
 			.onItemOrFailure()
@@ -537,22 +571,17 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				}
 				else {
 					log.infof(
-						"status updated to %s for schedulation with id %s",
+						"status updated to %s for scheduling with id %s",
 						status,
 						r.getId()
 					);
 
+					getContext().getSelf().tell(new SetScheduler(r));
 					persistStatus.replyTo.tell(Success.INSTANCE);
 				}
 			})
 		);
 
-		return Behaviors.same();
-	}
-
-
-	private Behavior<Command> onSetLastIngestionDate(SetLastIngestionDate setLastIngestionDate) {
-		this.lastIngestionDate = setLastIngestionDate.lastIngestionDate;
 		return Behaviors.same();
 	}
 
@@ -581,16 +610,14 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		log.infof("%s behavior is %s", key, behavior);
 	}
 
-	private static int getWorkersPerNode(ActorContext<Command> context) {
-		Config config = context.getSystem().settings().config();
+	private void destroyQueue() {
+		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
-		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
-	}
+		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
+			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 
-	private static Duration getTimeout(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		return AkkaUtils.getDuration(config, SCHEDULATION_TIMEOUT, Duration.ofHours(6));
+		queueManager.tell(new QueueManager.DestroyQueue(
+			SchedulingKey.asString(key.tenantId(), key.scheduleId())));
 	}
 
 	private void updateLastIngestionDate(DataPayload dataPayload) {
@@ -600,18 +627,74 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 				ZoneOffset.UTC
 			);
 
-		if (this.lastIngestionDate == null || !this.lastIngestionDate.isEqual(parsingDate)) {
+		var lastIngestionDate = this.scheduler.getLastIngestionDate();
+
+		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 		}
 	}
 
-	private void destroyQueue() {
-		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
-
-		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
-			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
-
-		queueManager.tell(new QueueManager.DestroyQueue(
-			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
+	private Uni<Scheduler> fetchScheduler(Mutiny.Session s) {
+		return s
+			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+			.setParameter("scheduleId", key.scheduleId())
+			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+			.getSingleResult();
 	}
+
+	public enum Cancel implements Command {
+		INSTANCE
+	}
+
+	public enum PersistDatasource implements Command {
+		INSTANCE
+	}
+
+	private enum PersistStatusFinished implements Command {
+		INSTANCE
+	}
+
+	private enum Start implements Command {
+		INSTANCE
+	}
+
+	private enum Stop implements Command {
+		INSTANCE
+	}
+
+	private enum Tick implements Command {
+		INSTANCE
+	}
+
+	public enum Success implements Response {
+		INSTANCE
+	}
+
+	public sealed interface Command extends CborSerializable {}
+
+	public sealed interface Response extends CborSerializable {}
+
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
+
+	public record TrackError(ActorRef<Response> replyTo) implements Command {}
+
+	public record Restart(ActorRef<Response> replyTo) implements Command {}
+
+	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+
+	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
+		implements Command {}
+
+	private record SetScheduler(Scheduler scheduler) implements Command {}
+
+	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response)
+		implements Command {}
+
+	private record NotificationSenderResponseWrapper(NotificationSender.Response response)
+		implements Command {}
+
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+
+	public record Failure(String error) implements Response {}
+
 }

@@ -20,18 +20,19 @@ package io.openk9.datasource.plugindriver;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.FormField;
 import io.openk9.datasource.web.dto.form.FormFieldValidator;
 import io.openk9.datasource.web.dto.form.FormFieldValue;
+import io.openk9.datasource.web.dto.form.FormType;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
-import io.openk9.datasource.web.dto.form.Type;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
-import io.vertx.mutiny.core.buffer.Buffer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -71,11 +72,36 @@ class HttpPluginDriverClientTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_post_invoke_fail_when_status_code_is_not_200(UniAsserter asserter) {
+
+		var invalidInvokeRequest = wireMockServer.stubFor(WireMock
+			.post(HttpPluginDriverClient.INVOKE_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(400)
+				.withStatusMessage("Invalid Request")
+			)
+		);
+
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.invoke(
+				pluginDriverInfo,
+				HttpPluginDriverContext.builder().build()
+			),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				wireMockServer.removeStub(invalidInvokeRequest);
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
 	void should_get_health_up(UniAsserter asserter) throws IOException {
 
 		PluginDriverHealthDTO expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
 			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverHealthDTO.class);
 		}
 
@@ -135,15 +161,18 @@ class HttpPluginDriverClientTest {
 	@RunOnVertxContext
 	void should_get_sample(UniAsserter asserter) throws IOException {
 
-		Buffer expected;
+		IngestionPayload expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
-			expected = Buffer.buffer(in.readAllBytes());
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
+			expected = Json.decodeValue(new String(in.readAllBytes()), IngestionPayload.class);
 		}
 
 		asserter.assertThat(
 			() -> httpPluginDriverClient.getSample(pluginDriverInfo),
-			res -> Assertions.assertEquals(expected, res.body())
+			res -> {
+				Assertions.assertEquals(expected, res);
+				Assertions.assertTrue(res.getDatasourcePayload().containsKey("sample"));
+			}
 		);
 
 	}
@@ -154,7 +183,7 @@ class HttpPluginDriverClientTest {
 
 		PluginDriverFormDTO expected;
 
-		try (InputStream in = getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
 			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverFormDTO.class);
 		}
 
@@ -162,12 +191,12 @@ class HttpPluginDriverClientTest {
 			() -> httpPluginDriverClient.getForm(pluginDriverInfo),
 			res -> {
 				Assertions.assertEquals(expected, res);
-				Assertions.assertTrue(expected
+				Assertions.assertTrue(res
 					.fields()
 					.contains(FormField.builder()
 						.label("Title tag")
 						.name("titleTag")
-						.type(Type.STRING)
+						.type(FormType.TEXT)
 						.size(10)
 						.required(true)
 						.info("")
@@ -211,12 +240,6 @@ class HttpPluginDriverClientTest {
 			}
 		);
 
-	}
-
-	private static InputStream getResourceAsStream(String path) {
-		return HttpPluginDriverClientTest.class
-			.getClassLoader()
-			.getResourceAsStream(path);
 	}
 
 }

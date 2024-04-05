@@ -3,6 +3,7 @@ package io.openk9.datasource.service;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TabMapper;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TokenTab;
@@ -77,6 +78,17 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		return sessionFactory.withTransaction(s -> s.fetch(tab.getTokenTabs()));
 	}
 
+	public Uni<List<TokenTab>> getTokenTabsByName(String tabName) {
+		return sessionFactory.withTransaction((s) -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<TokenTab> cq = cb.createQuery(TokenTab.class);
+			Root<Tab> root = cq.from(Tab.class);
+			cq.select(root.join(Tab_.TOKEN_TABS));
+			cq.where(cb.equal(root.get(Tab_.name), tabName));
+			return s.createQuery(cq).getResultList();
+		});
+	}
+
 	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
 
 		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
@@ -122,15 +134,90 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	}
 
-	public Uni<List<TokenTab>> getTokenTabsByName(String tabName) {
-		return sessionFactory.withTransaction((s) -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-			CriteriaQuery<TokenTab> cq = cb.createQuery(TokenTab.class);
-			Root<Tab> root = cq.from(Tab.class);
-			cq.select(root.join(Tab_.TOKEN_TABS));
-			cq.where(cb.equal(root.get(Tab_.name), tabName));
-			return s.createQuery(cq).getResultList();
-		});
+	public Uni<Connection<Sorting>> getSortingsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, Tab_.SORTINGS, Sorting.class,
+			_sortingService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable) {
+		return getSortings(sortingId, pageable, Filter.DEFAULT);
+	}
+
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[]{sortingId},
+			Tab_.SORTINGS, Sorting.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			searchText);
+	}
+
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[]{sortingId},
+			Tab_.SORTINGS, Sorting.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			filter);
+	}
+
+	public Uni<Set<Sorting>> getSortings(Tab tab) {
+		return sessionFactory.withTransaction(s -> s.fetch(tab.getSortings()));
+	}
+
+	public Uni<Tuple2<Tab, Sorting>> addSortingToTab(long tabId, long sortingId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tab -> _sortingService.findById(s, sortingId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sorting -> s.
+					fetch(tab.getSortings())
+					.flatMap(sortings -> {
+						if (sortings.add(sorting)) {
+							tab.setSortings(sortings);
+							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
+
+	}
+
+	public Uni<Tuple2<Tab, Sorting>> removeSortingToTab(long tabId, long sortingId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tab -> _sortingService.findById(s, sortingId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sorting -> s
+					.fetch(tab.getSortings())
+					.flatMap(sortings -> {
+						if (tab.removeSorting(sortings, sortingId)) {
+							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
+
 	}
 
 	public Uni<Tab> findByName(String name) {
@@ -202,6 +289,9 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	@Inject
 	TokenTabService _tokenTabService;
+
+	@Inject
+	SortingService _sortingService;
 
 	@Inject
 	TranslationService translationService;

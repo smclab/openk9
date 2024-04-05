@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.ApplyResponse;
+import io.openk9.common.util.StringUtils;
 import io.openk9.k8s.crd.Manifest;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
@@ -43,14 +44,23 @@ public class AppManagerService implements AppManager {
 	@ConfigProperty(name = "openk9.kubernetes-client.manifest-type")
 	Manifest.Type manifestType;
 
+	@Inject
+	@ConfigProperty(name = "openk9.kubernetes-client.repository-url")
+	String repositoryUrl;
+
 	@Override
 	public Uni<ApplyResponse> applyResource(AppManifest request) {
 		var manifest = Manifest.builder()
-			.repoURL("https://registry.smc.it/repository/helm-private")
+			.repoURL(repositoryUrl)
 			.chart(request.getChart())
 			.version(request.getVersion())
 			.targetNamespace(namespace)
 			.type(manifestType)
+			.tenant(request.getSchemaName())
+			.set(
+				"nameOverride",
+				StringUtils.withSuffix(request.getChart(), request.getSchemaName())
+			)
 			.build();
 
 		return Uni.createFrom()
@@ -72,11 +82,12 @@ public class AppManagerService implements AppManager {
 	@Override
 	public Uni<Empty> deleteResource(AppManifest appManifest) {
 		var manifest = Manifest.builder()
-			.repoURL("https://registry.smc.it/repository/helm-private")
+			.repoURL(repositoryUrl)
 			.chart(appManifest.getChart())
 			.version(appManifest.getVersion())
 			.targetNamespace(namespace)
 			.type(manifestType)
+			.tenant(appManifest.getSchemaName())
 			.build();
 
 		return Uni.createFrom()

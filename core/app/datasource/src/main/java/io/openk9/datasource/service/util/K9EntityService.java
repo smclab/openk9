@@ -95,6 +95,8 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 
 	Uni<ENTITY> create(Mutiny.Session s, ENTITY entity);
 
+	Uni<ENTITY> create(Mutiny.Session s, DTO dto);
+
 	Uni<ENTITY> deleteById(long entityId);
 
 	Uni<ENTITY> deleteById(String tenantId, long entityId);

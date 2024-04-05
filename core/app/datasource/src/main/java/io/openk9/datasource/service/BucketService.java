@@ -31,6 +31,7 @@ import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TenantBinding;
@@ -152,6 +153,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			last, searchText, sortByList, notEqual);
 	}
 
+	public Uni<Connection<Sorting>> getSortings(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Bucket_.SORTINGS, Sorting.class,
+			sortingService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
 
 	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
 		Long id, String after, String before, Integer first, Integer last,
@@ -263,6 +274,55 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.transformToUni(tabs -> {
 
 					if (bucket.removeTab(tabs, tabId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, Sorting>> addSortingToBucket(long id, long sortingId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> sortingService.findById(s, sortingId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sorting ->
+					s.fetch(bucket.getSortings())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(sortings -> {
+
+							if (sortings.add(sorting)) {
+
+								bucket.setSortings(sortings);
+
+								return persist(s, bucket)
+									.map(newSC -> Tuple2.of(newSC, sorting));
+							}
+
+							return Uni.createFrom().nullItem();
+
+						})
+				)
+			));
+	}
+
+	public Uni<Tuple2<Bucket, Sorting>> removeSortingFromBucket(long id, long sortingId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getSortings())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sortings -> {
+
+					if (bucket.removeSorting(sortings, sortingId)) {
 
 						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -606,6 +666,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	TabService tabService;
+
+	@Inject
+	SortingService sortingService;
+
 
 	@Inject
 	Logger logger;

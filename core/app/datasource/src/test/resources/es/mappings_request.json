@@ -1,0 +1,86 @@
+{
+	"properties": {
+		"complexNumber": {
+			"properties": {
+				"realPart": {
+					"type": "integer"
+				},
+				"imaginaryPart": {
+					"type": "integer"
+				}
+			}
+		},
+		"title": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword"
+				},
+				"trigram": {
+					"type": "text",
+					"analyzer": "trigram"
+				}
+			}
+		},
+		"address": {
+			"properties": {
+				"street": {
+					"type": "text",
+					"fields": {
+						"keyword": {
+							"type": "keyword"
+						},
+						"search_as_you_type": {
+							"type": "search_as_you_type"
+						}
+					}
+				},
+				"number": {
+					"type": "integer"
+				}
+			}
+		},
+		"web": {
+			"properties": {
+				"title": {
+					"type": "text"
+				},
+				"description": {
+					"properties": {
+						"base": {
+							"type": "text",
+							"fields": {
+								"keyword": {
+									"type": "keyword",
+									"ignore_above": 256
+								}
+							}
+						},
+						"i18n": {
+							"properties": {
+								"en_US": {
+									"type": "text",
+									"fields": {
+										"keyword": {
+											"type": "keyword",
+											"ignore_above": 256
+										}
+									}
+								},
+								"de_DE": {
+									"type": "text",
+									"fields": {
+										"keyword": {
+											"type": "keyword",
+											"ignore_above": 256
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

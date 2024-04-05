@@ -16,6 +16,7 @@ import {
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
 import { SelectionsAction } from "./useSelections";
+import CustomSkeleton from "./Skeleton";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -216,7 +217,8 @@ function Filters({
           </div>
         )}
         {preFilters}
-        {suggestionCategories.data?.map((suggestionCategory) => 
+        {suggestionCategories.data?.map((suggestionCategory, index) => (
+          <React.Suspense fallback={<div>sdcxz</div>}>
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
               suggestionCategoryName={translateSuggesionCategoryName({
@@ -236,8 +238,8 @@ function Filters({
               isDynamicElement={isDynamicElement}
               noResultMessage={noResultMessage}
             />
-         
-        )}
+          </React.Suspense>
+        ))}
       </div>
     </div>
   );
@@ -372,5 +374,41 @@ function translateSuggesionCategoryName({
     return names[desiredKey];
   }
   return defaultValue;
-  return "";
+}
+
+function SkeletonFilters() {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="openk9-filters-container-internal"
+      css={css`
+        padding-inline: 16px;
+        padding-top: 16px;
+      `}
+    >
+      <div
+        css={css`
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        `}
+      >
+        <CustomSkeleton />
+
+        {new Array(5).fill(null).map((_, index) => (
+          <div
+            key={index}
+            css={css`
+              display: flex;
+              gap: 10px;
+              width: 100%;
+            `}
+          >
+            <CustomSkeleton width="20px" />
+            <CustomSkeleton containerMax />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }

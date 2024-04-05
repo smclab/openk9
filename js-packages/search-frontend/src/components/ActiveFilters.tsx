@@ -15,11 +15,13 @@ export function ActiveFilter({
   onRemoveFilterToken,
   onConfigurationChange,
   actioneRemoveFilters,
+  callbackRemoveFilter,
 }: {
   searchQuery: SearchToken[];
   onRemoveFilterToken: (searchToken: SearchToken) => void;
   onConfigurationChange: ConfigurationUpdateFunction;
   actioneRemoveFilters?: () => void;
+  callbackRemoveFilter?: () => void;
 }) {
   const { t } = useTranslation();
   if (searchQuery.length === 0) return null;
@@ -34,7 +36,7 @@ export function ActiveFilter({
         className="openk9-filters-active-information"
         css={css`
           @media (max-width: 769px) {
-            display: none;
+            font-size: 20px;
           }
         `}
       >
@@ -48,15 +50,16 @@ export function ActiveFilter({
           {countTotalValues(filterSearchQuery)}
         </span>
       </h2>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div
-          className="openk9-tabs-overlay-scrollbars"
-          style={{
-            overflowX: "auto",
-            height: "50px",
-            width: "91%",
-          }}
-        >
+      <div
+        className="openk9-active-container-box"
+        css={css`
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        `}
+      >
+        <div className="openk9-tabs-overlay-scrollbars">
           <div
             className="openk9-active-filters-chop-container"
             css={css`
@@ -69,6 +72,7 @@ export function ActiveFilter({
                 display: flex;
                 gap: 10px;
                 width: 100%;
+                flex-wrap: wrap;
               `}
             >
               {searchQuery.map((selectToken, index) => {
@@ -78,12 +82,13 @@ export function ActiveFilter({
                       <div className="openk9-container-active-filter">
                         <button
                           className="openk9-active-filter"
-                          onClick={() =>
+                          onClick={() => {
                             onRemoveFilterToken({
                               ...selectToken,
                               values: [value],
-                            })
-                          }
+                            });
+                            if (callbackRemoveFilter) callbackRemoveFilter();
+                          }}
                           css={css`
                             border: 1px solid red;
                             background: inherit;

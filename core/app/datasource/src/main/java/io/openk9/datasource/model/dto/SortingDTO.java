@@ -15,19 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.k8s.crd;
+package io.openk9.datasource.model.dto;
 
-import lombok.NonNull;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-final class Utils {
+import javax.validation.constraints.NotNull;
 
-	private Utils() {}
-
-	static String name(@NonNull String chart, String suffix) {
-		if (suffix == null) {return chart;}
-		if (suffix.isBlank()) {return chart;}
-
-		return String.format("%s-%s", chart, suffix);
-	}
-
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+public class SortingDTO extends K9EntityDTO {
+    @NotNull
+    private Float priority;
+    @NotNull
+    private Boolean defaultSort = false;
+    @NotNull
+    private Sorting.SortingType type;
 }

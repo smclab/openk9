@@ -23,7 +23,7 @@ export function App() {
   const serviceStatus = useServiceStatus();
   if (serviceStatus === "down") {
     return <MaintenancePage />;
-  }  
+  }
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
@@ -191,7 +191,7 @@ export function App() {
             width: 100%;
             justify-content: center;
             align-items: baseline;
-            @media (max-width: 480px) {
+            @media (max-width: 768px) {
               flex-direction: column;
             }
           `}
@@ -212,7 +212,7 @@ export function App() {
               className="openk9-update-configuration"
               ref={(element) =>
                 openk9.updateConfiguration({
-                search:element
+                  search: element,
                 })
               }
             ></div>
@@ -424,7 +424,11 @@ export function App() {
       ></div>
       <div
         className="openk9-preview-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ details: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            details: element,
+          })
+        }
         css={css`
           grid-area: detail;
           overflow-y: auto;
@@ -446,10 +450,8 @@ export function App() {
         `}
       ></div>
       <div
-          ref={(element) =>
-            openk9.updateConfiguration({ detailMobile: element })
-          }
-        ></div>
+        ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
+      ></div>
     </div>
   );
 }

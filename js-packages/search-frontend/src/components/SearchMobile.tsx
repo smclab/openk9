@@ -82,12 +82,6 @@ export function SearchMobile({
   }, [adjustedSelection]);
   const { t } = useTranslation();
 
-  //utili durante l'implementazione del cambio dei colori del query analisys
-  // console.log(spans, onselect);
-  // selectionsState.selection.forEach((selection) => {
-  //   console.log(selection.token);
-  // });
-
   React.useEffect(() => {
     if (isVisible && inputRef.current) {
       inputRef.current?.focus();
@@ -648,7 +642,7 @@ function getTokenLabel(token: AnalysisToken) {
     case "TEXT":
       return token.value;
     case "FILTER":
-      return token.value;  
+      return token.value;
   }
 }
 

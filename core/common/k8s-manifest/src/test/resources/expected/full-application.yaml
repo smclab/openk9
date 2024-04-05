@@ -2,11 +2,11 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: openk9-foo-parser
-  namespace: default
+  namespace: k9-baz
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: openk9-baz
   source:
     repoURL: https://registry.acme.com/repository/helm/
     chart: openk9-foo-parser
@@ -16,10 +16,10 @@ spec:
         K2: 2,
         K3: "v3"
       }
-    targetRevision: 1.0.0
+    targetRevision: 1.x.x
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: k9-baz
   syncPolicy:
     automated:
       prune: true

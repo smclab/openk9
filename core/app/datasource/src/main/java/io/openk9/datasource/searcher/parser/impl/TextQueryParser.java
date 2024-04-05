@@ -153,7 +153,7 @@ public class TextQueryParser implements QueryParser {
 						multiMatchQueryBuilder.slop(2);
 					}
 
-					multiMatchQueryBuilder.boost(2.0f);
+					multiMatchQueryBuilder.boost(10.0f);
 
 					valuesQueryType
 						.useConfiguredQueryType(

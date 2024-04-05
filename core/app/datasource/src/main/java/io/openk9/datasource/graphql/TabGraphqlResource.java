@@ -4,6 +4,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TokenTabMapper;
+import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TabDTO;
@@ -60,6 +61,19 @@ public class TabGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<Connection<Sorting>> sortings(
+		@Source Tab tab,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+		return getSortings(
+			tab.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
+	}
+
 	public Uni<Connection<SearchTokenDto>> searchTokens(
 		@Source Tab tab,
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -83,6 +97,19 @@ public class TabGraphqlResource {
 		String searchText, Set<SortBy> sortByList,
 		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
 		return _tabService.getTokenTabsConnection(
+			tabId, after, before, first, last, searchText, sortByList, notEqual);
+	}
+
+	@Query
+	public Uni<Connection<Sorting>> getSortings(
+		@Id long tabId,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+		return _tabService.getSortingsConnection(
 			tabId, after, before, first, last, searchText, sortByList, notEqual);
 	}
 
@@ -137,6 +164,18 @@ public class TabGraphqlResource {
 	public Uni<Tuple2<Tab, TokenTab>> removeTokenTabToTab(
 		@Id long id, @Id long tokenTabId ) {
 		return _tabService.removeTokenTabToTab(id, tokenTabId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tab, Sorting>> addSortingToTab(
+		@Id long id, @Id long sortingId) {
+		return _tabService.addSortingToTab(id, sortingId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Tab, Sorting>> removeSortingToTab(
+		@Id long id, @Id long sortingId ) {
+		return _tabService.removeSortingToTab(id, sortingId);
 	}
 
 	@Mutation

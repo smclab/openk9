@@ -21,6 +21,7 @@ import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
+import io.openk9.resources.Release;
 import io.vertx.core.json.JsonObject;
 
 public class Constants {
@@ -33,7 +34,7 @@ public class Constants {
 			.setPreset(Preset.CRAWLER)
 			.build();
 	private static final String PRESET_VALUE = "CRAWLER";
-	private static final String CHART_VERSION = "1.x.x";
+	private static final String CHART_VERSION = Release.getVersion();
 
 	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
 		.setSchemaName(TENANT_NAME)
@@ -41,12 +42,6 @@ public class Constants {
 		.setVersion(CHART_VERSION)
 		.build();
 	private static final String TENANT_NAME_KEY = "tenantName";
-	private static final String CONNECTOR_NAME = String.format(
-		"%s-%s-%s",
-		TENANT_NAME,
-		PresetPluginDrivers.getPluginDriver(Preset.CRAWLER),
-		"1_x_x"
-	);
 	private static final String PRESET_KEY = "preset";
 	static final String VALID_JSON_BODY = JsonObject.of(
 		TENANT_NAME_KEY, TENANT_NAME,

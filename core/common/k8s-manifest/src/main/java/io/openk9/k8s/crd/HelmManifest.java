@@ -22,6 +22,7 @@ import io.cattle.helm.v1.HelmChartSpec;
 import io.cattle.helm.v1.helmchartspec.AuthSecret;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.openk9.common.util.StringUtils;
 
 import java.util.HashMap;
 
@@ -34,7 +35,7 @@ class HelmManifest {
 	static HelmChart createHelmChart(Manifest manifest) {
 
 		var metadata = new ObjectMeta();
-		metadata.setName(Utils.name(manifest.chart(), manifest.tenant()));
+		metadata.setName(StringUtils.withSuffix(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(CONTROLLER_NAMESPACE);
 
 		var spec = new HelmChartSpec();

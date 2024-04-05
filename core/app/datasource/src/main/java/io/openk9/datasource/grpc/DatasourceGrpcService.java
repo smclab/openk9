@@ -78,7 +78,10 @@ public class DatasourceGrpcService implements Datasource {
 		CreatePresetPluginDriverRequest request) {
 
 		var tenantId = request.getSchemaName();
-		var pluginDriverDTO = PluginDrivers.getPresetPluginDriver(request.getPreset());
+		var pluginDriverDTO = PluginDrivers.getPluginDriverDTO(
+			request.getSchemaName(),
+			request.getPreset()
+		);
 
 		return upsertPluginDriver(tenantId, pluginDriverDTO);
 	}

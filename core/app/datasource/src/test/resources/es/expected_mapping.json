@@ -1,0 +1,86 @@
+{
+	"settings": {
+		"index": {
+			"number_of_shards": "1",
+			"number_of_replicas": "1",
+			"highlight": {
+				"max_analyzed_offset": "10000000"
+			}
+		}
+	},
+	"properties": {
+		"contentId": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
+				}
+			}
+		},
+		"datasourceId": {
+			"type": "long"
+		},
+		"documentTypes": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
+				}
+			}
+		},
+		"last": {
+			"type": "boolean"
+		},
+		"parsingDate": {
+			"type": "long"
+		},
+		"resources": {
+			"type": "object"
+		},
+		"sample": {
+			"properties": {
+				"age": {
+					"type": "long"
+				},
+				"email": {
+					"type": "text",
+					"fields": {
+						"keyword": {
+							"type": "keyword",
+							"ignore_above": 256
+						}
+					}
+				},
+				"firstName": {
+					"type": "text",
+					"fields": {
+						"keyword": {
+							"type": "keyword",
+							"ignore_above": 256
+						}
+					}
+				},
+				"lastName": {
+					"type": "text",
+					"fields": {
+						"keyword": {
+							"type": "keyword",
+							"ignore_above": 256
+						}
+					}
+				}
+			}
+		},
+		"scheduleId": {
+			"type": "text",
+			"fields": {
+				"keyword": {
+					"type": "keyword",
+					"ignore_above": 256
+				}
+			}
+		}
+	}
+}

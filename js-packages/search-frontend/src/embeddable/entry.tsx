@@ -11,6 +11,7 @@ import * as RendererComponents from "../renderer-components";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
+import { Options } from "../components/Select";
 
 export const rendererComponents = RendererComponents;
 
@@ -278,6 +279,12 @@ type TabsProps = {
   };
 };
 
+type SelectProps = {
+  element: Element | string | null;
+  options: Options;
+  extraClass?: string;
+};
+
 type totalResultProps = {
   element: Element | string | null;
   saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
@@ -286,6 +293,7 @@ type totalResultProps = {
 type activeFiltersConfigurableProps = {
   element: Element | string | null;
   actioneRemoveFilters?(): void;
+  callbackRemoveFilter?(): void;
 };
 
 export type Configuration = {
@@ -338,6 +346,7 @@ export type Configuration = {
   resultsDisplayMode: ResultsDisplayMode;
   searchConfigurable: SearchProps | null;
   searchMobile: SearchMobileConfiguration | null;
+  select: SelectProps | null;
   sortableConfigurable: SortableProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
   sortResultListCustom: SortResultListCustomProps | null;
@@ -379,6 +388,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   resultsDisplayMode: { type: "infinite" },
   search: null,
+  select: null,
   searchAutoselect: true,
   searchConfigurable: null,
   searchMobile: null,

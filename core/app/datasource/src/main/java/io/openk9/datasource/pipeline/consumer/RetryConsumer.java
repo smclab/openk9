@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.pipeline.consumer;
 
 import akka.actor.typed.javadsl.ActorContext;
@@ -8,7 +25,7 @@ import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
-import io.openk9.datasource.pipeline.actor.Schedulation;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -20,7 +37,7 @@ public class RetryConsumer extends BaseConsumer {
 
 	private static final Logger log = Logger.getLogger(RetryConsumer.class);
 	private static final String CONSUMER_MAX_RETRIES =
-		"io.openk9.schedulation.consumer.max-retries";
+		"io.openk9.scheduling.consumer.max-retries";
 	private final int maxRetries;
 
 	public RetryConsumer(
@@ -65,29 +82,29 @@ public class RetryConsumer extends BaseConsumer {
 			getChannel().basicNack(envelope.getDeliveryTag(), false, false);
 
 			AskPattern.ask(
-				getSchedulation(),
-				Schedulation.TrackError::new,
+				getScheduling(),
+				Scheduling.TrackError::new,
 				timeout,
 				context.getSystem().scheduler()
 			).whenComplete((r, t) -> {
 				if (t != null) {
 					log.warnf(
 						t,
-						"Error cannot be tracked for schedulation: %s",
-						queueBind.schedulationKey()
+						"Error cannot be tracked for scheduling: %s",
+						queueBind.schedulingKey()
 					);
 				}
-				else if (r instanceof Schedulation.Failure) {
+				else if (r instanceof Scheduling.Failure) {
 					log.warnf(
-						"Error cannot be tracked for schedulation: %s, cause: %s",
-						queueBind.schedulationKey(),
-						((Schedulation.Failure) r).error()
+						"Error cannot be tracked for scheduling: %s, cause: %s",
+						queueBind.schedulingKey(),
+						((Scheduling.Failure) r).error()
 					);
 				}
 				else {
 					log.infof(
-						"Error tracked for schedulation: %s",
-						queueBind.schedulationKey()
+						"Error tracked for scheduling: %s",
+						queueBind.schedulingKey()
 					);
 				}
 			});

@@ -19,6 +19,7 @@ package io.openk9.datasource.plugindriver;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.openk9.datasource.TestUtils;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 import java.io.IOException;
@@ -82,7 +83,7 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 	}
 
 	private void stubForm() {
-		try (InputStream is = WireMockPluginDriver.class.getResourceAsStream(FORM_JSON_FILE)) {
+		try (InputStream is = TestUtils.getResourceAsStream(FORM_JSON_FILE)) {
 			String form = new String(is.readAllBytes());
 
 			wireMockServer.stubFor(WireMock
@@ -97,7 +98,7 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 	}
 
 	private void stubSample() {
-		try (InputStream is = WireMockPluginDriver.class.getResourceAsStream(SAMPLE_JSON_FILE)) {
+		try (InputStream is = TestUtils.getResourceAsStream(SAMPLE_JSON_FILE)) {
 			String sample = new String(is.readAllBytes());
 
 			wireMockServer.stubFor(WireMock
@@ -112,7 +113,7 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 	}
 
 	private void stubHealth() {
-		try (InputStream is = WireMockPluginDriver.class.getResourceAsStream(HEALTH_JSON_FILE)) {
+		try (InputStream is = TestUtils.getResourceAsStream(HEALTH_JSON_FILE)) {
 			String health = new String(is.readAllBytes());
 
 			wireMockServer.stubFor(WireMock

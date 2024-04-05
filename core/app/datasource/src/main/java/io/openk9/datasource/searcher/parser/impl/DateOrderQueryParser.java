@@ -24,7 +24,7 @@ public class DateOrderQueryParser implements QueryParser {
 
 	@Override
 	public boolean isQueryParserGroup() {
-		return false;
+		return true;
 	}
 
 	@Override

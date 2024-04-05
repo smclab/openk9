@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
