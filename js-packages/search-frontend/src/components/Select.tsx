@@ -79,17 +79,16 @@ function SelectComponent({
           </option>
         )}
         {selectOptions.map((option, index) => (
-          <>
+          <React.Fragment key={index}>
             {
               <option
                 value={[option.field, option.type]}
                 defaultChecked={option.isDefault}
-                key={index}
               >
                 {option?.translationMap?.[keyLanguage] || option?.label}
               </option>
             }
-          </>
+          </React.Fragment>
         ))}
       </select>
     </div>
