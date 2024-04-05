@@ -45,7 +45,7 @@ function SelectComponent({
       <select
         id="custom-select-sort"
         required
-        className={extraClass}
+        className={`select-custom-openk9 ${extraClass}`}
         onChange={handleChange}
         css={css`
           padding: 7px 40px 7px 12px;

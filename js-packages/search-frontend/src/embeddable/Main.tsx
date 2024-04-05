@@ -203,8 +203,7 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading ||
-    languageSelect === "";
+    languages.isLoading;
   return (
     <React.Fragment>
       {renderPortal(
@@ -619,7 +618,7 @@ export function Main({
             selectOptions={sortList ?? []}
             extraClass={configuration.sortResults?.extraClass}
             setSortResult={setSort}
-            labelDefault=""
+            labelDefault={configuration.sortResults?.classNameLabel}
           />
         </I18nextProvider>,
         configuration.sortResults ? configuration.sortResults?.element : null,
