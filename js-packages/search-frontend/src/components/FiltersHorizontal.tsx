@@ -12,7 +12,6 @@ import { useInfiniteResults } from "./ResultList";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { Logo } from "./Logo";
 import {
-  FilterCategoryDynamicMemo,
   WhoIsDynamic,
   createSuggestion,
   haveSomeValue,

@@ -235,7 +235,6 @@ export function Main({
                 ? false
                 : isQueryAnalysisComplete
             }
-            onDetail={setDetail}
             isMobile={isMobile}
             filtersSelect={configuration.filterTokens}
             isVisibleFilters={isVisibleFilters}
@@ -641,6 +640,7 @@ export function Main({
               language={languageSelect}
               sortAfterKey={sortAfterKey}
               isDynamicElement={dynamicData}
+              numberResultOfFilters={numberResultOfFilters}
             />
           )}
         </I18nextProvider>,
