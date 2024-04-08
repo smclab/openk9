@@ -2,12 +2,13 @@ import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { SearchToken } from "./client";
+import { SearchToken, SortField } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";
 import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
+import { Options } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -302,6 +303,7 @@ export type Tab = {
   label: string;
   tokens: Array<SearchToken>;
   translationMap: { [key: string]: string };
+  sortings: Options;
 };
 
 export function useTabTokens(): Array<Tab> {

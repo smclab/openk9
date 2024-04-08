@@ -53,7 +53,7 @@ module.exports = {
     },
     proxy: {
       "/api": {
-        target: "https://demo.openk9.io",
+        target: "https://k9-frontend.openk9.io",
         changeOrigin: true,
         secure: false,
       },
