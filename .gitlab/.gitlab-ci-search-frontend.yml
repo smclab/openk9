@@ -6,7 +6,7 @@ Build Search Frontend Docker Image:
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
+    DOCKER_TLS_VERIFY: 0
     DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   only:
     refs:
@@ -17,6 +17,7 @@ Build Search Frontend Docker Image:
   except:
     - schedules
   before_script:
+    - sleep 5
     - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
     - apk add --update curl && rm -rf /var/cache/apk/*
   script:
