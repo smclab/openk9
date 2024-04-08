@@ -2,41 +2,49 @@ import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components/macro";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { SearchToken } from "./client";
+import { SearchToken, SortField } from "./client";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";
 import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
+import { Options } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
   tabs: Array<Tab>;
   selectedTabIndex: number;
   onSelectedTabIndexChange(index: number): void;
-  onConfigurationChange: ConfigurationUpdateFunction;
   language: string;
   scrollMode?: boolean;
   onAction?(): void;
   speed?: number;
   distance?: number;
   step?: number;
-  pxHiddenRightArrow?:number
-  filterResetOnChange:React.Dispatch<SelectionsAction>;
+  reset?: {
+    filters: boolean;
+    calendar: boolean;
+    sort: boolean;
+    search: boolean;
+  };
+  resetFilter: () => void;
+  resetSort: () => void;
+  selectionsDispatch: React.Dispatch<SelectionsAction>;
 };
 function Tabs({
   tabs,
   selectedTabIndex,
   onSelectedTabIndexChange,
-  onConfigurationChange,
   language,
   onAction,
   scrollMode = true,
-  speed=10,
-  distance=700,
-  step=30,
-  pxHiddenRightArrow=91,
-  filterResetOnChange,
+  speed = 10,
+  distance = 700,
+  step = 30,
+  reset,
+  resetFilter,
+  resetSort,
+  selectionsDispatch,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
@@ -44,22 +52,20 @@ function Tabs({
   let scrollAmount = 0;
   const handleHorizantalScroll = ({
     element,
-    speed,
-    distance,
     step,
   }: {
     element: any;
     speed: number;
     distance: number;
     step: number;
-  }) => {    
-      element.scrollLeft += step;
-      scrollAmount += Math.abs(step);
-      if (element.scrollLeft === 0) {
-        setArrowDisable(true);
-      } else {
-        setArrowDisable(false);
-      }
+  }) => {
+    element.scrollLeft += step;
+    scrollAmount += Math.abs(step);
+    if (element.scrollLeft === 0) {
+      setArrowDisable(true);
+    } else {
+      setArrowDisable(false);
+    }
   };
 
   return !scrollMode ? (
@@ -190,10 +196,16 @@ function Tabs({
                 `}
                 onClick={() => {
                   onSelectedTabIndexChange(index);
-                  onConfigurationChange({ filterTokens: [] });
-                  filterResetOnChange({type:"reset-filters"})
+                  if (reset) {
+                    if (reset.filters) resetFilter();
+                    if (reset?.calendar) resetFilterCalendar();
+                    if (reset?.search)
+                      selectionsDispatch({
+                        type: "reset-search",
+                      });
+                    if (reset?.sort) resetSort();
+                  }
                   if (onAction) onAction();
-                  resetFilterCalendar();
                 }}
               >
                 {tabTraslation.toUpperCase()}
@@ -204,89 +216,85 @@ function Tabs({
       </nav>
     </div>
   ) : (
-    <OverlayScrollbarsComponentDockerFix
-      className="openk9-tabs-overlay-scrollbars"
-      style={{
-        position: "relative",
-        overflowX: "auto",
-        overflowY: "none",
-        height: "60px",
-      }}
+    <nav
+      className="openk9-tabs-container-internal"
+      css={css`
+        display: flex;
+        padding-top: 14px;
+        padding: 8px 12px;
+        width: fit-content;
+        height: fit-content;
+        gap: 16px;
+        @media (max-width: 480px) {
+          gap: 10px;
+        }
+      `}
     >
-      <nav
-        className="openk9-tabs-container-internal"
-        css={css`
-          position: absolute;
-          display: flex;
-          padding-top: 14px;
-          padding: 8px 12px;
-          width: fit-content;
-          height: fit-content;
-          gap: 16px;
-          @media (max-width: 480px) {
-            gap: 10px;
-          }
-        `}
-      >
-        {tabs.map((tab, index) => {
-          const isSelected = index === selectedTabIndex;
-          const tabTraslation = translationTab({
-            language: language,
-            tabLanguages: tab.translationMap,
-            defaultValue: tab.label,
-          });
-          return (
-            <button
-              className="openk9-single-tab-container"
+      {tabs.map((tab, index) => {
+        const isSelected = index === selectedTabIndex;
+        const tabTraslation = translationTab({
+          language: language,
+          tabLanguages: tab.translationMap,
+          defaultValue: tab.label,
+        });
+        return (
+          <button
+            className="openk9-single-tab-container"
+            key={index}
+            tabIndex={0}
+            css={css`
+              border: none;
+              background: none;
+            `}
+            onClick={() => {
+              onSelectedTabIndexChange(index);
+              if (reset) {
+                if (reset.filters) resetFilter();
+                if (reset?.calendar) resetFilterCalendar();
+                if (reset?.search)
+                  selectionsDispatch({
+                    type: "reset-search",
+                  });
+                if (reset?.sort) resetSort();
+              }
+              if (onAction) onAction();
+            }}
+          >
+            <span
               key={index}
-              tabIndex={0}
+              className={
+                "openk9-single-tab " +
+                (isSelected ? "openk9-active-tab" : "openk9-not-active")
+              }
               css={css`
-                border: none;
-                background: none;
-              `}
-              onClick={() => {
-                onSelectedTabIndexChange(index);
-                onConfigurationChange({ filterTokens: [] });
-                if (onAction) onAction();
-                resetFilterCalendar();
-              }}
-            >
-              <span
-                key={index}
-                className={
-                  "openk9-single-tab " +
-                  (isSelected ? "openk9-active-tab" : "openk9-not-active")
+                white-space: nowrap;
+                padding: 8px 12px;
+                background: ${isSelected
+                  ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                  : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+                border-radius: 8px;
+                font: Helvetica Neue LT Std;
+                font-style: normal;
+                display: block;
+                color: ${isSelected
+                  ? "var(--openk9-embeddable-search--primary-background-color)"
+                  : "var(--openk9-embeddable-tabs--primary-color)"};
+                ${isSelected
+                  ? "var(--openk9-embeddable-search--active-color)"
+                  : "transparent"};
+                cursor: ${isSelected ? "" : "pointer"};
+                user-select: none;
+                :hover {
+                  ${isSelected ? "" : "text-decoration: underline;"}
                 }
-                css={css`
-                  white-space: nowrap;
-                  padding: 8px 12px;
-                  background: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                    : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                  border-radius: 8px;
-                  font: Helvetica Neue LT Std;
-                  font-style: normal;
-                  display: block;
-                  color: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-color)"
-                    : "var(--openk9-embeddable-tabs--primary-color)"};
-                  ${isSelected
-                    ? "var(--openk9-embeddable-search--active-color)"
-                    : "transparent"};
-                  cursor: ${isSelected ? "" : "pointer"};
-                  user-select: none;
-                  :hover {
-                    ${isSelected ? "" : "text-decoration: underline;"}
-                  }
-                `}
-              >
-                {tabTraslation.toUpperCase()}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-    </OverlayScrollbarsComponentDockerFix>
+              `}
+            >
+              {tabTraslation.toUpperCase()}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 export const TabsMemo = React.memo(Tabs);
@@ -295,6 +303,7 @@ export type Tab = {
   label: string;
   tokens: Array<SearchToken>;
   translationMap: { [key: string]: string };
+  sortings: Options;
 };
 
 export function useTabTokens(): Array<Tab> {

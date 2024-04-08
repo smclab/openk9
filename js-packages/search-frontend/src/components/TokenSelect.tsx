@@ -12,20 +12,16 @@ type TokenSelectProps = {
   onSelect(token: AnalysisToken | null): void;
   selected: AnalysisToken | null;
   isOpen: boolean;
-  selectionsDispatch: (action: SelectionsAction) => void;
   optionIndex: number | null;
   onOptionIndexChange(optionIndex: number): void;
   isAutoSlected: boolean;
-  saveSearchQuery?: React.Dispatch<React.SetStateAction<boolean>>;
   isColorSearch?: boolean;
-  isBtnSearch: boolean;
   setOpenedDropdown: React.Dispatch<
     React.SetStateAction<{
       textPosition: number;
       optionPosition: number;
     } | null>
   >;
-  search: (text: string) => void;
 };
 export function TokenSelect({
   span,
@@ -36,11 +32,7 @@ export function TokenSelect({
   onOptionIndexChange,
   isAutoSlected,
   setOpenedDropdown,
-  selectionsDispatch,
-  saveSearchQuery,
   isColorSearch = true,
-  isBtnSearch = false,
-  search,
 }: TokenSelectProps) {
   const isInteractive = span.tokens.length > 0;
   const [subtitle, setSubtitle] = React.useState(false);
@@ -63,7 +55,7 @@ export function TokenSelect({
     `,
     "not-interactive": css`
       display: ${isColorSearch ? "default" : "none"};
-      color: green;
+      color: black;
     `,
   };
   const status: Status = isInteractive

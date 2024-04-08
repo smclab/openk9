@@ -1,6 +1,7 @@
 import React from "react";
 import Keycloak from "keycloak-js";
 import { useState } from "react";
+import { Options } from "./SortResults";
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
 >(null as any /* must break app if not provided */);
@@ -59,7 +60,12 @@ export function OpenK9Client({
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
     }
-    if (waitKeycloackForToken && !keycloak.authenticated && !useKeycloak && appendToBody.token === "") {
+    if (
+      waitKeycloackForToken &&
+      !keycloak.authenticated &&
+      !useKeycloak &&
+      appendToBody.token === ""
+    ) {
       await waitForToken();
     }
     return fetch(tenant + route, {
@@ -156,14 +162,37 @@ export function OpenK9Client({
       }> = await response.json();
       return data;
     },
-    async getRefreshFilters() {
+    async getSortingInfo() {
       const response = await authFetch(
-        "/api/datasource/buckets/current",
+        "/api/datasource/buckets/current/sortings",
         {
           method: "GET",
           headers: { Accept: "application/json" },
         },
       );
+      if (!response.ok) {
+        throw new Error();
+      }
+      const data: Array<{
+        field: string;
+        id: number;
+        isDefault: boolean;
+        type: string;
+        label: string;
+        translationMap: {
+          "label.en_US"?: string;
+          "label.es_ES"?: string;
+          "label.it_IT"?: string;
+        };
+      }> = await response.json();
+
+      return data;
+    },
+    async getRefreshFilters() {
+      const response = await authFetch("/api/datasource/buckets/current", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
       if (!response.ok) {
         throw new Error();
       }
@@ -253,6 +282,7 @@ export function OpenK9Client({
         label: string;
         tokens: Array<SearchToken>;
         translationMap: { [key: string]: string };
+        sortings: Options;
       }>
     > {
       const response = await authFetch(`/api/datasource/buckets/current/tabs`, {
@@ -375,6 +405,7 @@ export type GenericResultItem<E = {}> = {
         id: string;
         name: string;
         contentType: string;
+        resourceId: string;
       }[];
     };
   } & E;
@@ -452,10 +483,10 @@ export type SearchToken =
       isTab?: boolean;
       isFilter?: boolean;
       isSearch?: boolean;
-	  extra?: {
-		boost?: string;
-		fuzziness?: string
-	  }
+      extra?: {
+        boost?: string;
+        fuzziness?: string;
+      };
     }
   | {
       tokenType: "ENTITY";
@@ -543,10 +574,10 @@ export type AnalysisToken =
       keywordName?: string;
       value: string;
       label: string;
-	  extra?: {
-	  	boost?: string;
-	  	fuzziness?: string
-	  }
+      extra?: {
+        boost?: string;
+        fuzziness?: string;
+      };
     }
   | {
       tokenType: "AUTOCORRECT";
@@ -564,7 +595,7 @@ export type AnalysisToken =
       keywordName?: string;
       value: string;
       label: string;
-    }  ;
+    };
 
 export type AnalysisRequest = {
   searchText: string;

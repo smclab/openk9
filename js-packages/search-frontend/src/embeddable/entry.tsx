@@ -244,7 +244,6 @@ type SortableProps = {
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
-  isShowSyntax?: boolean | undefined | null;
   defaultValue?: string | undefined | null;
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
@@ -272,12 +271,25 @@ type TabsProps = {
   distance?: number;
   step?: number;
   pxHiddenRightArrow?: number;
+  reset?: {
+    filters: boolean;
+    calendar: boolean;
+    sort: boolean;
+    search: boolean;
+  };
 };
 
 type SelectProps = {
   element: Element | string | null;
   options: Options;
   extraClass?: string;
+  handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+};
+
+type SortResultsProps = {
+  element: Element | string | null;
+  extraClass?: string;
+  classNameLabel?: string | undefined;
 };
 
 type totalResultProps = {
@@ -295,6 +307,7 @@ export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
+  defaultString: string | null | undefined;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
   isQueryAnalysis: boolean | null;
@@ -303,8 +316,10 @@ export type Configuration = {
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   sort: Array<RestApi.SortField>;
+  showSyntax: boolean;
   tenant: string | null;
   token: string | null;
+  useQueryAnalysis: boolean;
   useKeycloak: boolean;
   useQueryString: boolean;
   useQueryStringFilters: boolean;
@@ -341,6 +356,7 @@ export type Configuration = {
   searchMobile: SearchMobileConfiguration | null;
   select: SelectProps | null;
   sortableConfigurable: SortableProps | null;
+  sortResults: SortResultsProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
   sortResultListCustom: SortResultListCustomProps | null;
   tabsConfigurable: TabsProps | null;
@@ -360,6 +376,7 @@ const defaultConfiguration: Configuration = {
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
+  defaultString: null,
   debounceTimeSearch: null,
   defaultTokens: [],
   detailMobile: null,
@@ -386,7 +403,9 @@ const defaultConfiguration: Configuration = {
   searchConfigurable: null,
   searchMobile: null,
   searchReplaceText: true,
+  showSyntax: true,
   sort: [],
+  sortResults: null,
   sortable: null,
   sortableConfigurable: null,
   sortResultConfigurable: null,
@@ -398,6 +417,7 @@ const defaultConfiguration: Configuration = {
   totalResult: null,
   totalResultConfigurable: null,
   totalResultMobile: null,
+  useQueryAnalysis: true,
   useKeycloak: true,
   useQueryString: true,
   useQueryStringFilters: true,

@@ -50,6 +50,7 @@ import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
+import SortResults, { Options } from "../components/SortResults";
 
 type MainProps = {
   configuration: Configuration;
@@ -61,31 +62,26 @@ export function Main({
   onConfigurationChange,
   onQueryStateChange,
 }: MainProps) {
-  const client = useOpenK9Client();
   const activeLanguage = i18next.language;
 
   //retrieving information from the configuration.
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
-  const cardDetailsOnOver =
-    configuration.resultList?.changeOnOver === false ? false : true;
-  const isSearchOnInputChange = !configuration.searchConfigurable?.btnSearch;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
-  const waitKeycloackForToken = configuration.waitKeycloackForToken;
 
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
-  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [languageSelect, setLanguageSelect] = React.useState("");
   const [selectionsState, selectionsDispatch] = useSelections({
     useKeycloak,
     useQueryString,
+    defaultString: configuration.defaultString || "",
   });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
@@ -93,52 +89,44 @@ export function Main({
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
-  const { filterTokens, addFilterToken, removeFilterToken } = useFilters({
-    configuration,
-    onConfigurationChange,
-    selectionsState,
-    selectionsDispatch,
-    useQueryStringFilters,
-  });
+  const { filterTokens, addFilterToken, removeFilterToken, resetFilter } =
+    useFilters({
+      configuration,
+      onConfigurationChange,
+      selectionsState,
+      selectionsDispatch,
+      useQueryStringFilters,
+    });
   const { i18n } = useTranslation();
-  const { sort, setSortResult } = useSortResult({
+  const { resetSort } = useSortResult({
     configuration,
     onConfigurationChange,
+    setSortAfterKey,
   });
-  const { tabs, selectedTabIndex, setSelectedTabIndex, tabTokens } = useTabs(
-    configuration.overrideTabs,
-    languageSelect,
-  );
+
   const {
-    searchQuery,
-    spans,
-    isQueryAnalysisComplete,
-    completelySort,
-    setIsSaveQuery,
-    textOnQueryStringOnCLick,
-  } = isSearchOnInputChange
-    ? useSearchOnClick({
-        configuration,
-        debounceTimeSearch,
-        tabTokens,
-        filterTokens,
-        dateTokens,
-        onQueryStateChange,
-        setCurrentPage,
-        selectionsState,
-        selectionsDispatch,
-      })
-    : useSearch({
-        configuration,
-        debounceTimeSearch,
-        tabTokens,
-        filterTokens,
-        dateTokens,
-        onQueryStateChange,
-        setCurrentPage,
-        selectionsDispatch,
-        selectionsState,
-      });
+    tabs,
+    selectedTabIndex,
+    setSelectedTabIndex,
+    tabTokens,
+    sortList,
+    tabSelected,
+    setSort,
+  } = useTabs(configuration.overrideTabs, languageSelect);
+
+  const { searchQuery, spans, isQueryAnalysisComplete, completelySort } =
+    useSearch({
+      configuration,
+      debounceTimeSearch,
+      tabTokens: { tabToken: tabTokens.tabTokens, sort: tabTokens.sort },
+      filterTokens,
+      dateTokens,
+      onQueryStateChange,
+      setCurrentPage,
+      selectionsState,
+      selectionsDispatch,
+    });
+
   const { detail, setDetail } = useDetails(
     searchQuery,
     setPrevSearchQuery,
@@ -202,8 +190,8 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading ||
-    languageSelect === "";
+    languages.isLoading;
+
   return (
     <React.Fragment>
       {renderPortal(
@@ -214,38 +202,32 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
-            isMobile={isMobile}
-            filtersSelect={configuration.filterTokens}
-            isVisibleFilters={isVisibleFilters}
-            isSearchOnInputChange={isSearchOnInputChange}
           />
         </I18nextProvider>,
         configuration.search,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <Search
-            configuration={configuration}
-            spans={spans}
-            selectionsState={selectionsState}
-            selectionsDispatch={selectionsDispatch}
-            textOnQueryStringOnCLick={textOnQueryStringOnCLick}
-            showSyntax={
-              configuration.searchConfigurable?.isShowSyntax === false
-                ? false
-                : isQueryAnalysisComplete
-            }
-            isMobile={isMobile}
-            filtersSelect={configuration.filterTokens}
-            isVisibleFilters={isVisibleFilters}
-            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
-            isSearchOnInputChange={isSearchOnInputChange}
-            defaultValue={configuration.searchConfigurable?.defaultValue ?? ""}
-            htmlKey={configuration.searchConfigurable?.htmlKey}
-            messageSearchIsVisible={
-              configuration?.searchConfigurable?.messageSearchIsVisible ?? true
-            }
-          />
+          {isSearchLoading ? null : (
+            <Search
+              configuration={configuration}
+              spans={spans}
+              selectionsState={selectionsState}
+              selectionsDispatch={selectionsDispatch}
+              showSyntax={isQueryAnalysisComplete}
+              btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+              htmlKey={configuration.searchConfigurable?.htmlKey}
+              viewColor={configuration.showSyntax}
+              messageSearchIsVisible={
+                configuration?.searchConfigurable?.messageSearchIsVisible ??
+                true
+              }
+              customMessageSearch={
+                configuration?.searchConfigurable?.customMessageSearch
+              }
+              actionOnClick={configuration?.searchConfigurable?.actionOnClick}
+            />
+          )}
         </I18nextProvider>,
         configuration.searchConfigurable
           ? configuration.searchConfigurable.element
@@ -257,9 +239,10 @@ export function Main({
             tabs={tabs}
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
-            onConfigurationChange={onConfigurationChange}
             language={languageSelect}
-            filterResetOnChange={selectionsDispatch}
+            resetFilter={resetFilter}
+            resetSort={resetSort}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.tabs,
@@ -279,17 +262,16 @@ export function Main({
             tabs={tabs}
             selectedTabIndex={selectedTabIndex}
             onSelectedTabIndexChange={setSelectedTabIndex}
-            onConfigurationChange={onConfigurationChange}
             language={languageSelect}
+            resetFilter={resetFilter}
             onAction={configuration.tabsConfigurable?.onAction}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
             distance={configuration.tabsConfigurable?.distance}
             step={configuration.tabsConfigurable?.step}
-            pxHiddenRightArrow={
-              configuration.tabsConfigurable?.pxHiddenRightArrow
-            }
-            filterResetOnChange={selectionsDispatch}
+            reset={configuration.tabsConfigurable?.reset}
+            resetSort={resetSort}
+            selectionsDispatch={selectionsDispatch}
           />
         </I18nextProvider>,
         configuration.tabsConfigurable
@@ -427,7 +409,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={true}
               language={languageSelect}
@@ -435,6 +417,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
+              selectOptions={sortList}
             />
           )}
         </I18nextProvider>,
@@ -475,7 +458,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={configuration.resultList?.changeOnOver || false}
               language={languageSelect}
@@ -487,6 +470,7 @@ export function Main({
                 configuration.resultList?.counterIsVisible || false
               }
               label={configuration.resultList?.label}
+              selectOptions={sortList}
             />
           )}
         </I18nextProvider>,
@@ -502,7 +486,7 @@ export function Main({
               onDetail={setDetail}
               setDetailMobile={setDetailMobile}
               sort={completelySort}
-              setSortResult={setSortResult}
+              setSortResult={setSort}
               isMobile={isMobile}
               overChangeCard={false}
               language={languageSelect}
@@ -522,11 +506,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DetailMemo
-            result={detail}
-            actionOnCLose={() => {}}
-            cardDetailsOnOver={cardDetailsOnOver}
-          />
+          <DetailMemo result={detail} actionOnCLose={() => {}} />
         </I18nextProvider>,
         configuration.details,
       )}
@@ -541,7 +521,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <SortResultListCustom
             classTab={tabs[selectedTabIndex]?.label}
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             selectOptions={
               configuration.sortResultListCustom?.selectOptions ?? []
             }
@@ -553,14 +533,14 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultListMemo setSortResult={setSortResult} />
+          <SortResultListMemo setSortResult={setSort} />
         </I18nextProvider>,
         configuration.sortable,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListMemo
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             relevance={configuration.sortableConfigurable?.relevance}
           />
         </I18nextProvider>,
@@ -571,7 +551,7 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListMemo
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             relevance={configuration.sortResultConfigurable?.relevance}
             HtmlString={
               configuration.sortResultConfigurable?.htmlKey || undefined
@@ -597,13 +577,25 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <SelectComponent
             language={languageSelect}
-            selectOptions={configuration.select?.options ?? []}
+            selectOptions={[]}
             extraClass={configuration.select?.extraClass}
-            setSortResult={setSortResult}
             labelDefault=""
+            handleChange={configuration.select?.handleChange}
           />
         </I18nextProvider>,
         configuration.select ? configuration.select?.element : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SortResults
+            language={languageSelect}
+            selectOptions={sortList ?? []}
+            extraClass={configuration.sortResults?.extraClass}
+            setSortResult={setSort}
+            labelDefault={configuration.sortResults?.classNameLabel}
+          />
+        </I18nextProvider>,
+        configuration.sortResults ? configuration.sortResults?.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -766,7 +758,7 @@ export function Main({
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
             isMobile={isMobile}
-            setSortResult={setSortResult}
+            setSortResult={setSort}
             searchQuery={searchQuery}
             onAddFilterToken={addFilterToken}
             onRemoveFilterToken={removeFilterToken}
@@ -785,7 +777,7 @@ export function Main({
   );
 }
 
-function useSearchOnClick({
+function useSearch({
   configuration,
   debounceTimeSearch,
   tabTokens,
@@ -798,7 +790,7 @@ function useSearchOnClick({
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
-  tabTokens: SearchToken[];
+  tabTokens: { tabToken: any; sort: any };
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
@@ -808,20 +800,24 @@ function useSearchOnClick({
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
-  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-  const textOnQueryStringOnCLick = "";
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
-  const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.text || "",
-    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-      token ? [{ text, start, end, token }] : [],
-    ),
-  });
+  const queryAnalysis = !configuration.useQueryAnalysis
+    ? { data: undefined }
+    : useQueryAnalysis({
+        searchText: debounced.textOnChange,
+        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      });
   const spans = React.useMemo(
     () =>
-      calculateSpans(selectionsState.text || "", queryAnalysis.data?.analysis),
-    [queryAnalysis.data?.analysis, selectionsState.text],
+      calculateSpans(
+        selectionsState.textOnChange,
+        queryAnalysis.data?.analysis,
+      ),
+    [queryAnalysis.data?.analysis, selectionsState.textOnChange],
   );
+
   const searchTokens = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -832,11 +828,17 @@ function useSearchOnClick({
       ),
     [spans, selectionsState.selection],
   );
+  const newSearch: SearchToken[] = selectionsState.text
+    ? [
+        {
+          isSearch: true,
+          tokenType: "TEXT",
+          filter: false,
+          values: [selectionsState.text],
+        },
+      ]
+    : [];
 
-  const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
-    searchTokenS.isSearch = true;
-    return searchTokenS;
-  });
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],
@@ -846,23 +848,31 @@ function useSearchOnClick({
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
-      ...tabTokens,
+      ...(tabTokens?.tabToken ?? []),
       ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
+      ...(tabTokens?.sort ? [tabTokens.sort] : []),
     ],
-    [defaultTokens, tabTokens, newTokenFilter, searchTokens, dateTokens],
+    [
+      defaultTokens,
+      tabTokens?.tabToken,
+      newTokenFilter,
+      searchTokens,
+      dateTokens,
+    ],
   );
 
   const searchQuery = useDebounce(searchQueryMemo, 600);
   const isQueryAnalysisComplete =
-    selectionsState.text === debounced.text &&
+    selectionsState.textOnChange === debounced.textOnChange &&
     queryAnalysis.data !== undefined &&
     !queryAnalysis.isPreviousData;
+
   React.useEffect(() => {
     onQueryStateChange({
       defaultTokens,
-      tabTokens,
+      tabTokens: tabTokens?.tabToken ?? [],
       filterTokens,
       searchTokens,
     });
@@ -870,7 +880,7 @@ function useSearchOnClick({
   }, [
     onQueryStateChange,
     defaultTokens,
-    tabTokens,
+    // tabTokens.tabToken,
     //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
     filterTokens,
     searchTokens,
@@ -917,148 +927,6 @@ function useSearchOnClick({
     spans,
     isQueryAnalysisComplete,
     completelySort,
-    setIsSaveQuery,
-    textOnQueryStringOnCLick,
-  };
-}
-
-function useSearch({
-  configuration,
-  debounceTimeSearch,
-  tabTokens,
-  filterTokens,
-  dateTokens,
-  onQueryStateChange,
-  setCurrentPage,
-  selectionsState,
-  selectionsDispatch,
-}: {
-  configuration: Configuration;
-  debounceTimeSearch: number;
-  tabTokens: SearchToken[];
-  filterTokens: SearchToken[];
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  dateTokens: SearchToken[];
-  onQueryStateChange(queryState: QueryState): void;
-  selectionsState: SelectionsState;
-  selectionsDispatch: React.Dispatch<SelectionsAction>;
-}) {
-  const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
-    configuration;
-  const [isSvaleQuery, setIsSaveQuery] = React.useState(false);
-  const debounced = useDebounce(
-    selectionsState as SelectionsState,
-    debounceTimeSearch,
-  );
-
-  const queryAnalysis = useQueryAnalysis({
-    searchText: debounced.textOnChange || "",
-    tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-      token ? [{ text, start, end, token }] : [],
-    ),
-  });
-
-  const spans = React.useMemo(
-    () =>
-      debounced.textOnChange?.length || 0 > 3
-        ? calculateSpans(
-            debounced.textOnChange || "",
-            queryAnalysis.data?.analysis,
-          )
-        : [],
-    [queryAnalysis.data?.analysis, debounced.textOnChange],
-  );
-  const searchTokens = React.useMemo(() => {
-    return deriveSearchQuery(
-      spans,
-      selectionsState.selection.flatMap(({ text, start, end, token }) =>
-        token ? [{ text, start, end, token }] : [],
-      ),
-    );
-  }, [isSvaleQuery, debounced.text]);
-  const newSearch: SearchToken[] = searchTokens.map((searchTokenS) => {
-    searchTokenS.isSearch = true;
-    return searchTokenS;
-  });
-
-  const newTokenFilter: SearchToken[] = React.useMemo(
-    () => createFilter(filterTokens),
-    [filterTokens],
-  );
-  const completelySort = React.useMemo(() => sort, [sort]);
-  const searchQueryMemo = React.useMemo(
-    () => [
-      ...defaultTokens,
-      ...tabTokens,
-      ...newTokenFilter,
-      ...newSearch,
-      ...dateTokens,
-    ],
-    [defaultTokens, tabTokens, newTokenFilter, dateTokens, searchTokens],
-  );
-
-  const searchQuery = useDebounce(searchQueryMemo, 600);
-  const isQueryAnalysisComplete =
-    selectionsState.text === debounced.text &&
-    queryAnalysis.data !== undefined &&
-    !queryAnalysis.isPreviousData;
-
-  React.useEffect(() => {
-    onQueryStateChange({
-      defaultTokens,
-      tabTokens,
-      filterTokens,
-      searchTokens,
-    });
-    setCurrentPage(0);
-  }, [
-    onQueryStateChange,
-    defaultTokens,
-    tabTokens,
-    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
-    filterTokens,
-    searchTokens,
-  ]);
-  React.useEffect(() => {
-    if (
-      searchAutoselect &&
-      queryAnalysis.data &&
-      queryAnalysis.data.searchText === selectionsState.text
-    ) {
-      const autoSelections = getAutoSelections(
-        selectionsState.selection,
-        queryAnalysis.data.analysis,
-      );
-      for (const selection of autoSelections) {
-        selectionsDispatch({
-          type: "set-selection",
-          replaceText: false,
-          selection: {
-            token: selection.token,
-            end: selection.end,
-            isAuto: selection.isAuto,
-            start: selection.start,
-            text: selection.text,
-            textOnChange: selection.text,
-          },
-        });
-      }
-    }
-  }, [
-    searchAutoselect,
-    searchReplaceText,
-    selectionsDispatch,
-    queryAnalysis.data,
-    selectionsState.selection,
-    selectionsState.text,
-  ]);
-  return {
-    searchQuery,
-    spans,
-    isQueryAnalysisComplete,
-    completelySort,
-    setIsSaveQuery,
-    textOnQueryStringOnCLick: selectionsState.text,
   };
 }
 
@@ -1074,13 +942,50 @@ function useTabs(
     [tenantTabs, overrideTabs, language],
   );
 
+  const tabSelected = React.useMemo(
+    () => tabs[selectedTabIndex],
+    [tabs, selectedTabIndex],
+  );
+  const sortList = tabSelected?.sortings;
+
   const tabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
+    const sort = sortList && sortList[0] ? { ...sortList[0] } : undefined;
+    const sortField: SortField = {
+      [sort?.field || ""]: {
+        sort: sort?.type as "asc" | "desc",
+        missing: "_last",
+      },
+    };
     const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
-    return completeTab ?? [];
-  }, [selectedTabIndex, tabs, language]);
 
-  return { tabTokens, tabs, selectedTabIndex, setSelectedTabIndex };
+    return (
+      {
+        tabTokens: completeTab,
+        sort: sort?.field ? { sort: sortField, isSort: true } : undefined,
+      } ?? {}
+    );
+  }, [selectedTabIndex, tabs, language]);
+  const [tabsValue, setTabsValue] = React.useState(tabTokens);
+  React.useEffect(() => {
+    setTabsValue(tabTokens);
+  }, [tabTokens]);
+
+  const setSort = (sortField: SortField | undefined) => {
+    setTabsValue({
+      ...tabTokens,
+      sort: sortField ? { sort: sortField, isSort: true } : undefined,
+    });
+  };
+  return {
+    tabTokens: tabsValue,
+    tabs,
+    selectedTabIndex,
+    setSelectedTabIndex,
+    sortList,
+    tabSelected,
+    setSort,
+  };
 }
 
 function recoveryDataBackEnd() {
@@ -1100,7 +1005,13 @@ function recoveryDataBackEnd() {
   const languages = useQuery(["date-label-languages", {}], async () => {
     return await client.getLanguages();
   });
-  return { dynamicFilters, languageQuery, whoIsDynamicResponse, languages };
+
+  return {
+    dynamicFilters,
+    languageQuery,
+    whoIsDynamicResponse,
+    languages,
+  };
 }
 
 function useFilters({
@@ -1167,28 +1078,39 @@ function useFilters({
     [onConfigurationChange],
   );
 
+  const resetFilter = React.useCallback(() => {
+    selectionsDispatch({ type: "reset-filters" });
+    onConfigurationChange(() => ({ filterTokens: [] }));
+  }, [onConfigurationChange]);
+
   const defaultTokens = configuration.defaultTokens;
-  return { defaultTokens, filterTokens, addFilterToken, removeFilterToken };
+  return {
+    defaultTokens,
+    filterTokens,
+    addFilterToken,
+    removeFilterToken,
+    resetFilter,
+  };
 }
 
 function useSortResult({
   configuration,
   onConfigurationChange,
+  setSortAfterKey,
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
+  setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const sort = configuration.sort;
-  const setSortResult = React.useCallback(
-    (sortResultNew: SortField) => {
-      onConfigurationChange((configuration) => ({
-        sort: [sortResultNew],
-      }));
-    },
-    [onConfigurationChange, sort],
-  );
 
-  return { sort, setSortResult };
+  const resetSort = React.useCallback(() => {
+    setSortAfterKey("");
+    onConfigurationChange(() => ({
+      sort: [],
+    }));
+  }, [configuration]);
+  return { sort, resetSort };
 }
 
 export type SearchDateRange = {
