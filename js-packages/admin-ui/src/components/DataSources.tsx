@@ -77,7 +77,7 @@ export function DataSources() {
               <ClayToggle
                 toggled={dataSource?.schedulable ?? false}
                 onToggle={(schedulable) => {
-                  if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling && dataSource.reindexRate)
+                  if (dataSource && dataSource.id && dataSource.name && dataSource.scheduling && dataSource.reindexRate >= 0)
                     updateDataSourceMutate({
                       variables: {
                         id: dataSource.id,
