@@ -358,6 +358,7 @@ function FiltersHorizontal({
                 </div>
                 <button
                   aria-label={isOpen ? "chiudi i filtri" : "apri i filtri"}
+                  className="openk9-close-filters"
                   css={css`
                     margin-right: 16px;
                     background: inherit;
