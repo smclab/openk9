@@ -14,7 +14,7 @@ export function DetailTitle({
   marginBottom = "8px",
 }: DetailTitleProps) {
   return (
-    <div
+    <h3
       className="openk9-embeddable-detail-title"
       css={css`
         font-size: ${fontSize};
@@ -23,6 +23,6 @@ export function DetailTitle({
       `}
     >
       {children}
-    </div>
+    </h3>
   );
 }
