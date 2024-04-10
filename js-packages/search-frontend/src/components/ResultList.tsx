@@ -456,7 +456,6 @@ export function InfiniteResults<E>({
             >
               <button
                 className="openk9-embeddable-result-list-button-load-more"
-                aria-label={t("load-more-results") || "load more results"}
                 onClick={() => {
                   if (!results.isFetching) {
                     results.fetchNextPage();
