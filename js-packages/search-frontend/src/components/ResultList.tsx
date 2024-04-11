@@ -180,6 +180,8 @@ function ResultCount({
           <ResultSvg />
         </span>
         <h2
+          id="resultid"
+          className="openk9-title-result"
           css={css`
             font-style: normal;
             font-weight: 700;
@@ -423,26 +425,36 @@ export function InfiniteResults<E>({
           >
             {results.data?.pages[0].total}
           </ResultCount>
-          {results.data?.pages.map((page, pageIndex) => {
-            return (
-              <React.Fragment key={`page-${pageIndex}`}>
-                {page.result.map((result, resultIndex) => {
-                  return (
-                    <ResultMemo<E>
-                      renderers={renderers}
-                      key={resultIndex}
-                      result={result}
-                      onDetail={onDetail}
-                      setDetailMobile={setDetailMobile}
-                      isMobile={isMobile}
-                      overChangeCard={overChangeCard}
-                      setIdPreview={setIdPreview}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            );
-          })}
+          <ul
+            role="list"
+            css={css`
+              list-style-type: none;
+              padding: 0;
+            `}
+          >
+            {results.data?.pages.map((page, pageIndex) => {
+              return (
+                <React.Fragment key={`page-${pageIndex}`}>
+                  {page.result.map((result, resultIndex) => {
+                    return (
+                      <li role="listitem" aria-labelledby="resultid">
+                        <ResultMemo<E>
+                          renderers={renderers}
+                          key={resultIndex}
+                          result={result}
+                          onDetail={onDetail}
+                          setDetailMobile={setDetailMobile}
+                          isMobile={isMobile}
+                          overChangeCard={overChangeCard}
+                          setIdPreview={setIdPreview}
+                        />
+                      </li>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </ul>
           {results.hasNextPage && (
             <div
               className="openk9-container-embeddable-result-button"
@@ -456,7 +468,6 @@ export function InfiniteResults<E>({
             >
               <button
                 className="openk9-embeddable-result-list-button-load-more"
-                aria-label={t("load-more-results") || "load more results"}
                 onClick={() => {
                   if (!results.isFetching) {
                     results.fetchNextPage();
