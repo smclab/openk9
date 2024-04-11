@@ -10,6 +10,7 @@ import {
   useDocTypeFieldOptionsQuery,
   useDocTypeFieldValueQuery,
   useUnbindDocTypeFieldToDataSourceMutation,
+  useAddAnnotatorExtraParamMutation,
 } from "../graphql-generated";
 import { useForm, fromFieldValidators, TextInput, TextArea, EnumSelect, NumberInput, SearchSelect, CustomButtom } from "./Form";
 import { AnnotatorsQuery } from "./Annotators";
@@ -28,6 +29,10 @@ const AnnotatorQuery = gql`
       fieldName
       docTypeField {
         id
+      }
+      extraParams {
+        key
+        value
       }
     }
   }
@@ -59,6 +64,40 @@ gql`
   }
 `;
 
+gql`
+  mutation addAnnotatorExtraParam($id: ID!, $key: String, $value: String!) {
+    addAnnotatorExtraParam(id: $id, key: $key, value: $value) {
+      name
+    }
+  }
+`;
+
+const boostDefaultValue = "50";
+
+enum valuesQueryType {
+  MUST = "MUST",
+  SHOULD = "SHOULD",
+  MIN_SHOULD_1 = "MIN_SHOULD_1",
+  MIN_SHOULD_2 = "MIN_SHOULD_2",
+  MIN_SHOULD_3 = "MIN_SHOULD_3",
+  MUST_NOT = "MUST_NOT",
+  FILTER = "FILTER",
+}
+
+const valuesQueryTypeDefaultValue = valuesQueryType.MUST.toString();
+
+enum globalQueryType {
+  MUST = "MUST",
+  SHOULD = "SHOULD",
+  MIN_SHOULD_1 = "MIN_SHOULD_1",
+  MIN_SHOULD_2 = "MIN_SHOULD_2",
+  MIN_SHOULD_3 = "MIN_SHOULD_3",
+  MUST_NOT = "MUST_NOT",
+  FILTER = "FILTER",
+}
+
+const globalQueryTypeDefaultValue = globalQueryType.MUST.toString();
+
 export function Annotator() {
   const { annotatorId = "new" } = useParams();
   const navigate = useNavigate();
@@ -83,6 +122,31 @@ export function Annotator() {
       showToast({ displayType: "danger", title: "Annotator error", content: error.message ?? "" });
     },
   });
+  const [addExtraParamMutate, addExtraParamMutation] = useAddAnnotatorExtraParamMutation({
+    refetchQueries: [AnnotatorsQuery],
+  });
+
+  const boostValue = annotatorQuery.data?.annotator?.extraParams?.find((element: any) => element.key === "boost")?.value;
+  const valuesQueryTypeValue = annotatorQuery.data?.annotator?.extraParams?.find(
+    (element: any) => element.key === "valuesQueryType"
+  )?.value;
+  const globalQueryTypeValue = annotatorQuery.data?.annotator?.extraParams?.find(
+    (element: any) => element.key === "globalQueryType"
+  )?.value;
+  const annotatorTypeInitialValue = annotatorQuery.data?.annotator?.type;
+
+  const originalValues = {
+    fieldName: annotatorQuery.data?.annotator?.fieldName,
+    fuziness: annotatorQuery.data?.annotator?.fuziness,
+    type: annotatorQuery.data?.annotator?.type,
+    description: annotatorQuery.data?.annotator?.description,
+    size: annotatorQuery.data?.annotator?.size,
+    name: annotatorQuery.data?.annotator?.name,
+    boost: boostValue,
+    valuesQueryType: valuesQueryTypeValue,
+    globalQueryType: globalQueryTypeValue,
+  };
+
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -92,13 +156,46 @@ export function Annotator() {
         description: "",
         size: 1,
         name: "",
+        boost: boostDefaultValue,
+        valuesQueryType: valuesQueryTypeDefaultValue,
+        globalQueryType: globalQueryTypeDefaultValue,
       }),
       []
     ),
-    originalValues: annotatorQuery.data?.annotator,
+    originalValues: originalValues,
     isLoading: annotatorQuery.loading || createOrUpdateannotatorMutation.loading,
     onSubmit(data) {
       createOrUpdateAnnotatorMutate({ variables: { id: annotatorId !== "new" ? annotatorId : undefined, ...data } });
+
+      if (
+        data.type === AnnotatorType.Autocomplete ||
+        data.type === AnnotatorType.NerAutocomplete ||
+        data.type === AnnotatorType.KeywordAutocomplete ||
+        data.type === AnnotatorType.Ner ||
+        data.type === AnnotatorType.Aggregator
+      ) {
+        addExtraParamMutate({
+          variables: {
+            id: annotatorId,
+            key: "boost",
+            value: data.boost ? data.boost : boostDefaultValue,
+          },
+        });
+        addExtraParamMutate({
+          variables: {
+            id: annotatorId,
+            key: "valuesQueryType",
+            value: data.valuesQueryType ? data.valuesQueryType : valuesQueryTypeDefaultValue,
+          },
+        });
+        addExtraParamMutate({
+          variables: {
+            id: annotatorId,
+            key: "globalQueryType",
+            value: data.globalQueryType ? data.globalQueryType : globalQueryTypeDefaultValue,
+          },
+        });
+      }
     },
     getValidationMessages: fromFieldValidators(createOrUpdateannotatorMutation.data?.annotator?.fieldValidators),
   });
@@ -124,6 +221,18 @@ export function Annotator() {
           dict={AnnotatorType}
           {...form.inputProps("type")}
           description="Annotator type. Read documentation for more information"
+          onChange={(annotatorType: AnnotatorType) => {
+            form.inputProps("type").onChange(annotatorType);
+            if (annotatorType !== annotatorTypeInitialValue) {
+              form.inputProps("boost").onChange(boostDefaultValue);
+              form.inputProps("valuesQueryType").onChange(valuesQueryTypeDefaultValue);
+              form.inputProps("globalQueryType").onChange(globalQueryTypeDefaultValue);
+            } else {
+              form.inputProps("boost").onChange(boostValue ? boostValue : boostDefaultValue);
+              form.inputProps("valuesQueryType").onChange(valuesQueryTypeValue ? valuesQueryTypeValue : valuesQueryTypeDefaultValue);
+              form.inputProps("globalQueryType").onChange(globalQueryTypeValue ? globalQueryTypeValue : globalQueryTypeDefaultValue);
+            }
+          }}
         />
         <TextArea label="Description" {...form.inputProps("description")} />
         <NumberInput label="Size" {...form.inputProps("size")} description="Size for result retrieved by annotator" />
@@ -148,6 +257,17 @@ export function Annotator() {
               invalidate={() => annotatorQuery.refetch()}
             />
           </form>
+        )}
+        {(form.inputProps("type").value === AnnotatorType.Autocomplete ||
+          form.inputProps("type").value === AnnotatorType.NerAutocomplete ||
+          form.inputProps("type").value === AnnotatorType.KeywordAutocomplete ||
+          form.inputProps("type").value === AnnotatorType.Ner ||
+          form.inputProps("type").value === AnnotatorType.Aggregator) && (
+          <div>
+            <TextInput label="boost" {...form.inputProps("boost")} />
+            <EnumSelect label="valuesQueryType" dict={valuesQueryType} {...form.inputProps("valuesQueryType")} />
+            <EnumSelect label="globalQueryType" dict={globalQueryType} {...form.inputProps("globalQueryType")} />
+          </div>
         )}
         <div className="sheet-footer">
           <CustomButtom nameButton={annotatorId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />
