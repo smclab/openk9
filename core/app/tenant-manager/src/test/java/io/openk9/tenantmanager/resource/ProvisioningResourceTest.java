@@ -18,11 +18,12 @@
 package io.openk9.tenantmanager.resource;
 
 import com.google.protobuf.Empty;
+import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.ApplyResponse;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
+import io.openk9.datasource.grpc.Datasource;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
-import io.openk9.tenantmanager.resource.mock.MockableAppManager;
-import io.openk9.tenantmanager.resource.mock.MockableDatasource;
+import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
@@ -47,9 +48,12 @@ public class ProvisioningResourceTest {
 
 
 	@InjectMock
-	MockableAppManager appManager;
+	@GrpcClient("appmanager")
+	AppManager appManager;
+
 	@InjectMock
-	MockableDatasource datasource;
+	@GrpcClient("datasource")
+	Datasource datasource;
 
 	@Test
 	void should_create_connector() {
