@@ -181,6 +181,7 @@ function ResultCount({
         </span>
         <h2
           id="resultid"
+          className="openk9-title-result"
           css={css`
             font-style: normal;
             font-weight: 700;
