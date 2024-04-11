@@ -849,17 +849,9 @@ function useSearch({
       ),
     [spans, selectionsState.selection],
   );
-  const newSearch: SearchToken[] = selectionsState.text
-    ? [
-        {
-          isSearch: true,
-          tokenType: "TEXT",
-          filter: false,
-          values: [selectionsState.text],
-        },
-      ]
-    : [];
-
+  const newSearch: SearchToken[] = searchTokens.map((searchToken) => {
+    return { ...searchToken, isSearch: true };
+  });
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],

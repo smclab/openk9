@@ -111,7 +111,7 @@ function reducer(
         textOnChange: action.textOnchange,
         selection: shiftSelection(
           state.textOnChange,
-          action.textOnchange || state.textOnChange,
+          action.textOnchange,
           state.selection,
         ),
       };
