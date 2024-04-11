@@ -160,6 +160,7 @@ export type Bucket = {
   refreshOnSuggestionCategory?: Maybe<Scalars['Boolean']>;
   refreshOnTab?: Maybe<Scalars['Boolean']>;
   searchConfig?: Maybe<SearchConfig>;
+  sortings?: Maybe<Connection_Sorting>;
   suggestionCategories?: Maybe<Connection_SuggestionCategory>;
   tabs?: Maybe<Connection_Tab>;
 };
@@ -177,6 +178,17 @@ export type BucketDatasourcesArgs = {
 
 
 export type BucketLanguagesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+export type BucketSortingsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -404,6 +416,14 @@ export type Connection_SearchTokenDto = {
 };
 
 /** A connection to a list of items. */
+export type Connection_Sorting = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_Sorting>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
 export type Connection_SuggestionCategory = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_SuggestionCategory>>>;
@@ -520,6 +540,27 @@ export type DatasourceSchedulersArgs = {
   notEqual?: InputMaybe<Scalars['Boolean']>;
   searchText?: InputMaybe<Scalars['String']>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+export type DatasourceConnectionDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  /** Json configuration with custom fields for datasource */
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  /** Pipeline to be created and associated (optional) */
+  pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
+  /** Pipeline to be associated (optional) */
+  pipelineId?: InputMaybe<Scalars['BigInteger']>;
+  /** PluginDriver to be created and associated (optional) */
+  pluginDriver?: InputMaybe<PluginDriverDtoInput>;
+  /** PluginDriver to be associated (optional) */
+  pluginDriverId?: InputMaybe<Scalars['BigInteger']>;
+  /** Reindex on datasource every {reindexRate} times, never if 0 */
+  reindexRate: Scalars['Int'];
+  /** If true datasource is scheduled based on defined scheduling expression */
+  schedulable: Scalars['Boolean'];
+  /** Chron quartz expression to define scheduling of datasource */
+  scheduling: Scalars['String'];
 };
 
 export type DatasourceDtoInput = {
@@ -646,6 +687,12 @@ export type DefaultConnection_SearchConfig = Connection_SearchConfig & {
 export type DefaultConnection_SearchTokenDto = Connection_SearchTokenDto & {
   __typename?: 'DefaultConnection_SearchTokenDto';
   edges?: Maybe<Array<Maybe<Edge_SearchTokenDto>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
+export type DefaultConnection_Sorting = Connection_Sorting & {
+  __typename?: 'DefaultConnection_Sorting';
+  edges?: Maybe<Array<Maybe<Edge_Sorting>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
@@ -791,6 +838,12 @@ export type DefaultEdge_SearchTokenDto = Edge_SearchTokenDto & {
   __typename?: 'DefaultEdge_SearchTokenDto';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<SearchTokenDto>;
+};
+
+export type DefaultEdge_Sorting = Edge_Sorting & {
+  __typename?: 'DefaultEdge_Sorting';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<Sorting>;
 };
 
 export type DefaultEdge_SuggestionCategory = Edge_SuggestionCategory & {
@@ -1108,6 +1161,14 @@ export type Edge_SearchTokenDto = {
 };
 
 /** An edge in a connection */
+export type Edge_Sorting = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<Sorting>;
+};
+
+/** An edge in a connection */
 export type Edge_SuggestionCategory = {
   /** cursor marks a unique position or index into the connection */
   cursor?: Maybe<Scalars['String']>;
@@ -1307,11 +1368,36 @@ export type FieldValidator = {
   message?: Maybe<Scalars['String']>;
 };
 
+export type FilterFieldInput = {
+  fieldName?: InputMaybe<Scalars['String']>;
+  not?: InputMaybe<Scalars['Boolean']>;
+  operator?: InputMaybe<Operator>;
+  value?: InputMaybe<Scalars['String']>;
+};
+
+export type FilterInput = {
+  andOperator?: InputMaybe<Scalars['Boolean']>;
+  filterFields?: InputMaybe<Array<InputMaybe<FilterFieldInput>>>;
+};
+
 export enum Fuzziness {
   Auto = 'AUTO',
   One = 'ONE',
   Two = 'TWO',
   Zero = 'ZERO'
+}
+
+export type ItemDtoInput = {
+  enrichItemId: Scalars['BigInteger'];
+  weight: Scalars['Float'];
+};
+
+export enum K9Column {
+  CreateDate = 'createDate',
+  Description = 'description',
+  Id = 'id',
+  ModifiedDate = 'modifiedDate',
+  Name = 'name'
 }
 
 export type Language = {
@@ -1346,6 +1432,9 @@ export type Mutation = {
   addExtraParam?: Maybe<TokenTab>;
   addLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   addRuleToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
+  addSortingToBucket?: Maybe<Tuple2_Bucket_Sorting>;
+  addSortingToTab?: Maybe<Tuple2_Tab_Sorting>;
+  addSortingTranslation?: Maybe<Tuple2_String_String>;
   addSuggestionCategoryToBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
   addSuggestionCategoryTranslation?: Maybe<Tuple2_String_String>;
   addTabToBucket?: Maybe<Tuple2_Bucket_Tab>;
@@ -1357,6 +1446,7 @@ export type Mutation = {
   bindAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   bindAnnotatorToDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
   bindDataIndexToDatasource?: Maybe<Tuple2_Datasource_DataIndex>;
+  bindDocTypeFieldToSorting?: Maybe<Tuple2_Sorting_DocTypeField>;
   bindDocTypeFieldToTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   bindDocTypeToDocTypeTemplate?: Maybe<Tuple2_DocType_DocTypeTemplate>;
   bindEnrichPipelineToDatasource?: Maybe<Tuple2_Datasource_EnrichPipeline>;
@@ -1368,6 +1458,7 @@ export type Mutation = {
   bucket?: Maybe<Response_Bucket>;
   charFilter?: Maybe<Response_CharFilter>;
   createDatasourceAndAddPluginDriver?: Maybe<Tuple2_Datasource_PluginDriver>;
+  createDatasourceConnection?: Maybe<Response_Datasource>;
   createSubField?: Maybe<Response_DocTypeField>;
   dataIndex?: Maybe<Response_DataIndex>;
   datasource?: Maybe<Response_Datasource>;
@@ -1387,6 +1478,7 @@ export type Mutation = {
   deleteQueryAnalysis?: Maybe<QueryAnalysis>;
   deleteRule?: Maybe<Rule>;
   deleteSearchConfig?: Maybe<SearchConfig>;
+  deleteSortingTranslation?: Maybe<Tuple2_String_String>;
   deleteSuggestionCategory?: Maybe<SuggestionCategory>;
   deleteSuggestionCategoryTranslation?: Maybe<Tuple2_String_String>;
   deleteTab?: Maybe<Tab>;
@@ -1418,6 +1510,8 @@ export type Mutation = {
   removeLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   removeQueryParserConfig?: Maybe<Tuple2_SearchConfig_BigInteger>;
   removeRuleFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
+  removeSortingFromBucket?: Maybe<Tuple2_Bucket_Sorting>;
+  removeSortingToTab?: Maybe<Tuple2_Tab_Sorting>;
   removeSuggestionCategoryFromBucket?: Maybe<Tuple2_Bucket_SuggestionCategory>;
   removeTabFromBucket?: Maybe<Tuple2_Bucket_Tab>;
   removeTokenFilterFromAnalyzer?: Maybe<Tuple2_Analyzer_TokenFilter>;
@@ -1426,6 +1520,7 @@ export type Mutation = {
   rule?: Maybe<Response_Rule>;
   searchConfig?: Maybe<Response_SearchConfig>;
   sortEnrichItems?: Maybe<EnrichPipeline>;
+  sorting?: Maybe<Response_Sorting>;
   suggestionCategory?: Maybe<Response_SuggestionCategory>;
   tab?: Maybe<Response_Tab>;
   tokenFilter?: Maybe<Response_TokenFilter>;
@@ -1434,6 +1529,7 @@ export type Mutation = {
   unbindAnalyzerFromDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   unbindAnnotatorFromDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
   unbindDataIndexFromDatasource?: Maybe<Datasource>;
+  unbindDocTypeFieldFromSorting?: Maybe<Tuple2_Sorting_DocTypeField>;
   unbindDocTypeFieldFromTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   unbindDocTypeTemplateFromDocType?: Maybe<DocType>;
   unbindEnrichPipelineToDatasource?: Maybe<Datasource>;
@@ -1537,6 +1633,29 @@ export type MutationAddRuleToQueryAnalysisArgs = {
 
 
 /** Mutation root */
+export type MutationAddSortingToBucketArgs = {
+  id: Scalars['ID'];
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddSortingToTabArgs = {
+  id: Scalars['ID'];
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationAddSortingTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  sortingId: Scalars['ID'];
+  value?: InputMaybe<Scalars['String']>;
+};
+
+
+/** Mutation root */
 export type MutationAddSuggestionCategoryToBucketArgs = {
   bucketId: Scalars['ID'];
   suggestionCategoryId: Scalars['ID'];
@@ -1620,6 +1739,13 @@ export type MutationBindDataIndexToDatasourceArgs = {
 
 
 /** Mutation root */
+export type MutationBindDocTypeFieldToSortingArgs = {
+  docTypeFieldId: Scalars['ID'];
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationBindDocTypeFieldToTokenTabArgs = {
   docTypeFieldId: Scalars['ID'];
   tokenTabId: Scalars['ID'];
@@ -1695,6 +1821,12 @@ export type MutationCharFilterArgs = {
 export type MutationCreateDatasourceAndAddPluginDriverArgs = {
   datasourceDTO?: InputMaybe<DatasourceDtoInput>;
   id: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationCreateDatasourceConnectionArgs = {
+  datasourceConnection?: InputMaybe<DatasourceConnectionDtoInput>;
 };
 
 
@@ -1816,6 +1948,14 @@ export type MutationDeleteRuleArgs = {
 /** Mutation root */
 export type MutationDeleteSearchConfigArgs = {
   searchConfigId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationDeleteSortingTranslationArgs = {
+  key?: InputMaybe<Scalars['String']>;
+  language?: InputMaybe<Scalars['String']>;
+  sortingId: Scalars['ID'];
 };
 
 
@@ -2043,6 +2183,20 @@ export type MutationRemoveRuleFromQueryAnalysisArgs = {
 
 
 /** Mutation root */
+export type MutationRemoveSortingFromBucketArgs = {
+  id: Scalars['ID'];
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationRemoveSortingToTabArgs = {
+  id: Scalars['ID'];
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationRemoveSuggestionCategoryFromBucketArgs = {
   bucketId: Scalars['ID'];
   suggestionCategoryId: Scalars['ID'];
@@ -2096,6 +2250,14 @@ export type MutationSearchConfigArgs = {
 export type MutationSortEnrichItemsArgs = {
   enrichItemIdList?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   enrichPipelineId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationSortingArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  sortingDTO?: InputMaybe<SortingDtoInput>;
 };
 
 
@@ -2159,6 +2321,13 @@ export type MutationUnbindDataIndexFromDatasourceArgs = {
 
 
 /** Mutation root */
+export type MutationUnbindDocTypeFieldFromSortingArgs = {
+  docTypeFieldId: Scalars['ID'];
+  id: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationUnbindDocTypeFieldFromTokenTabArgs = {
   docTypeFieldId: Scalars['ID'];
   id: Scalars['ID'];
@@ -2214,6 +2383,17 @@ export type MutationUserFieldArgs = {
   userField?: InputMaybe<UserField>;
 };
 
+export enum Operator {
+  Contains = 'contains',
+  EndsWith = 'endsWith',
+  Equals = 'equals',
+  GreaterThan = 'greaterThan',
+  GreaterThanOrEqualTo = 'greaterThanOrEqualTo',
+  LessThan = 'lessThan',
+  LessThenOrEqualTo = 'lessThenOrEqualTo',
+  StartsWith = 'startsWith'
+}
+
 /** Information about pagination in a connection. */
 export type PageInfo = {
   /** When paginating forwards, the cursor to continue. */
@@ -2224,6 +2404,28 @@ export type PageInfo = {
   hasPreviousPage: Scalars['Boolean'];
   /** When paginating backwards, the cursor to continue. */
   startCursor?: Maybe<Scalars['String']>;
+};
+
+export type Page_PluginDriver = {
+  __typename?: 'Page_PluginDriver';
+  afterId: Scalars['BigInteger'];
+  beforeId: Scalars['BigInteger'];
+  content?: Maybe<Array<Maybe<PluginDriver>>>;
+  count: Scalars['BigInteger'];
+  limit: Scalars['Int'];
+};
+
+export type PageableInput = {
+  afterId?: InputMaybe<Scalars['BigInteger']>;
+  beforeId?: InputMaybe<Scalars['BigInteger']>;
+  limit?: InputMaybe<Scalars['Int']>;
+  sortBy?: InputMaybe<K9Column>;
+};
+
+export type PipelineWithItemsDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  items?: InputMaybe<Array<InputMaybe<ItemDtoInput>>>;
+  name: Scalars['String'];
 };
 
 export type PluginDriver = {
@@ -2238,6 +2440,7 @@ export type PluginDriver = {
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
+  provisioning?: Maybe<Provisioning>;
   type?: Maybe<PluginDriverType>;
 };
 
@@ -2262,6 +2465,7 @@ export type PluginDriverDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  provisioning?: InputMaybe<Provisioning>;
   type: PluginDriverType;
 };
 
@@ -2273,6 +2477,11 @@ export type PluginDriverDocTypeFieldKey = {
 
 export enum PluginDriverType {
   Http = 'HTTP'
+}
+
+export enum Provisioning {
+  System = 'SYSTEM',
+  User = 'USER'
 }
 
 /** Query root */
@@ -2297,6 +2506,7 @@ export type Query = {
   docTypeFieldsByParent?: Maybe<Connection_DocTypeField>;
   docTypeFieldsFromDocType?: Maybe<Connection_DocTypeField>;
   docTypeFieldsFromDocTypeByParent?: Maybe<Connection_DocTypeField>;
+  docTypeFieldsNotInSorting?: Maybe<Connection_DocTypeField>;
   docTypeFieldsNotInTokenTab?: Maybe<Connection_DocTypeField>;
   docTypeTemplate?: Maybe<DocTypeTemplate>;
   docTypeTemplates?: Maybe<Connection_DocTypeTemplate>;
@@ -2316,6 +2526,7 @@ export type Query = {
   languages?: Maybe<Connection_Language>;
   pluginDriver?: Maybe<PluginDriver>;
   pluginDrivers?: Maybe<Connection_PluginDriver>;
+  pluginDriversPageFilter?: Maybe<Page_PluginDriver>;
   queryAnalyses?: Maybe<Connection_QueryAnalysis>;
   queryAnalysis?: Maybe<QueryAnalysis>;
   queryParserConfig?: Maybe<QueryParserConfig>;
@@ -2326,6 +2537,8 @@ export type Query = {
   schedulers?: Maybe<Connection_Scheduler>;
   searchConfig?: Maybe<SearchConfig>;
   searchConfigs?: Maybe<Connection_SearchConfig>;
+  sorting?: Maybe<Sorting>;
+  sortings?: Maybe<Connection_Sorting>;
   suggestionCategories?: Maybe<Connection_SuggestionCategory>;
   suggestionCategory?: Maybe<SuggestionCategory>;
   tab?: Maybe<Tab>;
@@ -2336,6 +2549,7 @@ export type Query = {
   tokenTabs?: Maybe<Connection_TokenTab>;
   tokenizer?: Maybe<Tokenizer>;
   tokenizers?: Maybe<Connection_Tokenizer>;
+  totalSortings?: Maybe<Connection_Sorting>;
   totalTokenTabs?: Maybe<Connection_TokenTab>;
 };
 
@@ -2518,6 +2732,19 @@ export type QueryDocTypeFieldsFromDocTypeByParentArgs = {
 
 
 /** Query root */
+export type QueryDocTypeFieldsNotInSortingArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+  sortingId: Scalars['ID'];
+};
+
+
+/** Query root */
 export type QueryDocTypeFieldsNotInTokenTabArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -2658,6 +2885,13 @@ export type QueryPluginDriversArgs = {
 
 
 /** Query root */
+export type QueryPluginDriversPageFilterArgs = {
+  filter?: InputMaybe<FilterInput>;
+  pageable?: InputMaybe<PageableInput>;
+};
+
+
+/** Query root */
 export type QueryQueryAnalysesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -2745,6 +2979,25 @@ export type QuerySearchConfigsArgs = {
 
 
 /** Query root */
+export type QuerySortingArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QuerySortingsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+  tabId: Scalars['ID'];
+};
+
+
+/** Query root */
 export type QuerySuggestionCategoriesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -2822,6 +3075,17 @@ export type QueryTokenizerArgs = {
 
 /** Query root */
 export type QueryTokenizersArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryTotalSortingsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -3006,6 +3270,12 @@ export type Response_SearchConfig = {
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
+export type Response_Sorting = {
+  __typename?: 'Response_Sorting';
+  entity?: Maybe<Sorting>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
 export type Response_SuggestionCategory = {
   __typename?: 'Response_SuggestionCategory';
   entity?: Maybe<SuggestionCategory>;
@@ -3062,6 +3332,8 @@ export type Scheduler = {
   createDate?: Maybe<Scalars['DateTime']>;
   datasource?: Maybe<Datasource>;
   id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  lastIngestionDate?: Maybe<Scalars['DateTime']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   newDataIndex?: Maybe<DataIndex>;
@@ -3123,6 +3395,45 @@ export type SortByInput = {
   column?: InputMaybe<Scalars['String']>;
   direction?: InputMaybe<Direction>;
 };
+
+export type Sorting = {
+  __typename?: 'Sorting';
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  defaultSort: Scalars['Boolean'];
+  description?: Maybe<Scalars['String']>;
+  docTypeField?: Maybe<DocTypeField>;
+  docTypeFieldsNotInSorting?: Maybe<Connection_DocTypeField>;
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  priority?: Maybe<Scalars['Float']>;
+  type?: Maybe<SortingType>;
+};
+
+
+export type SortingDocTypeFieldsNotInSortingArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+export type SortingDtoInput = {
+  defaultSort: Scalars['Boolean'];
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  priority: Scalars['Float'];
+  type: SortingType;
+};
+
+export enum SortingType {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
 
 /** Subscription root */
 export type Subscription = {
@@ -3227,12 +3538,24 @@ export type Tab = {
   name?: Maybe<Scalars['String']>;
   priority?: Maybe<Scalars['Int']>;
   searchTokens?: Maybe<Connection_SearchTokenDto>;
+  sortings?: Maybe<Connection_Sorting>;
   tokenTabs?: Maybe<Connection_TokenTab>;
   translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
 
 export type TabSearchTokensArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+export type TabSortingsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -3323,6 +3646,7 @@ export type TokenTabDtoInput = {
 export enum TokenType {
   Autocomplete = 'AUTOCOMPLETE',
   Date = 'DATE',
+  DateOrder = 'DATE_ORDER',
   Doctype = 'DOCTYPE',
   Entity = 'ENTITY',
   Filter = 'FILTER',
@@ -3404,6 +3728,12 @@ export type Tuple2_Bucket_SearchConfig = {
   __typename?: 'Tuple2_Bucket_SearchConfig';
   left?: Maybe<Bucket>;
   right?: Maybe<SearchConfig>;
+};
+
+export type Tuple2_Bucket_Sorting = {
+  __typename?: 'Tuple2_Bucket_Sorting';
+  left?: Maybe<Bucket>;
+  right?: Maybe<Sorting>;
 };
 
 export type Tuple2_Bucket_SuggestionCategory = {
@@ -3490,6 +3820,12 @@ export type Tuple2_SearchConfig_BigInteger = {
   right?: Maybe<Scalars['BigInteger']>;
 };
 
+export type Tuple2_Sorting_DocTypeField = {
+  __typename?: 'Tuple2_Sorting_DocTypeField';
+  left?: Maybe<Sorting>;
+  right?: Maybe<DocTypeField>;
+};
+
 export type Tuple2_String_String = {
   __typename?: 'Tuple2_String_String';
   left?: Maybe<Scalars['String']>;
@@ -3500,6 +3836,12 @@ export type Tuple2_SuggestionCategory_DocTypeField = {
   __typename?: 'Tuple2_SuggestionCategory_DocTypeField';
   left?: Maybe<SuggestionCategory>;
   right?: Maybe<DocTypeField>;
+};
+
+export type Tuple2_Tab_Sorting = {
+  __typename?: 'Tuple2_Tab_Sorting';
+  left?: Maybe<Tab>;
+  right?: Maybe<Sorting>;
 };
 
 export type Tuple2_Tab_TokenTab = {
@@ -3643,7 +3985,7 @@ export type AnnotatorQueryVariables = Exact<{
 }>;
 
 
-export type AnnotatorQuery = { __typename?: 'Query', annotator?: { __typename?: 'Annotator', id?: string | null, fuziness?: Fuzziness | null, size?: number | null, type?: AnnotatorType | null, description?: string | null, name?: string | null, fieldName?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type AnnotatorQuery = { __typename?: 'Query', annotator?: { __typename?: 'Annotator', id?: string | null, fuziness?: Fuzziness | null, size?: number | null, type?: AnnotatorType | null, description?: string | null, name?: string | null, fieldName?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null, extraParams?: Array<{ __typename?: 'AnnotatorExtraParam', key?: string | null, value?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateAnnotatorMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -3657,6 +3999,15 @@ export type CreateOrUpdateAnnotatorMutationVariables = Exact<{
 
 
 export type CreateOrUpdateAnnotatorMutation = { __typename?: 'Mutation', annotator?: { __typename?: 'Response_Annotator', entity?: { __typename?: 'Annotator', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type AddAnnotatorExtraParamMutationVariables = Exact<{
+  id: Scalars['ID'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddAnnotatorExtraParamMutation = { __typename?: 'Mutation', addAnnotatorExtraParam?: { __typename?: 'Annotator', name?: string | null } | null };
 
 export type DocTypeFieldOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -5681,6 +6032,10 @@ export const AnnotatorDocument = gql`
     docTypeField {
       id
     }
+    extraParams {
+      key
+      value
+    }
   }
 }
     `;
@@ -5761,6 +6116,41 @@ export function useCreateOrUpdateAnnotatorMutation(baseOptions?: Apollo.Mutation
 export type CreateOrUpdateAnnotatorMutationHookResult = ReturnType<typeof useCreateOrUpdateAnnotatorMutation>;
 export type CreateOrUpdateAnnotatorMutationResult = Apollo.MutationResult<CreateOrUpdateAnnotatorMutation>;
 export type CreateOrUpdateAnnotatorMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>;
+export const AddAnnotatorExtraParamDocument = gql`
+    mutation addAnnotatorExtraParam($id: ID!, $key: String, $value: String!) {
+  addAnnotatorExtraParam(id: $id, key: $key, value: $value) {
+    name
+  }
+}
+    `;
+export type AddAnnotatorExtraParamMutationFn = Apollo.MutationFunction<AddAnnotatorExtraParamMutation, AddAnnotatorExtraParamMutationVariables>;
+
+/**
+ * __useAddAnnotatorExtraParamMutation__
+ *
+ * To run a mutation, you first call `useAddAnnotatorExtraParamMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddAnnotatorExtraParamMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addAnnotatorExtraParamMutation, { data, loading, error }] = useAddAnnotatorExtraParamMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddAnnotatorExtraParamMutation(baseOptions?: Apollo.MutationHookOptions<AddAnnotatorExtraParamMutation, AddAnnotatorExtraParamMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddAnnotatorExtraParamMutation, AddAnnotatorExtraParamMutationVariables>(AddAnnotatorExtraParamDocument, options);
+      }
+export type AddAnnotatorExtraParamMutationHookResult = ReturnType<typeof useAddAnnotatorExtraParamMutation>;
+export type AddAnnotatorExtraParamMutationResult = Apollo.MutationResult<AddAnnotatorExtraParamMutation>;
+export type AddAnnotatorExtraParamMutationOptions = Apollo.BaseMutationOptions<AddAnnotatorExtraParamMutation, AddAnnotatorExtraParamMutationVariables>;
 export const DocTypeFieldOptionsDocument = gql`
     query DocTypeFieldOptions($searchText: String, $cursor: String, $annotatorId: ID!) {
   options: docTypeFieldNotInAnnotator(
@@ -13104,4 +13494,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2023-12-21T15:31:05+01:00
+// Generated on 2024-04-11T13:02:38+02:00
