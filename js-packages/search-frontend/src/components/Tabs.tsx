@@ -9,6 +9,7 @@ import _ from "lodash";
 import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
 import { Options } from "./SortResults";
+import CustomSkeleton from "./Skeleton";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 type TabsProps = {
@@ -357,4 +358,22 @@ export function translationTabValue({
   }
 
   return tabClick || defaultValue;
+}
+
+export default function TabsSkeleton() {
+  return (
+    <div
+      css={css`
+        padding: 8px 16px;
+      `}
+    >
+      <CustomSkeleton
+        height="32px"
+        counter={3}
+        position="row"
+        width="100px"
+        gap="10px"
+      />
+    </div>
+  );
 }

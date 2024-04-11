@@ -22,8 +22,8 @@ import {
   SortField,
 } from "../components/client";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
-import { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
-import { FiltersMemo } from "../components/Filters";
+import TabsSkeleton, { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
+import { FiltersMemo, SkeletonFilters } from "../components/Filters";
 import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
 import { Search } from "../components/Search";
 import { useOpenK9Client } from "../components/client";
@@ -44,7 +44,10 @@ import { ChangeLanguage } from "../components/ChangeLanguage";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { TotalResults } from "../components/TotalResults";
 import { TotalResultsMobile } from "../components/TotalResultsMobile";
-import { ResultsPaginationMemo } from "../components/ResultListPagination";
+import {
+  ResultsPaginationMemo,
+  SkeletonResult,
+} from "../components/ResultListPagination";
 import _, { isEqual } from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
@@ -235,15 +238,19 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <TabsMemo
-            tabs={tabs}
-            selectedTabIndex={selectedTabIndex}
-            onSelectedTabIndexChange={setSelectedTabIndex}
-            language={languageSelect}
-            resetFilter={resetFilter}
-            resetSort={resetSort}
-            selectionsDispatch={selectionsDispatch}
-          />
+          {tabs.length > 0 ? (
+            <TabsMemo
+              tabs={tabs}
+              selectedTabIndex={selectedTabIndex}
+              onSelectedTabIndexChange={setSelectedTabIndex}
+              language={languageSelect}
+              resetFilter={resetFilter}
+              resetSort={resetSort}
+              selectionsDispatch={selectionsDispatch}
+            />
+          ) : (
+            <TabsSkeleton />
+          )}
         </I18nextProvider>,
         configuration.tabs,
       )}
@@ -280,7 +287,9 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
+          {isSearchLoading ? (
+            <SkeletonFilters />
+          ) : (
             <FiltersMemo
               searchQuery={searchQuery}
               onAddFilterToken={addFilterToken}
@@ -303,7 +312,9 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
+          {isSearchLoading ? (
+            <SkeletonFilters />
+          ) : (
             <FiltersMemo
               searchQuery={searchQuery}
               onAddFilterToken={addFilterToken}
@@ -401,7 +412,9 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
+          {isSearchLoading ? (
+            <SkeletonResult />
+          ) : (
             <ResultsMemo
               setTotalResult={setTotalResult}
               displayMode={configuration.resultsDisplayMode}
@@ -450,7 +463,9 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
+          {isSearchLoading ? (
+            <SkeletonResult />
+          ) : (
             <ResultsMemo
               setTotalResult={setTotalResult}
               displayMode={configuration.resultsDisplayMode}

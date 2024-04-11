@@ -218,7 +218,7 @@ function Filters({
         )}
         {preFilters}
         {suggestionCategories.data?.map((suggestionCategory, index) => (
-          <React.Suspense fallback={<div>sdcxz</div>}>
+          <React.Suspense fallback={<SkeletonCategory />}>
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
               suggestionCategoryName={translateSuggesionCategoryName({
@@ -376,7 +376,85 @@ function translateSuggesionCategoryName({
   return defaultValue;
 }
 
-function SkeletonFilters() {
+export function SkeletonFilters() {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <div className="openk9-skeleton">
+        <div
+          className="openk9-result-list-container-title box-title openk9-skeleton-container-result"
+          css={css`
+            padding: 0px 16px;
+            padding-top: 20.7px;
+            padding-bottom: 12.7px;
+            display: flex;
+            margin-bottom: 8px;
+          `}
+        >
+          <span>
+            <FilterSvg />
+          </span>
+          <span
+            className="openk9-result-list-title title openk9-skeleton-container-title"
+            css={css`
+              margin-left: 5px;
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin-left: 8px;
+            `}
+          >
+            <CustomSkeleton width="80px" />
+          </span>
+        </div>
+      </div>
+      <div
+        css={css`
+          padding-inline: 16px;
+        `}
+      >
+        <CustomSkeleton />
+      </div>
+      <div
+        className="openk9-filters-container-internal"
+        css={css`
+          padding-inline: 16px;
+          padding-top: 16px;
+        `}
+      >
+        <div
+          css={css`
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+          `}
+        >
+          <CustomSkeleton />
+
+          {new Array(5).fill(null).map((_, index) => (
+            <div
+              key={index}
+              css={css`
+                display: flex;
+                gap: 10px;
+                width: 100%;
+              `}
+            >
+              <CustomSkeleton width="20px" />
+              <CustomSkeleton containerMax />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCategory() {
   const { t } = useTranslation();
   return (
     <div

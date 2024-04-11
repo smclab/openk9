@@ -21,6 +21,8 @@ interface CustomSkeletonProps {
   backgroundColor?: string;
   itereitorKey?: string;
   containerMax?: boolean;
+  position?: "column" | "row";
+  gap?: string;
 }
 
 const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
@@ -31,6 +33,8 @@ const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
   backgroundColor = "red",
   itereitorKey,
   containerMax = false,
+  position = "column",
+  gap = "5px",
 }) => {
   return (
     <div
@@ -38,8 +42,8 @@ const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
       className="custom-container-skeleton"
       css={css`
         display: flex;
-        flex-direction: column;
-        gap: 5px;
+        flex-direction: ${position};
+        gap: ${gap};
         width: ${containerMax ? "100%" : ""};
       `}
     >

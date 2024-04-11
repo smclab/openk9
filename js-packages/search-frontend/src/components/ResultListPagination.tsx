@@ -538,7 +538,7 @@ function CreateButton({
   );
 }
 
-function SkeletonResult() {
+export function SkeletonResult() {
   const { t } = useTranslation();
   return (
     <React.Fragment>
@@ -572,7 +572,7 @@ function SkeletonResult() {
               margin-left: 8px;
             `}
           >
-            {t("result")}
+            <CustomSkeleton width="80px" />
           </span>
         </div>
       </div>
