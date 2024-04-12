@@ -5,10 +5,8 @@ import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { useRenderers } from "./useRenderers";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { Logo } from "./Logo";
-import { ResultSvg } from "../svgElement/ResultSvg";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -17,7 +15,7 @@ export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
   setDetailMobile?: any;
   isMobile?: boolean;
-  cardDetailsOnOver?: boolean;
+  cardDetailsOnOver: boolean;
   actionOnCLose(): void;
 };
 function Detail<E>(props: DetailProps<E>) {
@@ -27,6 +25,7 @@ function Detail<E>(props: DetailProps<E>) {
   const renderers = useRenderers();
   const isMobile = props.isMobile;
   const cardDetailsOnOver = props.cardDetailsOnOver;
+
   const refFocus = React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
 
@@ -44,7 +43,7 @@ function Detail<E>(props: DetailProps<E>) {
   }, []);
 
   if (!result) {
-    return <NoDetail cardDetailsOnOver />;
+    return <NoDetail cardDetailsOnOver={cardDetailsOnOver} />;
   }
 
   return (

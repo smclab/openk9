@@ -11,12 +11,13 @@ export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
   setDetailMobile: any;
   onClose(): void;
+  cardDetailsOnOver: boolean;
 };
 function DetailMobile<E>(props: DetailMobileProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile as any;
   const action = props.onClose;
-  const renderers = useRenderers();
+  const cardDetailsOnOver = props.cardDetailsOnOver;
   const modalRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(true);
   const { t } = useTranslation();
@@ -77,6 +78,7 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
         setDetailMobile={setDetailMobile}
         isMobile={true}
         actionOnCLose={action}
+        cardDetailsOnOver={cardDetailsOnOver}
       />
     </div>
   );

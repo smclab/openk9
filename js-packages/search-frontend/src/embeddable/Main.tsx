@@ -74,6 +74,7 @@ export function Main({
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
+  const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
 
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
@@ -521,7 +522,11 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <DetailMemo result={detail} actionOnCLose={() => {}} />
+          <DetailMemo
+            result={detail}
+            actionOnCLose={() => {}}
+            cardDetailsOnOver={isHoverChangeDetail}
+          />
         </I18nextProvider>,
         configuration.details,
       )}
@@ -617,6 +622,7 @@ export function Main({
           <DetailMobileMemo
             result={detailMobile}
             setDetailMobile={setDetailMobile}
+            cardDetailsOnOver={isHoverChangeDetail}
             onClose={() => {
               const recoveryButton = document.getElementById(
                 "preview-card-" + idPreview,
