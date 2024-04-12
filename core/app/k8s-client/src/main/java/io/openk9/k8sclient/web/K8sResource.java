@@ -58,7 +58,7 @@ import javax.ws.rs.sse.SseEventSink;
 public class K8sResource {
 
 	@Inject
-	@ConfigProperty(name = "openk9.kubernetes-client.namespace")
+	@ConfigProperty(name = "quarkus.kubernetes.namespace")
 	String namespace;
 
 	@Inject
