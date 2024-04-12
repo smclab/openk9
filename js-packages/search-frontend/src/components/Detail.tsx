@@ -49,6 +49,8 @@ function Detail<E>(props: DetailProps<E>) {
 
   return (
     <div
+      role="region"
+      aria-labelledby="title-preview-openk9"
       className="openk9-detail-overlay-scrollbars-component"
       css={css`
         position: relative;
@@ -84,6 +86,7 @@ function Detail<E>(props: DetailProps<E>) {
             <PreviewSvg />
           </div>
           <h2
+            id="title-preview-openk9"
             css={css`
               font-style: normal;
               font-weight: 700;
