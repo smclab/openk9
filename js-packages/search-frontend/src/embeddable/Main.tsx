@@ -206,6 +206,7 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
+            viewColor={configuration.showSyntax}
           />
         </I18nextProvider>,
         configuration.search,
@@ -1315,46 +1316,38 @@ function calculateSpans(
   return spans.filter((span) => span.text);
 }
 
-function useQueryAnalysisOnCLick(request: AnalysisRequest) {
-  const client = useOpenK9Client();
-  return useQuery(
-    ["query-anaylis", request] as const,
-    async ({ queryKey: [, request] }) =>
-      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
-  );
-}
-
 function useQueryAnalysis(request: AnalysisRequest) {
   const client = useOpenK9Client();
+
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
-      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+      await client.fetchQueryAnalysis(request),
   );
 }
 // TODO: togliere una volta implementata gestione sugestion sovrapposte
-function fixQueryAnalysisResult(data: AnalysisResponse | null) {
-  if (data)
-    return {
-      ...data,
-      analysis: data.analysis
-        .reverse()
-        .filter((entry, index, array) =>
-          array
-            .slice(0, index)
-            .every((previous) => !isOverlapping(previous, entry)),
-        )
-        .reverse()
-        .filter((entry) => {
-          // togliere validazione quando fixato lato be
-          const isValidEntry = entry.start >= 0;
-          if (!isValidEntry) {
-            console.warn(`Invalid entry: `, entry);
-          }
-          return isValidEntry;
-        }),
-    };
-}
+// function fixQueryAnalysisResult(data: AnalysisResponse | null) {
+//   if (data)
+//     return {
+//       ...data,
+//       analysis: data.analysis
+//         .reverse()
+//         .filter((entry, index, array) =>
+//           array
+//             .slice(0, index)
+//             .every((previous) => !isOverlapping(previous, entry)),
+//         )
+//         .reverse()
+//         .filter((entry) => {
+//           // togliere validazione quando fixato lato be
+//           const isValidEntry = entry.start >= 0;
+//           if (!isValidEntry) {
+//             console.warn(`Invalid entry: `, entry);
+//           }
+//           return isValidEntry;
+//         }),
+//     };
+// }
 
 function createFilter(filterTokens: SearchToken[]): SearchToken[] {
   const groupedTokens: { [key: number]: SearchToken } = {};

@@ -127,7 +127,7 @@ export function TokenSelect({
             );
             margin-bottom: 1px solid red;
 
-            z-index: 2; /* workaround for scrollbar overaly problem */
+            z-index: 3; /* workaround for scrollbar overaly problem */
           `}
         >
           <div
