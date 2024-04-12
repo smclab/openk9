@@ -22,12 +22,17 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.ApplyResponse;
+import io.openk9.app.manager.grpc.CreateIngressRequest;
+import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.common.util.StringUtils;
 import io.openk9.k8s.crd.Manifest;
+import io.openk9.k8sclient.service.IngressDef;
+import io.openk9.k8sclient.service.IngressService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.util.List;
 import javax.inject.Inject;
 
 @GrpcService
@@ -37,7 +42,10 @@ public class AppManagerService implements AppManager {
 	KubernetesClient k8sClient;
 
 	@Inject
-	@ConfigProperty(name = "openk9.kubernetes-client.namespace")
+	IngressService ingressService;
+
+	@Inject
+	@ConfigProperty(name = "quarkus.kubernetes.namespace")
 	String namespace;
 
 	@Inject
@@ -102,6 +110,26 @@ public class AppManagerService implements AppManager {
 				}
 			});
 
+	}
+
+	@Override
+	public Uni<CreateIngressResponse> createIngress(CreateIngressRequest createIngressRequest) {
+		var ingressDef = IngressDef.of(
+			String.format("%s-default-ingress", createIngressRequest.getSchemaName()),
+			createIngressRequest.getVirtualHost(),
+			List.of(
+				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
+				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
+				IngressDef.Route.of("/api/datasource", "openk9-datasource", 8080),
+				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080)
+			)
+		);
+
+		return ingressService.create(ingressDef)
+			.map(hasMetadata -> CreateIngressResponse.newBuilder()
+				.setStatus("SUCCESS")
+				.setResourceName(hasMetadata.getMetadata().getName())
+				.build());
 	}
 
 

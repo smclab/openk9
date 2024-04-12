@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.grpc.StatusRuntimeException;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
@@ -155,4 +156,21 @@ class AppManagerServiceTest {
 		);
 
 	}
+
+	@Test
+	@RunOnVertxContext
+	void createIngressSuccess(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> client
+				.createIngress(CreateIngressRequest
+					.newBuilder()
+					.setSchemaName("mew")
+					.setVirtualHost("mew.openk9.io")
+					.build()
+				),
+			response -> Assertions.assertEquals("mew-default-ingress", response.getResourceName())
+		);
+	}
+
 }
