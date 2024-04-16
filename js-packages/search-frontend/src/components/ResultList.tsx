@@ -10,7 +10,6 @@ import { useOpenK9Client } from "./client";
 import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
-import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
 import SortResults, { Options } from "./SortResults";

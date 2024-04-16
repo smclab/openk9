@@ -38,7 +38,7 @@ function SelectComponent({
   if (selectOptions.length === 0) return null;
   const keyLanguage = `label.${language}` as keyof Field["translationMap"];
   return (
-    <div>
+    <>
       <label htmlFor="custom-select-sort" className={classLabel}>
         {label}
       </label>
@@ -91,7 +91,7 @@ function SelectComponent({
           </React.Fragment>
         ))}
       </select>
-    </div>
+    </>
   );
 }
 

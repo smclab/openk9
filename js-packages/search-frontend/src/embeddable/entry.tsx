@@ -290,6 +290,7 @@ type SortResultsProps = {
   element: Element | string | null;
   extraClass?: string;
   classNameLabel?: string | undefined;
+  labelText?: string | undefined;
 };
 
 type totalResultProps = {

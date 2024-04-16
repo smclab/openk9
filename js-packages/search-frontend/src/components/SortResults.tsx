@@ -8,6 +8,7 @@ type TypeSortResultComponent = {
   labelDefault?: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   language: string;
+  labelText?: string;
 };
 export type Options = Field[];
 type Field = {
@@ -27,6 +28,7 @@ export default function SortResults({
   extraClass = "",
   labelDefault = "Select Option",
   language,
+  labelText,
   setSortResult,
 }: TypeSortResultComponent) {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -51,6 +53,7 @@ export default function SortResults({
       selectOptions={selectOptions}
       extraClass={extraClass}
       labelDefault={labelDefault}
+      label={labelText}
     />
   );
 }

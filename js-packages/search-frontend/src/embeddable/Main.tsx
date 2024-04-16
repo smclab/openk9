@@ -53,7 +53,7 @@ import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
-import SortResults, { Options } from "../components/SortResults";
+import SortResults from "../components/SortResults";
 
 type MainProps = {
   configuration: Configuration;
@@ -649,6 +649,7 @@ export function Main({
             extraClass={configuration.sortResults?.extraClass}
             setSortResult={setSort}
             labelDefault={configuration.sortResults?.classNameLabel}
+            labelText={configuration.sortResults?.labelText}
           />
         </I18nextProvider>,
         configuration.sortResults ? configuration.sortResults?.element : null,
