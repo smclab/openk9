@@ -291,6 +291,7 @@ type SortResultsProps = {
   extraClass?: string;
   classNameLabel?: string | undefined;
   labelText?: string | undefined;
+  defaultLabelName?: string | undefined;
 };
 
 type totalResultProps = {

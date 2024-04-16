@@ -68,6 +68,7 @@ export function Main({
   const activeLanguage = i18next.language;
 
   //retrieving information from the configuration.
+  const classNameLabelSort = configuration.sortResults?.classNameLabel;
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
@@ -458,6 +459,7 @@ export function Main({
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
               selectOptions={sortList}
+              classNameLabel={classNameLabelSort}
             />
           )}
         </I18nextProvider>,
@@ -517,6 +519,7 @@ export function Main({
               }
               label={configuration.resultList?.label}
               selectOptions={sortList}
+              classNameLabel={classNameLabelSort}
             />
           )}
         </I18nextProvider>,
@@ -648,8 +651,9 @@ export function Main({
             selectOptions={sortList ?? []}
             extraClass={configuration.sortResults?.extraClass}
             setSortResult={setSort}
-            labelDefault={configuration.sortResults?.classNameLabel}
+            labelDefault={configuration.sortResults?.defaultLabelName}
             labelText={configuration.sortResults?.labelText}
+            classNameLabel={configuration.sortResults?.classNameLabel}
           />
         </I18nextProvider>,
         configuration.sortResults ? configuration.sortResults?.element : null,

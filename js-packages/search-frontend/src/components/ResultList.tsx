@@ -37,6 +37,7 @@ type ResultsProps<E> = {
   label?: string | null | undefined;
   counterIsVisible?: boolean;
   selectOptions: Options;
+  classNameLabel?: string | undefined;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -60,6 +61,7 @@ function Results<E>({
   counterIsVisible = false,
   selectOptions,
   setIdPreview,
+  classNameLabel,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -84,6 +86,7 @@ function Results<E>({
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
+          classNameLabel={classNameLabel}
         />
       );
     case "infinite":
@@ -106,6 +109,7 @@ function Results<E>({
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
+          classNameLabel={classNameLabel}
         />
       );
     case "virtual":
@@ -127,6 +131,7 @@ function Results<E>({
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
+          classNameLabel={classNameLabel}
         />
       );
   }
@@ -143,6 +148,7 @@ type ResultCountProps = {
   selectOptions: Options;
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
+  classNameLabel?: string | undefined;
 };
 
 function ResultCount({
@@ -152,6 +158,7 @@ function ResultCount({
   results,
   counterIsVisible,
   selectOptions,
+  classNameLabel,
   language,
   setSortResult,
 }: ResultCountProps) {
@@ -242,6 +249,7 @@ function ResultCount({
               selectOptions={selectOptions}
               setSortResult={setSortResult}
               labelDefault=""
+              classNameLabel={classNameLabel}
             />
           </span>
         </div>
@@ -272,6 +280,7 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   selectOptions: Options;
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
+  classNameLabel?: string | undefined;
 };
 export function FiniteResults<E>({
   renderers,
@@ -290,6 +299,7 @@ export function FiniteResults<E>({
   setIdPreview,
   selectOptions,
   setSortResult,
+  classNameLabel,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -324,6 +334,7 @@ export function FiniteResults<E>({
             language={language}
             selectOptions={selectOptions}
             setSortResult={setSortResult}
+            classNameLabel={classNameLabel}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -358,6 +369,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   selectOptions: Options;
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
+  classNameLabel?: string | undefined;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -377,6 +389,7 @@ export function InfiniteResults<E>({
   counterIsVisible,
   setIdPreview,
   selectOptions,
+  classNameLabel,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -421,6 +434,7 @@ export function InfiniteResults<E>({
             language={language}
             selectOptions={selectOptions}
             setSortResult={setSortResult}
+            classNameLabel={classNameLabel}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -507,6 +521,7 @@ export function InfiniteResults<E>({
             language={language}
             selectOptions={selectOptions}
             setSortResult={setSortResult}
+            classNameLabel={classNameLabel}
           >
             {results.data?.pages[0].total}
           </ResultCount>
@@ -524,6 +539,7 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   selectOptions: Options;
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
+  classNameLabel: string | undefined;
 };
 export function VirtualResults<E>({
   renderers,
@@ -541,6 +557,7 @@ export function VirtualResults<E>({
   label,
   counterIsVisible,
   selectOptions,
+  classNameLabel,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -571,6 +588,7 @@ export function VirtualResults<E>({
           selectOptions={selectOptions}
           setSortResult={setSortResult}
           language={language}
+          classNameLabel={classNameLabel}
         >
           {results.data?.pages[0].total}
         </ResultCount>
