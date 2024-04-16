@@ -68,10 +68,10 @@ class SearchResourceTest {
 					],
 					"i18n": {
 						"it_IT": [
-							"tesla",
+							true,
 							"panasonic",
 							"batteria al litio",
-							"co2",
+							2,
 							"emissione"
 						]
 					}
@@ -104,12 +104,9 @@ class SearchResourceTest {
 		Assertions.assertDoesNotThrow(() -> SearchResource.mapI18nFields(sourceMap));
 
 		var file = (Map<String, Object>) sourceMap.get("file");
-		var tags = (Map<String, Object>) file.get("tags");
-		var i18n = (Map<String, Object>) tags.get("i18n");
-		var itIt = i18n.get("it_IT");
-		Assertions.assertInstanceOf(List.class, itIt);
+		Assertions.assertInstanceOf(List.class, file.get("tags"));
 
-		var valueList = (List) itIt;
+		var valueList = (List) file.get("tags");
 		var item = valueList.iterator().next();
 		Assertions.assertInstanceOf(String.class, item);
 

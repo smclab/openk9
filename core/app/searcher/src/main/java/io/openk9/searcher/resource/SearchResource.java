@@ -513,9 +513,21 @@ public class SearchResource {
 						(Map<String, Object>) objectMap.get("i18n");
 
 					if (!i18nMap.isEmpty()) {
-						String i18nString =
-							(String) i18nMap.values().iterator().next();
-						entry.setValue(i18nString);
+						if (i18nMap.values().iterator().next() instanceof String) {
+							String i18nString =
+								(String) i18nMap.values().iterator().next();
+							entry.setValue(i18nString);
+						}
+						else if (i18nMap.values().iterator().next() instanceof List<?>) {
+							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
+								.stream()
+								.map(object -> String.valueOf(object))
+								.toList();
+							entry.setValue(i18nList);
+						}
+						else {
+							logger.warn("The object i18nList is not a String or a List<String>");
+						}
 					}
 
 				}
@@ -567,8 +579,8 @@ public class SearchResource {
 	@GrpcClient("searcher")
 	Searcher searcherClient;
 
-	@Inject
-	Logger logger;
+
+	static Logger logger = Logger.getLogger(SearchResource.class);
 
 	@Inject
 	@Claim(standard = Claims.raw_token)
