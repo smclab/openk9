@@ -311,10 +311,15 @@ export type Configuration = {
   enabled: boolean;
   filterTokens: Array<SearchToken>;
   isQueryAnalysis: boolean | null;
+  isActiveSkeleton: boolean | null;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
+  skeletonTabsCustom: React.ReactNode | null;
+  skeletonResultsCustom: React.ReactNode | null;
+  skeletonFiltersCustom: React.ReactNode | null;
+  skeletonSuggestionCustom: React.ReactNode | null;
   sort: Array<RestApi.SortField>;
   showSyntax: boolean;
   tenant: string | null;
@@ -388,6 +393,7 @@ const defaultConfiguration: Configuration = {
   filtersMobile: null,
   filtersMobileLiveChange: null,
   filterTokens: [],
+  isActiveSkeleton: null,
   isQueryAnalysis: true,
   login: null,
   numberResult: null,
@@ -410,6 +416,10 @@ const defaultConfiguration: Configuration = {
   sortableConfigurable: null,
   sortResultConfigurable: null,
   sortResultListCustom: null,
+  skeletonFiltersCustom: null,
+  skeletonResultsCustom: null,
+  skeletonSuggestionCustom: null,
+  skeletonTabsCustom: null,
   tabs: null,
   tabsConfigurable: null,
   tenant: null,

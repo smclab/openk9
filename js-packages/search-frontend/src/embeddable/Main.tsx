@@ -75,6 +75,13 @@ export function Main({
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
+  const isActiveSkeleton = configuration?.isActiveSkeleton || false;
+  const skeletonCustom = {
+    tabs: configuration.skeletonTabsCustom,
+    results: configuration.skeletonResultsCustom,
+    filters: configuration.skeletonFiltersCustom,
+    suggestion: configuration.skeletonSuggestionCustom,
+  };
 
   //state
   const [currentPage, setCurrentPage] = React.useState<number>(0);
@@ -250,8 +257,10 @@ export function Main({
               resetSort={resetSort}
               selectionsDispatch={selectionsDispatch}
             />
+          ) : skeletonCustom.tabs ? (
+            isActiveSkeleton && skeletonCustom.tabs
           ) : (
-            <TabsSkeleton />
+            isActiveSkeleton && <TabsSkeleton />
           )}
         </I18nextProvider>,
         configuration.tabs,
@@ -290,7 +299,11 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
-            <SkeletonFilters />
+            skeletonCustom.filters ? (
+              isActiveSkeleton && skeletonCustom.filters
+            ) : (
+              isActiveSkeleton && <SkeletonFilters />
+            )
           ) : (
             <FiltersMemo
               searchQuery={searchQuery}
@@ -307,6 +320,8 @@ export function Main({
               language={languageSelect}
               isDynamicElement={dynamicData}
               selectionsDispatch={selectionsDispatch}
+              isActiveSkeleton={isActiveSkeleton}
+              skeletonCategoryCustom={skeletonCustom.suggestion}
             />
           )}
         </I18nextProvider>,
@@ -315,7 +330,11 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
-            <SkeletonFilters />
+            skeletonCustom.results ? (
+              isActiveSkeleton && skeletonCustom.results
+            ) : (
+              isActiveSkeleton && <SkeletonFilters />
+            )
           ) : (
             <FiltersMemo
               searchQuery={searchQuery}
@@ -339,6 +358,8 @@ export function Main({
                 configuration.filtersConfigurable?.noResultMessage
               }
               selectionsDispatch={selectionsDispatch}
+              isActiveSkeleton={isActiveSkeleton}
+              skeletonCategoryCustom={skeletonCustom.suggestion}
             />
           )}
         </I18nextProvider>,
@@ -415,7 +436,11 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
-            <SkeletonResult />
+            skeletonCustom.results ? (
+              isActiveSkeleton && skeletonCustom.results
+            ) : (
+              isActiveSkeleton && <SkeletonResult />
+            )
           ) : (
             <ResultsMemo
               setTotalResult={setTotalResult}
@@ -466,7 +491,11 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
-            <SkeletonResult />
+            skeletonCustom.results ? (
+              isActiveSkeleton && skeletonCustom.results
+            ) : (
+              isActiveSkeleton && <SkeletonResult />
+            )
           ) : (
             <ResultsMemo
               setTotalResult={setTotalResult}
@@ -495,7 +524,13 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
+          {isSearchLoading ? (
+            skeletonCustom.results ? (
+              isActiveSkeleton && skeletonCustom.results
+            ) : (
+              isActiveSkeleton && <SkeletonResult />
+            )
+          ) : (
             <ResultsPaginationMemo
               setTotalResult={setTotalResult}
               displayMode={configuration.resultsDisplayMode}
@@ -673,6 +708,8 @@ export function Main({
               sortAfterKey={sortAfterKey}
               filtersSelect={configuration.filterTokens}
               sort={completelySort}
+              skeletonCategoryCustom={skeletonCustom.suggestion}
+              isActiveSkeleton={isActiveSkeleton}
               dynamicFilters={
                 dynamicFilters.data?.handleDynamicFilters || false
               }

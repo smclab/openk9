@@ -35,6 +35,8 @@ type FiltersProps = {
   isDynamicElement: WhoIsDynamic[];
   noResultMessage?: string | null | undefined;
   selectionsDispatch?: React.Dispatch<SelectionsAction>;
+  isActiveSkeleton: boolean;
+  skeletonCategoryCustom: React.ReactNode | null;
 };
 function Filters({
   searchQuery,
@@ -52,7 +54,9 @@ function Filters({
   numberOfResults,
   isDynamicElement,
   noResultMessage,
+  isActiveSkeleton,
   selectionsDispatch,
+  skeletonCategoryCustom,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -218,7 +222,13 @@ function Filters({
         )}
         {preFilters}
         {suggestionCategories.data?.map((suggestionCategory, index) => (
-          <React.Suspense fallback={<SkeletonCategory />}>
+          <React.Suspense
+            fallback={
+              skeletonCategoryCustom
+                ? isActiveSkeleton && skeletonCategoryCustom
+                : isActiveSkeleton && <SkeletonCategory />
+            }
+          >
             <FilterCategoryDynamicMemo
               key={suggestionCategory.id}
               suggestionCategoryName={translateSuggesionCategoryName({

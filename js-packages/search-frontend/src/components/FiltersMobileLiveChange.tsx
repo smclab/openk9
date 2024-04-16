@@ -53,6 +53,8 @@ export type FiltersMobileProps<E> = {
   whoIsDynamic: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   numberItems?: number | null | undefined;
+  isActiveSkeleton: boolean;
+  skeletonCategoryCustom: React.ReactNode | null;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -74,6 +76,8 @@ function FiltersMobileLiveChange<E>({
   numberOfResults,
   whoIsDynamic,
   numberItems,
+  isActiveSkeleton,
+  skeletonCategoryCustom,
   selectionsDispatch,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
@@ -180,6 +184,8 @@ function FiltersMobileLiveChange<E>({
           isCollapsable={isCollapsable}
           numberOfResults={numberOfResults}
           numberItems={numberItems}
+          skeletonCategoryCustom={skeletonCategoryCustom}
+          isActiveSkeleton={isActiveSkeleton}
           preFilters={
             viewTabs ? (
               <ViewAllTabs
