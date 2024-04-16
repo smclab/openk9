@@ -135,6 +135,7 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 		if (maybeNamespace.isEmpty()) {
 			getContext().getLog().info(
 				"Skipping ingress creation. No kubernetes namespace defined.");
+			replyTo.tell(Success.INSTANCE);
 		}
 		else {
 			VertxUtil.runOnContext(() ->
