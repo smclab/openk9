@@ -4,6 +4,7 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
@@ -16,6 +17,7 @@ public class Supervisor {
 		String virtualHost, String schemaName,
 		DatasourceLiquibaseService liquibaseService,
 		TenantService tenantService,
+		AppManager appManager,
 		KeycloakContext keycloakContext,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 	public record Rollback(
@@ -50,6 +52,7 @@ public class Supervisor {
 						start.schemaName(),
 						start.liquibaseService(),
 						start.tenantService(),
+						start.appManager,
 						start.keycloakContext(),
 						responseActorRef
 					),

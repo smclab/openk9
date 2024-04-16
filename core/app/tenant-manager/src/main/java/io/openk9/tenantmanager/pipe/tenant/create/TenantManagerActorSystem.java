@@ -6,10 +6,12 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AskPattern;
 import akka.actor.typed.javadsl.Behaviors;
+import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
@@ -23,8 +25,6 @@ import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
-
-	private ActorSystem<Supervisor.Command> _actorSystem;
 
 	@PostConstruct
 	public void init() {
@@ -47,6 +47,7 @@ public class TenantManagerActorSystem {
 						realmName,
 						liquibaseService,
 						tenantService,
+						appManager,
 						config,
 						actorRef
 					),
@@ -89,6 +90,12 @@ public class TenantManagerActorSystem {
 		})
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
+
+	private ActorSystem<Supervisor.Command> _actorSystem;
+
+	@Inject
+	@GrpcClient("appmanager")
+	AppManager appManager;
 
 	@Inject
 	TenantService tenantService;
