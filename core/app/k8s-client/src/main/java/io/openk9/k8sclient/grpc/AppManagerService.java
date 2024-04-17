@@ -24,6 +24,8 @@ import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.ApplyResponse;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
+import io.openk9.app.manager.grpc.DeleteIngressRequest;
+import io.openk9.app.manager.grpc.DeleteIngressResponse;
 import io.openk9.common.util.StringUtils;
 import io.openk9.k8s.crd.Manifest;
 import io.openk9.k8sclient.service.IngressDef;
@@ -113,10 +115,34 @@ public class AppManagerService implements AppManager {
 	}
 
 	@Override
-	public Uni<CreateIngressResponse> createIngress(CreateIngressRequest createIngressRequest) {
-		var ingressDef = IngressDef.of(
-			String.format("%s-default-ingress", createIngressRequest.getSchemaName()),
-			createIngressRequest.getVirtualHost(),
+	public Uni<CreateIngressResponse> createIngress(CreateIngressRequest request) {
+		var ingressDef = getIngressDef(request.getSchemaName(), request.getVirtualHost());
+
+		return ingressService.create(ingressDef)
+			.map(hasMetadata -> CreateIngressResponse.newBuilder()
+				.setStatus("SUCCESS")
+				.setResourceName(hasMetadata.getMetadata().getName())
+				.build());
+	}
+
+	@Override
+	public Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
+		var ingressDef = getIngressDef(request.getSchemaName(), request.getVirtualHost());
+
+		return ingressService.delete(ingressDef)
+			.map(statusDetails -> DeleteIngressResponse.newBuilder()
+				.setStatus("SUCCESS")
+				.setResourceName(ingressDef.ingressName())
+				.build());
+	}
+
+	private static IngressDef getIngressDef(String schemaName, String virtualHost) {
+		return IngressDef.of(
+			String.format(
+				"%s-default-ingress",
+				schemaName
+			),
+			virtualHost,
 			List.of(
 				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
 				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
@@ -124,12 +150,6 @@ public class AppManagerService implements AppManager {
 				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080)
 			)
 		);
-
-		return ingressService.create(ingressDef)
-			.map(hasMetadata -> CreateIngressResponse.newBuilder()
-				.setStatus("SUCCESS")
-				.setResourceName(hasMetadata.getMetadata().getName())
-				.build());
 	}
 
 

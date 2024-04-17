@@ -18,6 +18,7 @@
 package io.openk9.k8sclient.service;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.StatusDetails;
 import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressPathBuilder;
 import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
@@ -52,41 +53,7 @@ public final class IngressService {
 	public Uni<HasMetadata> create(IngressDef ingressDef) {
 		return Uni.createFrom().emitter(emitter -> {
 			try {
-				List<HTTPIngressPath> ingressPaths = new ArrayList<>();
-				for (IngressDef.Route route : ingressDef.routes()) {
-					var ingressPath = new HTTPIngressPathBuilder()
-						.withPath(route.path())
-						.withPathType(PATH_TYPE)
-						.withNewBackend()
-						.withNewService()
-						.withName(route.serviceName())
-						.withPort(servicePort(route))
-						.endService()
-						.endBackend()
-						.build();
-					ingressPaths.add(ingressPath);
-				}
-
-				Ingress ingress = new IngressBuilder()
-					.withNewMetadata()
-					.withName(ingressDef.ingressName())
-					.withNamespace(namespace)
-					.endMetadata()
-					.withNewSpec()
-					.withTls(new IngressTLSBuilder()
-						.withSecretName(secretName)
-						.withHosts(ingressDef.virtualHost())
-						.build()
-					)
-					.withRules(new IngressRuleBuilder()
-						.withHost(ingressDef.virtualHost())
-						.withNewHttp()
-						.withPaths(ingressPaths)
-						.endHttp()
-						.build()
-					)
-					.endSpec()
-					.build();
+				var ingress = getIngress(ingressDef);
 
 				Ingress resource = k8sClient.resource(ingress).createOrReplace();
 				emitter.complete(resource);
@@ -95,6 +62,60 @@ public final class IngressService {
 				emitter.fail(e);
 			}
 		});
+	}
+
+	public Uni<List<StatusDetails>> delete(IngressDef ingressDef) {
+		return Uni.createFrom().emitter(emitter -> {
+			try {
+				var ingress = getIngress(ingressDef);
+
+				var statusDetails = k8sClient.resource(ingress).delete();
+
+				emitter.complete(statusDetails);
+			}
+			catch (Exception e) {
+				emitter.fail(e);
+			}
+		});
+	}
+
+	private Ingress getIngress(IngressDef ingressDef) {
+		List<HTTPIngressPath> ingressPaths = new ArrayList<>();
+		for (IngressDef.Route route : ingressDef.routes()) {
+			var ingressPath = new HTTPIngressPathBuilder()
+				.withPath(route.path())
+				.withPathType(PATH_TYPE)
+				.withNewBackend()
+				.withNewService()
+				.withName(route.serviceName())
+				.withPort(servicePort(route))
+				.endService()
+				.endBackend()
+				.build();
+			ingressPaths.add(ingressPath);
+		}
+
+		Ingress ingress = new IngressBuilder()
+			.withNewMetadata()
+			.withName(ingressDef.ingressName())
+			.withNamespace(namespace)
+			.endMetadata()
+			.withNewSpec()
+			.withTls(new IngressTLSBuilder()
+				.withSecretName(secretName)
+				.withHosts(ingressDef.virtualHost())
+				.build()
+			)
+			.withRules(new IngressRuleBuilder()
+				.withHost(ingressDef.virtualHost())
+				.withNewHttp()
+				.withPaths(ingressPaths)
+				.endHttp()
+				.build()
+			)
+			.endSpec()
+			.build();
+		return ingress;
 	}
 
 	private static ServiceBackendPort servicePort(IngressDef.Route route) {

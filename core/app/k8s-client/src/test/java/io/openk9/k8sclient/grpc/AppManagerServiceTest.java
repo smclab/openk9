@@ -22,6 +22,7 @@ import io.grpc.StatusRuntimeException;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
+import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
@@ -37,6 +38,8 @@ import java.util.List;
 @QuarkusTest
 class AppManagerServiceTest {
 
+	private static final String NAMESPACE = "k9-unit-test";
+
 	private static final AppManifest goodRequest = AppManifest
 		.newBuilder()
 		.setSchemaName("mew")
@@ -48,9 +51,9 @@ class AppManagerServiceTest {
 		.setChart("openk9-foo-enrich")
 		.build();
 	private static final String APPLICATION_INSTANCE_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/default/applications/openk9-foo-enrich-mew";
+		"/apis/argoproj.io/v1alpha1/namespaces/k9-unit-test/applications/openk9-foo-enrich-mew";
 	private static final String APPLICATIONS_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/default/applications";
+		"/apis/argoproj.io/v1alpha1/namespaces/k9-unit-test/applications";
 	private static final int INTERNAL_SERVER_ERROR = 500;
 	private static final List<Object> EMPTY_ARRAY = List.of();
 
@@ -162,14 +165,36 @@ class AppManagerServiceTest {
 	void createIngressSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client
-				.createIngress(CreateIngressRequest
+			() -> client.createIngress(
+				CreateIngressRequest
 					.newBuilder()
 					.setSchemaName("mew")
 					.setVirtualHost("mew.openk9.io")
 					.build()
 				),
-			response -> Assertions.assertEquals("mew-default-ingress", response.getResourceName())
+			response -> Assertions.assertEquals(
+				"mew-default-ingress",
+				response.getResourceName()
+			)
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void deleteIngressSuccess(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> client.deleteIngress(
+				DeleteIngressRequest
+					.newBuilder()
+					.setSchemaName("mew")
+					.setVirtualHost("mew.openk9.io")
+					.build()
+			),
+			response -> Assertions.assertEquals(
+				"mew-default-ingress",
+				response.getResourceName()
+			)
 		);
 	}
 
