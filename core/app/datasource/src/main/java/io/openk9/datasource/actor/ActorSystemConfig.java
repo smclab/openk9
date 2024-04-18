@@ -115,7 +115,7 @@ public class ActorSystemConfig {
 
 	@Produces
 	@ApplicationScoped
-	ActorSystemBehaviorInitializer cacheHandlerBehaviorInit() {
+	public ActorSystemBehaviorInitializer cacheHandlerBehaviorInit() {
 		return ctx -> ctx.spawnAnonymous(
 			P2PCache.create(Set.of(bucketResourceCache, searcherServiceCache))
 		);
