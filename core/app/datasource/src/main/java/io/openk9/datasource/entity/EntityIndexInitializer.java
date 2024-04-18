@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.entity;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.StartupEvent;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
@@ -35,6 +36,7 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 @ApplicationScoped
+@IfBuildProperty(name = "openk9.entity.index.init", stringValue = "true", enableIfMissing = true)
 public class EntityIndexInitializer {
 
 	public void init(@Observes StartupEvent event) throws IOException {
