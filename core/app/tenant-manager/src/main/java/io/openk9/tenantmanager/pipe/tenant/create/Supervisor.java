@@ -37,20 +37,13 @@ public class Supervisor {
 		AppManager appManager,
 		KeycloakContext keycloakContext,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
-	public record Rollback(
-		String schemaName, DatasourceLiquibaseService service,
-		KeycloakContext keycloakContext
-	) implements Command {}
+
 	public record ResponseWrapper(
 		Manager.Response response,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public sealed interface Response {}
 	public record Success(Tenant tenant) implements Response {}
-
-	public static Behavior<Command> create() {
-		return Behaviors.setup(Supervisor::initial);
-	}
 
 	private static Behavior<Command> initial(ActorContext<Command> context) {
 
@@ -77,29 +70,25 @@ public class Supervisor {
 				);
 				return Behaviors.same();
 			})
-			.onMessage(Rollback.class, rollback -> {
-
-				context.spawn(
-					Manager.createRollback(
-						rollback.schemaName(),
-						rollback.service(),
-						rollback.keycloakContext()
-					),
-					"rollback-" + rollback.schemaName()
-				);
-
-				return Behaviors.same();
-			})
 			.onMessage(ResponseWrapper.class, responseWrapper -> {
-				if (responseWrapper.response instanceof Manager.Success) {
-					Manager.Success response =
-						(Manager.Success)responseWrapper.response;
-					responseWrapper.replyTo.tell(
-						new Success(response.tenant()));
+				if (responseWrapper.response() instanceof Manager.Success) {
+					Manager.Success response = (Manager.Success) responseWrapper.response;
+					responseWrapper.replyTo.tell(new Success(response.tenant()));
+				}
+				else if (responseWrapper.response() == Manager.Error.INSTANCE) {
+					responseWrapper.replyTo.tell(Error.INSTANCE);
 				}
 				return Behaviors.same();
 			})
 			.build();
+	}
+
+	public static Behavior<Command> create() {
+		return Behaviors.setup(Supervisor::initial);
+	}
+
+	public enum Error implements Response {
+		INSTANCE
 	}
 
 }

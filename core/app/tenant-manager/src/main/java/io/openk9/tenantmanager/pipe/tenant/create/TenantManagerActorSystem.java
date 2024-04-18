@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 
@@ -17,11 +34,11 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
@@ -62,9 +79,12 @@ public class TenantManagerActorSystem {
 			.onItem()
 			.transform(Unchecked.function((res) -> {
 
-				if (res instanceof Supervisor.Success) {
-					Supervisor.Success success = (Supervisor.Success)res;
+				if (res instanceof Supervisor.Success success) {
 					return success.tenant();
+				}
+				else if (res == Supervisor.Error.INSTANCE) {
+					throw new RuntimeException(
+						"Tenant Creation Failed for virtualHost: " + virtualHost);
 				}
 				else {
 					throw new IllegalStateException("unknown response");

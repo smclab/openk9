@@ -31,6 +31,8 @@ import io.openk9.app.manager.grpc.DeleteIngressResponse;
 import io.openk9.common.util.VertxUtil;
 import org.eclipse.microprofile.config.ConfigProvider;
 
+import java.util.Optional;
+
 public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 	private final AppManager appManager;
@@ -79,23 +81,15 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 			.build();
 	}
 
-	private Behavior<Command> onStartRollback(Command ignore) {
+	private static Optional<String> k8sNamespace() {
+		ConfigProvider.getConfig().getConfigSources();
 
-		VertxUtil.runOnContext(() -> appManager
-			.deleteIngress(DeleteIngressRequest.newBuilder()
-				.setSchemaName(schemaName)
-				.setVirtualHost(virtualHost)
-				.build())
-			.onItemOrFailure()
-			.invoke((response, throwable) -> getContext()
-				.getSelf()
-				.tell(new HandleRollback(response, throwable))
-			)
-		);
-
-		return newReceiveBuilder()
-			.onMessage(HandleRollback.class, this::onHandleRollback)
-			.build();
+		return ConfigProvider
+			.getConfig()
+			.getOptionalValue(
+				"quarkus.kubernetes.namespace",
+				String.class
+			);
 	}
 
 	private Behavior<Command> onHandleRollback(HandleRollback handleRollback) {
@@ -123,35 +117,55 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 		return Behaviors.stopped();
 	}
 
-	private Behavior<Command> onStartDefault(Command ignore) {
+	private Behavior<Command> onStartRollback(Command ignore) {
 
-		ConfigProvider.getConfig().getConfigSources();
-
-		var maybeNamespace = ConfigProvider
-			.getConfig()
-			.getOptionalValue(
-			"quarkus.kubernetes.namespace",
-			String.class);
-		if (maybeNamespace.isEmpty()) {
-			getContext().getLog().info(
-				"Skipping ingress creation. No kubernetes namespace defined.");
-			replyTo.tell(Success.INSTANCE);
-		}
-		else {
-			VertxUtil.runOnContext(() ->
-				appManager.createIngress(CreateIngressRequest
-					.newBuilder()
-					.setSchemaName(schemaName)
-					.setVirtualHost(virtualHost)
-					.build())
+		k8sNamespace()
+			.ifPresentOrElse(
+				(ns) -> VertxUtil.runOnContext(() -> appManager
+					.deleteIngress(DeleteIngressRequest.newBuilder()
+						.setSchemaName(schemaName)
+						.setVirtualHost(virtualHost)
+						.build())
 					.onItemOrFailure()
 					.invoke((response, throwable) -> getContext()
 						.getSelf()
-						.tell(new HandleCreate(response, throwable))
+						.tell(new HandleRollback(response, throwable))
 					)
+				),
+				() -> {
+					getContext().getLog().info("Skipped. Kubernetes namespace not defined.");
+					replyTo.tell(Success.INSTANCE);
+				}
 			);
 
-		}
+
+		return newReceiveBuilder()
+			.onMessage(HandleRollback.class, this::onHandleRollback)
+			.build();
+	}
+
+	private Behavior<Command> onStartDefault(Command ignore) {
+
+		k8sNamespace()
+			.ifPresentOrElse(
+				(ns) -> VertxUtil.runOnContext(() ->
+					appManager.createIngress(CreateIngressRequest
+							.newBuilder()
+							.setSchemaName(schemaName)
+							.setVirtualHost(virtualHost)
+							.build())
+						.onItemOrFailure()
+						.invoke((response, throwable) -> getContext()
+							.getSelf()
+							.tell(new HandleCreate(response, throwable))
+						)
+				),
+				() -> {
+					getContext().getLog().info(
+						"Skipping ingress creation. No kubernetes namespace defined.");
+					replyTo.tell(Success.INSTANCE);
+				}
+			);
 
 		return newReceiveBuilder()
 			.onMessage(HandleCreate.class, this::onHandleCreate)
