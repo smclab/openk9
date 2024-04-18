@@ -403,6 +403,12 @@ export function InfiniteResults<E>({
       setTotalResult(results.data.pages[0].total);
     }
   }, [results.data, setTotalResult]);
+  React.useEffect(() => {
+    const sak =
+      results.data?.pages[0].result[results.data?.pages[0].result.length - 1]
+        ?.sortAfterKey;
+    if (sort && sak && sortAfterKey !== sak) setSortAfterKey(sak || "");
+  }, [results]);
   const { t } = useTranslation();
   return (
     <OverlayScrollbarsComponentDockerFix
@@ -484,10 +490,6 @@ export function InfiniteResults<E>({
                 onClick={() => {
                   if (!results.isFetching) {
                     results.fetchNextPage();
-                    setSortAfterKey(
-                      results.data?.pages[0].result[result.length - 1]
-                        .sortAfterKey || "",
-                    );
                   }
                 }}
                 css={css`
@@ -677,7 +679,7 @@ export function useInfiniteResults<E>(
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
 
   return useInfiniteQuery(
-    ["results", searchQuery, sort, language, sortAfterKey] as const,
+    ["results", searchQuery, sort, language] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       const RangePage: [number, number] =
         sortAfterKey === "" ? [pageParam * pageSize, pageSize] : [0, pageSize];
