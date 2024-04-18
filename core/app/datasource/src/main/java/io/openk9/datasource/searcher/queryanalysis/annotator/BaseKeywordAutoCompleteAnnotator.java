@@ -143,42 +143,47 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 					Object value = entry.getValue();
 
 					String label;
+					String keyword_value;
 
 					if (annotator.getDocTypeField().getParentDocTypeField() == null) {
 						label = annotator.getDocTypeField().getName();
+						keyword_value = annotator.getDocTypeField().getPath();
 					}
 					else {
 						label = annotator.getDocTypeField().getParentDocTypeField().getName();
+						keyword_value = annotator.getDocTypeField().getParentDocTypeField().getPath();
 					}
 
 
 					if (value instanceof String) {
-						if (!value.equals(token) && ((String) value).startsWith(token)) {
+						if (((String) value).startsWith(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$KEYWORD_AUTOCOMPLETE",
 									Map.of(
 										"tokenType", "TEXT",
-										"keywordKey", label + ".keyword",
+										"keywordKey", keyword_value + ".keyword",
 										"label", label,
 										"value", value,
-										"score", 0.2f
+										"score", 0.2f,
+										"extra", annotator.getExtraParams()
 									)
 								));
 						}
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-							if (!e2.getValue().equals(token) && ((String) e2.getValue()).startsWith(token)) {
+							if (((String) e2.getValue()).startsWith(token)) {
 								categorySemantics.add(
 									CategorySemantics.of(
 										"$KEYWORD_AUTOCOMPLETE",
 										Map.of(
 											"tokenType", "TEXT",
-											"keywordKey", label + ".keyword",
+											"keywordKey", keyword_value + ".keyword",
 											"label", label,
 											"value", e2.getValue(),
-											"score", 0.2f
+											"score", 0.2f,
+											"extra", annotator.getExtraParams()
 										)
 									)
 								);

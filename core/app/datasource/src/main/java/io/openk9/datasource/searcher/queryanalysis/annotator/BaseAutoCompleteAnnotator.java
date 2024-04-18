@@ -161,7 +161,8 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 										"tokenType", "TEXT",
 										"label", label,
 										"value", value,
-										"score", 0.2f
+										"score", 0.2f,
+										"extra", annotator.getExtraParams()
 									)
 								));
 						}
@@ -179,7 +180,8 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 													"tokenType", "TEXT",
 													"label", label,
 													"value", name,
-													"score", 0.1f
+													"score", 0.1f,
+													"extra", annotator.getExtraParams()
 												)
 											)
 										);
@@ -195,7 +197,8 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 												"tokenType", "TEXT",
 												"label", label,
 												"value", e2.getValue(),
-												"score", 0.1f
+												"score", 0.1f,
+												"extra", annotator.getExtraParams()
 											)
 										)
 									);
