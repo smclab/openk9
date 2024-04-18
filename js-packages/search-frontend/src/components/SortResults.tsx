@@ -48,6 +48,12 @@ export default function SortResults({
     }
   };
 
+  const index = selectOptions.findIndex((obj) => obj.isDefault === true);
+
+  if (index !== -1) {
+    const defaultValueObj = selectOptions.splice(index, 1)[0];
+    selectOptions.unshift(defaultValueObj);
+  }
   return (
     <SelectComponent
       handleChange={handleChange}
