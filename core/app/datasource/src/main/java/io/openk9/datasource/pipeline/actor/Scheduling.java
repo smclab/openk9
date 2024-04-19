@@ -242,7 +242,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
-		return afterSetupReceiver()
+		return afterSetup()
 			.onAnyMessage(this::discard)
 			.build();
 	}
@@ -419,7 +419,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						.flatMap(datasource -> {
 							datasource.setLastIngestionDate(lastIngestionDate);
 
-							if (newDataIndexId != null) {
+							if (isNewIndex()) {
 								var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
 
 								log.infof(
@@ -435,6 +435,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				)
 				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
 			);
+		}
+		else if (!isNewIndex()) {
+			log.infof(
+				"Nothing was changed during this Scheduling on %s index.",
+				scheduler.getOldDataIndexName()
+			);
+			getContext().getSelf().tell(PersistStatusFinished.INSTANCE);
 		}
 		else {
 			log.warnf(
@@ -585,14 +592,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private String getIndexName() {
-		String newDataIndexName = scheduler.getNewDataIndexName();
-
-		return newDataIndexName != null
-			? newDataIndexName
-			: scheduler.getOldDataIndexName();
-	}
-
 	private Behavior<Command> onStop() {
 		logBehavior(STOPPED_BEHAVIOR);
 		return Behaviors.stopped();
@@ -640,6 +639,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.setParameter("scheduleId", key.scheduleId())
 			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 			.getSingleResult();
+	}
+
+	private boolean isNewIndex() {
+		return scheduler != null && scheduler.getNewDataIndexId() != null;
+	}
+
+	private String getIndexName() {
+		String newDataIndexName = scheduler.getNewDataIndexName();
+
+		return newDataIndexName != null
+			? newDataIndexName
+			: scheduler.getOldDataIndexName();
 	}
 
 	public enum Cancel implements Command {
