@@ -355,7 +355,7 @@ public class Manager {
 		INSTANCE
 	}
 
-	public enum CompensationResponse implements Command {
+	private enum CompensationResponse implements Command {
 		INSTANCE
 	}
 
