@@ -316,6 +316,7 @@ export type Configuration = {
   isActiveSkeleton: boolean | null;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
+  memoryResults: boolean | null | undefined;
   searchAutoselect: boolean;
   searchReplaceText: boolean;
   skeletonTabsCustom: React.ReactNode | null;
@@ -398,6 +399,7 @@ const defaultConfiguration: Configuration = {
   isActiveSkeleton: null,
   isQueryAnalysis: true,
   login: null,
+  memoryResults: null,
   numberResult: null,
   numberResultOfFilters: null,
   removeFilters: null,

@@ -29,6 +29,7 @@ type ResultsProps<E> = {
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
   overChangeCard?: boolean;
+  memoryResults: boolean;
   language: string;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
@@ -62,6 +63,7 @@ function Results<E>({
   selectOptions,
   setIdPreview,
   classNameLabel,
+  memoryResults,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -87,6 +89,7 @@ function Results<E>({
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
+          memoryResults={memoryResults}
         />
       );
     case "infinite":
@@ -110,6 +113,7 @@ function Results<E>({
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
+          memoryResults={memoryResults}
         />
       );
     case "virtual":
@@ -132,6 +136,7 @@ function Results<E>({
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
+          memoryResults={memoryResults}
         />
       );
   }
@@ -281,6 +286,7 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
+  memoryResults: boolean;
 };
 export function FiniteResults<E>({
   renderers,
@@ -300,6 +306,7 @@ export function FiniteResults<E>({
   selectOptions,
   setSortResult,
   classNameLabel,
+  memoryResults,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -307,6 +314,7 @@ export function FiniteResults<E>({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
@@ -370,6 +378,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
+  memoryResults: boolean;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -390,6 +399,7 @@ export function InfiniteResults<E>({
   setIdPreview,
   selectOptions,
   classNameLabel,
+  memoryResults,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -397,6 +407,7 @@ export function InfiniteResults<E>({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
@@ -545,6 +556,7 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel: string | undefined;
+  memoryResults: boolean;
 };
 export function VirtualResults<E>({
   renderers,
@@ -563,6 +575,7 @@ export function VirtualResults<E>({
   counterIsVisible,
   selectOptions,
   classNameLabel,
+  memoryResults,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -570,6 +583,7 @@ export function VirtualResults<E>({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   const resultsFlat = results.data?.pages.flatMap((page) => page.result);
   const thereAreResults = Boolean(
@@ -676,6 +690,7 @@ export function useInfiniteResults<E>(
   language: string,
   sortAfterKey: string,
   numberOfResults: number,
+  memoryResults: boolean,
 ) {
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
@@ -684,8 +699,9 @@ export function useInfiniteResults<E>(
   return useInfiniteQuery(
     ["results", searchQueryData, sortData, language] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
-      const RangePage: [number, number] =
-        sortAfterKey === "" ? [pageParam * pageSize, pageSize] : [0, pageSize];
+      const RangePage: [number, number] = !(sortData && sortAfterKey)
+        ? [pageParam * pageSize, pageSize]
+        : [0, pageSize];
       return client.doSearch<E>({
         range: RangePage,
         language,
@@ -696,6 +712,7 @@ export function useInfiniteResults<E>(
     },
     {
       keepPreviousData: true,
+      cacheTime: memoryResults ? Infinity : 0,
       getNextPageParam(lastPage, pages) {
         const totalDownloaded = pages.reduce(
           (total, page) => total + page.result.length,
