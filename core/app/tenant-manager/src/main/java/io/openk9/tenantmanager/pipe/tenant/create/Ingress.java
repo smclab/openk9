@@ -67,10 +67,10 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 	}
 
 	public static Behavior<Command> rollback(
-		AppManager appManager, String schemaName, String virtualHost) {
+		AppManager appManager, String schemaName, String virtualHost, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, appManager, schemaName, virtualHost, false, null));
+			new Ingress(ctx, appManager, schemaName, virtualHost, false, replyTo));
 	}
 
 	@Override

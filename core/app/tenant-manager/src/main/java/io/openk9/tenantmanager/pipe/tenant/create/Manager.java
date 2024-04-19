@@ -259,8 +259,22 @@ public class Manager {
 				}
 			}
 
-			replyTo.tell(Error.INSTANCE);
+			return Behaviors.receive(Command.class)
+				.onMessageEquals(
+					CompensationResponse.INSTANCE,
+					() -> onCompensate(replyTo, compensations.size())
+				)
+				.build();
 		}
+
+	}
+
+	private static Behavior<Command> onCompensate(ActorRef<Response> replyTo, int remaining) {
+		if (remaining > 0) {
+			return onCompensate(replyTo, remaining - 1);
+		}
+
+		replyTo.tell(Error.INSTANCE);
 
 		return Behaviors.stopped();
 	}
@@ -271,12 +285,18 @@ public class Manager {
 		String schemaName,
 		String virtualHost) {
 
-		ActorRef<Ingress.Command> ingressRollbackRef =
+		var replyTo = context.messageAdapter(
+			Ingress.Response.class,
+			res -> CompensationResponse.INSTANCE
+		);
+
+		ActorRef<Ingress.Command> ref =
 			context.spawn(
-				Ingress.rollback(appManager, schemaName, virtualHost),
+				Ingress.rollback(appManager, schemaName, virtualHost, replyTo),
 				"ingress-rollback-" + schemaName
 			);
-		ingressRollbackRef.tell(Ingress.Start.INSTANCE);
+
+		ref.tell(Ingress.Start.INSTANCE);
 	}
 
 	private static void compensateKeycloak(
@@ -284,13 +304,19 @@ public class Manager {
 		KeycloakContext keycloakContext,
 		String schemaName) {
 
-		ActorRef<Keycloak.Command> keycloakRollbackRef =
+		var replyTo = context.messageAdapter(
+			Keycloak.Response.class,
+			res -> CompensationResponse.INSTANCE
+		);
+
+		ActorRef<Keycloak.Command> ref =
 			context.spawn(
 				Keycloak.createRollback(
 					keycloakContext.getKeycloakAdminClientConfig(), schemaName),
 				"keycloak-rollback-" + schemaName
 			);
-		keycloakRollbackRef.tell(Keycloak.Start.INSTANCE);
+
+		ref.tell(new Keycloak.Rollback(replyTo));
 	}
 
 	private static void compensateSchema(
@@ -298,12 +324,18 @@ public class Manager {
 		DatasourceLiquibaseService liquibaseService,
 		String schemaName) {
 
-		ActorRef<Schema.Command> schemaRollbackRef =
+		var replyTo = context.messageAdapter(
+			Schema.Response.class,
+			res -> CompensationResponse.INSTANCE
+		);
+
+		ActorRef<Schema.Command> ref =
 			context.spawn(
 				Schema.createRollback(
 					liquibaseService, schemaName),
 				"schema-rollback-" + schemaName);
-		schemaRollbackRef.tell(Schema.Start.INSTANCE);
+
+		ref.tell(new Schema.Rollback(replyTo));
 	}
 
 	private static void compensateAll(
@@ -323,7 +355,11 @@ public class Manager {
 		INSTANCE
 	}
 
-	enum Operations {
+	public enum CompensationResponse implements Command {
+		INSTANCE
+	}
+
+	private enum Operations {
 		INGRESS,
 		KEYCLOAK,
 		SCHEMA

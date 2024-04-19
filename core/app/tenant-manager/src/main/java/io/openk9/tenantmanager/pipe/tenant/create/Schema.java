@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 import akka.actor.typed.ActorRef;
@@ -10,6 +27,27 @@ public class Schema {
 
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
+
+	private static Behavior<Command> rollback(
+		ActorContext<Command> context, DatasourceLiquibaseService service, String schemaName) {
+		return Behaviors.receive(Command.class)
+			.onMessage(Rollback.class, (msg) -> {
+
+				try {
+					service.rollbackRunLiquibaseMigration(schemaName);
+					context.getLog().info("schema {} rollback", schemaName);
+				}
+				catch (Exception e) {
+					context.getLog().error(e.getMessage(), e);
+				}
+
+				msg.replyTo().tell(new Schema.Success(schemaName));
+
+				return Behaviors.stopped();
+
+			})
+			.build();
+	}
 
 	public sealed interface Response {}
 	public record Success(String schemaName) implements Response {}
@@ -27,24 +65,7 @@ public class Schema {
 		return Behaviors.setup(context -> rollback(context, service, schemaName));
 	}
 
-	private static Behavior<Command> rollback(
-		ActorContext<Command> context, DatasourceLiquibaseService service, String schemaName) {
-		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> {
-
-				try {
-					service.rollbackRunLiquibaseMigration(schemaName);
-					context.getLog().info("schema {} rollback", schemaName);
-				}
-				catch (Exception e) {
-					context.getLog().error(e.getMessage(), e);
-				}
-
-				return Behaviors.stopped();
-
-			})
-			.build();
-	}
+	public record Rollback(ActorRef<Response> replyTo) implements Command {}
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, DatasourceLiquibaseService service,
