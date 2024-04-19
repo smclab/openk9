@@ -55,6 +55,7 @@ export type FiltersMobileProps<E> = {
   numberItems?: number | null | undefined;
   isActiveSkeleton: boolean;
   skeletonCategoryCustom: React.ReactNode | null;
+  memoryResults: boolean;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -79,6 +80,7 @@ function FiltersMobileLiveChange<E>({
   isActiveSkeleton,
   skeletonCategoryCustom,
   selectionsDispatch,
+  memoryResults,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -86,6 +88,7 @@ function FiltersMobileLiveChange<E>({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   const { t } = useTranslation();
   const componet = (

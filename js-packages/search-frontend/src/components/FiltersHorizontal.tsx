@@ -30,11 +30,9 @@ import { SelectionsAction } from "./useSelections";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
-  onAddFilterToken(searchToke: SearchToken): void;
-  onRemoveFilterToken(searchToken: SearchToken): void;
   onConfigurationChange: ConfigurationUpdateFunction;
   onConfigurationChangeExt: () => void | null;
-  filtersSelect: SearchToken[];
+  memoryResults: boolean;
   sort: SortField[];
   dynamicFilters: boolean;
   language: string;
@@ -49,11 +47,8 @@ type FiltersProps = {
 };
 function FiltersHorizontal({
   searchQuery,
-  onAddFilterToken,
   onConfigurationChange,
   onConfigurationChangeExt,
-  onRemoveFilterToken,
-  filtersSelect,
   sort,
   dynamicFilters,
   language,
@@ -65,6 +60,7 @@ function FiltersHorizontal({
   refButton,
   callbackReset,
   callbackSubmit,
+  memoryResults,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -75,6 +71,7 @@ function FiltersHorizontal({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   React.useEffect(() => {
     if (!isPreviousData) {

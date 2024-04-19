@@ -401,12 +401,10 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <FiltersHorizontalMemo
             searchQuery={searchQuery}
-            onAddFilterToken={addFilterToken}
             isDynamicElement={dynamicData}
             numberOfResults={numberOfResults}
             numberResultOfFilters={numberResultOfFilters}
             sortAfterKey={sortAfterKey}
-            onRemoveFilterToken={removeFilterToken}
             onConfigurationChange={onConfigurationChange}
             selectionsDispatch={selectionsDispatch}
             onConfigurationChangeExt={
@@ -414,7 +412,6 @@ export function Main({
                 ? configuration.filtersHorizontal.callback
                 : () => {}
             }
-            filtersSelect={configuration.filterTokens}
             sort={completelySort}
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             language={languageSelect}
@@ -429,6 +426,7 @@ export function Main({
                 ? configuration.filtersHorizontal.callbackReset
                 : () => {}
             }
+            memoryResults={memoryResults}
           />
         </I18nextProvider>,
         configuration.filtersHorizontal
@@ -742,6 +740,7 @@ export function Main({
               }
               numberOfResults={numberOfResults}
               selectionsDispatch={selectionsDispatch}
+              memoryResults={memoryResults}
             />
           )}
         </I18nextProvider>,
