@@ -40,21 +40,6 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 
 	public CreateConnectorSaga(
 		ActorContext<Command> context,
-		AppManager operatorClient,
-		Datasource persistenceClient,
-		AppManifest operatorRequest,
-		CreatePresetPluginDriverRequest persistenceRequest) {
-
-		this(
-			context,
-			context.spawnAnonymous(Operator.create(operatorClient, operatorRequest)),
-			context.spawnAnonymous(Persistence.create(persistenceClient, persistenceRequest))
-		);
-
-	}
-
-	public CreateConnectorSaga(
-		ActorContext<Command> context,
 		ActorRef<Operator.Command> operator,
 		ActorRef<Persistence.Command> persistence) {
 
@@ -97,10 +82,8 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 
 		return Behaviors.setup(ctx -> new CreateConnectorSaga(
 			ctx,
-			opsClient,
-			persistenceClient,
-			opsRequest,
-			persistenceRequest
+			ctx.spawnAnonymous(Operator.create(opsClient, opsRequest)),
+			ctx.spawnAnonymous(Persistence.create(persistenceClient, persistenceRequest))
 		));
 	}
 
@@ -138,6 +121,7 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 
 	private Behavior<Command> onNotInstalled() {
 		log.warn("CreateConnectorSaga failed: NOT_INSTALLED, no operation required.");
+
 		replyTo.tell(Responses.ERROR);
 		return Behaviors.stopped();
 	}
