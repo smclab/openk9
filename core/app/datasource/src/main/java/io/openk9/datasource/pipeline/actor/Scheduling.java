@@ -197,7 +197,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.build();
 	}
 
-	private ReceiveBuilder<Command> afterSetupReceiver() {
+	private ReceiveBuilder<Command> afterSetup() {
 
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
@@ -213,7 +213,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Receive<Command> ready() {
 		logBehavior(READY_BEHAVIOR);
 
-		return afterSetupReceiver()
+		return afterSetup()
 			.onMessage(Ingest.class, this::onIngest)
 			.onMessage(TrackError.class, this::onTrackError)
 			.onMessage(Restart.class, this::onRestart)
@@ -223,7 +223,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Receive<Command> busy() {
 		logBehavior(BUSY_BEHAVIOR);
 
-		return afterSetupReceiver()
+		return afterSetup()
 			.onAnyMessage(this::enqueue)
 			.build();
 	}
