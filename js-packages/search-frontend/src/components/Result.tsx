@@ -33,8 +33,6 @@ function Result<E>(props: ResultProps<E>) {
   return (
     <div
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
-      id={`openk9-card-${result?.source?.id}`}
-      tabIndex={0}
       onMouseEnter={() => {
         if (overChangeCard && !isMobile) {
           onDetail(result);
@@ -228,7 +226,7 @@ function ButtonDetail<E>({
       `}
     >
       <button
-        id={"preview-card-" + result?.source?.id}
+        id={`openk9-button-card-${result?.source?.id}`}
         className="openk9-wrapper-button-mobile openk9-detail-web-button"
         css={css`
           display: flex;

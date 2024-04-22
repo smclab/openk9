@@ -571,7 +571,7 @@ export function Main({
             cardDetailsOnOver={isHoverChangeDetail}
             callbackFocusedButton={() => {
               const recoveryButton = document.getElementById(
-                "openk9-card-" + idPreview,
+                "openk9-button-card-" + idPreview,
               ) as any;
               if (recoveryButton) recoveryButton.focus();
             }}
