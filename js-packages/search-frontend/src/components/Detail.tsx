@@ -17,6 +17,7 @@ export type DetailProps<E> = {
   isMobile?: boolean;
   cardDetailsOnOver: boolean;
   actionOnCLose(): void;
+  callbackFocusedButton?(): void;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
@@ -24,7 +25,68 @@ function Detail<E>(props: DetailProps<E>) {
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
   const isMobile = props.isMobile;
+  const callbackFocusedButton = props.callbackFocusedButton;
   const cardDetailsOnOver = props.cardDetailsOnOver;
+  const [showButton, setShowButton] = React.useState(false);
+  const modalRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const modalElement = modalRef.current as any;
+
+    if (modalElement) {
+      const focusableElements = modalElement?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const trapForInvisibleButton = focusableElements[1];
+
+      const handleTabKeyPress = (event: any) => {
+        if (event.key === "Tab") {
+          if (document.activeElement === firstElement) {
+            setShowButton(true);
+          } else {
+            setShowButton(false);
+          }
+          if (
+            event.shiftKey &&
+            trapForInvisibleButton === document.activeElement
+          ) {
+            setShowButton(true);
+          } else if (event.shiftKey) {
+            setShowButton(false);
+          }
+          if (event.shiftKey && document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          } else if (
+            !event.shiftKey &&
+            document.activeElement === lastElement
+          ) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      };
+
+      const handleEscapeKeyPress = (event: any) => {};
+
+      modalElement?.addEventListener("keydown", handleTabKeyPress);
+      modalElement?.addEventListener("keydown", handleEscapeKeyPress);
+
+      return () => {
+        modalElement?.removeEventListener("keydown", handleTabKeyPress);
+        modalElement?.removeEventListener("keydown", handleEscapeKeyPress);
+      };
+    }
+  }, [result]);
+
+  React.useEffect(() => {
+    const modalElement = modalRef.current as any;
+
+    const isFocusWithinModal = modalElement?.contains(document.activeElement);
+    if (!isFocusWithinModal) setShowButton(false);
+  }, [document.activeElement]);
 
   const refFocus = React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
@@ -42,13 +104,10 @@ function Detail<E>(props: DetailProps<E>) {
     }
   }, []);
 
-  if (!result) {
-    return <NoDetail cardDetailsOnOver={cardDetailsOnOver} />;
-  }
-
   return (
     <div
       role="region"
+      ref={modalRef}
       aria-labelledby="title-preview-openk9"
       className="openk9-detail-overlay-scrollbars-component"
       css={css`
@@ -86,6 +145,8 @@ function Detail<E>(props: DetailProps<E>) {
           </div>
           <h2
             id="title-preview-openk9"
+            tabIndex={0}
+            className="openk9-detail-class-title"
             css={css`
               font-style: normal;
               font-weight: 700;
@@ -100,6 +161,27 @@ function Detail<E>(props: DetailProps<E>) {
             {t("preview")}
           </h2>
         </div>
+        {showButton && !isMobile && (
+          <button
+            className="button-return-cards"
+            css={css`
+              border: 1px solid var(--openk9-embeddable-search--primary-color);
+              background: white;
+              color: var(--openk9-embeddable-search--primary-color);
+              font-weight: 600;
+              border-radius: 5px;
+              &:focus-visible {
+                box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
+                outline: 0;
+              }
+            `}
+            onClick={() => {
+              if (callbackFocusedButton) callbackFocusedButton();
+            }}
+          >
+            Return on card
+          </button>
+        )}
         {setDetailMobile && (
           <button
             aria-label={t("close") || "close"}
@@ -118,99 +200,56 @@ function Detail<E>(props: DetailProps<E>) {
           </button>
         )}
       </div>
-      <div
-        className="openk9-detail-container-card "
-        css={css`
-          position: absolute;
-          width: 100%;
-          box-sizing: border-box;
-          padding: 8px 16px;
-          background: white;
-          border-bottom-left-radius: ${setDetailMobile ? "20px" : "0px"};
-          border-bottom-right-radius: ${setDetailMobile ? "20px" : "0px"};
-        `}
-      >
-        {(() => {
-          const Renderer: React.FC<DetailRendererProps<E>> =
-            result.source.documentTypes
-              .map((k: string) => renderers?.detailRenderers[k])
-              .find(Boolean);
-          if (Renderer) {
-            return <Renderer result={result} />;
-          }
-          if (result.source.documentTypes.includes("pdf")) {
-            return <PdfDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("document")) {
-            return <DocumentDetail result={result} />;
-          }
-          if (result.source.documentTypes.includes("web")) {
-            return <WebDetail result={result} />;
-          }
-          return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
-        })()}
-      </div>
+      {result ? (
+        <div
+          className="openk9-detail-container-card "
+          css={css`
+            position: absolute;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 16px;
+            background: white;
+            border-bottom-left-radius: ${setDetailMobile ? "20px" : "0px"};
+            border-bottom-right-radius: ${setDetailMobile ? "20px" : "0px"};
+          `}
+        >
+          {(() => {
+            const Renderer: React.FC<DetailRendererProps<E>> =
+              result.source.documentTypes
+                .map((k: string) => renderers?.detailRenderers[k])
+                .find(Boolean);
+            if (Renderer) {
+              return <Renderer result={result} />;
+            }
+            if (result.source.documentTypes.includes("pdf")) {
+              return <PdfDetail result={result} />;
+            }
+            if (result.source.documentTypes.includes("document")) {
+              return <DocumentDetail result={result} />;
+            }
+            if (result.source.documentTypes.includes("web")) {
+              return <WebDetail result={result} />;
+            }
+            return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
+          })()}
+        </div>
+      ) : (
+        <div
+          className="openk9-no-detail-content "
+          css={css`
+            color: var(--openk9-embeddable-search--secondary-text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+          `}
+        >
+          <h3>{t("no-details")}</h3>
+          <div>{cardDetailsOnOver ? t("no-result") : t("no-result-click")}</div>
+        </div>
+      )}
     </div>
   );
 }
 export const DetailMemo = React.memo(Detail);
-
-export function NoDetail({
-  cardDetailsOnOver,
-}: {
-  cardDetailsOnOver: boolean;
-}) {
-  const { t } = useTranslation();
-  return (
-    <React.Fragment>
-      <div
-        className="openk9-no-detail-container-title box-title"
-        css={css`
-          padding: 0px 16px;
-          width: 100%;
-          background: #fafafa;
-          padding-top: 17px;
-          padding-bottom: 8px;
-          display: flex;
-          gap: 3px;
-        `}
-      >
-        <div>
-          <PreviewSvg />
-        </div>
-        <div className="openk9-no-detail-title title">
-          <h2
-            css={css`
-              font-style: normal;
-              font-weight: 700;
-              font-size: 18px;
-              height: 18px;
-              line-height: 22px;
-              align-items: center;
-              color: #3f3f46;
-              margin: 0;
-            `}
-          >
-            {t("preview")}
-          </h2>
-        </div>
-      </div>
-      <div
-        className="openk9-no-detail-content "
-        css={css`
-          color: var(--openk9-embeddable-search--secondary-text-color);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-        `}
-      >
-        <Logo size={128} />
-
-        <h3>{t("no-details")}</h3>
-        <div>{cardDetailsOnOver ? t("no-result") : t("no-result-click")}</div>
-      </div>
-    </React.Fragment>
-  );
-}

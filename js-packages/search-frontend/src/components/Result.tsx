@@ -15,6 +15,7 @@ type ResultProps<E> = {
   isMobile: boolean;
   setDetailMobile(result: GenericResultItem<E> | null): void;
   overChangeCard: boolean;
+  viewButton: boolean;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -26,12 +27,26 @@ function Result<E>(props: ResultProps<E>) {
   const isMobile = props.isMobile;
   const setIdPreview = props.setIdPreview;
   const setDetailMobile = props.setDetailMobile;
+  const viewButton = props.viewButton;
   const overChangeCard = props.overChangeCard;
+
   return (
     <div
-      className="openk9-embeddable-search--result-container"
-      onMouseEnter={() => overChangeCard && !isMobile && onDetail(result)}
-      onClick={() => !overChangeCard && !isMobile && onDetail(result)}
+      className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
+      id={`openk9-card-${result?.source?.id}`}
+      tabIndex={0}
+      onMouseEnter={() => {
+        if (overChangeCard && !isMobile) {
+          onDetail(result);
+          if (setIdPreview) setIdPreview(result?.source?.id || "");
+        }
+      }}
+      onClick={() => {
+        if (!overChangeCard && !isMobile && !viewButton) {
+          onDetail(result);
+          if (setIdPreview) setIdPreview(result?.source?.id || "");
+        }
+      }}
       css={css`
         cursor: ${!overChangeCard ? "pointer" : "auto"};
       `}
@@ -51,6 +66,13 @@ function Result<E>(props: ResultProps<E>) {
                   setDetailMobile,
                   result,
                 })}
+              {viewButton &&
+                !isMobile &&
+                ButtonDetail({
+                  result,
+                  onDetail,
+                  setIdPreview,
+                })}
             </React.Fragment>
           );
         }
@@ -63,6 +85,13 @@ function Result<E>(props: ResultProps<E>) {
                   setIdPreview,
                   setDetailMobile,
                   result,
+                })}
+              {viewButton &&
+                !isMobile &&
+                ButtonDetail({
+                  result,
+                  onDetail,
+                  setIdPreview,
                 })}
             </React.Fragment>
           );
@@ -77,6 +106,13 @@ function Result<E>(props: ResultProps<E>) {
                   setDetailMobile,
                   result,
                 })}
+              {viewButton &&
+                !isMobile &&
+                ButtonDetail({
+                  result,
+                  onDetail,
+                  setIdPreview,
+                })}
             </React.Fragment>
           );
         }
@@ -89,6 +125,13 @@ function Result<E>(props: ResultProps<E>) {
                   setIdPreview,
                   setDetailMobile,
                   result,
+                })}
+              {viewButton &&
+                !isMobile &&
+                ButtonDetail({
+                  result,
+                  onDetail,
+                  setIdPreview,
                 })}
             </React.Fragment>
           );
@@ -153,6 +196,61 @@ function CreateButton({
         onClick={() => {
           if (setIdPreview) setIdPreview(result?.source?.id || "");
           setDetailMobile(result);
+        }}
+      >
+        <span> {t("preview")}</span>
+        <MobileLogoSvg />
+      </button>
+    </div>
+  );
+}
+
+function ButtonDetail<E>({
+  result,
+  onDetail,
+  setIdPreview,
+}: {
+  result: GenericResultItem<any>;
+  onDetail: (result: GenericResultItem<E> | null) => void;
+  setIdPreview: React.Dispatch<React.SetStateAction<string>> | null | undefined;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="openk9-wrapper-button-mobile"
+      css={css`
+        padding: 24px;
+        padding-top: 8px;
+        @media (max-width: 480px) {
+          padding: 20px;
+          padding-top: 4px;
+        }
+      `}
+    >
+      <button
+        id={"preview-card-" + result?.source?.id}
+        className="openk9-wrapper-button-mobile openk9-detail-web-button"
+        css={css`
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          padding: 8px 16px;
+          background-color: #f9edee;
+          border: 1px solid #f9edee;
+          border-radius: 50px;
+          color: #c0272b;
+          font-weight: 500;
+          font-size: 13px;
+          cursor: pointer;
+        `}
+        onClick={() => {
+          const recoveryButton = document.getElementById(
+            "title-preview-openk9",
+          ) as any;
+          onDetail(result);
+          if (setIdPreview) setIdPreview(result?.source?.id || "");
+          if (recoveryButton) recoveryButton.focus();
         }}
       >
         <span> {t("preview")}</span>

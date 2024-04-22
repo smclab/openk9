@@ -78,6 +78,7 @@ export function Main({
   const useKeycloak = configuration.useKeycloak;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
   const isActiveSkeleton = configuration?.isActiveSkeleton || false;
+  const viewButton = configuration?.viewButton;
   const skeletonCustom = {
     tabs: configuration.skeletonTabsCustom,
     results: configuration.skeletonResultsCustom,
@@ -460,6 +461,7 @@ export function Main({
               selectOptions={sortList}
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
+              viewButton={viewButton}
             />
           )}
         </I18nextProvider>,
@@ -521,6 +523,7 @@ export function Main({
               selectOptions={sortList}
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
+              viewButton={viewButton}
             />
           )}
         </I18nextProvider>,
@@ -566,6 +569,12 @@ export function Main({
             result={detail}
             actionOnCLose={() => {}}
             cardDetailsOnOver={isHoverChangeDetail}
+            callbackFocusedButton={() => {
+              const recoveryButton = document.getElementById(
+                "openk9-card-" + idPreview,
+              ) as any;
+              if (recoveryButton) recoveryButton.focus();
+            }}
           />
         </I18nextProvider>,
         configuration.details,

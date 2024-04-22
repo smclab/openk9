@@ -39,6 +39,7 @@ type ResultsProps<E> = {
   counterIsVisible?: boolean;
   selectOptions: Options;
   classNameLabel?: string | undefined;
+  viewButton: boolean;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -64,6 +65,7 @@ function Results<E>({
   setIdPreview,
   classNameLabel,
   memoryResults,
+  viewButton,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -90,6 +92,7 @@ function Results<E>({
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
+          viewButton={viewButton}
         />
       );
     case "infinite":
@@ -114,6 +117,7 @@ function Results<E>({
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
+          viewButton={viewButton}
         />
       );
     case "virtual":
@@ -137,6 +141,7 @@ function Results<E>({
           selectOptions={selectOptions}
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
+          viewButton={viewButton}
         />
       );
   }
@@ -287,6 +292,7 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
   memoryResults: boolean;
+  viewButton: boolean;
 };
 export function FiniteResults<E>({
   renderers,
@@ -307,6 +313,7 @@ export function FiniteResults<E>({
   setSortResult,
   classNameLabel,
   memoryResults,
+  viewButton,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -357,6 +364,7 @@ export function FiniteResults<E>({
                 isMobile={isMobile}
                 overChangeCard={overChangeCard}
                 setIdPreview={setIdPreview}
+                viewButton={viewButton}
               />
             );
           })}
@@ -379,6 +387,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
   memoryResults: boolean;
+  viewButton: boolean;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -400,6 +409,7 @@ export function InfiniteResults<E>({
   selectOptions,
   classNameLabel,
   memoryResults,
+  viewButton,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -480,6 +490,7 @@ export function InfiniteResults<E>({
                           isMobile={isMobile}
                           overChangeCard={overChangeCard}
                           setIdPreview={setIdPreview}
+                          viewButton={viewButton}
                         />
                       </li>
                     );
@@ -557,6 +568,7 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel: string | undefined;
   memoryResults: boolean;
+  viewButton: boolean;
 };
 export function VirtualResults<E>({
   renderers,
@@ -576,6 +588,7 @@ export function VirtualResults<E>({
   selectOptions,
   classNameLabel,
   memoryResults,
+  viewButton,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -627,6 +640,7 @@ export function VirtualResults<E>({
                 setDetailMobile={setDetailMobile}
                 isMobile={isMobile}
                 overChangeCard={overChangeCard}
+                viewButton={viewButton}
               />
             );
           }

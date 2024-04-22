@@ -332,6 +332,7 @@ export type Configuration = {
   useQueryString: boolean;
   useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
+  viewButton: boolean;
   waitKeycloackForToken: boolean;
   // element types
   activeFilters: Element | string | null;
@@ -436,6 +437,7 @@ const defaultConfiguration: Configuration = {
   useQueryString: true,
   useQueryStringFilters: true,
   useFilterConfiguration: true,
+  viewButton: false,
   waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
