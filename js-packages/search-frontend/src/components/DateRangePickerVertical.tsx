@@ -89,15 +89,15 @@ export function DataRangePickerVertical({
       setEndDate(null);
       setDataEnd("");
       if (inputValue !== "") {
-      if (!dateObject.isValid()) {
-        setValidationEnd("Formato data non valido");
-      } else {
-        setValidationEnd(
-          "La data di fine non può essere inferiore alla data di inizio",
-        );
+        if (!dateObject.isValid()) {
+          setValidationEnd("Formato data non valido");
+        } else {
+          setValidationEnd(
+            "La data di fine non può essere inferiore alla data di inizio",
+          );
+        }
       }
     }
-  }
   }
 
   function handleStartDateChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -123,7 +123,15 @@ export function DataRangePickerVertical({
 
   const [date, setDate] = React.useState(null);
 
-  const renderCustomInput = ({ ref, onFocus, onKeyDown }:{ref:any,onFocus:any,onKeyDown:any}) => (
+  const renderCustomInput = ({
+    ref,
+    onFocus,
+    onKeyDown,
+  }: {
+    ref: any;
+    onFocus: any;
+    onKeyDown: any;
+  }) => (
     <button
       ref={ref}
       onFocus={onFocus}
@@ -157,7 +165,30 @@ export function DataRangePickerVertical({
             display: flex;
           `}
         >
-          <label className="visually-hidden" htmlFor={"input-start-date"}>
+          <label
+            className="visually-hidden"
+            css={css`
+              border: 0;
+              padding: 0;
+              margin: 0;
+              position: absolute !important;
+              height: 1px;
+              width: 1px;
+              overflow: hidden;
+              clip: rect(
+                1px 1px 1px 1px
+              ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+              clip: rect(
+                1px,
+                1px,
+                1px,
+                1px
+              ); /*maybe deprecated but we need to support legacy browsers */
+              clip-path: inset(50%);
+              white-space: nowrap;
+            `}
+            htmlFor={"input-start-date"}
+          >
             input per data inizio
           </label>
           <input
@@ -242,7 +273,30 @@ export function DataRangePickerVertical({
             display: flex;
           `}
         >
-          <label className="visually-hidden" htmlFor={"input-end-date"}>
+          <label
+            className="visually-hidden"
+            htmlFor={"input-end-date"}
+            css={css`
+              border: 0;
+              padding: 0;
+              margin: 0;
+              position: absolute !important;
+              height: 1px;
+              width: 1px;
+              overflow: hidden;
+              clip: rect(
+                1px 1px 1px 1px
+              ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+              clip: rect(
+                1px,
+                1px,
+                1px,
+                1px
+              ); /*maybe deprecated but we need to support legacy browsers */
+              clip-path: inset(50%);
+              white-space: nowrap;
+            `}
+          >
             input per data fine
           </label>
           <input

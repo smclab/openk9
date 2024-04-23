@@ -71,7 +71,30 @@ function Tabs({
 
   return !scrollMode ? (
     <div css={css`openk9-container-arrow-tabs`}>
-      <h2 id="title-tabs-openk9" className="visually-hidden">
+      <h2
+        id="title-tabs-openk9"
+        className="visually-hidden"
+        css={css`
+          border: 0;
+          padding: 0;
+          margin: 0;
+          position: absolute !important;
+          height: 1px;
+          width: 1px;
+          overflow: hidden;
+          clip: rect(
+            1px 1px 1px 1px
+          ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+          clip: rect(
+            1px,
+            1px,
+            1px,
+            1px
+          ); /*maybe deprecated but we need to support legacy browsers */
+          clip-path: inset(50%);
+          white-space: nowrap;
+        `}
+      >
         filtri e argomenti
       </h2>
       <ul
@@ -226,7 +249,30 @@ function Tabs({
     </div>
   ) : (
     <React.Fragment>
-      <h2 id="title-tabs-openk9" className="visually-hidden">
+      <h2
+        id="title-tabs-openk9"
+        className="visually-hidden"
+        css={css`
+          border: 0;
+          padding: 0;
+          margin: 0;
+          position: absolute !important;
+          height: 1px;
+          width: 1px;
+          overflow: hidden;
+          clip: rect(
+            1px 1px 1px 1px
+          ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+          clip: rect(
+            1px,
+            1px,
+            1px,
+            1px
+          ); /*maybe deprecated but we need to support legacy browsers */
+          clip-path: inset(50%);
+          white-space: nowrap;
+        `}
+      >
         filtri e argomenti
       </h2>
       <ul

@@ -71,7 +71,7 @@ function SortResultList({
     </components.SingleValue>
   );
 
-  const handleChange = (event: any) => {    
+  const handleChange = (event: any) => {
     if (event.value === relevance || event.value === relevance) {
       setSortResult({});
     } else {
@@ -82,7 +82,7 @@ function SortResultList({
         },
       });
     }
-    setMyValue(event)
+    setMyValue(event);
   };
 
   const customStyles = {
@@ -119,7 +119,30 @@ function SortResultList({
   return (
     <span className="openk9-container-sort-result-list-component">
       {!HtmlString && (
-        <label className="visually-hidden" htmlFor="defaultSort">
+        <label
+          className="visually-hidden"
+          htmlFor="defaultSort"
+          css={css`
+            border: 0;
+            padding: 0;
+            margin: 0;
+            position: absolute !important;
+            height: 1px;
+            width: 1px;
+            overflow: hidden;
+            clip: rect(
+              1px 1px 1px 1px
+            ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+            clip: rect(
+              1px,
+              1px,
+              1px,
+              1px
+            ); /*maybe deprecated but we need to support legacy browsers */
+            clip-path: inset(50%);
+            white-space: nowrap;
+          `}
+        >
           {"Ordinamento"}
         </label>
       )}
@@ -144,4 +167,4 @@ function SortResultList({
     </span>
   );
 }
-export const SortResultListMemo=React.memo(SortResultList)
+export const SortResultListMemo = React.memo(SortResultList);

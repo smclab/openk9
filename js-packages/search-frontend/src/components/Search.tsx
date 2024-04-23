@@ -193,6 +193,26 @@ export function Search({
               <label
                 htmlFor="search-openk9"
                 className="visually-hidden label-search"
+                css={css`
+                  border: 0;
+                  padding: 0;
+                  margin: 0;
+                  position: absolute !important;
+                  height: 1px;
+                  width: 1px;
+                  overflow: hidden;
+                  clip: rect(
+                    1px 1px 1px 1px
+                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+                  clip: rect(
+                    1px,
+                    1px,
+                    1px,
+                    1px
+                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip-path: inset(50%);
+                  white-space: nowrap;
+                `}
               >
                 Search
               </label>
@@ -315,7 +335,30 @@ export function Search({
               }}
             ></input>
             {messageSearchIsVisible && (
-              <p className="visually-hidden" id="message-search">
+              <p
+                className="visually-hidden"
+                id="message-search"
+                css={css`
+                  border: 0;
+                  padding: 0;
+                  margin: 0;
+                  position: absolute !important;
+                  height: 1px;
+                  width: 1px;
+                  overflow: hidden;
+                  clip: rect(
+                    1px 1px 1px 1px
+                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+                  clip: rect(
+                    1px,
+                    1px,
+                    1px,
+                    1px
+                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip-path: inset(50%);
+                  white-space: nowrap;
+                `}
+              >
                 {customMessageSearch ||
                   t(
                     "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box",

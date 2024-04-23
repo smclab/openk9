@@ -9,13 +9,13 @@
   --openk9-embeddable-search--primary-text-color: #000000;
   --openk9-embeddable-search--secondary-text-color: #62696e;
   --openk9-embeddable-search--primary-background-color: #ffffff;
-  --openk9-embeddable-search--secondary-background-color: #EEEEEE;
+  --openk9-embeddable-search--secondary-background-color: #eeeeee;
   --openk9-embeddable-search--secondary-background-tab-color: #fafafa;
-  --openk9-embeddable-search--primary-background-tab-color:   #d54949;
-  --openk9-embeddable-tabs--primary-color: #3F3F46;
-  --openk9-embeddable-active-border-card--primary-color: #A1A1AA;
-  --openk9-embeddable-not-active-border-card--primary-color: #E4E4E7;
-  --openk9-grey-stone-600: #52525B;
+  --openk9-embeddable-search--primary-background-tab-color: #d54949;
+  --openk9-embeddable-tabs--primary-color: #3f3f46;
+  --openk9-embeddable-active-border-card--primary-color: #a1a1aa;
+  --openk9-embeddable-not-active-border-card--primary-color: #e4e4e7;
+  --openk9-grey-stone-600: #52525b;
 }
 
 .openk9-embeddable-search--input-container {
@@ -26,7 +26,8 @@
 
 .openk9-embeddable-search--result-container {
   margin: 16px 16px 0px 16px;
-  border: 2px solid var(--openk9-embeddable-not-active-border-card--primary-color);
+  border: 2px solid
+    var(--openk9-embeddable-not-active-border-card--primary-color);
   border-radius: 4px;
 }
 
@@ -41,21 +42,8 @@
   border-radius: 4px;
 }
 
-.visually-hidden {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px 1px 1px 1px); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-  clip: rect(1px, 1px, 1px, 1px); /*maybe deprecated but we need to support legacy browsers */
-  clip-path: inset(50%); 
-  white-space: nowrap; 
-  }
-
-  ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: black;
-    opacity: 1; /* Firefox */
-  }
+::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: black;
+  opacity: 1; /* Firefox */
+}
