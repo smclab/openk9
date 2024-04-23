@@ -310,7 +310,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(key, contentId).asString()
+				EnrichPipelineKey.of(key, contentId, ingest.deliveryTag).asString()
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
@@ -685,7 +685,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public sealed interface Response extends CborSerializable {}
 
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo, long deliveryTag)
+		implements Command {}
 
 	public record TrackError(ActorRef<Response> replyTo) implements Command {}
 

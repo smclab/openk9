@@ -70,7 +70,11 @@ public class MainConsumer extends BaseConsumer {
 		AskPattern.ask(
 			getScheduling(),
 			(ActorRef<Scheduling.Response> replyTo) ->
-				new Scheduling.Ingest(Json.encodeToBuffer(payload).getBytes(), replyTo),
+				new Scheduling.Ingest(
+					Json.encodeToBuffer(payload).getBytes(),
+					replyTo,
+					envelope.getDeliveryTag()
+				),
 			timeout,
 			context.getSystem().scheduler()
 		).whenComplete((r, t) -> {

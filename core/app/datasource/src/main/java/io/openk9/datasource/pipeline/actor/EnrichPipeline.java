@@ -56,7 +56,6 @@ public class EnrichPipeline {
 			.onMessage(Setup.class, setup -> onSetup(
 				ctx,
 				enrichPipelineKey.key(),
-				enrichPipelineKey.contentId(),
 				setup
 			))
 			.build()
@@ -66,7 +65,6 @@ public class EnrichPipeline {
 	public static Behavior<Command> onSetup(
 		ActorContext<EnrichPipeline.Command> ctx,
 		SchedulingKey key,
-		String contentId,
 		Setup setup
 	) {
 

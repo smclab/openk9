@@ -21,25 +21,32 @@ import io.openk9.common.util.SchedulingKey;
 
 import java.util.Objects;
 
-public record EnrichPipelineKey(SchedulingKey key, String contentId) {
+public record EnrichPipelineKey(SchedulingKey key, String contentId, long deliveryTag) {
 
 	public EnrichPipelineKey {
 		Objects.requireNonNull(contentId);
 		assert !contentId.isBlank() : "contentId is blank";
 	}
 
-	public static EnrichPipelineKey of(SchedulingKey schedulingKey, String contentId) {
-		return new EnrichPipelineKey(schedulingKey, contentId);
+	public static EnrichPipelineKey of(
+		SchedulingKey schedulingKey, String contentId, long deliveryTag) {
+		return new EnrichPipelineKey(schedulingKey, contentId, deliveryTag);
 	}
 
 	public static EnrichPipelineKey fromString(String entityId) {
 		var strings = entityId.split(String.valueOf(SchedulingKey.SEPARATOR));
 		var schedulingKey = SchedulingKey.fromStrings(strings[0], strings[1]);
-		return new EnrichPipelineKey(schedulingKey, strings[2]);
+		return new EnrichPipelineKey(schedulingKey, strings[2], Long.parseLong(strings[3]));
 	}
 
 	public String asString() {
-		return key().asString() + SchedulingKey.SEPARATOR + contentId();
+		return new StringBuilder()
+			.append(key().asString())
+			.append(SchedulingKey.SEPARATOR)
+			.append(contentId())
+			.append(SchedulingKey.SEPARATOR)
+			.append(deliveryTag())
+			.toString();
 	}
 
 }
