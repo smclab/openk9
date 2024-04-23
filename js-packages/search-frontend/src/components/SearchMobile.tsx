@@ -13,12 +13,7 @@ import {
   SortField,
 } from "./client";
 import { useClickAway } from "./useClickAway";
-import {
-  SelectionsAction,
-  SelectionsActionOnClick,
-  SelectionsState,
-  SelectionsStateOnClick,
-} from "./useSelections";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 import React from "react";
 import { css } from "styled-components/macro";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
@@ -30,8 +25,8 @@ type SearchMobileProps = {
   onConfigurationChange: ConfigurationUpdateFunction;
   onDetail(detail: GenericResultItem<unknown> | null): void;
   spans: Array<AnalysisResponseEntry>;
-  selectionsState: SelectionsState | SelectionsStateOnClick;
-  selectionsDispatch(action: SelectionsAction | SelectionsActionOnClick): void;
+  selectionsState: SelectionsState;
+  selectionsDispatch(action: SelectionsAction): void;
   showSyntax: boolean;
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
@@ -45,6 +40,7 @@ type SearchMobileProps = {
   dynamicFilters: boolean;
   isVisible: boolean;
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>> | undefined;
+  btnSearch: boolean;
 };
 
 export function SearchMobile({
@@ -56,6 +52,7 @@ export function SearchMobile({
   showSyntax,
   isMobile,
   isVisible,
+  btnSearch = false,
   setIsVisible,
 }: SearchMobileProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -87,7 +84,10 @@ export function SearchMobile({
       inputRef.current?.focus();
     }
   }, [isVisible]);
-
+  const { setText, search, clearSearch } = setValueSearch({
+    isBtn: btnSearch,
+    selectionsDispatch: selectionsDispatch,
+  });
   const componet = (
     <React.Fragment>
       <div
@@ -212,12 +212,7 @@ export function SearchMobile({
                 placeholder={t("search") || "search..."}
                 value={selectionsState.text}
                 onChange={(event) => {
-                  selectionsDispatch({
-                    type: "set-text",
-                    text: event.currentTarget.value,
-                  });
-                  onDetail(null);
-                  setOpenedDropdown(null);
+                  setText(event.currentTarget.value);
                 }}
                 css={css`
                   position: relative;
@@ -335,10 +330,7 @@ export function SearchMobile({
                   border: "none",
                 }}
                 onClick={() => {
-                  selectionsDispatch({
-                    type: "set-text",
-                    text: "",
-                  });
+                  clearSearch();
                 }}
               >
                 <div>
@@ -426,19 +418,15 @@ export function SearchMobile({
             };
             const onSelectText = (token: AnalysisToken | null): void => {
               if (token)
-                selectionsDispatch({
-                  type: "set-text",
-                  text: token.value,
-                });
-              if (
-                inputRef.current?.selectionStart &&
-                inputRef.current?.selectionEnd
-              ) {
-                setAdjustedSelection({
-                  selectionStart: inputRef.current.selectionStart,
-                  selectionEnd: inputRef.current.selectionEnd,
-                });
-              }
+                if (
+                  inputRef.current?.selectionStart &&
+                  inputRef.current?.selectionEnd
+                ) {
+                  setAdjustedSelection({
+                    selectionStart: inputRef.current.selectionStart,
+                    selectionEnd: inputRef.current.selectionEnd,
+                  });
+                }
               setOpenedDropdown(null);
             };
             const isAutoSelected = selection?.isAuto ?? false;
@@ -755,4 +743,35 @@ function FactoryTokenType({
       );
       break;
   }
+}
+
+function setValueSearch({
+  isBtn,
+  selectionsDispatch,
+}: {
+  isBtn: boolean;
+  selectionsDispatch: (action: SelectionsAction) => void;
+}) {
+  const setText = (text: string) =>
+    !isBtn
+      ? selectionsDispatch({
+          type: "set-text",
+          text: text,
+          textOnchange: text,
+        })
+      : selectionsDispatch({
+          type: "set-text-btn",
+          textOnchange: text,
+        });
+  const search = (text: string) =>
+    selectionsDispatch({
+      type: "set-text",
+      text: text,
+      textOnchange: text,
+    });
+  const clearSearch = () =>
+    selectionsDispatch({
+      type: "reset-search",
+    });
+  return { setText, search, clearSearch };
 }

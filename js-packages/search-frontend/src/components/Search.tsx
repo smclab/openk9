@@ -244,6 +244,9 @@ export function Search({
                     ? "transparent"
                     : "black"
                   : "black"};
+                @media (max-width: 480px) {
+                  color: black;
+                }
               `}
               spellCheck="false"
               onSelect={(event) => {
