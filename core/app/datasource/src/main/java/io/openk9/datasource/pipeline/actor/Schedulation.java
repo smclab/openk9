@@ -78,7 +78,60 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 	public sealed interface Command extends CborSerializable {}
 	public enum Cancel implements Command {INSTANCE}
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo) implements Command {}
+
+	private Behavior<Command> onIngest(Ingest ingest) {
+		this.lastRequest = LocalDateTime.now();
+
+		String indexName = getIndexName();
+
+		byte[] payloadArray = ingest.payload;
+
+		DataPayload dataPayload =
+			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
+
+		if (dataPayload.getContentId() != null) {
+
+			updateLastIngestionDate(dataPayload);
+
+			dataPayload.setIndexName(indexName);
+
+			String contentId = dataPayload.getContentId();
+
+			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
+				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
+
+			ActorSystem<Void> system = getContext().getSystem();
+
+			ClusterSharding clusterSharding = ClusterSharding.get(system);
+
+			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
+				EnrichPipeline.ENTITY_TYPE_KEY,
+				key.value() + "#" + contentId + "#" + ingest.deliveryTag()
+			);
+
+			enrichPipelineRef.tell(new EnrichPipeline.Setup(
+				responseActorRef,
+				ingest.replyTo,
+				Json.encodeToBuffer(dataPayload).getBytes(),
+				scheduler)
+			);
+
+			consumers.add(ingest.replyTo());
+			busyWorkers++;
+
+		}
+		else if (!dataPayload.isLast()) {
+			ingest.replyTo.tell(new Failure("content-id is null"));
+		}
+		else {
+			ingest.replyTo.tell(Success.INSTANCE);
+			lastReceived = true;
+			log.infof("%s received last message", key);
+		}
+
+		return busyWorkers < maxWorkers ? next() : busy();
+
+	}
 	public record TrackError(ActorRef<Response> replyTo) implements Command {}
 	public record Restart(ActorRef<Response> replyTo) implements Command {}
 	public enum PersistDataIndex implements Command {INSTANCE}
@@ -291,59 +344,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		});
 	}
 
-	private Behavior<Command> onIngest(Ingest ingest) {
-		this.lastRequest = LocalDateTime.now();
-
-		String indexName = getIndexName();
-
-		byte[] payloadArray = ingest.payload;
-
-		DataPayload dataPayload =
-			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
-
-		if (dataPayload.getContentId() != null) {
-
-			updateLastIngestionDate(dataPayload);
-
-			dataPayload.setIndexName(indexName);
-
-			String contentId = dataPayload.getContentId();
-
-			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
-				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
-
-			ActorSystem<Void> system = getContext().getSystem();
-
-			ClusterSharding clusterSharding = ClusterSharding.get(system);
-
-			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
-				EnrichPipeline.ENTITY_TYPE_KEY,
-				key.value() + "#" + contentId
-			);
-
-			enrichPipelineRef.tell(new EnrichPipeline.Setup(
-				responseActorRef,
-				ingest.replyTo,
-				Json.encodeToBuffer(dataPayload).getBytes(),
-				scheduler)
-			);
-
-			consumers.add(ingest.replyTo());
-			busyWorkers++;
-
-		}
-		else if (!dataPayload.isLast()) {
-			ingest.replyTo.tell(new Failure("content-id is null"));
-		}
-		else {
-			ingest.replyTo.tell(Success.INSTANCE);
-			lastReceived = true;
-			log.infof("%s received last message", key);
-		}
-
-		return busyWorkers < maxWorkers ? next() : busy();
-
-	}
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo, long deliveryTag)
+		implements Command {}
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
 		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
