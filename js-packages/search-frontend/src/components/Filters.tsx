@@ -37,6 +37,7 @@ type FiltersProps = {
   selectionsDispatch?: React.Dispatch<SelectionsAction>;
   isActiveSkeleton: boolean;
   skeletonCategoryCustom: React.ReactNode | null;
+  memoryResults: boolean;
 };
 function Filters({
   searchQuery,
@@ -57,6 +58,7 @@ function Filters({
   isActiveSkeleton,
   selectionsDispatch,
   skeletonCategoryCustom,
+  memoryResults,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const { t } = useTranslation();
@@ -68,6 +70,7 @@ function Filters({
     language,
     sortAfterKey,
     numberOfResults,
+    memoryResults,
   );
   React.useEffect(() => {
     if (!isPreviousData) {
@@ -203,7 +206,7 @@ function Filters({
           width: calc(100% - 32px);
         `}
       >
-        {suggestionCategories.data?.length === 0 && (
+        {suggestionCategories.data?.length === 0 && !preFilters && (
           <div
             className="openk9-filters-container-internal-no-filters"
             css={css`

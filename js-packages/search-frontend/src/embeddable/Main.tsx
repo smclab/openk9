@@ -325,6 +325,7 @@ export function Main({
               selectionsDispatch={selectionsDispatch}
               isActiveSkeleton={isActiveSkeleton}
               skeletonCategoryCustom={skeletonCustom.suggestion}
+              memoryResults={memoryResults}
             />
           )}
         </I18nextProvider>,
@@ -363,6 +364,7 @@ export function Main({
               selectionsDispatch={selectionsDispatch}
               isActiveSkeleton={isActiveSkeleton}
               skeletonCategoryCustom={skeletonCustom.suggestion}
+              memoryResults={memoryResults}
             />
           )}
         </I18nextProvider>,
@@ -842,6 +844,7 @@ export function Main({
             dynamicFilters={dynamicFilters.data?.handleDynamicFilters || false}
             isVisible={configuration.searchMobile?.isVisible || false}
             setIsVisible={configuration.searchMobile?.setIsVisible}
+            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
           />
         </I18nextProvider>,
         configuration.searchMobile?.search !== undefined
