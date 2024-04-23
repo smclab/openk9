@@ -73,7 +73,7 @@ public class MainConsumer extends BaseConsumer {
 				new Schedulation.Ingest(
 					Json.encodeToBuffer(payload).getBytes(),
 					replyTo,
-					envelope.getDeliveryTag()
+					String.format("%s-%d", getConsumerTag(), envelope.getDeliveryTag())
 				),
 			timeout,
 			context.getSystem().scheduler()

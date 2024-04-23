@@ -106,7 +106,7 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				key.value() + "#" + contentId + "#" + ingest.deliveryTag()
+				key.value() + "#" + contentId + "#" + ingest.messageKey()
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
@@ -132,6 +132,9 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		return busyWorkers < maxWorkers ? next() : busy();
 
 	}
+
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
+		implements Command {}
 	public record TrackError(ActorRef<Response> replyTo) implements Command {}
 	public record Restart(ActorRef<Response> replyTo) implements Command {}
 	public enum PersistDataIndex implements Command {INSTANCE}
@@ -343,9 +346,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			return this.next();
 		});
 	}
-
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo, long deliveryTag)
-		implements Command {}
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
 		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
