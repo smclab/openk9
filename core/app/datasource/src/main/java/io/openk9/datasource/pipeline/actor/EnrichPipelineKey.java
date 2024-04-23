@@ -21,7 +21,7 @@ import io.openk9.common.util.SchedulingKey;
 
 import java.util.Objects;
 
-public record EnrichPipelineKey(SchedulingKey key, String contentId, long deliveryTag) {
+public record EnrichPipelineKey(SchedulingKey key, String contentId, String messageKey) {
 
 	public EnrichPipelineKey {
 		Objects.requireNonNull(contentId);
@@ -29,14 +29,14 @@ public record EnrichPipelineKey(SchedulingKey key, String contentId, long delive
 	}
 
 	public static EnrichPipelineKey of(
-		SchedulingKey schedulingKey, String contentId, long deliveryTag) {
-		return new EnrichPipelineKey(schedulingKey, contentId, deliveryTag);
+		SchedulingKey schedulingKey, String contentId, String messageKey) {
+		return new EnrichPipelineKey(schedulingKey, contentId, messageKey);
 	}
 
 	public static EnrichPipelineKey fromString(String entityId) {
 		var strings = entityId.split(String.valueOf(SchedulingKey.SEPARATOR));
 		var schedulingKey = SchedulingKey.fromStrings(strings[0], strings[1]);
-		return new EnrichPipelineKey(schedulingKey, strings[2], Long.parseLong(strings[3]));
+		return new EnrichPipelineKey(schedulingKey, strings[2], strings[3]);
 	}
 
 	public String asString() {
@@ -45,7 +45,7 @@ public record EnrichPipelineKey(SchedulingKey key, String contentId, long delive
 			.append(SchedulingKey.SEPARATOR)
 			.append(contentId())
 			.append(SchedulingKey.SEPARATOR)
-			.append(deliveryTag())
+			.append(messageKey())
 			.toString();
 	}
 
