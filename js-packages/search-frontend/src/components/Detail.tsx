@@ -45,16 +45,6 @@ function Detail<E>(props: DetailProps<E>) {
         if (event.key === "Tab") {
           if (document.activeElement === firstElement) {
             setShowButton(true);
-          } else {
-            setShowButton(false);
-          }
-          if (
-            event.shiftKey &&
-            trapForInvisibleButton === document.activeElement
-          ) {
-            setShowButton(true);
-          } else if (event.shiftKey) {
-            setShowButton(false);
           }
           if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
@@ -85,7 +75,11 @@ function Detail<E>(props: DetailProps<E>) {
     const modalElement = modalRef.current as any;
 
     const isFocusWithinModal = modalElement?.contains(document.activeElement);
-    if (!isFocusWithinModal) setShowButton(false);
+    if (isFocusWithinModal) {
+      setShowButton(true);
+    } else {
+      setShowButton(false);
+    }
   }, [document.activeElement]);
 
   const refFocus = React.useRef<HTMLButtonElement>(null);
@@ -165,11 +159,12 @@ function Detail<E>(props: DetailProps<E>) {
           <button
             className="button-return-cards"
             css={css`
-              border: 1px solid var(--openk9-embeddable-search--primary-color);
-              background: white;
+              border: none;
+              background: #f3e2e6;
               color: var(--openk9-embeddable-search--primary-color);
               font-weight: 600;
               border-radius: 5px;
+              cursor: pointer;
               &:focus-visible {
                 box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
                 outline: 0;
@@ -179,7 +174,7 @@ function Detail<E>(props: DetailProps<E>) {
               if (callbackFocusedButton) callbackFocusedButton();
             }}
           >
-            Return on card
+            {t("return-cards")}
           </button>
         )}
         {setDetailMobile && (
@@ -202,7 +197,7 @@ function Detail<E>(props: DetailProps<E>) {
       </div>
       {result ? (
         <div
-          className="openk9-detail-container-card "
+          className="openk9-detail-container-card button-start-detail"
           css={css`
             position: absolute;
             width: 100%;
@@ -232,6 +227,28 @@ function Detail<E>(props: DetailProps<E>) {
             }
             return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
           })()}
+          {showButton && !isMobile && (
+            <button
+              className="button-return-cards button-end-of-detail"
+              css={css`
+                border: none;
+                background: #f3e2e6;
+                color: var(--openk9-embeddable-search--primary-color);
+                font-weight: 600;
+                border-radius: 5px;
+                cursor: pointer;
+                &:focus-visible {
+                  box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
+                  outline: 0;
+                }
+              `}
+              onClick={() => {
+                if (callbackFocusedButton) callbackFocusedButton();
+              }}
+            >
+              {t("return-cards")}
+            </button>
+          )}
         </div>
       ) : (
         <div
