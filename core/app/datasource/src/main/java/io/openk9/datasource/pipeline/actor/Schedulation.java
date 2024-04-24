@@ -75,9 +75,96 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private static final String CLOSING_BEHAVIOR = "Closing";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Schedulation.class);
+	private final SchedulationKey key;
+	private final Mutiny.SessionFactory sessionFactory;
+	private final Deque<Command> lag = new ArrayDeque<>();
+	private final Set<ActorRef<Response>> consumers = new HashSet<>();
+	private final SchedulerMapper schedulerMapper;
+	private final Duration timeout;
+	private final int workersPerNode;
+	private SchedulerDTO scheduler;
+	private LocalDateTime lastRequest = LocalDateTime.now();
+	private OffsetDateTime lastIngestionDate;
+	private boolean failureTracked = false;
+	private boolean lastReceived = false;
+	private int maxWorkers;
+	private int busyWorkers = 0;
 
-	public sealed interface Command extends CborSerializable {}
-	public enum Cancel implements Command {INSTANCE}
+	public Schedulation(
+		ActorContext<Command> context,
+		SchedulationKey key,
+		Mutiny.SessionFactory sessionFactory,
+		SchedulerMapper schedulerMapper) {
+
+		super(context);
+		this.key = key;
+		this.sessionFactory = sessionFactory;
+		this.schedulerMapper = schedulerMapper;
+		this.timeout = getTimeout(context);
+		this.workersPerNode = getWorkersPerNode(context);
+		this.maxWorkers = workersPerNode;
+
+		ActorRef<Receptionist.Listing> messageAdapter =
+			getContext().messageAdapter(
+				Receptionist.Listing.class,
+				MessageGatewaySubscription::new
+			);
+
+		getContext().getSystem().receptionist().tell(
+			Receptionist.subscribe(MessageGateway.SERVICE_KEY, messageAdapter)
+		);
+
+		getContext().getSelf().tell(Start.INSTANCE);
+	}
+
+	public static Behavior<Command> create(
+		SchedulationKey schedulationKey,
+		Mutiny.SessionFactory sessionFactory,
+		SchedulerMapper schedulerMapper
+	) {
+
+		return Behaviors
+			.<Command>supervise(
+				Behaviors.setup(ctx -> new Schedulation(
+					ctx,
+					schedulationKey,
+					sessionFactory,
+					schedulerMapper
+				))
+			)
+			.onFailure(SupervisorStrategy.restartWithBackoff(
+					Duration.ofSeconds(3),
+					Duration.ofSeconds(60),
+					0.2
+				)
+			);
+	}
+
+	@Override
+	public Receive<Command> createReceive() {
+		return init();
+	}
+
+	@Override
+	public ReceiveBuilder<Command> newReceiveBuilder() {
+		return super.newReceiveBuilder()
+			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
+			.onMessage(SetScheduler.class, this::onSetScheduler)
+			.onMessageEquals(Stop.INSTANCE, this::onStop)
+			.onSignal(PostStop.class, this::onPostStop);
+	}
+
+	private static int getWorkersPerNode(ActorContext<Command> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
+	}
+
+	private static Duration getTimeout(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
+
+		return AkkaUtils.getDuration(config, SCHEDULATION_TIMEOUT, Duration.ofHours(6));
+	}
 
 	private Behavior<Command> onIngest(Ingest ingest) {
 		this.lastRequest = LocalDateTime.now();
@@ -110,10 +197,11 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
-				responseActorRef,
-				ingest.replyTo,
-				Json.encodeToBuffer(dataPayload).getBytes(),
-				scheduler)
+					responseActorRef,
+					ingest.replyTo,
+					Json.encodeToBuffer(dataPayload).getBytes(),
+					scheduler
+				)
 			);
 
 			consumers.add(ingest.replyTo());
@@ -131,110 +219,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		return busyWorkers < maxWorkers ? next() : busy();
 
-	}
-
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
-		implements Command {}
-	public record TrackError(ActorRef<Response> replyTo) implements Command {}
-	public record Restart(ActorRef<Response> replyTo) implements Command {}
-	public enum PersistDataIndex implements Command {INSTANCE}
-	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
-	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo) implements Command {}
-	private enum PersistStatusFinished implements Command {INSTANCE}
-	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
-	private record SetScheduler(Scheduler scheduler) implements Command {}
-	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response) implements Command {}
-	private record NotificationSenderResponseWrapper(NotificationSender.Response response) implements Command {}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-	private enum Start implements Command {INSTANCE}
-	private enum Stop implements Command {INSTANCE}
-	private enum Tick implements Command {INSTANCE}
-
-	public sealed interface Response extends CborSerializable {}
-	public enum Success implements Response {INSTANCE}
-	public record Failure(String error) implements Response {}
-
-	public record SchedulationKey(String tenantId, String scheduleId) {
-		public String value() {
-			return SchedulationKeyUtils.getValue(this);
-		}
-
-	}
-
-	private final SchedulationKey key;
-	private final Mutiny.SessionFactory sessionFactory;
-	private final Deque<Command> lag = new ArrayDeque<>();
-	private final Set<ActorRef<Response>> consumers = new HashSet<>();
-	private final SchedulerMapper schedulerMapper;
-	private final Duration timeout;
-	private final int workersPerNode;
-	private SchedulerDTO scheduler;
-	private LocalDateTime lastRequest = LocalDateTime.now();
-	private OffsetDateTime lastIngestionDate;
-	private boolean failureTracked = false;
-	private boolean lastReceived = false;
-	private int maxWorkers;
-	private int busyWorkers = 0;
-
-	public Schedulation(
-		ActorContext<Command> context,
-		SchedulationKey key,
-		Mutiny.SessionFactory sessionFactory,
-		SchedulerMapper schedulerMapper) {
-
-		super(context);
-		this.key = key;
-		this.sessionFactory = sessionFactory;
-		this.schedulerMapper = schedulerMapper;
-		this.timeout = getTimeout(context);
-		this.workersPerNode = getWorkersPerNode(context);
-		this.maxWorkers = workersPerNode;
-
-		ActorRef<Receptionist.Listing> messageAdapter =
-			getContext().messageAdapter(Receptionist.Listing.class, MessageGatewaySubscription::new);
-
-		getContext().getSystem().receptionist().tell(
-			Receptionist.subscribe(MessageGateway.SERVICE_KEY, messageAdapter)
-		);
-
-		getContext().getSelf().tell(Start.INSTANCE);
-	}
-
-	public static Behavior<Command> create(
-		SchedulationKey schedulationKey,
-		Mutiny.SessionFactory sessionFactory,
-		SchedulerMapper schedulerMapper
-	) {
-
-		return Behaviors
-			.<Command>supervise(
-				Behaviors.setup(ctx -> new Schedulation(
-					ctx,
-					schedulationKey,
-					sessionFactory,
-					schedulerMapper
-				))
-			)
-			.onFailure(SupervisorStrategy.restartWithBackoff(
-				Duration.ofSeconds(3),
-				Duration.ofSeconds(60),
-				0.2)
-			);
-	}
-
-
-	@Override
-	public Receive<Command> createReceive() {
-		return init();
-	}
-
-	@Override
-	public ReceiveBuilder<Command> newReceiveBuilder() {
-		return super.newReceiveBuilder()
-			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
-			.onMessage(SetScheduler.class, this::onSetScheduler)
-			.onMessageEquals(Stop.INSTANCE, this::onStop)
-			.onSignal(PostStop.class, this::onPostStop);
 	}
 
 	private Behavior<Command> onMessageGatewaySubscription(
@@ -423,7 +407,8 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 			log.infof(
 				"replacing dataindex %s for datasource %s on tenant %s",
-				newDataIndexId, datasourceId, tenantId);
+				newDataIndexId, datasourceId, tenantId
+			);
 			VertxUtil.runOnContext(() -> sessionFactory
 				.withTransaction(
 					tenantId,
@@ -486,13 +471,16 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 	private Behavior<Command> onTick() {
 		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
 			if (log.isTraceEnabled()) {
-				log.tracef("a manual operation is needed for scheduler with id %s", scheduler.getId());
+				log.tracef(
+					"a manual operation is needed for scheduler with id %s",
+					scheduler.getId()
+				);
 			}
 			return Behaviors.same();
 		}
 
 		if (!failureTracked && lastReceived) {
-			if (log.isDebugEnabled()){
+			if (log.isDebugEnabled()) {
 				log.debugf("There are %s busy workers, for %s", busyWorkers, key);
 			}
 
@@ -536,7 +524,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 						log.warn("last ingestion date cannot be persisted", t);
 					}
 					else {
-						log.infof("update last ingestion date for datasource with id %s", datasourceId);
+						log.infof(
+							"update last ingestion date for datasource with id %s",
+							datasourceId
+						);
 						getContext().getSelf().tell(new SetLastIngestionDate(lastIngestionDate));
 					}
 				})
@@ -557,7 +548,10 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 						.flatMap(ignore -> s.createNamedQuery(
 								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 							.setParameter("scheduleId", entity.getScheduleId())
-							.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+							.setPlan(s.getEntityGraph(
+								Scheduler.class,
+								Scheduler.ENRICH_ITEMS_ENTITY_GRAPH
+							))
 							.getSingleResult()
 							.invoke(fetch -> getContext().getSelf().tell(new SetScheduler(fetch)))
 						);
@@ -582,7 +576,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 
 		return Behaviors.same();
 	}
-
 
 	private Behavior<Command> onSetLastIngestionDate(SetLastIngestionDate setLastIngestionDate) {
 		this.lastIngestionDate = setLastIngestionDate.lastIngestionDate;
@@ -614,18 +607,6 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		log.infof("%s behavior is %s", key, behavior);
 	}
 
-	private static int getWorkersPerNode(ActorContext<Command> context) {
-		Config config = context.getSystem().settings().config();
-
-		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
-	}
-
-	private static Duration getTimeout(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		return AkkaUtils.getDuration(config, SCHEDULATION_TIMEOUT, Duration.ofHours(6));
-	}
-
 	private void updateLastIngestionDate(DataPayload dataPayload) {
 		OffsetDateTime parsingDate =
 			OffsetDateTime.ofInstant(
@@ -647,4 +628,70 @@ public class Schedulation extends AbstractBehavior<Schedulation.Command> {
 		queueManager.tell(new QueueManager.DestroyQueue(
 			SchedulationKeyUtils.getValue(key.tenantId(), key.scheduleId())));
 	}
+
+	public enum Cancel implements Command {
+		INSTANCE
+	}
+
+	public enum PersistDataIndex implements Command {
+		INSTANCE
+	}
+
+	private enum PersistStatusFinished implements Command {
+		INSTANCE
+	}
+
+	private enum Start implements Command {
+		INSTANCE
+	}
+
+	private enum Stop implements Command {
+		INSTANCE
+	}
+
+	private enum Tick implements Command {
+		INSTANCE
+	}
+
+	public enum Success implements Response {
+		INSTANCE
+	}
+
+	public sealed interface Command extends CborSerializable {}
+
+	public sealed interface Response extends CborSerializable {}
+
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
+		implements Command {}
+
+	public record TrackError(ActorRef<Response> replyTo) implements Command {}
+
+	public record Restart(ActorRef<Response> replyTo) implements Command {}
+
+	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+
+	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
+		implements Command {}
+
+	private record SetLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+
+	private record SetScheduler(Scheduler scheduler) implements Command {}
+
+	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response)
+		implements Command {}
+
+	private record NotificationSenderResponseWrapper(NotificationSender.Response response)
+		implements Command {}
+
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+
+	public record Failure(String error) implements Response {}
+
+	public record SchedulationKey(String tenantId, String scheduleId) {
+		public String value() {
+			return SchedulationKeyUtils.getValue(this);
+		}
+
+	}
+
 }
