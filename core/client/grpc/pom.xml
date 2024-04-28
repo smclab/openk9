@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>client</artifactId>
 		<groupId>io.openk9.client</groupId>
-		<version>1.7.0</version>
+		<version>1.7.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
