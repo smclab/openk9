@@ -18,6 +18,8 @@ export type DetailProps<E> = {
   cardDetailsOnOver: boolean;
   actionOnCLose(): void;
   callbackFocusedButton?(): void;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  viewButtonDetail: boolean;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
@@ -25,9 +27,12 @@ function Detail<E>(props: DetailProps<E>) {
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
   const isMobile = props.isMobile;
+  const setViewButtonDetail = props.setViewButtonDetail;
+  const viewButtonDetail = props.viewButtonDetail;
   const callbackFocusedButton = props.callbackFocusedButton;
   const cardDetailsOnOver = props.cardDetailsOnOver;
   const [showButton, setShowButton] = React.useState(false);
+
   const modalRef = React.useRef(null);
 
   React.useEffect(() => {
@@ -129,6 +134,7 @@ function Detail<E>(props: DetailProps<E>) {
         `}
       >
         <div
+          className="openk9-icon-and-title-detail"
           css={css`
             display: flex;
             gap: 5px;
@@ -155,7 +161,7 @@ function Detail<E>(props: DetailProps<E>) {
             {t("preview")}
           </h2>
         </div>
-        {showButton && !isMobile && (
+        {showButton && !isMobile && viewButtonDetail && (
           <button
             className="button-return-cards"
             css={css`
@@ -172,6 +178,7 @@ function Detail<E>(props: DetailProps<E>) {
             `}
             onClick={() => {
               if (callbackFocusedButton) callbackFocusedButton();
+              setViewButtonDetail(false);
             }}
           >
             {t("return-cards")}
@@ -227,28 +234,6 @@ function Detail<E>(props: DetailProps<E>) {
             }
             return <pre css={css``}>{JSON.stringify(result, null, 2)}</pre>;
           })()}
-          {showButton && !isMobile && (
-            <button
-              className="button-return-cards button-end-of-detail"
-              css={css`
-                border: none;
-                background: #f3e2e6;
-                color: var(--openk9-embeddable-search--primary-color);
-                font-weight: 600;
-                border-radius: 5px;
-                cursor: pointer;
-                &:focus-visible {
-                  box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem #ee4848;
-                  outline: 0;
-                }
-              `}
-              onClick={() => {
-                if (callbackFocusedButton) callbackFocusedButton();
-              }}
-            >
-              {t("return-cards")}
-            </button>
-          )}
         </div>
       ) : (
         <div

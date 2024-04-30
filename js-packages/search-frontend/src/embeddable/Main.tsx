@@ -101,6 +101,7 @@ export function Main({
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
   const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
+  const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const { filterTokens, addFilterToken, removeFilterToken, resetFilter } =
@@ -464,6 +465,7 @@ export function Main({
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
+              setViewButtonDetail={setViewButtonDetail}
             />
           )}
         </I18nextProvider>,
@@ -526,6 +528,7 @@ export function Main({
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
+              setViewButtonDetail={setViewButtonDetail}
             />
           )}
         </I18nextProvider>,
@@ -577,6 +580,8 @@ export function Main({
               ) as any;
               if (recoveryButton) recoveryButton.focus();
             }}
+            setViewButtonDetail={setViewButtonDetail}
+            viewButtonDetail={viewButtonDetail}
           />
         </I18nextProvider>,
         configuration.details,

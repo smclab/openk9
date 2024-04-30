@@ -40,6 +40,7 @@ type ResultsProps<E> = {
   selectOptions: Options;
   classNameLabel?: string | undefined;
   viewButton: boolean;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -66,6 +67,7 @@ function Results<E>({
   classNameLabel,
   memoryResults,
   viewButton,
+  setViewButtonDetail,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -93,6 +95,7 @@ function Results<E>({
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
+          setViewButtonDetail={setViewButtonDetail}
         />
       );
     case "infinite":
@@ -118,6 +121,7 @@ function Results<E>({
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
+          setViewButtonDetail={setViewButtonDetail}
         />
       );
     case "virtual":
@@ -142,6 +146,7 @@ function Results<E>({
           classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
+          setViewButtonDetail={setViewButtonDetail}
         />
       );
   }
@@ -293,6 +298,7 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
 };
 export function FiniteResults<E>({
   renderers,
@@ -314,6 +320,7 @@ export function FiniteResults<E>({
   classNameLabel,
   memoryResults,
   viewButton,
+  setViewButtonDetail,
 }: FiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -365,6 +372,7 @@ export function FiniteResults<E>({
                 overChangeCard={overChangeCard}
                 setIdPreview={setIdPreview}
                 viewButton={viewButton}
+                setViewButtonDetail={setViewButtonDetail}
               />
             );
           })}
@@ -384,6 +392,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
   selectOptions: Options;
   language: string;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
   memoryResults: boolean;
@@ -410,6 +419,7 @@ export function InfiniteResults<E>({
   classNameLabel,
   memoryResults,
   viewButton,
+  setViewButtonDetail,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -491,6 +501,7 @@ export function InfiniteResults<E>({
                           overChangeCard={overChangeCard}
                           setIdPreview={setIdPreview}
                           viewButton={viewButton}
+                          setViewButtonDetail={setViewButtonDetail}
                         />
                       </li>
                     );
@@ -569,6 +580,7 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   classNameLabel: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
 };
 export function VirtualResults<E>({
   renderers,
@@ -589,6 +601,7 @@ export function VirtualResults<E>({
   classNameLabel,
   memoryResults,
   viewButton,
+  setViewButtonDetail,
 }: VirtualResultsProps<E>) {
   const results = useInfiniteResults<E>(
     searchQuery,
@@ -641,6 +654,7 @@ export function VirtualResults<E>({
                 isMobile={isMobile}
                 overChangeCard={overChangeCard}
                 viewButton={viewButton}
+                setViewButtonDetail={setViewButtonDetail}
               />
             );
           }

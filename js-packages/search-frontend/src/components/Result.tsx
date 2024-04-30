@@ -16,6 +16,7 @@ type ResultProps<E> = {
   setDetailMobile(result: GenericResultItem<E> | null): void;
   overChangeCard: boolean;
   viewButton: boolean;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -29,7 +30,7 @@ function Result<E>(props: ResultProps<E>) {
   const setDetailMobile = props.setDetailMobile;
   const viewButton = props.viewButton;
   const overChangeCard = props.overChangeCard;
-
+  const setViewButtonDetail = props.setViewButtonDetail;
   return (
     <div
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
@@ -70,6 +71,7 @@ function Result<E>(props: ResultProps<E>) {
                   result,
                   onDetail,
                   setIdPreview,
+                  setViewButtonDetail,
                 })}
             </React.Fragment>
           );
@@ -90,6 +92,7 @@ function Result<E>(props: ResultProps<E>) {
                   result,
                   onDetail,
                   setIdPreview,
+                  setViewButtonDetail,
                 })}
             </React.Fragment>
           );
@@ -110,6 +113,7 @@ function Result<E>(props: ResultProps<E>) {
                   result,
                   onDetail,
                   setIdPreview,
+                  setViewButtonDetail,
                 })}
             </React.Fragment>
           );
@@ -130,6 +134,7 @@ function Result<E>(props: ResultProps<E>) {
                   result,
                   onDetail,
                   setIdPreview,
+                  setViewButtonDetail,
                 })}
             </React.Fragment>
           );
@@ -207,10 +212,12 @@ function ButtonDetail<E>({
   result,
   onDetail,
   setIdPreview,
+  setViewButtonDetail,
 }: {
   result: GenericResultItem<any>;
   onDetail: (result: GenericResultItem<E> | null) => void;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | null | undefined;
+  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { t } = useTranslation();
   return (
@@ -242,11 +249,16 @@ function ButtonDetail<E>({
           font-size: 13px;
           cursor: pointer;
         `}
-        onClick={() => {
+        onClick={(e) => {
           const recoveryButton = document.getElementById(
             "title-preview-openk9",
           ) as any;
           onDetail(result);
+          if (e.screenX === 0 && e.screenY === 0) {
+            setViewButtonDetail(true);
+          } else {
+            setViewButtonDetail(false);
+          }
           if (setIdPreview) setIdPreview(result?.source?.id || "");
           if (recoveryButton) recoveryButton.focus();
         }}
