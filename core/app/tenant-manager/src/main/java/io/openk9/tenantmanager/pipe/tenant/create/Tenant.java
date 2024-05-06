@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 import akka.actor.typed.ActorRef;
@@ -12,7 +29,30 @@ public class Tenant {
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
 	private record TenantCreated(io.openk9.tenantmanager.model.Tenant tenant) implements Command {}
-	private record TenantError(Throwable throwable) implements Command {}
+
+	private static Behavior<Command> initial(
+		ActorContext<Command> context, TenantService service, ActorRef<Response> replyTo,
+		String virtualHost, String schemaName, String liquibaseSchemaName,
+		String realmName, String clientId, String clientSecret) {
+
+		return Behaviors.receive(Command.class)
+			.onMessageEquals(Start.INSTANCE, () -> onStart(
+				context, service, virtualHost, schemaName,
+				liquibaseSchemaName, realmName, clientId, clientSecret
+			))
+			.onMessage(TenantCreated.class,
+				msg -> onTenantCreated(
+					context, replyTo, msg.tenant()
+				)
+			)
+			.onMessage(TenantError.class,
+				msg -> onTenantError(
+					context, replyTo, msg.exception()
+				)
+			)
+			.build();
+
+	}
 
 	public sealed interface Response {}
 	public record Success(
@@ -33,49 +73,13 @@ public class Tenant {
 
 	}
 
-	private static Behavior<Command> initial(
-		ActorContext<Command> context, TenantService service, ActorRef<Response> replyTo,
-		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String realmName, String clientId, String clientSecret) {
-
-		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> onStart(
-				context, service, virtualHost, schemaName,
-				liquibaseSchemaName, realmName, clientId, clientSecret
-			))
-			.onMessage(TenantCreated.class,
-				msg -> onTenantCreated(
-					context, replyTo, msg.tenant()
-				)
-			)
-			.onMessage(TenantError.class,
-				msg -> onTenantError(
-					context, replyTo, msg.throwable()
-				)
-			)
-			.build();
-
-	}
-
 	private static Behavior<Command> onTenantError(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		Throwable throwable) {
+		TenantException exception) {
 
-		context.getLog().error(throwable.getMessage(), throwable);
+		context.getLog().error("Tenant not created.", exception);
 
-		replyTo.tell(new Error(throwable.getMessage()));
-
-		return Behaviors.stopped();
-
-	}
-
-	private static Behavior<Command> onTenantCreated(
-		ActorContext<Command> context, ActorRef<Response> replyTo,
-		io.openk9.tenantmanager.model.Tenant tenant) {
-
-		context.getLog().info("tenant created with id: {}", tenant.getId());
-
-		replyTo.tell(new Success(tenant));
+		replyTo.tell(new Error(exception.getMessage()));
 
 		return Behaviors.stopped();
 
@@ -102,12 +106,26 @@ public class Tenant {
 				.onItem()
 				.invoke(t -> context.getSelf().tell(new TenantCreated(t)))
 				.onFailure()
-				.invoke(t -> context.getSelf().tell(new TenantError(t)))
+				.invoke(t -> context.getSelf().tell(new TenantError(new TenantException(t))))
 		);
 
 		return Behaviors.same();
 
 	}
+
+	private static Behavior<Command> onTenantCreated(
+		ActorContext<Command> context, ActorRef<Response> replyTo,
+		io.openk9.tenantmanager.model.Tenant tenant) {
+
+		context.getLog().info("tenant created with id: {}", tenant.getId());
+
+		replyTo.tell(new Success(tenant));
+
+		return Behaviors.stopped();
+
+	}
+
+	private record TenantError(TenantException exception) implements Command {}
 
 
 }
