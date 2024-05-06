@@ -111,7 +111,7 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 			replyTo.tell(Success.INSTANCE);
 		}
 		else {
-			replyTo.tell(new Error(throwable));
+			replyTo.tell(new Error(new IngressException(throwable)));
 		}
 
 		return Behaviors.stopped();
@@ -129,7 +129,7 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 					.onItemOrFailure()
 					.invoke((response, throwable) -> getContext()
 						.getSelf()
-						.tell(new HandleRollback(response, throwable))
+						.tell(new HandleRollback(response, new IngressException(throwable)))
 					)
 				),
 				() -> {
@@ -181,10 +181,12 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 		Throwable throwable) implements Command {}
 
 	public enum Success implements Response {INSTANCE}
-	public record Error(Throwable cause) implements Response {}
+
+	public record Error(IngressException exception) implements Response {}
 
 	private record HandleRollback(
 		DeleteIngressResponse response,
-		Throwable throwable) implements Command {}
+		IngressException exception
+	) implements Command {}
 
 }
