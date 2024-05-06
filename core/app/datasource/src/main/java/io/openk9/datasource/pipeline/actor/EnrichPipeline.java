@@ -156,7 +156,7 @@ public class EnrichPipeline {
 						}
 						else if (response instanceof IndexWriterActor.Failure failure) {
 							replyTo.tell(new Failure(
-									failure.exception(),
+								new EnrichPipelineException(failure.exception()),
 									consumer,
 									scheduleId,
 									dataPayload.getTenantId()
@@ -169,7 +169,7 @@ public class EnrichPipeline {
 				)
 				.onSignal(ChildFailed.class, childFailed -> {
 					replyTo.tell(new Failure(
-						childFailed.cause(),
+						new EnrichPipelineException(childFailed.cause()),
 						consumer,
 						dataPayload.getTenantId(),
 						dataPayload.getScheduleId()
@@ -349,7 +349,7 @@ public class EnrichPipeline {
 				log.error("terminating pipeline");
 
 				replyTo.tell(new Failure(
-					new RuntimeException(error),
+					new EnrichPipelineException(error),
 					consumer,
 					dataPayload.getScheduleId(),
 					dataPayload.getTenantId()
@@ -430,7 +430,7 @@ public class EnrichPipeline {
 	) implements Response {}
 
 	public record Failure(
-		Throwable exception,
+		EnrichPipelineException exception,
 		ActorRef<Scheduling.Response> replyTo,
 		String scheduleId,
 		String tenantId
