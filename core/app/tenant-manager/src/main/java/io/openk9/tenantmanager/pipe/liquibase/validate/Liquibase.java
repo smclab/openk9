@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.liquibase.validate;
 
 import akka.actor.typed.ActorRef;
@@ -22,23 +39,6 @@ public class Liquibase {
 
 	public sealed interface Response {}
 	public record Success(String schemaName) implements Response {}
-	public record Error(Throwable throwable) implements Response {}
-
-	public static Behavior<Command> validate(
-		Params params, ActorRef<Response> actorRef) {
-		return Behaviors.setup(
-			context -> initial(params, actorRef, context));
-	}
-
-	private static Behavior<Command> initial(
-		Params params, ActorRef<Response> actorRef, ActorContext<Command> context) {
-
-		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> onStart(
-				params, actorRef, context))
-			.build();
-
-	}
 
 	private static Behavior<Command> onStart(
 		Params params, ActorRef<Response> actorRef, ActorContext<Command> context) {
@@ -68,11 +68,29 @@ public class Liquibase {
 
 		}
 		catch (Exception e) {
-			actorRef.tell(new Error(e));
+			actorRef.tell(new Error(new LiquibaseException(e)));
 		}
 
 		return Behaviors.stopped();
 	}
+
+	public static Behavior<Command> validate(
+		Params params, ActorRef<Response> actorRef) {
+		return Behaviors.setup(
+			context -> initial(params, actorRef, context));
+	}
+
+	private static Behavior<Command> initial(
+		Params params, ActorRef<Response> actorRef, ActorContext<Command> context) {
+
+		return Behaviors.receive(Command.class)
+			.onMessageEquals(Start.INSTANCE, () -> onStart(
+				params, actorRef, context))
+			.build();
+
+	}
+
+	public record Error(LiquibaseException exception) implements Response {}
 
 	private static Database _createDatabase(
 		Params params, DatabaseConnection connection) throws DatabaseException {
