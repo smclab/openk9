@@ -55,7 +55,46 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private record PrepareChunks(List<DataIndex> dataIndices) implements Command {}
 	private enum WorkNextChunk implements Command {INSTANCE}
 	private enum DeleteEsIndices implements Command {INSTANCE}
-	private record EsDeleteError(Throwable error) implements Command {}
+
+	private Behavior<Command> onDeleteEsIndices() {
+		String[] names = currentChunk
+			.stream()
+			.map(DataIndex::getName)
+			.toArray(String[]::new);
+
+		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
+
+		deleteIndexRequest
+			.indicesOptions(
+				IndicesOptions.fromMap(
+					Map.of("ignore_unavailable", true),
+					deleteIndexRequest.indicesOptions()
+				)
+			);
+
+		getContext().getLog().info(
+			"Deleting ElasticSearch orphans indices for datasource {}-{}",
+			tenantName, datasourceId);
+
+		esClient
+			.indices()
+			.deleteAsync(
+				deleteIndexRequest,
+				RequestOptions.DEFAULT,
+				ActorActionListener.of(
+					getContext().getSelf(),
+					(res, err) -> {
+						if (err != null) {
+							return new EsDeleteError(new DatasourcePurgeException(err));
+						}
+						else {
+							return DeleteDataIndices.INSTANCE;
+						}
+					})
+			);
+
+		return Behaviors.same();
+	}
 	private enum DeleteDataIndices implements Command {INSTANCE}
 
 	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
@@ -200,45 +239,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onDeleteEsIndices() {
-		String[] names = currentChunk
-			.stream()
-			.map(DataIndex::getName)
-			.toArray(String[]::new);
-
-		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
-
-		deleteIndexRequest
-			.indicesOptions(
-				IndicesOptions.fromMap(
-					Map.of("ignore_unavailable", true),
-					deleteIndexRequest.indicesOptions()
-				)
-			);
-
-		getContext().getLog().info(
-			"Deleting ElasticSearch orphans indices for datasource {}-{}",
-			tenantName, datasourceId);
-
-		esClient
-			.indices()
-			.deleteAsync(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT,
-				ActorActionListener.of(
-					getContext().getSelf(),
-					(res, err) -> {
-						if (err != null) {
-							return new EsDeleteError(err);
-						}
-						else {
-							return DeleteDataIndices.INSTANCE;
-						}
-					})
-			);
-
-		return Behaviors.same();
-	}
+	private record EsDeleteError(DatasourcePurgeException error) implements Command {}
 
 	private Behavior<Command> onDeleteDataIndices() {
 
