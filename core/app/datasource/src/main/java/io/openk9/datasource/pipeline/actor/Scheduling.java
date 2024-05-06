@@ -393,10 +393,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			response.replyTo().tell(Success.INSTANCE);
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
-			Throwable exception = failure.exception();
-			log.error("enrich pipeline failure", exception);
+			EnrichPipelineException epe = failure.exception();
+			log.error("enrich pipeline failure", epe);
 			this.failureTracked = true;
-			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
+			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
 		}
 
 		busyWorkers--;
