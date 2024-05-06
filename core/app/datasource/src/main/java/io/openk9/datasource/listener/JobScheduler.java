@@ -98,8 +98,77 @@ public class JobScheduler {
 		String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record CopyIndexTemplate(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
-	private record PersistSchedulerInternal(
-		String tenantName, Scheduler scheduler, Throwable throwable) implements Command {}
+	private static Behavior<Command> onCopyIndexTemplate(
+		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
+		Scheduler scheduler = cit.scheduler;
+		String tenantName = cit.tenantName;
+
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+		DataIndex newDataIndex = scheduler.getNewDataIndex();
+		String newDataIndexName = newDataIndex.getName();
+
+		IndicesClient indices = restHighLevelClient.indices();
+
+		indices.getIndexTemplateAsync(
+			new GetComposableIndexTemplateRequest(oldDataIndex.getName() + "-template"),
+			RequestOptions.DEFAULT, new ActionListener<>() {
+				@Override
+				public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {
+					for (ComposableIndexTemplate composableIndexTemplate : indexTemplate.getIndexTemplates().values()) {
+
+						PutComposableIndexTemplateRequest request =
+							new PutComposableIndexTemplateRequest();
+
+						Template template = composableIndexTemplate.template();
+
+						ComposableIndexTemplate newComposableIndexTemplate =
+							new ComposableIndexTemplate(
+								List.of(newDataIndexName),
+								new Template(
+									template.settings(),
+									template.mappings(),
+									template.aliases()
+								),
+								composableIndexTemplate.composedOf(),
+								composableIndexTemplate.priority(),
+								composableIndexTemplate.version(),
+								composableIndexTemplate.metadata()
+							);
+
+						request
+							.name(newDataIndexName + "-template")
+							.indexTemplate(newComposableIndexTemplate);
+
+						indices.putIndexTemplateAsync(
+							request,
+							RequestOptions.DEFAULT,
+							ActorActionListener.of(ctx.getSelf(), (r, t) ->
+								new PersistSchedulerInternal(
+									tenantName,
+									scheduler,
+									new JobSchedulerException(t)
+								))
+						);
+					}
+				}
+
+				@Override
+				public void onFailure(Exception e) {
+					if (e instanceof ElasticsearchStatusException
+						&& ((ElasticsearchStatusException)e).status() == RestStatus.NOT_FOUND) {
+						log.warn("Cannot Copy Index Template", e);
+						ctx.getSelf().tell(
+							new PersistSchedulerInternal(tenantName, scheduler, null));
+					}
+					else  {
+						ctx.getSelf().tell(
+							new PersistSchedulerInternal(null, null, new JobSchedulerException(e)));
+					}
+				}
+			});
+
+		return Behaviors.same();
+	}
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
@@ -656,84 +725,16 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onCopyIndexTemplate(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
-		Scheduler scheduler = cit.scheduler;
-		String tenantName = cit.tenantName;
-
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		String newDataIndexName = newDataIndex.getName();
-
-		IndicesClient indices = restHighLevelClient.indices();
-
-		indices.getIndexTemplateAsync(
-			new GetComposableIndexTemplateRequest(oldDataIndex.getName() + "-template"),
-			RequestOptions.DEFAULT, new ActionListener<>() {
-				@Override
-				public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {
-					for (ComposableIndexTemplate composableIndexTemplate : indexTemplate.getIndexTemplates().values()) {
-
-						PutComposableIndexTemplateRequest request =
-							new PutComposableIndexTemplateRequest();
-
-						Template template = composableIndexTemplate.template();
-
-						ComposableIndexTemplate newComposableIndexTemplate =
-							new ComposableIndexTemplate(
-								List.of(newDataIndexName),
-								new Template(
-									template.settings(),
-									template.mappings(),
-									template.aliases()
-								),
-								composableIndexTemplate.composedOf(),
-								composableIndexTemplate.priority(),
-								composableIndexTemplate.version(),
-								composableIndexTemplate.metadata()
-							);
-
-						request
-							.name(newDataIndexName + "-template")
-							.indexTemplate(newComposableIndexTemplate);
-
-						indices.putIndexTemplateAsync(
-							request,
-							RequestOptions.DEFAULT,
-							ActorActionListener.of(ctx.getSelf(), (r, t) ->
-								new PersistSchedulerInternal(tenantName, scheduler, t))
-						);
-					}
-				}
-
-				@Override
-				public void onFailure(Exception e) {
-					if (e instanceof ElasticsearchStatusException
-						&& ((ElasticsearchStatusException)e).status() == RestStatus.NOT_FOUND) {
-						log.warn("Cannot Copy Index Template", e);
-						ctx.getSelf().tell(
-							new PersistSchedulerInternal(tenantName, scheduler, null));
-					}
-					else  {
-						ctx.getSelf().tell(
-							new PersistSchedulerInternal(null, null, e));
-					}
-				}
-			});
-
-		return Behaviors.same();
-	}
-
 	private static Behavior<Command> onPersistSchedulerInternal(
 		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
 		ActorRef<MessageGateway.Command> messageGateway, PersistSchedulerInternal pndi) {
 
 		String tenantName = pndi.tenantName;
 		Scheduler scheduler = pndi.scheduler;
-		Throwable t = pndi.throwable;
+		JobSchedulerException exception = pndi.exception;
 
-		if (t != null) {
-			log.error("cannot create index-template", t);
+		if (exception != null) {
+			log.error("cannot create index-template", exception);
 			return Behaviors.same();
 		}
 
@@ -741,6 +742,10 @@ public class JobScheduler {
 
 		return Behaviors.same();
 	}
+
+	private record PersistSchedulerInternal(
+		String tenantName, Scheduler scheduler, JobSchedulerException exception
+	) implements Command {}
 
 	private static void persistScheduler(
 		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
