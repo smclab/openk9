@@ -352,7 +352,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		failureTracked = false;
 		lastRequest = LocalDateTime.now();
 		getContext().getSelf().tell(
-			new PersistStatus(Scheduler.SchedulerStatus.STARTED, restart.replyTo)
+			new PersistStatus(Scheduler.SchedulerStatus.RUNNING, restart.replyTo)
 		);
 
 		return next();

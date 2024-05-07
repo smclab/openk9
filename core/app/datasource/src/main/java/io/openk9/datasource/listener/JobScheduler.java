@@ -420,7 +420,7 @@ public class JobScheduler {
 					"select s " +
 						"from Scheduler s " +
 						"where s.datasource.id = :datasourceId " +
-						"and s.status in ('STARTED', 'ERROR')",
+					"and s.status in ('RUNNING', 'ERROR')",
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
 					.getResultList()
@@ -687,7 +687,7 @@ public class JobScheduler {
 		scheduler.setScheduleId(UUID.randomUUID().toString());
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.STARTED);
+		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
