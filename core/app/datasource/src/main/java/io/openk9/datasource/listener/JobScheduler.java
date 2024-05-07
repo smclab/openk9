@@ -485,7 +485,7 @@ public class JobScheduler {
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 			Scheduling.ENTITY_TYPE_KEY, SchedulingKey.asString(tenantName, scheduleId));
 
-		schedulingRef.tell(Scheduling.Cancel.INSTANCE);
+		schedulingRef.tell(Scheduling.Fail.INSTANCE);
 
 		return Behaviors.same();
 	}

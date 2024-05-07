@@ -206,6 +206,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
 			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
+			.onMessageEquals(Fail.INSTANCE, this::onFail)
 			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
@@ -287,7 +288,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
 			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
 
-			getContext().getSelf().tell(Cancel.INSTANCE);
+			getContext().getSelf().tell(Fail.INSTANCE);
 
 			return closing();
 		}
@@ -356,6 +357,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		return next();
+	}
+
+	private Behavior<Command> onFail() {
+		VertxUtil.runOnContext(() -> sessionFactory
+			.withTransaction(key.tenantId(), (s, t) -> s
+				.find(Scheduler.class, scheduler.getId())
+				.chain(scheduler -> {
+					scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+					return s.persist(scheduler);
+				})
+				.invoke(this::destroyQueue)
+				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
+			)
+		);
+
+		return closing();
 	}
 
 	private Behavior<Command> onCancel() {
@@ -651,6 +668,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return newDataIndexName != null
 			? newDataIndexName
 			: scheduler.getOldDataIndexName();
+	}
+
+	public enum Fail implements Command {
+		INSTANCE
 	}
 
 	public enum Cancel implements Command {
