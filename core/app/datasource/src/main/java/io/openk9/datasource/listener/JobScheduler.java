@@ -417,10 +417,10 @@ public class JobScheduler {
 			sessionFactory.withStatelessTransaction(
 				tenantName,
 				(s, t) -> s.createQuery(
-					"select s " +
+						"select s " +
 						"from Scheduler s " +
 						"where s.datasource.id = :datasourceId " +
-					"and s.status in ('RUNNING', 'ERROR')",
+						"and s.status in " + Scheduler.RUNNING_STATES,
 						Scheduler.class)
 					.setParameter("datasourceId", datasource.getId())
 					.getResultList()

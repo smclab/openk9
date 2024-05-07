@@ -79,7 +79,7 @@ public class SchedulerInitializer {
 					Uni<List<Scheduler>> registration = sessionFactory.withTransaction(
 							tenantResponse.getSchemaName(),
 							(session, transaction) -> session
-								.createNamedQuery(Scheduler.FETCH_RUNNING_QUERY, Scheduler.class)
+								.createNamedQuery(Scheduler.FETCH_RUNNING, Scheduler.class)
 								.getResultList()
 						)
 						.invoke(schedulers -> {

@@ -45,6 +45,13 @@ import javax.persistence.OneToOne;
 @ToString
 @NamedEntityGraphs({
 	@NamedEntityGraph(
+		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
+		attributeNodes = {
+			@NamedAttributeNode(value = "oldDataIndex"),
+			@NamedAttributeNode(value = "newDataIndex")
+		}
+	),
+	@NamedEntityGraph(
 		name = Scheduler.ENRICH_ITEMS_ENTITY_GRAPH,
 		attributeNodes = {
 			@NamedAttributeNode(
@@ -84,19 +91,26 @@ import javax.persistence.OneToOne;
 })
 @NamedQueries({
 	@NamedQuery(
+		name = Scheduler.FETCH_BY_ID,
+		query = "from Scheduler s where s.id = :schedulerId"
+	),
+	@NamedQuery(
 		name = Scheduler.FETCH_BY_SCHEDULE_ID,
 		query = "from Scheduler s where s.scheduleId = :scheduleId"
 	),
 	@NamedQuery(
-		name = Scheduler.FETCH_RUNNING_QUERY,
-		query = "from Scheduler s where s.status in ('RUNNING', 'ERROR')"
-	)
+		name = Scheduler.FETCH_RUNNING,
+		query = "from Scheduler s where s.status in " + Scheduler.RUNNING_STATES
+	),
 })
 public class Scheduler extends K9Entity {
 
-	public static final String FETCH_BY_SCHEDULE_ID = "Scheduler.fetchScheduling";
-	public static final String FETCH_RUNNING_QUERY = "Scheduler.fetchRunning";
+	public static final String FETCH_BY_ID = "Scheduler.fetchSchedulerById";
+	public static final String FETCH_BY_SCHEDULE_ID = "Scheduler.fetchSchedulerByScheduleId";
+	public static final String FETCH_RUNNING = "Scheduler.fetchRunning";
 	public static final String ENRICH_ITEMS_ENTITY_GRAPH = "Scheduler.fetchEnrichItems";
+	public static final String DATA_INDEXES_ENTITY_GRAPH = "Scheduler.fetchDataIndexes";
+	public static final String RUNNING_STATES = "('RUNNING', 'ERROR')";
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;

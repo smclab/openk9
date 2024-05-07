@@ -82,14 +82,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		);
 	}
 
-	public Uni<List<String>> getDeletedContentIds(String tenant, String schedulerId) {
-		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s.createQuery(
-					"select s " +
-					"from Scheduler s " +
-					"join fetch s.oldDataIndex " +
-					"join fetch s.newDataIndex " +
-					"where s.scheduleId = :schedulerId", Scheduler.class)
-				.setParameter("schedulerId", schedulerId)
+	public Uni<List<String>> getDeletedContentIds(String tenant, String scheduleId) {
+		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s
+				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+				.setParameter("scheduleId", scheduleId)
+				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
 				.getSingleResultOrNull())
 			.flatMap(this::indexesDiff);
 	}
@@ -99,14 +96,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<List<String>> getDeletedContentIds(long id) {
-		return sessionFactory.withStatelessTransaction(s -> s.createQuery(
-			"select s " +
-				"from Scheduler s " +
-				"join fetch s.oldDataIndex " +
-				"join fetch s.newDataIndex " +
-				"where s.id = :schedulerId", Scheduler.class)
+		return sessionFactory.withStatelessTransaction(s -> s
+				.createNamedQuery(Scheduler.FETCH_BY_ID, Scheduler.class)
+				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
 				.setParameter("schedulerId", id)
-			.getSingleResultOrNull())
+				.getSingleResultOrNull())
 			.flatMap(this::indexesDiff);
 	}
 
@@ -173,7 +167,9 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				"select d.id " +
 					"from Scheduler s " +
 					"join s.datasource d " +
-				"where d.id in :datasourceIds and s.status in ('RUNNING', 'ERROR')", Long.class)
+				"where d.id in :datasourceIds and s.status in " + Scheduler.RUNNING_STATES,
+				Long.class
+			)
 			.setParameter("datasourceIds", datasourceIds)
 			.getResultList()
 			.map(ids -> datasourceIds
