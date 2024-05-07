@@ -110,7 +110,7 @@ public class Scheduler extends K9Entity {
 	public static final String FETCH_RUNNING = "Scheduler.fetchRunning";
 	public static final String ENRICH_ITEMS_ENTITY_GRAPH = "Scheduler.fetchEnrichItems";
 	public static final String DATA_INDEXES_ENTITY_GRAPH = "Scheduler.fetchDataIndexes";
-	public static final String RUNNING_STATES = "('RUNNING', 'ERROR')";
+	public static final String RUNNING_STATES = "('RUNNING', 'ERROR', 'STALE')";
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;
@@ -134,6 +134,8 @@ public class Scheduler extends K9Entity {
 		RUNNING,
 		FINISHED,
 		CANCELLED,
-		ERROR
+		ERROR,
+		STALE,
+		FAILURE
 	}
 }
