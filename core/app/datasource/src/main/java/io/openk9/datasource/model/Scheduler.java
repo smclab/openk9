@@ -89,7 +89,7 @@ import javax.persistence.OneToOne;
 	),
 	@NamedQuery(
 		name = Scheduler.FETCH_RUNNING_QUERY,
-		query = "from Scheduler s where s.status in ('STARTED', 'ERROR')"
+		query = "from Scheduler s where s.status in ('RUNNING', 'ERROR')"
 	)
 })
 public class Scheduler extends K9Entity {
@@ -117,7 +117,7 @@ public class Scheduler extends K9Entity {
 	@Column(name = "last_ingestion_date")
 	private OffsetDateTime lastIngestionDate;
 	public enum SchedulerStatus {
-		STARTED,
+		RUNNING,
 		FINISHED,
 		CANCELLED,
 		ERROR

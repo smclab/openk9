@@ -113,7 +113,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
-				case STARTED, ERROR -> {
+				case RUNNING, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
@@ -134,7 +134,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
-				case STARTED, ERROR -> {
+				case RUNNING, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
@@ -173,7 +173,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				"select d.id " +
 					"from Scheduler s " +
 					"join s.datasource d " +
-					"where d.id in :datasourceIds and s.status in ('STARTED', 'ERROR')", Long.class)
+				"where d.id in :datasourceIds and s.status in ('RUNNING', 'ERROR')", Long.class)
 			.setParameter("datasourceIds", datasourceIds)
 			.getResultList()
 			.map(ids -> datasourceIds
