@@ -150,7 +150,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
 			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
-			.onMessage(SetScheduler.class, this::onSetScheduler)
+			.onMessage(RefreshScheduler.class, this::onRefreshScheduler)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
@@ -165,6 +165,66 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Config config = context.getSystem().settings().config();
 
 		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
+	}
+
+	private ReceiveBuilder<Command> afterSetup() {
+
+		return newReceiveBuilder()
+			.onMessageEquals(Tick.INSTANCE, this::onTick)
+			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+			.onMessage(PersistStatus.class, this::onPersistStatus)
+			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
+			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
+			.onMessageEquals(Fail.INSTANCE, this::onFail)
+			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
+	}
+
+	private Receive<Command> init() {
+		logBehavior(INIT_BEHAVIOR);
+
+		return newReceiveBuilder()
+			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onAnyMessage(this::onEnqueue)
+			.build();
+	}
+
+	private Receive<Command> ready() {
+		logBehavior(READY_BEHAVIOR);
+
+		return afterSetup()
+			.onMessage(Ingest.class, this::onIngest)
+			.onMessage(TrackError.class, this::onTrackError)
+			.onMessage(Restart.class, this::onRestart)
+			.build();
+	}
+
+	private Receive<Command> busy() {
+		logBehavior(BUSY_BEHAVIOR);
+
+		return afterSetup()
+			.onAnyMessage(this::onEnqueue)
+			.build();
+	}
+
+	private Behavior<Command> next() {
+		logBehavior(NEXT_BEHAVIOR);
+
+		if (!lag.isEmpty()) {
+			Command command = lag.pop();
+			getContext().getSelf().tell(command);
+		}
+
+		return ready();
+	}
+
+	private Behavior<Command> closing() {
+		logBehavior(CLOSING_BEHAVIOR);
+
+		return afterSetup()
+			.onAnyMessage(this::onDiscard)
+			.build();
 	}
 
 	private Behavior<Command> onMessageGatewaySubscription(
@@ -188,67 +248,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Receive<Command> init() {
-		logBehavior(INIT_BEHAVIOR);
-
-		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::onStart)
-			.onAnyMessage(this::enqueue)
-			.build();
-	}
-
-	private ReceiveBuilder<Command> afterSetup() {
-
-		return newReceiveBuilder()
-			.onMessageEquals(Tick.INSTANCE, this::onTick)
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-			.onMessage(PersistStatus.class, this::onPersistStatus)
-			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
-			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
-			.onMessageEquals(Fail.INSTANCE, this::onFail)
-			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
-	}
-
-	private Receive<Command> ready() {
-		logBehavior(READY_BEHAVIOR);
-
-		return afterSetup()
-			.onMessage(Ingest.class, this::onIngest)
-			.onMessage(TrackError.class, this::onTrackError)
-			.onMessage(Restart.class, this::onRestart)
-			.build();
-	}
-
-	private Receive<Command> busy() {
-		logBehavior(BUSY_BEHAVIOR);
-
-		return afterSetup()
-			.onAnyMessage(this::enqueue)
-			.build();
-	}
-
-	private Behavior<Command> next() {
-		logBehavior(NEXT_BEHAVIOR);
-
-		if (!lag.isEmpty()) {
-			Command command = lag.pop();
-			getContext().getSelf().tell(command);
-		}
-
-		return ready();
-	}
-
-	private Behavior<Command> closing() {
-		logBehavior(CLOSING_BEHAVIOR);
-
-		return afterSetup()
-			.onAnyMessage(this::discard)
-			.build();
-	}
-
-	private Behavior<Command> discard(Command command) {
+	private Behavior<Command> onDiscard(Command command) {
 		log.warnf("A message of type %s has been discarded.", command.getClass());
 
 		return Behaviors.same();
@@ -260,17 +260,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					s.setDefaultReadOnly(true);
 					return fetchScheduler(s);
 				}
-			).invoke(scheduler -> getContext().getSelf().tell(new SetScheduler(scheduler)))
+			).invoke(scheduler -> getContext().getSelf().tell(new RefreshScheduler(scheduler)))
 		);
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onSetScheduler(SetScheduler setScheduler) {
-		this.scheduler = schedulerMapper.map(setScheduler.scheduler);
+	private Behavior<Command> onRefreshScheduler(RefreshScheduler refreshScheduler) {
+		this.scheduler = schedulerMapper.map(refreshScheduler.scheduler());
 
-		return Behaviors.withTimers(timer -> {
-			timer.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
+		return Behaviors.withTimers(timers -> {
+			timers.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
 			return this.next();
 		});
 	}
@@ -392,7 +392,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return closing();
 	}
 
-	private Behavior<Command> enqueue(Command command) {
+	private Behavior<Command> onEnqueue(Command command) {
 		this.lag.add(command);
 		log.infof("There are %s commands waiting", lag.size());
 		return Behaviors.same();
@@ -511,46 +511,54 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onTick() {
-		if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
-			if (log.isTraceEnabled()) {
-				log.tracef(
-					"a manual operation is needed for scheduler with id %s",
-					scheduler.getId()
-				);
-			}
+		var status = scheduler.getStatus();
 
-			return Behaviors.same();
+		switch (status) {
+			case ERROR:
+				if (log.isTraceEnabled()) {
+					log.tracef(
+						"a manual operation is needed for scheduler with id %s",
+						scheduler.getId()
+					);
+				}
+
+				return Behaviors.same();
+
+			case RUNNING:
+				if (busyWorkers > 0) {
+					if (log.isDebugEnabled()) {
+						log.debugf("There are %s busy workers, for %s", busyWorkers, key);
+					}
+
+					return Behaviors.same();
+				}
+
+				if (!failureTracked && lastReceived) {
+					log.infof("%s is done", key);
+
+					getContext().getSelf().tell(PersistDatasource.INSTANCE);
+
+					return closing();
+				}
+
+				if (log.isTraceEnabled()) {
+					log.tracef("check %s expiration", key);
+				}
+
+				if (isExpired()) {
+					log.infof("%s ingestion is expired", key);
+
+					getContext().getSelf().tell(PersistDatasource.INSTANCE);
+
+					return closing();
+				}
+
+			case STALE:
+
+			default:
+				return Behaviors.same();
 		}
 
-		if (busyWorkers > 0) {
-			if (log.isDebugEnabled()) {
-				log.debugf("There are %s busy workers, for %s", busyWorkers, key);
-			}
-
-			return Behaviors.same();
-		}
-
-		if (!failureTracked && lastReceived) {
-			log.infof("%s is done", key);
-
-			getContext().getSelf().tell(PersistDatasource.INSTANCE);
-
-			return closing();
-		}
-
-		if (log.isTraceEnabled()) {
-			log.tracef("check %s expiration", key);
-		}
-
-		if (Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0) {
-			log.infof("%s ingestion is expired", key);
-
-			getContext().getSelf().tell(PersistDatasource.INSTANCE);
-
-			return closing();
-		}
-
-		return Behaviors.same();
 	}
 
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
@@ -571,7 +579,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 							"update last ingestion date for scheduler with id %s",
 							r.getId()
 						);
-						getContext().getSelf().tell(new SetScheduler(r));
+						getContext().getSelf().tell(new RefreshScheduler(r));
 					}
 				})
 			)
@@ -600,7 +608,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						r.getId()
 					);
 
-					getContext().getSelf().tell(new SetScheduler(r));
+					getContext().getSelf().tell(new RefreshScheduler(r));
 					persistStatus.replyTo.tell(Success.INSTANCE);
 				}
 			})
@@ -658,6 +666,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.getSingleResult();
 	}
 
+	private boolean isExpired() {
+		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
+	}
+
 	private boolean isNewIndex() {
 		return scheduler != null && scheduler.getNewDataIndexId() != null;
 	}
@@ -670,6 +682,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			: scheduler.getOldDataIndexName();
 	}
 
+	public sealed interface Command extends CborSerializable {}
+
+	public sealed interface Response extends CborSerializable {}
+
 	public enum Fail implements Command {
 		INSTANCE
 	}
@@ -679,6 +695,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	public enum PersistDatasource implements Command {
+		INSTANCE
+	}
+
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
+		implements Command {}
+
+	public record TrackError(ActorRef<Response> replyTo) implements Command {}
+
+	public record Restart(ActorRef<Response> replyTo) implements Command {}
+
+	public enum Success implements Response {
 		INSTANCE
 	}
 
@@ -698,27 +725,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		INSTANCE
 	}
 
-	public enum Success implements Response {
-		INSTANCE
-	}
-
-	public sealed interface Command extends CborSerializable {}
-
-	public sealed interface Response extends CborSerializable {}
-
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
-		implements Command {}
-
-	public record TrackError(ActorRef<Response> replyTo) implements Command {}
-
-	public record Restart(ActorRef<Response> replyTo) implements Command {}
+	public record Failure(String error) implements Response {}
 
 	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
 
 	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
 		implements Command {}
 
-	private record SetScheduler(Scheduler scheduler) implements Command {}
+	private record RefreshScheduler(Scheduler scheduler) implements Command {}
 
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response)
 		implements Command {}
@@ -727,7 +741,5 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-
-	public record Failure(String error) implements Response {}
 
 }
