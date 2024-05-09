@@ -181,6 +181,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
 
+	private Behavior<Command> waitFetchedScheduler(ActorRef<Response> replyTo) {
+
+		return Behaviors.withTimers(timers -> {
+			timers.cancel(Tick.INSTANCE);
+
+			return newReceiveBuilder()
+				.onMessage(FetchedScheduler.class, msg -> onFetchedScheduler(msg, replyTo))
+				.onAnyMessage(this::onEnqueue)
+				.build();
+		});
+	}
+
 	private Receive<Command> init() {
 		logBehavior(INIT_BEHAVIOR);
 
@@ -227,6 +239,30 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.build();
 	}
 
+	private Behavior<Command> onFetchedScheduler(
+		FetchedScheduler fetchedScheduler,
+		ActorRef<Response> replyTo) {
+		var scheduler = fetchedScheduler.scheduler();
+		var exception = fetchedScheduler.exception();
+
+		if (exception != null) {
+			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
+		}
+		else {
+			log.infof(
+				"Fetched Scheduling with id %s, status %s, lastIngestionDate %s.",
+				scheduler.getId(),
+				scheduler.getStatus(),
+				scheduler.getLastIngestionDate()
+			);
+
+			getContext().getSelf().tell(new RefreshScheduler(scheduler));
+			replyTo.tell(Success.INSTANCE);
+		}
+
+		return Behaviors.same();
+	}
+
 	private Behavior<Command> onMessageGatewaySubscription(
 		MessageGatewaySubscription messageGatewaySubscription) {
 
@@ -250,18 +286,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onDiscard(Command command) {
 		log.warnf("A message of type %s has been discarded.", command.getClass());
-
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onStart() {
-		VertxUtil.runOnContext(() -> sessionFactory
-			.withSession(key.tenantId(), (s) -> {
-					s.setDefaultReadOnly(true);
-					return fetchScheduler(s);
-				}
-			).invoke(scheduler -> getContext().getSelf().tell(new RefreshScheduler(scheduler)))
-		);
 
 		return Behaviors.same();
 	}
@@ -561,60 +585,54 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	}
 
+	private Behavior<Command> onStart() {
+
+		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
+				sessionFactory.withSession(key.tenantId(), (s) -> {
+					s.setDefaultReadOnly(true);
+					return fetchScheduler(s);
+				}).subscribeAsCompletionStage(),
+				(s, t) -> new FetchedScheduler(s, (Exception) t)
+			)
+		);
+
+		return waitFetchedScheduler(getContext().getSystem().ignoreRef());
+	}
+
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
+
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
-		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId(), (s, tx) -> fetchScheduler(s)
+
+		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
+			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);
 					return s.merge(entity);
 				})
-				.onItemOrFailure()
-				.invoke((r, t) -> {
-					if (t != null) {
-						log.warn("last ingestion date cannot be persisted", t);
-					}
-					else {
-						log.infof(
-							"update last ingestion date for scheduler with id %s",
-							r.getId()
-						);
-						getContext().getSelf().tell(new RefreshScheduler(r));
-					}
-				})
+			).subscribeAsCompletionStage(),
+			(s, t) -> new FetchedScheduler(s, (Exception) t)
 			)
 		);
-		return Behaviors.same();
+
+		return waitFetchedScheduler(getContext().getSystem().ignoreRef());
 	}
 
 	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
+
 		Scheduler.SchedulerStatus status = persistStatus.status;
-		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
+
+		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
+			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setStatus(status);
 					return s.merge(entity);
 				})
+			).subscribeAsCompletionStage(),
+			(s, t) -> new FetchedScheduler(s, (Exception) t)
 			)
-			.onItemOrFailure()
-			.invoke((r, t) -> {
-				if (t != null) {
-					persistStatus.replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(t)));
-				}
-				else {
-					log.infof(
-						"status updated to %s for scheduling with id %s",
-						status,
-						r.getId()
-					);
-
-					getContext().getSelf().tell(new RefreshScheduler(r));
-					persistStatus.replyTo.tell(Success.INSTANCE);
-				}
-			})
 		);
 
-		return Behaviors.same();
+		return waitFetchedScheduler(persistStatus.replyTo());
 	}
 
 	private Behavior<Command> onStop() {
@@ -741,5 +759,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+
+	private record FetchedScheduler(Scheduler scheduler, Exception exception) implements Command {}
 
 }
