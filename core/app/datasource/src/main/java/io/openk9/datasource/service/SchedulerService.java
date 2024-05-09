@@ -107,7 +107,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
-				case RUNNING, ERROR -> {
+				case RUNNING, STALE, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
@@ -128,7 +128,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
 		return findById(schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
-				case RUNNING, ERROR -> {
+				case RUNNING, STALE, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
