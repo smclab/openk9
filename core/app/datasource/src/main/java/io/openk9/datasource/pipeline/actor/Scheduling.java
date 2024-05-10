@@ -175,6 +175,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
@@ -233,7 +234,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(CLOSING_BEHAVIOR);
 
 		return afterSetup()
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
