@@ -384,7 +384,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
 		var replyTo = getContext().messageAdapter(
 			Response.class,
-			DestroyQueue::new
+			res -> new DestroyQueue(res, gracefulEnd.status())
 		);
 
 		getContext()
@@ -395,41 +395,45 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				)
 			);
 
-		return Behaviors.receive(Command.class)
-			.onMessage(DestroyQueue.class, msg -> {
-				var response = msg.response();
-
-				if (response instanceof Success) {
-					destroyQueue();
-
-					if (gracefulEnd.status() == Scheduler.SchedulerStatus.FINISHED) {
-						Long newDataIndexId = scheduler.getNewDataIndexId();
-						Long oldDataIndexId = scheduler.getOldDataIndexId();
-
-						if (newDataIndexId != null && oldDataIndexId != null) {
-							ActorRef<NotificationSender.Response> messageAdapter =
-								getContext().messageAdapter(
-									NotificationSender.Response.class,
-									NotificationSenderResponseWrapper::new
-								);
-							getContext().spawnAnonymous(
-								NotificationSender.create(scheduler, key, messageAdapter));
-						}
-
-					}
-					else {
-						getContext().getSelf().tell(Stop.INSTANCE);
-					}
-				}
-				else {
-					log.warn("Graceful end failed");
-					getContext().getSelf().tell(Stop.INSTANCE);
-				}
-
-				return closing();
-			})
+		return afterSetup()
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.build();
 
+	}
+
+	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
+
+		var response = destroyQueue.response();
+		var status = destroyQueue.status();
+
+		if (response instanceof Success) {
+			destroyQueue();
+
+			if (status == Scheduler.SchedulerStatus.FINISHED) {
+				Long newDataIndexId = scheduler.getNewDataIndexId();
+				Long oldDataIndexId = scheduler.getOldDataIndexId();
+
+				if (newDataIndexId != null && oldDataIndexId != null) {
+					ActorRef<NotificationSender.Response> messageAdapter =
+						getContext().messageAdapter(
+							NotificationSender.Response.class,
+							NotificationSenderResponseWrapper::new
+						);
+					getContext().spawnAnonymous(
+						NotificationSender.create(scheduler, key, messageAdapter));
+				}
+
+			}
+			else {
+				getContext().getSelf().tell(Stop.INSTANCE);
+			}
+		}
+		else {
+			log.warn("Graceful end failed");
+			getContext().getSelf().tell(Stop.INSTANCE);
+		}
+
+		return closing();
 	}
 
 	private Behavior<Command> onEnqueue(Command command) {
@@ -494,6 +498,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					.getSelf()
 					.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED)))
 			);
+
 		}
 		else if (!isNewIndex()) {
 			log.infof(
@@ -501,6 +506,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				scheduler.getOldDataIndexName()
 			);
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
+
 		}
 		else {
 			log.warnf(
@@ -511,10 +517,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
 
-			return closing();
 		}
 
-		return Behaviors.same();
+		return closing();
 	}
 
 	private Behavior<Command> onNotificationResponse(
@@ -767,6 +772,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record FetchedScheduler(Scheduler scheduler, Exception exception) implements Command {}
 
-	private record DestroyQueue(Response response) implements Command {}
+	private record DestroyQueue(Response response, Scheduler.SchedulerStatus status)
+		implements Command {}
 
 }
