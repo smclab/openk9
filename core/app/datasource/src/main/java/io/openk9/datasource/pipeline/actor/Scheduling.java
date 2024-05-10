@@ -175,9 +175,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
-			.onMessageEquals(Cancel.INSTANCE, this::onCancel)
-			.onMessageEquals(Fail.INSTANCE, this::onFail)
-			.onMessageEquals(PersistStatusFinished.INSTANCE, this::onPersistStatusFinished)
+			.onMessage(GracefulEnd.class, this::onGracefulEnd)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
 
@@ -312,7 +310,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
 			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
 
-			getContext().getSelf().tell(Fail.INSTANCE);
+			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
 			return closing();
 		}
@@ -383,37 +381,55 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private Behavior<Command> onFail() {
-		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId(), (s, t) -> s
-				.find(Scheduler.class, scheduler.getId())
-				.chain(scheduler -> {
-					scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
-					return s.persist(scheduler);
-				})
-				.invoke(this::destroyQueue)
-				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
-			)
+	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
+		var replyTo = getContext().messageAdapter(
+			Response.class,
+			DestroyQueue::new
 		);
 
-		return closing();
-	}
+		getContext()
+			.getSelf()
+			.tell(new PersistStatus(
+					gracefulEnd.status(),
+					replyTo
+				)
+			);
 
-	private Behavior<Command> onCancel() {
+		return Behaviors.receive(Command.class)
+			.onMessage(DestroyQueue.class, msg -> {
+				var response = msg.response();
 
-		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(key.tenantId(), (s, t) -> s
-				.find(Scheduler.class, scheduler.getId())
-				.chain(scheduler -> {
-					scheduler.setStatus(Scheduler.SchedulerStatus.CANCELLED);
-					return s.persist(scheduler);
-				})
-				.invoke(this::destroyQueue)
-				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
-			)
-		);
+				if (response instanceof Success) {
+					destroyQueue();
 
-		return closing();
+					if (gracefulEnd.status() == Scheduler.SchedulerStatus.FINISHED) {
+						Long newDataIndexId = scheduler.getNewDataIndexId();
+						Long oldDataIndexId = scheduler.getOldDataIndexId();
+
+						if (newDataIndexId != null && oldDataIndexId != null) {
+							ActorRef<NotificationSender.Response> messageAdapter =
+								getContext().messageAdapter(
+									NotificationSender.Response.class,
+									NotificationSenderResponseWrapper::new
+								);
+							getContext().spawnAnonymous(
+								NotificationSender.create(scheduler, key, messageAdapter));
+						}
+
+					}
+					else {
+						getContext().getSelf().tell(Stop.INSTANCE);
+					}
+				}
+				else {
+					log.warn("Graceful end failed");
+					getContext().getSelf().tell(Stop.INSTANCE);
+				}
+
+				return closing();
+			})
+			.build();
+
 	}
 
 	private Behavior<Command> onEnqueue(Command command) {
@@ -474,7 +490,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 							return s.persist(datasource);
 						})
 				)
-				.invoke(() -> getContext().getSelf().tell(PersistStatusFinished.INSTANCE))
+				.invoke(() -> getContext()
+					.getSelf()
+					.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED)))
 			);
 		}
 		else if (!isNewIndex()) {
@@ -482,7 +500,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				"Nothing was changed during this Scheduling on %s index.",
 				scheduler.getOldDataIndexName()
 			);
-			getContext().getSelf().tell(PersistStatusFinished.INSTANCE);
+			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
 		}
 		else {
 			log.warnf(
@@ -491,39 +509,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				"%s will be cancelled",
 				key
 			);
-			getContext().getSelf().tell(Cancel.INSTANCE);
+			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
 
 			return closing();
 		}
 
 		return Behaviors.same();
-	}
-
-	private Behavior<Command> onPersistStatusFinished() {
-		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(
-			key.tenantId(), (s, t) -> s
-				.find(Scheduler.class, scheduler.getId())
-				.chain(entity -> {
-					entity.setStatus(Scheduler.SchedulerStatus.FINISHED);
-					return s.persist(entity);
-				})
-				.invoke(this::destroyQueue)
-				.invoke(() -> getContext().getSelf().tell(Stop.INSTANCE))
-			)
-		);
-
-		Long newDataIndexId = scheduler.getNewDataIndexId();
-		Long oldDataIndexId = scheduler.getOldDataIndexId();
-
-		if (newDataIndexId != null && oldDataIndexId != null) {
-			ActorRef<NotificationSender.Response> messageAdapter = getContext().messageAdapter(
-				NotificationSender.Response.class, NotificationSenderResponseWrapper::new);
-			getContext().spawnAnonymous(
-				NotificationSender.create(scheduler, key, messageAdapter));
-		}
-
-		return Behaviors.same();
-
 	}
 
 	private Behavior<Command> onNotificationResponse(
@@ -704,14 +695,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public sealed interface Response extends CborSerializable {}
 
-	public enum Fail implements Command {
-		INSTANCE
-	}
-
-	public enum Cancel implements Command {
-		INSTANCE
-	}
-
 	public enum PersistDatasource implements Command {
 		INSTANCE
 	}
@@ -727,9 +710,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		INSTANCE
 	}
 
-	private enum PersistStatusFinished implements Command {
-		INSTANCE
-	}
+	public record GracefulEnd(Scheduler.SchedulerStatus status) implements Command {}
 
 	private enum Start implements Command {
 		INSTANCE
@@ -761,5 +742,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
 	private record FetchedScheduler(Scheduler scheduler, Exception exception) implements Command {}
+
+	private record DestroyQueue(Response response) implements Command {}
 
 }

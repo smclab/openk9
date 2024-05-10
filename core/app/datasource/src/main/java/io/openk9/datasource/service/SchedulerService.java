@@ -138,7 +138,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
-					schedulingRef.tell(Scheduling.Cancel.INSTANCE);
+					schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
 					yield Uni.createFrom().voidItem();
 				}
 				default -> Uni.createFrom().voidItem();
