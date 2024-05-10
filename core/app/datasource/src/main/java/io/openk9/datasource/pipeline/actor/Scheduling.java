@@ -233,6 +233,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(CLOSING_BEHAVIOR);
 
 		return afterSetup()
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
@@ -318,7 +319,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (dataPayload.getContentId() != null) {
 
 			// TODO maybe could be asked to self
-			updateLastIngestionDate(dataPayload);
+			doUpdateLastIngestionDate(dataPayload);
 
 			dataPayload.setIndexName(indexName);
 
@@ -395,9 +396,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				)
 			);
 
-		return afterSetup()
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
-			.build();
+		return closing();
 
 	}
 
@@ -407,7 +406,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var status = destroyQueue.status();
 
 		if (response instanceof Success) {
-			destroyQueue();
+			doDestroyQueue();
 
 			if (status == Scheduler.SchedulerStatus.FINISHED) {
 				Long newDataIndexId = scheduler.getNewDataIndexId();
@@ -610,7 +609,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
 				sessionFactory.withSession(key.tenantId(), (s) -> {
 					s.setDefaultReadOnly(true);
-					return fetchScheduler(s);
+					return doFetchScheduler(s);
 				}).subscribeAsCompletionStage(),
 				(s, t) -> new FetchedScheduler(s, (Exception) t)
 			)
@@ -624,7 +623,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
 
 		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
-			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
+			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> doFetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setLastIngestionDate(lastIngestionDate);
 					return s.merge(entity);
@@ -642,7 +641,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Scheduler.SchedulerStatus status = persistStatus.status;
 
 		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
-			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> fetchScheduler(s)
+			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> doFetchScheduler(s)
 				.flatMap(entity -> {
 					entity.setStatus(status);
 					return s.merge(entity);
@@ -672,7 +671,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		log.infof("%s behavior is %s", key, behavior);
 	}
 
-	private void destroyQueue() {
+	private void doDestroyQueue() {
 		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
 		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
@@ -682,7 +681,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			SchedulingKey.asString(key.tenantId(), key.scheduleId())));
 	}
 
-	private void updateLastIngestionDate(DataPayload dataPayload) {
+	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s) {
+		return s
+			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+			.setParameter("scheduleId", key.scheduleId())
+			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+			.getSingleResult();
+	}
+
+	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
 		OffsetDateTime parsingDate =
 			OffsetDateTime.ofInstant(
 				Instant.ofEpochMilli(dataPayload.getParsingDate()),
@@ -694,14 +701,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 		}
-	}
-
-	private Uni<Scheduler> fetchScheduler(Mutiny.Session s) {
-		return s
-			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-			.setParameter("scheduleId", key.scheduleId())
-			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-			.getSingleResult();
 	}
 
 	private boolean isExpired() {
