@@ -585,7 +585,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			case STALE:
 
 				if (busyWorkers == 0) {
-					log.infof("%s is recovered");
+					log.infof("%s is recovered", key);
 					getContext().getSelf().tell(
 						new PersistStatus(
 							Scheduler.SchedulerStatus.RUNNING,
@@ -593,7 +593,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						)
 					);
 
-					return next();
+					return Behaviors.same();
 
 				}
 
