@@ -530,6 +530,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		switch (status) {
 			case ERROR:
+
 				if (log.isTraceEnabled()) {
 					log.tracef(
 						"a manual operation is needed for scheduler with id %s",
@@ -540,9 +541,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				return Behaviors.same();
 
 			case RUNNING:
+
 				if (busyWorkers > 0) {
 					if (log.isDebugEnabled()) {
 						log.debugf("There are %s busy workers, for %s", busyWorkers, key);
+					}
+
+					if (isExpired() || lastReceived) {
+						getContext().getSelf().tell(new PersistStatus(
+								Scheduler.SchedulerStatus.STALE,
+								getContext().getSystem().ignoreRef()
+							)
+						);
 					}
 
 					return Behaviors.same();
@@ -570,7 +580,21 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			case STALE:
 
+				if (busyWorkers == 0) {
+					log.infof("%s is recovered");
+					getContext().getSelf().tell(
+						new PersistStatus(
+							Scheduler.SchedulerStatus.RUNNING,
+							getContext().getSystem().ignoreRef()
+						)
+					);
+
+					return next();
+
+				}
+
 			default:
+
 				return Behaviors.same();
 		}
 
