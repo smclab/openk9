@@ -432,6 +432,8 @@ export function InfiniteResults<E>({
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
       setTotalResult(results.data.pages[0].total);
+    } else {
+      setTotalResult(0);
     }
   }, [results.data, setTotalResult]);
   React.useEffect(() => {

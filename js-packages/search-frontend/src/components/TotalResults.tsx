@@ -7,13 +7,13 @@ export function TotalResults({
   totalResult: number | null;
   saveTotalResultState?: React.Dispatch<React.SetStateAction<number | null>>;
 }) {
-  if (saveTotalResultState && totalResult) {
+  if (saveTotalResultState && totalResult!==null) {
     saveTotalResultState(totalResult);
   } else {
-    if (saveTotalResultState && totalResult!==null) {
+    if (saveTotalResultState) {
       saveTotalResultState(0);
     }
   }
-  
-  return <div className="openk9-totalResults-container">{totalResult}</div>;
+
+  return <div className="openk9-totalResults-container">{totalResult || 0}</div>;
 }
