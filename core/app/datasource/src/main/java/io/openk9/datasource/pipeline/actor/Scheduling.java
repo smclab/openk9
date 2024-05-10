@@ -551,7 +551,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						log.debugf("There are %s busy workers, for %s", busyWorkers, key);
 					}
 
-					if (isExpired() || lastReceived) {
+					if (isExpired()) {
 						getContext().getSelf().tell(new PersistStatus(
 								Scheduler.SchedulerStatus.STALE,
 								getContext().getSystem().ignoreRef()
