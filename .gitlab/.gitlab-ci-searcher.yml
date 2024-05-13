@@ -54,6 +54,34 @@ Build Latest Searcher Docker Images:
     paths:
       - .m2/repository
 
+
+Build Searcher [DEV]:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  stage: build-docker
+  variables:
+    TEST_NAME: local/test
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  only:
+    refs:
+      - /^\d+-.+$/
+  when:
+    manual
+  except:
+    - schedules
+  script:
+    - cd core
+    - ./mvnw package $MAVEN_CLI_OPTS -pl app/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT
+  cache:
+    key: searcher
+    paths:
+      - .m2/repository
+
+
 trigger_deploy_searcher:
   image: curlimages/curl
   stage: deploy
