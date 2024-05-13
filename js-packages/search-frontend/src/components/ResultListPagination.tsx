@@ -12,7 +12,6 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
-import "../components/Scrollbar.css";
 import CustomSkeleton from "./Skeleton";
 import { ResultTitleTwo } from "../renderer-components";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
