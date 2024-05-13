@@ -5,8 +5,6 @@ import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";
 import { PdfDetail } from "../renderers/openk9/pdf/PdfDetail";
 import { useRenderers } from "./useRenderers";
-import "overlayscrollbars/css/OverlayScrollbars.css";
-import { Logo } from "./Logo";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -115,6 +113,25 @@ function Detail<E>(props: DetailProps<E>) {
         height: 100%;
         box-sizing: border-box;
         overflow: auto;
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.4); 
+  border-radius: 10px;
+  height:5px;  
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, .55);
+  height:5px;
+}
       `}
     >
       <div

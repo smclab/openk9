@@ -1,8 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
 import { SearchToken, SortField } from "./client";
-import { buttonStyle, FilterCategoryMemo } from "./FilterCategory";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
@@ -97,6 +95,26 @@ function Filters({
         position: relative;
         height: 100%;
         border-radius: 8px;
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+         
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.4); 
+          border-radius: 10px;
+          height:5px;
+          
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, .55);
+          height:5px;
+        }
       `}
     >
       <div
