@@ -331,7 +331,7 @@ export function SearchWithSuggestions({
             {messageSearchIsVisible && (
               <p
                 className="visually-hidden"
-                id="message-search"
+                id="message-search-header"
                 css={css`
                   border: 0;
                   padding: 0;
@@ -362,9 +362,10 @@ export function SearchWithSuggestions({
             )}
           </div>
           <button
+            id="search-header-icon"
             className="openk9--search-search-container-icon"
-            title={t("remove-text") || ""}
-            aria-label={t("remove-text-description") || ""}
+            title={"avvia ricerca"}
+            aria-label={labelIcon}
             style={{
               paddingRight: "16px",
               display: "flex",
@@ -391,7 +392,7 @@ export function SearchWithSuggestions({
                   }
                 `}
               >
-                <SearchSvg label={labelIcon} />
+                <SearchSvg />
               </span>
             </div>
           </button>
