@@ -216,7 +216,7 @@ export function SearchWithSuggestions({
               className="openk9--input-search"
               autoComplete="off"
               ref={inputRef}
-              id={htmlKey || "search-openk9"}
+              id={"search-openk9-header"}
               aria-describedby="message-search"
               type="text"
               placeholder={placeholder || t("search") || "search..."}
