@@ -305,6 +305,16 @@ type activeFiltersConfigurableProps = {
   callbackRemoveFilter?(): void;
 };
 
+type searchWithSuggestionsProps =
+  | {
+      element: Element | string | null;
+      callbackSearchButton?(): void;
+      ariaLabelIcon?: string;
+      placeholder?: string;
+    }
+  | null
+  | undefined;
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -362,6 +372,7 @@ export type Configuration = {
   resultListPagination: ResulListPaginationProps | null;
   resultsDisplayMode: ResultsDisplayMode;
   searchConfigurable: SearchProps | null;
+  searchWithSuggestions: searchWithSuggestionsProps;
   searchMobile: SearchMobileConfiguration | null;
   select: SelectProps | null;
   sortableConfigurable: SortableProps | null;
@@ -414,6 +425,7 @@ const defaultConfiguration: Configuration = {
   searchConfigurable: null,
   searchMobile: null,
   searchReplaceText: true,
+  searchWithSuggestions: null,
   showSyntax: true,
   sort: [],
   sortResults: null,

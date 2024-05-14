@@ -54,6 +54,7 @@ import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
 import SortResults from "../components/SortResults";
+import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 
 type MainProps = {
   configuration: Configuration;
@@ -97,6 +98,12 @@ export function Main({
     useQueryString,
     defaultString: configuration.defaultString || "",
   });
+  const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
+    useSelections({
+      useKeycloak,
+      useQueryString,
+      defaultString: configuration.defaultString || "",
+    });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
   const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
@@ -141,7 +148,12 @@ export function Main({
       selectionsState,
       selectionsDispatch,
     });
-
+  const { isQueryAnalysisCompleteSuggestions, spansSuggestions } =
+    useQueryAnalysisWithoutSearch({
+      configuration,
+      selectionsState: selectionsStateSuggestions,
+      debounceTimeSearch,
+    });
   const { detail, setDetail } = useDetails(
     searchQuery,
     setPrevSearchQuery,
@@ -247,6 +259,25 @@ export function Main({
         </I18nextProvider>,
         configuration.searchConfigurable
           ? configuration.searchConfigurable.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <SearchWithSuggestions
+            configuration={configuration}
+            spans={spansSuggestions}
+            selectionsState={selectionsStateSuggestions}
+            selectionsDispatch={selectionsDispatchSuggestions}
+            showSyntax={isQueryAnalysisCompleteSuggestions}
+            callbackSearch={
+              configuration?.searchWithSuggestions?.callbackSearchButton
+            }
+            placeholder={configuration?.searchWithSuggestions?.placeholder}
+            labelIcon={configuration?.searchWithSuggestions?.ariaLabelIcon}
+          />
+        </I18nextProvider>,
+        configuration.searchWithSuggestions
+          ? configuration.searchWithSuggestions.element
           : null,
       )}
       {renderPortal(
@@ -892,6 +923,7 @@ function useSearch({
           token ? [{ text, start, end, token }] : [],
         ),
       });
+
   const spans = React.useMemo(
     () =>
       calculateSpans(
@@ -1004,7 +1036,51 @@ function useSearch({
     completelySort,
   };
 }
+function useQueryAnalysisWithoutSearch({
+  configuration,
+  debounceTimeSearch,
+  selectionsState,
+}: {
+  configuration: Configuration;
+  debounceTimeSearch: number;
+  selectionsState: SelectionsState;
+}) {
+  const debounced = useDebounce(selectionsState, debounceTimeSearch);
+  const queryAnalysis = !configuration.useQueryAnalysis
+    ? { data: undefined }
+    : useQueryAnalysis({
+        searchText: debounced.textOnChange,
+        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      });
+  const queryAnalysisWithoutSearch = !configuration.useQueryAnalysis
+    ? { data: undefined }
+    : useQueryAnalysis({
+        searchText: debounced.textOnChange,
+        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
+          token ? [{ text, start, end, token }] : [],
+        ),
+      });
+  const spans = React.useMemo(
+    () =>
+      calculateSpans(
+        selectionsState.textOnChange,
+        queryAnalysis.data?.analysis,
+      ),
+    [queryAnalysis.data?.analysis, selectionsState.textOnChange],
+  );
 
+  const isQueryAnalysisComplete =
+    selectionsState.textOnChange === debounced.textOnChange &&
+    queryAnalysis.data !== undefined &&
+    !queryAnalysis.isPreviousData;
+
+  return {
+    spansSuggestions: spans,
+    isQueryAnalysisCompleteSuggestions: isQueryAnalysisComplete,
+  };
+}
 function useTabs(
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>,
   language: string,
@@ -1378,6 +1454,16 @@ function calculateSpans(
 }
 
 function useQueryAnalysis(request: AnalysisRequest) {
+  const client = useOpenK9Client();
+
+  return useQuery(
+    ["query-anaylis", request] as const,
+    async ({ queryKey: [, request] }) =>
+      fixQueryAnalysisResult(await client.fetchQueryAnalysis(request)),
+  );
+}
+
+function useQueryAnalysisWithoutSearchData(request: AnalysisRequest) {
   const client = useOpenK9Client();
 
   return useQuery(

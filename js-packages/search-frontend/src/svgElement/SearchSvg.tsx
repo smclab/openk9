@@ -1,10 +1,17 @@
 import React from "react";
 
-export function SearchSvg({ size = "18" }: { size?: string }) {
+export function SearchSvg({
+  size = "18",
+  label,
+}: {
+  size?: string;
+  label?: string;
+}) {
   return (
     <svg
       width={size}
       height={size}
+      aria-label={label || ""}
       aria-hidden="true"
       viewBox="0 0 17 18"
       fill="none"
