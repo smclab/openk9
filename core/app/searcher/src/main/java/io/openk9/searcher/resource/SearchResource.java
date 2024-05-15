@@ -201,6 +201,22 @@ public class SearchResource {
 
 	}
 
+
+	@POST
+	@Path("/suggerimenti")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> suggerimenti(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
+
+		QueryAnalysisRequest queryAnalysisRequest =
+			getQueryAnalysisRequest(searchRequest);
+
+		return searcherClient
+			.queryAnalysis(queryAnalysisRequest)
+			.map(this::_toQueryAnalysisResponse);
+
+	}
+
 	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse _toQueryAnalysisResponse(
 		QueryAnalysisResponse queryAnalysisResponse) {
 
