@@ -545,8 +545,19 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					for (Map<String, Object> map : maps) {
 						Object tokenType = map.get("tokenType");
 						String value = (String) map.get("value");
-						if (!value.startsWith(searchText)
-							&& (tokenType.equals("TEXT"))) {
+						int startPos = maps.getPos().get(0);
+						int endPos = maps.getPos().get(1);
+						logger.info(startPos);
+//						if (!value.startsWith(searchText)
+//							&& (tokenType.equals("TEXT"))) {
+//							continue;
+//						}
+
+						if (startPos > 0  && searchText.contains(value)) {
+							continue;
+						}
+
+						if (endPos > 8) {
 							continue;
 						}
 
