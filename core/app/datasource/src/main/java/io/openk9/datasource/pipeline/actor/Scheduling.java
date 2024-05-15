@@ -363,10 +363,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
+
 		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
 			getContext().getSelf().tell(
 				new PersistStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
 			);
+		}
+		else {
+			trackError.replyTo().tell(Success.INSTANCE);
 		}
 
 		return next();
