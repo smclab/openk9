@@ -61,7 +61,7 @@ public class DataIndexService
 	@Inject
 	IndexService indexService;
 	@Inject
-	RestHighLevelClient client;
+	RestHighLevelClient restHighLevelClient;
 	@Inject
 	HttpPluginDriverClient pluginDriverClient;
 	@Inject
@@ -194,7 +194,7 @@ public class DataIndexService
 							);
 
 						try {
-							AcknowledgedResponse delete = client.indices().delete(
+							AcknowledgedResponse delete = restHighLevelClient.indices().delete(
 								deleteIndexRequest,
 								RequestOptions.DEFAULT
 							);

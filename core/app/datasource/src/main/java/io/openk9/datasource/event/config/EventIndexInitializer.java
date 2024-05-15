@@ -32,24 +32,34 @@ import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
 
+import java.io.IOException;
+import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import java.io.IOException;
-import java.util.List;
 
 @Dependent
 @Startup
 @IfBuildProperty(name = "openk9.events.enabled", stringValue = "true")
 public class EventIndexInitializer {
 
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
+	@Produces
+	public EventProcessor getEventProcessor(
+		EventSender eventSender) {
+		return new EventProcessor(
+			eventSender, Logger.getLogger(EventProcessor.class));
+	}
+
 	@PostConstruct
 	public void init() throws IOException {
 
 		String indexName = config.getIndexName();
 
-		IndicesClient indices = client.indices();
+		IndicesClient indices = restHighLevelClient.indices();
 
 		PutMappingRequest putMappingRequest =
 			new PutMappingRequest(indexName);
@@ -75,16 +85,6 @@ public class EventIndexInitializer {
 		logger.info("Created index template " + indexName);
 
 	}
-
-	@Produces
-	public EventProcessor getEventProcessor(
-		EventSender eventSender) {
-		return new EventProcessor(
-			eventSender, Logger.getLogger(EventProcessor.class));
-	}
-
-	@Inject
-	RestHighLevelClient client;
 
 	@Inject
 	EventConfig config;

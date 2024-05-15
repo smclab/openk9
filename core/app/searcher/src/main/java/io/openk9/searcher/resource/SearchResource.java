@@ -109,68 +109,8 @@ public class SearchResource {
 
 	}
 
-	@POST
-	@Path("/search")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<Response> search(SearchRequest searchRequest) {
-
-		QueryParserRequest queryParserRequest =
-			getQueryParserRequest(searchRequest);
-
-		Uni<QueryParserResponse> queryParserResponseUni =
-			searcherClient.queryParser(queryParserRequest);
-
-		return queryParserResponseUni
-			.flatMap(queryParserResponse -> {
-
-				ByteString query = queryParserResponse.getQuery();
-
-				String searchRequestElasticS = query.toStringUtf8();
-
-				ProtocolStringList indexNameList =
-					queryParserResponse.getIndexNameList();
-
-				if (indexNameList == null || indexNameList.isEmpty()) {
-					return Uni.createFrom().item(Response.EMPTY);
-				}
-
-				String indexNames =
-					String.join(",", indexNameList);
-
-				org.elasticsearch.client.Request request =
-					new org.elasticsearch.client.Request(
-						"GET", "/" + indexNames + "/_search");
-
-				request.setJsonEntity(searchRequestElasticS);
-
-				return Uni.createFrom().<SearchResponse>emitter((sink) -> client
-					.getLowLevelClient()
-					.performRequestAsync(request, new ResponseListener() {
-						@Override
-						public void onSuccess(
-							org.elasticsearch.client.Response response) {
-							try {
-								SearchResponse searchResponse =
-									parseEntity(response.getEntity(),
-										SearchResponse::fromXContent);
-
-								sink.complete(searchResponse);
-							}
-							catch (IOException e) {
-								sink.fail(e);
-							}
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							sink.fail(e);
-						}
-					}))
-					.map(this::_toSearchResponse);
-
-			});
-
-	}
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 
 	@POST
 	@Path("/suggestions")
@@ -437,21 +377,65 @@ public class SearchResource {
 		}
 	}
 
-	private NamedXContentRegistry getNamedXContentRegistry() {
+	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<Response> search(SearchRequest searchRequest) {
 
-		return namedXContentRegistryMap.computeIfAbsent(
-			namedXContentRegistryKey, o -> {
-				try {
-					Field registry =
-						RestHighLevelClient.class.getDeclaredField("registry");
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
 
-					registry.setAccessible(true);
+		Uni<QueryParserResponse> queryParserResponseUni =
+			searcherClient.queryParser(queryParserRequest);
 
-					return (NamedXContentRegistry)registry.get(client);
+		return queryParserResponseUni
+			.flatMap(queryParserResponse -> {
+
+				ByteString query = queryParserResponse.getQuery();
+
+				String searchRequestElasticS = query.toStringUtf8();
+
+				ProtocolStringList indexNameList =
+					queryParserResponse.getIndexNameList();
+
+				if (indexNameList == null || indexNameList.isEmpty()) {
+					return Uni.createFrom().item(Response.EMPTY);
 				}
-				catch (Exception e) {
-					throw new RuntimeException(e);
-				}
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				org.elasticsearch.client.Request request =
+					new org.elasticsearch.client.Request(
+						"GET", "/" + indexNames + "/_search");
+
+				request.setJsonEntity(searchRequestElasticS);
+
+				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
+					.getLowLevelClient()
+					.performRequestAsync(request, new ResponseListener() {
+						@Override
+						public void onSuccess(
+							org.elasticsearch.client.Response response) {
+							try {
+								SearchResponse searchResponse =
+									parseEntity(response.getEntity(),
+										SearchResponse::fromXContent);
+
+								sink.complete(searchResponse);
+							}
+							catch (IOException e) {
+								sink.fail(e);
+							}
+						}
+
+						@Override
+						public void onFailure(Exception e) {
+							sink.fail(e);
+						}
+					}))
+					.map(this::_toSearchResponse);
+
 			});
 
 	}
@@ -589,8 +573,24 @@ public class SearchResource {
 	@Inject
 	InternalSearcherMapper internalSearcherMapper;
 
-	@Inject
-	RestHighLevelClient client;
+	private NamedXContentRegistry getNamedXContentRegistry() {
+
+		return namedXContentRegistryMap.computeIfAbsent(
+			namedXContentRegistryKey, o -> {
+				try {
+					Field registry =
+						RestHighLevelClient.class.getDeclaredField("registry");
+
+					registry.setAccessible(true);
+
+					return (NamedXContentRegistry) registry.get(restHighLevelClient);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+
+	}
 
 	@GrpcClient("searcher")
 	Searcher searcherClient;

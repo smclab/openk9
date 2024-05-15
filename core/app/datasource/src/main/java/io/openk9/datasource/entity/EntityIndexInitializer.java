@@ -39,9 +39,12 @@ import javax.inject.Inject;
 @IfBuildProperty(name = "openk9.entity.index.init", stringValue = "true", enableIfMissing = true)
 public class EntityIndexInitializer {
 
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
 	public void init(@Observes StartupEvent event) throws IOException {
 
-		IndicesClient indices = client.indices();
+		IndicesClient indices = restHighLevelClient.indices();
 
 		try (XContentParser parser = XContentType
 			.JSON.xContent()
@@ -55,7 +58,7 @@ public class EntityIndexInitializer {
 
 			PutComposableIndexTemplateRequest putComposableIndexTemplateRequest =
 				new PutComposableIndexTemplateRequest();
-			
+
 			putComposableIndexTemplateRequest
 				.name("entity-index-template")
 				.indexTemplate(entityIndexTemplate);
@@ -64,13 +67,10 @@ public class EntityIndexInitializer {
 				putComposableIndexTemplateRequest, RequestOptions.DEFAULT);
 
 			logger.info("Created index template entity-index-template");
-			
+
 		}
 
 	}
-
-	@Inject
-	RestHighLevelClient client;
 
 	@Inject
 	io.quarkus.qute.Template entitymappings;

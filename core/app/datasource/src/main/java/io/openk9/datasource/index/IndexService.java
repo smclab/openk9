@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.index;
 
 import io.openk9.datasource.index.response.CatResponse;
@@ -21,24 +38,27 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class IndexService {
+
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 
 	public Uni<Map<String, Object>> getMappings(String indexName) {
 		return Uni
 			.createFrom()
 			.item(() -> {
 				try {
-					return client.indices().getMapping(
+					return restHighLevelClient.indices().getMapping(
 						new GetMappingsRequest().indices(indexName),
 						RequestOptions.DEFAULT
 					);
@@ -48,23 +68,6 @@ public class IndexService {
 				}
 			})
 			.map(response -> response.mappings().get(indexName).sourceAsMap());
-	}
-
-	public Uni<String> getSettings(String indexName) {
-		return Uni
-			.createFrom()
-			.item(() -> {
-				try {
-					return client.indices().getSettings(
-						new GetSettingsRequest().indices(indexName),
-						RequestOptions.DEFAULT
-					);
-				}
-				catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-			})
-			.map(response -> response.getIndexToSettings().get(indexName).toString());
 	}
 
 	public Uni<CatResponse> get_catIndicesFirst(String indexName) {
@@ -80,47 +83,21 @@ public class IndexService {
 		return get_catIndices(indexNames.toArray(String[]::new));
 	}
 
-	public Uni<List<CatResponse>> get_catIndices(String...indexNames) {
-
-		return getOnlyExistsIndexNames(List.of(indexNames))
-			.flatMap(existIndexNames -> {
-
-				if (existIndexNames.isEmpty()) {
-					return Uni.createFrom().item(List.of());
+	public Uni<String> getSettings(String indexName) {
+		return Uni
+			.createFrom()
+			.item(() -> {
+				try {
+					return restHighLevelClient.indices().getSettings(
+						new GetSettingsRequest().indices(indexName),
+						RequestOptions.DEFAULT
+					);
 				}
-
-				String indexName = String.join(",", existIndexNames);
-
-				return Uni
-						.createFrom()
-						.<Response>emitter((sink) -> {
-
-							RestClient lowLevelClient = client.getLowLevelClient();
-
-							Request
-								catRequest = new Request("GET", "/_cat/indices/" + indexName);
-
-							catRequest.addParameter("format", "JSON");
-							catRequest.addParameter("v", "true");
-							catRequest.addParameter("bytes", "b");
-
-							lowLevelClient.performRequestAsync(
-								catRequest,
-								new ResponseListener() {
-									@Override
-									public void onSuccess(Response response) {
-										sink.complete(response);
-									}
-
-									@Override
-									public void onFailure(Exception exception) {
-										sink.fail(exception);
-									}
-								});
-						})
-						.map(IndexService::responseToCatResponses);
+				catch (IOException e) {
+					throw new RuntimeException(e);
 				}
-			);
+			})
+			.map(response -> response.getIndexToSettings().get(indexName).toString());
 	}
 
 	private static List<CatResponse> responseToCatResponses(Response response) {
@@ -169,24 +146,47 @@ public class IndexService {
 		return indexCount(indexNames.toArray(String[]::new));
 	}
 
-	public Uni<Long> indexCount(String...indexName) {
-		return Uni
-			.createFrom()
-			.<CountResponse>emitter(
-				emitter -> client
-					.countAsync(
-						new CountRequest(indexName), RequestOptions.DEFAULT,
-						UniActionListener.of(emitter)
-					)
-			)
-			.onItemOrFailure()
-			.transformToUni((countResponse, throwable) -> {
-				if (throwable != null) {
-					logger.error("Error getting index count", throwable);
-					return Uni.createFrom().nullItem();
+	public Uni<List<CatResponse>> get_catIndices(String...indexNames) {
+
+		return getOnlyExistsIndexNames(List.of(indexNames))
+			.flatMap(existIndexNames -> {
+
+				if (existIndexNames.isEmpty()) {
+					return Uni.createFrom().item(List.of());
 				}
-				return Uni.createFrom().item(countResponse.getCount());
-			});
+
+				String indexName = String.join(",", existIndexNames);
+
+				return Uni
+						.createFrom()
+						.<Response>emitter((sink) -> {
+
+							RestClient lowLevelClient = restHighLevelClient.getLowLevelClient();
+
+							Request
+								catRequest = new Request("GET", "/_cat/indices/" + indexName);
+
+							catRequest.addParameter("format", "JSON");
+							catRequest.addParameter("v", "true");
+							catRequest.addParameter("bytes", "b");
+
+							lowLevelClient.performRequestAsync(
+								catRequest,
+								new ResponseListener() {
+									@Override
+									public void onSuccess(Response response) {
+										sink.complete(response);
+									}
+
+									@Override
+									public void onFailure(Exception exception) {
+										sink.fail(exception);
+									}
+								});
+						})
+						.map(IndexService::responseToCatResponses);
+				}
+			);
 	}
 
 	public Uni<List<String>> getOnlyExistsIndexNames(List<String> indexNames) {
@@ -233,11 +233,31 @@ public class IndexService {
 
 	}
 
+	public Uni<Long> indexCount(String...indexName) {
+		return Uni
+			.createFrom()
+			.<CountResponse>emitter(
+				emitter -> restHighLevelClient
+					.countAsync(
+						new CountRequest(indexName), RequestOptions.DEFAULT,
+						UniActionListener.of(emitter)
+					)
+			)
+			.onItemOrFailure()
+			.transformToUni((countResponse, throwable) -> {
+				if (throwable != null) {
+					logger.error("Error getting index count", throwable);
+					return Uni.createFrom().nullItem();
+				}
+				return Uni.createFrom().item(countResponse.getCount());
+			});
+	}
+
 	public Uni<Boolean> indexExist(String name) {
 		return Uni
 			.createFrom()
 			.<Boolean>emitter(
-				emitter -> client
+				emitter -> restHighLevelClient
 					.indices()
 					.existsAsync(
 						new GetIndexRequest(name), RequestOptions.DEFAULT,
@@ -253,9 +273,6 @@ public class IndexService {
 				return Uni.createFrom().item(response);
 			});
 	}
-
-	@Inject
-	RestHighLevelClient client;
 
 	@Inject
 	Logger logger;

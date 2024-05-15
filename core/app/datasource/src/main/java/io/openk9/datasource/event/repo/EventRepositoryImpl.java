@@ -46,19 +46,33 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class EventRepositoryImpl implements EventRepository {
+
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
+	@PreDestroy
+	public void shutdown() {
+		_disposable.dispose();
+		many.tryEmitComplete();
+	}
+
+	@Override
+	public void batchSave(Event event) {
+		many.tryEmitNext(_getIndexRequest(event));
+	}
 
 	@PostConstruct
 	public void init() {
@@ -81,7 +95,7 @@ public class EventRepositoryImpl implements EventRepository {
 					bulkRequest.add(indexRequest);
 				}
 
-				return Mono.create(sink -> client.bulkAsync(
+				return Mono.create(sink -> restHighLevelClient.bulkAsync(
 					bulkRequest, RequestOptions.DEFAULT,
 					new ActionListener<>() {
 						@Override
@@ -99,23 +113,12 @@ public class EventRepositoryImpl implements EventRepository {
 
 	}
 
-	@PreDestroy
-	public void shutdown() {
-		_disposable.dispose();
-		many.tryEmitComplete();
-	}
-
-	@Override
-	public void batchSave(Event event) {
-		many.tryEmitNext(_getIndexRequest(event));
-	}
-
 	@Override
 	public void syncSave(Event event) throws IOException {
 
 		IndexRequest indexRequest = _getIndexRequest(event);
 
-		client.index(indexRequest, RequestOptions.DEFAULT);
+		restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
 
 	}
 
@@ -126,7 +129,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 		return Uni
 			.createFrom()
-			.emitter(emitter -> client.indexAsync(
+			.emitter(emitter -> restHighLevelClient.indexAsync(
 				indexRequest, RequestOptions.DEFAULT,
 				new ActionListener<>() {
 					@Override
@@ -140,6 +143,11 @@ public class EventRepositoryImpl implements EventRepository {
 					}
 				}))
 			.replaceWithVoid();
+	}
+
+	@Override
+	public Uni<Event> findById(String id) {
+		return findById(id, null);
 	}
 
 	@Override
@@ -165,7 +173,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 		return Uni
 			.createFrom()
-			.<LocalDateTime>emitter(emitter -> client.searchAsync(
+			.<LocalDateTime>emitter(emitter -> restHighLevelClient.searchAsync(
 			searchRequest, RequestOptions.DEFAULT,
 			new ActionListener<>() {
 				@Override
@@ -200,11 +208,6 @@ public class EventRepositoryImpl implements EventRepository {
 	}
 
 	@Override
-	public Uni<Event> findById(String id) {
-		return findById(id, null);
-	}
-
-	@Override
 	public Uni<Event> findById(String id, String[] includeFields) {
 
 		SearchRequest searchRequest = new SearchRequest(config.getIndexName());
@@ -218,7 +221,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 		searchRequest.source(searchSourceBuilder);
 
-		return Uni.createFrom().emitter(emitter -> client.searchAsync(
+		return Uni.createFrom().emitter(emitter -> restHighLevelClient.searchAsync(
 			searchRequest, RequestOptions.DEFAULT,
 			new ActionListener<>() {
 				@Override
@@ -251,6 +254,11 @@ public class EventRepositoryImpl implements EventRepository {
 			}));
 	}
 
+	private IndexRequest _getIndexRequest(Event event) {
+		IndexRequest indexRequest = new IndexRequest(config.getIndexName());
+		return indexRequest.source(Json.encode(event), XContentType.JSON);
+	}
+
 	@Override
 	public Uni<List<Event>> search(SearchSourceBuilder searchSourceBuilder) {
 
@@ -258,7 +266,7 @@ public class EventRepositoryImpl implements EventRepository {
 
 		searchRequest.source(searchSourceBuilder);
 
-		return Uni.createFrom().emitter(emitter -> client.searchAsync(
+		return Uni.createFrom().emitter(emitter -> restHighLevelClient.searchAsync(
 			searchRequest, RequestOptions.DEFAULT, new ActionListener<>() {
 
 				@Override
@@ -294,14 +302,6 @@ public class EventRepositoryImpl implements EventRepository {
 
 			}));
 	}
-
-	private IndexRequest _getIndexRequest(Event event) {
-		IndexRequest indexRequest = new IndexRequest(config.getIndexName());
-		return indexRequest.source(Json.encode(event), XContentType.JSON);
-	}
-
-	@Inject
-	RestHighLevelClient client;
 
 	@Inject
 	EventConfig config;

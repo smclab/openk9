@@ -42,6 +42,11 @@ import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.settings.Settings;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -50,11 +55,6 @@ import javax.persistence.criteria.Root;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 @CircuitBreaker
 @Path("/v1/data-index")
@@ -109,103 +109,8 @@ public class DataIndexResource {
 
 	}
 
-	@Path("/create-data-index-from-doc-types/{datasourceId}")
-	@POST
-	public Uni<DataIndex> createDataIndexFromDocTypes(
-		@PathParam("datasourceId") long datasourceId,
-		CreateDataIndexFromDocTypesRequest request) {
-
-		String indexName;
-
-		if (request.getIndexName() == null) {
-			indexName = "data-" + OffsetDateTime.now();
-		}
-		else {
-			indexName = request.getIndexName();
-		}
-
-		return sessionFactory.withTransaction(s -> {
-
-			List<Long> docTypeIds = request.getDocTypeIds();
-
-			Uni<List<DocType>> docTypeListUni =
-				_findDocTypes(docTypeIds, s, true);
-
-			return docTypeListUni
-				.onItem()
-				.transformToUni(Unchecked.function(docTypeList -> {
-
-					if (docTypeList.size() != docTypeIds.size()) {
-						throw new RuntimeException(
-							"docTypeIds found: " + docTypeList.size() +
-							" docTypeIds requested: " + docTypeIds.size());
-					}
-
-					DataIndex dataIndex = new DataIndex();
-
-					dataIndex.setDescription("auto-generated");
-
-					dataIndex.setName(indexName);
-
-					dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
-
-					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
-
-					return s.persist(dataIndex)
-						.map(__ -> dataIndex)
-						.call(s::flush)
-						.call((di) -> Uni.createFrom().emitter((sink) -> {
-
-							try {
-								IndicesClient indices = client.indices();
-
-								Map<MappingsKey, Object> mappings =
-									MappingsUtil.docTypesToMappings(di.getDocTypes());
-
-								Settings settings;
-
-								Map<String, Object> settingsMap =
-									MappingsUtil.docTypesToSettings(di.getDocTypes());
-
-								if (settingsMap.isEmpty()) {
-									settings = Settings.EMPTY;
-								}
-								else {
-									settings = Settings.builder()
-										.loadFromMap(settingsMap)
-										.build();
-								}
-
-								PutComposableIndexTemplateRequest
-									putComposableIndexTemplateRequest =
-									new PutComposableIndexTemplateRequest();
-
-								ComposableIndexTemplate composableIndexTemplate =
-									new ComposableIndexTemplate(
-										List.of(indexName),
-										new Template(settings, new CompressedXContent(
-											Json.encode(mappings)), null),
-										null, null, null, null);
-
-								putComposableIndexTemplateRequest
-									.name(indexName + "-template")
-									.indexTemplate(composableIndexTemplate);
-
-								indices.putIndexTemplate(putComposableIndexTemplateRequest, RequestOptions.DEFAULT);
-
-								sink.complete(null);
-							}
-							catch (Exception e) {
-								sink.fail(e);
-							}
-
-						}));
-
-				}));
-
-		});
-
-	}
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 
 	private Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(
 		List<Long> docTypeIds) {
@@ -269,8 +174,103 @@ public class DataIndexResource {
 	@Inject
 	IndexerEvents indexerEvents;
 
-	@Inject
-	RestHighLevelClient client;
+	@Path("/create-data-index-from-doc-types/{datasourceId}")
+	@POST
+	public Uni<DataIndex> createDataIndexFromDocTypes(
+		@PathParam("datasourceId") long datasourceId,
+		CreateDataIndexFromDocTypesRequest request) {
+
+		String indexName;
+
+		if (request.getIndexName() == null) {
+			indexName = "data-" + OffsetDateTime.now();
+		}
+		else {
+			indexName = request.getIndexName();
+		}
+
+		return sessionFactory.withTransaction(s -> {
+
+			List<Long> docTypeIds = request.getDocTypeIds();
+
+			Uni<List<DocType>> docTypeListUni =
+				_findDocTypes(docTypeIds, s, true);
+
+			return docTypeListUni
+				.onItem()
+				.transformToUni(Unchecked.function(docTypeList -> {
+
+					if (docTypeList.size() != docTypeIds.size()) {
+						throw new RuntimeException(
+							"docTypeIds found: " + docTypeList.size() +
+							" docTypeIds requested: " + docTypeIds.size());
+					}
+
+					DataIndex dataIndex = new DataIndex();
+
+					dataIndex.setDescription("auto-generated");
+
+					dataIndex.setName(indexName);
+
+					dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
+
+					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
+
+					return s.persist(dataIndex)
+						.map(__ -> dataIndex)
+						.call(s::flush)
+						.call((di) -> Uni.createFrom().emitter((sink) -> {
+
+							try {
+								IndicesClient indices = restHighLevelClient.indices();
+
+								Map<MappingsKey, Object> mappings =
+									MappingsUtil.docTypesToMappings(di.getDocTypes());
+
+								Settings settings;
+
+								Map<String, Object> settingsMap =
+									MappingsUtil.docTypesToSettings(di.getDocTypes());
+
+								if (settingsMap.isEmpty()) {
+									settings = Settings.EMPTY;
+								}
+								else {
+									settings = Settings.builder()
+										.loadFromMap(settingsMap)
+										.build();
+								}
+
+								PutComposableIndexTemplateRequest
+									putComposableIndexTemplateRequest =
+									new PutComposableIndexTemplateRequest();
+
+								ComposableIndexTemplate composableIndexTemplate =
+									new ComposableIndexTemplate(
+										List.of(indexName),
+										new Template(settings, new CompressedXContent(
+											Json.encode(mappings)), null),
+										null, null, null, null);
+
+								putComposableIndexTemplateRequest
+									.name(indexName + "-template")
+									.indexTemplate(composableIndexTemplate);
+
+								indices.putIndexTemplate(putComposableIndexTemplateRequest, RequestOptions.DEFAULT);
+
+								sink.complete(null);
+							}
+							catch (Exception e) {
+								sink.fail(e);
+							}
+
+						}));
+
+				}));
+
+		});
+
+	}
 
 	@Inject
 	DocTypeService docTypeService;

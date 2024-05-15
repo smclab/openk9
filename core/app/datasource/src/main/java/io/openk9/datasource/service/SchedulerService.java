@@ -187,6 +187,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		);
 	}
 
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
+	private List<String> mapToList(SearchResponse searchResponse) {
+		return searchResponse
+			.getAggregations()
+			.<Terms>get("contentId_agg")
+			.getBuckets()
+			.stream()
+			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+			.toList();
+	}
+
 	private Uni<List<String>> indexesDiff(Scheduler scheduler) {
 		if (scheduler == null) {
 			return Uni.createFrom().item(List.of());
@@ -220,7 +233,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		searchRequest.source(sourceBuilder);
 
 		return Uni.createFrom().<SearchResponse>emitter(emitter ->
-				client.searchAsync(
+				restHighLevelClient.searchAsync(
 					searchRequest,
 					RequestOptions.DEFAULT,
 					UniActionListener.of(emitter)
@@ -228,20 +241,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			)
 			.map(this::mapToList);
 	}
-
-	private List<String> mapToList(SearchResponse searchResponse) {
-		return searchResponse
-			.getAggregations()
-			.<Terms>get("contentId_agg")
-			.getBuckets()
-			.stream()
-			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-			.toList();
-	}
-
-
-	@Inject
-	RestHighLevelClient client;
 	@Inject
 	ActorSystemProvider actorSystemProvider;
 
