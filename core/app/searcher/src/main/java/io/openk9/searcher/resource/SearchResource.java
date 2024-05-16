@@ -45,20 +45,20 @@ import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.ShardSearchFailure;
-import org.elasticsearch.client.ResponseListener;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.CheckedFunction;
-import org.elasticsearch.common.text.Text;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jboss.logging.Logger;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.search.ShardSearchFailure;
+import org.opensearch.client.ResponseListener;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.common.CheckedFunction;
+import org.opensearch.common.text.Text;
+import org.opensearch.common.xcontent.DeprecationHandler;
+import org.opensearch.common.xcontent.NamedXContentRegistry;
+import org.opensearch.common.xcontent.XContentParser;
+import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.SearchHits;
+import org.opensearch.search.fetch.subphase.highlight.HighlightField;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -360,23 +360,6 @@ public class SearchResource {
 	}
 
 
-	protected final <Resp> Resp parseEntity(final HttpEntity entity,
-											final CheckedFunction<XContentParser, Resp, IOException> entityParser) throws IOException {
-		if (entity == null) {
-			throw new IllegalStateException("Response body expected but not returned");
-		}
-		if (entity.getContentType() == null) {
-			throw new IllegalStateException("Elasticsearch didn't return the [Content-Type] header, unable to parse response body");
-		}
-		XContentType xContentType = XContentType.fromMediaTypeOrFormat(entity.getContentType().getValue());
-		if (xContentType == null) {
-			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
-		}
-		try (XContentParser parser = xContentType.xContent().createParser(getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION, entity.getContent())) {
-			return entityParser.apply(parser);
-		}
-	}
-
 	@POST
 	@Path("/search")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -405,8 +388,8 @@ public class SearchResource {
 				String indexNames =
 					String.join(",", indexNameList);
 
-				org.elasticsearch.client.Request request =
-					new org.elasticsearch.client.Request(
+				org.opensearch.client.Request request =
+					new org.opensearch.client.Request(
 						"GET", "/" + indexNames + "/_search");
 
 				request.setJsonEntity(searchRequestElasticS);
@@ -416,7 +399,7 @@ public class SearchResource {
 					.performRequestAsync(request, new ResponseListener() {
 						@Override
 						public void onSuccess(
-							org.elasticsearch.client.Response response) {
+							org.opensearch.client.Response response) {
 							try {
 								SearchResponse searchResponse =
 									parseEntity(response.getEntity(),
@@ -438,6 +421,23 @@ public class SearchResource {
 
 			});
 
+	}
+
+	protected final <Resp> Resp parseEntity(final HttpEntity entity,
+											final CheckedFunction<XContentParser, Resp, IOException> entityParser) throws IOException {
+		if (entity == null) {
+			throw new IllegalStateException("Response body expected but not returned");
+		}
+		if (entity.getContentType() == null) {
+			throw new IllegalStateException("Elasticsearch didn't return the [Content-Type] header, unable to parse response body");
+		}
+		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
+		if (xContentType == null) {
+			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
+		}
+		try (XContentParser parser = xContentType.xContent().createParser(getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION, entity.getContent())) {
+			return entityParser.apply(parser);
+		}
 	}
 
 	private Response _toSearchResponse(SearchResponse searchResponse) {
