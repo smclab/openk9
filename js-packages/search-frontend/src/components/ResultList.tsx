@@ -447,18 +447,19 @@ export function InfiniteResults<E>({
   }, [results]);
   const { t } = useTranslation();
   return (
-    <OverlayScrollbarsComponentDockerFix
+    <div
       className="openk9-infinite-results-overlay-scrollbars"
       style={{
         height: "100%",
         overflowY: "auto",
         position: "relative",
       }}
-      options={{
-        overflowBehavior: {
-          x: "hidden",
-        },
-      }}
+      css={css`
+      height: 100%;
+      overflow-y: auto;
+      position: relative;
+    `}
+    
     >
       {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
@@ -568,7 +569,7 @@ export function InfiniteResults<E>({
           <NoResults />
         </React.Fragment>
       )}
-    </OverlayScrollbarsComponentDockerFix>
+    </div>
   );
 }
 

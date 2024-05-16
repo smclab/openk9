@@ -277,6 +277,8 @@ type TabsProps = {
     sort: boolean;
     search: boolean;
   };
+  readMessageScreenReader?: boolean;
+  textLabelScreenReader?: string;
 };
 
 type SelectProps = {
