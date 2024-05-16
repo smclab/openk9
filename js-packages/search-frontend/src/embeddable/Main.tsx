@@ -942,6 +942,19 @@ function useSearch({
     [queryAnalysis.data?.analysis, selectionsState.textOnChange],
   );
 
+  // const searchTokens = React.useMemo(
+  //   () =>
+  //     deriveSearchQuery(
+  //       spans,
+  //       selectionsState.selection.flatMap(({ text, start, end, token }) =>
+  //         token ? [{ text, start, end, token }] : [],
+  //       ),
+  //     ),
+  //   [spans, selectionsState.selection],
+  // );
+  // const newSearch: SearchToken[] = searchTokens.map((searchToken) => {
+  //   return { ...searchToken, isSearch: true };
+  // });
   const searchTokens = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -949,10 +962,14 @@ function useSearch({
         selectionsState.selection.flatMap(({ text, start, end, token }) =>
           token ? [{ text, start, end, token }] : [],
         ),
+        selectionsState.text,
+        selectionsState.text === selectionsState.textOnChange,
       ),
-    [spans, selectionsState.selection],
-  );
-  const newSearch: SearchToken[] = searchTokens.map((searchToken) => {
+    [selectionsState.text],
+  ) as SearchToken[];
+  const newSearch: SearchToken[] = searchTokens
+  .filter((search) => search)
+  .map((searchToken) => {
     return { ...searchToken, isSearch: true };
   });
   const newTokenFilter: SearchToken[] = React.useMemo(
@@ -1372,22 +1389,26 @@ export type QueryState = {
 function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
   selection: AnalysisRequestEntry[],
+  text: string | undefined,
+  isSearch: boolean,
 ) {
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)
-    .map((span): SearchToken => {
+    .map((span) => {
       const token =
         selection.find((selection) => {
           return selection.start === span.start && selection.end === span.end;
         })?.token ?? null;
       return (
-        (token && analysisTokenToSearchToken(token)) ?? {
-          tokenType: "TEXT",
-          values: [span.text],
-          filter: false,
-        }
-      );
+        (token && analysisTokenToSearchToken(token) && isSearch === true) ??
+        (text !== undefined && isSearch === true
+          ? {
+              tokenType: "TEXT",
+              values: [text],
+              filter: false,
+            }
+          : false))
     });
 }
 
