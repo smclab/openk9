@@ -127,6 +127,11 @@
       <artifactId>quarkus-elasticsearch-rest-high-level-client</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkiverse.opensearch</groupId>
+      <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+      <version>0.2.6</version>
+    </dependency>
+    <dependency>
       <groupId>io.projectreactor</groupId>
       <artifactId>reactor-core</artifactId>
     </dependency>
