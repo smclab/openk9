@@ -230,7 +230,7 @@ function FilterCategoryDynamic({
               />
             </div>
           )}
-          <div
+          <ul
             className="openk9-filter-form-check-container"
             css={css`
               display: flex;
@@ -261,7 +261,7 @@ function FilterCategoryDynamic({
 
               return (
                 <React.Fragment key={"fragment-filter-dynamic " + index}>
-                  <div
+                  <li
                     key={index}
                     className="form-check"
                     css={css`
@@ -387,11 +387,11 @@ function FilterCategoryDynamic({
                         )}
                       </label>
                     </span>
-                  </div>
+                  </li>
                 </React.Fragment>
               );
             })}
-          </div>
+          </ul>
           {!isUniqueLoadMore && suggestions.hasNextPage && (
             <div
               className="openk9-container-load-more"

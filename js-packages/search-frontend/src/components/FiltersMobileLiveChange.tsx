@@ -174,6 +174,7 @@ function FiltersMobileLiveChange<E>({
         }}
       >
         <FiltersMemo
+          memoryResults={memoryResults}
           searchQuery={searchQuery}
           onAddFilterToken={onAddFilterToken}
           onRemoveFilterToken={onRemoveFilterToken}
@@ -216,12 +217,6 @@ function FiltersMobileLiveChange<E>({
           }
         `}
       >
-        <div
-          css={css`
-            margin-top: 10px;
-            border: 0.5px solid #d4d4d8;
-          `}
-        ></div>
         <button
           className="openk9-filter-horizontal-submit openk9-filter-button-mobile-remove"
           aria-label={t("remove-filters") || "remove filters"}
@@ -340,6 +335,7 @@ function ViewAllTabs({
 
   return (
     <div
+      className="openk9-filter-tabs-container"
       css={css`
         margin-left: 16px;
       `}
@@ -385,7 +381,8 @@ function ViewAllTabs({
           </button>
         )}
       </div>
-      <div
+      <ul
+        className="openk9-filter-tabs-list"
         css={css`
           margin: 10px 0px;
         `}
@@ -393,7 +390,8 @@ function ViewAllTabs({
         {isOpen &&
           tabs.map((tab, index) => {
             return (
-              <div
+              <li
+                className="openk9-filter-tabs-list-item"
                 css={css`
                   display: flex;
                   gap: 10px;
@@ -438,10 +436,10 @@ function ViewAllTabs({
                     {capitalize(tab.label)}
                   </label>
                 </div>
-              </div>
+              </li>
             );
           })}
-      </div>
+      </ul>
     </div>
   );
 }
