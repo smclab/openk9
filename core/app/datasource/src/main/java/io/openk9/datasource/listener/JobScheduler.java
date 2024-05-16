@@ -142,12 +142,16 @@ public class JobScheduler {
 						indices.putIndexTemplateAsync(
 							request,
 							RequestOptions.DEFAULT,
-							ActorActionListener.of(ctx.getSelf(), (r, t) ->
-								new PersistSchedulerInternal(
-									tenantName,
-									scheduler,
-									new JobSchedulerException(t)
-								))
+							ActorActionListener.of(ctx.getSelf(), (r, t) -> {
+									JobSchedulerException exception = null;
+									if (t != null) {
+										exception = new JobSchedulerException(t);
+									}
+
+									return new PersistSchedulerInternal(
+										tenantName, scheduler, exception);
+								}
+							)
 						);
 					}
 				}

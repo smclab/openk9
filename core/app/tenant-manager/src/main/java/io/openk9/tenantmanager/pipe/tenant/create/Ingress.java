@@ -127,9 +127,16 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 						.setVirtualHost(virtualHost)
 						.build())
 					.onItemOrFailure()
-					.invoke((response, throwable) -> getContext()
-						.getSelf()
-						.tell(new HandleRollback(response, new IngressException(throwable)))
+					.invoke((response, throwable) -> {
+							IngressException exception = null;
+							if (throwable != null) {
+								exception = new IngressException(throwable);
+							}
+
+							getContext()
+								.getSelf()
+								.tell(new HandleRollback(response, exception));
+						}
 					)
 				),
 				() -> {
