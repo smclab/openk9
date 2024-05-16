@@ -325,6 +325,9 @@ export function Main({
             reset={configuration.tabsConfigurable?.reset}
             resetSort={resetSort}
             selectionsDispatch={selectionsDispatch}
+            readMessageScreenReader= {configuration.tabsConfigurable?.readMessageScreenReader}
+            textLabelScreenReader = {configuration.tabsConfigurable?.textLabelScreenReader}
+
           />
         </I18nextProvider>,
         configuration.tabsConfigurable

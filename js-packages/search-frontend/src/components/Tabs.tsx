@@ -28,6 +28,8 @@ type TabsProps = {
     sort: boolean;
     search: boolean;
   };
+  readMessageScreenReader?: boolean;
+  textLabelScreenReader?: string;
   resetFilter: () => void;
   resetSort: () => void;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
@@ -46,6 +48,8 @@ function Tabs({
   resetFilter,
   resetSort,
   selectionsDispatch,
+  readMessageScreenReader,
+  textLabelScreenReader,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
@@ -73,7 +77,7 @@ function Tabs({
     <div css={css`openk9-container-arrow-tabs`}>
       <h2
         id="title-tabs-openk9"
-        className="visually-hidden"
+        className= {`${readMessageScreenReader && "visually-hidden title-tabs-openk9"} title-tabs-openk9`}
         css={css`
           border: 0;
           padding: 0;
@@ -95,7 +99,7 @@ function Tabs({
           white-space: nowrap;
         `}
       >
-        filtri e argomenti
+        {textLabelScreenReader || "filtri e argomenti"}
       </h2>
       <ul
         className="openk9-nav-container-tabs"
@@ -273,7 +277,7 @@ function Tabs({
           white-space: nowrap;
         `}
       >
-        filtri e argomenti
+        {textLabelScreenReader || "filtri e argomenti"}
       </h2>
       <ul
         className="openk9-tabs-container-internal"
