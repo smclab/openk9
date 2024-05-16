@@ -40,6 +40,7 @@ type ResultsProps<E> = {
   selectOptions: Options;
   classNameLabel?: string | undefined;
   viewButton: boolean;
+  NoResultsCustom?: React.ReactNode;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
@@ -67,6 +68,7 @@ function Results<E>({
   classNameLabel,
   memoryResults,
   viewButton,
+  NoResultsCustom,
   setViewButtonDetail,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -122,6 +124,7 @@ function Results<E>({
           memoryResults={memoryResults}
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
+          noResultsCustom={NoResultsCustom}
         />
       );
     case "virtual":
@@ -397,6 +400,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
+  noResultsCustom: React.ReactNode;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -418,6 +422,7 @@ export function InfiniteResults<E>({
   selectOptions,
   classNameLabel,
   memoryResults,
+  noResultsCustom,
   viewButton,
   setViewButtonDetail,
 }: InfiniteResultsProps<E>) {
@@ -566,7 +571,7 @@ export function InfiniteResults<E>({
           >
             {results.data?.pages[0].total}
           </ResultCount>
-          <NoResults />
+         {noResultsCustom ?  noResultsCustom : <NoResults /> }
         </React.Fragment>
       )}
     </div>

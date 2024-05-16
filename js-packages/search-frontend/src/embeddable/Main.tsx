@@ -569,6 +569,7 @@ export function Main({
               memoryResults={memoryResults}
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
+              NoResultsCustom={configuration.resultList?.noResultsCustom}
             />
           )}
         </I18nextProvider>,

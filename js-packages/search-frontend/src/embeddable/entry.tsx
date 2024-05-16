@@ -217,6 +217,7 @@ type ResultListProps = {
   changeOnOver: boolean;
   counterIsVisible?: boolean;
   label?: string;
+  noResultsCustom?: React.ReactNode;
 };
 
 type SortResultConfigurableProps = {
