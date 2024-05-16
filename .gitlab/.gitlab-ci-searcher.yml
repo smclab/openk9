@@ -54,7 +54,6 @@ Build Latest Searcher Docker Images:
     paths:
       - .m2/repository
 
-
 Build Searcher [DEV]:
   image: eclipse-temurin:17-jdk
   services:
@@ -71,8 +70,6 @@ Build Searcher [DEV]:
       - /^\d+-.+$/
   when:
     manual
-  except:
-    - schedules
   script:
     - cd core
     - ./mvnw package $MAVEN_CLI_OPTS -pl app/searcher -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT
@@ -81,6 +78,19 @@ Build Searcher [DEV]:
     paths:
       - .m2/repository
 
+trigger_restart_searcher:
+  image: curlimages/curl
+  stage: deploy
+  needs: [ 'Build Searcher [DEV]' ]
+  only:
+    refs:
+      - /^\d+-.+$/
+  except:
+    - schedules
+  before_script:
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-searcher" -F ref=master $RESTART_TRIGGER_URL
 
 trigger_deploy_searcher:
   image: curlimages/curl
