@@ -249,6 +249,7 @@ type SearchProps = {
   messageSearchIsVisible?: boolean;
   customMessageSearch?: string;
   actionOnClick?(): void;
+  callbackClickSearch?(): void;
 };
 
 type FilterProps = {

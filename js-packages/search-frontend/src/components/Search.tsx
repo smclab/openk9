@@ -22,6 +22,7 @@ type SearchProps = {
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
   viewColor?: boolean;
+  callbackClickSearch?(): void;
 };
 export function Search({
   configuration,
@@ -35,6 +36,7 @@ export function Search({
   messageSearchIsVisible = true,
   viewColor = true,
   actionOnClick,
+  callbackClickSearch,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -226,6 +228,9 @@ export function Search({
               type="text"
               placeholder={t("search") || "search..."}
               value={selectionsState.textOnChange}
+              onClick={() => {
+                callbackClickSearch && callbackClickSearch();
+              }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
               }}
