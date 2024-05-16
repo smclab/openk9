@@ -19,7 +19,7 @@ package io.openk9.datasource.event.repo;
 
 import io.openk9.datasource.event.model.Event;
 import io.smallrye.mutiny.Uni;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

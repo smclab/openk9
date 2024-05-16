@@ -20,7 +20,7 @@ package io.openk9.datasource.searcher.queryanalysis.annotator;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.client.RestHighLevelClient;
 
 import java.util.List;
 import java.util.Map;

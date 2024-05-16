@@ -44,19 +44,19 @@ import io.smallrye.mutiny.Uni;
 import io.vavr.Function3;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.client.IndicesClient;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.GetComposableIndexTemplateRequest;
-import org.elasticsearch.client.indices.GetComposableIndexTemplatesResponse;
-import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
-import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
-import org.elasticsearch.cluster.metadata.Template;
-import org.elasticsearch.rest.RestStatus;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+import org.opensearch.OpenSearchStatusException;
+import org.opensearch.action.ActionListener;
+import org.opensearch.client.IndicesClient;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.indices.GetComposableIndexTemplateRequest;
+import org.opensearch.client.indices.GetComposableIndexTemplatesResponse;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.cluster.metadata.ComposableIndexTemplate;
+import org.opensearch.cluster.metadata.Template;
+import org.opensearch.rest.RestStatus;
 import scala.Option;
 
 import java.time.Instant;
@@ -154,8 +154,8 @@ public class JobScheduler {
 
 				@Override
 				public void onFailure(Exception e) {
-					if (e instanceof ElasticsearchStatusException
-						&& ((ElasticsearchStatusException)e).status() == RestStatus.NOT_FOUND) {
+					if (e instanceof OpenSearchStatusException
+						&& ((OpenSearchStatusException) e).status() == RestStatus.NOT_FOUND) {
 						log.warn("Cannot Copy Index Template", e);
 						ctx.getSelf().tell(
 							new PersistSchedulerInternal(tenantName, scheduler, null));

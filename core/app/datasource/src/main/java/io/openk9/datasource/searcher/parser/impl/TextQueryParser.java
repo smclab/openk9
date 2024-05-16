@@ -29,9 +29,9 @@ import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.vertx.core.json.JsonObject;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.MultiMatchQueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +110,7 @@ public class TextQueryParser implements QueryParser {
 
 			tokenClauseBuilder.boost(getBoost(token, jsonConfig));
 
-			org.elasticsearch.common.unit.Fuzziness fuzziness = getFuzziness(token, jsonConfig);
+			org.opensearch.common.unit.Fuzziness fuzziness = getFuzziness(token, jsonConfig);
 
 			QueryType valuesQueryType = getValuesQueryType(token, jsonConfig);
 
@@ -223,7 +223,7 @@ public class TextQueryParser implements QueryParser {
 			.orElse(QueryType.MUST);
 	}
 
-	private org.elasticsearch.common.unit.Fuzziness getFuzziness(
+	private org.opensearch.common.unit.Fuzziness getFuzziness(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
 		return FuzzinessMapper.map(ParserContext

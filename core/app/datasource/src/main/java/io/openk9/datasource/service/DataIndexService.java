@@ -38,12 +38,12 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.ElasticSearchUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.opensearch.action.support.IndicesOptions;
+import org.opensearch.action.support.master.AcknowledgedResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 
 import java.io.IOException;
 import java.util.Map;

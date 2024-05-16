@@ -24,19 +24,19 @@ import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
-import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseListener;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.core.CountRequest;
-import org.elasticsearch.client.core.CountResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
+import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.opensearch.client.Request;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.Response;
+import org.opensearch.client.ResponseListener;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.core.CountRequest;
+import org.opensearch.client.core.CountResponse;
+import org.opensearch.client.indices.GetIndexRequest;
+import org.opensearch.client.indices.GetMappingsRequest;
+import org.opensearch.common.xcontent.XContentType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,7 +127,7 @@ public class IndexService {
 		if (entity.getContentType() == null) {
 			throw new IllegalStateException("Elasticsearch didn't return the [Content-Type] header, unable to parse response body");
 		}
-		XContentType xContentType = XContentType.fromMediaTypeOrFormat(entity.getContentType().getValue());
+		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
 		if (xContentType == null) {
 			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
 		}

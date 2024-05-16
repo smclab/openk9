@@ -19,7 +19,7 @@ package io.openk9.datasource.searcher.queryanalysis.annotator;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.JWT;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.client.RestHighLevelClient;
 
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;

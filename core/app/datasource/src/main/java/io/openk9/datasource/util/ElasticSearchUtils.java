@@ -22,23 +22,23 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.elasticsearch.Version;
-import org.elasticsearch.cluster.metadata.IndexMetadata;
-import org.elasticsearch.common.bytes.BytesArray;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.analysis.AnalyzerScope;
-import org.elasticsearch.index.analysis.IndexAnalyzers;
-import org.elasticsearch.index.analysis.NamedAnalyzer;
-import org.elasticsearch.index.mapper.DocumentMapper;
-import org.elasticsearch.index.mapper.MapperService;
-import org.elasticsearch.index.mapper.Mapping;
-import org.elasticsearch.index.mapper.ParsedDocument;
-import org.elasticsearch.index.mapper.SourceToParse;
-import org.elasticsearch.index.similarity.SimilarityService;
-import org.elasticsearch.indices.IndicesModule;
+import org.opensearch.Version;
+import org.opensearch.cluster.metadata.IndexMetadata;
+import org.opensearch.common.bytes.BytesArray;
+import org.opensearch.common.settings.Settings;
+import org.opensearch.common.xcontent.NamedXContentRegistry;
+import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.index.IndexSettings;
+import org.opensearch.index.analysis.AnalyzerScope;
+import org.opensearch.index.analysis.IndexAnalyzers;
+import org.opensearch.index.analysis.NamedAnalyzer;
+import org.opensearch.index.mapper.DocumentMapper;
+import org.opensearch.index.mapper.MapperService;
+import org.opensearch.index.mapper.Mapping;
+import org.opensearch.index.mapper.ParsedDocument;
+import org.opensearch.index.mapper.SourceToParse;
+import org.opensearch.index.similarity.SimilarityService;
+import org.opensearch.indices.IndicesModule;
 
 import java.util.List;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class ElasticSearchUtils {
 	public static JsonObject getDynamicMapping(byte[] payload) {
 
 		DocumentMapper documentMapper = getMapperService()
-			.documentMapperWithAutoCreate(DOCUMENT_TYPE)
+			.documentMapperWithAutoCreate()
 			.getDocumentMapper();
 
 		ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
@@ -106,7 +106,6 @@ public class ElasticSearchUtils {
 		return new SourceToParse(
 			IGNORE_INDEX,
 			DOCUMENT_TYPE,
-			"1",
 			new BytesArray(payload),
 			XContentType.JSON
 		);

@@ -19,16 +19,16 @@ package io.openk9.datasource.entity;
 
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.StartupEvent;
-import org.elasticsearch.client.IndicesClient;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.PutComposableIndexTemplateRequest;
-import org.elasticsearch.cluster.metadata.ComposableIndexTemplate;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.jboss.logging.Logger;
+import org.opensearch.client.IndicesClient;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.cluster.metadata.ComposableIndexTemplate;
+import org.opensearch.common.xcontent.DeprecationHandler;
+import org.opensearch.common.xcontent.NamedXContentRegistry;
+import org.opensearch.common.xcontent.XContentParser;
+import org.opensearch.common.xcontent.XContentType;
 
 import java.io.IOException;
 import javax.enterprise.context.ApplicationScoped;

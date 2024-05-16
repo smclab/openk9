@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.mapper;
 
-import org.elasticsearch.common.unit.Fuzziness;
+import org.opensearch.common.unit.Fuzziness;
 
 public final class FuzzinessMapper {
 

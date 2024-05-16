@@ -123,10 +123,6 @@
       <version>${zstd-jni.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-elasticsearch-rest-high-level-client</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
       <version>0.2.6</version>
@@ -169,23 +165,23 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-suggest</artifactId>
-      <version>8.7.0</version>
+      <version>9.5.0</version>
     </dependency>
     <!-- dependencies needed for dynamicmapping -->
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-sandbox</artifactId>
-      <version>8.7.0</version>
+      <version>9.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-misc</artifactId>
-      <version>8.7.0</version>
+      <version>9.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-analyzers-common</artifactId>
-      <version>8.7.0</version>
+      <version>8.11.3</version>
     </dependency>
     <!--  -->
     <dependency>

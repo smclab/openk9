@@ -27,11 +27,11 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.util.ActorActionListener;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.opensearch.action.support.IndicesOptions;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

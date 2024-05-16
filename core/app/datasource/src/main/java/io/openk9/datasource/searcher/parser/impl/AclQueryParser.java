@@ -24,8 +24,8 @@ import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 
 import java.util.Iterator;
 import java.util.List;

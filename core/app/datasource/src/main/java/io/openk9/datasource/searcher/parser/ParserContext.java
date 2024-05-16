@@ -25,7 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.BoolQueryBuilder;
 
 import java.util.List;
 import java.util.Map;
