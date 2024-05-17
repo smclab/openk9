@@ -44,13 +44,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ElasticSearchUtils {
+public class OpenSearchUtils {
 
 	private static final String IGNORE_INDEX = "IGNORE_INDEX";
 	private static final String DOCUMENT_TYPE = MapperService.SINGLE_MAPPING_NAME;
 	private static MapperService mapperService = null;
 
-	private ElasticSearchUtils() {
+	private OpenSearchUtils() {
 	}
 
 	public static JsonObject getDynamicMapping(
@@ -61,7 +61,7 @@ public class ElasticSearchUtils {
 
 		var dataPayload = mapper.map(ingestionPayload, documentTypes);
 
-		return ElasticSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
+		return OpenSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
 	}
 
 	public static JsonObject getDynamicMapping(byte[] payload) {

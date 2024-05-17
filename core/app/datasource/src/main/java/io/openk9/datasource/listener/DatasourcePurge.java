@@ -54,7 +54,20 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private enum FetchDataIndexOrphans implements Command {INSTANCE}
 	private record PrepareChunks(List<DataIndex> dataIndices) implements Command {}
 	private enum WorkNextChunk implements Command {INSTANCE}
-	private enum DeleteEsIndices implements Command {INSTANCE}
+
+	@Override
+	public Receive<Command> createReceive() {
+		return newReceiveBuilder()
+			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessageEquals(FetchDataIndexOrphans.INSTANCE, this::onFetchDataIndexOrphans)
+			.onMessage(PrepareChunks.class, this::onPrepareChunks)
+			.onMessageEquals(WorkNextChunk.INSTANCE, this::onWorkNextChunk)
+			.onMessageEquals(DeleteIndices.INSTANCE, this::onDeleteEsIndices)
+			.onMessageEquals(DeleteDataIndices.INSTANCE, this::onDeleteDataIndices)
+			.onMessage(DeleteError.class, this::onEsDeleteError)
+			.onMessageEquals(Stop.INSTANCE, this::onStop)
+			.build();
+	}
 
 	private Behavior<Command> onDeleteEsIndices() {
 		String[] names = currentChunk
@@ -73,7 +86,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			);
 
 		getContext().getLog().info(
-			"Deleting ElasticSearch orphans indices for datasource {}-{}",
+			"Deleting Opensearch orphans indices for datasource {}-{}",
 			tenantName, datasourceId);
 
 		esClient
@@ -85,7 +98,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 					getContext().getSelf(),
 					(res, err) -> {
 						if (err != null) {
-							return new EsDeleteError(new DatasourcePurgeException(err));
+							return new DeleteError(new DatasourcePurgeException(err));
 						}
 						else {
 							return DeleteDataIndices.INSTANCE;
@@ -140,18 +153,20 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			new DatasourcePurge(ctx, tenantName, datasourceId, esClient, sessionFactory));
 	}
 
-	@Override
-	public Receive<Command> createReceive() {
-		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::onStart)
-			.onMessageEquals(FetchDataIndexOrphans.INSTANCE, this::onFetchDataIndexOrphans)
-			.onMessage(PrepareChunks.class, this::onPrepareChunks)
-			.onMessageEquals(WorkNextChunk.INSTANCE, this::onWorkNextChunk)
-			.onMessageEquals(DeleteEsIndices.INSTANCE, this::onDeleteEsIndices)
-			.onMessageEquals(DeleteDataIndices.INSTANCE, this::onDeleteDataIndices)
-			.onMessage(EsDeleteError.class, this::onEsDeleteError)
-			.onMessageEquals(Stop.INSTANCE, this::onStop)
-			.build();
+	private Behavior<Command> onWorkNextChunk() {
+		try {
+			this.currentChunk = chunks.pop();
+			getContext().getLog().info(
+				"Working on a chunk for datasource {}-{}", tenantName, datasourceId);
+			getContext().getSelf().tell(DeleteIndices.INSTANCE);
+		}
+		catch (NoSuchElementException e) {
+			getContext().getLog().info(
+				"No more chunks to work for datasource {}-{}", tenantName, datasourceId);
+			getContext().getSelf().tell(Stop.INSTANCE);
+		}
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onStart() {
@@ -223,23 +238,17 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onWorkNextChunk() {
-		try {
-			this.currentChunk = chunks.pop();
-			getContext().getLog().info(
-				"Working on a chunk for datasource {}-{}", tenantName, datasourceId);
-			getContext().getSelf().tell(DeleteEsIndices.INSTANCE);
-		}
-		catch (NoSuchElementException e) {
-			getContext().getLog().info(
-				"No more chunks to work for datasource {}-{}", tenantName, datasourceId);
-			getContext().getSelf().tell(Stop.INSTANCE);
-		}
+	private Behavior<Command> onEsDeleteError(DeleteError ede) {
+		getContext().getLog().error("Opensearch DeleteIndexRequest went wrong.", ede.error);
+
+		getContext().getSelf().tell(WorkNextChunk.INSTANCE);
 
 		return Behaviors.same();
 	}
 
-	private record EsDeleteError(DatasourcePurgeException error) implements Command {}
+	private enum DeleteIndices implements Command {
+		INSTANCE
+	}
 
 	private Behavior<Command> onDeleteDataIndices() {
 
@@ -277,13 +286,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onEsDeleteError(EsDeleteError ede) {
-		getContext().getLog().error("ElasticSearch DeleteIndexRequest went wrong.", ede.error);
-
-		getContext().getSelf().tell(WorkNextChunk.INSTANCE);
-
-		return Behaviors.same();
-	}
+	private record DeleteError(DatasourcePurgeException error) implements Command {}
 
 
 	private Behavior<Command> onStop() {

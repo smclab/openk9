@@ -30,7 +30,7 @@ import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ElasticSearchUtilsTest {
+class OpenSearchUtilsTest {
 
 	private static final JsonObject expected =
 		TestUtils.getResourceAsJsonObject("es/expected_mapping.json");
@@ -47,7 +47,7 @@ class ElasticSearchUtilsTest {
 				IngestionPayload.class
 			);
 
-			var dynamicMapping = ElasticSearchUtils.getDynamicMapping(ingestionPayload, mapper);
+			var dynamicMapping = OpenSearchUtils.getDynamicMapping(ingestionPayload, mapper);
 
 			assertEquals(expected, dynamicMapping);
 		}

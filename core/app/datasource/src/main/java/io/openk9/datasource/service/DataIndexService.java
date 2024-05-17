@@ -35,7 +35,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.util.ElasticSearchUtils;
+import io.openk9.datasource.util.OpenSearchUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -230,7 +230,7 @@ public class DataIndexService
 
 				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
 
-				var mappings = ElasticSearchUtils.getDynamicMapping(
+				var mappings = OpenSearchUtils.getDynamicMapping(
 					ingestionPayload,
 					ingestionPayloadMapper
 				);
