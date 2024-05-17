@@ -544,20 +544,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				for (SemanticType maps : semanticTypeList) {
 					for (Map<String, Object> map : maps) {
 						Object tokenType = map.get("tokenType");
-						String value = (String) map.get("value");
 						int startPos = maps.getPos().get(0);
-						int endPos = maps.getPos().get(1);
-						logger.info(startPos);
-//						if (!value.startsWith(searchText)
-//							&& (tokenType.equals("TEXT"))) {
-//							continue;
-//						}
+						Object keywordKey = map.get("keywordKey");
 
-						if (startPos > 0  && searchText.contains(value)) {
-							continue;
-						}
-
-						if (endPos > 8) {
+						if (startPos > 0 || keywordKey != null) {
 							continue;
 						}
 
