@@ -10,18 +10,17 @@ services:
         ports:
             - 5672:5672
             - 15672:15672
-    elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
-        container_name: elasticsearch
-        hostname: elasticsearch
+    opensearch:
+        image: docker.io/opensearchproject/opensearch:2.13.0
+        container_name: opensearch
+        hostname: opensearch
         environment:
-            - node.name=elasticsearch
+            - node.name=opensearch
             - cluster.name=docker-cluster
-            - cluster.initial_master_nodes=elasticsearch
+            - cluster.initial_master_nodes=opensearch
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-            - ELASTIC_USERNAME=elastic
-            - ELASTIC_PASSWORD=elastic
+            # TODO: verify how to set credentials
         ports:
             - "9200:9200"
         ulimits:
@@ -29,7 +28,7 @@ services:
                 soft: -1
                 hard: -1
         volumes:
-            - ./elasticsearch/data:/var/lib/elasticsearch/data
+            - ./opensearch/data:/var/lib/opensearch/data
     postgresql:
         image: postgres:latest
         hostname: postgresql
@@ -128,9 +127,9 @@ services:
             QUARKUS_DATASOURCE_PASSWORD: openk9
             QUARKUS_DATASOURCE_REACTIVE_URL: postgresql://postgresql/openk9
             QUARKUS_DATASOURCE_USERNAME: openk9
-            QUARKUS_ELASTICSEARCH_HOSTS: elasticsearch:9200
-            QUARKUS_ELASTICSEARCH_PASSWORD: elastic
-            QUARKUS_ELASTICSEARCH_USERNAME: elastic
+            QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
+            QUARKUS_OPENSEARCH_PASSWORD: admin
+            QUARKUS_OPENSEARCH_USERNAME: admin
             QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
             QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
             QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
@@ -178,8 +177,8 @@ services:
         environment:
             OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.local:8081/realms/{realm}
             OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
-            QUARKUS_ELASTICSEARCH_HOSTS: elasticsearch:9200
-            QUARKUS_ELASTICSEARCH_USERNAME: elastic
+            QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
+            QUARKUS_OPENSEARCH_USERNAME: admin
             QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: openk9-datasource
             QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
             QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.local:8081/realms/master
@@ -197,9 +196,9 @@ services:
             RABBITMQ_PORT: '5672'
             QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
             QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-            QUARKUS_ELASTICSEARCH_HOST: elasticsearch:9200
-            QUARKUS_ELASTICSEARCH_USERNAME: elastic
-            QUARKUS_ELASTICSEARCH_PASSWORD: elastic
+            QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
+            QUARKUS_OPENSEARCH_USERNAME: admin
+            QUARKUS_OPENSEARCH_PASSWORD: admin
             OPENK9_ENTITY_UNIQUE_ENTITIES: 'date,organization,loc,email,document,bank,person'
             OPENK9_ENTITY_MIN_HOPS: '1'
             OPENK9_ENTITY_MAX_HOPS: '2'
