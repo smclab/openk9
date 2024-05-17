@@ -288,6 +288,7 @@ export function SearchWithSuggestions({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
+                  if (callbackSearch) callbackSearch();
                   if (actionOnClick) {
                     actionOnClick();
                   }
