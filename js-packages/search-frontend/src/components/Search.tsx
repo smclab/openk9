@@ -302,6 +302,9 @@ export function Search({
                   }
                 } else if (event.key === "Enter") {
                   event.preventDefault();
+                  inputRef &&
+                    inputRef.current &&
+                    search(inputRef?.current?.value || "");
                   if (actionOnClick) {
                     actionOnClick();
                   }
