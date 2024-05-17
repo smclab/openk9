@@ -203,7 +203,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 	@Override
 	public int getLastTokenCount() {
-		return 5;
+		return 6;
 	}
 
 }

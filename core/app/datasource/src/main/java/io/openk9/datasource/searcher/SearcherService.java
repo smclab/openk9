@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.searcher;
 
 import io.openk9.datasource.model.Bucket;
@@ -8,13 +25,13 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
 import io.openk9.datasource.searcher.queryanalysis.GrammarProvider;
 import io.openk9.datasource.searcher.queryanalysis.Parse;
 import io.openk9.datasource.searcher.queryanalysis.SemanticType;
 import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
-import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.util.QuarkusCacheUtil;
@@ -70,8 +87,6 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -86,6 +101,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -421,24 +438,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 									long docCount = bucket.getDocCount();
 
-									if ("documentTypes".equals(key.replace(".keyword", ""))) {
-										addSuggestions.accept(
-											value,
-											SuggestionsUtil.docType(
-												value,
-												suggestionCategoryId,
-												docCount)
-										);
-									}
-									else {
-										addSuggestions.accept(
-											value,
-											SuggestionsUtil.filter(
-												value, suggestionCategoryId,
-												key, docCount
-											)
-										);
-									}
+									addSuggestions.accept(
+										value,
+										SuggestionsUtil.filter(
+											value, suggestionCategoryId,
+											key, docCount
+										)
+									);
 								}
 
 							}
@@ -491,7 +497,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		String searchText = request.getSearchText();
 
 		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(request.getVirtualHost());
+			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
 
 		return grammarUni.map(grammar -> {
 
@@ -538,6 +544,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				for (SemanticType maps : semanticTypeList) {
 					for (Map<String, Object> map : maps) {
 						Object tokenType = map.get("tokenType");
+						int startPos = maps.getPos().get(0);
+						Object keywordKey = map.get("keywordKey");
+
+						if (startPos > 0 || keywordKey != null) {
+							continue;
+						}
+
 						if (tokenType != null && !tokenType.equals("TOKEN")) {
 							list.add(SemanticsPos.of(maps.getPos(), map));
 						}
