@@ -17,8 +17,8 @@
 
 package io.openk9.entity.manager.cleaner;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 
 public class DefaultEntityNameCleaner implements EntityNameCleaner {
 

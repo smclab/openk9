@@ -40,7 +40,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.jboss.logging.Logger;
 import org.neo4j.cypherdsl.core.AliasedExpression;
 import org.neo4j.cypherdsl.core.Cypher;
@@ -49,10 +48,10 @@ import org.neo4j.cypherdsl.core.Node;
 import org.neo4j.cypherdsl.core.Property;
 import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.cypherdsl.core.SymbolicName;
+import org.opensearch.index.query.QueryBuilder;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +68,7 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.enterprise.inject.spi.CDI;
 
 import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 

@@ -95,8 +95,9 @@
 			<artifactId>quarkus-resteasy-reactive</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-elasticsearch-rest-high-level-client</artifactId>
+			<groupId>io.quarkiverse.opensearch</groupId>
+			<artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+			<version>0.2.6</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.neo4j</groupId>

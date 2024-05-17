@@ -18,9 +18,9 @@
 package io.openk9.entity.manager.cleaner;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
