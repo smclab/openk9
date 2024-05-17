@@ -186,7 +186,7 @@ export function SearchWithSuggestions({
             </div>
             {!htmlKey && (
               <label
-                htmlFor="search-openk9"
+                htmlFor="openk9--input-search"
                 className="visually-hidden label-search"
                 css={css`
                   border: 0;
