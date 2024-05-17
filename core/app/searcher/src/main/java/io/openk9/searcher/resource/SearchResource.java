@@ -429,7 +429,8 @@ public class SearchResource {
 			throw new IllegalStateException("Response body expected but not returned");
 		}
 		if (entity.getContentType() == null) {
-			throw new IllegalStateException("Elasticsearch didn't return the [Content-Type] header, unable to parse response body");
+			throw new IllegalStateException(
+				"Opensearch didn't return the [Content-Type] header, unable to parse response body");
 		}
 		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
 		if (xContentType == null) {
