@@ -96,7 +96,7 @@ function FilterCategoryDynamic({
     );
 
   return (
-    <div
+    <fieldset
       className="openk9-filter-category-container"
       css={css`
         margin-bottom: 16px;
@@ -105,6 +105,14 @@ function FilterCategoryDynamic({
           width: 100%;
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
+        background-image: none;
+        font: inherit;
+        color: inherit;
       `}
     >
       <div>
@@ -117,9 +125,8 @@ function FilterCategoryDynamic({
             align-items: center;
             width: 100% !important;
           `}
-          onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
         >
-          <div
+          <legend
             css={css`
               flex-grow: 1;
               :first-letter {
@@ -128,13 +135,15 @@ function FilterCategoryDynamic({
             `}
           >
             <strong>{suggestionCategoryName}</strong>
-          </div>
+          </legend>
           {isCollapsable && (
             <button
               aria-label={
                 t("openk9-collapsable-filter") || "openk9 collapsable filter"
               }
+              aria-expanded={isOpen ? "true" : "false"}
               style={{ background: "inherit", border: "none" }}
+              onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
             >
               <FontAwesomeIcon
                 icon={isOpen ? faChevronDown : faChevronUp}
@@ -437,7 +446,7 @@ function FilterCategoryDynamic({
           )}
         </React.Fragment>
       )}
-    </div>
+    </fieldset>
   );
 }
 
