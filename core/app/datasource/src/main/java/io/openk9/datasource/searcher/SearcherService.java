@@ -25,13 +25,13 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
 import io.openk9.datasource.searcher.queryanalysis.GrammarProvider;
 import io.openk9.datasource.searcher.queryanalysis.Parse;
 import io.openk9.datasource.searcher.queryanalysis.SemanticType;
 import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
+import io.openk9.datasource.searcher.util.JWT;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.util.QuarkusCacheUtil;
@@ -497,7 +497,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		String searchText = request.getSearchText();
 
 		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
+			grammarProvider.getOrCreateGrammar(request.getVirtualHost());
 
 		return grammarUni.map(grammar -> {
 
