@@ -376,7 +376,7 @@ public class SearchResource {
 
 				ByteString query = queryParserResponse.getQuery();
 
-				String searchRequestElasticS = query.toStringUtf8();
+				String searchRequestBody = query.toStringUtf8();
 
 				ProtocolStringList indexNameList =
 					queryParserResponse.getIndexNameList();
@@ -392,7 +392,7 @@ public class SearchResource {
 					new org.opensearch.client.Request(
 						"GET", "/" + indexNames + "/_search");
 
-				request.setJsonEntity(searchRequestElasticS);
+				request.setJsonEntity(searchRequestBody);
 
 				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
 					.getLowLevelClient()
