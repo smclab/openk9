@@ -130,18 +130,16 @@ public class ResourcesValidatorProcessor {
 								"document found. dropped message with contentId: "
 								+ contentId);
 
-							throw new RuntimeException();
+							return JsonObject.of("toIndex", true);
 						}
-
 					}
-
 				}
 			}
 			else {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
-			return JsonObject.of("hashCodes", hashCodes);
+			return JsonObject.of("hashCodes", hashCodes, "toIndex", false);
 
 		}
 		catch (IOException e) {
