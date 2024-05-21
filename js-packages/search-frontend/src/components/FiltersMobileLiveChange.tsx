@@ -397,34 +397,40 @@ function ViewAllTabs({
                   gap: 10px;
                 `}
               >
-                <input
-                  className={`radio-button ${
-                    selectedTabIndex === index
-                      ? "filter-category-radio-checked"
-                      : "not-checked-filter-category"
-                  }`}
-                  id={"tabs " + index}
-                  type="radio"
-                  checked={selectedTabIndex === index}
-                  onClick={() => {
-                    onSelectedTabIndexChange(index);
-                  }}
+                <div
+                  className="openk9-radio"
                   css={css`
-                    appearance: none !important;
-                    width: 17px !important;
-                    height: 16px !important;
-                    border-radius: 50% !important;
-                    border: 2px solid #ccc !important;
-                    background-color: ${selectedTabIndex === index
-                      ? "var(--openk9-embeddable-search--secondary-active-color) !important"
-                      : "#fff !important"};
-                    cursor: pointer !important;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
                   `}
-                />
-
-                <div>
+                >
+                  <input
+                    className={`radio-button ${
+                      selectedTabIndex === index
+                        ? "filter-category-radio-checked"
+                        : "not-checked-filter-category"
+                    }`}
+                    id={"tabs" + index}
+                    type="radio"
+                    checked={selectedTabIndex === index}
+                    onClick={() => {
+                      onSelectedTabIndexChange(index);
+                    }}
+                    css={css`
+                      appearance: none !important;
+                      width: 17px !important;
+                      height: 16px !important;
+                      border-radius: 50% !important;
+                      border: 2px solid #ccc !important;
+                      background-color: ${selectedTabIndex === index
+                        ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+                        : "#fff !important"};
+                      cursor: pointer !important;
+                    `}
+                  />
                   <label
-                    htmlFor={"tabs " + index}
+                    htmlFor={"tabs" + index}
                     css={css`
                       text-overflow: ellipsis;
                       font-style: normal;
