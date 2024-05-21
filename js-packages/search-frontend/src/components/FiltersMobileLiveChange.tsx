@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
-import { Tab } from "./Tabs";
+import { Tab, translationTab } from "./Tabs";
 import { capitalize } from "lodash";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
 import { SelectionsAction } from "./useSelections";
@@ -196,6 +196,7 @@ function FiltersMobileLiveChange<E>({
                 tabs={tabs}
                 onSelectedTabIndexChange={onSelectedTabIndexChange}
                 selectedTabIndex={selectedTabIndex}
+                language={language}
               />
             ) : null
           }
@@ -324,10 +325,12 @@ function ViewAllTabs({
   onSelectedTabIndexChange,
   selectedTabIndex,
   isCollapsable = true,
+  language,
 }: {
   tabs: Array<Tab>;
   onSelectedTabIndexChange(index: number): void;
   selectedTabIndex: number;
+  language: string;
   isCollapsable?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
@@ -389,6 +392,11 @@ function ViewAllTabs({
       >
         {isOpen &&
           tabs.map((tab, index) => {
+            const tabTraslation = translationTab({
+              language: language,
+              tabLanguages: tab.translationMap,
+              defaultValue: tab.label,
+            });
             return (
               <li
                 className="openk9-filter-tabs-list-item"
@@ -439,7 +447,7 @@ function ViewAllTabs({
                       color: #000000;
                     `}
                   >
-                    {capitalize(tab.label)}
+                    {capitalize(tabTraslation)}
                   </label>
                 </div>
               </li>
