@@ -418,15 +418,15 @@ function ViewAllTabs({
                       onSelectedTabIndexChange(index);
                     }}
                     css={css`
-                      appearance: none !important;
-                      width: 17px !important;
-                      height: 16px !important;
-                      border-radius: 50% !important;
-                      border: 2px solid #ccc !important;
+                      appearance: none;
+                      width: 17px;
+                      height: 16px;
+                      border-radius: 50%;
+                      border: 2px solid #ccc;
                       background-color: ${selectedTabIndex === index
-                        ? "var(--openk9-embeddable-search--secondary-active-color) !important"
-                        : "#fff !important"};
-                      cursor: pointer !important;
+                        ? "var(--openk9-embeddable-search--secondary-active-color) "
+                        : "#fff "};
+                      cursor: pointer;
                     `}
                   />
                   <label
