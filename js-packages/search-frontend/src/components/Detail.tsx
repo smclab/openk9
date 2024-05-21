@@ -113,25 +113,25 @@ function Detail<E>(props: DetailProps<E>) {
         height: 100%;
         box-sizing: border-box;
         overflow: auto;
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
 
-::-webkit-scrollbar-track {
-    background-color: transparent;
-}
- 
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.4); 
-  border-radius: 10px;
-  height:5px;  
-}
+        ::-webkit-scrollbar-track {
+          background-color: transparent;
+        }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, .55);
-  height:5px;
-}
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.4);
+          border-radius: 10px;
+          height: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.55);
+          height: 5px;
+        }
       `}
     >
       <div

@@ -10,6 +10,16 @@ type TypeSortResultComponent = {
   language: string;
   labelText?: string;
   classNameLabel: string | undefined;
+  setSelectedSort: React.Dispatch<
+    React.SetStateAction<{
+      field: string;
+      type: string;
+    }>
+  >;
+  selectedSort: {
+    field: string;
+    type: string;
+  };
 };
 export type Options = Field[];
 type Field = {
@@ -32,10 +42,13 @@ export default function SortResults({
   labelText,
   setSortResult,
   classNameLabel,
+  selectedSort,
+  setSelectedSort,
 }: TypeSortResultComponent) {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     const [label, type] = value.split(",");
+    setSelectedSort({ field: label, type });
     if (label && (type === "asc" || type === "desc")) {
       setSortResult({
         [label]: {
@@ -54,6 +67,7 @@ export default function SortResults({
     const defaultValueObj = selectOptions.splice(index, 1)[0];
     selectOptions.unshift(defaultValueObj);
   }
+
   return (
     <SelectComponent
       handleChange={handleChange}
@@ -63,6 +77,7 @@ export default function SortResults({
       labelDefault={labelDefault}
       label={labelText}
       classLabel={classNameLabel}
+      selectedSort={selectedSort}
     />
   );
 }

@@ -53,7 +53,7 @@ import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
-import SortResults from "../components/SortResults";
+import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 
 type MainProps = {
@@ -120,11 +120,6 @@ export function Main({
       useQueryStringFilters,
     });
   const { i18n } = useTranslation();
-  const { resetSort } = useSortResult({
-    configuration,
-    onConfigurationChange,
-    setSortAfterKey,
-  });
 
   const {
     tabs,
@@ -135,6 +130,13 @@ export function Main({
     tabSelected,
     setSort,
   } = useTabs(configuration.overrideTabs, languageSelect);
+
+  const { resetSort, selectedSort, setSelectedSort } = useSortResult({
+    configuration,
+    onConfigurationChange,
+    setSortAfterKey,
+    sortList,
+  });
 
   const { searchQuery, spans, isQueryAnalysisComplete, completelySort } =
     useSearch({
@@ -285,7 +287,7 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {tabs.length > 0 ? (
+          {tabs.length >= 0 ? (
             <TabsMemo
               tabs={tabs}
               selectedTabIndex={selectedTabIndex}
@@ -506,6 +508,8 @@ export function Main({
               memoryResults={memoryResults}
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
+              selectedSort={selectedSort}
+              setSelectedSort={setSelectedSort}
             />
           )}
         </I18nextProvider>,
@@ -560,6 +564,8 @@ export function Main({
               sortAfterKey={sortAfterKey}
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
+              selectedSort={selectedSort}
+              setSelectedSort={setSelectedSort}
               counterIsVisible={
                 configuration.resultList?.counterIsVisible || false
               }
@@ -712,6 +718,8 @@ export function Main({
             labelDefault={configuration.sortResults?.defaultLabelName}
             labelText={configuration.sortResults?.labelText}
             classNameLabel={configuration.sortResults?.classNameLabel}
+            selectedSort={selectedSort}
+            setSelectedSort={setSelectedSort}
           />
         </I18nextProvider>,
         configuration.sortResults ? configuration.sortResults?.element : null,
@@ -737,8 +745,6 @@ export function Main({
           {isSearchLoading ? null : (
             <FiltersMobileMemo
               searchQuery={searchQuery}
-              onAddFilterToken={addFilterToken}
-              onRemoveFilterToken={removeFilterToken}
               onConfigurationChange={onConfigurationChange}
               filtersSelect={configuration.filterTokens}
               sort={completelySort}
@@ -746,13 +752,13 @@ export function Main({
               dynamicFilters={
                 dynamicFilters.data?.handleDynamicFilters || false
               }
-              configuration={configuration}
               isVisibleFilters={configuration.filtersMobile?.isVisible || false}
               setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
               language={languageSelect}
               sortAfterKey={sortAfterKey}
               isDynamicElement={dynamicData}
               numberResultOfFilters={numberResultOfFilters}
+              memoryResults={memoryResults}
             />
           )}
         </I18nextProvider>,
@@ -969,10 +975,10 @@ function useSearch({
     [selectionsState.text],
   ) as SearchToken[];
   const newSearch: SearchToken[] = searchTokens
-  .filter((search) => search)
-  .map((searchToken) => {
-    return { ...searchToken, isSearch: true };
-  });
+    .filter((search) => search)
+    .map((searchToken) => {
+      return { ...searchToken, isSearch: true };
+    });
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],
@@ -1275,20 +1281,29 @@ function useSortResult({
   configuration,
   onConfigurationChange,
   setSortAfterKey,
+  sortList,
 }: {
   configuration: Configuration;
   onConfigurationChange: ConfigurationUpdateFunction;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
+  sortList: Options;
 }) {
   const sort = configuration.sort;
+  const option = sortList?.find((option) => option.isDefault);
+  const defaultOption = {
+    field: option?.field || "",
+    type: option?.type || "",
+  };
+  const [selectedSort, setSelectedSort] = React.useState(defaultOption);
 
   const resetSort = React.useCallback(() => {
     setSortAfterKey("");
     onConfigurationChange(() => ({
       sort: [],
     }));
-  }, [configuration]);
-  return { sort, resetSort };
+    setSelectedSort(defaultOption);
+  }, [configuration, selectedSort]);
+  return { sort, resetSort, selectedSort, setSelectedSort };
 }
 
 export type SearchDateRange = {
@@ -1409,7 +1424,8 @@ function deriveSearchQuery(
               values: [text],
               filter: false,
             }
-          : false))
+          : false)
+      );
     });
 }
 

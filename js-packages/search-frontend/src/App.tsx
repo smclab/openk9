@@ -166,13 +166,26 @@ export function App() {
         </div>
       </div>
       <div
-        ref={(element) => openk9.updateConfiguration({ tabs: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            tabsConfigurable: {
+              element,
+              onAction: () => {},
+              reset: {
+                calendar: false,
+                filters: false,
+                search: false,
+                sort: true,
+              },
+            },
+          })
+        }
         className="openk9-container-tabs"
         css={css`
           grid-area: tabs;
           padding: 8px 16px 0px 0px;
           margin-bottom: -16px;
-          overflow:auto;
+          overflow: auto;
           @media (max-width: 480px) {
             display: none;
           }
