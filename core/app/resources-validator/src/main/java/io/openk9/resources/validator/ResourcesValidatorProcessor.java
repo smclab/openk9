@@ -134,7 +134,7 @@ public class ResourcesValidatorProcessor {
 								"document found. dropped message with contentId: "
 								+ contentId);
 
-							return JsonObject.of("toIndex", true);
+							return JsonObject.of("_openk9SkipDocument", true);
 						}
 					}
 				}
@@ -143,7 +143,7 @@ public class ResourcesValidatorProcessor {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
-			return JsonObject.of("hashCodes", hashCodes, "toIndex", false);
+			return JsonObject.of("hashCodes", hashCodes, "_openk9SkipDocument", false);
 
 		}
 		catch (IOException e) {
