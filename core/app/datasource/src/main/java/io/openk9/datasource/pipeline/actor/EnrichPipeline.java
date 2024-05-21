@@ -323,6 +323,23 @@ public class EnrichPipeline {
 					newJsonPayload = result;
 				}
 
+				if (newJsonPayload.getBoolean("_openk9SkipDocument", false)) {
+
+					log.infof(
+						"Document with contentId %s can be skipped.",
+						dataPayload.getContentId()
+					);
+
+					replyTo.tell(new Success(
+						dataPayload.getContentId(),
+						consumer,
+						dataPayload.getScheduleId(),
+						dataPayload.getTenantId()
+					));
+
+					return Behaviors.stopped();
+				}
+
 				DataPayload newDataPayload =
 					mergeResponse(
 						jsonPath, behaviorMergeType, dataPayload,
