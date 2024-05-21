@@ -15,8 +15,8 @@ type ResultProps<E> = {
   isMobile: boolean;
   setDetailMobile(result: GenericResultItem<E> | null): void;
   overChangeCard: boolean;
-  viewButton: boolean;
-  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  viewButton?: boolean;
+  setViewButtonDetail?: React.Dispatch<React.SetStateAction<boolean>>;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -217,7 +217,7 @@ function ButtonDetail<E>({
   result: GenericResultItem<any>;
   onDetail: (result: GenericResultItem<E> | null) => void;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | null | undefined;
-  setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  setViewButtonDetail?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { t } = useTranslation();
   return (
@@ -255,9 +255,9 @@ function ButtonDetail<E>({
           ) as any;
           onDetail(result);
           if (e.screenX === 0 && e.screenY === 0) {
-            setViewButtonDetail(true);
+            setViewButtonDetail && setViewButtonDetail(true);
           } else {
-            setViewButtonDetail(false);
+            setViewButtonDetail && setViewButtonDetail(false);
           }
           if (setIdPreview) setIdPreview(result?.source?.id || "");
           if (recoveryButton) recoveryButton.focus();

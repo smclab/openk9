@@ -15,13 +15,10 @@ import { SelectionsAction } from "./useSelections";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
-  onAddFilterToken: (searchToken: SearchToken) => void;
-  onRemoveFilterToken: (searchToken: SearchToken) => void;
   filtersSelect: SearchToken[];
   sort: SortField[];
   dynamicFilters: boolean;
   onConfigurationChange: ConfigurationUpdateFunction;
-  configuration: Configuration;
   isVisibleFilters: boolean;
   setIsVisibleFilters:
     | React.Dispatch<React.SetStateAction<boolean>>
@@ -31,15 +28,13 @@ export type FiltersMobileProps<E> = {
   isDynamicElement: WhoIsDynamic[];
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   numberResultOfFilters: number | null | undefined;
+  memoryResults: any;
 };
 function FiltersMobile<E>({
   dynamicFilters,
   searchQuery,
   sort,
-  onAddFilterToken,
-  onRemoveFilterToken,
   onConfigurationChange,
-  configuration,
   isVisibleFilters,
   setIsVisibleFilters,
   language,
@@ -47,6 +42,7 @@ function FiltersMobile<E>({
   isDynamicElement,
   selectionsDispatch,
   numberResultOfFilters,
+  memoryResults,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -120,13 +116,10 @@ function FiltersMobile<E>({
       </div>
       <FiltersHorizontalMemo
         searchQuery={searchQuery}
-        onAddFilterToken={onAddFilterToken}
-        onRemoveFilterToken={onRemoveFilterToken}
         onConfigurationChange={onConfigurationChange}
         onConfigurationChangeExt={() => {
           if (setIsVisibleFilters) setIsVisibleFilters(false);
         }}
-        filtersSelect={configuration.filterTokens}
         sort={sort}
         dynamicFilters={dynamicFilters}
         language={language}
@@ -135,6 +128,7 @@ function FiltersMobile<E>({
         isDynamicElement={isDynamicElement}
         selectionsDispatch={selectionsDispatch}
         numberResultOfFilters={numberResultOfFilters}
+        memoryResults={memoryResults}
       />
     </React.Fragment>
   );

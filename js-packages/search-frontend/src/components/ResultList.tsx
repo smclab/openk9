@@ -42,6 +42,13 @@ type ResultsProps<E> = {
   viewButton: boolean;
   NoResultsCustom?: React.ReactNode;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedSort: any;
+  setSelectedSort: React.Dispatch<
+    React.SetStateAction<{
+      field: string;
+      type: string;
+    }>
+  >;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -69,6 +76,8 @@ function Results<E>({
   memoryResults,
   viewButton,
   NoResultsCustom,
+  selectedSort,
+  setSelectedSort,
   setViewButtonDetail,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -125,6 +134,7 @@ function Results<E>({
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
           noResultsCustom={NoResultsCustom}
+          setSelectedSort={setSelectedSort}
         />
       );
     case "virtual":
@@ -167,6 +177,13 @@ type ResultCountProps = {
   language: string;
   setSortResult: (sortResultNew: SortField | undefined) => void;
   classNameLabel?: string | undefined;
+  selectedSort?: any;
+  setSelectedSort?: React.Dispatch<
+    React.SetStateAction<{
+      field: string;
+      type: string;
+    }>
+  >;
 };
 
 function ResultCount({
@@ -178,6 +195,8 @@ function ResultCount({
   selectOptions,
   classNameLabel,
   language,
+  selectedSort,
+  setSelectedSort,
   setSortResult,
 }: ResultCountProps) {
   const client = useOpenK9Client();
@@ -262,13 +281,14 @@ function ResultCount({
             {children?.toLocaleString("it")}
           </span>
           <span>
-            <SortResults
+            {/* <SortResults
               language={language}
               selectOptions={selectOptions}
               setSortResult={setSortResult}
               labelDefault=""
               classNameLabel={classNameLabel}
-            />
+              selectedSort={selectedSort}
+            /> */}
           </span>
         </div>
       </div>
@@ -401,6 +421,12 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   memoryResults: boolean;
   viewButton: boolean;
   noResultsCustom: React.ReactNode;
+  setSelectedSort: React.Dispatch<
+    React.SetStateAction<{
+      field: string;
+      type: string;
+    }>
+  >;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -460,11 +486,29 @@ export function InfiniteResults<E>({
         position: "relative",
       }}
       css={css`
-      height: 100%;
-      overflow-y: auto;
-      position: relative;
-    `}
-    
+        height: 100%;
+        overflow-y: auto;
+        position: relative;
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background-color: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.4);
+          border-radius: 10px;
+          height: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.55);
+          height: 5px;
+        }
+      `}
     >
       {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
@@ -571,7 +615,7 @@ export function InfiniteResults<E>({
           >
             {results.data?.pages[0].total}
           </ResultCount>
-         {noResultsCustom ?  noResultsCustom : <NoResults /> }
+          {noResultsCustom ? noResultsCustom : <NoResults />}
         </React.Fragment>
       )}
     </div>
