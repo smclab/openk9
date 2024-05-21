@@ -36,11 +36,15 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -130,18 +134,16 @@ public class ResourcesValidatorProcessor {
 								"document found. dropped message with contentId: "
 								+ contentId);
 
-							throw new RuntimeException();
+							return JsonObject.of("_openk9SkipDocument", true);
 						}
-
 					}
-
 				}
 			}
 			else {
 				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
 			}
 
-			return JsonObject.of("hashCodes", hashCodes);
+			return JsonObject.of("hashCodes", hashCodes, "_openk9SkipDocument", false);
 
 		}
 		catch (IOException e) {
