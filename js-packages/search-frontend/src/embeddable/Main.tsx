@@ -136,6 +136,7 @@ export function Main({
     onConfigurationChange,
     setSortAfterKey,
     sortList,
+    setSort,
   });
 
   const { searchQuery, spans, isQueryAnalysisComplete, completelySort } =
@@ -1134,7 +1135,8 @@ function useTabs(
 
   const tabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
-    const sort = sortList && sortList[0] ? { ...sortList[0] } : undefined;
+    const sort =
+      sortList && sortList.find((sortElement) => sortElement.isDefault);
     const sortField: SortField = {
       [sort?.field || ""]: {
         sort: sort?.type as "asc" | "desc",
@@ -1287,6 +1289,7 @@ function useSortResult({
   onConfigurationChange: ConfigurationUpdateFunction;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortList: Options;
+  setSort: (sortField: SortField | undefined) => void;
 }) {
   const sort = configuration.sort;
   const option = sortList?.find((option) => option.isDefault);
