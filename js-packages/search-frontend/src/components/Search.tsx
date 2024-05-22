@@ -381,7 +381,7 @@ export function Search({
           <button
             className="openk9--search-delete-container-icon"
             title={t("remove-text") || ""}
-            aria-label={t("remove-text-description") || ""}
+            aria-label={t("remove-text") || ""}
             style={{
               paddingRight: "16px",
               display: "flex",
