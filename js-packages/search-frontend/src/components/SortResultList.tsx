@@ -6,6 +6,7 @@ import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
+import { setSortResultsType } from "./SortResults";
 
 function SortResultList({
   setSortResult,
@@ -13,7 +14,7 @@ function SortResultList({
   HtmlString = "",
   language,
 }: {
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: setSortResultsType;
   background?: string;
   minHeight?: string;
   color?: string;
@@ -73,14 +74,9 @@ function SortResultList({
 
   const handleChange = (event: any) => {
     if (event.value === relevance || event.value === relevance) {
-      setSortResult({});
+      setSortResult(undefined);
     } else {
-      setSortResult({
-        [JSON.parse(event.value)?.label]: {
-          sort: JSON.parse(event.value)?.sort,
-          missing: "_last",
-        },
-      });
+      setSortResult({ field: event.value.label, type: event.value.sort });
     }
     setMyValue(event);
   };

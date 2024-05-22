@@ -12,7 +12,7 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ResultSvg } from "../svgElement/ResultSvg";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
-import SortResults, { Options } from "./SortResults";
+import { Options, setSortResultsType } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -25,7 +25,7 @@ type ResultsProps<E> = {
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
   sort: SortField[];
-  setSortResult: (sortResultNew: SortField | undefined) => void;
+  setSortResult: setSortResultsType;
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
   overChangeCard?: boolean;
@@ -43,12 +43,7 @@ type ResultsProps<E> = {
   NoResultsCustom?: React.ReactNode;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   selectedSort: any;
-  setSelectedSort: React.Dispatch<
-    React.SetStateAction<{
-      field: string;
-      type: string;
-    }>
-  >;
+  setSelectedSort: setSortResultsType;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
     | undefined
@@ -175,7 +170,7 @@ type ResultCountProps = {
   counterIsVisible: boolean;
   selectOptions: Options;
   language: string;
-  setSortResult: (sortResultNew: SortField | undefined) => void;
+  setSortResult: setSortResultsType;
   classNameLabel?: string | undefined;
   selectedSort?: any;
   setSelectedSort?: React.Dispatch<
@@ -302,7 +297,7 @@ type ResulListProps<E> = {
   onDetail(result: GenericResultItem<E> | null): void;
   setDetailMobile(result: GenericResultItem<E> | null): void;
   sort: SortField[];
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: setSortResultsType;
   isMobile: boolean;
   overChangeCard?: boolean;
   language: string;
@@ -317,7 +312,7 @@ type FiniteResultsProps<E> = ResulListProps<E> & {
   counterIsVisible: boolean;
   selectOptions: Options;
   language: string;
-  setSortResult: (sortResultNew: SortField | undefined) => void;
+  setSortResult: setSortResultsType;
   classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
@@ -416,17 +411,12 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   selectOptions: Options;
   language: string;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
-  setSortResult: (sortResultNew: SortField | undefined) => void;
+  setSortResult: setSortResultsType;
   classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
   noResultsCustom: React.ReactNode;
-  setSelectedSort: React.Dispatch<
-    React.SetStateAction<{
-      field: string;
-      type: string;
-    }>
-  >;
+  setSelectedSort: setSortResultsType;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -542,7 +532,11 @@ export function InfiniteResults<E>({
                 <React.Fragment key={`page-${pageIndex}`}>
                   {page.result.map((result, resultIndex) => {
                     return (
-                      <li role="listitem" aria-labelledby="resultid">
+                      <li
+                        role="listitem"
+                        aria-labelledby="resultid"
+                        key={resultIndex}
+                      >
                         <ResultMemo<E>
                           renderers={renderers}
                           key={resultIndex}
@@ -628,7 +622,7 @@ type VirtualResultsProps<E> = ResulListProps<E> & {
   counterIsVisible: boolean;
   selectOptions: Options;
   language: string;
-  setSortResult: (sortResultNew: SortField | undefined) => void;
+  setSortResult: setSortResultsType;
   classNameLabel: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;

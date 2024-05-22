@@ -99,21 +99,20 @@ function Filters({
           width: 6px;
           height: 6px;
         }
-        
+
         ::-webkit-scrollbar-track {
-            background-color: transparent;
+          background-color: transparent;
         }
-         
+
         ::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.4); 
+          background: rgba(0, 0, 0, 0.4);
           border-radius: 10px;
-          height:5px;
-          
+          height: 5px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(0, 0, 0, .55);
-          height:5px;
+          background: rgba(0, 0, 0, 0.55);
+          height: 5px;
         }
       `}
     >
@@ -244,6 +243,7 @@ function Filters({
         {preFilters}
         {suggestionCategories.data?.map((suggestionCategory, index) => (
           <React.Suspense
+            key={index}
             fallback={
               skeletonCategoryCustom
                 ? isActiveSkeleton && skeletonCategoryCustom

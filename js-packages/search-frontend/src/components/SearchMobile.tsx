@@ -31,7 +31,15 @@ type SearchMobileProps = {
   dateRange: SearchDateRange;
   onDateRangeChange(dateRange: SearchDateRange): void;
   isMobile: boolean;
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: (
+    sortField:
+      | {
+          field: string;
+          type: "desc" | "asc";
+        }
+      | null
+      | undefined,
+  ) => void;
   searchQuery: SearchToken[];
   onAddFilterToken: (searchToken: SearchToken) => void;
   onRemoveFilterToken: (searchToken: SearchToken) => void;

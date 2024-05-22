@@ -304,7 +304,11 @@ function Tabs({
             defaultValue: tab.label,
           });
           return (
-            <li role="listitem" aria-labelledby="title-tabs-openk9">
+            <li
+              role="listitem"
+              aria-labelledby="title-tabs-openk9"
+              key={"tabs" + index}
+            >
               <button
                 className="openk9-single-tab-container"
                 key={index}
