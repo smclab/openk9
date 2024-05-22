@@ -77,7 +77,9 @@ function Tabs({
     <div css={css`openk9-container-arrow-tabs`}>
       <h2
         id="title-tabs-openk9"
-        className= {`${readMessageScreenReader && "visually-hidden title-tabs-openk9"} title-tabs-openk9`}
+        className={`${
+          readMessageScreenReader && "visually-hidden title-tabs-openk9"
+        } title-tabs-openk9`}
         css={css`
           border: 0;
           padding: 0;
@@ -238,7 +240,6 @@ function Tabs({
                         selectionsDispatch({
                           type: "reset-search",
                         });
-                      if (reset?.sort) resetSort();
                     }
                     if (onAction) onAction();
                   }}
