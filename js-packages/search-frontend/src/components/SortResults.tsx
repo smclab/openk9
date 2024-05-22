@@ -47,8 +47,11 @@ export default function SortResults({
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     const [label, types] = value.split("-");
-
-    setSort({ field: label, type: types as "asc" | "desc" });
+    if (label && types) {
+      setSort({ field: label, type: types as "asc" | "desc" });
+    } else {
+      setSort(undefined);
+    }
   };
 
   const index = selectOptions.findIndex((obj) => obj.isDefault === true);
