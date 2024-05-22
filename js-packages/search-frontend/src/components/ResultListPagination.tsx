@@ -14,6 +14,7 @@ import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import CustomSkeleton from "./Skeleton";
 import { ResultTitleTwo } from "../renderer-components";
+import { setSortResultsType } from "./SortResults";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -26,7 +27,7 @@ type ResultsProps<E> = {
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
   sort: SortField[];
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: setSortResultsType;
   setDetailMobile(result: GenericResultItem<E>): void;
   isMobile: boolean;
   overChangeCard?: boolean;
@@ -100,7 +101,7 @@ export const ResultsPaginationMemo = React.memo(ResultsPagination);
 
 type ResultCountProps = {
   children: number | undefined;
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: setSortResultsType;
   isMobile: boolean;
 };
 
@@ -186,7 +187,7 @@ type ResulListProps<E> = {
   onDetail(result: GenericResultItem<E> | null): void;
   setDetailMobile(result: GenericResultItem<E> | null): void;
   sort: SortField[];
-  setSortResult: (sortResultNew: SortField) => void;
+  setSortResult: setSortResultsType;
   isMobile: boolean;
   overChangeCard?: boolean;
   language: string;

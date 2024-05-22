@@ -6,21 +6,21 @@ type TypeSortResultComponent = {
   selectOptions: Options;
   extraClass?: string;
   labelDefault?: string;
-  setSortResult: (sortResultNew: SortField | undefined) => void;
   language: string;
   labelText?: string;
   classNameLabel: string | undefined;
-  setSelectedSort: React.Dispatch<
-    React.SetStateAction<{
-      field: string;
-      type: string;
-    }>
-  >;
-  selectedSort: {
-    field: string;
-    type: string;
-  };
+  setSort: setSortResultsType;
+  sort:
+    | {
+        sort: {
+          field: string;
+          type: string;
+        };
+        isSort: boolean;
+      }
+    | undefined;
 };
+
 export type Options = Field[];
 type Field = {
   field: string;
@@ -40,25 +40,15 @@ export default function SortResults({
   labelDefault = "Select Option",
   language,
   labelText,
-  setSortResult,
+  setSort,
   classNameLabel,
-  selectedSort,
-  setSelectedSort,
+  sort,
 }: TypeSortResultComponent) {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    const [label, type] = value.split(",");
-    setSelectedSort({ field: label, type });
-    if (label && (type === "asc" || type === "desc")) {
-      setSortResult({
-        [label]: {
-          sort: type,
-          missing: "_last",
-        },
-      });
-    } else {
-      setSortResult(undefined);
-    }
+    const [label, types] = value.split("-");
+
+    setSort({ field: label, type: types as "asc" | "desc" });
   };
 
   const index = selectOptions.findIndex((obj) => obj.isDefault === true);
@@ -77,7 +67,17 @@ export default function SortResults({
       labelDefault={labelDefault}
       label={labelText}
       classLabel={classNameLabel}
-      selectedSort={selectedSort}
+      selectedSort={sort?.sort}
     />
   );
 }
+
+export type setSortResultsType = (
+  sortField:
+    | {
+        field: string;
+        type: "asc" | "desc";
+      }
+    | undefined
+    | null,
+) => void;

@@ -130,7 +130,6 @@ export function Main({
     tabSelected,
     setSort,
   } = useTabs(configuration.overrideTabs, languageSelect);
-
   const { resetSort, selectedSort, setSelectedSort } = useSortResult({
     configuration,
     onConfigurationChange,
@@ -715,12 +714,11 @@ export function Main({
             language={languageSelect}
             selectOptions={sortList ?? []}
             extraClass={configuration.sortResults?.extraClass}
-            setSortResult={setSort}
             labelDefault={configuration.sortResults?.defaultLabelName}
             labelText={configuration.sortResults?.labelText}
             classNameLabel={configuration.sortResults?.classNameLabel}
-            selectedSort={selectedSort}
-            setSelectedSort={setSelectedSort}
+            setSort={setSort}
+            sort={tabTokens.sort}
           />
         </I18nextProvider>,
         configuration.sortResults ? configuration.sortResults?.element : null,
@@ -921,7 +919,18 @@ function useSearch({
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
-  tabTokens: { tabToken: any; sort: any };
+  tabTokens: {
+    tabToken: any;
+    sort:
+      | {
+          sort: {
+            field: string;
+            type: string;
+          };
+          isSort: boolean;
+        }
+      | undefined;
+  };
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
@@ -932,6 +941,7 @@ function useSearch({
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
+  const infoSort = tabTokens?.sort?.sort;
   const queryAnalysis = !configuration.useQueryAnalysis
     ? { data: undefined }
     : useQueryAnalysis({
@@ -950,19 +960,6 @@ function useSearch({
     [queryAnalysis.data?.analysis, selectionsState.textOnChange],
   );
 
-  // const searchTokens = React.useMemo(
-  //   () =>
-  //     deriveSearchQuery(
-  //       spans,
-  //       selectionsState.selection.flatMap(({ text, start, end, token }) =>
-  //         token ? [{ text, start, end, token }] : [],
-  //       ),
-  //     ),
-  //   [spans, selectionsState.selection],
-  // );
-  // const newSearch: SearchToken[] = searchTokens.map((searchToken) => {
-  //   return { ...searchToken, isSearch: true };
-  // });
   const searchTokens = React.useMemo(
     () =>
       deriveSearchQuery(
@@ -985,6 +982,16 @@ function useSearch({
     [filterTokens],
   );
 
+  const sortField = {
+    sort: {
+      [infoSort?.field || ""]: {
+        sort: infoSort?.type as "asc" | "desc",
+        missing: "_last",
+      },
+    },
+    isSort: true,
+  };
+
   const completelySort = React.useMemo(() => sort, [sort]);
   const searchQueryMemo = React.useMemo(
     () => [
@@ -993,7 +1000,7 @@ function useSearch({
       ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
-      ...(tabTokens?.sort ? [tabTokens.sort] : []),
+      ...(tabTokens?.sort ? [sortField] : []),
     ],
     [
       defaultTokens,
@@ -1137,18 +1144,14 @@ function useTabs(
     const createTab = tabs[selectedTabIndex]?.tokens;
     const sort =
       sortList && sortList.find((sortElement) => sortElement.isDefault);
-    const sortField: SortField = {
-      [sort?.field || ""]: {
-        sort: sort?.type as "asc" | "desc",
-        missing: "_last",
-      },
-    };
-    const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
 
+    const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
     return (
       {
         tabTokens: completeTab,
-        sort: sort?.field ? { sort: sortField, isSort: true } : undefined,
+        sort: sort?.field
+          ? { sort: { field: sort.field, type: sort.type }, isSort: true }
+          : undefined,
       } ?? {}
     );
   }, [selectedTabIndex, tabs, language]);
@@ -1157,7 +1160,9 @@ function useTabs(
     setTabsValue(tabTokens);
   }, [tabTokens]);
 
-  const setSort = (sortField: SortField | undefined) => {
+  const setSort = (
+    sortField: { field: string; type: "asc" | "desc" } | null | undefined,
+  ) => {
     setTabsValue({
       ...tabTokens,
       sort: sortField ? { sort: sortField, isSort: true } : undefined,
@@ -1289,15 +1294,22 @@ function useSortResult({
   onConfigurationChange: ConfigurationUpdateFunction;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortList: Options;
-  setSort: (sortField: SortField | undefined) => void;
+  setSort: (
+    sortField: { field: string; type: "asc" | "desc" } | undefined | null,
+  ) => void;
 }) {
   const sort = configuration.sort;
   const option = sortList?.find((option) => option.isDefault);
-  const defaultOption = {
+  const defaultOption:
+    | { field: string; type: "asc" | "desc" }
+    | null
+    | undefined = {
     field: option?.field || "",
-    type: option?.type || "",
+    type: option?.type as "asc" | "desc",
   };
-  const [selectedSort, setSelectedSort] = React.useState(defaultOption);
+  const [selectedSort, setSelectedSort] = React.useState<
+    { field: string; type: "asc" | "desc" } | null | undefined
+  >(defaultOption);
 
   const resetSort = React.useCallback(() => {
     setSortAfterKey("");
