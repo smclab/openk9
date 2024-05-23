@@ -46,15 +46,19 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	private record ChannelInit(Channel c) implements Command {}
 
 	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
-		try {
-			QueueBind queueBind = new QueueBind(destroyQueue.schedulingKey());
+		QueueBind queueBind = new QueueBind(destroyQueue.schedulingKey());
 
+		try {
 			channel.queueDelete(queueBind.getMainQueue());
 			channel.queueDelete(queueBind.getRetryQueue());
 			channel.queueDelete(queueBind.getErrorQueue());
+
+			destroyQueue.replyTo().tell(ResponseStatus.SUCCESS);
 		}
 		catch (Exception e) {
-			throw new RuntimeException(e);
+			log.errorf("Failed to delete %s", queueBind);
+
+			destroyQueue.replyTo().tell(ResponseStatus.ERROR);
 		}
 
 		return Behaviors.same();
@@ -139,7 +143,13 @@ public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 		return Behaviors.same();
 	}
 
-	public record DestroyQueue(String schedulingKey) implements Command {}
+	public enum ResponseStatus implements Response {
+		SUCCESS,
+		ERROR
+	}
+
+	public record DestroyQueue(String schedulingKey, ActorRef<Response> replyTo)
+		implements Command {}
 
 	public record QueueBind(String schedulingKey) implements Response {
 		public String getMainQueue() {

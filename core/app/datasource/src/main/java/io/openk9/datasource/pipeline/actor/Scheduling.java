@@ -175,8 +175,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd)
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
 	}
 
@@ -389,7 +389,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
 		var replyTo = getContext().messageAdapter(
 			Response.class,
-			res -> new DestroyQueue(res, gracefulEnd.status())
+			DestroyQueue::new
 		);
 
 		getContext()
@@ -406,30 +406,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
 
-		var response = destroyQueue.response();
-		var status = destroyQueue.status();
+		var persistStatusResponse = destroyQueue.persistStatusResponse();
 
-		if (response instanceof Success) {
-			doDestroyQueue();
+		if (persistStatusResponse instanceof Success) {
+			ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
 
-			if (status == Scheduler.SchedulerStatus.FINISHED) {
-				Long newDataIndexId = scheduler.getNewDataIndexId();
-				Long oldDataIndexId = scheduler.getOldDataIndexId();
+			ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
+				SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
 
-				if (newDataIndexId != null && oldDataIndexId != null) {
-					ActorRef<NotificationSender.Response> messageAdapter =
-						getContext().messageAdapter(
-							NotificationSender.Response.class,
-							NotificationSenderResponseWrapper::new
-						);
-					getContext().spawnAnonymous(
-						NotificationSender.create(scheduler, key, messageAdapter));
-				}
+			var replyTo = getContext().messageAdapter(
+				QueueManager.Response.class,
+				DestroyQueueResult::new
+			);
 
-			}
-			else {
-				getContext().getSelf().tell(Stop.INSTANCE);
-			}
+			queueManager.tell(new QueueManager.DestroyQueue(
+					SchedulingKey.asString(key.tenantId(), key.scheduleId()),
+					replyTo
+				)
+			);
+
+			return waitDestroyQueueResult();
 		}
 		else {
 			log.warn("Graceful end failed");
@@ -437,6 +433,24 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 
 		return closing();
+	}
+
+	private Behavior<Command> waitDestroyQueueResult() {
+
+		return Behaviors.withTimers(timers -> {
+			timers.cancel(Tick.INSTANCE);
+
+			return newReceiveBuilder()
+				.onMessage(DestroyQueueResult.class, msg -> {
+					else{
+						getContext().getSelf().tell(Stop.INSTANCE);
+					}
+
+					return closing();
+				})
+				.onAnyMessage(this::onEnqueue)
+				.build();
+		});
 	}
 
 	private Behavior<Command> onEnqueue(Command command) {
@@ -471,6 +485,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onPersistDatasource() {
 		var newDataIndexId = scheduler.getNewDataIndexId();
+		var oldDataIndexId = scheduler.getOldDataIndexId();
 		var datasourceId = scheduler.getDatasourceId();
 		var lastIngestionDate = scheduler.getLastIngestionDate();
 
@@ -497,9 +512,23 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 							return s.persist(datasource);
 						})
 				)
-				.invoke(() -> getContext()
-					.getSelf()
-					.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED)))
+				.invoke(() -> {
+
+					if (newDataIndexId != null && oldDataIndexId != null) {
+						ActorRef<NotificationSender.Response> replyTo =
+							getContext().getSystem().ignoreRef();
+
+						getContext().spawnAnonymous(NotificationSender.create(
+							scheduler,
+							key,
+							replyTo
+						));
+					}
+
+					getContext()
+						.getSelf()
+						.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
+				})
 			);
 
 		}
@@ -675,16 +704,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		log.infof("%s behavior is %s", key, behavior);
 	}
 
-	private void doDestroyQueue() {
-		ClusterSingleton clusterSingleton = ClusterSingleton.get(getContext().getSystem());
-
-		ActorRef<QueueManager.Command> queueManager = clusterSingleton.init(
-			SingletonActor.of(QueueManager.create(), QueueManager.INSTANCE_NAME));
-
-		queueManager.tell(new QueueManager.DestroyQueue(
-			SchedulingKey.asString(key.tenantId(), key.scheduleId())));
-	}
-
 	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s) {
 		return s
 			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
@@ -775,7 +794,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record FetchedScheduler(Scheduler scheduler, Exception exception) implements Command {}
 
-	private record DestroyQueue(Response response, Scheduler.SchedulerStatus status)
-		implements Command {}
+	private record DestroyQueue(Response persistStatusResponse) implements Command {}
+
+	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
 }
