@@ -146,7 +146,7 @@ function FilterCategoryDynamic({
               onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
             >
               <FontAwesomeIcon
-                icon={isOpen ? faChevronDown : faChevronUp}
+                icon={isOpen ? faChevronUp : faChevronDown}
                 style={{
                   color:
                     "var(--openk9-embeddable-search--secondary-text-color)",
