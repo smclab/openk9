@@ -174,10 +174,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
 			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
-			.onMessageEquals(PersistDatasource.INSTANCE, this::onPersistDatasource)
-			.onMessage(GracefulEnd.class, this::onGracefulEnd)
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse);
+			.onMessageEquals(Close.INSTANCE, this::onClose)
+			.onMessage(GracefulEnd.class, this::onGracefulEnd);
 	}
 
 	private Behavior<Command> waitFetchedScheduler(ActorRef<Response> replyTo) {
@@ -234,6 +232,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(CLOSING_BEHAVIOR);
 
 		return afterSetup()
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
+			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
@@ -481,7 +481,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private Behavior<Command> onPersistDatasource() {
+	private Behavior<Command> onClose() {
 		var newDataIndexId = scheduler.getNewDataIndexId();
 		var oldDataIndexId = scheduler.getOldDataIndexId();
 		var datasourceId = scheduler.getDatasourceId();
@@ -596,7 +596,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				if (!failureTracked && lastReceived) {
 					log.infof("%s is done", key);
 
-					getContext().getSelf().tell(PersistDatasource.INSTANCE);
+					getContext().getSelf().tell(Close.INSTANCE);
 
 					return closing();
 				}
@@ -608,7 +608,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				if (isExpired()) {
 					log.infof("%s ingestion is expired", key);
 
-					getContext().getSelf().tell(PersistDatasource.INSTANCE);
+					getContext().getSelf().tell(Close.INSTANCE);
 
 					return closing();
 				}
@@ -744,7 +744,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public sealed interface Response extends CborSerializable {}
 
-	public enum PersistDatasource implements Command {
+	public enum Close implements Command {
 		INSTANCE
 	}
 
