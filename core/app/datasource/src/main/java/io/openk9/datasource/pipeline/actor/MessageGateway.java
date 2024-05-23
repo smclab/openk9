@@ -165,10 +165,6 @@ public class MessageGateway
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onDeregister(Deregister deregister) {
-		queueManager.tell(new QueueManager.DestroyQueue(deregister.schedulingKey()));
-		return Behaviors.same();
-	}
 	private record SpawnConsumer(QueueManager.QueueBind queueBind) implements Command {}
 	private record Reroute(QueueManager.QueueBind queueBind) implements Command {}
 	private record QueueManagerResponseWrapper(QueueManager.Response response) implements Command {}
@@ -247,7 +243,6 @@ public class MessageGateway
 			.onMessage(QueueManagerResponseWrapper.class, this::onQueueManagerResponse)
 			.onMessage(SpawnConsumer.class, this::onSpawnConsumer)
 			.onMessage(Reroute.class, this::onReroute)
-			.onMessage(Deregister.class, this::onDeregister)
 			.onSignal(PreRestart.class, this::destroyChannel)
 			.onSignal(PostStop.class, this::destroyChannel)
 			.build();
@@ -373,8 +368,6 @@ public class MessageGateway
 		return ready();
 
 	}
-
-	public record Deregister(String schedulingKey) implements Command {}
 
 	private int getWorkersPerNode(ActorContext<Command> context) {
 		Config config = context.getSystem().settings().config();
