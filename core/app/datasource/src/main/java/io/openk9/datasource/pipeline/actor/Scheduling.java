@@ -442,13 +442,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			return newReceiveBuilder()
 				.onMessage(DestroyQueueResult.class, msg -> {
-					else{
-						getContext().getSelf().tell(Stop.INSTANCE);
-					}
+					getContext().getSelf().tell(Stop.INSTANCE);
 
 					return closing();
 				})
-				.onAnyMessage(this::onEnqueue)
+				.onAnyMessage(this::onDiscard)
 				.build();
 		});
 	}
