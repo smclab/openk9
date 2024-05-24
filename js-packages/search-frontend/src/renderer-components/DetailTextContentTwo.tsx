@@ -19,6 +19,7 @@ export function DetailTextContentTwo<E>({
 }: DetailTextContentProps<E>) {
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
+  if (!text || typeof text !== "string") return null;
   const textWithBreaksAndTabsAndCarriageReturns = text
     .replace(/\r/g, "")
     .replace(/\n/g, "<br />")
