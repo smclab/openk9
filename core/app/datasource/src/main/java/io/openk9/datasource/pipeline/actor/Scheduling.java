@@ -345,7 +345,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
-			return closing();
+			return Behaviors.same();
 		}
 
 		if (dataPayload.getContentId() != null) {
@@ -620,7 +620,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
-					return closing();
+					return Behaviors.same();
 				}
 
 				if (log.isTraceEnabled()) {
@@ -632,7 +632,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
-					return closing();
+					return Behaviors.same();
 				}
 
 			case STALE:
