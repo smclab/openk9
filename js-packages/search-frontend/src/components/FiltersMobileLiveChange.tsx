@@ -316,7 +316,6 @@ function FiltersMobileLiveChange<E>({
     </React.Fragment>
   );
   if (!isVisibleFilters) return null;
-
   return <ModalDetail padding="0px" background="white" content={componet} />;
 }
 
