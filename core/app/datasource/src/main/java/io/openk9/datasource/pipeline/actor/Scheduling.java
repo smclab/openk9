@@ -61,7 +61,9 @@ import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
@@ -502,77 +504,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private Behavior<Command> onClose() {
-
-		var newDataIndexId = scheduler.getNewDataIndexId();
-		var oldDataIndexId = scheduler.getOldDataIndexId();
-		var datasourceId = scheduler.getDatasourceId();
-		var lastIngestionDate = scheduler.getLastIngestionDate();
-
-		if (lastIngestionDate != null) {
-			String tenantId = key.tenantId();
-
-			VertxUtil.runOnContext(() -> sessionFactory
-				.withTransaction(
-					tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
-						.flatMap(datasource -> {
-							datasource.setLastIngestionDate(lastIngestionDate);
-
-							if (isNewIndex()) {
-								var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
-
-								log.infof(
-									"replacing dataindex %s for datasource %s on tenant %s",
-									newDataIndexId, datasourceId, tenantId
-								);
-
-								datasource.setDataIndex(newDataIndex);
-							}
-
-							return s.persist(datasource);
-						})
-				)
-				.invoke(() -> {
-
-					if (newDataIndexId != null && oldDataIndexId != null) {
-						ActorRef<NotificationSender.Response> replyTo =
-							getContext().getSystem().ignoreRef();
-
-						getContext().spawnAnonymous(NotificationSender.create(
-							scheduler,
-							key,
-							replyTo
-						));
-					}
-
-					getContext()
-						.getSelf()
-						.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
-				})
-			);
-
-		}
-		else if (!isNewIndex()) {
-			log.infof(
-				"Nothing was changed during this Scheduling on %s index.",
-				scheduler.getOldDataIndexName()
-			);
-			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
-
-		}
-		else {
-			log.warnf(
-				"LastIngestionDate was null, " +
-				"means that no content was received in this Scheduling. " +
-				"%s will be cancelled",
-				key
-			);
-			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
-
-		}
-
-		return closing();
-	}
+	private final List<CloseHandler> closeHandlers = List.of(
+		Scheduling::updateDatasource,
+		Scheduling::sendNotification
+	);
 
 	private Behavior<Command> onNotificationResponse(
 		NotificationSenderResponseWrapper notificationResponseWrapper) {
@@ -760,15 +695,19 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 	}
 
-	private boolean isExpired() {
+	protected boolean isExpired() {
 		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
 	}
 
-	private boolean isNewIndex() {
+	protected boolean isNewIndex() {
 		return scheduler != null && scheduler.getNewDataIndexId() != null;
 	}
 
-	private String getIndexName() {
+	protected boolean isReindex() {
+		return isNewIndex() && scheduler.getOldDataIndexId() != null;
+	}
+
+	protected String getIndexName() {
 		String newDataIndexName = scheduler.getNewDataIndexName();
 
 		return newDataIndexName != null
@@ -776,6 +715,112 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			: scheduler.getOldDataIndexName();
 	}
 
+	protected SchedulingKey getKey() {
+		return this.key;
+	}
+
+	private static void updateDatasource(CloseHandlerContext handlerContext) {
+		var scheduler = handlerContext.scheduler();
+		var scheduling = handlerContext.scheduling();
+		var key = scheduling.getKey();
+		var sessionFactory = handlerContext.sessionFactory();
+
+		var newDataIndexId = scheduler.getNewDataIndexId();
+		var datasourceId = scheduler.getDatasourceId();
+		var lastIngestionDate = scheduler.getLastIngestionDate();
+
+		if (lastIngestionDate != null) {
+			String tenantId = key.tenantId();
+
+			VertxUtil.runOnContext(() -> scheduling.getContext().pipeToSelf(
+					sessionFactory.withTransaction(
+						tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
+							.flatMap(datasource -> {
+								datasource.setLastIngestionDate(lastIngestionDate);
+
+								if (scheduling.isNewIndex()) {
+									var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
+
+									log.infof(
+										"replacing dataindex %s for datasource %s on tenant %s",
+										newDataIndexId, datasourceId, tenantId
+									);
+
+									datasource.setDataIndex(newDataIndex);
+								}
+
+								return s.persist(datasource);
+							})
+					).subscribeAsCompletionStage(),
+					(s, t) -> null
+				)
+			);
+
+		}
+		else if (!scheduling.isNewIndex()) {
+			log.infof(
+				"Nothing was changed during this Scheduling on %s index.",
+				scheduler.getOldDataIndexName()
+			);
+			scheduling
+				.getContext()
+				.getSelf()
+				.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
+
+		}
+		else {
+			log.warnf(
+				"LastIngestionDate was null, " +
+				"means that no content was received in this Scheduling. " +
+				"%s will be cancelled",
+				key
+			);
+			scheduling
+				.getContext()
+				.getSelf()
+				.tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
+
+		}
+	}
+
+	private static void sendNotification(CloseHandlerContext handlerContext) {
+		var scheduling = handlerContext.scheduling();
+
+		if (scheduling.isReindex()) {
+			scheduling.getContext().spawnAnonymous(NotificationSender.create(
+				handlerContext.scheduler(),
+				scheduling.getKey(),
+				scheduling.getContext().getSystem().ignoreRef()
+			));
+		}
+	}
+
+	private Behavior<Command> onClose() {
+
+		var closeHandlerContext = new CloseHandlerContext(
+			this,
+			this.scheduler,
+			this.sessionFactory
+		);
+
+		for (CloseHandler handler : closeHandlers) {
+			handler.accept(closeHandlerContext);
+		}
+
+		return closing();
+	}
+
+	private enum CloseHandlerResponse implements Command {
+		INSTANCE
+	}
+
+	private interface CloseHandler extends Consumer<CloseHandlerContext> {}
+
+	private record CloseHandlerContext(
+		Scheduling scheduling,
+		SchedulerDTO scheduler,
+		Mutiny.SessionFactory sessionFactory
+	) {}
 	public sealed interface Command extends CborSerializable {}
 
 	public sealed interface Response extends CborSerializable {}
