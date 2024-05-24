@@ -75,6 +75,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final String BUSY_BEHAVIOR = "Busy";
 	private static final String NEXT_BEHAVIOR = "Next";
 	private static final String CLOSING_BEHAVIOR = "Closing";
+	private static final String GRACEFUL_ENDING_BEHAVIOR = "Graceful Ending";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Scheduling.class);
 	private final SchedulingKey key;
@@ -178,13 +179,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
 	}
 
-	private Behavior<Command> waitFetchedScheduler(ActorRef<Response> replyTo) {
+	private Behavior<Command> waitFetchedScheduler() {
 
 		return Behaviors.withTimers(timers -> {
 			timers.cancel(Tick.INSTANCE);
 
 			return newReceiveBuilder()
-				.onMessage(FetchedScheduler.class, msg -> onFetchedScheduler(msg, replyTo))
+				.onMessage(FetchedScheduler.class, this::onFetchedScheduler)
 				.onAnyMessage(this::onEnqueue)
 				.build();
 		});
@@ -232,17 +233,28 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(CLOSING_BEHAVIOR);
 
 		return afterSetup()
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
 
-	private Behavior<Command> onFetchedScheduler(
-		FetchedScheduler fetchedScheduler,
-		ActorRef<Response> replyTo) {
+	private Behavior<Command> gracefulEnding() {
+		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
+
+		return newReceiveBuilder()
+			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
+			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
+			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
+			.onAnyMessage(this::onDiscard)
+			.build();
+	}
+
+	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
+
 		var scheduler = fetchedScheduler.scheduler();
 		var exception = fetchedScheduler.exception();
+		var replyTo = fetchedScheduler.replyTo();
 
 		if (exception != null) {
 			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
@@ -258,6 +270,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			getContext().getSelf().tell(new RefreshScheduler(scheduler));
 			replyTo.tell(Success.INSTANCE);
 		}
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onFetchedSchedulerEnding(FetchedScheduler fetchedScheduler) {
+		var scheduler = fetchedScheduler.scheduler();
+		var exception = fetchedScheduler.exception();
+		var replyTo = fetchedScheduler.replyTo();
+
+		if (exception != null) {
+			log.errorf(
+				"Error during graceful ending, Scheduler with id %s cannot be persisted",
+				this.scheduler.getId()
+			);
+		}
+		else {
+			this.scheduler = schedulerMapper.map(scheduler);
+		}
+
+		replyTo.tell(Success.INSTANCE);
 
 		return Behaviors.same();
 	}
@@ -400,7 +432,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				)
 			);
 
-		return closing();
+		return gracefulEnding();
 
 	}
 
@@ -425,30 +457,19 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				)
 			);
 
-			return waitDestroyQueueResult();
 		}
 		else {
 			log.warn("Graceful end failed");
 			getContext().getSelf().tell(Stop.INSTANCE);
 		}
 
-		return closing();
+		return Behaviors.same();
 	}
 
-	private Behavior<Command> waitDestroyQueueResult() {
+	private Behavior<Command> onDestroyQueueResult(DestroyQueueResult destroyQueueResult) {
+		getContext().getSelf().tell(Stop.INSTANCE);
 
-		return Behaviors.withTimers(timers -> {
-			timers.cancel(Tick.INSTANCE);
-
-			return newReceiveBuilder()
-				.onMessage(DestroyQueueResult.class, msg -> {
-					getContext().getSelf().tell(Stop.INSTANCE);
-
-					return closing();
-				})
-				.onAnyMessage(this::onDiscard)
-				.build();
-		});
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onEnqueue(Command command) {
@@ -482,6 +503,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onClose() {
+
 		var newDataIndexId = scheduler.getNewDataIndexId();
 		var oldDataIndexId = scheduler.getOldDataIndexId();
 		var datasourceId = scheduler.getDatasourceId();
@@ -636,22 +658,24 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onStart() {
+		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
 
 		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
 				sessionFactory.withSession(key.tenantId(), (s) -> {
 					s.setDefaultReadOnly(true);
 					return doFetchScheduler(s);
 				}).subscribeAsCompletionStage(),
-				(s, t) -> new FetchedScheduler(s, (Exception) t)
+			(s, t) -> new FetchedScheduler(s, (Exception) t, ignoreRef)
 			)
 		);
 
-		return waitFetchedScheduler(getContext().getSystem().ignoreRef());
+		return waitFetchedScheduler();
 	}
 
 	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
 
 		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
+		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
 
 		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
 			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> doFetchScheduler(s)
@@ -660,29 +684,25 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					return s.merge(entity);
 				})
 			).subscribeAsCompletionStage(),
-			(s, t) -> new FetchedScheduler(s, (Exception) t)
+			(s, t) -> new FetchedScheduler(s, (Exception) t, ignoreRef)
 			)
 		);
 
-		return waitFetchedScheduler(getContext().getSystem().ignoreRef());
+		return waitFetchedScheduler();
 	}
 
 	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
 
-		Scheduler.SchedulerStatus status = persistStatus.status;
+		doPersistStatus(persistStatus);
 
-		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
-			sessionFactory.withTransaction(key.tenantId(), (s, tx) -> doFetchScheduler(s)
-				.flatMap(entity -> {
-					entity.setStatus(status);
-					return s.merge(entity);
-				})
-			).subscribeAsCompletionStage(),
-			(s, t) -> new FetchedScheduler(s, (Exception) t)
-			)
-		);
+		return waitFetchedScheduler();
+	}
 
-		return waitFetchedScheduler(persistStatus.replyTo());
+	private Behavior<Command> onPersistStatusEnding(PersistStatus persistStatus) {
+
+		doPersistStatus(persistStatus);
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onStop() {
@@ -708,6 +728,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.setParameter("scheduleId", key.scheduleId())
 			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 			.getSingleResult();
+	}
+
+	private void doPersistStatus(PersistStatus persistStatus) {
+		var status = persistStatus.status();
+		var replyTo = persistStatus.replyTo();
+
+		VertxUtil.runOnContext(() -> getContext().pipeToSelf(
+				sessionFactory.withTransaction(key.tenantId(), (s, tx) -> doFetchScheduler(s)
+					.flatMap(entity -> {
+						entity.setStatus(status);
+						return s.merge(entity);
+					})
+				).subscribeAsCompletionStage(),
+				(s, t) -> new FetchedScheduler(s, (Exception) t, replyTo)
+			)
+		);
 	}
 
 	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
@@ -790,7 +826,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
-	private record FetchedScheduler(Scheduler scheduler, Exception exception) implements Command {}
+	private record FetchedScheduler(
+		Scheduler scheduler,
+		Exception exception,
+		ActorRef<Response> replyTo
+	) implements Command {}
 
 	private record DestroyQueue(Response persistStatusResponse) implements Command {}
 
