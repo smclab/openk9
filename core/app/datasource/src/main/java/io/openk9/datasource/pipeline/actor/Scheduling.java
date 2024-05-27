@@ -93,6 +93,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean lastReceived = false;
 	private int maxWorkers;
 	private int busyWorkers = 0;
+	private Scheduler.SchedulerStatus gracefulEndStatus = Scheduler.SchedulerStatus.CANCELLED;
 
 	public Scheduling(
 		ActorContext<Command> context,
@@ -235,21 +236,56 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		logBehavior(CLOSING_BEHAVIOR);
 
 		return afterSetup()
-			.onMessage(NotificationSenderResponseWrapper.class, this::onNotificationResponse)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
+	private int closeHandlerResponseExpected = closeHandlers.size();
 
-	private Behavior<Command> gracefulEnding() {
-		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
+	private static void updateDatasource(CloseHandlerContext handlerContext) {
+		var scheduler = handlerContext.scheduler();
+		var scheduling = handlerContext.scheduling();
+		var key = scheduling.getKey();
+		var sessionFactory = handlerContext.sessionFactory();
 
-		return newReceiveBuilder()
-			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
-			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
-			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
-			.onAnyMessage(this::onDiscard)
-			.build();
+		var newDataIndexId = scheduler.getNewDataIndexId();
+		var datasourceId = scheduler.getDatasourceId();
+		var lastIngestionDate = scheduler.getLastIngestionDate();
+
+		if (lastIngestionDate != null) {
+			String tenantId = key.tenantId();
+
+			VertxUtil.runOnContext(() -> scheduling.getContext().pipeToSelf(
+					sessionFactory.withTransaction(
+						tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
+							.flatMap(datasource -> {
+								datasource.setLastIngestionDate(lastIngestionDate);
+
+								if (scheduling.isNewIndex()) {
+									var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
+
+									log.infof(
+										"replacing dataindex %s for datasource %s on tenant %s",
+										newDataIndexId, datasourceId, tenantId
+									);
+
+									datasource.setDataIndex(newDataIndex);
+								}
+
+								return s.persist(datasource);
+							})
+					).subscribeAsCompletionStage(),
+				(s, t) -> CloseHandlerResponse.INSTANCE
+				)
+			);
+
+		}
+		else {
+
+			scheduling
+				.getContext()
+				.getSelf()
+				.tell(CloseHandlerResponse.INSTANCE);
+		}
 	}
 
 	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
@@ -420,22 +456,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
-		var replyTo = getContext().messageAdapter(
-			Response.class,
-			DestroyQueue::new
-		);
+	private static void sendNotification(CloseHandlerContext handlerContext) {
+		var scheduling = handlerContext.scheduling();
 
-		getContext()
-			.getSelf()
-			.tell(new PersistStatus(
-					gracefulEnd.status(),
-					replyTo
-				)
-			);
+		if (scheduling.isReindex()) {
+			scheduling.getContext().spawnAnonymous(NotificationSender.create(
+				handlerContext.scheduler(),
+				scheduling.getKey(),
+				scheduling.getContext().getSystem().ignoreRef()
+			));
+		}
 
-		return gracefulEnding();
-
+		scheduling.getContext().getSelf().tell(CloseHandlerResponse.INSTANCE);
 	}
 
 	private Behavior<Command> onDestroyQueue(DestroyQueue destroyQueue) {
@@ -509,12 +541,61 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Scheduling::sendNotification
 	);
 
-	private Behavior<Command> onNotificationResponse(
-		NotificationSenderResponseWrapper notificationResponseWrapper) {
+	private Behavior<Command> gracefulEnding() {
+		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
 
-		getContext().getSelf().tell(Stop.INSTANCE);
+		return Behaviors.withTimers(timers -> {
 
-		return Behaviors.same();
+			timers.cancel(Tick.INSTANCE);
+
+			if (closeHandlerResponseExpected > 0) {
+
+				log.infof("Waiting for %s CloseHandlers.", closeHandlerResponseExpected);
+
+				return newReceiveBuilder()
+					.onMessageEquals(CloseHandlerResponse.INSTANCE, this::onCloseHandlerResponse)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+			else {
+
+				log.infof("Starting ending operations for %s", key);
+
+				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
+					log.infof(
+						"Nothing was changed during this Scheduling on %s index.",
+						scheduler.getOldDataIndexName()
+					);
+
+				}
+				else if (scheduler.getLastIngestionDate() == null) {
+					log.warnf(
+						"LastIngestionDate was null, " +
+						"means that no content was received in this Scheduling. " +
+						"%s will be cancelled",
+						key
+					);
+
+					this.gracefulEndStatus = Scheduler.SchedulerStatus.CANCELLED;
+
+				}
+
+				var replyTo = getContext().messageAdapter(
+					Response.class,
+					DestroyQueue::new
+				);
+
+				getContext().getSelf().tell(new PersistStatus(this.gracefulEndStatus, replyTo));
+
+				return newReceiveBuilder()
+					.onMessage(PersistStatus.class, this::onPersistStatusEnding)
+					.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
+					.onMessage(DestroyQueue.class, this::onDestroyQueue)
+					.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+		});
 	}
 
 	private Behavior<Command> onTick() {
@@ -719,80 +800,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return this.key;
 	}
 
-	private static void updateDatasource(CloseHandlerContext handlerContext) {
-		var scheduler = handlerContext.scheduler();
-		var scheduling = handlerContext.scheduling();
-		var key = scheduling.getKey();
-		var sessionFactory = handlerContext.sessionFactory();
+	private Behavior<Command> onCloseHandlerResponse() {
 
-		var newDataIndexId = scheduler.getNewDataIndexId();
-		var datasourceId = scheduler.getDatasourceId();
-		var lastIngestionDate = scheduler.getLastIngestionDate();
+		this.closeHandlerResponseExpected--;
 
-		if (lastIngestionDate != null) {
-			String tenantId = key.tenantId();
-
-			VertxUtil.runOnContext(() -> scheduling.getContext().pipeToSelf(
-					sessionFactory.withTransaction(
-						tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
-							.flatMap(datasource -> {
-								datasource.setLastIngestionDate(lastIngestionDate);
-
-								if (scheduling.isNewIndex()) {
-									var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
-
-									log.infof(
-										"replacing dataindex %s for datasource %s on tenant %s",
-										newDataIndexId, datasourceId, tenantId
-									);
-
-									datasource.setDataIndex(newDataIndex);
-								}
-
-								return s.persist(datasource);
-							})
-					).subscribeAsCompletionStage(),
-				(s, t) -> new GracefulEnd(Scheduler.SchedulerStatus.FINISHED)
-				)
-			);
-
-		}
-		else if (!scheduling.isNewIndex()) {
-			log.infof(
-				"Nothing was changed during this Scheduling on %s index.",
-				scheduler.getOldDataIndexName()
-			);
-			scheduling
-				.getContext()
-				.getSelf()
-				.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
-
-		}
-		else {
-			log.warnf(
-				"LastIngestionDate was null, " +
-				"means that no content was received in this Scheduling. " +
-				"%s will be cancelled",
-				key
-			);
-			scheduling
-				.getContext()
-				.getSelf()
-				.tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
-
-		}
+		return gracefulEnding();
 	}
 
-	private static void sendNotification(CloseHandlerContext handlerContext) {
-		var scheduling = handlerContext.scheduling();
+	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
+		this.gracefulEndStatus = gracefulEnd.status();
 
-		if (scheduling.isReindex()) {
-			scheduling.getContext().spawnAnonymous(NotificationSender.create(
-				handlerContext.scheduler(),
-				scheduling.getKey(),
-				scheduling.getContext().getSystem().ignoreRef()
-			));
-		}
+		return gracefulEnding();
 	}
 
 	private Behavior<Command> onClose() {
@@ -806,6 +824,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		for (CloseHandler handler : closeHandlers) {
 			handler.accept(closeHandlerContext);
 		}
+
+		getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
 
 		return closing();
 	}
@@ -865,9 +885,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private record RefreshScheduler(Scheduler scheduler) implements Command {}
 
 	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response)
-		implements Command {}
-
-	private record NotificationSenderResponseWrapper(NotificationSender.Response response)
 		implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
