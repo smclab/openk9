@@ -43,6 +43,17 @@ export function App() {
   const [focusedInput, setFocusedInput] = React.useState(null);
   const [isCLickReset, setIsClickReset] = React.useState(false);
 
+  React.useEffect(() => {
+    if (isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+    return () => {
+      document.body.classList.remove("no-scroll");
+    };
+  }, [isVisibleFilters]);
+
   const { t } = useTranslation();
 
   return (
@@ -166,20 +177,7 @@ export function App() {
         </div>
       </div>
       <div
-        ref={(element) =>
-          openk9.updateConfiguration({
-            tabsConfigurable: {
-              element,
-              onAction: () => {},
-              reset: {
-                calendar: false,
-                filters: false,
-                search: false,
-                sort: true,
-              },
-            },
-          })
-        }
+        ref={(element) => openk9.updateConfiguration({ tabs: element })}
         className="openk9-container-tabs"
         css={css`
           grid-area: tabs;
