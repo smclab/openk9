@@ -121,7 +121,11 @@ function reducer(
         text: state.text,
         filters: state.filters,
         textOnChange: action.textOnchange,
-        selection: [],
+        selection: shiftSelection(
+          state.textOnChange,
+          action.textOnchange,
+          state.selection,
+        ),
       };
     }
     case "reset-search": {

@@ -316,7 +316,7 @@ function FiltersMobileLiveChange<E>({
     </React.Fragment>
   );
   if (!isVisibleFilters) return null;
-  document.body.style.overflow = "hidden";
+
   return <ModalDetail padding="0px" background="white" content={componet} />;
 }
 
