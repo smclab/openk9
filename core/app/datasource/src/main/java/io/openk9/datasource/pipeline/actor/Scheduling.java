@@ -752,7 +752,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 								return s.persist(datasource);
 							})
 					).subscribeAsCompletionStage(),
-					(s, t) -> null
+				(s, t) -> new GracefulEnd(Scheduler.SchedulerStatus.FINISHED)
 				)
 			);
 
@@ -821,6 +821,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		SchedulerDTO scheduler,
 		Mutiny.SessionFactory sessionFactory
 	) {}
+
 	public sealed interface Command extends CborSerializable {}
 
 	public sealed interface Response extends CborSerializable {}
