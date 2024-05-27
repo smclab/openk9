@@ -256,18 +256,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 				log.infof("Starting ending operations for %s", key);
 
+				var status = Scheduler.SchedulerStatus.FINISHED;
+
 				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
 					log.infof(
 						"Nothing was changed during this Scheduling on %s index.",
 						scheduler.getOldDataIndexName()
 					);
-
-					getContext()
-						.getSelf()
-						.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
-
 				}
-				else if (scheduler.getLastIngestionDate() == null) {
+
+				if (scheduler.getLastIngestionDate() == null && isNewIndex()) {
 					log.warnf(
 						"LastIngestionDate was null, " +
 						"means that no content was received in this Scheduling. " +
@@ -275,11 +273,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						key
 					);
 
-					getContext()
-						.getSelf()
-						.tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
-
+					status = Scheduler.SchedulerStatus.CANCELLED;
 				}
+
+				getContext()
+					.getSelf()
+					.tell(new GracefulEnd(status));
 
 				return newReceiveBuilder()
 					.onMessage(GracefulEnd.class, this::onGracefulEnd)
