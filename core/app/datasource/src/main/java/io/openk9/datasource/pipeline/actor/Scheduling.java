@@ -93,7 +93,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean lastReceived = false;
 	private int maxWorkers;
 	private int busyWorkers = 0;
-	private Scheduler.SchedulerStatus gracefulEndStatus = Scheduler.SchedulerStatus.CANCELLED;
 	private final List<CloseHandler> closeHandlers = List.of(
 		Scheduling::updateDatasource,
 		Scheduling::sendNotification
@@ -240,9 +239,54 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
-		return afterSetup()
-			.onAnyMessage(this::onDiscard)
-			.build();
+		return Behaviors.withTimers(timers -> {
+
+			timers.cancel(Tick.INSTANCE);
+
+			if (closeHandlerResponseExpected > 0) {
+
+				log.infof("Waiting for %s CloseHandlers.", closeHandlerResponseExpected);
+
+				return newReceiveBuilder()
+					.onMessageEquals(CloseHandlerResponse.INSTANCE, this::onCloseHandlerResponse)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+			else {
+
+				log.infof("Starting ending operations for %s", key);
+
+				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
+					log.infof(
+						"Nothing was changed during this Scheduling on %s index.",
+						scheduler.getOldDataIndexName()
+					);
+
+					getContext()
+						.getSelf()
+						.tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
+
+				}
+				else if (scheduler.getLastIngestionDate() == null) {
+					log.warnf(
+						"LastIngestionDate was null, " +
+						"means that no content was received in this Scheduling. " +
+						"%s will be cancelled",
+						key
+					);
+
+					getContext()
+						.getSelf()
+						.tell(new GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
+
+				}
+
+				return newReceiveBuilder()
+					.onMessage(GracefulEnd.class, this::onGracefulEnd)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+		});
 	}
 
 	private static void updateDatasource(CloseHandlerContext handlerContext) {
@@ -543,58 +587,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> gracefulEnding() {
 		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
 
-		return Behaviors.withTimers(timers -> {
-
-			timers.cancel(Tick.INSTANCE);
-
-			if (closeHandlerResponseExpected > 0) {
-
-				log.infof("Waiting for %s CloseHandlers.", closeHandlerResponseExpected);
-
-				return newReceiveBuilder()
-					.onMessageEquals(CloseHandlerResponse.INSTANCE, this::onCloseHandlerResponse)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-			else {
-
-				log.infof("Starting ending operations for %s", key);
-
-				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
-					log.infof(
-						"Nothing was changed during this Scheduling on %s index.",
-						scheduler.getOldDataIndexName()
-					);
-
-				}
-				else if (scheduler.getLastIngestionDate() == null) {
-					log.warnf(
-						"LastIngestionDate was null, " +
-						"means that no content was received in this Scheduling. " +
-						"%s will be cancelled",
-						key
-					);
-
-					this.gracefulEndStatus = Scheduler.SchedulerStatus.CANCELLED;
-
-				}
-
-				var replyTo = getContext().messageAdapter(
-					Response.class,
-					DestroyQueue::new
-				);
-
-				getContext().getSelf().tell(new PersistStatus(this.gracefulEndStatus, replyTo));
-
-				return newReceiveBuilder()
-					.onMessage(PersistStatus.class, this::onPersistStatusEnding)
-					.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
-					.onMessage(DestroyQueue.class, this::onDestroyQueue)
-					.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-		});
+		return newReceiveBuilder()
+			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
+			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
+			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
+			.onAnyMessage(this::onDiscard)
+			.build();
 	}
 
 	private Behavior<Command> onTick() {
@@ -803,11 +802,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		this.closeHandlerResponseExpected--;
 
-		return gracefulEnding();
+		return closing();
 	}
 
 	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
-		this.gracefulEndStatus = gracefulEnd.status();
+
+		var replyTo = getContext().messageAdapter(
+			Response.class,
+			DestroyQueue::new
+		);
+
+		getContext().getSelf().tell(new PersistStatus(gracefulEnd.status(), replyTo));
 
 		return gracefulEnding();
 	}
@@ -823,8 +828,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		for (CloseHandler handler : closeHandlers) {
 			handler.accept(closeHandlerContext);
 		}
-
-		getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FINISHED));
 
 		return closing();
 	}
