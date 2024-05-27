@@ -776,6 +776,7 @@ export function useInfiniteResults<E>(
       const RangePage: [number, number] = !(sortData && sortAfterKey)
         ? [pageParam * pageSize, pageSize]
         : [0, pageSize];
+
       return client.doSearch<E>({
         range: RangePage,
         language,

@@ -575,7 +575,6 @@ export function Main({
               memoryResults={memoryResults}
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
-              NoResultsCustom={configuration.resultList?.noResultsCustom}
             />
           )}
         </I18nextProvider>,
@@ -940,6 +939,9 @@ function useSearch({
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
+  const [previousSearchTokens, setPreviousSearchTokens] = React.useState<
+    Array<SearchToken>
+  >([]);
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
   const infoSort = tabTokens?.sort?.sort;
   const queryAnalysis = !configuration.useQueryAnalysis
@@ -960,18 +962,20 @@ function useSearch({
     [queryAnalysis.data?.analysis, selectionsState.textOnChange],
   );
 
-  const searchTokens = React.useMemo(
-    () =>
-      deriveSearchQuery(
-        spans,
-        selectionsState.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
-        ),
-        selectionsState.text,
-        selectionsState.text === selectionsState.textOnChange,
+  const searchTokens = React.useMemo(() => {
+    const value = deriveSearchQuery(
+      spans,
+      selectionsState.selection.flatMap(({ text, start, end, token }) =>
+        token ? [{ text, start, end, token }] : [],
       ),
-    [selectionsState.text],
-  ) as SearchToken[];
+      selectionsState.text,
+    );
+    if (selectionsState.text === selectionsState.textOnChange) {
+      setPreviousSearchTokens(value as SearchToken[]);
+      return value;
+    }
+    return previousSearchTokens;
+  }, [selectionsState.text, spans]) as SearchToken[];
   const newSearch: SearchToken[] = searchTokens
     .filter((search) => search)
     .map((searchToken) => {
@@ -1421,7 +1425,6 @@ function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
   selection: AnalysisRequestEntry[],
   text: string | undefined,
-  isSearch: boolean,
 ) {
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
@@ -1431,11 +1434,12 @@ function deriveSearchQuery(
         selection.find((selection) => {
           return selection.start === span.start && selection.end === span.end;
         })?.token ?? null;
+
       return (
-        (token && analysisTokenToSearchToken(token) && isSearch === true) ??
-        (text !== undefined && isSearch === true
+        (token && analysisTokenToSearchToken(token)) ??
+        (text !== undefined
           ? {
-              tokenType: "TEXT",
+              tokenType: token?.tokenType,
               values: [text],
               filter: false,
             }
