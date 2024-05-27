@@ -94,6 +94,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private int maxWorkers;
 	private int busyWorkers = 0;
 	private Scheduler.SchedulerStatus gracefulEndStatus = Scheduler.SchedulerStatus.CANCELLED;
+	private final List<CloseHandler> closeHandlers = List.of(
+		Scheduling::updateDatasource,
+		Scheduling::sendNotification
+	);
+	private int closeHandlerResponseExpected = closeHandlers.size();
 
 	public Scheduling(
 		ActorContext<Command> context,
@@ -239,7 +244,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
-	private int closeHandlerResponseExpected = closeHandlers.size();
 
 	private static void updateDatasource(CloseHandlerContext handlerContext) {
 		var scheduler = handlerContext.scheduler();
@@ -535,11 +539,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		return next();
 	}
-
-	private final List<CloseHandler> closeHandlers = List.of(
-		Scheduling::updateDatasource,
-		Scheduling::sendNotification
-	);
 
 	private Behavior<Command> gracefulEnding() {
 		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
