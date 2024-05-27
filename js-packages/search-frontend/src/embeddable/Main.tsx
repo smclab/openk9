@@ -575,6 +575,7 @@ export function Main({
               memoryResults={memoryResults}
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
+              NoResultsCustom={configuration.resultList?.noResultsCustom}
             />
           )}
         </I18nextProvider>,
@@ -942,8 +943,9 @@ function useSearch({
   const [previousSearchTokens, setPreviousSearchTokens] = React.useState<
     Array<SearchToken>
   >([]);
-  const debounced = useDebounce(selectionsState, debounceTimeSearch);
+  const debounced = useDebounce(selectionsState, 0);
   const infoSort = tabTokens?.sort?.sort;
+
   const queryAnalysis = !configuration.useQueryAnalysis
     ? { data: undefined }
     : useQueryAnalysis({
@@ -981,6 +983,7 @@ function useSearch({
     .map((searchToken) => {
       return { ...searchToken, isSearch: true };
     });
+
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],
@@ -1426,10 +1429,14 @@ function deriveSearchQuery(
   selection: AnalysisRequestEntry[],
   text: string | undefined,
 ) {
+  // console.log(spans);
+
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)
     .map((span) => {
+      // console.log(span);
+
       const token =
         selection.find((selection) => {
           return selection.start === span.start && selection.end === span.end;
@@ -1498,13 +1505,16 @@ function calculateSpans(
   text: string,
   analysis: AnalysisResponseEntry[] | undefined,
 ): AnalysisResponseEntry[] {
+  console.log(analysis);
+
   const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];
   for (let i = 0; i < text.length; ) {
-    const found = analysis?.find(
-      ({ start, text }) => i === start && text !== "",
-    );
+    const found = analysis?.find(({ start, text }) => {
+      return i === start && text !== "";
+    });
+
     if (found) {
       spans.push(found);
       i += found.text.length;
@@ -1521,7 +1531,6 @@ function calculateSpans(
 
 function useQueryAnalysis(request: AnalysisRequest) {
   const client = useOpenK9Client();
-
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
