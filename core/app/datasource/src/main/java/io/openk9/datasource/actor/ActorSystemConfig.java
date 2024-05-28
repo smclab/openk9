@@ -77,12 +77,12 @@ public class ActorSystemConfig {
 
 	@Produces
 	@ApplicationScoped
-	public ActorSystemInitializer schedulingSharding() {
-		logger.info("init scheduling sharding");
+	public ActorSystemInitializer clusterSharding() {
+		logger.info("init cluster sharding");
 		return actorSystem -> {
-			ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+			ClusterSharding sharding = ClusterSharding.get(actorSystem);
 
-			clusterSharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
+			sharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				var schedulingKey = SchedulingKey.fromString(entityId);
 				return Scheduling.create(
@@ -92,13 +92,13 @@ public class ActorSystemConfig {
 				);
 			}));
 
-			clusterSharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
+			sharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				var schedulingKey = SchedulingKey.fromString(entityId);
 				return Token.create(schedulingKey);
 			}));
 
-			clusterSharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
+			sharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				var enrichPipelineKey = EnrichPipelineKey.fromString(entityId);
 				return EnrichPipeline.create(enrichPipelineKey);
