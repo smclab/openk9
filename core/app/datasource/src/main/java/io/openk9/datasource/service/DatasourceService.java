@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
@@ -84,15 +85,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		OffsetDateTime lastIngestionDate,
 		Long newDataIndexId) {
 
+		var eventBus = CDI.current().select(EventBus.class).get();
+
 		return eventBus.request(ADDRESS, new UpdateDatasourceRequest(
 				tenantId, datasourceId, lastIngestionDate, newDataIndexId))
 			.map(message -> (Void) message.body())
 			.subscribeAsCompletionStage();
-	}
-
-	@Inject
-	void setEventBus(EventBus eventBus) {
-		DatasourceService.eventBus = eventBus;
 	}
 
 	@ConsumeEvent

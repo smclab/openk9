@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 import java.time.OffsetDateTime;
 import java.util.concurrent.CompletableFuture;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 
 @ApplicationScoped
@@ -37,13 +38,15 @@ public class SchedulingService {
 
 	private final static String ADDRESS = SchedulingService.class.getName();
 	private final static Logger log = Logger.getLogger(SchedulingService.class);
-	private static EventBus eventBus;
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	SchedulerMapper schedulerMapper;
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(SchedulingKey schedulingKey) {
+
+		var eventBus = CDI.current().select(EventBus.class).get();
+
 		return eventBus.request(ADDRESS, new FetchRequest(schedulingKey))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
@@ -52,6 +55,8 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistStatus(
 		SchedulingKey schedulingKey, Scheduler.SchedulerStatus status) {
 
+		var eventBus = CDI.current().select(EventBus.class).get();
+
 		return eventBus.request(ADDRESS, new PersistStatusRequest(schedulingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
@@ -59,6 +64,8 @@ public class SchedulingService {
 
 	public static CompletableFuture<SchedulerDTO> persistLastIngestionDate(
 		SchedulingKey schedulingKey, OffsetDateTime lastIngestionDate) {
+
+		var eventBus = CDI.current().select(EventBus.class).get();
 
 		return eventBus.request(
 				ADDRESS,
@@ -118,13 +125,6 @@ public class SchedulingService {
 				})
 			)
 			.map(schedulerMapper::map);
-	}
-
-	@Inject
-	void setEventBus(EventBus eventBus) {
-
-		SchedulingService.eventBus = eventBus;
-		log.infof("Injected eventBus");
 	}
 
 	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
