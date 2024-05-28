@@ -53,7 +53,7 @@ import javax.validation.ValidationException;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
-	private static final String ADDRESS = DatasourceService.class.getName();
+	private static final String UPDATE_DATASOURCE = "DatasourceService#updateDatasource";
 	private static final Logger log = Logger.getLogger(DatasourceService.class);
 	private static EventBus eventBus;
 	@Inject
@@ -87,13 +87,13 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 		var eventBus = CDI.current().select(EventBus.class).get();
 
-		return eventBus.request(ADDRESS, new UpdateDatasourceRequest(
+		return eventBus.request(UPDATE_DATASOURCE, new UpdateDatasourceRequest(
 				tenantId, datasourceId, lastIngestionDate, newDataIndexId))
 			.map(message -> (Void) message.body())
 			.subscribeAsCompletionStage();
 	}
 
-	@ConsumeEvent
+	@ConsumeEvent(UPDATE_DATASOURCE)
 	Uni<Void> _updateDatasource(UpdateDatasourceRequest request) {
 
 		var tenantId = request.tenantId();

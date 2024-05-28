@@ -36,7 +36,10 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class SchedulingService {
 
-	private final static String ADDRESS = SchedulingService.class.getName();
+	private final static String FETCH_SCHEDULER = "SchedulingService#fetchScheduler";
+	private final static String PERSIST_STATUS = "SchedulingService#persistStatus";
+	private final static String PERSIST_LAST_INGESTION_DATE =
+		"SchedulingService#persistLastIngestionDate";
 	private final static Logger log = Logger.getLogger(SchedulingService.class);
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -47,7 +50,7 @@ public class SchedulingService {
 
 		var eventBus = CDI.current().select(EventBus.class).get();
 
-		return eventBus.request(ADDRESS, new FetchRequest(schedulingKey))
+		return eventBus.request(FETCH_SCHEDULER, new FetchRequest(schedulingKey))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
@@ -57,7 +60,7 @@ public class SchedulingService {
 
 		var eventBus = CDI.current().select(EventBus.class).get();
 
-		return eventBus.request(ADDRESS, new PersistStatusRequest(schedulingKey, status))
+		return eventBus.request(PERSIST_STATUS, new PersistStatusRequest(schedulingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
@@ -68,14 +71,14 @@ public class SchedulingService {
 		var eventBus = CDI.current().select(EventBus.class).get();
 
 		return eventBus.request(
-				ADDRESS,
+				PERSIST_LAST_INGESTION_DATE,
 				new PersistLastIngestionDateRequest(schedulingKey, lastIngestionDate)
 			)
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
 
-	@ConsumeEvent
+	@ConsumeEvent(FETCH_SCHEDULER)
 	Uni<SchedulerDTO> _fetchScheduler(FetchRequest request) {
 
 		var schedulingKey = request.schedulingKey();
@@ -89,7 +92,7 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
-	@ConsumeEvent
+	@ConsumeEvent(PERSIST_STATUS)
 	Uni<SchedulerDTO> _persistStatus(
 		PersistStatusRequest request) {
 
@@ -108,7 +111,7 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
-	@ConsumeEvent
+	@ConsumeEvent(PERSIST_LAST_INGESTION_DATE)
 	Uni<SchedulerDTO> _persistLastIngestionDate(
 		PersistLastIngestionDateRequest request) {
 
