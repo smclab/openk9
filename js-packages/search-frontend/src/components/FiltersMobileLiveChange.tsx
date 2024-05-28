@@ -1,12 +1,6 @@
 import React from "react";
 import { css } from "styled-components/macro";
-import {
-  GenericResultItem,
-  DetailRendererProps,
-  SearchToken,
-  SortField,
-} from "./client";
-import { useRenderers } from "./useRenderers";
+import { SearchToken, SortField } from "./client";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { ModalDetail } from "./ModalDetail";
 import {
