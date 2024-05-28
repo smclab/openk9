@@ -1024,12 +1024,17 @@ function useSearch({
     queryAnalysis.data !== undefined &&
     !queryAnalysis.isPreviousData;
 
+  const counterTotalFilters = newTokenFilter.reduce((total, element) => {
+    return total + (element?.values?.length || 0);
+  }, 0);
+
   React.useEffect(() => {
     onQueryStateChange({
       defaultTokens,
       tabTokens: tabTokens?.tabToken ?? [],
       filterTokens,
       searchTokens,
+      numberOfFilters: counterTotalFilters,
     });
     setCurrentPage(0);
   }, [
@@ -1422,6 +1427,7 @@ export type QueryState = {
   tabTokens: Array<SearchToken>;
   filterTokens: Array<SearchToken>;
   searchTokens: Array<SearchToken>;
+  numberOfFilters: number;
 };
 
 function deriveSearchQuery(
