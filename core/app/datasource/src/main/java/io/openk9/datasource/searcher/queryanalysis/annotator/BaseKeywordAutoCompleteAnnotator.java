@@ -173,21 +173,44 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
-							if (((String) e2.getValue()).startsWith(token)) {
-								categorySemantics.add(
-									CategorySemantics.of(
-										"$KEYWORD_AUTOCOMPLETE",
-										Map.of(
-											"tokenType", "TEXT",
-											"keywordKey", keyword_value + ".keyword",
-											"label", label,
-											"value", e2.getValue(),
-											"score", 0.2f,
-											"extra", annotator.getExtraParams()
-										)
-									)
-								);
+							if (e2.getValue() instanceof ArrayList) {
+								for (String name : ((ArrayList<String>) e2.getValue())) {
+									if (!name.equals(token) &&
+										(name.contains(token))) {
+										categorySemantics.add(
+											CategorySemantics.of(
+												"$KEYWORD_AUTOCOMPLETE",
+												Map.of(
+													"tokenType", "TEXT",
+													"keywordKey", keyword_value + ".keyword",
+													"label", label,
+													"value", e2.getValue(),
+													"score", 0.2f,
+													"extra", annotator.getExtraParams()
+												)
+											)
+										);
+									}
+								}
 							}
+							else {
+								if (!e2.getValue().equals(token)) {
+									categorySemantics.add(
+										CategorySemantics.of(
+											"$KEYWORD_AUTOCOMPLETE",
+											Map.of(
+												"tokenType", "TEXT",
+												"keywordKey", keyword_value + ".keyword",
+												"label", label,
+												"value", e2.getValue(),
+												"score", 0.2f,
+												"extra", annotator.getExtraParams()
+											)
+										)
+									);
+								}
+							}
+
 						}
 					}
 
