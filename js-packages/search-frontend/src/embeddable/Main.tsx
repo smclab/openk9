@@ -943,7 +943,7 @@ function useSearch({
   const [previousSearchTokens, setPreviousSearchTokens] = React.useState<
     Array<SearchToken>
   >([]);
-  const debounced = useDebounce(selectionsState, 0);
+  const debounced = useDebounce(selectionsState, debounceTimeSearch);
   const infoSort = tabTokens?.sort?.sort;
 
   const queryAnalysis = !configuration.useQueryAnalysis
