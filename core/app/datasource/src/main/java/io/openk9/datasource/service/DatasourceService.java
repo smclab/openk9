@@ -33,12 +33,17 @@ import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -47,6 +52,9 @@ import javax.validation.ValidationException;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
+	private static final String ADDRESS = DatasourceService.class.getName();
+	private static final Logger log = Logger.getLogger(DatasourceService.class);
+	private static EventBus eventBus;
 	@Inject
 	DataIndexService dataIndexService;
 	@Inject
@@ -68,6 +76,52 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	@Override
 	public Class<Datasource> getEntityClass() {
 		return Datasource.class;
+	}
+
+	public static CompletableFuture<Void> updateDatasource(
+		String tenantId,
+		long datasourceId,
+		OffsetDateTime lastIngestionDate,
+		Long newDataIndexId) {
+
+		return eventBus.request(ADDRESS, new UpdateDatasourceRequest(
+				tenantId, datasourceId, lastIngestionDate, newDataIndexId))
+			.map(message -> (Void) message.body())
+			.subscribeAsCompletionStage();
+	}
+
+	@Inject
+	void setEventBus(EventBus eventBus) {
+		DatasourceService.eventBus = eventBus;
+	}
+
+	@ConsumeEvent
+	Uni<Void> _updateDatasource(UpdateDatasourceRequest request) {
+
+		var tenantId = request.tenantId();
+		var datasourceId = request.datasourceId();
+		var lastIngestionDate = request.lastIngestionDate();
+		var newDataIndexId = request.newDataIndexId();
+
+		return sessionFactory.withTransaction(
+			tenantId, (s, t) -> s.find(Datasource.class, datasourceId)
+				.flatMap(datasource -> {
+					datasource.setLastIngestionDate(lastIngestionDate);
+
+					if (newDataIndexId != null) {
+						var newDataIndex = s.getReference(DataIndex.class, newDataIndexId);
+
+						log.infof(
+							"replacing dataindex %s for datasource %s on tenant %s",
+							newDataIndexId, datasourceId, tenantId
+						);
+
+						datasource.setDataIndex(newDataIndex);
+					}
+
+					return s.persist(datasource);
+				})
+		);
 	}
 
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
@@ -392,5 +446,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	}
 
-
+	public record UpdateDatasourceRequest(
+		String tenantId, long datasourceId, OffsetDateTime lastIngestionDate, Long newDataIndexId
+	) {}
 }

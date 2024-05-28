@@ -49,7 +49,7 @@ public class MockActorSystemConfig extends ActorSystemConfig {
 	@Override
 	@Produces
 	@ApplicationScoped
-	public ActorSystemInitializer schedulingSharding() {
+	public ActorSystemInitializer clusterSharding() {
 		return actorSystem -> {};
 	}
 

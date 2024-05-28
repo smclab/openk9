@@ -85,11 +85,7 @@ public class ActorSystemConfig {
 			sharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				var schedulingKey = SchedulingKey.fromString(entityId);
-				return Scheduling.create(
-					schedulingKey,
-					sessionFactory,
-					schedulerMapper
-				);
+				return Scheduling.create(schedulingKey);
 			}));
 
 			sharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
