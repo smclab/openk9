@@ -1452,7 +1452,7 @@ function deriveSearchQuery(
         (token && analysisTokenToSearchToken(token)) ??
         (text !== undefined
           ? {
-              tokenType: token?.tokenType,
+              tokenType: "TEXT",
               values: [text],
               filter: false,
             }
