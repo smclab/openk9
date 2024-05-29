@@ -15,12 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor.service;
+package io.openk9.datasource.pipeline.service;
 
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
-import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;

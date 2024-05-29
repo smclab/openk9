@@ -23,7 +23,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
@@ -54,7 +54,8 @@ import javax.enterprise.inject.spi.CDI;
 public class IndexWriterActor {
 
 	public sealed interface Command extends CborSerializable {}
-	public record Start(io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler, byte[] dataPayload, ActorRef<Response> replyTo)
+
+	public record Start(SchedulerDTO scheduler, byte[] dataPayload, ActorRef<Response> replyTo)
 		implements Command {}
 	private record SearchResponseCommand(SchedulerDTO scheduler, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
 	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}

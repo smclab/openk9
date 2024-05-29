@@ -30,7 +30,7 @@ import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
-import io.openk9.datasource.pipeline.actor.mapper.SchedulerMapper;
+import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;

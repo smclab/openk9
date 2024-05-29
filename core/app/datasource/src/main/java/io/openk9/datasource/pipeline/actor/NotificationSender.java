@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline;
+package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -27,7 +27,7 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.service.SchedulerService;
 
 import javax.enterprise.inject.spi.CDI;

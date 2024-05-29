@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor.dto;
+package io.openk9.datasource.pipeline.service.dto;
 
 import io.openk9.datasource.model.Scheduler;
 import lombok.Data;

@@ -26,10 +26,10 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.pipeline.actor.dto.EnrichItemDTO;
-import io.openk9.datasource.pipeline.actor.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
+import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.JsonMerge;
@@ -435,7 +435,7 @@ public class EnrichPipeline {
 		ActorRef<Response> scheduling,
 		ActorRef<Scheduling.Response> consumer,
 		byte[] ingestPayload,
-		io.openk9.datasource.pipeline.actor.dto.SchedulerDTO scheduler
+		SchedulerDTO scheduler
 
 	) implements Command {}
 

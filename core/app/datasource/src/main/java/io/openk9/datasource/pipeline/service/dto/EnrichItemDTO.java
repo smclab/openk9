@@ -15,21 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor;
+package io.openk9.datasource.pipeline.service.dto;
 
-public class SendNotificationCloseHandler {
+import io.openk9.datasource.model.EnrichItem;
+import lombok.Data;
 
-	static void sendNotification(Scheduling scheduling) {
-
-		if (scheduling.isReindex()) {
-			scheduling.getContext().spawnAnonymous(NotificationSender.create(
-				scheduling.getScheduler(),
-				scheduling.getKey(),
-				scheduling.getContext().getSystem().ignoreRef()
-			));
-		}
-
-		scheduling.getContext().getSelf().tell(Scheduling.CloseHandlerResponse.INSTANCE);
-	}
-
+@Data
+public class EnrichItemDTO {
+	private Long id;
+	private String name;
+	private String serviceName;
+	private String script;
+	private EnrichItem.EnrichItemType type;
+	private String jsonConfig;
+	private String jsonPath;
+	private EnrichItem.BehaviorMergeType behaviorMergeType;
+	private Long requestTimeout;
+	private EnrichItem.BehaviorOnError behaviorOnError;
 }
