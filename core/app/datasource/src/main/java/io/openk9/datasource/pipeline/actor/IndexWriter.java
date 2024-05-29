@@ -51,7 +51,7 @@ import org.slf4j.Logger;
 import java.util.Map;
 import javax.enterprise.inject.spi.CDI;
 
-public class IndexWriterActor {
+public class IndexWriter {
 
 	public sealed interface Command extends CborSerializable {}
 

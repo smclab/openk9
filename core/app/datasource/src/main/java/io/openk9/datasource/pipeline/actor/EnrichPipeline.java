@@ -77,9 +77,9 @@ public class EnrichPipeline {
 		ActorRef<Response> scheduling = setup.scheduling();
 		ActorRef<Scheduling.Response> consumer = setup.consumer();
 
-		ActorRef<IndexWriterActor.Response> responseActorRef =
+		ActorRef<IndexWriter.Response> responseActorRef =
 			ctx.messageAdapter(
-				IndexWriterActor.Response.class,
+				IndexWriter.Response.class,
 				IndexWriterResponseWrapper::new
 			);
 
@@ -110,7 +110,7 @@ public class EnrichPipeline {
 	private static Behavior<Command> initPipeline(
 		ActorContext<Command> ctx,
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
-		ActorRef<IndexWriterActor.Response> responseActorRef,
+		ActorRef<IndexWriter.Response> responseActorRef,
 		ActorRef<Response> replyTo,
 		ActorRef<Scheduling.Response> consumer,
 		DataPayload dataPayload,
@@ -125,15 +125,15 @@ public class EnrichPipeline {
 
 			log.info("pipeline is empty, start index writer");
 
-			ActorRef<IndexWriterActor.Command> indexWriterActorRef =
-				ctx.spawnAnonymous(IndexWriterActor.create());
+			ActorRef<IndexWriter.Command> indexWriterActorRef =
+				ctx.spawnAnonymous(IndexWriter.create());
 
 			ctx.watch(indexWriterActorRef);
 
 			Buffer buffer = Json.encodeToBuffer(dataPayload);
 
 			indexWriterActorRef.tell(
-				new IndexWriterActor.Start(
+				new IndexWriter.Start(
 					scheduler, buffer.getBytes(), responseActorRef)
 			);
 
@@ -142,10 +142,10 @@ public class EnrichPipeline {
 					IndexWriterResponseWrapper.class,
 					indexWriterResponseWrapper -> {
 
-						IndexWriterActor.Response response =
+						IndexWriter.Response response =
 							indexWriterResponseWrapper.response();
 
-						if (response instanceof IndexWriterActor.Success) {
+						if (response instanceof IndexWriter.Success) {
 							replyTo.tell(new Success(
 									dataPayload.getContentId(),
 									consumer,
@@ -154,7 +154,7 @@ public class EnrichPipeline {
 								)
 							);
 						}
-						else if (response instanceof IndexWriterActor.Failure failure) {
+						else if (response instanceof IndexWriter.Failure failure) {
 							replyTo.tell(new Failure(
 								new EnrichPipelineException(failure.exception()),
 									consumer,
@@ -415,7 +415,7 @@ public class EnrichPipeline {
 	}
 
 	private record IndexWriterResponseWrapper(
-		IndexWriterActor.Response response
+		IndexWriter.Response response
 	) implements Command {}
 
 	private record EnrichItemSupervisorResponseWrapper(
