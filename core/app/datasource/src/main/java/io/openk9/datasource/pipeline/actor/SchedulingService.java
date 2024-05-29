@@ -41,6 +41,8 @@ public class SchedulingService {
 	private final static String PERSIST_LAST_INGESTION_DATE =
 		"SchedulingService#persistLastIngestionDate";
 	private final static Logger log = Logger.getLogger(SchedulingService.class);
+	private static EventBus eventBus;
+
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
@@ -48,7 +50,7 @@ public class SchedulingService {
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(SchedulingKey schedulingKey) {
 
-		var eventBus = CDI.current().select(EventBus.class).get();
+		var eventBus = getEventBus();
 
 		return eventBus.request(FETCH_SCHEDULER, new FetchRequest(schedulingKey))
 			.map(message -> (SchedulerDTO) message.body())
@@ -58,7 +60,7 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistStatus(
 		SchedulingKey schedulingKey, Scheduler.SchedulerStatus status) {
 
-		var eventBus = CDI.current().select(EventBus.class).get();
+		var eventBus = getEventBus();
 
 		return eventBus.request(PERSIST_STATUS, new PersistStatusRequest(schedulingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
@@ -68,7 +70,7 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistLastIngestionDate(
 		SchedulingKey schedulingKey, OffsetDateTime lastIngestionDate) {
 
-		var eventBus = CDI.current().select(EventBus.class).get();
+		var eventBus = getEventBus();
 
 		return eventBus.request(
 				PERSIST_LAST_INGESTION_DATE,
@@ -79,7 +81,7 @@ public class SchedulingService {
 	}
 
 	@ConsumeEvent(FETCH_SCHEDULER)
-	Uni<SchedulerDTO> _fetchScheduler(FetchRequest request) {
+	Uni<SchedulerDTO> fetchScheduler(FetchRequest request) {
 
 		var schedulingKey = request.schedulingKey();
 		var tenantId = schedulingKey.tenantId();
@@ -93,7 +95,7 @@ public class SchedulingService {
 	}
 
 	@ConsumeEvent(PERSIST_STATUS)
-	Uni<SchedulerDTO> _persistStatus(
+	Uni<SchedulerDTO> persistStatus(
 		PersistStatusRequest request) {
 
 		var schedulingKey = request.schedulingKey();
@@ -112,7 +114,7 @@ public class SchedulingService {
 	}
 
 	@ConsumeEvent(PERSIST_LAST_INGESTION_DATE)
-	Uni<SchedulerDTO> _persistLastIngestionDate(
+	Uni<SchedulerDTO> persistLastIngestionDate(
 		PersistLastIngestionDateRequest request) {
 
 		var schedulingKey = request.schedulingKey();
@@ -130,6 +132,14 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
+	private static EventBus getEventBus() {
+		if (eventBus == null) {
+			eventBus = CDI.current().select(EventBus.class).get();
+		}
+
+		return eventBus;
+	}
+
 	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
 
 		return s
@@ -139,14 +149,14 @@ public class SchedulingService {
 			.getSingleResult();
 	}
 
-	public record FetchRequest(SchedulingKey schedulingKey) {}
+	private record FetchRequest(SchedulingKey schedulingKey) {}
 
-	public record PersistStatusRequest(
+	private record PersistStatusRequest(
 		SchedulingKey schedulingKey,
 		Scheduler.SchedulerStatus status
 	) {}
 
-	public record PersistLastIngestionDateRequest(
+	private record PersistLastIngestionDateRequest(
 		SchedulingKey schedulingKey,
 		OffsetDateTime lastIngestionDate
 	) {}
