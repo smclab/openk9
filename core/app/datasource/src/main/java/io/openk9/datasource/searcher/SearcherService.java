@@ -97,6 +97,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -496,6 +497,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		String searchText = request.getSearchText();
 
+		String mode = request.getMode();
+
 		Uni<Grammar> grammarUni =
 			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
 
@@ -547,8 +550,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						int startPos = maps.getPos().get(0);
 						Object keywordKey = map.get("keywordKey");
 
-						if (startPos > 0 || keywordKey != null) {
-							continue;
+						if (Objects.equals(mode, "semantic-autocomplete")) {
+							logger.info(mode);
+							if (startPos > 0 && keywordKey != null) {
+								continue;
+							}
 						}
 
 						if (tokenType != null && !tokenType.equals("TOKEN")) {

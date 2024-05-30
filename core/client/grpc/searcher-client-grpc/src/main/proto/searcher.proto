@@ -81,6 +81,7 @@ message QueryAnalysisRequest {
   repeated QueryAnalysisToken tokens = 2;
   string virtualHost = 3;
   optional string jwt = 4;
+  string mode = 5;
 }
 
 message QueryAnalysisToken {

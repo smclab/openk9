@@ -133,7 +133,7 @@ public class SearchResource {
 		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
 
 		QueryAnalysisRequest queryAnalysisRequest =
-			getQueryAnalysisRequest(searchRequest);
+			getQueryAnalysisRequest(searchRequest, "query-analysis");
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
@@ -143,13 +143,13 @@ public class SearchResource {
 
 
 	@POST
-	@Path("/suggerimenti")
+	@Path("/semantic-autocomplete")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> suggerimenti(
+	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> semanticAutocomplete(
 		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
 
 		QueryAnalysisRequest queryAnalysisRequest =
-			getQueryAnalysisRequest(searchRequest);
+			getQueryAnalysisRequest(searchRequest, "semantic-autocomplete");
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
@@ -230,7 +230,7 @@ public class SearchResource {
 	}
 
 	private QueryAnalysisRequest getQueryAnalysisRequest(
-		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
 
 		QueryAnalysisRequest.Builder builder =
 			QueryAnalysisRequest.newBuilder();
@@ -238,6 +238,7 @@ public class SearchResource {
 		builder.setSearchText(searchRequest.getSearchText());
 		builder.setVirtualHost(request.host());
 		builder.setJwt(rawToken == null ? "" : rawToken);
+		builder.setMode(mode);
 
 		if (searchRequest.getTokens() != null) {
 
