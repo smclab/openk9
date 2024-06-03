@@ -39,6 +39,7 @@ import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
+import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
@@ -89,6 +90,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private int maxWorkers;
 	private int busyWorkers = 0;
 	private int expectedReplies;
+	private Scheduler.SchedulerStatus endingStatus = Scheduler.SchedulerStatus.FINISHED;
 
 	public Scheduling(
 		ActorContext<Command> context, SchedulingKey key) {
@@ -246,31 +248,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			}
 			else {
 
-				log.infof("Starting ending operations for %s", key);
-
-				var status = Scheduler.SchedulerStatus.FINISHED;
-
-				if (scheduler.getLastIngestionDate() == null && !scheduler.isNewIndex()) {
-					log.infof(
-						"Nothing was changed during this Scheduling on %s index.",
-						scheduler.getOldDataIndexName()
-					);
-				}
-
-				if (scheduler.getLastIngestionDate() == null && scheduler.isNewIndex()) {
-					log.warnf(
-						"LastIngestionDate was null, " +
-						"means that no content was received in this Scheduling. " +
-						"%s will be cancelled",
-						key
-					);
-
-					status = Scheduler.SchedulerStatus.CANCELLED;
-				}
-
 				getContext()
 					.getSelf()
-					.tell(new GracefulEnd(status));
+					.tell(new GracefulEnd(endingStatus));
 
 				return newReceiveBuilder()
 					.onMessage(GracefulEnd.class, this::onGracefulEnd)
@@ -651,6 +631,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onCloseHandlerReply(CloseHandlerReply closeHandlerReply) {
+		var reply = closeHandlerReply.reply();
+
+		if (reply instanceof EvaluateStatus.Success success) {
+			this.endingStatus = success.status();
+		}
 
 		this.expectedReplies--;
 
@@ -674,6 +659,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var updateDatasource = getContext().spawnAnonymous(UpdateDatasource.create(getKey()));
 		var deletionCompareNotifier = getContext().spawnAnonymous(DeletionCompareNotifier.create(
 			getKey()));
+		var evaluateStatus = getContext().spawnAnonymous(EvaluateStatus.create(getKey()));
 
 		var replyTo = getContext().messageAdapter(
 			Object.class,
@@ -685,8 +671,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			getScheduler(),
 			replyTo.narrow()
 		));
+		evaluateStatus.tell(new EvaluateStatus.Start(getScheduler(), replyTo.narrow()));
 
-		expectedReplies = 2;
+		expectedReplies = 3;
 
 		return closing();
 	}
