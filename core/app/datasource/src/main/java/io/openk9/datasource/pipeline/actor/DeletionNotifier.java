@@ -32,43 +32,37 @@ import io.openk9.datasource.service.SchedulerService;
 
 import javax.enterprise.inject.spi.CDI;
 
-public class NotificationSender extends AbstractBehavior<NotificationSender.Command> {
+public class DeletionNotifier extends AbstractBehavior<DeletionNotifier.Command> {
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
 	private final SchedulingKey schedulingKey;
-	private final SchedulerDTO scheduler;
-	private final ActorRef<Response> replyTo;
 
-	public NotificationSender(
+	public DeletionNotifier(
 		ActorContext<Command> context,
-		SchedulerDTO scheduler,
-		SchedulingKey schedulingKey, ActorRef<Response> replyTo) {
+		SchedulingKey schedulingKey) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
 		this.schedulingKey = schedulingKey;
-		this.scheduler = scheduler;
-		this.replyTo = replyTo;
-		context.getSelf().tell(Start.INSTANCE);
 	}
 
-	public static Behavior<Command> create(
-		SchedulerDTO scheduler, SchedulingKey key, ActorRef<Response> replyTo) {
-
-		return Behaviors.setup(ctx -> new NotificationSender(ctx, scheduler, key, replyTo));
+	public static Behavior<Command> create(SchedulingKey key) {
+		return Behaviors.setup(ctx -> new DeletionNotifier(ctx, key));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessage(Start.class, this::onStart)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
-	private Behavior<Command> onStart() {
+	private Behavior<Command> onStart(Start start) {
 
+		var replyTo = start.replyTo();
+		var scheduler = start.scheduler();
 		String tenantName = schedulingKey.tenantId();
 		String scheduleId = schedulingKey.scheduleId();
 
@@ -96,6 +90,8 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 						.build()
 				);
 			}
+
+			replyTo.tell(Success.INSTANCE);
 			getContext().getSelf().tell(Stop.INSTANCE);
 		});
 
@@ -103,12 +99,12 @@ public class NotificationSender extends AbstractBehavior<NotificationSender.Comm
 	}
 
 	private Behavior<Command> onStop() {
-		replyTo.tell(Success.INSTANCE);
 		return Behaviors.stopped();
 	}
 
 	public sealed interface Command {}
-	private enum Start implements Command {INSTANCE}
+
+	public record Start(SchedulerDTO scheduler, ActorRef<Response> replyTo) implements Command {}
 	private enum Stop implements Command {INSTANCE}
 	public sealed interface Response {}
 	public enum Success implements Response {INSTANCE}

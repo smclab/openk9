@@ -55,9 +55,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
@@ -85,21 +83,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean lastReceived = false;
 	private int maxWorkers;
 	private int busyWorkers = 0;
-	private final List<CloseHandler> closeHandlers;
 	private int expectedReplies;
 
 	public Scheduling(
-		ActorContext<Command> context,
-		SchedulingKey key,
-		List<CloseHandler> closeHandlers) {
+		ActorContext<Command> context, SchedulingKey key) {
 
 		super(context);
 		this.key = key;
 		this.timeout = getTimeout(context);
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
-		this.closeHandlers = closeHandlers;
-		this.expectedReplies = closeHandlers.size();
 
 		ActorRef<Receptionist.Listing> messageAdapter =
 			getContext().messageAdapter(
@@ -120,13 +113,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Scheduling(
-					ctx,
-					schedulingKey,
-					List.of(
-						UpdateDatasourceCloseHandler::updateDatasource,
-						SendNotificationCloseHandler::sendNotification
-					)
-				))
+					ctx, schedulingKey)
+				)
 			)
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 					Duration.ofSeconds(3),
@@ -223,10 +211,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return ready();
 	}
 
-	public SchedulingKey getKey() {
-		return this.key;
-	}
-
 	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
 
 		var scheduler = fetchedScheduler.scheduler();
@@ -249,10 +233,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 
 		return Behaviors.same();
-	}
-
-	public SchedulerDTO getScheduler() {
-		return this.scheduler;
 	}
 
 	private Behavior<Command> onMessageGatewaySubscription(
@@ -282,56 +262,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> closing() {
-		logBehavior(CLOSING_BEHAVIOR);
-
-		return Behaviors.withTimers(timers -> {
-
-			timers.cancel(Tick.INSTANCE);
-
-			if (expectedReplies > 0) {
-
-				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
-
-				return newReceiveBuilder()
-					.onMessageEquals(CloseHandlerResponse.INSTANCE, this::onCloseHandlerResponse)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-			else {
-
-				log.infof("Starting ending operations for %s", key);
-
-				var status = Scheduler.SchedulerStatus.FINISHED;
-
-				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
-					log.infof(
-						"Nothing was changed during this Scheduling on %s index.",
-						scheduler.getOldDataIndexName()
-					);
-				}
-
-				if (scheduler.getLastIngestionDate() == null && isNewIndex()) {
-					log.warnf(
-						"LastIngestionDate was null, " +
-						"means that no content was received in this Scheduling. " +
-						"%s will be cancelled",
-						key
-					);
-
-					status = Scheduler.SchedulerStatus.CANCELLED;
-				}
-
-				getContext()
-					.getSelf()
-					.tell(new GracefulEnd(status));
-
-				return newReceiveBuilder()
-					.onMessage(GracefulEnd.class, this::onGracefulEnd)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-		});
+	public SchedulingKey getKey() {
+		return this.key;
 	}
 
 	private Behavior<Command> onIngest(Ingest ingest) {
@@ -665,11 +597,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onCloseHandlerResponse() {
-
-		this.expectedReplies--;
-
-		return closing();
+	public SchedulerDTO getScheduler() {
+		return this.scheduler;
 	}
 
 	private void logBehavior(String behavior) {
@@ -688,6 +617,65 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 		}
+	}
+
+	private Behavior<Command> closing() {
+		logBehavior(CLOSING_BEHAVIOR);
+
+		return Behaviors.withTimers(timers -> {
+
+			timers.cancel(Tick.INSTANCE);
+
+			if (expectedReplies > 0) {
+
+				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
+
+				return newReceiveBuilder()
+					.onMessage(CloseHandlerReply.class, this::onCloseHandlerReply)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+			else {
+
+				log.infof("Starting ending operations for %s", key);
+
+				var status = Scheduler.SchedulerStatus.FINISHED;
+
+				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
+					log.infof(
+						"Nothing was changed during this Scheduling on %s index.",
+						scheduler.getOldDataIndexName()
+					);
+				}
+
+				if (scheduler.getLastIngestionDate() == null && isNewIndex()) {
+					log.warnf(
+						"LastIngestionDate was null, " +
+						"means that no content was received in this Scheduling. " +
+						"%s will be cancelled",
+						key
+					);
+
+					status = Scheduler.SchedulerStatus.CANCELLED;
+				}
+
+				getContext()
+					.getSelf()
+					.tell(new GracefulEnd(status));
+
+				return newReceiveBuilder()
+					.onMessage(GracefulEnd.class, this::onGracefulEnd)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+		});
+	}
+
+	private Behavior<Command> onCloseHandlerReply(CloseHandlerReply closeHandlerReply) {
+
+		this.expectedReplies--;
+
+		return closing();
 	}
 
 	protected boolean isExpired() {
@@ -724,18 +712,21 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onClose() {
 
-		for (CloseHandler handler : closeHandlers) {
-			handler.accept(this);
-		}
+		var updateDatasource = getContext().spawnAnonymous(UpdateDatasource.create(getKey()));
+		var deletionNotifier = getContext().spawnAnonymous(DeletionNotifier.create(getKey()));
+
+		var replyTo = getContext().messageAdapter(
+			Object.class,
+			CloseHandlerReply::new
+		);
+
+		updateDatasource.tell(new UpdateDatasource.Start(getScheduler(), replyTo.narrow()));
+		deletionNotifier.tell(new DeletionNotifier.Start(getScheduler(), replyTo.narrow()));
+
+		expectedReplies = 2;
 
 		return closing();
 	}
-
-	public enum CloseHandlerResponse implements Command {
-		INSTANCE
-	}
-
-	private interface CloseHandler extends Consumer<Scheduling> {}
 
 	public sealed interface Command extends CborSerializable {}
 
@@ -793,5 +784,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private record DestroyQueue(Response persistStatusResponse) implements Command {}
 
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
+
+	private record CloseHandlerReply(Object reply) implements Command {}
 
 }
