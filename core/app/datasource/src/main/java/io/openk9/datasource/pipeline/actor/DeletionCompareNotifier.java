@@ -32,13 +32,13 @@ import io.openk9.datasource.service.SchedulerService;
 
 import javax.enterprise.inject.spi.CDI;
 
-public class DeletionNotifier extends AbstractBehavior<DeletionNotifier.Command> {
+public class DeletionCompareNotifier extends AbstractBehavior<DeletionCompareNotifier.Command> {
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
 	private final SchedulingKey schedulingKey;
 
-	public DeletionNotifier(
+	public DeletionCompareNotifier(
 		ActorContext<Command> context,
 		SchedulingKey schedulingKey) {
 		super(context);
@@ -48,7 +48,7 @@ public class DeletionNotifier extends AbstractBehavior<DeletionNotifier.Command>
 	}
 
 	public static Behavior<Command> create(SchedulingKey key) {
-		return Behaviors.setup(ctx -> new DeletionNotifier(ctx, key));
+		return Behaviors.setup(ctx -> new DeletionCompareNotifier(ctx, key));
 	}
 
 	@Override
@@ -66,35 +66,55 @@ public class DeletionNotifier extends AbstractBehavior<DeletionNotifier.Command>
 		String tenantName = schedulingKey.tenantId();
 		String scheduleId = schedulingKey.scheduleId();
 
-		getContext()
-			.getLog()
-			.info(
-				"Sending notification for tenant {} scheduleId {} for deleted content",
-				tenantName, scheduleId
+		if (scheduler.isReindex()) {
+
+			getContext()
+				.getLog()
+				.info(
+					"Compare index and sending notification for tenant {} scheduleId {} for deleted content",
+					tenantName,
+					scheduleId
+				);
+
+			VertxUtil.runOnContext(
+				() -> service.getDeletedContentIds(tenantName, scheduleId),
+				list -> {
+
+					Long datasourceId = scheduler.getDatasourceId();
+					String newDataIndexName = scheduler.getNewDataIndexName();
+
+					for (String deletedContentId : list) {
+						sender.sendEvent(
+							DatasourceMessage
+								.Delete
+								.builder()
+								.indexName(newDataIndexName)
+								.datasourceId(datasourceId)
+								.tenantId(tenantName)
+								.contentId(deletedContentId)
+								.build()
+						);
+					}
+
+					replyTo.tell(Success.INSTANCE);
+					getContext().getSelf().tell(Stop.INSTANCE);
+				}
 			);
 
-		VertxUtil.runOnContext(() -> service.getDeletedContentIds(tenantName, scheduleId), list -> {
+		}
+		else {
 
-			Long datasourceId = scheduler.getDatasourceId();
-			String newDataIndexName = scheduler.getNewDataIndexName();
-
-			for (String deletedContentId : list) {
-				sender.sendEvent(
-					DatasourceMessage
-						.Delete
-						.builder()
-						.indexName(newDataIndexName)
-						.datasourceId(datasourceId)
-						.tenantId(tenantName)
-						.contentId(deletedContentId)
-						.build()
+			getContext()
+				.getLog()
+				.info(
+					"Nothing to compare for tenant {} scheduleId {}",
+					tenantName, scheduleId
 				);
-			}
 
 			replyTo.tell(Success.INSTANCE);
 			getContext().getSelf().tell(Stop.INSTANCE);
-		});
 
+		}
 		return Behaviors.same();
 	}
 

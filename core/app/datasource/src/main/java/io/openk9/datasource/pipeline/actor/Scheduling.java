@@ -670,7 +670,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onClose() {
 
 		var updateDatasource = getContext().spawnAnonymous(UpdateDatasource.create(getKey()));
-		var deletionNotifier = getContext().spawnAnonymous(DeletionNotifier.create(getKey()));
+		var deletionCompareNotifier = getContext().spawnAnonymous(DeletionCompareNotifier.create(
+			getKey()));
 
 		var replyTo = getContext().messageAdapter(
 			Object.class,
@@ -678,7 +679,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		updateDatasource.tell(new UpdateDatasource.Start(getScheduler(), replyTo.narrow()));
-		deletionNotifier.tell(new DeletionNotifier.Start(getScheduler(), replyTo.narrow()));
+		deletionCompareNotifier.tell(new DeletionCompareNotifier.Start(
+			getScheduler(),
+			replyTo.narrow()
+		));
 
 		expectedReplies = 2;
 
