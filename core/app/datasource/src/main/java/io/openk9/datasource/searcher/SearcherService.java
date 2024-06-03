@@ -864,6 +864,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		highlightBuilder.forceSource(true);
 
+		highlightBuilder.fragmentSize(150);
+
+		highlightBuilder.order("score");
+
 		highlightBuilder.tagsSchema("default");
 
 		highlightBuilder.fields().addAll(highlightFields);
