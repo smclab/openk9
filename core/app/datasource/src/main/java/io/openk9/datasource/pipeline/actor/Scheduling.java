@@ -242,7 +242,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
 
 				return newReceiveBuilder()
-					.onMessage(CloseHandlerReply.class, this::onCloseHandlerReply)
+					.onMessage(HandlerReply.class, this::onCloseHandlerReply)
 					.onAnyMessage(this::onDiscard)
 					.build();
 			}
@@ -630,8 +630,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onCloseHandlerReply(CloseHandlerReply closeHandlerReply) {
-		var reply = closeHandlerReply.reply();
+	private Behavior<Command> onCloseHandlerReply(HandlerReply handlerReply) {
+		var reply = handlerReply.reply();
 
 		if (reply instanceof EvaluateStatus.Success success) {
 			this.endingStatus = success.status();
@@ -663,7 +663,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		var replyTo = getContext().messageAdapter(
 			Object.class,
-			CloseHandlerReply::new
+			HandlerReply::new
 		);
 
 		updateDatasource.tell(new UpdateDatasource.Start(getScheduler(), replyTo.narrow()));
@@ -757,6 +757,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
-	private record CloseHandlerReply(Object reply) implements Command {}
+	private record HandlerReply(Object reply) implements Command {}
 
 }
