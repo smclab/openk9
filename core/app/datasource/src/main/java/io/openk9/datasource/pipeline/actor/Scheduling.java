@@ -648,20 +648,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
-		OffsetDateTime parsingDate =
-			OffsetDateTime.ofInstant(
-				Instant.ofEpochMilli(dataPayload.getParsingDate()),
-				ZoneOffset.UTC
-			);
-
-		var lastIngestionDate = this.scheduler.getLastIngestionDate();
-
-		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
-			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
-		}
-	}
-
 	private Behavior<Command> onCloseHandlerReply(CloseHandlerReply closeHandlerReply) {
 
 		this.expectedReplies--;
@@ -697,6 +683,20 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		expectedReplies = 2;
 
 		return closing();
+	}
+
+	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
+		OffsetDateTime parsingDate =
+			OffsetDateTime.ofInstant(
+				Instant.ofEpochMilli(dataPayload.getParsingDate()),
+				ZoneOffset.UTC
+			);
+
+		var lastIngestionDate = this.scheduler.getLastIngestionDate();
+
+		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
+			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+		}
 	}
 
 	private void logBehavior(String behavior) {
