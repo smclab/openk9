@@ -35,4 +35,21 @@ public class SchedulerDTO {
 	private String newDataIndexName;
 	private Scheduler.SchedulerStatus status;
 	private OffsetDateTime lastIngestionDate;
+
+	public boolean isNewIndex() {
+		return getNewDataIndexId() != null;
+	}
+
+	public boolean isReindex() {
+		return isNewIndex() && getOldDataIndexId() != null;
+	}
+
+	public String getIndexName() {
+		String newDataIndexName = getNewDataIndexName();
+
+		return newDataIndexName != null
+			? newDataIndexName
+			: getOldDataIndexName();
+	}
+
 }

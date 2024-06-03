@@ -45,6 +45,7 @@ import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import lombok.Getter;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
@@ -72,11 +73,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final String GRACEFUL_ENDING_BEHAVIOR = "Graceful Ending";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Scheduling.class);
+	@Getter
 	private final SchedulingKey key;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Set<ActorRef<Response>> consumers = new HashSet<>();
 	private final Duration timeout;
 	private final int workersPerNode;
+	@Getter
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
 	private boolean failureTracked = false;
@@ -211,6 +214,70 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return ready();
 	}
 
+	private Behavior<Command> gracefulEnding() {
+		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
+
+		return newReceiveBuilder()
+			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
+			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
+			.onMessage(DestroyQueue.class, this::onDestroyQueue)
+			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
+			.onAnyMessage(this::onDiscard)
+			.build();
+	}
+
+	private Behavior<Command> closing() {
+		logBehavior(CLOSING_BEHAVIOR);
+
+		return Behaviors.withTimers(timers -> {
+
+			timers.cancel(Tick.INSTANCE);
+
+			if (expectedReplies > 0) {
+
+				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
+
+				return newReceiveBuilder()
+					.onMessage(CloseHandlerReply.class, this::onCloseHandlerReply)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+			else {
+
+				log.infof("Starting ending operations for %s", key);
+
+				var status = Scheduler.SchedulerStatus.FINISHED;
+
+				if (scheduler.getLastIngestionDate() == null && !scheduler.isNewIndex()) {
+					log.infof(
+						"Nothing was changed during this Scheduling on %s index.",
+						scheduler.getOldDataIndexName()
+					);
+				}
+
+				if (scheduler.getLastIngestionDate() == null && scheduler.isNewIndex()) {
+					log.warnf(
+						"LastIngestionDate was null, " +
+						"means that no content was received in this Scheduling. " +
+						"%s will be cancelled",
+						key
+					);
+
+					status = Scheduler.SchedulerStatus.CANCELLED;
+				}
+
+				getContext()
+					.getSelf()
+					.tell(new GracefulEnd(status));
+
+				return newReceiveBuilder()
+					.onMessage(GracefulEnd.class, this::onGracefulEnd)
+					.onAnyMessage(this::onDiscard)
+					.build();
+			}
+		});
+	}
+
 	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
 
 		var scheduler = fetchedScheduler.scheduler();
@@ -262,14 +329,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	public SchedulingKey getKey() {
-		return this.key;
-	}
-
 	private Behavior<Command> onIngest(Ingest ingest) {
 		this.lastRequest = LocalDateTime.now();
 
-		String indexName = getIndexName();
+		String indexName = scheduler.getIndexName();
 
 		byte[] payloadArray = ingest.payload;
 
@@ -418,18 +481,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		consumers.remove(response.replyTo());
 
 		return next();
-	}
-
-	private Behavior<Command> gracefulEnding() {
-		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
-
-		return newReceiveBuilder()
-			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
-			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
-			.onMessage(DestroyQueue.class, this::onDestroyQueue)
-			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
-			.onAnyMessage(this::onDiscard)
-			.build();
 	}
 
 	private Behavior<Command> onTick() {
@@ -597,14 +648,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	public SchedulerDTO getScheduler() {
-		return this.scheduler;
-	}
-
-	private void logBehavior(String behavior) {
-		log.infof("%s behavior is %s", key, behavior);
-	}
-
 	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
 		OffsetDateTime parsingDate =
 			OffsetDateTime.ofInstant(
@@ -619,83 +662,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 	}
 
-	private Behavior<Command> closing() {
-		logBehavior(CLOSING_BEHAVIOR);
-
-		return Behaviors.withTimers(timers -> {
-
-			timers.cancel(Tick.INSTANCE);
-
-			if (expectedReplies > 0) {
-
-				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
-
-				return newReceiveBuilder()
-					.onMessage(CloseHandlerReply.class, this::onCloseHandlerReply)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-			else {
-
-				log.infof("Starting ending operations for %s", key);
-
-				var status = Scheduler.SchedulerStatus.FINISHED;
-
-				if (scheduler.getLastIngestionDate() == null && !isNewIndex()) {
-					log.infof(
-						"Nothing was changed during this Scheduling on %s index.",
-						scheduler.getOldDataIndexName()
-					);
-				}
-
-				if (scheduler.getLastIngestionDate() == null && isNewIndex()) {
-					log.warnf(
-						"LastIngestionDate was null, " +
-						"means that no content was received in this Scheduling. " +
-						"%s will be cancelled",
-						key
-					);
-
-					status = Scheduler.SchedulerStatus.CANCELLED;
-				}
-
-				getContext()
-					.getSelf()
-					.tell(new GracefulEnd(status));
-
-				return newReceiveBuilder()
-					.onMessage(GracefulEnd.class, this::onGracefulEnd)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-		});
-	}
-
 	private Behavior<Command> onCloseHandlerReply(CloseHandlerReply closeHandlerReply) {
 
 		this.expectedReplies--;
 
 		return closing();
-	}
-
-	protected boolean isExpired() {
-		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
-	}
-
-	protected boolean isNewIndex() {
-		return scheduler != null && scheduler.getNewDataIndexId() != null;
-	}
-
-	protected boolean isReindex() {
-		return isNewIndex() && scheduler.getOldDataIndexId() != null;
-	}
-
-	protected String getIndexName() {
-		String newDataIndexName = scheduler.getNewDataIndexName();
-
-		return newDataIndexName != null
-			? newDataIndexName
-			: scheduler.getOldDataIndexName();
 	}
 
 	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
@@ -726,6 +697,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		expectedReplies = 2;
 
 		return closing();
+	}
+
+	private void logBehavior(String behavior) {
+		log.infof("%s behavior is %s", key, behavior);
+	}
+
+	private boolean isExpired() {
+		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
 	}
 
 	public sealed interface Command extends CborSerializable {}
