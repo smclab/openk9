@@ -38,6 +38,8 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
+import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;

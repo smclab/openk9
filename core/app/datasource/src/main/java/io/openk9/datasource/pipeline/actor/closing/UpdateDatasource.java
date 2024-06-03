@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor;
+package io.openk9.datasource.pipeline.actor.closing;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
