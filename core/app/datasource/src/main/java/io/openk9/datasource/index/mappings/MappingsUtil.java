@@ -68,10 +68,6 @@ public final class MappingsUtil {
 
 		highlight.put("max_analyzed_offset", "10000000");
 
-		highlight.put("order", "score");
-
-		highlight.put("fragment_size", 150);
-
 		index.put("highlight", highlight);
 
 		if (!analyzerMap.isEmpty()) {
