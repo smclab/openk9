@@ -111,7 +111,8 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 		);
 
 		this.replies.add(handlerReply.reply());
-		return this;
+
+		return collectAndAggregate();
 	}
 
 	public sealed interface Command {}
