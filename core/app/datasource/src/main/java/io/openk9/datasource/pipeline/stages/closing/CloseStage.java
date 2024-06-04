@@ -23,6 +23,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import org.jboss.logging.Logger;
@@ -39,27 +40,57 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	private final ActorRef<Response> replyTo;
 	private final Function<List<Protocol.Reply>, Aggregate> aggregator;
 	private final List<Protocol.Reply> replies = new ArrayList<>();
+	private final SchedulingKey schedulingKey;
 	private SchedulerDTO scheduler;
 
 	public CloseStage(
 		ActorContext<Command> context,
+		SchedulingKey schedulingKey,
 		List<ActorRef<Protocol.Command>> handlers,
 		ActorRef<Response> replyTo,
 		Function<List<Protocol.Reply>, Aggregate> aggregator) {
 
 		super(context);
-		this.expectedReplies = handlers.size();
+
+		this.schedulingKey = schedulingKey;
 		this.handlers = handlers;
+		this.expectedReplies = handlers.size();
 		this.replyTo = replyTo;
 		this.aggregator = aggregator;
 	}
 
 	public static Behavior<Command> create(
-		List<ActorRef<Protocol.Command>> handlers,
+		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<Protocol.Reply>, Aggregate> aggregator) {
+		Function<List<Protocol.Reply>, Aggregate> aggregator,
+		List<ActorRef<Protocol.Command>> handlers) {
 
-		return Behaviors.setup(ctx -> new CloseStage(ctx, handlers, replyTo, aggregator));
+		return Behaviors.setup(ctx -> new CloseStage(
+			ctx,
+			schedulingKey,
+			handlers,
+			replyTo,
+			aggregator
+		));
+	}
+
+	@SafeVarargs
+	public static Behavior<Command> create(
+		SchedulingKey schedulingKey,
+		ActorRef<Response> replyTo,
+		Function<List<Protocol.Reply>, Aggregate> aggregator,
+		Function<SchedulingKey, Behavior<Protocol.Command>>... handlersFactories) {
+
+		return Behaviors.setup(ctx -> {
+			List<ActorRef<Protocol.Command>> handlers = new ArrayList<>();
+
+			for (Function<SchedulingKey, Behavior<Protocol.Command>> handlerFactory : handlersFactories) {
+				var handler = ctx.spawnAnonymous(handlerFactory.apply(schedulingKey));
+				handlers.add(handler);
+			}
+
+			return new CloseStage(ctx, schedulingKey, handlers, replyTo, aggregator);
+		});
 	}
 
 	@Override

@@ -38,9 +38,6 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
-import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
-import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
@@ -63,6 +60,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
@@ -85,6 +83,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final Set<ActorRef<Response>> consumers = new HashSet<>();
 	private final Duration timeout;
 	private final int workersPerNode;
+	private final ActorRef<CloseStage.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
@@ -93,8 +92,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private int maxWorkers;
 	private int busyWorkers = 0;
 
+	@SafeVarargs
 	public Scheduling(
-		ActorContext<Command> context, SchedulingKey key) {
+		ActorContext<Command> context,
+		SchedulingKey key,
+		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
 
 		super(context);
 		this.key = key;
@@ -113,15 +116,31 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		getContext().getSelf().tell(Start.INSTANCE);
+
+		var replyTo = getContext().messageAdapter(
+			CloseStage.Response.class,
+			CloseStageResponse::new
+		);
+
+		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
+			getKey(),
+			replyTo,
+			closeAggregator,
+			closeHandlerFactories
+		));
+
 	}
 
+	@SafeVarargs
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey) {
+		SchedulingKey schedulingKey,
+		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
 
 		return Behaviors
 			.<Command>supervise(
 				Behaviors.setup(ctx -> new Scheduling(
-					ctx, schedulingKey)
+					ctx, schedulingKey, closeAggregator, closeHandlerFactories)
 				)
 			)
 			.onFailure(SupervisorStrategy.restartWithBackoff(
@@ -646,39 +665,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onClose() {
 
-		var updateDatasource = getContext().spawnAnonymous(UpdateDatasource.create(getKey()));
-		var deletionCompareNotifier = getContext().spawnAnonymous(DeletionCompareNotifier.create(
-			getKey()));
-		var evaluateStatus = getContext().spawnAnonymous(EvaluateStatus.create(getKey()));
-
-		var handlers = List.of(updateDatasource, deletionCompareNotifier, evaluateStatus);
-
-		var replyTo = getContext().messageAdapter(
-			CloseStage.Response.class,
-			CloseStageResponse::new
-		);
-
-		var closeStage = getContext().spawnAnonymous(CloseStage.create(
-			handlers,
-			replyTo,
-			this::aggregator
-		));
-
-		closeStage.tell(new CloseStage.Start(getScheduler()));
+		this.closeStage.tell(new CloseStage.Start(getScheduler()));
 
 		return closing();
-	}
-
-	private CloseStage.Aggregate aggregator(List<Protocol.Reply> replies) {
-
-		return replies.stream()
-			.filter(EvaluateStatus.Success.class::isInstance)
-			.findFirst()
-			.map(reply -> (EvaluateStatus.Success) reply)
-			.map(EvaluateStatus.Success::status)
-			.map(CloseStage.Aggregate::new)
-			.orElse(new CloseStage.Aggregate(Scheduler.SchedulerStatus.FINISHED));
-
 	}
 
 	private void doUpdateLastIngestionDate(DataPayload dataPayload) {

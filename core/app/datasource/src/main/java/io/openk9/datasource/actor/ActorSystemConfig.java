@@ -29,7 +29,11 @@ import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
+import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
+import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.pipeline.base.BaseConfig;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.quarkus.arc.Priority;
@@ -85,7 +89,13 @@ public class ActorSystemConfig {
 			sharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
 				var schedulingKey = SchedulingKey.fromString(entityId);
-				return Scheduling.create(schedulingKey);
+				return Scheduling.create(
+					schedulingKey,
+					BaseConfig::closeResponseAggregator,
+					UpdateDatasource::create,
+					DeletionCompareNotifier::create,
+					EvaluateStatus::create
+				);
 			}));
 
 			sharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
