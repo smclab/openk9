@@ -629,7 +629,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.warnf("Unexpected response from CloseStage for %s", getKey());
 		}
 
-		return closing();
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onGracefulEnd(GracefulEnd gracefulEnd) {
