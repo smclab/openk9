@@ -26,9 +26,11 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import io.openk9.datasource.service.DatasourceService;
+import org.jboss.logging.Logger;
 
 public class UpdateDatasource extends AbstractBehavior<Protocol.Command> {
 
+	private static final Logger log = Logger.getLogger(UpdateDatasource.class);
 	private final SchedulingKey schedulingKey;
 
 	protected UpdateDatasource(
@@ -66,6 +68,8 @@ public class UpdateDatasource extends AbstractBehavior<Protocol.Command> {
 			);
 		}
 		else {
+
+			log.infof("Nothing to do on Datasource %s", scheduler.getId());
 
 			getContext()
 				.getSelf()
