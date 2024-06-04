@@ -103,14 +103,14 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	}
 
 	private Behavior<Command> onHandlerReply(HandlerReply handlerReply) {
+		this.replies.add(handlerReply.reply());
+
 		log.infof(
 			"Received %s of %s expected replies for scheduler %s.",
 			replies.size(),
 			expectedReplies,
 			scheduler.getId()
 		);
-
-		this.replies.add(handlerReply.reply());
 
 		return collectAndAggregate();
 	}
