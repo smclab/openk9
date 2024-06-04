@@ -24,34 +24,34 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import io.openk9.datasource.service.DatasourceService;
 
-public class UpdateDatasource extends AbstractBehavior<UpdateDatasource.Command> {
+public class UpdateDatasource extends AbstractBehavior<Protocol.Command> {
 
 	private final SchedulingKey schedulingKey;
 
 	protected UpdateDatasource(
-		ActorContext<Command> context,
+		ActorContext<Protocol.Command> context,
 		SchedulingKey schedulingKey) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
 	}
 
-	public static Behavior<Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<Protocol.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new UpdateDatasource(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<Command> createReceive() {
+	public Receive<Protocol.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessage(Protocol.Start.class, this::onStart)
 			.onMessage(Stop.class, this::onStop)
 			.build();
 	}
 
-	private Behavior<Command> onStart(Start start) {
+	private Behavior<Protocol.Command> onStart(Protocol.Start start) {
 		var tenantId = schedulingKey.tenantId();
 		var scheduler = start.scheduler();
 		var lastIngestionDate = scheduler.getLastIngestionDate();
@@ -75,23 +75,17 @@ public class UpdateDatasource extends AbstractBehavior<UpdateDatasource.Command>
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onStop(Stop stop) {
+	private Behavior<Protocol.Command> onStop(Stop stop) {
 
 		stop.replyTo().tell(Success.INSTANCE);
 
 		return Behaviors.stopped();
 	}
 
-	public enum Success implements Response {
+	public enum Success implements Protocol.Reply {
 		INSTANCE
 	}
 
-	public sealed interface Command {}
-
-	public sealed interface Response {}
-
-	public record Start(SchedulerDTO scheduler, ActorRef<Response> replyTo) implements Command {}
-
-	private record Stop(ActorRef<Response> replyTo) implements Command {}
+	private record Stop(ActorRef<Protocol.Reply> replyTo) implements Protocol.Command {}
 
 }

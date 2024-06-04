@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -25,32 +24,32 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import org.jboss.logging.Logger;
 
-public class EvaluateStatus extends AbstractBehavior<EvaluateStatus.Command> {
+public class EvaluateStatus extends AbstractBehavior<Protocol.Command> {
 
 	private final static Logger log = Logger.getLogger(EvaluateStatus.class);
 	private final SchedulingKey key;
 
-	public EvaluateStatus(ActorContext<Command> context, SchedulingKey key) {
+	public EvaluateStatus(ActorContext<Protocol.Command> context, SchedulingKey key) {
 		super(context);
 		this.key = key;
 	}
 
-	public static Behavior<Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<Protocol.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new EvaluateStatus(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<Command> createReceive() {
+	public Receive<Protocol.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessage(Protocol.Start.class, this::onStart)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
-	public Behavior<Command> onStart(Start start) {
+	public Behavior<Protocol.Command> onStart(Protocol.Start start) {
 		var scheduler = start.scheduler();
 		var replyTo = start.replyTo();
 
@@ -82,21 +81,15 @@ public class EvaluateStatus extends AbstractBehavior<EvaluateStatus.Command> {
 		return this;
 	}
 
-	public Behavior<Command> onStop() {
+	public Behavior<Protocol.Command> onStop() {
 
 		return Behaviors.stopped();
 	}
 
-	private enum Stop implements Command {
+	private enum Stop implements Protocol.Command {
 		INSTANCE
 	}
 
-	public sealed interface Command {}
-
-	public sealed interface Response {}
-
-	public record Start(SchedulerDTO scheduler, ActorRef<Response> replyTo) implements Command {}
-
-	public record Success(Scheduler.SchedulerStatus status) implements Response {}
+	public record Success(Scheduler.SchedulerStatus status) implements Protocol.Reply {}
 
 }

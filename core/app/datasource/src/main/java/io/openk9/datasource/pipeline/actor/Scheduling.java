@@ -43,6 +43,8 @@ import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -59,6 +61,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
@@ -89,8 +92,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean lastReceived = false;
 	private int maxWorkers;
 	private int busyWorkers = 0;
-	private int expectedReplies;
-	private Scheduler.SchedulerStatus endingStatus = Scheduler.SchedulerStatus.FINISHED;
 
 	public Scheduling(
 		ActorContext<Command> context, SchedulingKey key) {
@@ -218,6 +219,21 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return ready();
 	}
 
+	private Behavior<Command> closing() {
+		logBehavior(CLOSING_BEHAVIOR);
+
+		return Behaviors.withTimers(timers -> {
+
+			timers.cancel(Tick.INSTANCE);
+
+			return newReceiveBuilder()
+				.onMessage(CloseStageResponse.class, this::onCloseStageResponse)
+				.onMessage(GracefulEnd.class, this::onGracefulEnd)
+				.onAnyMessage(this::onDiscard)
+				.build();
+		});
+	}
+
 	private Behavior<Command> gracefulEnding() {
 		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
 
@@ -228,36 +244,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
 			.onAnyMessage(this::onDiscard)
 			.build();
-	}
-
-	private Behavior<Command> closing() {
-		logBehavior(CLOSING_BEHAVIOR);
-
-		return Behaviors.withTimers(timers -> {
-
-			timers.cancel(Tick.INSTANCE);
-
-			if (expectedReplies > 0) {
-
-				log.infof("Waiting for %s CloseHandlers.", expectedReplies);
-
-				return newReceiveBuilder()
-					.onMessage(HandlerReply.class, this::onCloseHandlerReply)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-			else {
-
-				getContext()
-					.getSelf()
-					.tell(new GracefulEnd(endingStatus));
-
-				return newReceiveBuilder()
-					.onMessage(GracefulEnd.class, this::onGracefulEnd)
-					.onAnyMessage(this::onDiscard)
-					.build();
-			}
-		});
 	}
 
 	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
@@ -630,14 +616,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onCloseHandlerReply(HandlerReply handlerReply) {
-		var reply = handlerReply.reply();
+	private Behavior<Command> onCloseStageResponse(CloseStageResponse closeStageResponse) {
+		var response = closeStageResponse.response();
 
-		if (reply instanceof EvaluateStatus.Success success) {
-			this.endingStatus = success.status();
+		if (response instanceof CloseStage.Aggregate aggregate) {
+
+			getContext()
+				.getSelf()
+				.tell(new GracefulEnd(aggregate.status()));
 		}
-
-		this.expectedReplies--;
+		else {
+			log.warnf("Unexpected response from CloseStage for %s", getKey());
+		}
 
 		return closing();
 	}
@@ -661,21 +651,34 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			getKey()));
 		var evaluateStatus = getContext().spawnAnonymous(EvaluateStatus.create(getKey()));
 
+		var handlers = List.of(updateDatasource, deletionCompareNotifier, evaluateStatus);
+
 		var replyTo = getContext().messageAdapter(
-			Object.class,
-			HandlerReply::new
+			CloseStage.Response.class,
+			CloseStageResponse::new
 		);
 
-		updateDatasource.tell(new UpdateDatasource.Start(getScheduler(), replyTo.narrow()));
-		deletionCompareNotifier.tell(new DeletionCompareNotifier.Start(
-			getScheduler(),
-			replyTo.narrow()
+		var closeStage = getContext().spawnAnonymous(CloseStage.create(
+			handlers,
+			replyTo,
+			this::aggregator
 		));
-		evaluateStatus.tell(new EvaluateStatus.Start(getScheduler(), replyTo.narrow()));
 
-		expectedReplies = 3;
+		closeStage.tell(new CloseStage.Start(getScheduler()));
 
 		return closing();
+	}
+
+	private CloseStage.Aggregate aggregator(List<Protocol.Reply> replies) {
+
+		return replies.stream()
+			.filter(EvaluateStatus.Success.class::isInstance)
+			.findFirst()
+			.map(reply -> (EvaluateStatus.Success) reply)
+			.map(EvaluateStatus.Success::status)
+			.map(CloseStage.Aggregate::new)
+			.orElse(new CloseStage.Aggregate(Scheduler.SchedulerStatus.FINISHED));
+
 	}
 
 	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
@@ -757,6 +760,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
-	private record HandlerReply(Object reply) implements Command {}
+	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
 }

@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -27,19 +26,19 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import io.openk9.datasource.service.SchedulerService;
 
 import javax.enterprise.inject.spi.CDI;
 
-public class DeletionCompareNotifier extends AbstractBehavior<DeletionCompareNotifier.Command> {
+public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> {
 
 	private final SchedulerService service;
 	private final DatasourceEventBus sender;
 	private final SchedulingKey schedulingKey;
 
 	public DeletionCompareNotifier(
-		ActorContext<Command> context,
+		ActorContext<Protocol.Command> context,
 		SchedulingKey schedulingKey) {
 		super(context);
 		this.service = CDI.current().select(SchedulerService.class).get();
@@ -47,19 +46,19 @@ public class DeletionCompareNotifier extends AbstractBehavior<DeletionCompareNot
 		this.schedulingKey = schedulingKey;
 	}
 
-	public static Behavior<Command> create(SchedulingKey key) {
+	public static Behavior<Protocol.Command> create(SchedulingKey key) {
 		return Behaviors.setup(ctx -> new DeletionCompareNotifier(ctx, key));
 	}
 
 	@Override
-	public Receive<Command> createReceive() {
+	public Receive<Protocol.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessage(Protocol.Start.class, this::onStart)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
-	private Behavior<Command> onStart(Start start) {
+	private Behavior<Protocol.Command> onStart(Protocol.Start start) {
 
 		var replyTo = start.replyTo();
 		var scheduler = start.scheduler();
@@ -118,14 +117,16 @@ public class DeletionCompareNotifier extends AbstractBehavior<DeletionCompareNot
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onStop() {
+	private Behavior<Protocol.Command> onStop() {
 		return Behaviors.stopped();
 	}
 
-	public sealed interface Command {}
+	private enum Stop implements Protocol.Command {
+		INSTANCE
+	}
 
-	public record Start(SchedulerDTO scheduler, ActorRef<Response> replyTo) implements Command {}
-	private enum Stop implements Command {INSTANCE}
-	public sealed interface Response {}
-	public enum Success implements Response {INSTANCE}
+	public enum Success implements Protocol.Reply {
+		INSTANCE
+	}
+
 }
