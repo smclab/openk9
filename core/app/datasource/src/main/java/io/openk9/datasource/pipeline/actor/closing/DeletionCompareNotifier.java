@@ -17,31 +17,32 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
-import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
+import io.openk9.datasource.pipeline.service.SchedulingService;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.Protocol;
-import io.openk9.datasource.service.SchedulerService;
 
+import java.util.List;
 import javax.enterprise.inject.spi.CDI;
 
 public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> {
 
-	private final SchedulerService service;
 	private final DatasourceEventBus sender;
 	private final SchedulingKey schedulingKey;
 
 	public DeletionCompareNotifier(
 		ActorContext<Protocol.Command> context,
 		SchedulingKey schedulingKey) {
+
 		super(context);
-		this.service = CDI.current().select(SchedulerService.class).get();
 		this.sender = CDI.current().select(DatasourceEventBus.class).get();
 		this.schedulingKey = schedulingKey;
 	}
@@ -54,7 +55,8 @@ public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> 
 	public Receive<Protocol.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(Protocol.Start.class, this::onStart)
-			.onMessageEquals(Stop.INSTANCE, this::onStop)
+			.onMessage(SendEvents.class, this::onSendEvents)
+			.onMessage(Stop.class, this::onStop)
 			.build();
 	}
 
@@ -75,29 +77,10 @@ public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> 
 					scheduleId
 				);
 
-			VertxUtil.runOnContext(
-				() -> service.getDeletedContentIds(tenantName, scheduleId),
-				list -> {
 
-					Long datasourceId = scheduler.getDatasourceId();
-					String newDataIndexName = scheduler.getNewDataIndexName();
-
-					for (String deletedContentId : list) {
-						sender.sendEvent(
-							DatasourceMessage
-								.Delete
-								.builder()
-								.indexName(newDataIndexName)
-								.datasourceId(datasourceId)
-								.tenantId(tenantName)
-								.contentId(deletedContentId)
-								.build()
-						);
-					}
-
-					replyTo.tell(Success.INSTANCE);
-					getContext().getSelf().tell(Stop.INSTANCE);
-				}
+			getContext().pipeToSelf(
+				SchedulingService.getDeletedContentIds(schedulingKey),
+				(list, throwable) -> new SendEvents(list, throwable, scheduler, replyTo)
 			);
 
 		}
@@ -110,23 +93,56 @@ public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> 
 					tenantName, scheduleId
 				);
 
-			replyTo.tell(Success.INSTANCE);
-			getContext().getSelf().tell(Stop.INSTANCE);
+			getContext().getSelf().tell(new Stop(replyTo));
 
 		}
+
 		return Behaviors.same();
 	}
 
-	private Behavior<Protocol.Command> onStop() {
+	private Behavior<Protocol.Command> onSendEvents(SendEvents sendEvents) {
+		var scheduler = sendEvents.scheduler();
+		var list = sendEvents.list();
+		var tenantId = schedulingKey.tenantId();
+		var replyTo = sendEvents.replyTo();
+
+		Long datasourceId = scheduler.getDatasourceId();
+		String newDataIndexName = scheduler.getNewDataIndexName();
+
+		for (String deletedContentId : list) {
+			sender.sendEvent(
+				DatasourceMessage
+					.Delete
+					.builder()
+					.indexName(newDataIndexName)
+					.datasourceId(datasourceId)
+					.tenantId(tenantId)
+					.contentId(deletedContentId)
+					.build()
+			);
+		}
+
+		getContext().getSelf().tell(new Stop(replyTo));
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Protocol.Command> onStop(Stop stop) {
+		stop.replyTo().tell(Success.INSTANCE);
 		return Behaviors.stopped();
 	}
 
-	private enum Stop implements Protocol.Command {
-		INSTANCE
-	}
+	private record Stop(ActorRef<Protocol.Reply> replyTo) implements Protocol.Command {}
 
 	public enum Success implements Protocol.Reply {
 		INSTANCE
 	}
+
+	private record SendEvents(
+		List<String> list,
+		Throwable throwable,
+		SchedulerDTO scheduler,
+		ActorRef<Protocol.Reply> replyTo
+	) implements Protocol.Command {}
 
 }

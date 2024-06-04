@@ -21,13 +21,14 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
+import io.openk9.datasource.service.SchedulerService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.spi.CDI;
@@ -40,13 +41,15 @@ public class SchedulingService {
 	private final static String PERSIST_STATUS = "SchedulingService#persistStatus";
 	private final static String PERSIST_LAST_INGESTION_DATE =
 		"SchedulingService#persistLastIngestionDate";
-	private final static Logger log = Logger.getLogger(SchedulingService.class);
+	private static final String GET_DELETED_CONTENT_ID = "SchedulingService#getDeletedContentId";
 	private static EventBus eventBus;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	SchedulerMapper schedulerMapper;
+	@Inject
+	SchedulerService schedulerService;
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(SchedulingKey schedulingKey) {
 
@@ -77,6 +80,17 @@ public class SchedulingService {
 				new PersistLastIngestionDateRequest(schedulingKey, lastIngestionDate)
 			)
 			.map(message -> (SchedulerDTO) message.body())
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletableFuture<List<String>> getDeletedContentIds(SchedulingKey schedulingKey) {
+		var eventBus = getEventBus();
+
+		return eventBus.request(
+				GET_DELETED_CONTENT_ID,
+				new GetDeletedContentIdRequest(schedulingKey)
+			)
+			.map(message -> (List<String>) message.body())
 			.subscribeAsCompletionStage();
 	}
 
@@ -132,6 +146,14 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
+	@ConsumeEvent(GET_DELETED_CONTENT_ID)
+	Uni<List<String>> getDeletedContentId(GetDeletedContentIdRequest request) {
+		var schedulingKey = request.schedulingKey();
+
+		return schedulerService.getDeletedContentIds(
+			schedulingKey.tenantId(), schedulingKey.scheduleId());
+	}
+
 	private static EventBus getEventBus() {
 		if (eventBus == null) {
 			eventBus = CDI.current().select(EventBus.class).get();
@@ -160,5 +182,7 @@ public class SchedulingService {
 		SchedulingKey schedulingKey,
 		OffsetDateTime lastIngestionDate
 	) {}
+
+	private record GetDeletedContentIdRequest(SchedulingKey schedulingKey) {}
 
 }
