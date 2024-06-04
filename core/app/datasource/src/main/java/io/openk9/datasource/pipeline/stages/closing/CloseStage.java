@@ -38,7 +38,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	private final List<ActorRef<Protocol.Command>> handlers;
 	private final ActorRef<Response> replyTo;
 	private final Function<List<Protocol.Reply>, Aggregate> aggregator;
-	private List<Protocol.Reply> replies = new ArrayList<>();
+	private final List<Protocol.Reply> replies = new ArrayList<>();
 	private SchedulerDTO scheduler;
 
 	public CloseStage(
