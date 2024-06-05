@@ -330,8 +330,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
 
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
-
-			return Behaviors.same();
 		}
 
 		if (dataPayload.getContentId() != null) {
