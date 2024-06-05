@@ -17,14 +17,31 @@
 
 package io.openk9.datasource.pipeline.base;
 
+import akka.actor.typed.Behavior;
+import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
+import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.closing.Protocol;
 
 import java.util.List;
 
-public class BaseConfig {
+public class BasePipeline {
+
+	public static Behavior<Scheduling.Command> createScheduling(SchedulingKey schedulingKey) {
+
+		return Scheduling.create(
+			schedulingKey,
+			BasePipeline::closeResponseAggregator,
+			UpdateDatasource::create,
+			DeletionCompareNotifier::create,
+			EvaluateStatus::create
+		);
+	}
+
 	public static CloseStage.Aggregate closeResponseAggregator(List<Protocol.Reply> replies) {
 
 		return replies.stream()

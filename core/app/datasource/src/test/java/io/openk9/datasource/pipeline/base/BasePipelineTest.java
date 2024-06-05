@@ -28,7 +28,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BaseConfigTest {
+class BasePipelineTest {
 
 	@Test
 	void should_get_status_from_reply() {
@@ -37,7 +37,7 @@ class BaseConfigTest {
 			UpdateDatasource.Success.INSTANCE
 		);
 
-		var aggregate = BaseConfig.closeResponseAggregator(replies);
+		var aggregate = BasePipeline.closeResponseAggregator(replies);
 
 		assertEquals(Scheduler.SchedulerStatus.ERROR, aggregate.status());
 	}
@@ -49,7 +49,7 @@ class BaseConfigTest {
 			DeletionCompareNotifier.Success.INSTANCE
 		);
 
-		var aggregate = BaseConfig.closeResponseAggregator(replies);
+		var aggregate = BasePipeline.closeResponseAggregator(replies);
 
 		assertEquals(Scheduler.SchedulerStatus.FINISHED, aggregate.status());
 	}

@@ -25,17 +25,14 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.events.DatasourceEventBus;
-import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.Protocol;
 
 import java.util.List;
-import javax.enterprise.inject.spi.CDI;
 
 public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> {
 
-	private final DatasourceEventBus sender;
 	private final SchedulingKey schedulingKey;
 
 	public DeletionCompareNotifier(
@@ -43,7 +40,6 @@ public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> 
 		SchedulingKey schedulingKey) {
 
 		super(context);
-		this.sender = CDI.current().select(DatasourceEventBus.class).get();
 		this.schedulingKey = schedulingKey;
 	}
 
@@ -110,16 +106,8 @@ public class DeletionCompareNotifier extends AbstractBehavior<Protocol.Command> 
 		String newDataIndexName = scheduler.getNewDataIndexName();
 
 		for (String deletedContentId : list) {
-			sender.sendEvent(
-				DatasourceMessage
-					.Delete
-					.builder()
-					.indexName(newDataIndexName)
-					.datasourceId(datasourceId)
-					.tenantId(tenantId)
-					.contentId(deletedContentId)
-					.build()
-			);
+			DatasourceEventBus.sendDeleteEvent(
+				tenantId, datasourceId, newDataIndexName, deletedContentId);
 		}
 
 		getContext().getSelf().tell(new Stop(replyTo));
