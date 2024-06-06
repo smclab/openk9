@@ -51,6 +51,8 @@ public class TextQueryParser implements QueryParser {
 	public static final String FUZZINESS = "fuzziness";
 	public static final String GLOBAL_QUERY_TYPE = "globalQueryType";
 	public static final String VALUES_QUERY_TYPE = "valuesQueryType";
+	public static final String MULTI_MATCH_TYPE = "multiMatchType";
+	public static final String TIE_BREAKER = "tieBreaker";
 
 	public String getType() {
 		return "TEXT";
@@ -132,6 +134,10 @@ public class TextQueryParser implements QueryParser {
 					multiMatchQueryBuilder.fields(keywordBoostMap);
 
 					multiMatchQueryBuilder.fuzziness(fuzziness);
+
+					multiMatchQueryBuilder.type(getMultiMatchType(token, jsonConfig));
+
+					multiMatchQueryBuilder.tieBreaker(getTieBreaker(token, jsonConfig));
 
 					valuesQueryType
 						.useConfiguredQueryType(
@@ -232,6 +238,22 @@ public class TextQueryParser implements QueryParser {
 			.orElse(Fuzziness.ZERO)
 		);
 
+	}
+
+	private MultiMatchQueryBuilder.Type getMultiMatchType(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getString(token, jsonConfig, MULTI_MATCH_TYPE)
+			.map(MultiMatchQueryBuilder.Type::valueOf)
+			.orElse(MultiMatchQueryBuilder.Type.MOST_FIELDS);
+
+	}
+
+	private static float getTieBreaker(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getFloat(token, jsonConfig, TIE_BREAKER)
+			.orElse(0.0F);
 	}
 
 }
