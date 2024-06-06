@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+package embedding;
+
+service Embedding {
+  rpc GetMessages(EmbeddingRequest) returns (EmbeddingResponse);
+}
+
+enum ChunkType {
+  CHUNK_TYPE_DEFAULT = 0;
+  CHUNK_TYPE_TEXT_SPLITTER = 1;
+  CHUNK_TYPE_TOKEN_TEXT_SPLITTER = 2;
+  CHUNK_TYPE_CHARACTER_TEXT_SPLITTER = 3;
+}
+
+message RequestChunk {
+  optional ChunkType type = 1;
+  google.protobuf.Struct jsonConfig = 2;
+}
+
+message ResponseChunk {
+  int32 number = 1;
+  int32 total = 2;
+  string text = 3;
+  repeated float vectors = 4;
+}
+
+message EmbeddingRequest {
+  RequestChunk chunk = 1;
+  optional string api_key = 2;
+  string text = 3;
+}
+
+message EmbeddingResponse { repeated ResponseChunk chunks = 1; }
