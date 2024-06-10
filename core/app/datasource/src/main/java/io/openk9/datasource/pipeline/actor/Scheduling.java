@@ -180,8 +180,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
-			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
+			.onMessage(PostProcess.class, this::onPostProcess)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
+			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
 	}
@@ -334,10 +335,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (dataPayload.getContentId() != null) {
 
 			String contentId = dataPayload.getContentId();
-			var parsingDate = dataPayload.getParsingDate();
+			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
 			ActorRef<EnrichPipeline.Response> replyTo = getContext()
-				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
+				.messageAdapter(EnrichPipeline.Response.class, PostProcess::new);
 
 			ActorSystem<Void> system = getContext().getSystem();
 
@@ -352,7 +353,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				getSchedulingKey(),
 				contentId,
 				ingest.messageKey(),
-				parsingDate,
+				parsingDateTimeStamp,
 				ingest.replyTo()
 			);
 
@@ -365,6 +366,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			heldMessages.add(heldMessage);
+
+			OffsetDateTime parsingDate =
+				OffsetDateTime.ofInstant(
+					Instant.ofEpochMilli(heldMessage.parsingDate()),
+					ZoneOffset.UTC
+				);
+
+			var lastIngestionDate = this.scheduler.getLastIngestionDate();
+
+			if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
+				getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+			}
 
 		}
 		else if (!dataPayload.isLast()) {
@@ -446,8 +459,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponseWrapper eprw) {
-		EnrichPipeline.Response response = eprw.response;
+	private Behavior<Command> onPostProcess(PostProcess postProcess) {
+		EnrichPipeline.Response response = postProcess.response;
+
 		var heldMessage = response.heldMessage();
 		var replyTo = heldMessage.replyTo();
 
@@ -457,23 +471,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				success.contentId(), replyTo
 			);
 
-			OffsetDateTime parsingDate =
-				OffsetDateTime.ofInstant(
-					Instant.ofEpochMilli(heldMessage.parsingDate()),
-					ZoneOffset.UTC
-				);
-
-			var lastIngestionDate = this.scheduler.getLastIngestionDate();
-
-			if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
-				getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
-			}
-
 			replyTo.tell(Success.INSTANCE);
 
-			return newReceiveBuilder()
-				.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
-				.build();
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
 			EnrichPipelineException epe = failure.exception();
@@ -747,7 +746,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record RefreshScheduler(SchedulerDTO scheduler) implements Command {}
 
-	private record EnrichPipelineResponseWrapper(EnrichPipeline.Response response)
+	private record PostProcess(EnrichPipeline.Response response)
 		implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
