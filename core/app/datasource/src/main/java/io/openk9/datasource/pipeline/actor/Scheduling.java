@@ -90,6 +90,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
+	private OffsetDateTime lastIngestionDate;
 
 	@SafeVarargs
 	public Scheduling(
@@ -182,7 +183,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(PostProcess.class, this::onPostProcess)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
 	}
@@ -367,18 +367,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			heldMessages.add(heldMessage);
 
-			OffsetDateTime parsingDate =
-				OffsetDateTime.ofInstant(
-					Instant.ofEpochMilli(heldMessage.parsingDate()),
-					ZoneOffset.UTC
-				);
-
-			var lastIngestionDate = this.scheduler.getLastIngestionDate();
-
-			if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
-				getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
-			}
-
 		}
 		else if (!dataPayload.isLast()) {
 			ingest.replyTo.tell(new Failure("content-id is null"));
@@ -472,6 +460,25 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			replyTo.tell(Success.INSTANCE);
+
+			OffsetDateTime parsingDate =
+				OffsetDateTime.ofInstant(
+					Instant.ofEpochMilli(heldMessage.parsingDate()),
+					ZoneOffset.UTC
+				);
+
+
+			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+
+			return newReceiveBuilder()
+				.onMessage(
+					PersistLastIngestionDate.class,
+					msg -> this.lastIngestionDate == null ||
+						   !this.lastIngestionDate.isEqual(msg.lastIngestionDate()),
+					this::onPersistLastIngestionDate
+				)
+				.onAnyMessage(this::onEnqueue)
+				.build();
 
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
@@ -615,6 +622,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			(scheduler, throwable) -> new FetchedScheduler(
 				scheduler, (Exception) throwable, ignoreRef)
 		);
+
+		this.lastIngestionDate = lastIngestionDate;
 
 		return waitFetchedScheduler();
 	}
