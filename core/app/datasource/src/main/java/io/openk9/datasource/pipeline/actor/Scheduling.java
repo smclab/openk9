@@ -477,6 +477,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						   !this.lastIngestionDate.isEqual(msg.lastIngestionDate()),
 					this::onPersistLastIngestionDate
 				)
+				.onMessage(
+					PersistLastIngestionDate.class,
+					msg -> this.lastIngestionDate != null &&
+						   this.lastIngestionDate.isEqual(msg.lastIngestionDate()),
+					(__) -> this.next()
+				)
 				.onAnyMessage(this::onEnqueue)
 				.build();
 
