@@ -470,6 +470,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 
+			heldMessages.remove(heldMessage);
+
 			return newReceiveBuilder()
 				.onMessage(
 					PersistLastIngestionDate.class,
@@ -492,9 +494,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.error("enrich pipeline failure", epe);
 			this.failureTracked = true;
 			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
+			heldMessages.remove(heldMessage);
 		}
-
-		heldMessages.remove(heldMessage);
 
 		return next();
 	}
