@@ -78,9 +78,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Scheduling.class);
 	@Getter
-	private final SchedulingKey key;
+	private final SchedulingKey schedulingKey;
 	private final Deque<Command> lag = new ArrayDeque<>();
-	private final Set<ActorRef<Response>> consumers = new HashSet<>();
+	private final Set<HeldMessage> heldMessages = new HashSet<>();
 	private final Duration timeout;
 	private final int workersPerNode;
 	private final ActorRef<CloseStage.Command> closeStage;
@@ -90,17 +90,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean failureTracked = false;
 	private boolean lastReceived = false;
 	private int maxWorkers;
-	private int busyWorkers = 0;
 
 	@SafeVarargs
 	public Scheduling(
 		ActorContext<Command> context,
-		SchedulingKey key,
+		SchedulingKey schedulingKey,
 		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
 		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
 
 		super(context);
-		this.key = key;
+		this.schedulingKey = schedulingKey;
 		this.timeout = getTimeout(context);
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
@@ -123,7 +122,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
-			getKey(),
+			getSchedulingKey(),
 			replyTo,
 			closeAggregator,
 			closeHandlerFactories
@@ -182,7 +181,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(EnrichPipelineResponseWrapper.class, this::onEnrichPipelineResponse)
-			.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
 			.onMessage(PersistStatus.class, this::onPersistStatus)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
@@ -303,7 +301,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.debugf(
 				"Max Workers updated to %d for %s",
 				maxWorkers,
-				key
+				schedulingKey
 			);
 		}
 
@@ -319,29 +317,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onIngest(Ingest ingest) {
 		this.lastRequest = LocalDateTime.now();
 
-		String indexName = scheduler.getIndexName();
-
 		byte[] payloadArray = ingest.payload;
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
 		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
-			log.warnf("The publisher has sent an HALT message. So %s will be cancelled.", key);
+			log.warnf(
+				"The publisher has sent an HALT message. So %s will be cancelled.",
+				schedulingKey
+			);
 
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 		}
 
 		if (dataPayload.getContentId() != null) {
 
-			// TODO maybe could be asked to self
-			doUpdateLastIngestionDate(dataPayload);
-
-			dataPayload.setIndexName(indexName);
-
 			String contentId = dataPayload.getContentId();
+			var parsingDate = dataPayload.getParsingDate();
 
-			ActorRef<EnrichPipeline.Response> responseActorRef = getContext()
+			ActorRef<EnrichPipeline.Response> replyTo = getContext()
 				.messageAdapter(EnrichPipeline.Response.class, EnrichPipelineResponseWrapper::new);
 
 			ActorSystem<Void> system = getContext().getSystem();
@@ -350,19 +345,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(key, contentId, ingest.messageKey()).asString()
+				EnrichPipelineKey.of(schedulingKey, contentId, ingest.messageKey()).asString()
+			);
+
+			var heldMessage = new HeldMessage(
+				getSchedulingKey(),
+				contentId,
+				ingest.messageKey(),
+				parsingDate,
+				ingest.replyTo()
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
-					responseActorRef,
-					ingest.replyTo,
+				replyTo,
+				heldMessage,
 					Json.encodeToBuffer(dataPayload).getBytes(),
 					scheduler
 				)
 			);
 
-			consumers.add(ingest.replyTo());
-			busyWorkers++;
+			heldMessages.add(heldMessage);
 
 		}
 		else if (!dataPayload.isLast()) {
@@ -371,10 +373,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		else {
 			ingest.replyTo.tell(Success.INSTANCE);
 			lastReceived = true;
-			log.infof("%s received last message", key);
+			log.infof("%s received last message", schedulingKey);
 		}
 
-		return busyWorkers < maxWorkers ? next() : busy();
+		return heldMessages.size() < maxWorkers ? next() : busy();
 
 	}
 
@@ -418,7 +420,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			queueManager.tell(new QueueManager.DestroyQueue(
-					SchedulingKey.asString(key.tenantId(), key.scheduleId()),
+				SchedulingKey.asString(schedulingKey.tenantId(), schedulingKey.scheduleId()),
 					replyTo
 				)
 			);
@@ -446,24 +448,41 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponseWrapper eprw) {
 		EnrichPipeline.Response response = eprw.response;
+		var heldMessage = response.heldMessage();
+		var replyTo = heldMessage.replyTo();
 
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
 				"enrich pipeline success for content-id %s replyTo %s",
-				success.contentId(), success.replyTo()
+				success.contentId(), replyTo
 			);
 
-			response.replyTo().tell(Success.INSTANCE);
+			OffsetDateTime parsingDate =
+				OffsetDateTime.ofInstant(
+					Instant.ofEpochMilli(heldMessage.parsingDate()),
+					ZoneOffset.UTC
+				);
+
+			var lastIngestionDate = this.scheduler.getLastIngestionDate();
+
+			if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
+				getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+			}
+
+			replyTo.tell(Success.INSTANCE);
+
+			return newReceiveBuilder()
+				.onMessage(PersistLastIngestionDate.class, this::onPersistLastIngestionDate)
+				.build();
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
 			EnrichPipelineException epe = failure.exception();
 			log.error("enrich pipeline failure", epe);
 			this.failureTracked = true;
-			response.replyTo().tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
+			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
 		}
 
-		busyWorkers--;
-		consumers.remove(response.replyTo());
+		heldMessages.remove(heldMessage);
 
 		return next();
 	}
@@ -485,9 +504,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			case RUNNING:
 
-				if (busyWorkers > 0) {
+				if (!heldMessages.isEmpty()) {
 					if (log.isDebugEnabled()) {
-						log.debugf("There are %s busy workers, for %s", busyWorkers, key);
+						log.debugf("There are %s busy workers, for %s", heldMessages.size(),
+							schedulingKey
+						);
 					}
 
 					if (isExpired()) {
@@ -502,7 +523,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				}
 
 				if (!failureTracked && lastReceived) {
-					log.infof("%s is done", key);
+					log.infof("%s is done", schedulingKey);
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
@@ -510,11 +531,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				}
 
 				if (log.isTraceEnabled()) {
-					log.tracef("check %s expiration", key);
+					log.tracef("check %s expiration", schedulingKey);
 				}
 
 				if (isExpired()) {
-					log.infof("%s ingestion is expired", key);
+					log.infof("%s ingestion is expired", schedulingKey);
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
@@ -523,8 +544,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			case STALE:
 
-				if (busyWorkers == 0) {
-					log.infof("%s is recovered", key);
+				if (heldMessages.isEmpty()) {
+					log.infof("%s is recovered", schedulingKey);
 					getContext().getSelf().tell(
 						new PersistStatus(
 							Scheduler.SchedulerStatus.RUNNING,
@@ -558,6 +579,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			this.scheduler = scheduler;
 		}
 
+		// TODO: tell failure on exception
 		replyTo.tell(Success.INSTANCE);
 
 		return Behaviors.same();
@@ -576,7 +598,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
 
 		getContext().pipeToSelf(
-			SchedulingService.fetchScheduler(key),
+			SchedulingService.fetchScheduler(schedulingKey),
 			(scheduler, throwable) -> new FetchedScheduler(
 				scheduler, (Exception) throwable, ignoreRef)
 		);
@@ -590,7 +612,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
 
 		getContext().pipeToSelf(
-			SchedulingService.persistLastIngestionDate(key, lastIngestionDate),
+			SchedulingService.persistLastIngestionDate(schedulingKey, lastIngestionDate),
 			(scheduler, throwable) -> new FetchedScheduler(
 				scheduler, (Exception) throwable, ignoreRef)
 		);
@@ -604,8 +626,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private Behavior<Command> onPostStop(PostStop postStop) {
-		for (ActorRef<Response> consumer : consumers) {
-			consumer.tell(new Failure("stopped for unexpected reason"));
+		Set<ActorRef<Response>> released = new HashSet<>();
+
+		for (HeldMessage heldMessage : heldMessages) {
+			var replyTo = heldMessage.replyTo();
+
+			if (!released.contains(replyTo)) {
+				replyTo.tell(new Failure("stopped for unexpected reason"));
+				released.add(replyTo);
+			}
 		}
 
 		return Behaviors.same();
@@ -614,7 +643,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
 
 		getContext().pipeToSelf(
-			SchedulingService.persistStatus(key, persistStatus.status()),
+			SchedulingService.persistStatus(schedulingKey, persistStatus.status()),
 			(scheduler, throwable) -> new FetchedScheduler(
 				scheduler, (Exception) throwable, persistStatus.replyTo())
 		);
@@ -625,12 +654,19 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onPersistStatusEnding(PersistStatus persistStatus) {
 
 		getContext().pipeToSelf(
-			SchedulingService.persistStatus(key, persistStatus.status()),
+			SchedulingService.persistStatus(schedulingKey, persistStatus.status()),
 			(scheduler, throwable) -> new FetchedScheduler(
 				scheduler, (Exception) throwable, persistStatus.replyTo())
 		);
 
 		return Behaviors.same();
+	}
+
+	private Behavior<Command> onClose() {
+
+		this.closeStage.tell(new CloseStage.Start(getScheduler()));
+
+		return closing();
 	}
 
 	private Behavior<Command> onCloseStageResponse(CloseStageResponse closeStageResponse) {
@@ -643,7 +679,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				.tell(new GracefulEnd(aggregate.status()));
 		}
 		else {
-			log.warnf("Unexpected response from CloseStage for %s", getKey());
+			log.warnf("Unexpected response from CloseStage for %s", getSchedulingKey());
 		}
 
 		return Behaviors.same();
@@ -661,29 +697,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return gracefulEnding();
 	}
 
-	private Behavior<Command> onClose() {
-
-		this.closeStage.tell(new CloseStage.Start(getScheduler()));
-
-		return closing();
-	}
-
-	private void doUpdateLastIngestionDate(DataPayload dataPayload) {
-		OffsetDateTime parsingDate =
-			OffsetDateTime.ofInstant(
-				Instant.ofEpochMilli(dataPayload.getParsingDate()),
-				ZoneOffset.UTC
-			);
-
-		var lastIngestionDate = this.scheduler.getLastIngestionDate();
-
-		if (lastIngestionDate == null || !lastIngestionDate.isEqual(parsingDate)) {
-			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
-		}
-	}
-
 	private void logBehavior(String behavior) {
-		log.infof("%s behavior is %s", key, behavior);
+		log.infof("%s behavior is %s", schedulingKey, behavior);
 	}
 
 	private boolean isExpired() {
@@ -748,5 +763,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
+
+	public record HeldMessage(
+		SchedulingKey schedulingKey,
+		String contentId,
+		String messageKey,
+		long parsingDate,
+		ActorRef<Scheduling.Response> replyTo
+	) {}
+
 
 }

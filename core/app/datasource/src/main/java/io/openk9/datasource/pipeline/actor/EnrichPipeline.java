@@ -23,7 +23,6 @@ import akka.actor.typed.ChildFailed;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
-import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
@@ -55,7 +54,7 @@ public class EnrichPipeline {
 			.receive(Command.class)
 			.onMessage(Setup.class, setup -> onSetup(
 				ctx,
-				enrichPipelineKey.key(),
+				enrichPipelineKey,
 				setup
 			))
 			.build()
@@ -64,18 +63,15 @@ public class EnrichPipeline {
 
 	public static Behavior<Command> onSetup(
 		ActorContext<EnrichPipeline.Command> ctx,
-		SchedulingKey key,
+		EnrichPipelineKey key,
 		Setup setup
 	) {
 
 		SchedulerDTO scheduler = setup.scheduler();
 		byte[] payloadArray = setup.ingestPayload();
 
-		DataPayload dataPayload =
-			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
-
-		ActorRef<Response> scheduling = setup.scheduling();
-		ActorRef<Scheduling.Response> consumer = setup.consumer();
+		ActorRef<Response> scheduling = setup.replyTo();
+		Scheduling.HeldMessage heldMessage = setup.heldMessage;
 
 		ActorRef<IndexWriter.Response> responseActorRef =
 			ctx.messageAdapter(
@@ -83,23 +79,19 @@ public class EnrichPipeline {
 				IndexWriterResponseWrapper::new
 			);
 
-		String oldDataIndexName = scheduler.getOldDataIndexName();
-		if (oldDataIndexName != null) {
-			dataPayload.setOldIndexName(oldDataIndexName);
-		}
-
+		var dataPayload = prepareDataPayload(payloadArray, scheduler);
 
 		log.infof("start pipeline for datasource with id %s", scheduler.getDatasourceId());
 
 		ActorRef<HttpSupervisor.Command> supervisorActorRef =
-			ctx.spawnAnonymous(HttpSupervisor.create(key));
+			ctx.spawnAnonymous(HttpSupervisor.create(key.schedulingKey()));
 
 		return initPipeline(
 			ctx,
 			supervisorActorRef,
 			responseActorRef,
 			scheduling,
-			consumer,
+			heldMessage,
 			dataPayload,
 			scheduler,
 			scheduler.getEnrichItems()
@@ -112,14 +104,11 @@ public class EnrichPipeline {
 		ActorRef<HttpSupervisor.Command> supervisorActorRef,
 		ActorRef<IndexWriter.Response> responseActorRef,
 		ActorRef<Response> replyTo,
-		ActorRef<Scheduling.Response> consumer,
+		Scheduling.HeldMessage heldMessage,
 		DataPayload dataPayload,
 		SchedulerDTO scheduler,
 		Set<EnrichItemDTO> enrichPipelineItems
 	) {
-
-
-		String scheduleId = scheduler.getScheduleId();
 
 		if (enrichPipelineItems.isEmpty()) {
 
@@ -148,18 +137,14 @@ public class EnrichPipeline {
 						if (response instanceof IndexWriter.Success) {
 							replyTo.tell(new Success(
 									dataPayload.getContentId(),
-									consumer,
-									scheduleId,
-									dataPayload.getTenantId()
+								heldMessage
 								)
 							);
 						}
 						else if (response instanceof IndexWriter.Failure failure) {
 							replyTo.tell(new Failure(
 								new EnrichPipelineException(failure.exception()),
-									consumer,
-									scheduleId,
-									dataPayload.getTenantId()
+								heldMessage
 								)
 							);
 						}
@@ -170,9 +155,7 @@ public class EnrichPipeline {
 				.onSignal(ChildFailed.class, childFailed -> {
 					replyTo.tell(new Failure(
 						new EnrichPipelineException(childFailed.cause()),
-						consumer,
-						dataPayload.getTenantId(),
-						dataPayload.getScheduleId()
+							heldMessage
 						)
 					);
 
@@ -244,7 +227,7 @@ public class EnrichPipeline {
 
 						return initPipeline(
 							ctx, supervisorActorRef, responseActorRef, replyTo,
-							consumer, dataPayload, scheduler, tail
+							heldMessage, dataPayload, scheduler, tail
 						);
 
 					}
@@ -274,10 +257,9 @@ public class EnrichPipeline {
 
 						replyTo.tell(new Success(
 							dataPayload.getContentId(),
-							consumer,
-							dataPayload.getScheduleId(),
-							dataPayload.getTenantId()
-						));
+								heldMessage
+							)
+						);
 
 						return Behaviors.stopped();
 					}
@@ -332,9 +314,7 @@ public class EnrichPipeline {
 
 					replyTo.tell(new Success(
 						dataPayload.getContentId(),
-						consumer,
-						dataPayload.getScheduleId(),
-						dataPayload.getTenantId()
+						heldMessage
 					));
 
 					return Behaviors.stopped();
@@ -351,7 +331,7 @@ public class EnrichPipeline {
 					supervisorActorRef,
 					responseActorRef,
 					replyTo,
-					consumer,
+					heldMessage,
 					newDataPayload,
 					scheduler,
 					tail
@@ -367,9 +347,7 @@ public class EnrichPipeline {
 
 				replyTo.tell(new Failure(
 					new EnrichPipelineException(error),
-					consumer,
-					dataPayload.getScheduleId(),
-					dataPayload.getTenantId()
+					heldMessage
 				));
 
 				return Behaviors.stopped();
@@ -403,15 +381,23 @@ public class EnrichPipeline {
 
 	}
 
+	private static DataPayload prepareDataPayload(byte[] payloadArray, SchedulerDTO scheduler) {
+		DataPayload dataPayload =
+			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
+
+		dataPayload.setIndexName(scheduler.getIndexName());
+
+		String oldDataIndexName = scheduler.getOldDataIndexName();
+		if (oldDataIndexName != null) {
+			dataPayload.setOldIndexName(oldDataIndexName);
+		}
+		return dataPayload;
+	}
+
 	public sealed interface Command extends CborSerializable {}
 
 	public sealed interface Response extends CborSerializable {
-		ActorRef<Scheduling.Response> replyTo();
-
-		String scheduleId();
-
-		String tenantId();
-
+		Scheduling.HeldMessage heldMessage();
 	}
 
 	private record IndexWriterResponseWrapper(
@@ -432,8 +418,8 @@ public class EnrichPipeline {
 	private record InternalError(String error) implements Command {}
 
 	public record Setup(
-		ActorRef<Response> scheduling,
-		ActorRef<Scheduling.Response> consumer,
+		ActorRef<Response> replyTo,
+		Scheduling.HeldMessage heldMessage,
 		byte[] ingestPayload,
 		SchedulerDTO scheduler
 
@@ -441,16 +427,12 @@ public class EnrichPipeline {
 
 	public record Success(
 		String contentId,
-		ActorRef<Scheduling.Response> replyTo,
-		String scheduleId,
-		String tenantId
+		Scheduling.HeldMessage heldMessage
 	) implements Response {}
 
 	public record Failure(
 		EnrichPipelineException exception,
-		ActorRef<Scheduling.Response> replyTo,
-		String scheduleId,
-		String tenantId
+		Scheduling.HeldMessage heldMessage
 	) implements Response {}
 
 }

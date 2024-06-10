@@ -21,7 +21,7 @@ import io.openk9.common.util.SchedulingKey;
 
 import java.util.Objects;
 
-public record EnrichPipelineKey(SchedulingKey key, String contentId, String messageKey) {
+public record EnrichPipelineKey(SchedulingKey schedulingKey, String contentId, String messageKey) {
 
 	public EnrichPipelineKey {
 		Objects.requireNonNull(contentId);
@@ -41,7 +41,7 @@ public record EnrichPipelineKey(SchedulingKey key, String contentId, String mess
 
 	public String asString() {
 		return new StringBuilder()
-			.append(key().asString())
+			.append(schedulingKey().asString())
 			.append(SchedulingKey.SEPARATOR)
 			.append(contentId())
 			.append(SchedulingKey.SEPARATOR)
