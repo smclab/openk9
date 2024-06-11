@@ -475,14 +475,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			return newReceiveBuilder()
 				.onMessage(
 					PersistLastIngestionDate.class,
-					msg -> this.lastIngestionDate == null ||
-						   !this.lastIngestionDate.isEqual(msg.lastIngestionDate()),
+					this::isNewLastIngestionDate,
 					this::onPersistLastIngestionDate
 				)
 				.onMessage(
 					PersistLastIngestionDate.class,
-					msg -> this.lastIngestionDate != null &&
-						   this.lastIngestionDate.isEqual(msg.lastIngestionDate()),
+					this::isSameLastIngestionDate,
 					(__) -> this.next()
 				)
 				.onAnyMessage(this::onEnqueue)
@@ -498,6 +496,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 
 		return next();
+	}
+
+	private boolean isNewLastIngestionDate(PersistLastIngestionDate msg) {
+		return this.lastIngestionDate == null ||
+			   !this.lastIngestionDate.isEqual(msg.lastIngestionDate());
+	}
+
+	private boolean isSameLastIngestionDate(PersistLastIngestionDate msg) {
+		return this.lastIngestionDate != null &&
+			   this.lastIngestionDate.isEqual(msg.lastIngestionDate());
 	}
 
 	private Behavior<Command> onTick() {
