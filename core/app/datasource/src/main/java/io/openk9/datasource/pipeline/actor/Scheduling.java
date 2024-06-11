@@ -453,6 +453,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var heldMessage = response.heldMessage();
 		var replyTo = heldMessage.replyTo();
 
+		heldMessages.remove(heldMessage);
+
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
 				"enrich pipeline success for content-id %s replyTo %s",
@@ -469,8 +471,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
-
-			heldMessages.remove(heldMessage);
 
 			return newReceiveBuilder()
 				.onMessage(
@@ -494,7 +494,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.error("enrich pipeline failure", epe);
 			this.failureTracked = true;
 			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
-			heldMessages.remove(heldMessage);
+
 		}
 
 		return next();
