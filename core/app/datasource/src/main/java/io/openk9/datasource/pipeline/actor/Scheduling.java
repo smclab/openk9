@@ -237,6 +237,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return ready();
 	}
 
+	private Receive<Command> updatingLastIngestionDate() {
+		return afterSetup()
+			.onMessage(
+				PersistLastIngestionDate.class,
+				this::isNewLastIngestionDate,
+				this::onPersistLastIngestionDate
+			)
+			.onMessage(
+				PersistLastIngestionDate.class,
+				this::isSameLastIngestionDate,
+				(__) -> this.next()
+			)
+			.onAnyMessage(this::onEnqueue)
+			.build();
+	}
+
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
@@ -471,19 +487,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 
-			return newReceiveBuilder()
-				.onMessage(
-					PersistLastIngestionDate.class,
-					this::isNewLastIngestionDate,
-					this::onPersistLastIngestionDate
-				)
-				.onMessage(
-					PersistLastIngestionDate.class,
-					this::isSameLastIngestionDate,
-					(__) -> this.next()
-				)
-				.onAnyMessage(this::onEnqueue)
-				.build();
+			return updatingLastIngestionDate();
 
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
