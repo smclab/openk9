@@ -360,10 +360,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
 				replyTo,
 				heldMessage,
-					Json.encodeToBuffer(dataPayload).getBytes(),
-					scheduler
-				)
-			);
+				Json.encodeToBuffer(dataPayload).getBytes(),
+				scheduler
+			));
 
 			heldMessages.add(heldMessage);
 
