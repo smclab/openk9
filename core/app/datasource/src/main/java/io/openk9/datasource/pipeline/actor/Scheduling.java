@@ -27,7 +27,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
-import akka.actor.typed.receptionist.Receptionist;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
@@ -781,8 +780,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record PostProcess(EnrichPipeline.Response response)
 		implements Command {}
-
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
 	private record FetchedScheduler(
 		SchedulerDTO scheduler,
