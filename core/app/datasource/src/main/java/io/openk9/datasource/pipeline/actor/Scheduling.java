@@ -484,7 +484,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					ZoneOffset.UTC
 				);
 
-
 			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
 
 			return updatingLastIngestionDate();
