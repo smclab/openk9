@@ -497,16 +497,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return next();
 	}
 
-	private boolean isNewLastIngestionDate(PersistLastIngestionDate msg) {
-		return this.lastIngestionDate == null ||
-			   !this.lastIngestionDate.isEqual(msg.lastIngestionDate());
-	}
-
-	private boolean isSameLastIngestionDate(PersistLastIngestionDate msg) {
-		return this.lastIngestionDate != null &&
-			   this.lastIngestionDate.isEqual(msg.lastIngestionDate());
-	}
-
 	private Behavior<Command> onTick() {
 		var status = scheduler.getStatus();
 
@@ -725,6 +715,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private boolean isExpired() {
 		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
+	}
+
+	private boolean isNewLastIngestionDate(PersistLastIngestionDate msg) {
+		return this.lastIngestionDate == null ||
+			   !this.lastIngestionDate.isEqual(msg.lastIngestionDate());
+	}
+
+	private boolean isSameLastIngestionDate(PersistLastIngestionDate msg) {
+		return this.lastIngestionDate != null &&
+			   this.lastIngestionDate.isEqual(msg.lastIngestionDate());
 	}
 
 	public sealed interface Command extends CborSerializable {}
