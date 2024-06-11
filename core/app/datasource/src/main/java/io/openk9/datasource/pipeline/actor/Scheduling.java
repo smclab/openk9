@@ -31,8 +31,10 @@ import akka.actor.typed.receptionist.Receptionist;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import akka.cluster.typed.Cluster;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
+import akka.cluster.typed.Subscribe;
 import com.typesafe.config.Config;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.ingestion.PayloadType;
@@ -91,6 +93,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private boolean lastReceived = false;
 	private int maxWorkers;
 	private OffsetDateTime lastIngestionDate;
+	private int nodes = 0;
 
 	@SafeVarargs
 	public Scheduling(
@@ -105,15 +108,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
 
-		ActorRef<Receptionist.Listing> messageAdapter =
-			getContext().messageAdapter(
-				Receptionist.Listing.class,
-				MessageGatewaySubscription::new
-			);
-
-		getContext().getSystem().receptionist().tell(
-			Receptionist.subscribe(MessageGateway.SERVICE_KEY, messageAdapter)
+		var cluster = Cluster.get(getContext().getSystem());
+		var subscriber = getContext().messageAdapter(
+			akka.cluster.ClusterEvent.MemberEvent.class,
+			ClusterEvent::new
 		);
+
+		cluster.subscriptions().tell(Subscribe.create(
+			subscriber,
+			akka.cluster.ClusterEvent.MemberEvent.class
+		));
 
 		getContext().getSelf().tell(Start.INSTANCE);
 
@@ -159,7 +163,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@Override
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
-			.onMessage(MessageGatewaySubscription.class, this::onMessageGatewaySubscription)
+			.onMessage(ClusterEvent.class, this::onClusterEvent)
 			.onMessage(RefreshScheduler.class, this::onRefreshScheduler)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
@@ -304,13 +308,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onMessageGatewaySubscription(
-		MessageGatewaySubscription messageGatewaySubscription) {
+	private Behavior<Command> onClusterEvent(ClusterEvent clusterEvent) {
 
-		int nodes = messageGatewaySubscription
-			.listing()
-			.getServiceInstances(MessageGateway.SERVICE_KEY)
-			.size();
+		var memberEvent = clusterEvent.event();
+
+		if (memberEvent instanceof akka.cluster.ClusterEvent.MemberUp) {
+			nodes++;
+		}
+		else if (memberEvent instanceof akka.cluster.ClusterEvent.MemberDowned) {
+			nodes--;
+		}
 
 		maxWorkers = workersPerNode * nodes;
 
@@ -797,5 +804,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorRef<Scheduling.Response> replyTo
 	) {}
 
+
+	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
 
 }
