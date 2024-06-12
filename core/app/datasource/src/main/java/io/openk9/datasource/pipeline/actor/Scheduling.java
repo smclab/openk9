@@ -71,7 +71,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public static final String SCHEDULING_TIMEOUT = "io.openk9.scheduling.timeout";
 	public static final String WORKERS_PER_NODE = "io.openk9.scheduling.workers-per-node";
 	public static final int WORKERS_PER_NODE_DEFAULT = 2;
-	private static final String INIT_BEHAVIOR = "Init";
+	private static final String SETTING_UP_BEHAVIOR = "Setting up";
 	private static final String READY_BEHAVIOR = "Ready";
 	private static final String BUSY_BEHAVIOR = "Busy";
 	private static final String NEXT_BEHAVIOR = "Next";
@@ -158,7 +158,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	@Override
 	public Receive<Command> createReceive() {
-		return init();
+		return settingUp();
 	}
 
 	@Override
@@ -205,8 +205,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
 	}
 
-	private Receive<Command> init() {
-		logBehavior(INIT_BEHAVIOR);
+	private Receive<Command> settingUp() {
+		logBehavior(SETTING_UP_BEHAVIOR);
 
 		return newReceiveBuilder()
 			.onMessageEquals(Setup.INSTANCE, this::onSetup)
@@ -595,7 +595,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				scheduler, (Exception) throwable, startWrapper)
 		);
 
-		return init();
+		return settingUp();
 	}
 
 	private Behavior<Command> onTrackDate(TrackDate trackDate) {
@@ -613,7 +613,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				scheduler, (Exception) throwable, startWrapper)
 		);
 
-		return init();
+		return settingUp();
 	}
 
 	private Behavior<Command> onStop() {
@@ -646,7 +646,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				scheduler, (Exception) throwable, startWrapper)
 		);
 
-		return init();
+		return settingUp();
 	}
 
 	private Behavior<Command> onClose() {
