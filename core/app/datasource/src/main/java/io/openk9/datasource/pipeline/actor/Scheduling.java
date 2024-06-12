@@ -18,7 +18,6 @@
 package io.openk9.datasource.pipeline.actor;
 
 import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.SupervisorStrategy;
@@ -28,8 +27,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.actor.typed.javadsl.TimerScheduler;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.ClusterSingleton;
@@ -37,18 +34,16 @@ import akka.cluster.typed.SingletonActor;
 import akka.cluster.typed.Subscribe;
 import com.typesafe.config.Config;
 import io.openk9.common.util.SchedulingKey;
-import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.closing.Protocol;
-import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.pipeline.stages.work.HeldMessage;
+import io.openk9.datasource.pipeline.stages.work.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import lombok.Getter;
 import org.jboss.logging.Logger;
 
@@ -59,8 +54,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -82,10 +79,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@Getter
 	private final SchedulingKey schedulingKey;
 	private final Deque<Command> lag = new ArrayDeque<>();
-	private final Set<HeldMessage> heldMessages = new HashSet<>();
+	private final Map<HeldMessage, ActorRef<Response>> heldMessages = new HashMap<>();
 	private final Duration timeout;
 	private final int workersPerNode;
 	private final TimerScheduler<Command> timers;
+	private final ActorRef<WorkStage.Command> workStage;
 	private final ActorRef<CloseStage.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
@@ -124,14 +122,18 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		getContext().getSelf().tell(Setup.INSTANCE);
 
-		var replyTo = getContext().messageAdapter(
+		this.workStage = getContext().spawnAnonymous(
+			WorkStage.create(getSchedulingKey()));
+
+		// TODO better to get scheduling from cluster shard
+		var closeStageAdapter = getContext().messageAdapter(
 			CloseStage.Response.class,
 			CloseStageResponse::new
 		);
 
 		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
 			getSchedulingKey(),
-			replyTo,
+			closeStageAdapter,
 			closeAggregator,
 			closeHandlerFactories
 		));
@@ -189,7 +191,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
-			.onMessage(PostProcess.class, this::onPostProcess)
+			.onMessage(WorkStageResponse.class, this::onWorkStageResponse)
 			.onMessage(
 				TrackDate.class,
 				this::isNewLastIngestionDate,
@@ -327,69 +329,20 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onIngest(Ingest ingest) {
 		this.lastRequest = LocalDateTime.now();
 
-		byte[] payloadArray = ingest.payload;
-		var requester = ingest.replyTo();
+		var workStageAdapter = getContext().messageAdapter(
+			WorkStage.Response.class,
+			res -> new WorkStageResponse(res, ingest.replyTo())
+		);
 
-		DataPayload dataPayload =
-			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
-
-		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
-			log.warnf(
-				"The publisher has sent an HALT message. So %s will be cancelled.",
-				schedulingKey
-			);
-
-			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
-
-			requester.tell(Success.INSTANCE);
-		}
-
-		if (dataPayload.getContentId() != null) {
-
-			String contentId = dataPayload.getContentId();
-			var parsingDateTimeStamp = dataPayload.getParsingDate();
-
-			ActorRef<EnrichPipeline.Response> replyTo = getContext()
-				.messageAdapter(EnrichPipeline.Response.class, PostProcess::new);
-
-			ActorSystem<Void> system = getContext().getSystem();
-
-			ClusterSharding clusterSharding = ClusterSharding.get(system);
-
-			EntityRef<EnrichPipeline.Command> enrichPipelineRef = clusterSharding.entityRefFor(
-				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(schedulingKey, contentId, ingest.messageKey()).asString()
-			);
-
-			var heldMessage = new HeldMessage(
-				getSchedulingKey(),
-				contentId,
+		this.workStage.tell(new WorkStage.StartWorker(
+				getScheduler(),
 				ingest.messageKey(),
-				parsingDateTimeStamp,
-				requester
-			);
+			ingest.payload(),
+			workStageAdapter
+			)
+		);
 
-			enrichPipelineRef.tell(new EnrichPipeline.Setup(
-				replyTo,
-				heldMessage,
-				Json.encodeToBuffer(dataPayload).getBytes(),
-				scheduler
-			));
-
-			heldMessages.add(heldMessage);
-
-		}
-		else if (!dataPayload.isLast()) {
-			requester.tell(new Failure("content-id is null"));
-		}
-		else {
-			requester.tell(Success.INSTANCE);
-			lastReceived = true;
-			log.infof("%s received last message", schedulingKey);
-		}
-
-		return heldMessages.size() < maxWorkers ? next() : busy();
-
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onTrackError(TrackError trackError) {
@@ -458,18 +411,46 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onPostProcess(PostProcess postProcess) {
-		EnrichPipeline.Response response = postProcess.response;
+	private Behavior<Command> onWorkStageResponse(WorkStageResponse workStageResponse) {
+		var response = workStageResponse.response();
+		var requester = workStageResponse.requester();
 
-		var heldMessage = response.heldMessage();
-		var replyTo = heldMessage.replyTo();
+		if (response instanceof WorkStage.InvalidMessage invalid) {
 
-		heldMessages.remove(heldMessage);
+			requester.tell(new Failure(invalid.errorMessage()));
 
-		if (response instanceof EnrichPipeline.Success success) {
+		}
+		else if (response instanceof WorkStage.HaltMessage halt) {
+
+			requester.tell(Success.INSTANCE);
+			getContext()
+				.getSelf()
+				.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
+
+		}
+		else if (response instanceof WorkStage.LastMessage last) {
+
+			requester.tell(Success.INSTANCE);
+			lastReceived = true;
+			log.infof("%s received last message", schedulingKey);
+
+		}
+		else if (response instanceof WorkStage.WorkingMessage working) {
+
+			var heldMessage = working.heldMessage();
+			heldMessages.put(heldMessage, requester);
+
+		}
+
+		if (response instanceof WorkStage.Done done) {
+
+			var heldMessage = done.heldMessage();
+
+			var replyTo = heldMessages.remove(heldMessage);
+
 			log.infof(
-				"enrich pipeline success for content-id %s replyTo %s",
-				success.contentId(), replyTo
+				"work done for content-id %s replyTo %s",
+				heldMessage.contentId(), replyTo
 			);
 
 			replyTo.tell(Success.INSTANCE);
@@ -485,15 +466,23 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			return busy();
 
 		}
-		else if (response instanceof EnrichPipeline.Failure failure) {
-			EnrichPipelineException epe = failure.exception();
-			log.error("enrich pipeline failure", epe);
+		else if (response instanceof WorkStage.Failed failed) {
+
+			var heldMessage = failed.heldMessage();
+			var replyTo = heldMessages.remove(heldMessage);
+
+			log.error("work failed");
+
 			this.failureTracked = true;
-			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(epe)));
+
+			replyTo.tell(new Failure(failed.errorMessage()));
 
 		}
+		else {
+			log.warn("unknown callback type");
+		}
 
-		return next();
+		return heldMessages.size() < maxWorkers ? next() : busy();
 	}
 
 	private Behavior<Command> onTick() {
@@ -627,8 +616,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onPostStop(PostStop postStop) {
 		Set<ActorRef<Response>> released = new HashSet<>();
 
-		for (HeldMessage heldMessage : heldMessages) {
-			var replyTo = heldMessage.replyTo();
+		for (ActorRef<Response> replyTo : heldMessages.values()) {
 
 			if (!released.contains(replyTo)) {
 				replyTo.tell(new Failure("stopped for unexpected reason"));
@@ -769,9 +757,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record TrackDate(OffsetDateTime lastIngestionDate) implements Command {}
 
-	private record PostProcess(EnrichPipeline.Response response)
-		implements Command {}
-
 	private record UpdateStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
 		implements Command {}
 
@@ -785,16 +770,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
+	private record WorkStageResponse(WorkStage.Response response, ActorRef<Response> requester)
+		implements Command {}
+
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
 	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
-
-	public record HeldMessage(
-		SchedulingKey schedulingKey,
-		String contentId,
-		String messageKey,
-		long parsingDate,
-		ActorRef<Scheduling.Response> replyTo
-	) {}
 
 }
