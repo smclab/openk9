@@ -27,6 +27,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
+import akka.actor.typed.javadsl.TimerScheduler;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
@@ -84,6 +85,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final Set<HeldMessage> heldMessages = new HashSet<>();
 	private final Duration timeout;
 	private final int workersPerNode;
+	private final TimerScheduler<Command> timers;
 	private final ActorRef<CloseStage.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
@@ -97,6 +99,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@SafeVarargs
 	public Scheduling(
 		ActorContext<Command> context,
+		TimerScheduler<Command> timers,
 		SchedulingKey schedulingKey,
 		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
 		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
@@ -106,6 +109,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.timeout = getTimeout(context);
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
+		this.timers = timers;
 
 		var cluster = Cluster.get(getContext().getSystem());
 		var subscriber = getContext().messageAdapter(
@@ -118,7 +122,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			akka.cluster.ClusterEvent.MemberEvent.class
 		));
 
-		getContext().getSelf().tell(Start.INSTANCE);
+		getContext().getSelf().tell(Setup.INSTANCE);
 
 		var replyTo = getContext().messageAdapter(
 			CloseStage.Response.class,
@@ -140,12 +144,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
 		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
 
-		return Behaviors
-			.<Command>supervise(
-				Behaviors.setup(ctx -> new Scheduling(
-					ctx, schedulingKey, closeAggregator, closeHandlerFactories)
-				)
-			)
+		return Behaviors.<Command>supervise(
+				Behaviors.setup(ctx ->
+					Behaviors.withTimers(timers -> new Scheduling(
+						ctx, timers, schedulingKey, closeAggregator, closeHandlerFactories))))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 					Duration.ofSeconds(3),
 					Duration.ofSeconds(60),
@@ -163,7 +165,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public ReceiveBuilder<Command> newReceiveBuilder() {
 		return super.newReceiveBuilder()
 			.onMessage(ClusterEvent.class, this::onClusterEvent)
-			.onMessage(RefreshScheduler.class, this::onRefreshScheduler)
+			.onMessage(UpdateScheduler.class, this::onUpdateScheduler)
+			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessageEquals(StartInternalClock.INSTANCE, this::onStartInternalClock)
+			.onMessageEquals(StopInternalClock.INSTANCE, this::onStopInternalClock)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.onSignal(PostStop.class, this::onPostStop);
 	}
@@ -185,28 +190,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(PostProcess.class, this::onPostProcess)
-			.onMessage(PersistStatus.class, this::onPersistStatus)
+			.onMessage(UpdateStatus.class, this::onUpdateStatus)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
-	}
-
-	private Behavior<Command> waitFetchedScheduler() {
-
-		return Behaviors.withTimers(timers -> {
-			timers.cancel(Tick.INSTANCE);
-
-			return newReceiveBuilder()
-				.onMessage(FetchedScheduler.class, this::onFetchedScheduler)
-				.onAnyMessage(this::onEnqueue)
-				.build();
-		});
 	}
 
 	private Receive<Command> init() {
 		logBehavior(INIT_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessageEquals(Start.INSTANCE, this::onStart)
+			.onMessageEquals(Setup.INSTANCE, this::onSetup)
 			.onAnyMessage(this::onEnqueue)
 			.build();
 	}
@@ -240,15 +233,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return ready();
 	}
 
-	private Receive<Command> updatingLastIngestionDate() {
+	private Receive<Command> trackingDate() {
 		return afterSetup()
 			.onMessage(
-				PersistLastIngestionDate.class,
+				TrackDate.class,
 				this::isNewLastIngestionDate,
-				this::onPersistLastIngestionDate
+				this::onTrackDate
 			)
 			.onMessage(
-				PersistLastIngestionDate.class,
+				TrackDate.class,
 				this::isSameLastIngestionDate,
 				(__) -> this.next()
 			)
@@ -259,35 +252,35 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> closing() {
 		logBehavior(CLOSING_BEHAVIOR);
 
-		return Behaviors.withTimers(timers -> {
-
-			timers.cancel(Tick.INSTANCE);
-
-			return newReceiveBuilder()
-				.onMessage(CloseStageResponse.class, this::onCloseStageResponse)
-				.onMessage(GracefulEnd.class, this::onGracefulEnd)
-				.onAnyMessage(this::onDiscard)
-				.build();
-		});
+		return newReceiveBuilder()
+			.onMessage(CloseStageResponse.class, this::onCloseStageResponse)
+			.onMessage(GracefulEnd.class, this::onGracefulEnd)
+			.onAnyMessage(this::onDiscard)
+			.build();
 	}
 
 	private Behavior<Command> gracefulEnding() {
 		logBehavior(GRACEFUL_ENDING_BEHAVIOR);
 
 		return newReceiveBuilder()
-			.onMessage(PersistStatus.class, this::onPersistStatusEnding)
-			.onMessage(FetchedScheduler.class, this::onFetchedSchedulerEnding)
 			.onMessage(DestroyQueue.class, this::onDestroyQueue)
 			.onMessage(DestroyQueueResult.class, this::onDestroyQueueResult)
 			.onAnyMessage(this::onDiscard)
 			.build();
 	}
 
-	private Behavior<Command> onFetchedScheduler(FetchedScheduler fetchedScheduler) {
+	private Behavior<Command> onStart() {
 
-		var scheduler = fetchedScheduler.scheduler();
-		var exception = fetchedScheduler.exception();
-		var replyTo = fetchedScheduler.replyTo();
+		getContext().getSelf().tell(StartInternalClock.INSTANCE);
+
+		return next();
+	}
+
+	private Behavior<Command> onUpdateScheduler(UpdateScheduler updateScheduler) {
+
+		var scheduler = updateScheduler.scheduler();
+		var exception = updateScheduler.exception();
+		var replyTo = updateScheduler.replyTo();
 
 		if (exception != null) {
 			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
@@ -300,7 +293,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				scheduler.getLastIngestionDate()
 			);
 
-			getContext().getSelf().tell(new RefreshScheduler(scheduler));
+			this.scheduler = scheduler;
 			replyTo.tell(Success.INSTANCE);
 		}
 
@@ -406,7 +399,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		if (scheduler.getStatus() != Scheduler.SchedulerStatus.ERROR) {
 			getContext().getSelf().tell(
-				new PersistStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
+				new UpdateStatus(Scheduler.SchedulerStatus.ERROR, trackError.replyTo)
 			);
 		}
 		else {
@@ -420,7 +413,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		failureTracked = false;
 		lastRequest = LocalDateTime.now();
 		getContext().getSelf().tell(
-			new PersistStatus(Scheduler.SchedulerStatus.RUNNING, restart.replyTo)
+			new UpdateStatus(Scheduler.SchedulerStatus.RUNNING, restart.replyTo)
 		);
 
 		return next();
@@ -490,9 +483,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					ZoneOffset.UTC
 				);
 
-			getContext().getSelf().tell(new PersistLastIngestionDate(parsingDate));
+			getContext().getSelf().tell(new TrackDate(parsingDate));
 
-			return updatingLastIngestionDate();
+			return trackingDate();
 
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
@@ -531,7 +524,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 					}
 
 					if (isExpired()) {
-						getContext().getSelf().tell(new PersistStatus(
+						getContext().getSelf().tell(new UpdateStatus(
 								Scheduler.SchedulerStatus.STALE,
 								getContext().getSystem().ignoreRef()
 							)
@@ -566,7 +559,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				if (heldMessages.isEmpty()) {
 					log.infof("%s is recovered", schedulingKey);
 					getContext().getSelf().tell(
-						new PersistStatus(
+						new UpdateStatus(
 							Scheduler.SchedulerStatus.RUNNING,
 							getContext().getSystem().ignoreRef()
 						)
@@ -583,62 +576,50 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	}
 
-	private Behavior<Command> onFetchedSchedulerEnding(FetchedScheduler fetchedScheduler) {
-		var scheduler = fetchedScheduler.scheduler();
-		var exception = fetchedScheduler.exception();
-		var replyTo = fetchedScheduler.replyTo();
+	private Behavior<Command> onStartInternalClock() {
 
-		if (exception != null) {
-			log.errorf(
-				"Error during graceful ending, Scheduler with id %s cannot be persisted",
-				this.scheduler.getId()
-			);
-		}
-		else {
-			this.scheduler = scheduler;
-		}
+		timers.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
 
-		// TODO: tell failure on exception
-		replyTo.tell(Success.INSTANCE);
+		return this.next();
+	}
+
+	private Behavior<Command> onStopInternalClock() {
+
+		timers.cancel(Tick.INSTANCE);
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onRefreshScheduler(RefreshScheduler refreshScheduler) {
-		this.scheduler = refreshScheduler.scheduler;
-
-		return Behaviors.withTimers(timers -> {
-			timers.startTimerAtFixedRate(Tick.INSTANCE, Duration.ofSeconds(1));
-			return this.next();
-		});
-	}
-
-	private Behavior<Command> onStart() {
+	private Behavior<Command> onSetup() {
 		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
+
+		var startWrapper = getStartWrapper(ignoreRef);
 
 		getContext().pipeToSelf(
 			SchedulingService.fetchScheduler(schedulingKey),
-			(scheduler, throwable) -> new FetchedScheduler(
-				scheduler, (Exception) throwable, ignoreRef)
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, startWrapper)
 		);
 
-		return waitFetchedScheduler();
+		return init();
 	}
 
-	private Behavior<Command> onPersistLastIngestionDate(PersistLastIngestionDate persistLastIngestionDate) {
+	private Behavior<Command> onTrackDate(TrackDate trackDate) {
 
-		OffsetDateTime lastIngestionDate = persistLastIngestionDate.lastIngestionDate();
+		OffsetDateTime lastIngestionDate = trackDate.lastIngestionDate();
 		ActorRef<Response> ignoreRef = getContext().getSystem().ignoreRef();
 
-		getContext().pipeToSelf(
-			SchedulingService.persistLastIngestionDate(schedulingKey, lastIngestionDate),
-			(scheduler, throwable) -> new FetchedScheduler(
-				scheduler, (Exception) throwable, ignoreRef)
-		);
+		var startWrapper = getStartWrapper(ignoreRef);
 
 		this.lastIngestionDate = lastIngestionDate;
 
-		return waitFetchedScheduler();
+		getContext().pipeToSelf(
+			SchedulingService.persistLastIngestionDate(schedulingKey, lastIngestionDate),
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, startWrapper)
+		);
+
+		return init();
 	}
 
 	private Behavior<Command> onStop() {
@@ -661,29 +642,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onPersistStatus(PersistStatus persistStatus) {
+	private Behavior<Command> onUpdateStatus(UpdateStatus updateStatus) {
+
+		var startWrapper = getStartWrapper(updateStatus.replyTo());
 
 		getContext().pipeToSelf(
-			SchedulingService.persistStatus(schedulingKey, persistStatus.status()),
-			(scheduler, throwable) -> new FetchedScheduler(
-				scheduler, (Exception) throwable, persistStatus.replyTo())
+			SchedulingService.persistStatus(schedulingKey, updateStatus.status()),
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, startWrapper)
 		);
 
-		return waitFetchedScheduler();
-	}
-
-	private Behavior<Command> onPersistStatusEnding(PersistStatus persistStatus) {
-
-		getContext().pipeToSelf(
-			SchedulingService.persistStatus(schedulingKey, persistStatus.status()),
-			(scheduler, throwable) -> new FetchedScheduler(
-				scheduler, (Exception) throwable, persistStatus.replyTo())
-		);
-
-		return Behaviors.same();
+		return init();
 	}
 
 	private Behavior<Command> onClose() {
+
+		getContext().getSelf().tell(StopInternalClock.INSTANCE);
 
 		this.closeStage.tell(new CloseStage.Start(getScheduler()));
 
@@ -713,9 +687,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			DestroyQueue::new
 		);
 
-		getContext().getSelf().tell(new PersistStatus(gracefulEnd.status(), replyTo));
+		getContext().pipeToSelf(
+			SchedulingService.persistStatus(schedulingKey, gracefulEnd.status()),
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, replyTo)
+		);
 
 		return gracefulEnding();
+	}
+
+	private ActorRef<Response> getStartWrapper(ActorRef<Response> wrappedReplyTo) {
+		getContext().getSelf().tell(StopInternalClock.INSTANCE);
+		return getContext().messageAdapter(
+			Response.class, response -> {
+				wrappedReplyTo.tell(response);
+				return Start.INSTANCE;
+			});
 	}
 
 	private void logBehavior(String behavior) {
@@ -726,12 +713,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return Duration.between(lastRequest, LocalDateTime.now()).compareTo(timeout) > 0;
 	}
 
-	private boolean isNewLastIngestionDate(PersistLastIngestionDate msg) {
+	private boolean isNewLastIngestionDate(TrackDate msg) {
 		return this.lastIngestionDate == null ||
 			   !this.lastIngestionDate.isEqual(msg.lastIngestionDate());
 	}
 
-	private boolean isSameLastIngestionDate(PersistLastIngestionDate msg) {
+	private boolean isSameLastIngestionDate(TrackDate msg) {
 		return this.lastIngestionDate != null &&
 			   this.lastIngestionDate.isEqual(msg.lastIngestionDate());
 	}
@@ -757,7 +744,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public record GracefulEnd(Scheduler.SchedulerStatus status) implements Command {}
 
-	private enum Start implements Command {
+	private enum Setup implements Command {
 		INSTANCE
 	}
 
@@ -771,17 +758,27 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	public record Failure(String error) implements Response {}
 
-	private record PersistLastIngestionDate(OffsetDateTime lastIngestionDate) implements Command {}
+	private enum StartInternalClock implements Command {
+		INSTANCE
+	}
 
-	private record PersistStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
-		implements Command {}
+	private enum StopInternalClock implements Command {
+		INSTANCE
+	}
 
-	private record RefreshScheduler(SchedulerDTO scheduler) implements Command {}
+	private enum Start implements Command {
+		INSTANCE
+	}
+
+	private record TrackDate(OffsetDateTime lastIngestionDate) implements Command {}
 
 	private record PostProcess(EnrichPipeline.Response response)
 		implements Command {}
 
-	private record FetchedScheduler(
+	private record UpdateStatus(Scheduler.SchedulerStatus status, ActorRef<Response> replyTo)
+		implements Command {}
+
+	private record UpdateScheduler(
 		SchedulerDTO scheduler,
 		Exception exception,
 		ActorRef<Response> replyTo
@@ -793,6 +790,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
+	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
+
 	public record HeldMessage(
 		SchedulingKey schedulingKey,
 		String contentId,
@@ -800,8 +799,5 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		long parsingDate,
 		ActorRef<Scheduling.Response> replyTo
 	) {}
-
-
-	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
 
 }
