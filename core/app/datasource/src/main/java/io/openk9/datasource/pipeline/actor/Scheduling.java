@@ -328,6 +328,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.lastRequest = LocalDateTime.now();
 
 		byte[] payloadArray = ingest.payload;
+		var requester = ingest.replyTo();
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -339,6 +340,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			getContext().getSelf().tell(new GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
+
+			requester.tell(Success.INSTANCE);
 		}
 
 		if (dataPayload.getContentId() != null) {
@@ -363,7 +366,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				contentId,
 				ingest.messageKey(),
 				parsingDateTimeStamp,
-				ingest.replyTo()
+				requester
 			);
 
 			enrichPipelineRef.tell(new EnrichPipeline.Setup(
@@ -377,10 +380,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		}
 		else if (!dataPayload.isLast()) {
-			ingest.replyTo.tell(new Failure("content-id is null"));
+			requester.tell(new Failure("content-id is null"));
 		}
 		else {
-			ingest.replyTo.tell(Success.INSTANCE);
+			requester.tell(Success.INSTANCE);
 			lastReceived = true;
 			log.infof("%s received last message", schedulingKey);
 		}
