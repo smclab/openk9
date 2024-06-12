@@ -190,6 +190,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return newReceiveBuilder()
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(PostProcess.class, this::onPostProcess)
+			.onMessage(
+				TrackDate.class,
+				this::isNewLastIngestionDate,
+				this::onTrackDate
+			)
+			.onMessage(
+				TrackDate.class,
+				this::isSameLastIngestionDate,
+				(__) -> this.next()
+			)
 			.onMessage(UpdateStatus.class, this::onUpdateStatus)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
@@ -231,22 +241,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 
 		return ready();
-	}
-
-	private Receive<Command> trackingDate() {
-		return afterSetup()
-			.onMessage(
-				TrackDate.class,
-				this::isNewLastIngestionDate,
-				this::onTrackDate
-			)
-			.onMessage(
-				TrackDate.class,
-				this::isSameLastIngestionDate,
-				(__) -> this.next()
-			)
-			.onAnyMessage(this::onEnqueue)
-			.build();
 	}
 
 	private Behavior<Command> closing() {
@@ -485,7 +479,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			getContext().getSelf().tell(new TrackDate(parsingDate));
 
-			return trackingDate();
+			return busy();
 
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
