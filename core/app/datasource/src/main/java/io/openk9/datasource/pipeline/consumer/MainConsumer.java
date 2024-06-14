@@ -72,8 +72,7 @@ public class MainConsumer extends BaseConsumer {
 			(ActorRef<Scheduling.Response> replyTo) ->
 				new Scheduling.Ingest(
 					Json.encodeToBuffer(payload).getBytes(),
-					replyTo,
-					String.format("%s-%d", getConsumerTag(), envelope.getDeliveryTag())
+					replyTo
 				),
 			timeout,
 			context.getSystem().scheduler()

@@ -46,8 +46,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
-	private int counter;
 	private ActorRef<EnrichPipeline.Response> enrichPipelineAdapter;
+	private long counter = 0;
 
 	public WorkStage(
 		ActorContext<Command> context,
@@ -58,7 +58,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		super(context);
 		this.schedulingKey = schedulingKey;
 		this.replyTo = replyTo;
-		this.counter = 0;
 
 		var oldDataIndexName = scheduler.getOldDataIndexName();
 		var newDataIndexName = scheduler.getNewDataIndexName();
@@ -104,7 +103,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var payloadArray = startWorker.payload();
 		var requester = startWorker.requester();
-		var messageKey = startWorker.messageKey() + counter++;
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -121,6 +119,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 		else if (dataPayload.getContentId() != null) {
 
+			counter++;
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
@@ -130,13 +129,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipeline = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(schedulingKey, contentId, messageKey).asString()
+				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
 
 			var heldMessage = new HeldMessage(
 				schedulingKey,
 				contentId,
-				messageKey,
+				counter,
 				parsingDateTimeStamp
 			);
 
@@ -239,7 +238,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	public record StartWorker(
 		SchedulerDTO scheduler,
-		String messageKey,
 		byte[] payload,
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}

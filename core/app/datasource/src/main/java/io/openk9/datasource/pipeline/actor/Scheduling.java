@@ -327,7 +327,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		this.workStage.tell(new WorkStage.StartWorker(
 				getScheduler(),
-				ingest.messageKey(),
 			ingest.payload(),
 				ingest.replyTo()
 			)
@@ -725,7 +724,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		INSTANCE
 	}
 
-	public record Ingest(byte[] payload, ActorRef<Response> replyTo, String messageKey)
+	public record Ingest(byte[] payload, ActorRef<Response> replyTo)
 		implements Command {}
 
 	public record TrackError(ActorRef<Response> replyTo) implements Command {}

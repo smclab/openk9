@@ -22,6 +22,6 @@ import io.openk9.common.util.SchedulingKey;
 public record HeldMessage(
 	SchedulingKey schedulingKey,
 	String contentId,
-	String messageKey,
+	long messageNumber,
 	long parsingDate
 ) {}
