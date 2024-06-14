@@ -47,6 +47,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
 	private int counter;
+	private ActorRef<EnrichPipeline.Response> enrichPipelineAdapter;
 
 	public WorkStage(
 		ActorContext<Command> context,
@@ -72,6 +73,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			newDataIndexName,
 			indexWriterAdapter
 		));
+
+		this.enrichPipelineAdapter = getContext().messageAdapter(
+			EnrichPipeline.Response.class,
+			EnrichPipelineResponse::new
+		);
+
 	}
 
 	public static Behavior<Command> create(
@@ -133,17 +140,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp
 			);
 
-			ActorRef<EnrichPipeline.Response> enrichPipelineAdapter =
-				getContext().messageAdapter(
-					EnrichPipeline.Response.class,
-					res -> new EnrichPipelineResponse(
-						res,
-						heldMessage
-					)
-				);
-
 			enrichPipeline.tell(new EnrichPipeline.Setup(
-				enrichPipelineAdapter,
+				this.enrichPipelineAdapter,
 				heldMessage,
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				startWorker.scheduler()
@@ -169,7 +167,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponse enrichPipelineResponse) {
 
 		var response = enrichPipelineResponse.response();
-		var heldMessage = enrichPipelineResponse.heldMessage();
+		var heldMessage = response.heldMessage();
 
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
@@ -246,10 +244,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record EnrichPipelineResponse(
-		EnrichPipeline.Response response,
-		HeldMessage heldMessage
-	) implements Command {}
+	private record EnrichPipelineResponse(EnrichPipeline.Response response) implements Command {}
 
 	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 
