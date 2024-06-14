@@ -95,6 +95,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var payloadArray = startWorker.payload();
 		var requester = startWorker.requester();
+		var messageKey = startWorker.messageKey();
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -109,8 +110,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			this.replyTo.tell(new HaltMessage(requester));
 
 		}
-
-		if (dataPayload.getContentId() != null) {
+		else if (dataPayload.getContentId() != null) {
 
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
@@ -121,13 +121,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			EntityRef<EnrichPipeline.Command> enrichPipeline = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(schedulingKey, contentId, startWorker.messageKey()).asString()
+				EnrichPipelineKey.of(schedulingKey, contentId, messageKey).asString()
 			);
 
 			var heldMessage = new HeldMessage(
 				schedulingKey,
 				contentId,
-				startWorker.messageKey(),
+				messageKey,
 				parsingDateTimeStamp
 			);
 
@@ -171,8 +171,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
-				"enrich pipeline success for content-id %s replyTo %s",
-				heldMessage.contentId(), this.replyTo
+				"enrich pipeline success for %s",
+				heldMessage, this.replyTo
 			);
 
 			getContext().getSelf().tell(new Write(

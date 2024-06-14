@@ -444,10 +444,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			var heldMessage = done.heldMessage();
 			var replyTo = heldMessages.remove(heldMessage);
 
-			log.infof(
-				"work done for content-id %s replyTo %s",
-				heldMessage, replyTo
-			);
+			log.infof("work done for %s", heldMessage, replyTo);
 
 			replyTo.tell(Success.INSTANCE);
 
