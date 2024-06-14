@@ -122,10 +122,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		getContext().getSelf().tell(Setup.INSTANCE);
 
-		this.workStage = getContext().spawnAnonymous(
-			WorkStage.create(getSchedulingKey()));
+		var workStageAdapter = getContext().messageAdapter(
+			WorkStage.Response.class,
+			WorkStageResponse::new
+		);
 
-		// TODO better to get scheduling from cluster shard
+		this.workStage = getContext().spawnAnonymous(
+			WorkStage.create(
+				getSchedulingKey(),
+				workStageAdapter
+			));
+
 		var closeStageAdapter = getContext().messageAdapter(
 			CloseStage.Response.class,
 			CloseStageResponse::new
@@ -329,16 +336,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onIngest(Ingest ingest) {
 		this.lastRequest = LocalDateTime.now();
 
-		var workStageAdapter = getContext().messageAdapter(
-			WorkStage.Response.class,
-			res -> new WorkStageResponse(res, ingest.replyTo())
-		);
-
 		this.workStage.tell(new WorkStage.StartWorker(
 				getScheduler(),
 				ingest.messageKey(),
 			ingest.payload(),
-			workStageAdapter
+				ingest.replyTo()
 			)
 		);
 
@@ -413,14 +415,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private Behavior<Command> onWorkStageResponse(WorkStageResponse workStageResponse) {
 		var response = workStageResponse.response();
-		var requester = workStageResponse.requester();
 
 		if (response instanceof WorkStage.InvalidMessage invalid) {
+
+			var requester = invalid.requester();
 
 			requester.tell(new Failure(invalid.errorMessage()));
 
 		}
-		else if (response instanceof WorkStage.HaltMessage) {
+		else if (response instanceof WorkStage.HaltMessage halt) {
+
+			var requester = halt.requester();
 
 			requester.tell(Success.INSTANCE);
 			getContext()
@@ -428,7 +433,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
 		}
-		else if (response instanceof WorkStage.LastMessage) {
+		else if (response instanceof WorkStage.LastMessage lastMessage) {
+
+			var requester = lastMessage.requester();
 
 			requester.tell(Success.INSTANCE);
 			lastReceived = true;
@@ -437,7 +444,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		}
 		else if (response instanceof WorkStage.WorkingMessage working) {
 
+			var requester = working.requester();
 			var heldMessage = working.heldMessage();
+
 			heldMessages.put(heldMessage, requester);
 
 		}
@@ -445,7 +454,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		if (response instanceof WorkStage.Done done) {
 
 			var heldMessage = done.heldMessage();
-
 			var replyTo = heldMessages.remove(heldMessage);
 
 			log.infof(
@@ -770,7 +778,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record DestroyQueueResult(QueueManager.Response response) implements Command {}
 
-	private record WorkStageResponse(WorkStage.Response response, ActorRef<Response> requester)
+	private record WorkStageResponse(WorkStage.Response response)
 		implements Command {}
 
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}

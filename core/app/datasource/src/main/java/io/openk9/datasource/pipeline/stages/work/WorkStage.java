@@ -32,6 +32,7 @@ import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.EnrichPipelineException;
 import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.IndexWriter;
+import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -43,18 +44,21 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final SchedulingKey schedulingKey;
+	private final ActorRef<Response> replyTo;
 
 	public WorkStage(
 		ActorContext<Command> context,
-		SchedulingKey schedulingKey) {
+		SchedulingKey schedulingKey,
+		ActorRef<Response> replyTo) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
+		this.replyTo = replyTo;
 	}
 
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey) {
-		return Behaviors.setup(ctx -> new WorkStage(ctx, schedulingKey));
+		SchedulingKey schedulingKey, ActorRef<Response> replyTo) {
+		return Behaviors.setup(ctx -> new WorkStage(ctx, schedulingKey, replyTo));
 	}
 
 	@Override
@@ -70,6 +74,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private Behavior<Command> onStartWorker(StartWorker startWorker) {
 
 		var payloadArray = startWorker.payload();
+		var requester = startWorker.requester();
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -81,7 +86,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				schedulingKey
 			);
 
-			startWorker.replyTo().tell(HaltMessage.INSTANCE);
+			this.replyTo.tell(new HaltMessage(requester));
 
 		}
 
@@ -112,8 +117,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 					EnrichPipeline.Response.class,
 					res -> new EnrichPipelineResponse(
 						res,
-						heldMessage,
-						startWorker.replyTo().narrow()
+						heldMessage
 					)
 				);
 
@@ -124,15 +128,17 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				startWorker.scheduler()
 			));
 
-			startWorker.replyTo().tell(new WorkingMessage(heldMessage));
+			this.replyTo.tell(new WorkingMessage(heldMessage, requester));
 
 		}
 		else if (!dataPayload.isLast()) {
-			startWorker.replyTo().tell(new InvalidMessage("content-id is null"));
+
+			this.replyTo.tell(new InvalidMessage("content-id is null", requester));
 
 		}
 		else {
-			startWorker.replyTo().tell(LastMessage.INSTANCE);
+
+			this.replyTo.tell(new LastMessage(requester));
 
 		}
 
@@ -144,18 +150,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var response = enrichPipelineResponse.response();
 		var heldMessage = enrichPipelineResponse.heldMessage();
 
-		var replyTo = enrichPipelineResponse.replyTo();
-
 		if (response instanceof EnrichPipeline.Success success) {
 			log.infof(
 				"enrich pipeline success for content-id %s replyTo %s",
-				heldMessage.contentId(), replyTo
+				heldMessage.contentId(), this.replyTo
 			);
 
 			getContext().getSelf().tell(new Write(
 				success.payload(),
-				heldMessage,
-				replyTo
+				heldMessage
 			));
 
 		}
@@ -164,7 +167,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			EnrichPipelineException epe = failure.exception();
 			log.error("enrich pipeline failure", epe);
 
-			replyTo.tell(new Failed(
+			this.replyTo.tell(new Failed(
 				ExceptionUtil.generateStackTrace(epe), heldMessage));
 
 		}
@@ -180,7 +183,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var indexWriter = getContext().spawnAnonymous(IndexWriter.create());
 		var indexWriterAdapter = getContext().messageAdapter(
 			IndexWriter.Response.class,
-			res -> new IndexWriterResponse(res, heldMessage, write.replyTo())
+			res -> new IndexWriterResponse(res, heldMessage)
 		);
 
 		indexWriter.tell(new IndexWriter.Start(
@@ -197,16 +200,14 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var response = indexWriterResponse.response();
 		var heldMessage = indexWriterResponse.heldMessage();
 
-		var replyTo = indexWriterResponse.replyTo();
-
 		if (response instanceof IndexWriter.Success) {
 
-			replyTo.tell(new Done(heldMessage));
+			this.replyTo.tell(new Done(heldMessage));
 
 		}
 		else if (response instanceof IndexWriter.Failure failure) {
 
-			replyTo.tell(new Failed(
+			this.replyTo.tell(new Failed(
 				ExceptionUtil.generateStackTrace(failure.exception()),
 				heldMessage
 			));
@@ -220,43 +221,38 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	public sealed interface Response {}
 
-	public enum HaltMessage implements Response {
-		INSTANCE
-	}
-
-	public enum LastMessage implements Response {
-		INSTANCE
-	}
-
 	public sealed interface Callback extends Response {}
 
 	public record StartWorker(
 		SchedulerDTO scheduler,
 		String messageKey,
 		byte[] payload,
-		ActorRef<Response> replyTo
+		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
 	private record EnrichPipelineResponse(
 		EnrichPipeline.Response response,
-		HeldMessage heldMessage,
-		ActorRef<Callback> replyTo
+		HeldMessage heldMessage
 	) implements Command {}
 
-	public record WorkingMessage(HeldMessage heldMessage) implements Response {}
+	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 
-	public record InvalidMessage(String errorMessage) implements Response {}
+	public record LastMessage(ActorRef<Scheduling.Response> requester) implements Response {}
+
+	public record WorkingMessage(HeldMessage heldMessage, ActorRef<Scheduling.Response> requester)
+		implements Response {}
+
+	public record InvalidMessage(String errorMessage, ActorRef<Scheduling.Response> requester)
+		implements Response {}
 
 	private record Write(
 		byte[] payload,
-		HeldMessage heldMessage,
-		ActorRef<Callback> replyTo
+		HeldMessage heldMessage
 	) implements Command {}
 
 	private record IndexWriterResponse(
 		IndexWriter.Response response,
-		HeldMessage heldMessage,
-		ActorRef<Callback> replyTo
+		HeldMessage heldMessage
 	) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
