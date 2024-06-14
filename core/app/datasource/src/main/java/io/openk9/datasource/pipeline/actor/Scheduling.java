@@ -446,7 +446,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			log.infof(
 				"work done for content-id %s replyTo %s",
-				heldMessage.contentId(), replyTo
+				heldMessage, replyTo
 			);
 
 			replyTo.tell(Success.INSTANCE);

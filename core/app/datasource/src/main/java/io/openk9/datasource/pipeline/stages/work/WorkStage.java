@@ -126,7 +126,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var heldMessage = new HeldMessage(
 				schedulingKey,
-				startWorker.scheduler(),
 				contentId,
 				startWorker.messageKey(),
 				parsingDateTimeStamp
