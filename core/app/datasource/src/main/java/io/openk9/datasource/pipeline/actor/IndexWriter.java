@@ -23,7 +23,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.work.HeldMessage;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
@@ -55,15 +55,10 @@ public class IndexWriter {
 
 	public sealed interface Command extends CborSerializable {}
 
-	public record Start(SchedulerDTO scheduler, byte[] dataPayload, ActorRef<Response> replyTo)
-		implements Command {}
-	private record SearchResponseCommand(SchedulerDTO scheduler, DataPayload dataPayload, ActorRef<Response> replyTo, SearchResponse searchResponse, Exception exception) implements Command {}
-	private record BulkResponseCommand(ActorRef<Response> replyTo, BulkResponse bulkResponse, DataPayload dataPayload, Exception exception) implements Command {}
-	public sealed interface Response extends CborSerializable {}
-	public enum Success implements Response {INSTANCE}
-	public record Failure(Exception exception) implements Response {}
-
-	public static Behavior<Command> create() {
+	public static Behavior<Command> create(
+		String oldDataIndexName,
+		String newDataIndexName,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -73,37 +68,52 @@ public class IndexWriter {
 			DatasourceEventBus eventBus =
 				CDI.current().select(DatasourceEventBus.class).get();
 
-			return initial(ctx, restHighLevelClient, eventBus);
+			return initial(
+				ctx,
+				restHighLevelClient,
+				eventBus,
+				oldDataIndexName,
+				newDataIndexName,
+				replyTo
+			);
 
 		});
 	}
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		DatasourceEventBus eventBus) {
+		DatasourceEventBus eventBus,
+		String oldDataIndexName,
+		String newDataIndexName,
+		ActorRef<Response> replyTo) {
 
 		Logger logger = ctx.getLog();
 
 		return Behaviors.receive(Command.class)
 			.onMessage(Start.class, (start) -> onStart(
-				ctx, restHighLevelClient, start.scheduler, start.dataPayload, start.replyTo)
+					ctx,
+					restHighLevelClient,
+					oldDataIndexName,
+					start
+				)
 			)
 			.onMessage(SearchResponseCommand.class, src -> onSearchResponseCommand(
-				ctx, restHighLevelClient, src, logger)
+				ctx, restHighLevelClient, src, logger, oldDataIndexName, newDataIndexName)
 			)
 			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(
-				logger, brc, eventBus)
+				logger, brc, eventBus, replyTo)
 			)
 			.build();
 	}
 
 	private static Behavior<Command> onBulkResponseCommand(
-		Logger logger, BulkResponseCommand brc, DatasourceEventBus eventBus) {
+		Logger logger, BulkResponseCommand brc, DatasourceEventBus eventBus,
+		ActorRef<Response> replyTo) {
 
 		BulkResponse response = brc.bulkResponse;
 		Exception throwable = brc.exception;
-		ActorRef<Response> replyTo = brc.replyTo;
 		DataPayload dataPayload = brc.dataPayload();
+		var heldMessage = brc.heldMessage;
 
 		if (response != null) {
 
@@ -124,14 +134,14 @@ public class IndexWriter {
 				);
 
 				logger.error("Bulk request error: " + errorMessage);
-				replyTo.tell(new Failure(new RuntimeException(errorMessage)));
+				replyTo.tell(new Failure(heldMessage, new RuntimeException(errorMessage)));
 			}
 
 		}
 
 		if (throwable != null) {
 			logger.error("Error on bulk request", throwable);
-			replyTo.tell(new Failure(throwable));
+			replyTo.tell(new Failure(heldMessage, throwable));
 		}
 		else {
 
@@ -162,23 +172,26 @@ public class IndexWriter {
 
 			}
 
-			replyTo.tell(Success.INSTANCE);
+			replyTo.tell(new Success(heldMessage));
 		}
 
 		return Behaviors.same();
 	}
 
+	public sealed interface Response extends CborSerializable {}
+
 	private static Behavior<Command> onSearchResponseCommand(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		SearchResponseCommand src, Logger logger) {
+		ActorContext<Command> ctx,
+		RestHighLevelClient restHighLevelClient,
+		SearchResponseCommand src,
+		Logger logger,
+		String oldDataIndexName,
+		String newDataIndexName) {
 
 		Exception exception = src.exception;
-		SchedulerDTO scheduler = src.scheduler;
 		DataPayload dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
-		ActorRef<Response> replyTo = src.replyTo;
-		String oldDataIndexName = scheduler.getOldDataIndexName();
-		String newDataIndexName = scheduler.getNewDataIndexName();
+		var heldMessage = src.heldMessage();
 
 		if (exception != null) {
 			logger.error("Error on search", exception);
@@ -200,15 +213,13 @@ public class IndexWriter {
 				@Override
 				public void onResponse(BulkResponse bulkResponse) {
 					ctx.getSelf().tell(
-						new BulkResponseCommand(
-							replyTo, bulkResponse, dataPayload, null));
+						new BulkResponseCommand(dataPayload, heldMessage, bulkResponse, null));
 				}
 
 				@Override
 				public void onFailure(Exception e) {
 					ctx.getSelf().tell(
-						new BulkResponseCommand(
-							replyTo, null, dataPayload, e));
+						new BulkResponseCommand(dataPayload, heldMessage, null, e));
 				}
 			});
 
@@ -216,16 +227,17 @@ public class IndexWriter {
 	}
 
 	private static Behavior<Command> onStart(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
-		SchedulerDTO scheduler, byte[] data,
-		ActorRef<Response> replyTo) {
+		ActorContext<Command> ctx,
+		RestHighLevelClient restHighLevelClient,
+		String oldDataIndexName,
+		Start start) {
+
+		var data = start.dataPayload();
+		var heldMessage = start.heldMessage();
 
 		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
 		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
-
-		String oldDataIndexName = scheduler.getOldDataIndexName();
-
 
 		if (oldDataIndexName != null) {
 			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
@@ -247,24 +259,46 @@ public class IndexWriter {
 					public void onResponse(SearchResponse searchResponse) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								scheduler, dataPayload, replyTo, searchResponse, null));
+								dataPayload, heldMessage, searchResponse, null));
 					}
 
 					@Override
 					public void onFailure(Exception e) {
 						ctx.getSelf().tell(
 							new SearchResponseCommand(
-								scheduler, dataPayload, replyTo, null, e));
+								dataPayload, heldMessage, null, e));
 					}
 				});
 		}
 		else {
 			ctx.getSelf().tell(
 				new SearchResponseCommand(
-					scheduler, dataPayload, replyTo, null, null));
+					dataPayload, heldMessage, null, null));
 		}
+
 		return Behaviors.same();
 	}
+
+	public record Start(byte[] dataPayload, HeldMessage heldMessage)
+		implements Command {}
+
+	private record SearchResponseCommand(
+		DataPayload dataPayload,
+		HeldMessage heldMessage,
+		SearchResponse searchResponse,
+		Exception exception
+	) implements Command {}
+
+	private record BulkResponseCommand(
+		DataPayload dataPayload,
+		HeldMessage heldMessage,
+		BulkResponse bulkResponse,
+		Exception exception
+	) implements Command {}
+
+	public record Success(HeldMessage heldMessage) implements Response {}
+
+	public record Failure(HeldMessage heldMessage, Exception exception) implements Response {}
 
 	private static DocWriteRequest createDocWriteRequest(
 		ActorContext<?> ctx, String indexName, DataPayload dataPayload, Logger logger,

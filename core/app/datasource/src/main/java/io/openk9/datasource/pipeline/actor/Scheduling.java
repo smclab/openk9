@@ -83,7 +83,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final Duration timeout;
 	private final int workersPerNode;
 	private final TimerScheduler<Command> timers;
-	private final ActorRef<WorkStage.Command> workStage;
+	private ActorRef<WorkStage.Command> workStage;
 	private final ActorRef<CloseStage.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
@@ -121,17 +121,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		));
 
 		getContext().getSelf().tell(Setup.INSTANCE);
-
-		var workStageAdapter = getContext().messageAdapter(
-			WorkStage.Response.class,
-			WorkStageResponse::new
-		);
-
-		this.workStage = getContext().spawnAnonymous(
-			WorkStage.create(
-				getSchedulingKey(),
-				workStageAdapter
-			));
 
 		var closeStageAdapter = getContext().messageAdapter(
 			CloseStage.Response.class,
@@ -450,8 +439,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			heldMessages.put(heldMessage, requester);
 
 		}
-
-		if (response instanceof WorkStage.Done done) {
+		else if (response instanceof WorkStage.Done done) {
 
 			var heldMessage = done.heldMessage();
 			var replyTo = heldMessages.remove(heldMessage);
@@ -487,7 +475,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		}
 		else {
-			log.warn("unknown callback type");
+			log.warn("unknown response type");
 		}
 
 		return heldMessages.size() < maxWorkers ? next() : busy();
@@ -591,8 +579,24 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		getContext().pipeToSelf(
 			SchedulingService.fetchScheduler(schedulingKey),
-			(scheduler, throwable) -> new UpdateScheduler(
-				scheduler, (Exception) throwable, startWrapper)
+			(scheduler, throwable) -> {
+				if (scheduler != null) {
+
+					var workStageAdapter = getContext().messageAdapter(
+						WorkStage.Response.class,
+						WorkStageResponse::new
+					);
+
+					this.workStage = getContext().spawnAnonymous(WorkStage.create(
+						getSchedulingKey(),
+						scheduler,
+						workStageAdapter
+					));
+				}
+
+				return new UpdateScheduler(
+					scheduler, (Exception) throwable, startWrapper);
+			}
 		);
 
 		return settingUp();

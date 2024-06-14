@@ -21,7 +21,8 @@ import io.openk9.common.util.SchedulingKey;
 
 public record HeldMessage(
 	SchedulingKey schedulingKey,
-	io.openk9.datasource.pipeline.service.dto.SchedulerDTO scheduler, String contentId,
+	io.openk9.datasource.pipeline.service.dto.SchedulerDTO scheduler,
+	String contentId,
 	String messageKey,
 	long parsingDate
 ) {}

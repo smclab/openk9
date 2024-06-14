@@ -45,20 +45,40 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
+	private final ActorRef<IndexWriter.Command> indexWriter;
 
 	public WorkStage(
 		ActorContext<Command> context,
 		SchedulingKey schedulingKey,
+		SchedulerDTO scheduler,
 		ActorRef<Response> replyTo) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
 		this.replyTo = replyTo;
+
+		var oldDataIndexName = scheduler.getOldDataIndexName();
+		var newDataIndexName = scheduler.getNewDataIndexName();
+
+		var indexWriterAdapter = getContext().messageAdapter(
+			IndexWriter.Response.class,
+			IndexWriterResponse::new
+		);
+
+		this.indexWriter = getContext().spawnAnonymous(IndexWriter.create(
+			oldDataIndexName,
+			newDataIndexName,
+			indexWriterAdapter
+		));
 	}
 
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey, ActorRef<Response> replyTo) {
-		return Behaviors.setup(ctx -> new WorkStage(ctx, schedulingKey, replyTo));
+		SchedulingKey schedulingKey,
+		SchedulerDTO scheduler,
+		ActorRef<Response> replyTo) {
+
+		return Behaviors.setup(ctx -> new WorkStage(
+			ctx, schedulingKey, scheduler, replyTo));
 	}
 
 	@Override
@@ -180,16 +200,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var payload = write.payload();
 		var heldMessage = write.heldMessage();
 
-		var indexWriter = getContext().spawnAnonymous(IndexWriter.create());
-		var indexWriterAdapter = getContext().messageAdapter(
-			IndexWriter.Response.class,
-			res -> new IndexWriterResponse(res, heldMessage)
-		);
-
 		indexWriter.tell(new IndexWriter.Start(
-			heldMessage.scheduler(),
-			payload,
-			indexWriterAdapter
+			payload, heldMessage
 		));
 
 		return Behaviors.same();
@@ -198,14 +210,17 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private Behavior<Command> onIndexWriterResponse(IndexWriterResponse indexWriterResponse) {
 
 		var response = indexWriterResponse.response();
-		var heldMessage = indexWriterResponse.heldMessage();
 
-		if (response instanceof IndexWriter.Success) {
+		if (response instanceof IndexWriter.Success success) {
+
+			var heldMessage = success.heldMessage();
 
 			this.replyTo.tell(new Done(heldMessage));
 
 		}
 		else if (response instanceof IndexWriter.Failure failure) {
+
+			var heldMessage = failure.heldMessage();
 
 			this.replyTo.tell(new Failed(
 				ExceptionUtil.generateStackTrace(failure.exception()),
@@ -251,8 +266,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	) implements Command {}
 
 	private record IndexWriterResponse(
-		IndexWriter.Response response,
-		HeldMessage heldMessage
+		IndexWriter.Response response
 	) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
