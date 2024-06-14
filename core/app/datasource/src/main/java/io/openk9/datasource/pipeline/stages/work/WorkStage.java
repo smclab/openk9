@@ -126,16 +126,17 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			startWorker.replyTo().tell(new WorkingMessage(heldMessage));
 
-			return Behaviors.same();
 		}
 		else if (!dataPayload.isLast()) {
 			startWorker.replyTo().tell(new InvalidMessage("content-id is null"));
+
 		}
 		else {
 			startWorker.replyTo().tell(LastMessage.INSTANCE);
+
 		}
 
-		return Behaviors.stopped();
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponse enrichPipelineResponse) {
@@ -159,6 +160,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		}
 		else if (response instanceof EnrichPipeline.Failure failure) {
+
 			EnrichPipelineException epe = failure.exception();
 			log.error("enrich pipeline failure", epe);
 
@@ -171,6 +173,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	}
 
 	private Behavior<Command> onWrite(Write write) {
+
 		var payload = write.payload();
 		var heldMessage = write.heldMessage();
 
@@ -190,22 +193,27 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	}
 
 	private Behavior<Command> onIndexWriterResponse(IndexWriterResponse indexWriterResponse) {
+
 		var response = indexWriterResponse.response();
 		var heldMessage = indexWriterResponse.heldMessage();
 
 		var replyTo = indexWriterResponse.replyTo();
 
 		if (response instanceof IndexWriter.Success) {
+
 			replyTo.tell(new Done(heldMessage));
+
 		}
 		else if (response instanceof IndexWriter.Failure failure) {
+
 			replyTo.tell(new Failed(
-					ExceptionUtil.generateStackTrace(failure.exception()),
+				ExceptionUtil.generateStackTrace(failure.exception()),
 				heldMessage
 			));
+
 		}
 
-		return Behaviors.stopped();
+		return Behaviors.same();
 	}
 
 	public sealed interface Command {}
@@ -220,7 +228,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		INSTANCE
 	}
 
-
 	public sealed interface Callback extends Response {}
 
 	public record StartWorker(
@@ -234,8 +241,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		EnrichPipeline.Response response,
 		HeldMessage heldMessage,
 		ActorRef<Callback> replyTo
-	)
-		implements Command {}
+	) implements Command {}
 
 	public record WorkingMessage(HeldMessage heldMessage) implements Response {}
 
@@ -251,8 +257,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		IndexWriter.Response response,
 		HeldMessage heldMessage,
 		ActorRef<Callback> replyTo
-	)
-		implements Command {}
+	) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
 
