@@ -286,6 +286,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			this.scheduler = scheduler;
+			setupWorkStage();
+
 			replyTo.tell(Success.INSTANCE);
 		}
 
@@ -575,24 +577,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		getContext().pipeToSelf(
 			SchedulingService.fetchScheduler(schedulingKey),
-			(scheduler, throwable) -> {
-				if (scheduler != null) {
-
-					var workStageAdapter = getContext().messageAdapter(
-						WorkStage.Response.class,
-						WorkStageResponse::new
-					);
-
-					this.workStage = getContext().spawnAnonymous(WorkStage.create(
-						getSchedulingKey(),
-						scheduler,
-						workStageAdapter
-					));
-				}
-
-				return new UpdateScheduler(
-					scheduler, (Exception) throwable, startWrapper);
-			}
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, startWrapper)
 		);
 
 		return settingUp();
@@ -696,6 +682,23 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				wrappedReplyTo.tell(response);
 				return Start.INSTANCE;
 			});
+	}
+
+	private void setupWorkStage() {
+		if (this.workStage == null && this.scheduler != null) {
+
+			var workStageAdapter = getContext().messageAdapter(
+				WorkStage.Response.class,
+				WorkStageResponse::new
+			);
+
+			this.workStage = getContext().spawnAnonymous(WorkStage.create(
+				getSchedulingKey(),
+				scheduler,
+				workStageAdapter
+			));
+
+		}
 	}
 
 	private void logBehavior(String behavior) {
