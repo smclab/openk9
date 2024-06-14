@@ -420,7 +420,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			requester.tell(new Failure(invalid.errorMessage()));
 
 		}
-		else if (response instanceof WorkStage.HaltMessage halt) {
+		else if (response instanceof WorkStage.HaltMessage) {
 
 			requester.tell(Success.INSTANCE);
 			getContext()
@@ -428,7 +428,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
 		}
-		else if (response instanceof WorkStage.LastMessage last) {
+		else if (response instanceof WorkStage.LastMessage) {
 
 			requester.tell(Success.INSTANCE);
 			lastReceived = true;
