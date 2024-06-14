@@ -46,6 +46,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
+	private int counter;
 
 	public WorkStage(
 		ActorContext<Command> context,
@@ -56,6 +57,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		super(context);
 		this.schedulingKey = schedulingKey;
 		this.replyTo = replyTo;
+		this.counter = 0;
 
 		var oldDataIndexName = scheduler.getOldDataIndexName();
 		var newDataIndexName = scheduler.getNewDataIndexName();
@@ -95,7 +97,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var payloadArray = startWorker.payload();
 		var requester = startWorker.requester();
-		var messageKey = startWorker.messageKey();
+		var messageKey = startWorker.messageKey() + counter++;
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
