@@ -33,9 +33,9 @@ public interface Protocol {
 
 	record Start(
 		byte[] ingestPayload,
+		SchedulerDTO scheduler,
 		HeldMessage heldMessage,
-		ActorRef<Response> replyTo,
-		SchedulerDTO scheduler
+		ActorRef<Response> replyTo
 	) implements Command {}
 
 	record Success(

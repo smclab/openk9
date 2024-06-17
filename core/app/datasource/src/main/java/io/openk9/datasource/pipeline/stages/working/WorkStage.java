@@ -141,9 +141,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			dataProcess.tell(new Protocol.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
+				startWorker.scheduler(),
 				heldMessage,
-				this.dataProcessAdapter,
-				startWorker.scheduler()
+				this.dataProcessAdapter
 			));
 
 			this.replyTo.tell(new WorkingMessage(heldMessage, requester));
