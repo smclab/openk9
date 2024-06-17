@@ -24,32 +24,32 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.stages.closing.Protocol;
+import io.openk9.datasource.pipeline.stages.closing.CloseProtocol;
 import org.jboss.logging.Logger;
 
-public class EvaluateStatus extends AbstractBehavior<Protocol.Command> {
+public class EvaluateStatus extends AbstractBehavior<CloseProtocol.Command> {
 
 	private final static Logger log = Logger.getLogger(EvaluateStatus.class);
 	private final SchedulingKey key;
 
-	public EvaluateStatus(ActorContext<Protocol.Command> context, SchedulingKey key) {
+	public EvaluateStatus(ActorContext<CloseProtocol.Command> context, SchedulingKey key) {
 		super(context);
 		this.key = key;
 	}
 
-	public static Behavior<Protocol.Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<CloseProtocol.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new EvaluateStatus(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<Protocol.Command> createReceive() {
+	public Receive<CloseProtocol.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Protocol.Start.class, this::onStart)
+			.onMessage(CloseProtocol.Start.class, this::onStart)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
-	public Behavior<Protocol.Command> onStart(Protocol.Start start) {
+	public Behavior<CloseProtocol.Command> onStart(CloseProtocol.Start start) {
 		var scheduler = start.scheduler();
 		var replyTo = start.replyTo();
 
@@ -81,15 +81,15 @@ public class EvaluateStatus extends AbstractBehavior<Protocol.Command> {
 		return this;
 	}
 
-	public Behavior<Protocol.Command> onStop() {
+	public Behavior<CloseProtocol.Command> onStop() {
 
 		return Behaviors.stopped();
 	}
 
-	private enum Stop implements Protocol.Command {
+	private enum Stop implements CloseProtocol.Command {
 		INSTANCE
 	}
 
-	public record Success(Scheduler.SchedulerStatus status) implements Protocol.Reply {}
+	public record Success(Scheduler.SchedulerStatus status) implements CloseProtocol.Reply {}
 
 }

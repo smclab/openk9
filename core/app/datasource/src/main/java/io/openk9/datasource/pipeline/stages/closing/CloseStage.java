@@ -36,19 +36,19 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 
 	private static final Logger log = Logger.getLogger(CloseStage.class);
 	private final int expectedReplies;
-	private final List<ActorRef<Protocol.Command>> handlers;
+	private final List<ActorRef<CloseProtocol.Command>> handlers;
 	private final ActorRef<Response> replyTo;
-	private final Function<List<Protocol.Reply>, Aggregate> aggregator;
-	private final List<Protocol.Reply> replies = new ArrayList<>();
+	private final Function<List<CloseProtocol.Reply>, Aggregate> aggregator;
+	private final List<CloseProtocol.Reply> replies = new ArrayList<>();
 	private final SchedulingKey schedulingKey;
 	private SchedulerDTO scheduler;
 
 	public CloseStage(
 		ActorContext<Command> context,
 		SchedulingKey schedulingKey,
-		List<ActorRef<Protocol.Command>> handlers,
+		List<ActorRef<CloseProtocol.Command>> handlers,
 		ActorRef<Response> replyTo,
-		Function<List<Protocol.Reply>, Aggregate> aggregator) {
+		Function<List<CloseProtocol.Reply>, Aggregate> aggregator) {
 
 		super(context);
 
@@ -62,8 +62,8 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<Protocol.Reply>, Aggregate> aggregator,
-		List<ActorRef<Protocol.Command>> handlers) {
+		Function<List<CloseProtocol.Reply>, Aggregate> aggregator,
+		List<ActorRef<CloseProtocol.Command>> handlers) {
 
 		return Behaviors.setup(ctx -> new CloseStage(
 			ctx,
@@ -78,13 +78,13 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<Protocol.Reply>, Aggregate> aggregator,
-		Function<SchedulingKey, Behavior<Protocol.Command>>... handlersFactories) {
+		Function<List<CloseProtocol.Reply>, Aggregate> aggregator,
+		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... handlersFactories) {
 
 		return Behaviors.setup(ctx -> {
-			List<ActorRef<Protocol.Command>> handlers = new ArrayList<>();
+			List<ActorRef<CloseProtocol.Command>> handlers = new ArrayList<>();
 
-			for (Function<SchedulingKey, Behavior<Protocol.Command>> handlerFactory : handlersFactories) {
+			for (Function<SchedulingKey, Behavior<CloseProtocol.Command>> handlerFactory : handlersFactories) {
 				var handler = ctx.spawnAnonymous(handlerFactory.apply(schedulingKey));
 				handlers.add(handler);
 			}
@@ -122,12 +122,12 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 
 	public Behavior<Command> onStart(Start start) {
 		this.scheduler = start.schedulerDTO();
-		var replyTo = getContext().messageAdapter(Protocol.Reply.class, HandlerReply::new);
+		var replyTo = getContext().messageAdapter(CloseProtocol.Reply.class, HandlerReply::new);
 
 		log.infof("Starting close handlers for scheduler with id: %s", scheduler.getId());
 
-		for (ActorRef<Protocol.Command> handler : handlers) {
-			handler.tell(new Protocol.Start(scheduler, replyTo));
+		for (ActorRef<CloseProtocol.Command> handler : handlers) {
+			handler.tell(new CloseProtocol.Start(scheduler, replyTo));
 		}
 
 		return collectAndAggregate();
@@ -152,7 +152,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 
 	public record Start(SchedulerDTO schedulerDTO) implements Command {}
 
-	private record HandlerReply(Protocol.Reply reply) implements Command {}
+	private record HandlerReply(CloseProtocol.Reply reply) implements Command {}
 
 	public record Aggregate(Scheduler.SchedulerStatus status) implements Response {}
 

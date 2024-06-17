@@ -15,35 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.stages.working;
+package io.openk9.datasource.pipeline.stages.closing;
 
 import akka.actor.typed.ActorRef;
-import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
-import io.openk9.datasource.util.CborSerializable;
 
-public interface Protocol {
+public interface CloseProtocol {
 
-	interface Command extends CborSerializable {}
+	interface Command {}
 
-	interface Response extends CborSerializable {
-		HeldMessage heldMessage();
-	}
+	interface Reply {}
 
-	record Start(
-		byte[] ingestPayload,
-		SchedulerDTO scheduler,
-		HeldMessage heldMessage,
-		ActorRef<Response> replyTo
-	) implements Command {}
-
-	record Success(
-		byte[] payload, HeldMessage heldMessage
-	) implements Response {}
-
-	record Failure(
-		DataProcessException exception,
-		HeldMessage heldMessage
-	) implements Response {}
+	record Start(SchedulerDTO scheduler, ActorRef<Reply> replyTo) implements Command {}
 
 }

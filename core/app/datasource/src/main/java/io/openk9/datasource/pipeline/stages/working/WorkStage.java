@@ -45,7 +45,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
-	private final ActorRef<Protocol.Response> dataProcessAdapter;
+	private final ActorRef<WorkProtocol.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
 	private long counter = 0;
 
@@ -77,7 +77,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		));
 
 		this.dataProcessAdapter = getContext().messageAdapter(
-			Protocol.Response.class,
+			WorkProtocol.Response.class,
 			DataProcessResponse::new
 		);
 
@@ -126,7 +126,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-			EntityRef<Protocol.Command> dataProcess = sharding.entityRefFor(
+			EntityRef<WorkProtocol.Command> dataProcess = sharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
@@ -138,7 +138,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp
 			);
 
-			dataProcess.tell(new Protocol.Start(
+			dataProcess.tell(new WorkProtocol.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				startWorker.scheduler(),
 				heldMessage,
@@ -167,7 +167,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var response = dataProcessResponse.response();
 		var heldMessage = response.heldMessage();
 
-		if (response instanceof Protocol.Success success) {
+		if (response instanceof WorkProtocol.Success success) {
 			log.infof("data process success for %s", heldMessage);
 
 			getContext().getSelf().tell(new Write(
@@ -176,7 +176,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			));
 
 		}
-		else if (response instanceof Protocol.Failure failure) {
+		else if (response instanceof WorkProtocol.Failure failure) {
 
 			Exception exception = failure.exception();
 			log.error("data process failure for %s", heldMessage, exception);
@@ -238,7 +238,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record DataProcessResponse(Protocol.Response response) implements Command {}
+	private record DataProcessResponse(WorkProtocol.Response response) implements Command {}
 
 	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 

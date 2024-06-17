@@ -24,36 +24,36 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
-import io.openk9.datasource.pipeline.stages.closing.Protocol;
+import io.openk9.datasource.pipeline.stages.closing.CloseProtocol;
 import io.openk9.datasource.service.DatasourceService;
 import org.jboss.logging.Logger;
 
-public class UpdateDatasource extends AbstractBehavior<Protocol.Command> {
+public class UpdateDatasource extends AbstractBehavior<CloseProtocol.Command> {
 
 	private static final Logger log = Logger.getLogger(UpdateDatasource.class);
 	private final SchedulingKey schedulingKey;
 
 	protected UpdateDatasource(
-		ActorContext<Protocol.Command> context,
+		ActorContext<CloseProtocol.Command> context,
 		SchedulingKey schedulingKey) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
 	}
 
-	public static Behavior<Protocol.Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<CloseProtocol.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new UpdateDatasource(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<Protocol.Command> createReceive() {
+	public Receive<CloseProtocol.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Protocol.Start.class, this::onStart)
+			.onMessage(CloseProtocol.Start.class, this::onStart)
 			.onMessage(Stop.class, this::onStop)
 			.build();
 	}
 
-	private Behavior<Protocol.Command> onStart(Protocol.Start start) {
+	private Behavior<CloseProtocol.Command> onStart(CloseProtocol.Start start) {
 		var tenantId = schedulingKey.tenantId();
 		var scheduler = start.scheduler();
 		var lastIngestionDate = scheduler.getLastIngestionDate();
@@ -79,17 +79,17 @@ public class UpdateDatasource extends AbstractBehavior<Protocol.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Protocol.Command> onStop(Stop stop) {
+	private Behavior<CloseProtocol.Command> onStop(Stop stop) {
 
 		stop.replyTo().tell(Success.INSTANCE);
 
 		return Behaviors.stopped();
 	}
 
-	public enum Success implements Protocol.Reply {
+	public enum Success implements CloseProtocol.Reply {
 		INSTANCE
 	}
 
-	private record Stop(ActorRef<Protocol.Reply> replyTo) implements Protocol.Command {}
+	private record Stop(ActorRef<CloseProtocol.Reply> replyTo) implements CloseProtocol.Command {}
 
 }

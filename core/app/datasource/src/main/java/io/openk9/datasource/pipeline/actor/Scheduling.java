@@ -38,8 +38,8 @@ import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.closing.CloseProtocol;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
-import io.openk9.datasource.pipeline.stages.closing.Protocol;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
@@ -99,8 +99,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
 		SchedulingKey schedulingKey,
-		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
-		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
+		Function<List<CloseProtocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... closeHandlerFactories) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
@@ -139,8 +139,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@SafeVarargs
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
-		Function<List<Protocol.Reply>, CloseStage.Aggregate> closeAggregator,
-		Function<SchedulingKey, Behavior<Protocol.Command>>... closeHandlerFactories) {
+		Function<List<CloseProtocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
