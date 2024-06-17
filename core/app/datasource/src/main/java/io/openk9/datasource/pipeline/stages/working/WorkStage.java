@@ -46,7 +46,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
-	private ActorRef<EnrichPipeline.Response> enrichPipelineAdapter;
+	private final ActorRef<Protocol.Response> enrichPipelineAdapter;
 	private long counter = 0;
 
 	public WorkStage(
@@ -74,7 +74,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		));
 
 		this.enrichPipelineAdapter = getContext().messageAdapter(
-			EnrichPipeline.Response.class,
+			Protocol.Response.class,
 			EnrichPipelineResponse::new
 		);
 
@@ -127,7 +127,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			ClusterSharding clusterSharding = ClusterSharding.get(system);
 
-			EntityRef<EnrichPipeline.Command> enrichPipeline = clusterSharding.entityRefFor(
+			EntityRef<Protocol.Command> enrichPipeline = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
@@ -139,10 +139,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp
 			);
 
-			enrichPipeline.tell(new EnrichPipeline.Setup(
-				this.enrichPipelineAdapter,
-				heldMessage,
+			enrichPipeline.tell(new Protocol.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
+				heldMessage,
+				this.enrichPipelineAdapter,
 				startWorker.scheduler()
 			));
 
@@ -168,7 +168,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var response = enrichPipelineResponse.response();
 		var heldMessage = response.heldMessage();
 
-		if (response instanceof EnrichPipeline.Success success) {
+		if (response instanceof Protocol.Success success) {
 			log.infof(
 				"enrich pipeline success for %s",
 				heldMessage, this.replyTo
@@ -180,7 +180,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			));
 
 		}
-		else if (response instanceof EnrichPipeline.Failure failure) {
+		else if (response instanceof Protocol.Failure failure) {
 
 			EnrichPipelineException epe = failure.exception();
 			log.error("enrich pipeline failure", epe);
@@ -242,7 +242,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record EnrichPipelineResponse(EnrichPipeline.Response response) implements Command {}
+	private record EnrichPipelineResponse(Protocol.Response response) implements Command {}
 
 	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 

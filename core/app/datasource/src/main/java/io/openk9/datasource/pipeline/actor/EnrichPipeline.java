@@ -29,8 +29,8 @@ import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.Protocol;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.JsonMerge;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
@@ -45,14 +45,14 @@ import java.util.Set;
 
 public class EnrichPipeline {
 
-	public static final EntityTypeKey<EnrichPipeline.Command> ENTITY_TYPE_KEY =
-		EntityTypeKey.create(EnrichPipeline.Command.class, "enrich-pipeline");
+	public static final EntityTypeKey<Protocol.Command> ENTITY_TYPE_KEY =
+		EntityTypeKey.create(Protocol.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
-	public static Behavior<Command> create(EnrichPipelineKey enrichPipelineKey) {
+	public static Behavior<Protocol.Command> create(EnrichPipelineKey enrichPipelineKey) {
 		return Behaviors.setup(ctx -> Behaviors
-			.receive(Command.class)
-			.onMessage(Setup.class, setup -> onSetup(
+			.receive(Protocol.Command.class)
+			.onMessage(Protocol.Start.class, setup -> onSetup(
 				ctx,
 				enrichPipelineKey,
 				setup
@@ -61,17 +61,17 @@ public class EnrichPipeline {
 		);
 	}
 
-	public static Behavior<Command> onSetup(
-		ActorContext<EnrichPipeline.Command> ctx,
+	public static Behavior<Protocol.Command> onSetup(
+		ActorContext<Protocol.Command> ctx,
 		EnrichPipelineKey key,
-		Setup setup
+		Protocol.Start setup
 	) {
 
 		SchedulerDTO scheduler = setup.scheduler();
 		byte[] payloadArray = setup.ingestPayload();
 
-		ActorRef<Response> scheduling = setup.replyTo();
-		HeldMessage heldMessage = setup.heldMessage;
+		ActorRef<Protocol.Response> scheduling = setup.replyTo();
+		HeldMessage heldMessage = setup.heldMessage();
 
 		var dataPayload = prepareDataPayload(payloadArray, scheduler);
 
@@ -91,10 +91,10 @@ public class EnrichPipeline {
 
 	}
 
-	private static Behavior<Command> initPipeline(
-		ActorContext<Command> ctx,
+	private static Behavior<Protocol.Command> initPipeline(
+		ActorContext<Protocol.Command> ctx,
 		ActorRef<HttpSupervisor.Command> httpSupervisor,
-		ActorRef<Response> replyTo,
+		ActorRef<Protocol.Response> replyTo,
 		HeldMessage heldMessage,
 		DataPayload dataPayload,
 		Set<EnrichItemDTO> enrichPipelineItems
@@ -106,7 +106,7 @@ public class EnrichPipeline {
 
 			var buffer = Json.encodeToBuffer(dataPayload);
 
-			replyTo.tell(new Success(buffer.getBytes(), heldMessage));
+			replyTo.tell(new Protocol.Success(buffer.getBytes(), heldMessage));
 
 			return Behaviors.stopped();
 		}
@@ -147,7 +147,7 @@ public class EnrichPipeline {
 			}
 		);
 
-		return Behaviors.receive(Command.class)
+		return Behaviors.receive(Protocol.Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
 				EnrichItemDTO enrichItemError = param.enrichItem();
@@ -199,7 +199,7 @@ public class EnrichPipeline {
 
 						var buffer = Json.encodeToBuffer(dataPayload);
 
-						replyTo.tell(new Success(buffer.getBytes(), heldMessage));
+						replyTo.tell(new Protocol.Success(buffer.getBytes(), heldMessage));
 
 						return Behaviors.stopped();
 					}
@@ -254,7 +254,7 @@ public class EnrichPipeline {
 
 					var buffer = Json.encodeToBuffer(dataPayload);
 
-					replyTo.tell(new Success(buffer.getBytes(), heldMessage));
+					replyTo.tell(new Protocol.Success(buffer.getBytes(), heldMessage));
 
 					return Behaviors.stopped();
 				}
@@ -282,7 +282,7 @@ public class EnrichPipeline {
 				log.errorf("enrichItem: %s occurred error: %s", enrichItem.getId(), error);
 				log.error("terminating pipeline");
 
-				replyTo.tell(new Failure(
+				replyTo.tell(new Protocol.Failure(
 					new EnrichPipelineException(error),
 					heldMessage
 				));
@@ -331,40 +331,17 @@ public class EnrichPipeline {
 		return dataPayload;
 	}
 
-	public sealed interface Command extends CborSerializable {}
-
-	public sealed interface Response extends CborSerializable {
-		HeldMessage heldMessage();
-	}
-
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response
-	) implements Command {}
+	) implements Protocol.Command {}
 
 	private record EnrichItemError(
 		EnrichItemDTO enrichItem,
 		Throwable exception
-	) implements Command {}
+	) implements Protocol.Command {}
 
-	private record InternalResponseWrapper(byte[] jsonObject) implements Command {}
+	private record InternalResponseWrapper(byte[] jsonObject) implements Protocol.Command {}
 
-	private record InternalError(String error) implements Command {}
-
-	public record Setup(
-		ActorRef<Response> replyTo,
-		HeldMessage heldMessage,
-		byte[] ingestPayload,
-		SchedulerDTO scheduler
-
-	) implements Command {}
-
-	public record Success(
-		byte[] payload, HeldMessage heldMessage
-	) implements Response {}
-
-	public record Failure(
-		EnrichPipelineException exception,
-		HeldMessage heldMessage
-	) implements Response {}
+	private record InternalError(String error) implements Protocol.Command {}
 
 }
