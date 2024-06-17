@@ -46,7 +46,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
-	private final ActorRef<Protocol.Response> enrichPipelineAdapter;
+	private final ActorRef<Protocol.Response> dataProcessAdapter;
 	private long counter = 0;
 
 	public WorkStage(
@@ -73,9 +73,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			indexWriterAdapter
 		));
 
-		this.enrichPipelineAdapter = getContext().messageAdapter(
+		this.dataProcessAdapter = getContext().messageAdapter(
 			Protocol.Response.class,
-			EnrichPipelineResponse::new
+			DataProcessResponse::new
 		);
 
 	}
@@ -93,9 +93,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(StartWorker.class, this::onStartWorker)
-			.onMessage(EnrichPipelineResponse.class, this::onEnrichPipelineResponse)
-			.onMessage(IndexWriterResponse.class, this::onIndexWriterResponse)
+			.onMessage(DataProcessResponse.class, this::onDataProcessResponse)
 			.onMessage(Write.class, this::onWrite)
+			.onMessage(IndexWriterResponse.class, this::onIndexWriterResponse)
 			.build();
 	}
 
@@ -127,7 +127,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			ClusterSharding clusterSharding = ClusterSharding.get(system);
 
-			EntityRef<Protocol.Command> enrichPipeline = clusterSharding.entityRefFor(
+			EntityRef<Protocol.Command> dataProcess = clusterSharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
@@ -139,10 +139,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp
 			);
 
-			enrichPipeline.tell(new Protocol.Start(
+			dataProcess.tell(new Protocol.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				heldMessage,
-				this.enrichPipelineAdapter,
+				this.dataProcessAdapter,
 				startWorker.scheduler()
 			));
 
@@ -163,9 +163,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onEnrichPipelineResponse(EnrichPipelineResponse enrichPipelineResponse) {
+	private Behavior<Command> onDataProcessResponse(DataProcessResponse dataProcessResponse) {
 
-		var response = enrichPipelineResponse.response();
+		var response = dataProcessResponse.response();
 		var heldMessage = response.heldMessage();
 
 		if (response instanceof Protocol.Success success) {
@@ -242,7 +242,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record EnrichPipelineResponse(Protocol.Response response) implements Command {}
+	private record DataProcessResponse(Protocol.Response response) implements Command {}
 
 	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 
