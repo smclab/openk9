@@ -178,8 +178,6 @@ public class IndexWriter {
 		return Behaviors.same();
 	}
 
-	public sealed interface Response extends CborSerializable {}
-
 	private static Behavior<Command> onSearchResponseCommand(
 		ActorContext<Command> ctx,
 		RestHighLevelClient restHighLevelClient,
@@ -201,10 +199,20 @@ public class IndexWriter {
 		bulkRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
 
 		if (oldDataIndexName != null) {
-			bulkRequest.add(createDocWriteRequest(ctx, oldDataIndexName, dataPayload, logger, searchResponse));
+			bulkRequest.add(createDocWriteRequest(
+				oldDataIndexName,
+				dataPayload,
+				logger,
+				searchResponse
+			));
 		}
 		if (newDataIndexName != null) {
-			bulkRequest.add(createDocWriteRequest(ctx, newDataIndexName, dataPayload, logger, searchResponse));
+			bulkRequest.add(createDocWriteRequest(
+				newDataIndexName,
+				dataPayload,
+				logger,
+				searchResponse
+			));
 		}
 
 		restHighLevelClient.bulkAsync(
@@ -224,6 +232,44 @@ public class IndexWriter {
 			});
 
 		return Behaviors.same();
+	}
+
+	private static DocWriteRequest createDocWriteRequest(
+		String indexName, DataPayload dataPayload, Logger logger,
+		SearchResponse searchResponse) {
+
+		IndexRequest indexRequest = new IndexRequest(indexName);
+
+		if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
+
+			logger.info("found document for contentId: " + dataPayload.getContentId());
+
+			String documentId = searchResponse.getHits().getAt(0).getId();
+
+			String[] documentTypes = dataPayload.getDocumentTypes();
+
+			if (documentTypes == null || documentTypes.length == 0) {
+
+				logger.info("delete document for contentId: " + dataPayload.getContentId());
+
+				return new DeleteRequest(indexName, documentId);
+			}
+
+			indexRequest.id(documentId);
+		}
+
+		logger.info("index document for contentId: " + dataPayload.getContentId());
+
+		JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
+
+		JsonObject acl =
+			jsonObject.getJsonObject("acl");
+
+		if (acl == null || acl.isEmpty()) {
+			jsonObject.put("acl", Map.of("public", true));
+		}
+
+		return indexRequest.source(jsonObject.toString(), XContentType.JSON);
 	}
 
 	private static Behavior<Command> onStart(
@@ -300,42 +346,9 @@ public class IndexWriter {
 
 	public record Failure(HeldMessage heldMessage, Exception exception) implements Response {}
 
-	private static DocWriteRequest createDocWriteRequest(
-		ActorContext<?> ctx, String indexName, DataPayload dataPayload, Logger logger,
-		SearchResponse searchResponse) {
+	public sealed interface Response extends CborSerializable {
+		HeldMessage heldMessage();
 
-		IndexRequest indexRequest = new IndexRequest(indexName);
-
-		if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
-
-			logger.info("found document for contentId: " + dataPayload.getContentId());
-
-			String documentId = searchResponse.getHits().getAt(0).getId();
-
-			String[] documentTypes = dataPayload.getDocumentTypes();
-
-			if (documentTypes == null || documentTypes.length == 0) {
-
-				logger.info("delete document for contentId: " + dataPayload.getContentId());
-
-				return new DeleteRequest(indexName, documentId);
-			}
-
-			indexRequest.id(documentId);
-		}
-
-		logger.info("index document for contentId: " + dataPayload.getContentId());
-
-		JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
-
-		JsonObject acl =
-			jsonObject.getJsonObject("acl");
-
-		if (acl == null || acl.isEmpty()) {
-			jsonObject.put("acl", Map.of("public", true));
-		}
-
-		return indexRequest.source(jsonObject.toString(), XContentType.JSON);
 	}
 
 }
