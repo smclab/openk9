@@ -283,7 +283,7 @@ public class EnrichPipeline {
 				log.error("terminating pipeline");
 
 				replyTo.tell(new Protocol.Failure(
-					new EnrichPipelineException(error),
+					new DataProcessException(error),
 					heldMessage
 				));
 

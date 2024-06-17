@@ -18,7 +18,7 @@
 package io.openk9.datasource.pipeline.stages.working;
 
 import akka.actor.typed.ActorRef;
-import io.openk9.datasource.pipeline.actor.EnrichPipelineException;
+import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.util.CborSerializable;
 
@@ -28,7 +28,6 @@ public interface Protocol {
 
 	interface Response extends CborSerializable {
 		HeldMessage heldMessage();
-
 	}
 
 	record Start(
@@ -43,7 +42,7 @@ public interface Protocol {
 	) implements Response {}
 
 	record Failure(
-		EnrichPipelineException exception,
+		DataProcessException exception,
 		HeldMessage heldMessage
 	) implements Response {}
 

@@ -17,22 +17,22 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-public class EnrichPipelineException extends RuntimeException {
+public class DataProcessException extends RuntimeException {
 
-	public EnrichPipelineException() {
+	public DataProcessException() {
 	}
 
-	public EnrichPipelineException(String message) {
+	public DataProcessException(String message) {
 		super(message);
 	}
 
-	public EnrichPipelineException(String message, Throwable cause) {
+	public DataProcessException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public EnrichPipelineException(Throwable cause) {}
+	public DataProcessException(Throwable cause) {}
 
-	public EnrichPipelineException(
+	public DataProcessException(
 		String message,
 		Throwable cause,
 		boolean enableSuppression,

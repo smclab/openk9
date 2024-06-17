@@ -29,7 +29,6 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
-import io.openk9.datasource.pipeline.actor.EnrichPipelineException;
 import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
@@ -47,6 +46,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<IndexWriter.Command> indexWriter;
 	private final ActorRef<Protocol.Response> dataProcessAdapter;
+	private final ClusterSharding sharding;
 	private long counter = 0;
 
 	public WorkStage(
@@ -58,6 +58,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		super(context);
 		this.schedulingKey = schedulingKey;
 		this.replyTo = replyTo;
+
+		ActorSystem<Void> system = getContext().getSystem();
+		this.sharding = ClusterSharding.get(system);
 
 		var oldDataIndexName = scheduler.getOldDataIndexName();
 		var newDataIndexName = scheduler.getNewDataIndexName();
@@ -123,11 +126,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-			ActorSystem<Void> system = getContext().getSystem();
-
-			ClusterSharding clusterSharding = ClusterSharding.get(system);
-
-			EntityRef<Protocol.Command> dataProcess = clusterSharding.entityRefFor(
+			EntityRef<Protocol.Command> dataProcess = sharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
@@ -169,10 +168,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var heldMessage = response.heldMessage();
 
 		if (response instanceof Protocol.Success success) {
-			log.infof(
-				"enrich pipeline success for %s",
-				heldMessage, this.replyTo
-			);
+			log.infof("data process success for %s", heldMessage);
 
 			getContext().getSelf().tell(new Write(
 				success.payload(),
@@ -182,11 +178,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 		else if (response instanceof Protocol.Failure failure) {
 
-			EnrichPipelineException epe = failure.exception();
-			log.error("enrich pipeline failure", epe);
+			Exception exception = failure.exception();
+			log.error("data process failure for %s", heldMessage, exception);
 
 			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(epe), heldMessage));
+				ExceptionUtil.generateStackTrace(exception), heldMessage));
 
 		}
 
