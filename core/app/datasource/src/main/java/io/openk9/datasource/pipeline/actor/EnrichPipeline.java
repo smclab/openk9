@@ -28,7 +28,7 @@ import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
-import io.openk9.datasource.pipeline.stages.work.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.JsonMerge;

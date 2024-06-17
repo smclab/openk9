@@ -23,7 +23,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
-import io.openk9.datasource.pipeline.stages.work.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;

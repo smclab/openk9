@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.stages.work;
+package io.openk9.datasource.pipeline.stages.working;
 
 import io.openk9.common.util.SchedulingKey;
 
