@@ -24,8 +24,8 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.WriteProtocol;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.openk9.datasource.util.CborSerializable;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -53,12 +53,10 @@ import javax.enterprise.inject.spi.CDI;
 
 public class IndexWriter {
 
-	public sealed interface Command extends CborSerializable {}
-
-	public static Behavior<Command> create(
+	public static Behavior<WriteProtocol.Command> create(
 		String oldDataIndexName,
 		String newDataIndexName,
-		ActorRef<Response> replyTo) {
+		ActorRef<WriteProtocol.Response> replyTo) {
 
 		return Behaviors.setup(ctx -> {
 
@@ -80,17 +78,17 @@ public class IndexWriter {
 		});
 	}
 
-	private static Behavior<Command> initial(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient,
+	private static Behavior<WriteProtocol.Command> initial(
+		ActorContext<WriteProtocol.Command> ctx, RestHighLevelClient restHighLevelClient,
 		DatasourceEventBus eventBus,
 		String oldDataIndexName,
 		String newDataIndexName,
-		ActorRef<Response> replyTo) {
+		ActorRef<WriteProtocol.Response> replyTo) {
 
 		Logger logger = ctx.getLog();
 
-		return Behaviors.receive(Command.class)
-			.onMessage(Start.class, (start) -> onStart(
+		return Behaviors.receive(WriteProtocol.Command.class)
+			.onMessage(WriteProtocol.Start.class, (start) -> onStart(
 					ctx,
 					restHighLevelClient,
 					oldDataIndexName,
@@ -106,9 +104,9 @@ public class IndexWriter {
 			.build();
 	}
 
-	private static Behavior<Command> onBulkResponseCommand(
+	private static Behavior<WriteProtocol.Command> onBulkResponseCommand(
 		Logger logger, BulkResponseCommand brc, DatasourceEventBus eventBus,
-		ActorRef<Response> replyTo) {
+		ActorRef<WriteProtocol.Response> replyTo) {
 
 		BulkResponse response = brc.bulkResponse;
 		Exception throwable = brc.exception;
@@ -134,14 +132,17 @@ public class IndexWriter {
 				);
 
 				logger.error("Bulk request error: " + errorMessage);
-				replyTo.tell(new Failure(heldMessage, new RuntimeException(errorMessage)));
+				replyTo.tell(new WriteProtocol.Failure(
+					new RuntimeException(errorMessage),
+					heldMessage
+				));
 			}
 
 		}
 
 		if (throwable != null) {
 			logger.error("Error on bulk request", throwable);
-			replyTo.tell(new Failure(heldMessage, throwable));
+			replyTo.tell(new WriteProtocol.Failure(throwable, heldMessage));
 		}
 		else {
 
@@ -172,14 +173,14 @@ public class IndexWriter {
 
 			}
 
-			replyTo.tell(new Success(heldMessage));
+			replyTo.tell(new WriteProtocol.Success(dataPayload, heldMessage));
 		}
 
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onSearchResponseCommand(
-		ActorContext<Command> ctx,
+	private static Behavior<WriteProtocol.Command> onSearchResponseCommand(
+		ActorContext<WriteProtocol.Command> ctx,
 		RestHighLevelClient restHighLevelClient,
 		SearchResponseCommand src,
 		Logger logger,
@@ -272,11 +273,11 @@ public class IndexWriter {
 		return indexRequest.source(jsonObject.toString(), XContentType.JSON);
 	}
 
-	private static Behavior<Command> onStart(
-		ActorContext<Command> ctx,
+	private static Behavior<WriteProtocol.Command> onStart(
+		ActorContext<WriteProtocol.Command> ctx,
 		RestHighLevelClient restHighLevelClient,
 		String oldDataIndexName,
-		Start start) {
+		WriteProtocol.Start start) {
 
 		var data = start.dataPayload();
 		var heldMessage = start.heldMessage();
@@ -325,30 +326,18 @@ public class IndexWriter {
 		return Behaviors.same();
 	}
 
-	public record Start(byte[] dataPayload, HeldMessage heldMessage)
-		implements Command {}
-
 	private record SearchResponseCommand(
 		DataPayload dataPayload,
 		HeldMessage heldMessage,
 		SearchResponse searchResponse,
 		Exception exception
-	) implements Command {}
+	) implements WriteProtocol.Command {}
 
 	private record BulkResponseCommand(
 		DataPayload dataPayload,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
-	) implements Command {}
-
-	public record Success(HeldMessage heldMessage) implements Response {}
-
-	public record Failure(HeldMessage heldMessage, Exception exception) implements Response {}
-
-	public sealed interface Response extends CborSerializable {
-		HeldMessage heldMessage();
-
-	}
+	) implements WriteProtocol.Command {}
 
 }

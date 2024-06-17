@@ -44,7 +44,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
-	private final ActorRef<IndexWriter.Command> indexWriter;
+	private final ActorRef<WriteProtocol.Command> indexWriter;
 	private final ActorRef<WorkProtocol.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
 	private long counter = 0;
@@ -66,8 +66,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var newDataIndexName = scheduler.getNewDataIndexName();
 
 		var indexWriterAdapter = getContext().messageAdapter(
-			IndexWriter.Response.class,
-			IndexWriterResponse::new
+			WriteProtocol.Response.class,
+			PostWrite::new
 		);
 
 		this.indexWriter = getContext().spawnAnonymous(IndexWriter.create(
@@ -78,7 +78,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		this.dataProcessAdapter = getContext().messageAdapter(
 			WorkProtocol.Response.class,
-			DataProcessResponse::new
+			PostProcess::new
 		);
 
 	}
@@ -96,9 +96,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(StartWorker.class, this::onStartWorker)
-			.onMessage(DataProcessResponse.class, this::onDataProcessResponse)
+			.onMessage(PostProcess.class, this::onPostProcess)
 			.onMessage(Write.class, this::onWrite)
-			.onMessage(IndexWriterResponse.class, this::onIndexWriterResponse)
+			.onMessage(PostWrite.class, this::onPostWrite)
 			.build();
 	}
 
@@ -162,9 +162,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onDataProcessResponse(DataProcessResponse dataProcessResponse) {
+	private Behavior<Command> onPostProcess(PostProcess postProcess) {
 
-		var response = dataProcessResponse.response();
+		var response = postProcess.response();
 		var heldMessage = response.heldMessage();
 
 		if (response instanceof WorkProtocol.Success success) {
@@ -194,25 +194,25 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var payload = write.payload();
 		var heldMessage = write.heldMessage();
 
-		indexWriter.tell(new IndexWriter.Start(
+		indexWriter.tell(new WriteProtocol.Start(
 			payload, heldMessage
 		));
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onIndexWriterResponse(IndexWriterResponse indexWriterResponse) {
+	private Behavior<Command> onPostWrite(PostWrite postWrite) {
 
-		var response = indexWriterResponse.response();
+		var response = postWrite.response();
 
-		if (response instanceof IndexWriter.Success success) {
+		if (response instanceof WriteProtocol.Success success) {
 
 			var heldMessage = success.heldMessage();
 
 			this.replyTo.tell(new Done(heldMessage));
 
 		}
-		else if (response instanceof IndexWriter.Failure failure) {
+		else if (response instanceof WriteProtocol.Failure failure) {
 
 			var heldMessage = failure.heldMessage();
 
@@ -238,7 +238,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record DataProcessResponse(WorkProtocol.Response response) implements Command {}
+	private record PostProcess(WorkProtocol.Response response) implements Command {}
 
 	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
 
@@ -255,8 +255,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		HeldMessage heldMessage
 	) implements Command {}
 
-	private record IndexWriterResponse(
-		IndexWriter.Response response
+	private record PostWrite(
+		WriteProtocol.Response response
 	) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
