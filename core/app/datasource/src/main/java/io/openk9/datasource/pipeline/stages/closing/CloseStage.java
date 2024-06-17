@@ -38,7 +38,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	private final int expectedReplies;
 	private final List<ActorRef<CloseProtocol.Command>> handlers;
 	private final ActorRef<Response> replyTo;
-	private final Function<List<CloseProtocol.Reply>, Aggregate> aggregator;
+	private final Function<List<CloseProtocol.Reply>, Aggregated> aggregator;
 	private final List<CloseProtocol.Reply> replies = new ArrayList<>();
 	private final SchedulingKey schedulingKey;
 	private SchedulerDTO scheduler;
@@ -48,7 +48,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 		SchedulingKey schedulingKey,
 		List<ActorRef<CloseProtocol.Command>> handlers,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregate> aggregator) {
+		Function<List<CloseProtocol.Reply>, Aggregated> aggregator) {
 
 		super(context);
 
@@ -62,7 +62,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregate> aggregator,
+		Function<List<CloseProtocol.Reply>, Aggregated> aggregator,
 		List<ActorRef<CloseProtocol.Command>> handlers) {
 
 		return Behaviors.setup(ctx -> new CloseStage(
@@ -78,7 +78,7 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregate> aggregator,
+		Function<List<CloseProtocol.Reply>, Aggregated> aggregator,
 		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... handlersFactories) {
 
 		return Behaviors.setup(ctx -> {
@@ -154,6 +154,6 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 
 	private record HandlerReply(CloseProtocol.Reply reply) implements Command {}
 
-	public record Aggregate(Scheduler.SchedulerStatus status) implements Response {}
+	public record Aggregated(Scheduler.SchedulerStatus status) implements Response {}
 
 }

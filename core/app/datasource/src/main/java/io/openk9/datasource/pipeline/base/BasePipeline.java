@@ -42,15 +42,15 @@ public class BasePipeline {
 		);
 	}
 
-	public static CloseStage.Aggregate closeResponseAggregator(List<CloseProtocol.Reply> replies) {
+	public static CloseStage.Aggregated closeResponseAggregator(List<CloseProtocol.Reply> replies) {
 
 		return replies.stream()
 			.filter(EvaluateStatus.Success.class::isInstance)
 			.findFirst()
 			.map(reply -> (EvaluateStatus.Success) reply)
 			.map(EvaluateStatus.Success::status)
-			.map(CloseStage.Aggregate::new)
-			.orElse(new CloseStage.Aggregate(Scheduler.SchedulerStatus.FINISHED));
+			.map(CloseStage.Aggregated::new)
+			.orElse(new CloseStage.Aggregated(Scheduler.SchedulerStatus.FINISHED));
 
 	}
 

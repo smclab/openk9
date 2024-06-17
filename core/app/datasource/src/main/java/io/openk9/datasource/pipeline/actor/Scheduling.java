@@ -99,7 +99,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
 		SchedulingKey schedulingKey,
-		Function<List<CloseProtocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<List<CloseProtocol.Reply>, CloseStage.Aggregated> closeAggregator,
 		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... closeHandlerFactories) {
 
 		super(context);
@@ -139,7 +139,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@SafeVarargs
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
-		Function<List<CloseProtocol.Reply>, CloseStage.Aggregate> closeAggregator,
+		Function<List<CloseProtocol.Reply>, CloseStage.Aggregated> closeAggregator,
 		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
@@ -646,11 +646,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onCloseStageResponse(CloseStageResponse closeStageResponse) {
 		var response = closeStageResponse.response();
 
-		if (response instanceof CloseStage.Aggregate aggregate) {
+		if (response instanceof CloseStage.Aggregated aggregated) {
 
 			getContext()
 				.getSelf()
-				.tell(new GracefulEnd(aggregate.status()));
+				.tell(new GracefulEnd(aggregated.status()));
 		}
 		else {
 			log.warnf("Unexpected response from CloseStage for %s", getSchedulingKey());
