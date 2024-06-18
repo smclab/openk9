@@ -24,37 +24,37 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.service.DatasourceService;
 import org.jboss.logging.Logger;
 
-public class UpdateDatasource extends AbstractBehavior<AggregateProtocol.Command> {
+public class UpdateDatasource extends AbstractBehavior<AggregateItem.Command> {
 
 	private static final Logger log = Logger.getLogger(UpdateDatasource.class);
 	private final SchedulingKey schedulingKey;
 
 	protected UpdateDatasource(
-		ActorContext<AggregateProtocol.Command> context,
+		ActorContext<AggregateItem.Command> context,
 		SchedulingKey schedulingKey) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
 	}
 
-	public static Behavior<AggregateProtocol.Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<AggregateItem.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new UpdateDatasource(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<AggregateProtocol.Command> createReceive() {
+	public Receive<AggregateItem.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(CloseStage.StartHandler.class, this::onStart)
 			.onMessage(Stop.class, this::onStop)
 			.build();
 	}
 
-	private Behavior<AggregateProtocol.Command> onStart(CloseStage.StartHandler start) {
+	private Behavior<AggregateItem.Command> onStart(CloseStage.StartHandler start) {
 		var tenantId = schedulingKey.tenantId();
 		var scheduler = start.scheduler();
 		var lastIngestionDate = scheduler.getLastIngestionDate();
@@ -80,18 +80,18 @@ public class UpdateDatasource extends AbstractBehavior<AggregateProtocol.Command
 		return Behaviors.same();
 	}
 
-	private Behavior<AggregateProtocol.Command> onStop(Stop stop) {
+	private Behavior<AggregateItem.Command> onStop(Stop stop) {
 
 		stop.replyTo().tell(Success.INSTANCE);
 
 		return Behaviors.stopped();
 	}
 
-	public enum Success implements AggregateProtocol.Reply {
+	public enum Success implements AggregateItem.Reply {
 		INSTANCE
 	}
 
-	private record Stop(ActorRef<AggregateProtocol.Reply> replyTo)
-		implements AggregateProtocol.Command {}
+	private record Stop(ActorRef<AggregateItem.Reply> replyTo)
+		implements AggregateItem.Command {}
 
 }

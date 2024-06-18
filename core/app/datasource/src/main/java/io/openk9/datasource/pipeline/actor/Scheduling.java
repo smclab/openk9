@@ -37,7 +37,7 @@ import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
@@ -85,7 +85,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final int workersPerNode;
 	private final TimerScheduler<Command> timers;
 	private ActorRef<WorkStage.Command> workStage;
-	private final ActorRef<CloseStage.Command> closeStage;
+	private final ActorRef<AggregateBehavior.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
 	private LocalDateTime lastRequest = LocalDateTime.now();
@@ -100,8 +100,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
 		SchedulingKey schedulingKey,
-		Function<List<AggregateProtocol.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<SchedulingKey, Behavior<AggregateProtocol.Command>>... closeHandlerFactories) {
+		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
+		Function<SchedulingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
@@ -140,8 +140,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@SafeVarargs
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
-		Function<List<AggregateProtocol.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<SchedulingKey, Behavior<AggregateProtocol.Command>>... closeHandlerFactories) {
+		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
+		Function<SchedulingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->

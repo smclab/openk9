@@ -24,33 +24,33 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import org.jboss.logging.Logger;
 
-public class EvaluateStatus extends AbstractBehavior<AggregateProtocol.Command> {
+public class EvaluateStatus extends AbstractBehavior<AggregateItem.Command> {
 
 	private final static Logger log = Logger.getLogger(EvaluateStatus.class);
 	private final SchedulingKey key;
 
-	public EvaluateStatus(ActorContext<AggregateProtocol.Command> context, SchedulingKey key) {
+	public EvaluateStatus(ActorContext<AggregateItem.Command> context, SchedulingKey key) {
 		super(context);
 		this.key = key;
 	}
 
-	public static Behavior<AggregateProtocol.Command> create(SchedulingKey schedulingKey) {
+	public static Behavior<AggregateItem.Command> create(SchedulingKey schedulingKey) {
 		return Behaviors.setup(ctx -> new EvaluateStatus(ctx, schedulingKey));
 	}
 
 	@Override
-	public Receive<AggregateProtocol.Command> createReceive() {
+	public Receive<AggregateItem.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(CloseStage.StartHandler.class, this::onStart)
 			.onMessageEquals(Stop.INSTANCE, this::onStop)
 			.build();
 	}
 
-	public Behavior<AggregateProtocol.Command> onStart(CloseStage.StartHandler start) {
+	public Behavior<AggregateItem.Command> onStart(CloseStage.StartHandler start) {
 		var scheduler = start.scheduler();
 		var replyTo = start.replyTo();
 
@@ -82,15 +82,15 @@ public class EvaluateStatus extends AbstractBehavior<AggregateProtocol.Command> 
 		return this;
 	}
 
-	public Behavior<AggregateProtocol.Command> onStop() {
+	public Behavior<AggregateItem.Command> onStop() {
 
 		return Behaviors.stopped();
 	}
 
-	private enum Stop implements AggregateProtocol.Command {
+	private enum Stop implements AggregateItem.Command {
 		INSTANCE
 	}
 
-	public record Success(Scheduler.SchedulerStatus status) implements AggregateProtocol.Reply {}
+	public record Success(Scheduler.SchedulerStatus status) implements AggregateItem.Reply {}
 
 }

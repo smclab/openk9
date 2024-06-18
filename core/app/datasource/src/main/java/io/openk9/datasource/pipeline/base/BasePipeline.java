@@ -24,7 +24,7 @@ import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 
 import java.util.List;
@@ -42,7 +42,7 @@ public class BasePipeline {
 		);
 	}
 
-	public static CloseStage.Aggregated closeResponseAggregator(List<AggregateProtocol.Reply> replies) {
+	public static CloseStage.Aggregated closeResponseAggregator(List<AggregateItem.Reply> replies) {
 
 		return replies.stream()
 			.filter(EvaluateStatus.Success.class::isInstance)

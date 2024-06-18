@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor.common;
 
-public interface AggregateProtocol {
+public interface AggregateItem {
 
 	interface Command {}
 

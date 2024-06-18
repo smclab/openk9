@@ -24,7 +24,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 
 import java.util.ArrayList;
@@ -33,31 +33,24 @@ import java.util.function.Function;
 
 public class CloseStage extends AggregateBehavior {
 
-	private final SchedulingKey schedulingKey;
-
 	public CloseStage(
 		ActorContext<Command> context,
-		SchedulingKey schedulingKey,
-		List<ActorRef<AggregateProtocol.Command>> handlers,
 		ActorRef<Response> replyTo,
-		Function<List<AggregateProtocol.Reply>, Response> aggregator) {
+		List<ActorRef<AggregateItem.Command>> handlers,
+		Function<List<AggregateItem.Reply>, Response> aggregator) {
 
 		super(context, handlers, replyTo, aggregator);
-
-		this.schedulingKey = schedulingKey;
 	}
 
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<AggregateProtocol.Reply>, Response> aggregator,
-		List<ActorRef<AggregateProtocol.Command>> handlers) {
+		Function<List<AggregateItem.Reply>, Response> aggregator,
+		List<ActorRef<AggregateItem.Command>> handlers) {
 
 		return Behaviors.setup(ctx -> new CloseStage(
 			ctx,
-			schedulingKey,
-			handlers,
 			replyTo,
+			handlers,
 			aggregator
 		));
 	}
@@ -66,39 +59,39 @@ public class CloseStage extends AggregateBehavior {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<AggregateProtocol.Reply>, Response> aggregator,
-		Function<SchedulingKey, Behavior<AggregateProtocol.Command>>... handlersFactories) {
+		Function<List<AggregateItem.Reply>, Response> aggregator,
+		Function<SchedulingKey, Behavior<AggregateItem.Command>>... handlersFactories) {
 
 		return Behaviors.setup(ctx -> {
-			List<ActorRef<AggregateProtocol.Command>> handlers = new ArrayList<>();
+			List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
 
-			for (Function<SchedulingKey, Behavior<AggregateProtocol.Command>> handlerFactory : handlersFactories) {
+			for (Function<SchedulingKey, Behavior<AggregateItem.Command>> handlerFactory : handlersFactories) {
 				var handler = ctx.spawnAnonymous(handlerFactory.apply(schedulingKey));
 				handlers.add(handler);
 			}
 
-			return new CloseStage(ctx, schedulingKey, handlers, replyTo, aggregator);
+			return new CloseStage(ctx, replyTo, handlers, aggregator);
 		});
 	}
 
 	@Override
 	protected void invokeHandler(HandlerContext handlerContext) {
 		var handler = handlerContext.handler();
-		var start = handlerContext.start();
+		var starter = handlerContext.starter();
 
-		if (start instanceof CloseStage.Start closeStageStart) {
-			var scheduler = closeStageStart.scheduler();
+		if (starter instanceof CloseStage.Start start) {
+			var scheduler = start.scheduler();
 			handler.tell(new StartHandler(scheduler, handlerAdapter));
 		}
 	}
 
-	public record Start(SchedulerDTO scheduler) implements AggregateBehavior.Start {}
+	public record Start(SchedulerDTO scheduler) implements Starter {}
 
 	public record Aggregated(Scheduler.SchedulerStatus status) implements Response {}
 
 	public record StartHandler(
 		SchedulerDTO scheduler,
-		ActorRef<AggregateProtocol.Reply> replyTo
-	) implements AggregateProtocol.Command {}
+		ActorRef<AggregateItem.Reply> replyTo
+	) implements AggregateItem.Command {}
 
 }

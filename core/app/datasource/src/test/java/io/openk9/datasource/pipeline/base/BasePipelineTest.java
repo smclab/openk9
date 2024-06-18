@@ -21,7 +21,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -32,7 +32,7 @@ class BasePipelineTest {
 
 	@Test
 	void should_get_status_from_reply() {
-		List<AggregateProtocol.Reply> replies = List.of(
+		List<AggregateItem.Reply> replies = List.of(
 			new EvaluateStatus.Success(Scheduler.SchedulerStatus.ERROR),
 			UpdateDatasource.Success.INSTANCE
 		);
@@ -44,7 +44,7 @@ class BasePipelineTest {
 
 	@Test
 	void should_get_status_default() {
-		List<AggregateProtocol.Reply> replies = List.of(
+		List<AggregateItem.Reply> replies = List.of(
 			UpdateDatasource.Success.INSTANCE,
 			DeletionCompareNotifier.Success.INSTANCE
 		);

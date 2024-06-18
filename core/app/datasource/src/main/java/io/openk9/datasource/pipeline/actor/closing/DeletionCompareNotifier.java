@@ -25,31 +25,31 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.events.DatasourceEventBus;
-import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 
 import java.util.List;
 
-public class DeletionCompareNotifier extends AbstractBehavior<AggregateProtocol.Command> {
+public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Command> {
 
 	private final SchedulingKey schedulingKey;
 
 	public DeletionCompareNotifier(
-		ActorContext<AggregateProtocol.Command> context,
+		ActorContext<AggregateItem.Command> context,
 		SchedulingKey schedulingKey) {
 
 		super(context);
 		this.schedulingKey = schedulingKey;
 	}
 
-	public static Behavior<AggregateProtocol.Command> create(SchedulingKey key) {
+	public static Behavior<AggregateItem.Command> create(SchedulingKey key) {
 		return Behaviors.setup(ctx -> new DeletionCompareNotifier(ctx, key));
 	}
 
 	@Override
-	public Receive<AggregateProtocol.Command> createReceive() {
+	public Receive<AggregateItem.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(CloseStage.StartHandler.class, this::onStart)
 			.onMessage(SendEvents.class, this::onSendEvents)
@@ -57,7 +57,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateProtocol.
 			.build();
 	}
 
-	private Behavior<AggregateProtocol.Command> onStart(
+	private Behavior<AggregateItem.Command> onStart(
 		CloseStage.StartHandler start) {
 
 		var replyTo = start.replyTo();
@@ -99,7 +99,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateProtocol.
 		return Behaviors.same();
 	}
 
-	private Behavior<AggregateProtocol.Command> onSendEvents(SendEvents sendEvents) {
+	private Behavior<AggregateItem.Command> onSendEvents(SendEvents sendEvents) {
 		var scheduler = sendEvents.scheduler();
 		var list = sendEvents.list();
 		var tenantId = schedulingKey.tenantId();
@@ -118,23 +118,23 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateProtocol.
 		return Behaviors.same();
 	}
 
-	private Behavior<AggregateProtocol.Command> onStop(Stop stop) {
+	private Behavior<AggregateItem.Command> onStop(Stop stop) {
 		stop.replyTo().tell(Success.INSTANCE);
 		return Behaviors.stopped();
 	}
 
-	public enum Success implements AggregateProtocol.Reply {
+	public enum Success implements AggregateItem.Reply {
 		INSTANCE
 	}
 
-	private record Stop(ActorRef<AggregateProtocol.Reply> replyTo)
-		implements AggregateProtocol.Command {}
+	private record Stop(ActorRef<AggregateItem.Reply> replyTo)
+		implements AggregateItem.Command {}
 
 	private record SendEvents(
 		List<String> list,
 		Throwable throwable,
 		SchedulerDTO scheduler,
-		ActorRef<AggregateProtocol.Reply> replyTo
-	) implements AggregateProtocol.Command {}
+		ActorRef<AggregateItem.Reply> replyTo
+	) implements AggregateItem.Command {}
 
 }

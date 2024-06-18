@@ -27,24 +27,23 @@ import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavior.Command> {
 
 	private static final Logger log = Logger.getLogger(AggregateBehavior.class);
 	protected final int expectedReplies;
-	protected final List<ActorRef<AggregateProtocol.Command>> handlers;
+	protected final List<ActorRef<AggregateItem.Command>> handlers;
 	protected final ActorRef<Response> replyTo;
-	protected final ActorRef<AggregateProtocol.Reply> handlerAdapter;
-	protected final Function<List<AggregateProtocol.Reply>, Response> aggregator;
-	protected final List<AggregateProtocol.Reply> replies = new ArrayList<>();
+	protected final ActorRef<AggregateItem.Reply> handlerAdapter;
+	protected final Function<List<AggregateItem.Reply>, Response> aggregator;
+	protected final List<AggregateItem.Reply> replies = new ArrayList<>();
 
 	protected AggregateBehavior(
 		ActorContext<Command> context,
-		List<ActorRef<AggregateProtocol.Command>> handlers,
+		List<ActorRef<AggregateItem.Command>> handlers,
 		ActorRef<Response> replyTo,
-		Function<List<AggregateProtocol.Reply>, Response> aggregator) {
+		Function<List<AggregateItem.Reply>, Response> aggregator) {
 
 		super(context);
 
@@ -52,18 +51,18 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 		this.expectedReplies = handlers.size();
 		this.replyTo = replyTo;
 		this.handlerAdapter = getContext().messageAdapter(
-			AggregateProtocol.Reply.class, HandlerReply::new);
+			AggregateItem.Reply.class, HandlerReply::new);
 		this.aggregator = aggregator;
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
+			.onMessage(Starter.class, this::onStart)
 			.build();
 	}
 
-	public Behavior<Command> collectAndAggregate() {
+	public Behavior<Command> aggregation() {
 		if (replies.size() == expectedReplies) {
 			if (log.isDebugEnabled()) {
 				log.debugf(
@@ -85,21 +84,20 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 		}
 	}
 
-	public Behavior<Command> onStart(Start start) {
-		Consumer<HandlerContext> invokeHandler = this::invokeHandler;
-
-		for (ActorRef<AggregateProtocol.Command> handler : handlers) {
-			var handlerContext = new HandlerContext(start, handler);
-			invokeHandler.accept(handlerContext);
-		}
-
-		return collectAndAggregate();
-	}
-
 	protected abstract void invokeHandler(HandlerContext handlerContext);
 
+	private Behavior<Command> onStart(Starter starter) {
+
+		for (ActorRef<AggregateItem.Command> handler : handlers) {
+			var handlerContext = new HandlerContext(starter, handler);
+			invokeHandler(handlerContext);
+		}
+
+		return aggregation();
+	}
+
 	private Behavior<Command> onHandlerReply(HandlerReply handlerReply) {
-		this.replies.add((AggregateProtocol.Reply) handlerReply.reply());
+		this.replies.add((AggregateItem.Reply) handlerReply.reply());
 
 		if (log.isDebugEnabled()) {
 			log.debugf(
@@ -110,20 +108,20 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 			);
 		}
 
-		return collectAndAggregate();
+		return aggregation();
 	}
 
-	public interface Command {}
+	public sealed interface Command {}
 
-	public interface Start extends Command {}
+	public non-sealed interface Starter extends Command {}
 
 	public interface Response {}
 
 	private record HandlerReply(Object reply) implements Command {}
 
 	protected record HandlerContext(
-		Start start,
-		ActorRef<AggregateProtocol.Command> handler
+		Starter starter,
+		ActorRef<AggregateItem.Command> handler
 	) {}
 
 }
