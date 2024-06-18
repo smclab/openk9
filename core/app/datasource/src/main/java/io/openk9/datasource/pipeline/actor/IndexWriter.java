@@ -23,6 +23,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -54,8 +55,7 @@ import javax.enterprise.inject.spi.CDI;
 public class IndexWriter {
 
 	public static Behavior<Writer.Command> create(
-		String oldDataIndexName,
-		String newDataIndexName,
+		SchedulerDTO scheduler,
 		ActorRef<Writer.Response> replyTo) {
 
 		return Behaviors.setup(ctx -> {
@@ -65,6 +65,9 @@ public class IndexWriter {
 
 			DatasourceEventBus eventBus =
 				CDI.current().select(DatasourceEventBus.class).get();
+
+			var oldDataIndexName = scheduler.getOldDataIndexName();
+			var newDataIndexName = scheduler.getNewDataIndexName();
 
 			return initial(
 				ctx,

@@ -62,17 +62,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorSystem<Void> system = getContext().getSystem();
 		this.sharding = ClusterSharding.get(system);
 
-		var oldDataIndexName = scheduler.getOldDataIndexName();
-		var newDataIndexName = scheduler.getNewDataIndexName();
-
 		var indexWriterAdapter = getContext().messageAdapter(
 			Writer.Response.class,
 			PostWrite::new
 		);
 
 		this.writer = getContext().spawnAnonymous(IndexWriter.create(
-			oldDataIndexName,
-			newDataIndexName,
+			scheduler,
 			indexWriterAdapter
 		));
 
