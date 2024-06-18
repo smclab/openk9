@@ -29,7 +29,7 @@ import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
-import io.openk9.datasource.pipeline.stages.working.WorkProtocol;
+import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.JsonMerge;
 import io.vertx.core.buffer.Buffer;
@@ -45,14 +45,14 @@ import java.util.Set;
 
 public class EnrichPipeline {
 
-	public static final EntityTypeKey<WorkProtocol.Command> ENTITY_TYPE_KEY =
-		EntityTypeKey.create(WorkProtocol.Command.class, "enrich-pipeline");
+	public static final EntityTypeKey<Processor.Command> ENTITY_TYPE_KEY =
+		EntityTypeKey.create(Processor.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
-	public static Behavior<WorkProtocol.Command> create(EnrichPipelineKey enrichPipelineKey) {
+	public static Behavior<Processor.Command> create(EnrichPipelineKey enrichPipelineKey) {
 		return Behaviors.setup(ctx -> Behaviors
-			.receive(WorkProtocol.Command.class)
-			.onMessage(WorkProtocol.Start.class, setup -> onSetup(
+			.receive(Processor.Command.class)
+			.onMessage(Processor.Start.class, setup -> onSetup(
 				ctx,
 				enrichPipelineKey,
 				setup
@@ -61,16 +61,16 @@ public class EnrichPipeline {
 		);
 	}
 
-	public static Behavior<WorkProtocol.Command> onSetup(
-		ActorContext<WorkProtocol.Command> ctx,
+	public static Behavior<Processor.Command> onSetup(
+		ActorContext<Processor.Command> ctx,
 		EnrichPipelineKey key,
-		WorkProtocol.Start setup
+		Processor.Start setup
 	) {
 
 		SchedulerDTO scheduler = setup.scheduler();
 		byte[] payloadArray = setup.ingestPayload();
 
-		ActorRef<WorkProtocol.Response> scheduling = setup.replyTo();
+		ActorRef<Processor.Response> scheduling = setup.replyTo();
 		HeldMessage heldMessage = setup.heldMessage();
 
 		var dataPayload = prepareDataPayload(payloadArray, scheduler);
@@ -91,10 +91,10 @@ public class EnrichPipeline {
 
 	}
 
-	private static Behavior<WorkProtocol.Command> initPipeline(
-		ActorContext<WorkProtocol.Command> ctx,
+	private static Behavior<Processor.Command> initPipeline(
+		ActorContext<Processor.Command> ctx,
 		ActorRef<HttpSupervisor.Command> httpSupervisor,
-		ActorRef<WorkProtocol.Response> replyTo,
+		ActorRef<Processor.Response> replyTo,
 		HeldMessage heldMessage,
 		DataPayload dataPayload,
 		Set<EnrichItemDTO> enrichPipelineItems
@@ -106,7 +106,7 @@ public class EnrichPipeline {
 
 			var buffer = Json.encodeToBuffer(dataPayload);
 
-			replyTo.tell(new WorkProtocol.Success(buffer.getBytes(), heldMessage));
+			replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
 
 			return Behaviors.stopped();
 		}
@@ -147,7 +147,7 @@ public class EnrichPipeline {
 			}
 		);
 
-		return Behaviors.receive(WorkProtocol.Command.class)
+		return Behaviors.receive(Processor.Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
 				EnrichItemDTO enrichItemError = param.enrichItem();
@@ -199,7 +199,7 @@ public class EnrichPipeline {
 
 						var buffer = Json.encodeToBuffer(dataPayload);
 
-						replyTo.tell(new WorkProtocol.Success(buffer.getBytes(), heldMessage));
+						replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
 
 						return Behaviors.stopped();
 					}
@@ -254,7 +254,7 @@ public class EnrichPipeline {
 
 					var buffer = Json.encodeToBuffer(dataPayload);
 
-					replyTo.tell(new WorkProtocol.Success(buffer.getBytes(), heldMessage));
+					replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
 
 					return Behaviors.stopped();
 				}
@@ -282,7 +282,7 @@ public class EnrichPipeline {
 				log.errorf("enrichItem: %s occurred error: %s", enrichItem.getId(), error);
 				log.error("terminating pipeline");
 
-				replyTo.tell(new WorkProtocol.Failure(
+				replyTo.tell(new Processor.Failure(
 					new DataProcessException(error),
 					heldMessage
 				));
@@ -333,15 +333,15 @@ public class EnrichPipeline {
 
 	private record EnrichItemSupervisorResponseWrapper(
 		EnrichItemSupervisor.Response response
-	) implements WorkProtocol.Command {}
+	) implements Processor.Command {}
 
 	private record EnrichItemError(
 		EnrichItemDTO enrichItem,
 		Throwable exception
-	) implements WorkProtocol.Command {}
+	) implements Processor.Command {}
 
-	private record InternalResponseWrapper(byte[] jsonObject) implements WorkProtocol.Command {}
+	private record InternalResponseWrapper(byte[] jsonObject) implements Processor.Command {}
 
-	private record InternalError(String error) implements WorkProtocol.Command {}
+	private record InternalError(String error) implements Processor.Command {}
 
 }

@@ -44,8 +44,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final SchedulingKey schedulingKey;
 	private final ActorRef<Response> replyTo;
-	private final ActorRef<WriteProtocol.Command> indexWriter;
-	private final ActorRef<WorkProtocol.Response> dataProcessAdapter;
+	private final ActorRef<Writer.Command> writer;
+	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
 	private long counter = 0;
 
@@ -66,18 +66,18 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var newDataIndexName = scheduler.getNewDataIndexName();
 
 		var indexWriterAdapter = getContext().messageAdapter(
-			WriteProtocol.Response.class,
+			Writer.Response.class,
 			PostWrite::new
 		);
 
-		this.indexWriter = getContext().spawnAnonymous(IndexWriter.create(
+		this.writer = getContext().spawnAnonymous(IndexWriter.create(
 			oldDataIndexName,
 			newDataIndexName,
 			indexWriterAdapter
 		));
 
 		this.dataProcessAdapter = getContext().messageAdapter(
-			WorkProtocol.Response.class,
+			Processor.Response.class,
 			PostProcess::new
 		);
 
@@ -126,7 +126,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-			EntityRef<WorkProtocol.Command> dataProcess = sharding.entityRefFor(
+			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
 			);
@@ -138,7 +138,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp
 			);
 
-			dataProcess.tell(new WorkProtocol.Start(
+			dataProcess.tell(new Processor.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				startWorker.scheduler(),
 				heldMessage,
@@ -167,7 +167,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var response = postProcess.response();
 		var heldMessage = response.heldMessage();
 
-		if (response instanceof WorkProtocol.Success success) {
+		if (response instanceof Processor.Success success) {
 			log.infof("data process success for %s", heldMessage);
 
 			getContext().getSelf().tell(new Write(
@@ -176,7 +176,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			));
 
 		}
-		else if (response instanceof WorkProtocol.Failure failure) {
+		else if (response instanceof Processor.Failure failure) {
 
 			Exception exception = failure.exception();
 			log.error("data process failure for %s", heldMessage, exception);
@@ -194,7 +194,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var payload = write.payload();
 		var heldMessage = write.heldMessage();
 
-		indexWriter.tell(new WriteProtocol.Start(
+		writer.tell(new Writer.Start(
 			payload, heldMessage
 		));
 
@@ -205,14 +205,14 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var response = postWrite.response();
 
-		if (response instanceof WriteProtocol.Success success) {
+		if (response instanceof Writer.Success success) {
 
 			var heldMessage = success.heldMessage();
 
 			this.replyTo.tell(new Done(heldMessage));
 
 		}
-		else if (response instanceof WriteProtocol.Failure failure) {
+		else if (response instanceof Writer.Failure failure) {
 
 			var heldMessage = failure.heldMessage();
 
@@ -238,7 +238,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record PostProcess(WorkProtocol.Response response) implements Command {}
+	private record PostProcess(Processor.Response response) implements Command {}
 
 	public record Halt(ActorRef<Scheduling.Response> requester) implements Response {}
 
@@ -256,7 +256,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	) implements Command {}
 
 	private record PostWrite(
-		WriteProtocol.Response response
+		Writer.Response response
 	) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}

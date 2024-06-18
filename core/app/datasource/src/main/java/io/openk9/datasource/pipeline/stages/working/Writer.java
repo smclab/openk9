@@ -19,7 +19,7 @@ package io.openk9.datasource.pipeline.stages.working;
 
 import io.openk9.datasource.util.CborSerializable;
 
-public interface WriteProtocol {
+public interface Writer {
 
 
 	interface Command extends CborSerializable {}

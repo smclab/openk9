@@ -22,7 +22,7 @@ import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.util.CborSerializable;
 
-public interface WorkProtocol {
+public interface Processor {
 
 	interface Command extends CborSerializable {}
 
