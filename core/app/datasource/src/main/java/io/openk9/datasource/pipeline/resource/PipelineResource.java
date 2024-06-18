@@ -20,7 +20,7 @@ package io.openk9.datasource.pipeline.resource;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.pipeline.actor.enrichitem.TokenUtils;
@@ -48,7 +48,7 @@ public class PipelineResource {
 
 		EntityRef<Token.Command> tokenEntityRef = clusterSharding.entityRefFor(
 			Token.ENTITY_TYPE_KEY,
-			SchedulingKey.asString(
+			ShardingKey.asString(
 				schedulingToken.tenantId(), schedulingToken.scheduleId())
 		);
 

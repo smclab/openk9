@@ -18,7 +18,7 @@
 package io.openk9.datasource.listener;
 
 import com.google.protobuf.Empty;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
@@ -84,15 +84,15 @@ public class SchedulerInitializer {
 						)
 						.invoke(schedulers -> {
 							for (Scheduler scheduler : schedulers) {
-								SchedulingKey schedulingKey =
-									SchedulingKey.fromStrings(
+								ShardingKey shardingKey =
+									ShardingKey.fromStrings(
 										tenantResponse.getSchemaName(),
 										scheduler.getScheduleId()
 									);
 
 								MessageGateway.askRegister(
 									actorSystemProvider.getActorSystem(),
-									schedulingKey
+									shardingKey
 								);
 							}
 						});

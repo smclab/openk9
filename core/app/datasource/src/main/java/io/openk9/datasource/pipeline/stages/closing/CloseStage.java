@@ -21,7 +21,7 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
@@ -57,16 +57,16 @@ public class CloseStage extends AggregateBehavior {
 
 	@SafeVarargs
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
 		Function<List<AggregateItem.Reply>, Response> aggregator,
-		Function<SchedulingKey, Behavior<AggregateItem.Command>>... handlersFactories) {
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories) {
 
 		return Behaviors.setup(ctx -> {
 			List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
 
-			for (Function<SchedulingKey, Behavior<AggregateItem.Command>> handlerFactory : handlersFactories) {
-				var handler = ctx.spawnAnonymous(handlerFactory.apply(schedulingKey));
+			for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory : handlersFactories) {
+				var handler = ctx.spawnAnonymous(handlerFactory.apply(shardingKey));
 				handlers.add(handler);
 			}
 

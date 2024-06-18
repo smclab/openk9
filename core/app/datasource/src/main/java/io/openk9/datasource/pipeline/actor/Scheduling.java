@@ -33,7 +33,7 @@ import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import akka.cluster.typed.Subscribe;
 import com.typesafe.config.Config;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
@@ -78,7 +78,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Scheduling.class);
 	@Getter
-	private final SchedulingKey schedulingKey;
+	private final ShardingKey shardingKey;
 	private final Deque<Command> lag = new ArrayDeque<>();
 	private final Map<HeldMessage, ActorRef<Response>> heldMessages = new HashMap<>();
 	private final Duration timeout;
@@ -99,12 +99,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public Scheduling(
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<SchedulingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		super(context);
-		this.schedulingKey = schedulingKey;
+		this.shardingKey = shardingKey;
 		this.timeout = getTimeout(context);
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
@@ -129,7 +129,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
-			getSchedulingKey(),
+			getShardingKey(),
 			closeStageAdapter,
 			closeAggregator,
 			closeHandlerFactories
@@ -139,14 +139,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	@SafeVarargs
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<SchedulingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
 					Behaviors.withTimers(timers -> new Scheduling(
-						ctx, timers, schedulingKey, closeAggregator, closeHandlerFactories))))
+						ctx, timers, shardingKey, closeAggregator, closeHandlerFactories))))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 					Duration.ofSeconds(3),
 					Duration.ofSeconds(60),
@@ -312,7 +312,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.debugf(
 				"Max Workers updated to %d for %s",
 				maxWorkers,
-				schedulingKey
+				shardingKey
 			);
 		}
 
@@ -378,7 +378,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			queueManager.tell(new QueueManager.DestroyQueue(
-				SchedulingKey.asString(schedulingKey.tenantId(), schedulingKey.scheduleId()),
+				ShardingKey.asString(shardingKey.tenantId(), shardingKey.scheduleId()),
 					replyTo
 				)
 			);
@@ -430,7 +430,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			requester.tell(Success.INSTANCE);
 			lastReceived = true;
-			log.infof("%s received last message", schedulingKey);
+			log.infof("%s received last message", shardingKey);
 
 		}
 		else if (response instanceof WorkStage.Working working) {
@@ -500,7 +500,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				if (!heldMessages.isEmpty()) {
 					if (log.isDebugEnabled()) {
 						log.debugf("There are %s busy workers, for %s", heldMessages.size(),
-							schedulingKey
+							shardingKey
 						);
 					}
 
@@ -516,7 +516,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				}
 
 				if (!failureTracked && lastReceived) {
-					log.infof("%s is done", schedulingKey);
+					log.infof("%s is done", shardingKey);
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
@@ -524,11 +524,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				}
 
 				if (log.isTraceEnabled()) {
-					log.tracef("check %s expiration", schedulingKey);
+					log.tracef("check %s expiration", shardingKey);
 				}
 
 				if (isExpired()) {
-					log.infof("%s ingestion is expired", schedulingKey);
+					log.infof("%s ingestion is expired", shardingKey);
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
@@ -538,7 +538,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			case STALE:
 
 				if (heldMessages.isEmpty()) {
-					log.infof("%s is recovered", schedulingKey);
+					log.infof("%s is recovered", shardingKey);
 					getContext().getSelf().tell(
 						new UpdateStatus(
 							Scheduler.SchedulerStatus.RUNNING,
@@ -577,7 +577,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var startWrapper = getStartWrapper(ignoreRef);
 
 		getContext().pipeToSelf(
-			SchedulingService.fetchScheduler(schedulingKey),
+			SchedulingService.fetchScheduler(shardingKey),
 			(scheduler, throwable) -> new UpdateScheduler(
 				scheduler, (Exception) throwable, startWrapper)
 		);
@@ -595,7 +595,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.lastIngestionDate = lastIngestionDate;
 
 		getContext().pipeToSelf(
-			SchedulingService.persistLastIngestionDate(schedulingKey, lastIngestionDate),
+			SchedulingService.persistLastIngestionDate(shardingKey, lastIngestionDate),
 			(scheduler, throwable) -> new UpdateScheduler(
 				scheduler, (Exception) throwable, startWrapper)
 		);
@@ -627,7 +627,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var startWrapper = getStartWrapper(updateStatus.replyTo());
 
 		getContext().pipeToSelf(
-			SchedulingService.persistStatus(schedulingKey, updateStatus.status()),
+			SchedulingService.persistStatus(shardingKey, updateStatus.status()),
 			(scheduler, throwable) -> new UpdateScheduler(
 				scheduler, (Exception) throwable, startWrapper)
 		);
@@ -654,7 +654,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				.tell(new GracefulEnd(aggregated.status()));
 		}
 		else {
-			log.warnf("Unexpected response from CloseStage for %s", getSchedulingKey());
+			log.warnf("Unexpected response from CloseStage for %s", getShardingKey());
 		}
 
 		return Behaviors.same();
@@ -668,7 +668,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		);
 
 		getContext().pipeToSelf(
-			SchedulingService.persistStatus(schedulingKey, gracefulEnd.status()),
+			SchedulingService.persistStatus(shardingKey, gracefulEnd.status()),
 			(scheduler, throwable) -> new UpdateScheduler(
 				scheduler, (Exception) throwable, replyTo)
 		);
@@ -694,7 +694,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			this.workStage = getContext().spawnAnonymous(WorkStage.create(
-				getSchedulingKey(),
+				getShardingKey(),
 				scheduler,
 				workStageAdapter
 			));
@@ -703,7 +703,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	}
 
 	private void logBehavior(String behavior) {
-		log.infof("%s behavior is %s", schedulingKey, behavior);
+		log.infof("%s behavior is %s", shardingKey, behavior);
 	}
 
 	private boolean isExpired() {

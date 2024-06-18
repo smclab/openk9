@@ -22,7 +22,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
@@ -31,15 +31,15 @@ import org.jboss.logging.Logger;
 public class EvaluateStatus extends AbstractBehavior<AggregateItem.Command> {
 
 	private final static Logger log = Logger.getLogger(EvaluateStatus.class);
-	private final SchedulingKey key;
+	private final ShardingKey key;
 
-	public EvaluateStatus(ActorContext<AggregateItem.Command> context, SchedulingKey key) {
+	public EvaluateStatus(ActorContext<AggregateItem.Command> context, ShardingKey key) {
 		super(context);
 		this.key = key;
 	}
 
-	public static Behavior<AggregateItem.Command> create(SchedulingKey schedulingKey) {
-		return Behaviors.setup(ctx -> new EvaluateStatus(ctx, schedulingKey));
+	public static Behavior<AggregateItem.Command> create(ShardingKey shardingKey) {
+		return Behaviors.setup(ctx -> new EvaluateStatus(ctx, shardingKey));
 	}
 
 	@Override

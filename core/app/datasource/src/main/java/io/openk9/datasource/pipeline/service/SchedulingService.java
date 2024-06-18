@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
@@ -51,44 +51,44 @@ public class SchedulingService {
 	@Inject
 	SchedulerService schedulerService;
 
-	public static CompletableFuture<SchedulerDTO> fetchScheduler(SchedulingKey schedulingKey) {
+	public static CompletableFuture<SchedulerDTO> fetchScheduler(ShardingKey shardingKey) {
 
 		var eventBus = getEventBus();
 
-		return eventBus.request(FETCH_SCHEDULER, new FetchRequest(schedulingKey))
+		return eventBus.request(FETCH_SCHEDULER, new FetchRequest(shardingKey))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
 
 	public static CompletableFuture<SchedulerDTO> persistStatus(
-		SchedulingKey schedulingKey, Scheduler.SchedulerStatus status) {
+		ShardingKey shardingKey, Scheduler.SchedulerStatus status) {
 
 		var eventBus = getEventBus();
 
-		return eventBus.request(PERSIST_STATUS, new PersistStatusRequest(schedulingKey, status))
+		return eventBus.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
 
 	public static CompletableFuture<SchedulerDTO> persistLastIngestionDate(
-		SchedulingKey schedulingKey, OffsetDateTime lastIngestionDate) {
+		ShardingKey shardingKey, OffsetDateTime lastIngestionDate) {
 
 		var eventBus = getEventBus();
 
 		return eventBus.request(
 				PERSIST_LAST_INGESTION_DATE,
-				new PersistLastIngestionDateRequest(schedulingKey, lastIngestionDate)
+				new PersistLastIngestionDateRequest(shardingKey, lastIngestionDate)
 			)
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<List<String>> getDeletedContentIds(SchedulingKey schedulingKey) {
+	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
 		var eventBus = getEventBus();
 
 		return eventBus.request(
 				GET_DELETED_CONTENT_ID,
-				new GetDeletedContentIdRequest(schedulingKey)
+				new GetDeletedContentIdRequest(shardingKey)
 			)
 			.map(message -> (List<String>) message.body())
 			.subscribeAsCompletionStage();
@@ -97,7 +97,7 @@ public class SchedulingService {
 	@ConsumeEvent(FETCH_SCHEDULER)
 	Uni<SchedulerDTO> fetchScheduler(FetchRequest request) {
 
-		var schedulingKey = request.schedulingKey();
+		var schedulingKey = request.shardingKey();
 		var tenantId = schedulingKey.tenantId();
 		var scheduleId = schedulingKey.scheduleId();
 
@@ -112,7 +112,7 @@ public class SchedulingService {
 	Uni<SchedulerDTO> persistStatus(
 		PersistStatusRequest request) {
 
-		var schedulingKey = request.schedulingKey();
+		var schedulingKey = request.shardingKey();
 		var tenantId = schedulingKey.tenantId();
 		var scheduleId = schedulingKey.scheduleId();
 		var status = request.status();
@@ -131,7 +131,7 @@ public class SchedulingService {
 	Uni<SchedulerDTO> persistLastIngestionDate(
 		PersistLastIngestionDateRequest request) {
 
-		var schedulingKey = request.schedulingKey();
+		var schedulingKey = request.shardingKey();
 		var tenantId = schedulingKey.tenantId();
 		var scheduleId = schedulingKey.scheduleId();
 		var lastIngestionDate = request.lastIngestionDate();
@@ -148,7 +148,7 @@ public class SchedulingService {
 
 	@ConsumeEvent(GET_DELETED_CONTENT_ID)
 	Uni<List<String>> getDeletedContentId(GetDeletedContentIdRequest request) {
-		var schedulingKey = request.schedulingKey();
+		var schedulingKey = request.shardingKey();
 
 		return schedulerService.getDeletedContentIds(
 			schedulingKey.tenantId(), schedulingKey.scheduleId());
@@ -171,18 +171,18 @@ public class SchedulingService {
 			.getSingleResult();
 	}
 
-	private record FetchRequest(SchedulingKey schedulingKey) {}
+	private record FetchRequest(ShardingKey shardingKey) {}
 
 	private record PersistStatusRequest(
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		Scheduler.SchedulerStatus status
 	) {}
 
 	private record PersistLastIngestionDateRequest(
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		OffsetDateTime lastIngestionDate
 	) {}
 
-	private record GetDeletedContentIdRequest(SchedulingKey schedulingKey) {}
+	private record GetDeletedContentIdRequest(ShardingKey shardingKey) {}
 
 }

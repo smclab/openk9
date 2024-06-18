@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 
 public record HeldMessage(
-	SchedulingKey schedulingKey,
+	ShardingKey shardingKey,
 	String contentId,
 	long messageNumber,
 	long parsingDate

@@ -18,7 +18,7 @@
 package io.openk9.datasource.pipeline.base;
 
 import akka.actor.typed.Behavior;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
@@ -31,10 +31,10 @@ import java.util.List;
 
 public class BasePipeline {
 
-	public static Behavior<Scheduling.Command> createScheduling(SchedulingKey schedulingKey) {
+	public static Behavior<Scheduling.Command> createScheduling(ShardingKey shardingKey) {
 
 		return Scheduling.create(
-			schedulingKey,
+			shardingKey,
 			BasePipeline::closeResponseAggregator,
 			UpdateDatasource::create,
 			DeletionCompareNotifier::create,

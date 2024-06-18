@@ -23,7 +23,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.service.DatasourceService;
@@ -32,18 +32,18 @@ import org.jboss.logging.Logger;
 public class UpdateDatasource extends AbstractBehavior<AggregateItem.Command> {
 
 	private static final Logger log = Logger.getLogger(UpdateDatasource.class);
-	private final SchedulingKey schedulingKey;
+	private final ShardingKey shardingKey;
 
 	protected UpdateDatasource(
 		ActorContext<AggregateItem.Command> context,
-		SchedulingKey schedulingKey) {
+		ShardingKey shardingKey) {
 
 		super(context);
-		this.schedulingKey = schedulingKey;
+		this.shardingKey = shardingKey;
 	}
 
-	public static Behavior<AggregateItem.Command> create(SchedulingKey schedulingKey) {
-		return Behaviors.setup(ctx -> new UpdateDatasource(ctx, schedulingKey));
+	public static Behavior<AggregateItem.Command> create(ShardingKey shardingKey) {
+		return Behaviors.setup(ctx -> new UpdateDatasource(ctx, shardingKey));
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class UpdateDatasource extends AbstractBehavior<AggregateItem.Command> {
 	}
 
 	private Behavior<AggregateItem.Command> onStart(CloseStage.StartHandler start) {
-		var tenantId = schedulingKey.tenantId();
+		var tenantId = shardingKey.tenantId();
 		var scheduler = start.scheduler();
 		var lastIngestionDate = scheduler.getLastIngestionDate();
 		var newDataIndexId = scheduler.getNewDataIndexId();

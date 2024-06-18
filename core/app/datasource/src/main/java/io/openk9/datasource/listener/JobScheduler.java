@@ -26,7 +26,7 @@ import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import com.typesafe.config.Config;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -487,7 +487,7 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, SchedulingKey.asString(tenantName, scheduleId));
+			Scheduling.ENTITY_TYPE_KEY, ShardingKey.asString(tenantName, scheduleId));
 
 		schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
@@ -778,7 +778,7 @@ public class JobScheduler {
 							.persist(scheduler)
 							.invoke(() -> {
 								messageGateway.tell(new MessageGateway.Register(
-									SchedulingKey.asString(
+									ShardingKey.asString(
 										tenantName, scheduler.getScheduleId())));
 								ctx
 									.getSelf()

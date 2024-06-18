@@ -17,7 +17,7 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.ingestion.dto.BinaryDTO;
@@ -203,7 +203,7 @@ public class IngestionEmitter {
 	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
 		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
 
-		return SchedulingKey.asString(
+		return ShardingKey.asString(
 			ingestionPayload.getTenantId(),
 			ingestionPayload.getScheduleId()
 		);

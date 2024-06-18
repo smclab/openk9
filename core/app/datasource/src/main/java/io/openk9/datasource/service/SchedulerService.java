@@ -20,7 +20,7 @@ package io.openk9.datasource.service;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -114,7 +114,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
-						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
+						ShardingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
 					schedulingRef.tell(Scheduling.Close.INSTANCE);
@@ -135,7 +135,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 						Scheduling.ENTITY_TYPE_KEY,
-						SchedulingKey.asString(tenantId, scheduler.getScheduleId())
+						ShardingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
 					schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
@@ -154,7 +154,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					MessageGateway.askReroute(
 						actorSystem,
-						SchedulingKey.fromStrings(tenantId, scheduler.getScheduleId())
+						ShardingKey.fromStrings(tenantId, scheduler.getScheduleId())
 					);
 				}
 				return Uni.createFrom().voidItem();

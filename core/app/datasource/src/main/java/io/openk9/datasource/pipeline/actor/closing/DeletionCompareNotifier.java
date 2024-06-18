@@ -23,7 +23,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
@@ -34,17 +34,17 @@ import java.util.List;
 
 public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Command> {
 
-	private final SchedulingKey schedulingKey;
+	private final ShardingKey shardingKey;
 
 	public DeletionCompareNotifier(
 		ActorContext<AggregateItem.Command> context,
-		SchedulingKey schedulingKey) {
+		ShardingKey shardingKey) {
 
 		super(context);
-		this.schedulingKey = schedulingKey;
+		this.shardingKey = shardingKey;
 	}
 
-	public static Behavior<AggregateItem.Command> create(SchedulingKey key) {
+	public static Behavior<AggregateItem.Command> create(ShardingKey key) {
 		return Behaviors.setup(ctx -> new DeletionCompareNotifier(ctx, key));
 	}
 
@@ -62,8 +62,8 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 
 		var replyTo = start.replyTo();
 		var scheduler = start.scheduler();
-		String tenantName = schedulingKey.tenantId();
-		String scheduleId = schedulingKey.scheduleId();
+		String tenantName = shardingKey.tenantId();
+		String scheduleId = shardingKey.scheduleId();
 
 		if (scheduler.isReindex()) {
 
@@ -77,7 +77,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 
 
 			getContext().pipeToSelf(
-				SchedulingService.getDeletedContentIds(schedulingKey),
+				SchedulingService.getDeletedContentIds(shardingKey),
 				(list, throwable) -> new SendEvents(
 					list, throwable, scheduler, replyTo)
 			);
@@ -102,7 +102,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 	private Behavior<AggregateItem.Command> onSendEvents(SendEvents sendEvents) {
 		var scheduler = sendEvents.scheduler();
 		var list = sendEvents.list();
-		var tenantId = schedulingKey.tenantId();
+		var tenantId = shardingKey.tenantId();
 		var replyTo = sendEvents.replyTo();
 
 		Long datasourceId = scheduler.getDatasourceId();

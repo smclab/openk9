@@ -26,10 +26,9 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
-import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
@@ -42,7 +41,7 @@ import org.jboss.logging.Logger;
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private static final Logger log = Logger.getLogger(WorkStage.class);
-	private final SchedulingKey schedulingKey;
+	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
@@ -51,12 +50,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	public WorkStage(
 		ActorContext<Command> context,
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		SchedulerDTO scheduler,
 		ActorRef<Response> replyTo) {
 
 		super(context);
-		this.schedulingKey = schedulingKey;
+		this.shardingKey = shardingKey;
 		this.replyTo = replyTo;
 
 		ActorSystem<Void> system = getContext().getSystem();
@@ -80,12 +79,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	}
 
 	public static Behavior<Command> create(
-		SchedulingKey schedulingKey,
+		ShardingKey shardingKey,
 		SchedulerDTO scheduler,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new WorkStage(
-			ctx, schedulingKey, scheduler, replyTo));
+			ctx, shardingKey, scheduler, replyTo));
 	}
 
 	@Override
@@ -110,7 +109,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			log.warnf(
 				"The publisher has sent an HALT message. So %s will be cancelled.",
-				schedulingKey
+				shardingKey
 			);
 
 			this.replyTo.tell(new Halt(requester));
@@ -124,11 +123,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				EnrichPipelineKey.of(schedulingKey, contentId, String.valueOf(counter)).asString()
+				ShardingKey.concat(shardingKey, String.valueOf(counter)).asString()
 			);
 
 			var heldMessage = new HeldMessage(
-				schedulingKey,
+				shardingKey,
 				contentId,
 				counter,
 				parsingDateTimeStamp

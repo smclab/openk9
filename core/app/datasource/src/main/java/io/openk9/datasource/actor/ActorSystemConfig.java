@@ -22,11 +22,10 @@ import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.typed.Cluster;
 import akka.management.cluster.bootstrap.ClusterBootstrap;
 import akka.management.javadsl.AkkaManagement;
-import io.openk9.common.util.SchedulingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
-import io.openk9.datasource.pipeline.actor.EnrichPipelineKey;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -86,19 +85,19 @@ public class ActorSystemConfig {
 
 			sharding.init(Entity.of(Scheduling.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				var schedulingKey = SchedulingKey.fromString(entityId);
+				var schedulingKey = ShardingKey.fromString(entityId);
 				return BasePipeline.createScheduling(schedulingKey);
 			}));
 
 			sharding.init(Entity.of(Token.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				var schedulingKey = SchedulingKey.fromString(entityId);
+				var schedulingKey = ShardingKey.fromString(entityId);
 				return Token.create(schedulingKey);
 			}));
 
 			sharding.init(Entity.of(EnrichPipeline.ENTITY_TYPE_KEY, entityCtx -> {
 				String entityId = entityCtx.getEntityId();
-				var enrichPipelineKey = EnrichPipelineKey.fromString(entityId);
+				var enrichPipelineKey = ShardingKey.fromString(entityId);
 				return EnrichPipeline.create(enrichPipelineKey);
 			}));
 		};

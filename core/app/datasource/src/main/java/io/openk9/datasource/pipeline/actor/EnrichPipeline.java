@@ -22,6 +22,7 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
@@ -49,12 +50,12 @@ public class EnrichPipeline {
 		EntityTypeKey.create(Processor.Command.class, "enrich-pipeline");
 	private static final Logger log = Logger.getLogger(EnrichPipeline.class);
 
-	public static Behavior<Processor.Command> create(EnrichPipelineKey enrichPipelineKey) {
+	public static Behavior<Processor.Command> create(ShardingKey processKey) {
 		return Behaviors.setup(ctx -> Behaviors
 			.receive(Processor.Command.class)
 			.onMessage(Processor.Start.class, setup -> onSetup(
 				ctx,
-				enrichPipelineKey,
+				processKey,
 				setup
 			))
 			.build()
@@ -63,7 +64,7 @@ public class EnrichPipeline {
 
 	public static Behavior<Processor.Command> onSetup(
 		ActorContext<Processor.Command> ctx,
-		EnrichPipelineKey key,
+		ShardingKey processKey,
 		Processor.Start setup
 	) {
 
@@ -78,7 +79,7 @@ public class EnrichPipeline {
 		log.infof("start pipeline for datasource with id %s", scheduler.getDatasourceId());
 
 		ActorRef<HttpSupervisor.Command> supervisorActorRef =
-			ctx.spawnAnonymous(HttpSupervisor.create(key.schedulingKey()));
+			ctx.spawnAnonymous(HttpSupervisor.create(processKey.baseKey()));
 
 		return initPipeline(
 			ctx,
