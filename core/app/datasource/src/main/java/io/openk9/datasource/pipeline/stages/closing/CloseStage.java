@@ -19,51 +19,39 @@ package io.openk9.datasource.pipeline.stages.closing;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.SchedulingKey;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
+import io.openk9.datasource.pipeline.actor.common.AggregateProtocol;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class CloseStage extends AbstractBehavior<CloseStage.Command> {
+public class CloseStage extends AggregateBehavior {
 
-	private static final Logger log = Logger.getLogger(CloseStage.class);
-	private final int expectedReplies;
-	private final List<ActorRef<CloseProtocol.Command>> handlers;
-	private final ActorRef<Response> replyTo;
-	private final Function<List<CloseProtocol.Reply>, Aggregated> aggregator;
-	private final List<CloseProtocol.Reply> replies = new ArrayList<>();
 	private final SchedulingKey schedulingKey;
-	private SchedulerDTO scheduler;
 
 	public CloseStage(
 		ActorContext<Command> context,
 		SchedulingKey schedulingKey,
-		List<ActorRef<CloseProtocol.Command>> handlers,
+		List<ActorRef<AggregateProtocol.Command>> handlers,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregated> aggregator) {
+		Function<List<AggregateProtocol.Reply>, Response> aggregator) {
 
-		super(context);
+		super(context, handlers, replyTo, aggregator);
 
 		this.schedulingKey = schedulingKey;
-		this.handlers = handlers;
-		this.expectedReplies = handlers.size();
-		this.replyTo = replyTo;
-		this.aggregator = aggregator;
 	}
 
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregated> aggregator,
-		List<ActorRef<CloseProtocol.Command>> handlers) {
+		Function<List<AggregateProtocol.Reply>, Response> aggregator,
+		List<ActorRef<AggregateProtocol.Command>> handlers) {
 
 		return Behaviors.setup(ctx -> new CloseStage(
 			ctx,
@@ -78,13 +66,13 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	public static Behavior<Command> create(
 		SchedulingKey schedulingKey,
 		ActorRef<Response> replyTo,
-		Function<List<CloseProtocol.Reply>, Aggregated> aggregator,
-		Function<SchedulingKey, Behavior<CloseProtocol.Command>>... handlersFactories) {
+		Function<List<AggregateProtocol.Reply>, Response> aggregator,
+		Function<SchedulingKey, Behavior<AggregateProtocol.Command>>... handlersFactories) {
 
 		return Behaviors.setup(ctx -> {
-			List<ActorRef<CloseProtocol.Command>> handlers = new ArrayList<>();
+			List<ActorRef<AggregateProtocol.Command>> handlers = new ArrayList<>();
 
-			for (Function<SchedulingKey, Behavior<CloseProtocol.Command>> handlerFactory : handlersFactories) {
+			for (Function<SchedulingKey, Behavior<AggregateProtocol.Command>> handlerFactory : handlersFactories) {
 				var handler = ctx.spawnAnonymous(handlerFactory.apply(schedulingKey));
 				handlers.add(handler);
 			}
@@ -94,66 +82,23 @@ public class CloseStage extends AbstractBehavior<CloseStage.Command> {
 	}
 
 	@Override
-	public Receive<Command> createReceive() {
-		return newReceiveBuilder()
-			.onMessage(Start.class, this::onStart)
-			.build();
-	}
+	protected void invokeHandler(HandlerContext handlerContext) {
+		var handler = handlerContext.handler();
+		var start = handlerContext.start();
 
-	public Behavior<Command> collectAndAggregate() {
-		if (replies.size() == expectedReplies) {
-			log.infof(
-				"Aggregating response and reply to scheduler %s",
-				scheduler.getId()
-			);
-
-			var aggregate = aggregator.apply(replies);
-
-			replyTo.tell(aggregate);
-
-			return Behaviors.stopped();
-		}
-		else {
-			return newReceiveBuilder()
-				.onMessage(HandlerReply.class, this::onHandlerReply)
-				.build();
+		if (start instanceof CloseStage.Start closeStageStart) {
+			var scheduler = closeStageStart.scheduler();
+			handler.tell(new StartHandler(scheduler, handlerAdapter));
 		}
 	}
 
-	public Behavior<Command> onStart(Start start) {
-		this.scheduler = start.schedulerDTO();
-		var replyTo = getContext().messageAdapter(CloseProtocol.Reply.class, HandlerReply::new);
-
-		log.infof("Starting close handlers for scheduler with id: %s", scheduler.getId());
-
-		for (ActorRef<CloseProtocol.Command> handler : handlers) {
-			handler.tell(new CloseProtocol.Start(scheduler, replyTo));
-		}
-
-		return collectAndAggregate();
-	}
-
-	private Behavior<Command> onHandlerReply(HandlerReply handlerReply) {
-		this.replies.add(handlerReply.reply());
-
-		log.infof(
-			"Received %s of %s expected replies for scheduler %s.",
-			replies.size(),
-			expectedReplies,
-			scheduler.getId()
-		);
-
-		return collectAndAggregate();
-	}
-
-	public sealed interface Command {}
-
-	public sealed interface Response {}
-
-	public record Start(SchedulerDTO schedulerDTO) implements Command {}
-
-	private record HandlerReply(CloseProtocol.Reply reply) implements Command {}
+	public record Start(SchedulerDTO scheduler) implements AggregateBehavior.Start {}
 
 	public record Aggregated(Scheduler.SchedulerStatus status) implements Response {}
+
+	public record StartHandler(
+		SchedulerDTO scheduler,
+		ActorRef<AggregateProtocol.Reply> replyTo
+	) implements AggregateProtocol.Command {}
 
 }

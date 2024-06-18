@@ -15,17 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.stages.closing;
+package io.openk9.datasource.pipeline.actor.common;
 
-import akka.actor.typed.ActorRef;
-import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
-
-public interface CloseProtocol {
+public interface AggregateProtocol {
 
 	interface Command {}
 
 	interface Reply {}
-
-	record Start(SchedulerDTO scheduler, ActorRef<Reply> replyTo) implements Command {}
 
 }
