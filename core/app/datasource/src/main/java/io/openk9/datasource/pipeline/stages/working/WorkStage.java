@@ -117,7 +117,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				schedulingKey
 			);
 
-			this.replyTo.tell(new HaltMessage(requester));
+			this.replyTo.tell(new Halt(requester));
 
 		}
 		else if (dataPayload.getContentId() != null) {
@@ -145,17 +145,17 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				this.dataProcessAdapter
 			));
 
-			this.replyTo.tell(new WorkingMessage(heldMessage, requester));
+			this.replyTo.tell(new Working(heldMessage, requester));
 
 		}
 		else if (!dataPayload.isLast()) {
 
-			this.replyTo.tell(new InvalidMessage("content-id is null", requester));
+			this.replyTo.tell(new Invalid("content-id is null", requester));
 
 		}
 		else {
 
-			this.replyTo.tell(new LastMessage(requester));
+			this.replyTo.tell(new Last(requester));
 
 		}
 
@@ -240,14 +240,14 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private record PostProcess(WorkProtocol.Response response) implements Command {}
 
-	public record HaltMessage(ActorRef<Scheduling.Response> requester) implements Response {}
+	public record Halt(ActorRef<Scheduling.Response> requester) implements Response {}
 
-	public record LastMessage(ActorRef<Scheduling.Response> requester) implements Response {}
+	public record Last(ActorRef<Scheduling.Response> requester) implements Response {}
 
-	public record WorkingMessage(HeldMessage heldMessage, ActorRef<Scheduling.Response> requester)
+	public record Working(HeldMessage heldMessage, ActorRef<Scheduling.Response> requester)
 		implements Response {}
 
-	public record InvalidMessage(String errorMessage, ActorRef<Scheduling.Response> requester)
+	public record Invalid(String errorMessage, ActorRef<Scheduling.Response> requester)
 		implements Response {}
 
 	private record Write(

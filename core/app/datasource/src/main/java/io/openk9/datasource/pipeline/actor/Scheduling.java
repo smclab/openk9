@@ -407,14 +407,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onWorkStageResponse(WorkStageResponse workStageResponse) {
 		var response = workStageResponse.response();
 
-		if (response instanceof WorkStage.InvalidMessage invalid) {
+		if (response instanceof WorkStage.Invalid invalid) {
 
 			var requester = invalid.requester();
 
 			requester.tell(new Failure(invalid.errorMessage()));
 
 		}
-		else if (response instanceof WorkStage.HaltMessage halt) {
+		else if (response instanceof WorkStage.Halt halt) {
 
 			var requester = halt.requester();
 
@@ -424,16 +424,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
 		}
-		else if (response instanceof WorkStage.LastMessage lastMessage) {
+		else if (response instanceof WorkStage.Last last) {
 
-			var requester = lastMessage.requester();
+			var requester = last.requester();
 
 			requester.tell(Success.INSTANCE);
 			lastReceived = true;
 			log.infof("%s received last message", schedulingKey);
 
 		}
-		else if (response instanceof WorkStage.WorkingMessage working) {
+		else if (response instanceof WorkStage.Working working) {
 
 			var requester = working.requester();
 			var heldMessage = working.heldMessage();
