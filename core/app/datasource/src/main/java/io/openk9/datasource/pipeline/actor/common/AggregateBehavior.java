@@ -125,9 +125,4 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 
 	private record HandlerReply(Object reply) implements Command {}
 
-	protected record HandlerContext(
-		Starter starter,
-		ActorRef<AggregateItem.Command> handler
-	) {}
-
 }
