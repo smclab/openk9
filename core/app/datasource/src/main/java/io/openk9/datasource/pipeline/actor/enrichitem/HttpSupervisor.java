@@ -33,7 +33,6 @@ import java.time.LocalDateTime;
 
 public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
-
 	public HttpSupervisor(
 		ActorContext<Command> context, ShardingKey key) {
 
