@@ -84,13 +84,19 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 		}
 	}
 
-	protected abstract void invokeHandler(HandlerContext handlerContext);
+	/**
+	 * Map the starter mess handlers.
+	 *
+	 * @param starter the command that started the AggregateBehavior, received from the caller.
+	 */
+	protected abstract AggregateItem.Starter mapCommand(Starter starter);
 
 	private Behavior<Command> onStart(Starter starter) {
 
 		for (ActorRef<AggregateItem.Command> handler : handlers) {
-			var handlerContext = new HandlerContext(starter, handler);
-			invokeHandler(handlerContext);
+			var command = mapCommand(starter);
+
+			handler.tell(command);
 		}
 
 		return aggregation();

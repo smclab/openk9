@@ -75,14 +75,13 @@ public class CloseStage extends AggregateBehavior {
 	}
 
 	@Override
-	protected void invokeHandler(HandlerContext handlerContext) {
-		var handler = handlerContext.handler();
-		var starter = handlerContext.starter();
-
+	protected AggregateItem.Starter mapCommand(Starter starter) {
 		if (starter instanceof CloseStage.Start start) {
 			var scheduler = start.scheduler();
-			handler.tell(new StartHandler(scheduler, handlerAdapter));
+			return new StartHandler(scheduler, handlerAdapter);
 		}
+
+		return null;
 	}
 
 	public record Start(SchedulerDTO scheduler) implements Starter {}
@@ -92,6 +91,6 @@ public class CloseStage extends AggregateBehavior {
 	public record StartHandler(
 		SchedulerDTO scheduler,
 		ActorRef<AggregateItem.Reply> replyTo
-	) implements AggregateItem.Command {}
+	) implements AggregateItem.Starter {}
 
 }

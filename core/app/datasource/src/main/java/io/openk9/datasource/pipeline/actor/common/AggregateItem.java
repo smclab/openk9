@@ -17,9 +17,16 @@
 
 package io.openk9.datasource.pipeline.actor.common;
 
+import akka.actor.typed.ActorRef;
+
 public interface AggregateItem {
 
 	interface Command {}
+
+	interface Starter extends Command {
+		ActorRef<Reply> replyTo();
+
+	}
 
 	interface Reply {}
 
