@@ -85,7 +85,7 @@ public abstract class AggregateBehavior extends AbstractBehavior<AggregateBehavi
 	}
 
 	/**
-	 * Map the starter mess handlers.
+	 * Map the starter for the handlers.
 	 *
 	 * @param starter the command that started the AggregateBehavior, received from the caller.
 	 */
