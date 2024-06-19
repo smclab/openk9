@@ -43,7 +43,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
-	private final ActorRef<Writer.Command> writer;
+	private final ActorRef<Writer.Response> indexWriterAdapter;
+	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
 	private final EntityTypeKey<Processor.Command> processorType;
@@ -52,7 +53,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public WorkStage(
 		ActorContext<Command> context,
 		ShardingKey shardingKey,
-		SchedulerDTO scheduler,
 		ActorRef<Response> replyTo,
 		EntityTypeKey<Processor.Command> processorType) {
 
@@ -64,15 +64,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorSystem<Void> system = getContext().getSystem();
 		this.sharding = ClusterSharding.get(system);
 
-		var indexWriterAdapter = getContext().messageAdapter(
+		this.indexWriterAdapter = getContext().messageAdapter(
 			Writer.Response.class,
 			PostWrite::new
 		);
-
-		this.writer = getContext().spawnAnonymous(IndexWriter.create(
-			scheduler,
-			indexWriterAdapter
-		));
 
 		this.dataProcessAdapter = getContext().messageAdapter(
 			Processor.Response.class,
@@ -83,12 +78,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
-		SchedulerDTO scheduler,
 		ActorRef<Response> replyTo,
 		EntityTypeKey<Processor.Command> processorType) {
 
 		return Behaviors.setup(ctx -> new WorkStage(
-			ctx, shardingKey, scheduler, replyTo, processorType));
+			ctx, shardingKey, replyTo, processorType));
 	}
 
 	@Override
@@ -105,6 +99,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var payloadArray = startWorker.payload();
 		var requester = startWorker.requester();
+		var scheduler = startWorker.scheduler;
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -120,6 +115,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		}
 		else if (dataPayload.getContentId() != null) {
+
+			if (this.writer == null) {
+				this.writer = getContext().spawnAnonymous(IndexWriter.create(
+					scheduler,
+					indexWriterAdapter
+				));
+			}
 
 			counter++;
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
@@ -139,7 +141,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			dataProcess.tell(new Processor.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
-				startWorker.scheduler(),
+				scheduler,
 				heldMessage,
 				this.dataProcessAdapter
 			));
@@ -207,6 +209,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		if (response instanceof Writer.Success success) {
 
 			var heldMessage = success.heldMessage();
+
+			// todo new actor postwrite-aggregator
 
 			this.replyTo.tell(new Done(heldMessage));
 

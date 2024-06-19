@@ -85,8 +85,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final Duration timeout;
 	private final int workersPerNode;
 	private final TimerScheduler<Command> timers;
-	private final EntityTypeKey<Processor.Command> processorType;
-	private ActorRef<WorkStage.Command> workStage;
+	private final ActorRef<WorkStage.Command> workStage;
 	private final ActorRef<AggregateBehavior.Command> closeStage;
 	@Getter
 	private SchedulerDTO scheduler;
@@ -112,7 +111,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
 		this.timers = timers;
-		this.processorType = processorType;
 
 		var cluster = Cluster.get(getContext().getSystem());
 		var subscriber = getContext().messageAdapter(
@@ -126,6 +124,17 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		));
 
 		getContext().getSelf().tell(Setup.INSTANCE);
+
+		var workStageAdapter = getContext().messageAdapter(
+			WorkStage.Response.class,
+			WorkStageResponse::new
+		);
+
+		this.workStage = getContext().spawnAnonymous(WorkStage.create(
+			getShardingKey(),
+			workStageAdapter,
+			processorType
+		));
 
 		var closeStageAdapter = getContext().messageAdapter(
 			AggregateBehavior.Response.class,
@@ -294,7 +303,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			this.scheduler = scheduler;
-			setupWorkStage();
 
 			replyTo.tell(Success.INSTANCE);
 		}
@@ -690,24 +698,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				wrappedReplyTo.tell(response);
 				return Start.INSTANCE;
 			});
-	}
-
-	private void setupWorkStage() {
-		if (this.workStage == null && this.scheduler != null) {
-
-			var workStageAdapter = getContext().messageAdapter(
-				WorkStage.Response.class,
-				WorkStageResponse::new
-			);
-
-			this.workStage = getContext().spawnAnonymous(WorkStage.create(
-				getShardingKey(),
-				scheduler,
-				workStageAdapter,
-				processorType
-			));
-
-		}
 	}
 
 	private void logBehavior(String behavior) {
