@@ -121,14 +121,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
+			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
+
 			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
 				EnrichPipeline.ENTITY_TYPE_KEY,
 				ShardingKey.concat(shardingKey, String.valueOf(counter)).asString()
 			);
 
 			var heldMessage = new HeldMessage(
-				shardingKey,
-				contentId,
+				processKey,
 				counter,
 				parsingDateTimeStamp
 			);

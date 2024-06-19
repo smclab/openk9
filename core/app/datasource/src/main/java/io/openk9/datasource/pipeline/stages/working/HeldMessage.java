@@ -21,7 +21,6 @@ import io.openk9.common.util.ShardingKey;
 
 public record HeldMessage(
 	ShardingKey shardingKey,
-	String contentId,
 	long messageNumber,
 	long parsingDate
 ) {}
