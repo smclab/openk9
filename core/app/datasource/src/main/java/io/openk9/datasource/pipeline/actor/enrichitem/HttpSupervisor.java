@@ -50,7 +50,6 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Callback.class, this::onCallback)
 			.onMessage(Call.class, this::onCall)
 			.onMessage(ResponseWrapper.class, wrapper -> {
 
@@ -75,24 +74,24 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	private Behavior<Command> onCall(Call call) {
 
-		ActorRef<HttpProcessor.Command> actorRef =
+		ActorRef<HttpProcessor.Command> httpProcessor =
 			getContext().spawnAnonymous(
 				HttpProcessor.create(call.async, tokenActorRef));
 
-		ActorRef<HttpProcessor.Response> responseActorRef =
+		ActorRef<HttpProcessor.Response> httpProcessorAdapter =
 			getContext().messageAdapter(
 				HttpProcessor.Response.class,
 				response -> new ResponseWrapper(response, call.replyTo));
 
-		actorRef.tell(new HttpProcessor.Start(call.url, call.jsonObject, call.expiredDate, responseActorRef));
+		httpProcessor.tell(new HttpProcessor.Start(
+			call.url,
+			call.jsonObject,
+			call.expiredDate,
+			httpProcessorAdapter
+		));
 
 		return Behaviors.same();
 
-	}
-
-	private Behavior<Command> onCallback(Callback callback) {
-		tokenActorRef.tell(new Token.Callback(callback.tokenId, callback.jsonObject));
-		return Behaviors.same();
 	}
 
 	private final RecipientRef<Token.Command> tokenActorRef;
@@ -101,7 +100,6 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 	public record Call(
 		boolean async, String url, byte[] jsonObject,
 		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
-	public record Callback(String tokenId, byte[] jsonObject) implements Command {}
 	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public record Body(byte[] jsonObject) implements Response {}
