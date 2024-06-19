@@ -26,9 +26,9 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
+import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
-import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
@@ -46,17 +46,20 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
+	private final EntityTypeKey<Processor.Command> processorType;
 	private long counter = 0;
 
 	public WorkStage(
 		ActorContext<Command> context,
 		ShardingKey shardingKey,
 		SchedulerDTO scheduler,
-		ActorRef<Response> replyTo) {
+		ActorRef<Response> replyTo,
+		EntityTypeKey<Processor.Command> processorType) {
 
 		super(context);
 		this.shardingKey = shardingKey;
 		this.replyTo = replyTo;
+		this.processorType = processorType;
 
 		ActorSystem<Void> system = getContext().getSystem();
 		this.sharding = ClusterSharding.get(system);
@@ -81,10 +84,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
 		SchedulerDTO scheduler,
-		ActorRef<Response> replyTo) {
+		ActorRef<Response> replyTo,
+		EntityTypeKey<Processor.Command> processorType) {
 
 		return Behaviors.setup(ctx -> new WorkStage(
-			ctx, shardingKey, scheduler, replyTo));
+			ctx, shardingKey, scheduler, replyTo, processorType));
 	}
 
 	@Override
@@ -118,14 +122,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (dataPayload.getContentId() != null) {
 
 			counter++;
-			String contentId = dataPayload.getContentId();
 			var parsingDateTimeStamp = dataPayload.getParsingDate();
 
 			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
 			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
-				EnrichPipeline.ENTITY_TYPE_KEY,
-				ShardingKey.concat(shardingKey, String.valueOf(counter)).asString()
+				processorType,
+				processKey.asString()
 			);
 
 			var heldMessage = new HeldMessage(

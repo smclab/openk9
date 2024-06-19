@@ -98,6 +98,7 @@ public class JobScheduler {
 		String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
 	private record CopyIndexTemplate(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
+
 	private static Behavior<Command> onCopyIndexTemplate(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
 		Scheduler scheduler = cit.scheduler;

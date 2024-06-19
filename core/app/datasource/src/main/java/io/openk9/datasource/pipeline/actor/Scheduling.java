@@ -42,6 +42,7 @@ import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -84,6 +85,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private final Duration timeout;
 	private final int workersPerNode;
 	private final TimerScheduler<Command> timers;
+	private final EntityTypeKey<Processor.Command> processorType;
 	private ActorRef<WorkStage.Command> workStage;
 	private final ActorRef<AggregateBehavior.Command> closeStage;
 	@Getter
@@ -100,6 +102,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
 		ShardingKey shardingKey,
+		EntityTypeKey<Processor.Command> processorType,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
 		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
@@ -109,6 +112,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.workersPerNode = getWorkersPerNode(context);
 		this.maxWorkers = workersPerNode;
 		this.timers = timers;
+		this.processorType = processorType;
 
 		var cluster = Cluster.get(getContext().getSystem());
 		var subscriber = getContext().messageAdapter(
@@ -140,13 +144,16 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	@SafeVarargs
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
+		EntityTypeKey<Processor.Command> processorType,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
 		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
 					Behaviors.withTimers(timers -> new Scheduling(
-						ctx, timers, shardingKey, closeAggregator, closeHandlerFactories))))
+						ctx, timers, shardingKey, processorType,
+						closeAggregator, closeHandlerFactories
+					))))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 					Duration.ofSeconds(3),
 					Duration.ofSeconds(60),
@@ -696,7 +703,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			this.workStage = getContext().spawnAnonymous(WorkStage.create(
 				getShardingKey(),
 				scheduler,
-				workStageAdapter
+				workStageAdapter,
+				processorType
 			));
 
 		}
