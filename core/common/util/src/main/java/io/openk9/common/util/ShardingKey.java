@@ -17,9 +17,11 @@
 
 package io.openk9.common.util;
 
+import java.util.Arrays;
+
 public record ShardingKey(String... elements) {
 
-	public static final char SEPARATOR = '_';
+	private static final char SEPARATOR = '_';
 
 	public ShardingKey {
 		assert elements.length >= 2 : "Must have at least 2 elements (tenantId, scheduleId)";
@@ -74,6 +76,11 @@ public record ShardingKey(String... elements) {
 
 	public String asString() {
 		return asString(this);
+	}
+
+	@Override
+	public String toString() {
+		return "ShardingKey[elements=" + Arrays.toString(elements) + "]";
 	}
 
 }
