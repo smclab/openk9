@@ -184,7 +184,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 													"tokenType", "TEXT",
 													"keywordKey", keyword_value + ".keyword",
 													"label", label,
-													"value", e2.getValue(),
+													"value", name,
 													"score", 0.2f,
 													"extra", annotator.getExtraParams()
 												)
