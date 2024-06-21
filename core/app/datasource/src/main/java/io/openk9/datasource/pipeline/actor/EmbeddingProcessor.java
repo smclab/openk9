@@ -24,17 +24,11 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
-import com.jayway.jsonpath.JsonPath;
 import io.openk9.common.util.ShardingKey;
-import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;
+import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
-import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
-
-import java.time.LocalDateTime;
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
@@ -44,14 +38,8 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 	private static final Logger log = Logger.getLogger(EmbeddingProcessor.class);
 
 	private final ShardingKey processKey;
-	private final ActorRef<HttpSupervisor.Command> httpSupervisor;
-	private final Deque<Processor.Command> lag = new ArrayDeque<>();
-	private final ActorRef<HttpSupervisor.Response> httpSupervisorAdapter;
 	private ActorRef<Processor.Response> replyTo;
 	private HeldMessage heldMessage;
-	private String apiUrl;
-	private String apiKey;
-	private String jsonPath;
 
 	public EmbeddingProcessor(
 		ActorContext<Processor.Command> context,
@@ -59,42 +47,15 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 		super(context);
 		this.processKey = processKey;
-		this.httpSupervisor = getContext().spawnAnonymous(
-			HttpSupervisor.create(processKey.baseKey()));
-		this.httpSupervisorAdapter = getContext().messageAdapter(
-			HttpSupervisor.Response.class, HttpResponse::new);
 
 	}
 
 	@Override
 	public Receive<Processor.Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessageEquals(Setup.INSTANCE, this::onSetup)
-			.onAnyMessage(this::enqueue)
-			.build();
-	}
-
-	public Behavior<Processor.Command> ready() {
-		for (Processor.Command command : lag) {
-			getContext().getSelf().tell(command);
-		}
-
-		return newReceiveBuilder()
 			.onMessage(Processor.Start.class, this::onStart)
-			.onMessage(HttpResponse.class, this::onHttpResponse)
+			.onMessage(EmbeddingResponse.class, this::onEmbeddingResponse)
 			.build();
-	}
-
-	private Behavior<Processor.Command> enqueue(Processor.Command command) {
-		lag.add(command);
-		return this;
-	}
-
-	private Behavior<Processor.Command> onSetup() {
-		// TODO gets config by shardingKey (tenant, schedule)
-		// apiUrl, apiKey, JsonPath for field, Chunk Size, Chunk Type
-
-		return ready();
 	}
 
 	private Behavior<Processor.Command> onStart(Processor.Start start) {
@@ -102,39 +63,27 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		this.heldMessage = start.heldMessage();
 		this.replyTo = start.replyTo();
 
-		httpRequestCall(payload);
+		this.getContext().pipeToSelf(
+			EmbeddingService.getEmbeddedPayload(
+				processKey.tenantId(), processKey.scheduleId(), payload),
+			EmbeddingResponse::new
+		);
 
 		return this;
 	}
 
-	private void httpRequestCall(byte[] payload) {
-		var embeddingRequest = map(payload);
-		var jsonObject = Json.encode(embeddingRequest).getBytes();
 
-		httpSupervisor.tell(new HttpSupervisor.Call(
-			true,
-			apiUrl,
-			jsonObject,
-			LocalDateTime.now().plusMinutes(5),
-			this.httpSupervisorAdapter
-		));
-	}
+	private Behavior<Processor.Command> onEmbeddingResponse(EmbeddingResponse response) {
 
-	private Behavior<Processor.Command> onHttpResponse(HttpResponse httpResponse) {
+		if (response.payload != null) {
 
-		var response = httpResponse.response();
-
-		if (response instanceof HttpSupervisor.Body body) {
-
-			var payload = body.jsonObject();
-
-			replyTo.tell(new Processor.Success(payload, heldMessage));
+			replyTo.tell(new Processor.Success(response.payload, heldMessage));
 
 		}
-		else if (response instanceof HttpSupervisor.Error error) {
+		else {
 
 			replyTo.tell(new Processor.Failure(
-				new DataProcessException(error.error()),
+				new DataProcessException(response.throwable),
 				heldMessage
 			));
 
@@ -143,28 +92,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		return Behaviors.stopped();
 	}
 
-	private EmbeddingRequest map(byte[] payload) {
-		var chunk = new Chunk(2, ChunkType.DEFAULT);
-		var json = new String(payload);
-
-		String text = JsonPath.read(json, jsonPath);
-
-		return new EmbeddingRequest(chunk, apiKey, text);
-	}
-
-	private enum Setup implements Processor.Command {
-		INSTANCE
-	}
-
-	private enum ChunkType {
-		DEFAULT
-	}
-
-	private record HttpResponse(HttpSupervisor.Response response)
+	private record EmbeddingResponse(byte[] payload, Throwable throwable)
 		implements Processor.Command {}
-
-	private record EmbeddingRequest(Chunk chunk, String apiKey, String text) {}
-
-	private record Chunk(int size, ChunkType chunkType) {}
 
 }

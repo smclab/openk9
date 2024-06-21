@@ -17,17 +17,16 @@
 
 package io.openk9.datasource.events;
 
+import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 
 @ApplicationScoped
@@ -35,7 +34,6 @@ import javax.inject.Inject;
 public class DatasourceEventBus {
 
 	private static final String SEND_EVENT = "DatasourceEventBus#sendEvent";
-	private static EventBus eventBus;
 
 	public static void sendDeleteEvent(
 		String tenantId, long datasourceId, String dataIndexName, String deletedContentId) {
@@ -49,7 +47,7 @@ public class DatasourceEventBus {
 			.contentId(deletedContentId)
 			.build();
 
-		getEventBus().send(SEND_EVENT, deleteEvent);
+		EventBusInstanceHolder.getEventBus().send(SEND_EVENT, deleteEvent);
 	}
 
 	@Inject
@@ -70,11 +68,4 @@ public class DatasourceEventBus {
 		);
 	}
 
-	private static EventBus getEventBus() {
-		if (eventBus == null) {
-			eventBus = CDI.current().select(EventBus.class).get();
-		}
-
-		return eventBus;
-	}
 }

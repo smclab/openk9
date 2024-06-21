@@ -18,20 +18,19 @@
 package io.openk9.datasource.pipeline.service;
 
 import io.openk9.common.util.ShardingKey;
+import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.service.SchedulerService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.spi.CDI;
 import javax.inject.Inject;
 
 @ApplicationScoped
@@ -42,7 +41,6 @@ public class SchedulingService {
 	private final static String PERSIST_LAST_INGESTION_DATE =
 		"SchedulingService#persistLastIngestionDate";
 	private static final String GET_DELETED_CONTENT_ID = "SchedulingService#getDeletedContentId";
-	private static EventBus eventBus;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -53,9 +51,8 @@ public class SchedulingService {
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(ShardingKey shardingKey) {
 
-		var eventBus = getEventBus();
-
-		return eventBus.request(FETCH_SCHEDULER, new FetchRequest(shardingKey))
+		return EventBusInstanceHolder.getEventBus()
+			.request(FETCH_SCHEDULER, new FetchRequest(shardingKey))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
@@ -63,9 +60,8 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistStatus(
 		ShardingKey shardingKey, Scheduler.SchedulerStatus status) {
 
-		var eventBus = getEventBus();
-
-		return eventBus.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
+		return EventBusInstanceHolder.getEventBus()
+			.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
@@ -73,9 +69,8 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistLastIngestionDate(
 		ShardingKey shardingKey, OffsetDateTime lastIngestionDate) {
 
-		var eventBus = getEventBus();
-
-		return eventBus.request(
+		return EventBusInstanceHolder.getEventBus()
+			.request(
 				PERSIST_LAST_INGESTION_DATE,
 				new PersistLastIngestionDateRequest(shardingKey, lastIngestionDate)
 			)
@@ -84,9 +79,9 @@ public class SchedulingService {
 	}
 
 	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
-		var eventBus = getEventBus();
 
-		return eventBus.request(
+		return EventBusInstanceHolder.getEventBus()
+			.request(
 				GET_DELETED_CONTENT_ID,
 				new GetDeletedContentIdRequest(shardingKey)
 			)
@@ -152,14 +147,6 @@ public class SchedulingService {
 
 		return schedulerService.getDeletedContentIds(
 			schedulingKey.tenantId(), schedulingKey.scheduleId());
-	}
-
-	private static EventBus getEventBus() {
-		if (eventBus == null) {
-			eventBus = CDI.current().select(EventBus.class).get();
-		}
-
-		return eventBus;
 	}
 
 	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {

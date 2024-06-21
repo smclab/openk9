@@ -25,15 +25,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "data_index")
@@ -66,6 +68,12 @@ public class DataIndex extends K9Entity {
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
+
+	@JsonIgnore
+	@ToString.Exclude
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "vector_index_id", referencedColumnName = "id")
+	private VectorIndex vectorIndex;
 
 	public void addDocType(DocType docType) {
 		docTypes.add(docType);

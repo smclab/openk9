@@ -19,6 +19,7 @@ package io.openk9.datasource.actor;
 
 import akka.actor.typed.ActorSystem;
 import com.typesafe.config.ConfigFactory;
+import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
 import io.quarkus.runtime.Startup;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -72,11 +73,14 @@ public class ActorSystemProvider {
 			actorSystemInitializer.init(actorSystem);
 		}
 
+		EventBusInstanceHolder.setEventBus(eventBus);
+
 		eventBus.send(INITIALIZED, INITIALIZED);
 	}
 
 	@PreDestroy
 	void destroy() {
+		EmbeddingStubRegistry.clear();
 		actorSystem.terminate();
 	}
 
