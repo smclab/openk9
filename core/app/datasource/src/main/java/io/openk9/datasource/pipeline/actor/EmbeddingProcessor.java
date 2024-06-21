@@ -36,12 +36,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class Embedding extends AbstractBehavior<Processor.Command> {
+public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 	public static final EntityTypeKey<Processor.Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Processor.Command.class, "embedding-processor");
 
-	private static final Logger log = Logger.getLogger(Embedding.class);
+	private static final Logger log = Logger.getLogger(EmbeddingProcessor.class);
 
 	private final ShardingKey processKey;
 	private final ActorRef<HttpSupervisor.Command> httpSupervisor;
@@ -53,7 +53,7 @@ public class Embedding extends AbstractBehavior<Processor.Command> {
 	private String apiKey;
 	private String jsonPath;
 
-	public Embedding(
+	public EmbeddingProcessor(
 		ActorContext<Processor.Command> context,
 		ShardingKey processKey) {
 
@@ -102,6 +102,12 @@ public class Embedding extends AbstractBehavior<Processor.Command> {
 		this.heldMessage = start.heldMessage();
 		this.replyTo = start.replyTo();
 
+		httpRequestCall(payload);
+
+		return this;
+	}
+
+	private void httpRequestCall(byte[] payload) {
 		var embeddingRequest = map(payload);
 		var jsonObject = Json.encode(embeddingRequest).getBytes();
 
@@ -112,8 +118,6 @@ public class Embedding extends AbstractBehavior<Processor.Command> {
 			LocalDateTime.now().plusMinutes(5),
 			this.httpSupervisorAdapter
 		));
-
-		return this;
 	}
 
 	private Behavior<Processor.Command> onHttpResponse(HttpResponse httpResponse) {
