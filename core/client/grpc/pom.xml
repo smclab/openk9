@@ -58,6 +58,7 @@
 		<module>datasource-client-grpc</module>
 		<module>app-manager</module>
 		<module>common</module>
+		<module>text-embedding</module>
 	</modules>
 
 	<build>
