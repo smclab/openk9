@@ -21,6 +21,7 @@ import akka.actor.typed.Behavior;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
+import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
@@ -37,6 +38,7 @@ public class BasePipeline {
 		return Scheduling.create(
 			shardingKey,
 			EnrichPipeline.ENTITY_TYPE_KEY,
+			IndexWriter::create,
 			BasePipeline::closeResponseAggregator,
 			UpdateDatasource::create,
 			DeletionCompareNotifier::create,

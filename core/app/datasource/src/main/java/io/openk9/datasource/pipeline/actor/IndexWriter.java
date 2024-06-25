@@ -176,7 +176,8 @@ public class IndexWriter {
 
 			}
 
-			replyTo.tell(new Writer.Success(dataPayload, heldMessage));
+			var bytes = Json.encodeToBuffer(dataPayload).getBytes();
+			replyTo.tell(new Writer.Success(bytes, heldMessage));
 		}
 
 		return Behaviors.same();

@@ -33,7 +33,7 @@ public interface Writer {
 		implements Command {}
 
 	record Success(
-		io.openk9.datasource.processor.payload.DataPayload dataPayload,
+		byte[] dataPayload,
 		HeldMessage heldMessage
 	) implements Response {}
 

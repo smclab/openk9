@@ -29,7 +29,6 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
-import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
@@ -38,12 +37,16 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
 
+import java.util.function.BiFunction;
+
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<Writer.Response> indexWriterAdapter;
+	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
+		Behavior<Writer.Command>> writerFactory;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
@@ -54,7 +57,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorContext<Command> context,
 		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
-		EntityTypeKey<Processor.Command> processorType) {
+		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
+			Behavior<Writer.Command>> writerFactory) {
 
 		super(context);
 		this.shardingKey = shardingKey;
@@ -74,15 +79,18 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			PostProcess::new
 		);
 
+		this.writerFactory = writerFactory;
+
 	}
 
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
-		EntityTypeKey<Processor.Command> processorType) {
+		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory) {
 
 		return Behaviors.setup(ctx -> new WorkStage(
-			ctx, shardingKey, replyTo, processorType));
+			ctx, shardingKey, replyTo, processorType, writerFactory));
 	}
 
 	@Override
@@ -99,7 +107,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var payloadArray = startWorker.payload();
 		var requester = startWorker.requester();
-		var scheduler = startWorker.scheduler;
+		var scheduler = startWorker.scheduler();
 
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
@@ -117,10 +125,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (dataPayload.getContentId() != null) {
 
 			if (this.writer == null) {
-				this.writer = getContext().spawnAnonymous(IndexWriter.create(
-					scheduler,
-					indexWriterAdapter
-				));
+				this.writer = getContext()
+					.spawnAnonymous(this.writerFactory.apply(
+							scheduler,
+							indexWriterAdapter
+						)
+					);
 			}
 
 			counter++;

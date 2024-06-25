@@ -44,6 +44,7 @@ import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
+import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import lombok.Getter;
@@ -61,6 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
@@ -102,6 +104,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		TimerScheduler<Command> timers,
 		ShardingKey shardingKey,
 		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
 		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
@@ -133,7 +136,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.workStage = getContext().spawnAnonymous(WorkStage.create(
 			getShardingKey(),
 			workStageAdapter,
-			processorType
+			processorType,
+			writerFactory
 		));
 
 		var closeStageAdapter = getContext().messageAdapter(
@@ -154,13 +158,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
 		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
 		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
 					Behaviors.withTimers(timers -> new Scheduling(
-						ctx, timers, shardingKey, processorType,
+						ctx, timers, shardingKey, processorType, writerFactory,
 						closeAggregator, closeHandlerFactories
 					))))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
