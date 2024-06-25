@@ -33,6 +33,7 @@ public class SchedulerDTO {
 	private String oldDataIndexName;
 	private Long newDataIndexId;
 	private String newDataIndexName;
+	private String vectorIndexName;
 	private Scheduler.SchedulerStatus status;
 	private OffsetDateTime lastIngestionDate;
 

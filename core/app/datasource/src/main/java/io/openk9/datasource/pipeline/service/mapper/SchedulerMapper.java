@@ -41,6 +41,10 @@ public interface SchedulerMapper {
 		@Mapping(source = "oldDataIndex.name", target = "oldDataIndexName"),
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "newDataIndex.name", target = "newDataIndexName"),
+		@Mapping(
+			source = "newDataIndex.vectorIndex.name",
+			target = "vectorIndexName"
+		)
 	})
 	SchedulerDTO map(Scheduler source);
 
