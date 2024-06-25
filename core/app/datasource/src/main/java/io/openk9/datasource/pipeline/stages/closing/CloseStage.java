@@ -81,7 +81,7 @@ public class CloseStage extends AggregateBehavior {
 			return new StartHandler(scheduler, handlerAdapter);
 		}
 
-		return null;
+		throw new CloseStageException();
 	}
 
 	public record Start(SchedulerDTO scheduler) implements Starter {}

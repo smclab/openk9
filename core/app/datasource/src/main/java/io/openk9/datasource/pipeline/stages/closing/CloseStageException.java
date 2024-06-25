@@ -15,18 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor.common;
+package io.openk9.datasource.pipeline.stages.closing;
 
-import akka.actor.typed.ActorRef;
+public class CloseStageException extends RuntimeException {
 
-public interface AggregateItem {
-
-	interface Command {}
-
-	interface Starter extends Command {
-		ActorRef<Reply> replyTo();
+	public CloseStageException() {
 	}
 
-	interface Reply {}
+	public CloseStageException(String message) {
+		super(message);
+	}
+
+	public CloseStageException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public CloseStageException(Throwable cause) {
+		super(cause);
+	}
+
+	public CloseStageException(
+		String message,
+		Throwable cause,
+		boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 
 }
