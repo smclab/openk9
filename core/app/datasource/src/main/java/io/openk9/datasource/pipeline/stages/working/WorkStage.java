@@ -235,8 +235,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			this.endProcess.tell(new EndProcess.Start(payload, heldMessage));
 
-			return this;
-
 		}
 		else if (response instanceof Writer.Failure failure) {
 
@@ -258,7 +256,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			this.replyTo.tell(new Done(endProcessDone.heldMessage()));
 
-			return Behaviors.stopped();
+			return Behaviors.same();
 		}
 
 		throw new AggregateBehaviorException();
