@@ -47,12 +47,11 @@ public class EndProcess extends AggregateBehavior {
 
 	@Override
 	protected AggregateItem.Starter mapCommand(Starter starter) {
+
 		if (starter instanceof Start start) {
 			var payload = start.payload();
 			var heldMessage = start.heldMessage();
-			for (ActorRef<AggregateItem.Command> handler : handlers) {
-				handler.tell(new StartHandler(payload, heldMessage, handlerAdapter));
-			}
+			return new StartHandler(payload, heldMessage, handlerAdapter);
 		}
 
 		throw new AggregateBehaviorException();
@@ -72,7 +71,7 @@ public class EndProcess extends AggregateBehavior {
 		));
 
 		List<ActorRef<AggregateItem.Command>> newHandlers = new ArrayList<>(
-			handlers != null ? handlers : new ArrayList<>());
+			handlers != null ? handlers : List.of());
 
 		newHandlers.add(basicHandler);
 
