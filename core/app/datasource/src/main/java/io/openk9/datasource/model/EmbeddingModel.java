@@ -21,6 +21,7 @@ import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
@@ -35,6 +36,12 @@ import javax.persistence.OneToOne;
 public class EmbeddingModel extends K9Entity {
 
 	public static final String FETCH_CURRENT = "EmbeddingModel.FetchCurrent";
+
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+
+	@Column(name = "description", length = 4096)
+	private String description;
 
 	private String apiUrl;
 
