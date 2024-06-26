@@ -30,6 +30,8 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
+import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -37,6 +39,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
 
+import java.util.List;
 import java.util.function.BiFunction;
 
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
@@ -47,6 +50,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Writer.Response> indexWriterAdapter;
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
+	private final ActorRef<AggregateBehavior.Command> endProcess;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
@@ -81,6 +85,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		this.writerFactory = writerFactory;
 
+		ActorRef<AggregateBehavior.Response> endProcessAdapter = getContext().messageAdapter(
+			AggregateBehavior.Response.class,
+			EndProcessResponse::new
+		);
+
+		this.endProcess = getContext().spawnAnonymous(
+			EndProcess.create(List.of(), endProcessAdapter));
 	}
 
 	public static Behavior<Command> create(
@@ -100,6 +111,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			.onMessage(PostProcess.class, this::onPostProcess)
 			.onMessage(Write.class, this::onWrite)
 			.onMessage(PostWrite.class, this::onPostWrite)
+			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
 			.build();
 	}
 
@@ -218,11 +230,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		if (response instanceof Writer.Success success) {
 
+			var payload = success.dataPayload();
 			var heldMessage = success.heldMessage();
 
-			// todo new actor postwrite-aggregator
+			this.endProcess.tell(new EndProcess.Start(payload, heldMessage));
 
-			this.replyTo.tell(new Done(heldMessage));
+			return this;
 
 		}
 		else if (response instanceof Writer.Failure failure) {
@@ -237,6 +250,19 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 
 		return Behaviors.same();
+	}
+
+	private Behavior<Command> onEndProcessResponse(EndProcessResponse endProcessResponse) {
+
+		if (endProcessResponse.response() instanceof EndProcess.EndProcessDone endProcessDone) {
+
+			this.replyTo.tell(new Done(endProcessDone.heldMessage()));
+
+			return Behaviors.stopped();
+		}
+
+		throw new AggregateBehaviorException();
+
 	}
 
 	public sealed interface Command {}
@@ -271,6 +297,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private record PostWrite(
 		Writer.Response response
 	) implements Command {}
+
+	private record EndProcessResponse(AggregateBehavior.Response response) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
 

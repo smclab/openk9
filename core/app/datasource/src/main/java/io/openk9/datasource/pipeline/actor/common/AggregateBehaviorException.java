@@ -15,26 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.stages.closing;
+package io.openk9.datasource.pipeline.actor.common;
 
-public class CloseStageException extends RuntimeException {
+public class AggregateBehaviorException extends RuntimeException {
 
-	public CloseStageException() {
+	public AggregateBehaviorException() {
 	}
 
-	public CloseStageException(String message) {
+	public AggregateBehaviorException(String message) {
 		super(message);
 	}
 
-	public CloseStageException(String message, Throwable cause) {
+	public AggregateBehaviorException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public CloseStageException(Throwable cause) {
+	public AggregateBehaviorException(Throwable cause) {
 		super(cause);
 	}
 
-	public CloseStageException(
+	public AggregateBehaviorException(
 		String message,
 		Throwable cause,
 		boolean enableSuppression,

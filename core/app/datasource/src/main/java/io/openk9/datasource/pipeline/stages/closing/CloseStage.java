@@ -24,6 +24,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
+import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 
@@ -81,7 +82,7 @@ public class CloseStage extends AggregateBehavior {
 			return new StartHandler(scheduler, handlerAdapter);
 		}
 
-		throw new CloseStageException();
+		throw new AggregateBehaviorException();
 	}
 
 	public record Start(SchedulerDTO scheduler) implements Starter {}
