@@ -50,6 +50,14 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 	}
 
+	public static Behavior<Processor.Command> create(ShardingKey shardingKey) {
+
+		return Behaviors.setup(ctx ->
+			new EmbeddingProcessor(ctx, shardingKey)
+		);
+
+	}
+
 	@Override
 	public Receive<Processor.Command> createReceive() {
 		return newReceiveBuilder()

@@ -67,8 +67,6 @@ import java.util.function.Function;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
-	public static final EntityTypeKey<Command> ENTITY_TYPE_KEY =
-		EntityTypeKey.create(Command.class, "scheduling");
 	public static final String SCHEDULING_TIMEOUT = "io.openk9.scheduling.timeout";
 	public static final String WORKERS_PER_NODE = "io.openk9.scheduling.workers-per-node";
 	public static final int WORKERS_PER_NODE_DEFAULT = 2;

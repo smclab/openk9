@@ -18,6 +18,7 @@
 package io.openk9.datasource.pipeline.base;
 
 import akka.actor.typed.Behavior;
+import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
@@ -32,6 +33,9 @@ import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import java.util.List;
 
 public class BasePipeline {
+
+	public static final EntityTypeKey<Scheduling.Command> ENTITY_TYPE_KEY =
+		EntityTypeKey.create(Scheduling.Command.class, "base-pipeline");
 
 	public static Behavior<Scheduling.Command> createScheduling(ShardingKey shardingKey) {
 
