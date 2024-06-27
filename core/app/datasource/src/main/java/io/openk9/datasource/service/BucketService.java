@@ -506,7 +506,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				if (bucket == null) {
 					return Uni
 						.createFrom()
-						.failure(new NotFoundException("Tenant not found for id " + id));
+						.failure(new NotFoundException("Bucket not found for id " + id));
 				}
 
 				TenantBinding bucketBinding = bucket.getTenantBinding();
