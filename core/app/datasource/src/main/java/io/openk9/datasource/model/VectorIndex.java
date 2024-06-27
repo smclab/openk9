@@ -56,9 +56,11 @@ public class VectorIndex extends K9Entity {
 	private String fieldJsonPath;
 
 	@Enumerated(EnumType.STRING)
+	@Column(name = "chunk_type")
 	private ChunkType chunkType;
 
 	@Lob
+	@Column(name = "json_config")
 	private String jsonConfig;
 
 	@OneToOne(mappedBy = "vectorIndex")

@@ -45,11 +45,13 @@ public class EmbeddingModel extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@Column(name = "api_url")
 	private String apiUrl;
 
+	@Column(name = "api_key")
 	private String apiKey;
 
-	@OneToOne
+	@OneToOne(mappedBy = "embeddingModel")
 	private TenantBinding tenantBinding;
 
 }
