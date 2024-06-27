@@ -52,7 +52,7 @@ public class VectorIndex extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "vector_field", nullable = false)
+	@Column(name = "field_json_path", nullable = false)
 	private String fieldJsonPath;
 
 	@Enumerated(EnumType.STRING)
