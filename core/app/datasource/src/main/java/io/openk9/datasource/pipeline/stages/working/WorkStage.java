@@ -50,7 +50,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Writer.Response> indexWriterAdapter;
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
-	private final ActorRef<AggregateBehavior.Command> endProcess;
+	private final ActorRef<AggregateBehavior.Response> endProcessAdapter;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
@@ -85,13 +85,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		this.writerFactory = writerFactory;
 
-		ActorRef<AggregateBehavior.Response> endProcessAdapter = getContext().messageAdapter(
+		this.endProcessAdapter = getContext().messageAdapter(
 			AggregateBehavior.Response.class,
 			EndProcessResponse::new
 		);
 
-		this.endProcess = getContext().spawnAnonymous(
-			EndProcess.create(List.of(), endProcessAdapter));
 	}
 
 	public static Behavior<Command> create(
@@ -233,7 +231,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			var payload = success.dataPayload();
 			var heldMessage = success.heldMessage();
 
-			this.endProcess.tell(new EndProcess.Start(payload, heldMessage));
+			var endProcess = getContext().spawnAnonymous(EndProcess.create(
+				List.of(),
+				endProcessAdapter
+			));
+
+			endProcess.tell(new EndProcess.Start(payload, heldMessage));
 
 		}
 		else if (response instanceof Writer.Failure failure) {
