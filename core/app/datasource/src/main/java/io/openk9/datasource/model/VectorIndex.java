@@ -28,8 +28,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "vector_index")
 @NamedQuery(
 	name = VectorIndex.FETCH_BY_SCHEDULE_ID,
 	query = "select vi " +

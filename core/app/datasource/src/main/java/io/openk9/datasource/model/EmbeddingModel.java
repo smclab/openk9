@@ -25,8 +25,10 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "embedding_model")
 @NamedQuery(
 	name = EmbeddingModel.FETCH_CURRENT,
 	query = "from EmbeddingModel em join em.tenantBinding t where t is not null"
