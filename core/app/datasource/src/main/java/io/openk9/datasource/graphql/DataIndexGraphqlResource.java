@@ -41,9 +41,9 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -141,6 +141,16 @@ public class DataIndexGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.removeDocType(dataIndexId, docTypeId);
+	}
+
+	@Mutation
+	public Uni<DataIndex> bindVectorIndex(@Id long dataIndexId, @Id long vectorIndexId) {
+		return dataIndexService.bindVectorDataIndex(dataIndexId, vectorIndexId);
+	}
+
+	@Mutation
+	public Uni<DataIndex> unbindVectorIndex(@Id long dataIndexId) {
+		return dataIndexService.unbindVectorDataIndex(dataIndexId);
 	}
 
 	@Subscription

@@ -26,6 +26,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -76,6 +77,35 @@ public class DataIndexService
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
+	}
+
+	public Uni<DataIndex> bindVectorDataIndex(long dataIndexId, long vectorIndexId) {
+
+		return sessionFactory.withTransaction((s, t) -> s
+			.find(DataIndex.class, dataIndexId)
+			.flatMap(dataIndex -> s
+				.find(VectorIndex.class, vectorIndexId)
+				.flatMap(vectorIndex -> {
+					dataIndex.setVectorIndex(vectorIndex);
+					return s.persist(dataIndex)
+						.map(unused -> dataIndex);
+				})
+			)
+		);
+
+	}
+
+	public Uni<DataIndex> unbindVectorDataIndex(long dataIndexId) {
+
+		return sessionFactory.withTransaction((s, t) -> s
+			.find(DataIndex.class, dataIndexId)
+			.flatMap(dataIndex -> {
+				dataIndex.setVectorIndex(null);
+				return s.persist(dataIndex)
+					.map(unused -> dataIndex);
+			})
+		);
+
 	}
 
 	public Uni<Set<DocType>> getDocTypes(DataIndex dataIndex) {
