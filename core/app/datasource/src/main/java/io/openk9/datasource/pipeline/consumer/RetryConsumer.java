@@ -29,7 +29,6 @@ import io.openk9.datasource.pipeline.actor.Scheduling;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -62,14 +61,6 @@ public class RetryConsumer extends BaseConsumer {
 		long count = (long) xDeath.getOrDefault("count", 0L);
 
 		if (count < maxRetries) {
-			if (log.isTraceEnabled()) {
-				log.tracef(
-					"(count < maxRetries): %s < %s for payload with hashCode %s",
-					count,
-					maxRetries,
-					Arrays.hashCode(body)
-				);
-			}
 			getChannel().basicPublish(
 				QueueManager.AMQ_TOPIC_EXCHANGE,
 				queueBind.getMainKey(),
