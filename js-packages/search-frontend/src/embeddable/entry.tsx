@@ -356,6 +356,7 @@ export type Configuration = {
   details: Element | string | null;
   filters: Element | string | null;
   login: Element | string | null;
+  queryStringValues: queryStringValues;
   results: Element | string | null;
   search: Element | string | null;
   sortable: Element | string | null;
@@ -418,6 +419,7 @@ const defaultConfiguration: Configuration = {
   memoryResults: null,
   numberResult: null,
   numberResultOfFilters: null,
+  queryStringValues: null,
   removeFilters: null,
   resultList: null,
   resultListPagination: null,
@@ -476,3 +478,8 @@ declare global {
     OpenK9: typeof OpenK9;
   }
 }
+
+export type queryStringValues =
+  | ("text" | "selection" | "textOnChange" | "filters")[]
+  | null
+  | undefined;

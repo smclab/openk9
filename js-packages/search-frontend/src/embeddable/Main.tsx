@@ -80,6 +80,12 @@ export function Main({
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
   const isActiveSkeleton = configuration?.isActiveSkeleton || false;
   const viewButton = configuration?.viewButton;
+  const queryStringValues = configuration?.queryStringValues || [
+    "text",
+    "selection",
+    "textOnChange",
+    "filters",
+  ];
   const skeletonCustom = {
     tabs: configuration.skeletonTabsCustom,
     results: configuration.skeletonResultsCustom,
@@ -97,12 +103,14 @@ export function Main({
     useKeycloak,
     useQueryString,
     defaultString: configuration.defaultString || "",
+    queryStringValues,
   });
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
     useSelections({
       useKeycloak,
       useQueryString,
       defaultString: configuration.defaultString || "",
+      queryStringValues,
     });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
