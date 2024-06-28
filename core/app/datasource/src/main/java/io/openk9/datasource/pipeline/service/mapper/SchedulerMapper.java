@@ -42,7 +42,7 @@ public interface SchedulerMapper {
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "newDataIndex.name", target = "newDataIndexName"),
 		@Mapping(
-			source = "newDataIndex.vectorIndex.name",
+			source = "oldDataIndex.vectorIndex.name",
 			target = "vectorIndexName"
 		)
 	})
