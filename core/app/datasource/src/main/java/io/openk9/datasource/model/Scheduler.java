@@ -47,8 +47,14 @@ import javax.persistence.OneToOne;
 	@NamedEntityGraph(
 		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
 		attributeNodes = {
-			@NamedAttributeNode(value = "oldDataIndex"),
-			@NamedAttributeNode(value = "newDataIndex")
+			@NamedAttributeNode(
+				value = "oldDataIndex",
+				subgraph = "dataIndex-subgraph"
+			),
+			@NamedAttributeNode(
+				value = "newDataIndex",
+				subgraph = "dataIndex-subgraph"
+			)
 		}
 	),
 	@NamedEntityGraph(
@@ -84,6 +90,12 @@ import javax.persistence.OneToOne;
 				name = "enrichPipelineItems-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(value = "enrichItem")
+				}
+			),
+			@NamedSubgraph(
+				name = "dataIndex-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = "vectorIndex")
 				}
 			)
 		}
