@@ -31,10 +31,12 @@ import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -197,9 +199,54 @@ public class JobScheduler {
 			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, sessionFactory, messageGateway, ssi))
 			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
 			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, sessionFactory, messageGateway, pndi))
+			.onMessage(
+				StartVectorPipeline.class,
+				msg -> onStartVectorPipeline(ctx, sessionFactory, messageGateway, msg)
+			)
 			.onMessage(CancelScheduling.class, cs -> onCancelScheduling(ctx, cs))
 			.build();
 
+	}
+
+	private static Behavior<Command> onStartVectorPipeline(
+		ActorContext<Command> ctx,
+		Mutiny.SessionFactory sessionFactory,
+		ActorRef<MessageGateway.Command> messageGateway,
+		StartVectorPipeline msg) {
+
+		var tenantName = msg.tenantName();
+		var scheduler = msg.scheduler();
+
+		var oldDataIndex = scheduler.getOldDataIndex();
+
+		if (oldDataIndex == null) {
+			return Behaviors.same();
+		}
+
+		var vectorIndex = oldDataIndex.getVectorIndex();
+
+		if (vectorIndex == null) {
+			return Behaviors.same();
+		}
+
+		var scheduleId = scheduler.getScheduleId();
+		var vScheduleId = scheduleId + "-vector-pipeline";
+
+		var vScheduler = new Scheduler();
+		vScheduler.setScheduleId(vScheduleId);
+		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+		vScheduler.setDatasource(scheduler.getDatasource());
+		vScheduler.setOldDataIndex(oldDataIndex);
+
+		sessionFactory.withTransaction(tenantName, (s, t) ->
+			s.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+				.getSingleResult()
+				.flatMap(embeddingModel -> s.persist(vScheduler))
+				.invoke(() -> messageGateway.tell(new MessageGateway.Register(
+					ShardingKey.asString(tenantName, vScheduleId))))
+		);
+
+		return Behaviors.same();
 	}
 
 	public static Behavior<Command> create(
@@ -488,7 +535,7 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, ShardingKey.asString(tenantName, scheduleId));
+			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantName, scheduleId));
 
 		schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
 
@@ -659,6 +706,7 @@ public class JobScheduler {
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
 						"left join fetch d.dataIndex di " +
+						"left join fetch di.vectorIndex vi " +
 						"left join fetch di.docTypes " +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", datasourceId)
@@ -785,6 +833,8 @@ public class JobScheduler {
 									.getSelf()
 									.tell(new InvokePluginDriverInternal(
 										tenantName, scheduler, startFromFirst));
+
+								ctx.getSelf().tell(new StartVectorPipeline(tenantName, scheduler));
 							});
 					}
 				)
@@ -815,5 +865,7 @@ public class JobScheduler {
 	}
 
 	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
+
+	public record StartVectorPipeline(String tenantName, Scheduler scheduler) implements Command {}
 
 }
