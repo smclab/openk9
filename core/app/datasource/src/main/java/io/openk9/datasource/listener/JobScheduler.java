@@ -834,7 +834,6 @@ public class JobScheduler {
 									.tell(new InvokePluginDriverInternal(
 										tenantName, scheduler, startFromFirst));
 
-								ctx.getSelf().tell(new StartVectorPipeline(tenantName, scheduler));
 							});
 					}
 				)
