@@ -55,6 +55,14 @@ import javax.persistence.OneToOne;
 				value = "newDataIndex",
 				subgraph = "dataIndex-subgraph"
 			)
+		},
+		subgraphs = {
+			@NamedSubgraph(
+				name = "dataIndex-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = "vectorIndex")
+				}
+			)
 		}
 	),
 	@NamedEntityGraph(
@@ -64,8 +72,14 @@ import javax.persistence.OneToOne;
 				value = "datasource",
 				subgraph = "datasource-subgraph"
 			),
-			@NamedAttributeNode(value = "oldDataIndex"),
-			@NamedAttributeNode(value = "newDataIndex")
+			@NamedAttributeNode(
+				value = "oldDataIndex",
+				subgraph = "dataIndex-subgraph"
+			),
+			@NamedAttributeNode(
+				value = "newDataIndex",
+				subgraph = "dataIndex-subgraph"
+			)
 		},
 		subgraphs = {
 			@NamedSubgraph(
