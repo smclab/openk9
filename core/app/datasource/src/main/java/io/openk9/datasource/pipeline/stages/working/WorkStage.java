@@ -32,6 +32,7 @@ import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.quarkus.runtime.util.ExceptionUtil;
@@ -39,8 +40,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
@@ -51,6 +54,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
 	private final ActorRef<AggregateBehavior.Response> endProcessAdapter;
+	private final List<ActorRef<AggregateItem.Command>> endProcessHandlers;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
@@ -61,14 +65,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorContext<Command> context,
 		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
-			Behavior<Writer.Command>> writerFactory) {
+		Configurations configurations) {
 
 		super(context);
 		this.shardingKey = shardingKey;
 		this.replyTo = replyTo;
-		this.processorType = processorType;
+		this.processorType = configurations.processorType();
 
 		ActorSystem<Void> system = getContext().getSystem();
 		this.sharding = ClusterSharding.get(system);
@@ -83,23 +85,45 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			PostProcess::new
 		);
 
-		this.writerFactory = writerFactory;
+		this.writerFactory = configurations.writerFactory();
 
 		this.endProcessAdapter = getContext().messageAdapter(
 			AggregateBehavior.Response.class,
 			EndProcessResponse::new
 		);
 
+		List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
+		for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory
+			: configurations.handlersFactories()) {
+
+			var handlerBehavior = handlerFactory.apply(shardingKey);
+			var handler = context.spawnAnonymous(handlerBehavior);
+
+			handlers.add(handler);
+		}
+
+		endProcessHandlers = handlers;
 	}
 
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory) {
+		Configurations configurations) {
 
 		return Behaviors.setup(ctx -> new WorkStage(
-			ctx, shardingKey, replyTo, processorType, writerFactory));
+			ctx, shardingKey, replyTo, configurations));
+	}
+
+	public record Configurations(
+		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories
+	) {
+
+		@SafeVarargs
+		public Configurations {
+		}
+
 	}
 
 	@Override

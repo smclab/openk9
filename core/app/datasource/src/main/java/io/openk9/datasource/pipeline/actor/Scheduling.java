@@ -27,7 +27,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.ReceiveBuilder;
 import akka.actor.typed.javadsl.TimerScheduler;
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
@@ -37,14 +36,11 @@ import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
-import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
-import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
-import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import lombok.Getter;
@@ -59,11 +55,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
@@ -96,15 +89,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private OffsetDateTime lastIngestionDate;
 	private int nodes = 0;
 
-	@SafeVarargs
 	public Scheduling(
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
 		ShardingKey shardingKey,
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
-		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
+		WorkStage.Configurations workStageConfigurations,
+		CloseStage.Configurations closeStageConfigurations) {
 
 		super(context);
 		this.shardingKey = shardingKey;
@@ -134,8 +124,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.workStage = getContext().spawnAnonymous(WorkStage.create(
 			getShardingKey(),
 			workStageAdapter,
-			processorType,
-			writerFactory
+			workStageConfigurations
 		));
 
 		var closeStageAdapter = getContext().messageAdapter(
@@ -146,25 +135,22 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
 			getShardingKey(),
 			closeStageAdapter,
-			closeAggregator,
-			closeHandlerFactories
+			closeStageConfigurations
 		));
 
 	}
 
-	@SafeVarargs
 	public static Behavior<Command> create(
 		ShardingKey shardingKey,
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
-		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> closeAggregator,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... closeHandlerFactories) {
+		WorkStage.Configurations workStageConfigurations,
+		CloseStage.Configurations closeStageConfigurations) {
 
 		return Behaviors.<Command>supervise(
 				Behaviors.setup(ctx ->
 					Behaviors.withTimers(timers -> new Scheduling(
-						ctx, timers, shardingKey, processorType, writerFactory,
-						closeAggregator, closeHandlerFactories
+						ctx, timers, shardingKey,
+						workStageConfigurations,
+						closeStageConfigurations
 					))))
 			.onFailure(SupervisorStrategy.restartWithBackoff(
 					Duration.ofSeconds(3),

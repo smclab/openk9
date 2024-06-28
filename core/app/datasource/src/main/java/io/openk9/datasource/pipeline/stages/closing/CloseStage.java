@@ -44,35 +44,29 @@ public class CloseStage extends AggregateBehavior {
 	}
 
 	public static Behavior<Command> create(
-		ActorRef<Response> replyTo,
-		Function<List<AggregateItem.Reply>, Response> aggregator,
-		List<ActorRef<AggregateItem.Command>> handlers) {
-
-		return Behaviors.setup(ctx -> new CloseStage(
-			ctx,
-			replyTo,
-			handlers,
-			aggregator
-		));
-	}
-
-	@SafeVarargs
-	public static Behavior<Command> create(
 		ShardingKey shardingKey,
 		ActorRef<Response> replyTo,
-		Function<List<AggregateItem.Reply>, Response> aggregator,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories) {
+		Configurations configurations) {
 
 		return Behaviors.setup(ctx -> {
 			List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
 
-			for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory : handlersFactories) {
+			for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory : configurations.handlersFactories()) {
 				var handler = ctx.spawnAnonymous(handlerFactory.apply(shardingKey));
 				handlers.add(handler);
 			}
 
-			return new CloseStage(ctx, replyTo, handlers, aggregator);
+			return new CloseStage(ctx, replyTo, handlers, configurations.aggregator());
 		});
+	}
+
+	public record Configurations(
+		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> aggregator,
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories
+	) {
+		@SafeVarargs
+		public Configurations {}
+
 	}
 
 	@Override

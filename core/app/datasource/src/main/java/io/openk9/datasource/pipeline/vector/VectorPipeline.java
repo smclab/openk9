@@ -24,6 +24,8 @@ import io.openk9.datasource.pipeline.actor.EmbeddingProcessor;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.VectorIndexWriter;
 import io.openk9.datasource.pipeline.base.BasePipeline;
+import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+import io.openk9.datasource.pipeline.stages.working.WorkStage;
 
 public class VectorPipeline {
 
@@ -34,9 +36,11 @@ public class VectorPipeline {
 
 		return Scheduling.create(
 			shardingKey,
-			EmbeddingProcessor.ENTITY_TYPE_KEY,
-			VectorIndexWriter::create,
-			BasePipeline::closeResponseAggregator
+			new WorkStage.Configurations(
+				EmbeddingProcessor.ENTITY_TYPE_KEY,
+				VectorIndexWriter::create
+			),
+			new CloseStage.Configurations(BasePipeline::closeResponseAggregator)
 		);
 	}
 
