@@ -29,6 +29,7 @@ import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -113,7 +114,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-						Scheduling.ENTITY_TYPE_KEY,
+						BasePipeline.ENTITY_TYPE_KEY,
 						ShardingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 
@@ -134,7 +135,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-						Scheduling.ENTITY_TYPE_KEY,
+						BasePipeline.ENTITY_TYPE_KEY,
 						ShardingKey.asString(tenantId, scheduler.getScheduleId())
 					);
 

@@ -27,6 +27,7 @@ import com.typesafe.config.Config;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.base.BasePipeline;
 
 import java.time.Duration;
 
@@ -54,7 +55,7 @@ public abstract class BaseConsumer extends DefaultConsumer {
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 		return clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulingKey());
+			BasePipeline.ENTITY_TYPE_KEY, queueBind.schedulingKey());
 	}
 
 	private static Duration getTimeout(Config config) {

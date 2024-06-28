@@ -42,6 +42,7 @@ import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
 import io.openk9.datasource.pipeline.consumer.MainConsumer;
 import io.openk9.datasource.pipeline.consumer.RetryConsumer;
@@ -127,7 +128,7 @@ public class MessageGateway
 		ClusterSharding clusterSharding = ClusterSharding.get(system);
 
 		EntityRef<Scheduling.Command> entityRef = clusterSharding.entityRefFor(
-			Scheduling.ENTITY_TYPE_KEY, queueBind.schedulingKey());
+			BasePipeline.ENTITY_TYPE_KEY, queueBind.schedulingKey());
 
 		AskPattern.ask(
 			entityRef,
