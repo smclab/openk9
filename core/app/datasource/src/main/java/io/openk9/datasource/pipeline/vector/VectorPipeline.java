@@ -32,6 +32,8 @@ public class VectorPipeline {
 	public static final EntityTypeKey<Scheduling.Command> ENTITY_TYPE_KEY =
 		EntityTypeKey.create(Scheduling.Command.class, "vector-pipeline");
 
+	public static final String VECTOR_PIPELINE_SUFFIX = "-vector-pipeline";
+
 	public static Behavior<Scheduling.Command> createScheduling(ShardingKey shardingKey) {
 
 		return Scheduling.create(

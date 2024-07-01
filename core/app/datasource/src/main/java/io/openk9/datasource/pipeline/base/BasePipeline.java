@@ -28,6 +28,7 @@ import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
+import io.openk9.datasource.pipeline.actor.working.Forward;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
 
@@ -44,7 +45,8 @@ public class BasePipeline {
 			shardingKey,
 			new WorkStage.Configurations(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				IndexWriter::create
+				IndexWriter::create,
+				Forward::create
 			),
 			new CloseStage.Configurations(
 				BasePipeline::closeResponseAggregator,

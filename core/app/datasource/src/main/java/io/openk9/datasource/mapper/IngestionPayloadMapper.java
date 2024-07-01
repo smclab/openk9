@@ -20,6 +20,7 @@ package io.openk9.datasource.mapper;
 import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -41,6 +42,9 @@ public interface IngestionPayloadMapper {
 		source = "datasourcePayload"
 	)
 	DataPayload map(IngestionPayload ingestionPayload);
+
+	@InheritInverseConfiguration
+	IngestionPayload map(DataPayload dataPayload);
 
 	@Mappings(
 		{

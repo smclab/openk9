@@ -37,6 +37,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.base.BasePipeline;
+import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -76,7 +77,7 @@ import java.util.UUID;
 public class JobScheduler {
 
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
-	
+
 	public sealed interface Command extends CborSerializable {}
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String cron
@@ -230,7 +231,7 @@ public class JobScheduler {
 		}
 
 		var scheduleId = scheduler.getScheduleId();
-		var vScheduleId = scheduleId + "-vector-pipeline";
+		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
 
 		var vScheduler = new Scheduler();
 		vScheduler.setScheduleId(vScheduleId);
