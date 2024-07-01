@@ -36,7 +36,7 @@ import javax.persistence.Table;
 	name = VectorIndex.FETCH_BY_SCHEDULE_ID,
 	query = "select vi " +
 			" from Scheduler s " +
-			" join s.newDataIndex di " +
+			" join s.oldDataIndex di " +
 			" join di.vectorIndex vi " +
 			" where s.scheduleId = :scheduleId"
 )
