@@ -72,7 +72,7 @@ public class InternalVectorPipelineIngestionService {
 		var scheduleId = shardingKey.scheduleId();
 		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
 
-		return sessionFactory.withStatelessSession((s -> s
+		return sessionFactory.withStatelessSession(tenantId, (s -> s
 			.createNamedQuery(VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
 			.setParameter("scheduleId", scheduleId)
 			.getSingleResult()
