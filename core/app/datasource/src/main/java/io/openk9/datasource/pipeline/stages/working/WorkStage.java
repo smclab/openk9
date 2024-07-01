@@ -94,7 +94,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
 		for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory
-			: configurations.handlersFactories()) {
+			: configurations.endProcessHandlers()) {
 
 			var handlerBehavior = handlerFactory.apply(shardingKey);
 			var handler = context.spawnAnonymous(handlerBehavior);
@@ -114,16 +114,35 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			ctx, shardingKey, replyTo, configurations));
 	}
 
-	public record Configurations(
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories
-	) {
+	private Behavior<Command> onPostWrite(PostWrite postWrite) {
 
-		@SafeVarargs
-		public Configurations {
+		var response = postWrite.response();
+
+		if (response instanceof Writer.Success success) {
+
+			var payload = success.dataPayload();
+			var heldMessage = success.heldMessage();
+
+			var endProcess = getContext().spawnAnonymous(EndProcess.create(
+				endProcessHandlers,
+				endProcessAdapter
+			));
+
+			endProcess.tell(new EndProcess.Start(payload, heldMessage));
+
+		}
+		else if (response instanceof Writer.Failure failure) {
+
+			var heldMessage = failure.heldMessage();
+
+			this.replyTo.tell(new Failed(
+				ExceptionUtil.generateStackTrace(failure.exception()),
+				heldMessage
+			));
+
 		}
 
+		return Behaviors.same();
 	}
 
 	@Override
@@ -246,35 +265,16 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onPostWrite(PostWrite postWrite) {
+	public record Configurations(
+		EntityTypeKey<Processor.Command> processorType,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
+		Function<ShardingKey, Behavior<AggregateItem.Command>>... endProcessHandlers
+	) {
 
-		var response = postWrite.response();
-
-		if (response instanceof Writer.Success success) {
-
-			var payload = success.dataPayload();
-			var heldMessage = success.heldMessage();
-
-			var endProcess = getContext().spawnAnonymous(EndProcess.create(
-				List.of(),
-				endProcessAdapter
-			));
-
-			endProcess.tell(new EndProcess.Start(payload, heldMessage));
-
-		}
-		else if (response instanceof Writer.Failure failure) {
-
-			var heldMessage = failure.heldMessage();
-
-			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(failure.exception()),
-				heldMessage
-			));
-
+		@SafeVarargs
+		public Configurations {
 		}
 
-		return Behaviors.same();
 	}
 
 	private Behavior<Command> onEndProcessResponse(EndProcessResponse endProcessResponse) {
