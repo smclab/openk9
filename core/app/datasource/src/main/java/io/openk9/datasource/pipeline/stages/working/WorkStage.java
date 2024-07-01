@@ -54,7 +54,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
 	private final ActorRef<AggregateBehavior.Response> endProcessAdapter;
-	private final List<ActorRef<AggregateItem.Command>> endProcessHandlers;
+	private final List<Behavior<AggregateItem.Command>> endProcessHandlersBehaviors;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
@@ -92,17 +92,16 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			EndProcessResponse::new
 		);
 
-		List<ActorRef<AggregateItem.Command>> handlers = new ArrayList<>();
+		List<Behavior<AggregateItem.Command>> handlerBehaviors = new ArrayList<>();
 		for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory
 			: configurations.endProcessHandlers()) {
 
 			var handlerBehavior = handlerFactory.apply(shardingKey);
-			var handler = context.spawnAnonymous(handlerBehavior);
 
-			handlers.add(handler);
+			handlerBehaviors.add(handlerBehavior);
 		}
 
-		endProcessHandlers = handlers;
+		endProcessHandlersBehaviors = handlerBehaviors;
 	}
 
 	public static Behavior<Command> create(
@@ -122,6 +121,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var payload = success.dataPayload();
 			var heldMessage = success.heldMessage();
+
+			List<ActorRef<AggregateItem.Command>> endProcessHandlers = new ArrayList<>();
+
+			for (Behavior<AggregateItem.Command> behavior : endProcessHandlersBehaviors) {
+				var endProcessHandler = getContext().spawnAnonymous(behavior);
+				endProcessHandlers.add(endProcessHandler);
+			}
 
 			var endProcess = getContext().spawnAnonymous(EndProcess.create(
 				endProcessHandlers,
