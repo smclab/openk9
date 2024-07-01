@@ -102,6 +102,48 @@ public class JobScheduler {
 	private record CopyIndexTemplate(
 		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
 
+	private static void persistScheduler(
+		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
+		ActorRef<MessageGateway.Command> messageGateway, String tenantName, Scheduler scheduler,
+		boolean startFromFirst) {
+
+		VertxUtil.runOnContext(() ->
+			sessionFactory
+				.withTransaction(tenantName, (s, t) ->  {
+					DataIndex oldDataIndex = scheduler.getOldDataIndex();
+					DataIndex newDataIndex = scheduler.getNewDataIndex();
+
+					if (oldDataIndex != null && newDataIndex != null) {
+						Set<DocType> docTypes = oldDataIndex.getDocTypes();
+						if (docTypes != null && !docTypes.isEmpty()) {
+							Set<DocType> refreshed = new LinkedHashSet<>();
+
+							for (DocType docType : docTypes) {
+								refreshed.add(s.getReference(docType));
+							}
+							newDataIndex.setDocTypes(refreshed);
+						}
+					}
+
+					return s
+							.persist(scheduler)
+							.invoke(() -> {
+								messageGateway.tell(new MessageGateway.Register(
+									ShardingKey.asString(
+										tenantName, scheduler.getScheduleId())));
+
+								ctx.getSelf()
+									.tell(new InvokePluginDriverInternal(
+										tenantName, scheduler, startFromFirst));
+
+								ctx.getSelf()
+									.tell(new StartVectorPipeline(tenantName, scheduler));
+							});
+					}
+				)
+		);
+	}
+
 	private static Behavior<Command> onCopyIndexTemplate(
 		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
 		Scheduler scheduler = cit.scheduler;
@@ -801,45 +843,7 @@ public class JobScheduler {
 		String tenantName, Scheduler scheduler, JobSchedulerException exception
 	) implements Command {}
 
-	private static void persistScheduler(
-		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
-		ActorRef<MessageGateway.Command> messageGateway, String tenantName, Scheduler scheduler,
-		boolean startFromFirst) {
-
-		VertxUtil.runOnContext(() ->
-			sessionFactory
-				.withTransaction(tenantName, (s, t) ->  {
-					DataIndex oldDataIndex = scheduler.getOldDataIndex();
-					DataIndex newDataIndex = scheduler.getNewDataIndex();
-
-					if (oldDataIndex != null && newDataIndex != null) {
-						Set<DocType> docTypes = oldDataIndex.getDocTypes();
-						if (docTypes != null && !docTypes.isEmpty()) {
-							Set<DocType> refreshed = new LinkedHashSet<>();
-
-							for (DocType docType : docTypes) {
-								refreshed.add(s.getReference(docType));
-							}
-							newDataIndex.setDocTypes(refreshed);
-						}
-					}
-
-					return s
-							.persist(scheduler)
-							.invoke(() -> {
-								messageGateway.tell(new MessageGateway.Register(
-									ShardingKey.asString(
-										tenantName, scheduler.getScheduleId())));
-								ctx
-									.getSelf()
-									.tell(new InvokePluginDriverInternal(
-										tenantName, scheduler, startFromFirst));
-
-							});
-					}
-				)
-		);
-	}
+	private record StartVectorPipeline(String tenantName, Scheduler scheduler) implements Command {}
 
 	private record CancelScheduling(String tenantName, Scheduler scheduler) implements Command {}
 
@@ -866,6 +870,5 @@ public class JobScheduler {
 
 	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
 
-	public record StartVectorPipeline(String tenantName, Scheduler scheduler) implements Command {}
 
 }
