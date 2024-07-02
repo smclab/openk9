@@ -24,7 +24,7 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
@@ -47,7 +47,7 @@ public class InternalVectorPipelineIngestionService {
 		Logger.getLogger(InternalVectorPipelineIngestionService.class);
 	@Inject
 	@Channel("internal-ingest")
-	Emitter<IngestionPayload> emitter;
+	Emitter<IngestionIndexWriterPayload> emitter;
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
@@ -96,7 +96,11 @@ public class InternalVectorPipelineIngestionService {
 					.build()
 			);
 
-			emitter.send(Message.of(ingestionPayload, metadata));
+			var ingestionIndexWriterPayload = IngestionIndexWriterPayload.builder()
+				.ingestionPayload(ingestionPayload)
+				.build();
+
+			emitter.send(Message.of(ingestionIndexWriterPayload, metadata));
 
 		}).onFailure().invoke((throwable) ->
 			log.error("No vector index for scheduleId %s", scheduleId, throwable)
