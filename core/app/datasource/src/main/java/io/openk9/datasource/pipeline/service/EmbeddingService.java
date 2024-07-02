@@ -63,13 +63,13 @@ public class EmbeddingService {
 				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
 
 				var apiKey = configurations.apiKey();
+				var indexName = configurations.indexName();
 				var jsonConfig = StructUtils.fromJson(configurations.jsonConfig());
 				var chunkType = mapChunkType(configurations);
 				var documentContext =
 					JsonPath.using(VertxJsonNodeJsonProvider.CONFIGURATION).parseUtf8(payload);
 
 				String text = documentContext.read(configurations.fieldJsonPath);
-				String indexName = documentContext.read("$.indexName");
 				String contentId = documentContext.read("$.contentId");
 				Map<String, List<String>> acl = documentContext.read("$.acl");
 
@@ -122,7 +122,8 @@ public class EmbeddingService {
 							embeddingModel.getApiKey(),
 							vectorIndex.getFieldJsonPath(),
 							vectorIndex.getChunkType(),
-							vectorIndex.getJsonConfig()
+							vectorIndex.getJsonConfig(),
+							vectorIndex.getDataIndex().getName()
 						))
 					)
 			)
@@ -147,7 +148,8 @@ public class EmbeddingService {
 		String apiKey,
 		String fieldJsonPath,
 		VectorIndex.ChunkType chunkType,
-		String jsonConfig
+		String jsonConfig,
+		String indexName
 	) {}
 
 	public record EmbeddedChunk(
