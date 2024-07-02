@@ -263,12 +263,22 @@ public class JobScheduler {
 		var oldDataIndex = scheduler.getOldDataIndex();
 
 		if (oldDataIndex == null) {
+			log.infof(
+				"VectorPipeline skipped because no dataindex is associated for scheduleId %.",
+				scheduler.getScheduleId()
+			);
+
 			return Behaviors.same();
 		}
 
 		var vectorIndex = oldDataIndex.getVectorIndex();
 
 		if (vectorIndex == null) {
+			log.infof(
+				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %.",
+				scheduler.getScheduleId()
+			);
+
 			return Behaviors.same();
 		}
 
