@@ -281,13 +281,14 @@ public class JobScheduler {
 		vScheduler.setDatasource(scheduler.getDatasource());
 		vScheduler.setOldDataIndex(oldDataIndex);
 
-		sessionFactory.withTransaction(tenantName, (s, t) ->
+		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(tenantName, (s, t) ->
 			s.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
 				.getSingleResult()
 				.flatMap(embeddingModel -> s.persist(vScheduler))
 				.invoke(() -> messageGateway.tell(new MessageGateway.Register(
 					ShardingKey.asString(tenantName, vScheduleId))))
-		);
+		));
+
 
 		return Behaviors.same();
 	}
