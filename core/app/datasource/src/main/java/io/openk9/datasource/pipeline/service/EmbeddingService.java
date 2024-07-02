@@ -23,6 +23,7 @@ import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.VectorIndex;
+import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 import io.quarkus.cache.Cache;
@@ -30,6 +31,7 @@ import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -64,10 +66,11 @@ public class EmbeddingService {
 				var apiKey = configurations.apiKey();
 				var jsonConfig = StructUtils.fromJson(configurations.jsonConfig());
 				var chunkType = mapChunkType(configurations);
-				String text = JsonPath.read(payload, configurations.fieldJsonPath());
-				String indexName = JsonPath.read(payload, "$.indexName");
-				String contentId = JsonPath.read(payload, "$.contentId");
-				Map<String, List<String>> acl = JsonPath.read(payload, "$.acl");
+				var dataPayload = Json.decodeValue(Buffer.buffer(payload), DataPayload.class);
+				String text = JsonPath.read(dataPayload, configurations.fieldJsonPath());
+				String indexName = JsonPath.read(dataPayload, "$.indexName");
+				String contentId = JsonPath.read(dataPayload, "$.contentId");
+				Map<String, List<String>> acl = JsonPath.read(dataPayload, "$.acl");
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
 						.setApiKey(apiKey)
