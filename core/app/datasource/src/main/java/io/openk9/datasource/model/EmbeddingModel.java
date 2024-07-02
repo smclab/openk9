@@ -31,7 +31,7 @@ import javax.persistence.Table;
 @Table(name = "embedding_model")
 @NamedQuery(
 	name = EmbeddingModel.FETCH_CURRENT,
-	query = "from EmbeddingModel em join em.tenantBinding t where t is not null"
+	query = "select em from EmbeddingModel em join em.tenantBinding t where t is not null"
 )
 @Getter
 @Setter
