@@ -88,7 +88,8 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
 
 					for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
-						var enrichItem = s.getReference(EnrichItem.class, item.getEnrichItemId());
+						var enrichItem =
+							s.getReference(EnrichItem.class, item.getEnrichItemId());
 
 						var enrichPipelineItem = new EnrichPipelineItem();
 						enrichPipelineItem.setEnrichPipeline(pipeline);
@@ -127,13 +128,23 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						if (pipelineWithItemsDTO.getItems() != null) {
 							var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
 
-							for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
-								var enrichItem = session.getReference(EnrichItem.class, item.getEnrichItemId());
+							for (PipelineWithItemsDTO.ItemDTO item :
+									pipelineWithItemsDTO.getItems()) {
+
+								var enrichItem =
+									session.getReference(EnrichItem.class, item.getEnrichItemId());
 
 								var enrichPipelineItem = new EnrichPipelineItem();
 								enrichPipelineItem.setEnrichPipeline(prev);
 								enrichPipelineItem.setEnrichItem(enrichItem);
 								enrichPipelineItem.setWeight(item.getWeight());
+
+								var key = EnrichPipelineItemKey.of(
+									prev.getId(),
+									item.getEnrichItemId()
+								);
+
+								enrichPipelineItem.setKey(key);
 
 								enrichPipelineItems.add(enrichPipelineItem);
 							}
@@ -159,23 +170,31 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					.onItem().ifNotNull()
 					.transformToUni(prev -> {
 						var entity = mapper.update(prev, dto);
-
-						if (pipelineWithItemsDTO.getItems() != null) {
 						var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
 
-							for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
-								var enrichItem = session.getReference(EnrichItem.class, item.getEnrichItemId());
+						if (pipelineWithItemsDTO.getItems() != null) {
+
+							for (PipelineWithItemsDTO.ItemDTO item :
+									pipelineWithItemsDTO.getItems()) {
+
+								var enrichItem =
+									session.getReference(EnrichItem.class, item.getEnrichItemId());
 
 								var enrichPipelineItem = new EnrichPipelineItem();
 								enrichPipelineItem.setEnrichPipeline(prev);
 								enrichPipelineItem.setEnrichItem(enrichItem);
 								enrichPipelineItem.setWeight(item.getWeight());
 
+								var key =
+									EnrichPipelineItemKey.of(prev.getId(), item.getEnrichItemId());
+
+								enrichPipelineItem.setKey(key);
+
 								enrichPipelineItems.add(enrichPipelineItem);
 							}
-
-							entity.setEnrichPipelineItems(enrichPipelineItems);
 						}
+
+						entity.setEnrichPipelineItems(enrichPipelineItems);
 
 						return persist(session, entity);
 					});
