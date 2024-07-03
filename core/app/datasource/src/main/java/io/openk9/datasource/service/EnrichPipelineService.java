@@ -123,6 +123,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
 
 				return findById(session, id)
+					.call(enrichPipeline -> Mutiny.fetch(enrichPipeline.getEnrichPipelineItems()))
 					.onItem().ifNotNull()
 					.transformToUni(prev -> {
 						var entity = mapper.patch(prev, dto);
@@ -167,6 +168,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
 
 				return findById(session, id)
+					.call(enrichPipeline -> Mutiny.fetch(enrichPipeline.getEnrichPipelineItems()))
 					.onItem().ifNotNull()
 					.transformToUni(prev -> {
 						var entity = mapper.update(prev, dto);
