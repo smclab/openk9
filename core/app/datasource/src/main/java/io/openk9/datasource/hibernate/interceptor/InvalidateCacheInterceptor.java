@@ -26,9 +26,9 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
+import java.io.Serializable;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.io.Serializable;
 
 @PersistenceUnitExtension
 @ApplicationScoped
@@ -39,21 +39,6 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 
 	@Inject
 	Logger log;
-
-	@Override
-	public boolean onFlushDirty(
-		Object entity, Serializable id, Object[] currentState,
-		Object[] previousState, String[] propertyNames, Type[] types) {
-
-		if (log.isTraceEnabled()) {
-			log.trace("intercepted flushDirty");
-		}
-
-		invalidateLocalCache();
-
-		return super.onFlushDirty(
-			entity, id, currentState, previousState, propertyNames, types);
-	}
 
 	@Override
 	public void onDelete(
