@@ -249,7 +249,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (response instanceof Processor.Failure failure) {
 
 			Exception exception = failure.exception();
-			log.errorf("data process failure for %s", heldMessage, exception);
+			log.errorf(exception, "data process failure for %s", heldMessage);
 
 			this.replyTo.tell(new Failed(
 				ExceptionUtil.generateStackTrace(exception), heldMessage));
