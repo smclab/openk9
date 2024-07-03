@@ -60,12 +60,16 @@ public class EmbeddingService {
 			.request(GET_CONFIGURATIONS, new ConfigurationsRequest(tenantId, scheduleId))
 			.flatMap(message -> {
 				var configurations = (EmbeddingConfiguration) message.body();
+
 				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
 
 				var apiKey = configurations.apiKey();
 				var indexName = configurations.indexName();
-				var jsonConfig = StructUtils.fromJson(configurations.jsonConfig());
+				var jsonConfig = configurations.jsonConfig() != null
+					? configurations.jsonConfig()
+					: "{}";
 				var chunkType = mapChunkType(configurations);
+
 				var documentContext =
 					JsonPath.using(VertxJsonNodeJsonProvider.CONFIGURATION).parseUtf8(payload);
 
@@ -77,7 +81,7 @@ public class EmbeddingService {
 						.setApiKey(apiKey)
 						.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
 							.setType(chunkType)
-							.setJsonConfig(jsonConfig)
+							.setJsonConfig(StructUtils.fromJson(jsonConfig))
 							.build())
 						.setText(text)
 						.build())
