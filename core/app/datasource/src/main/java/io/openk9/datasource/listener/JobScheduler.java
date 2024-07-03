@@ -136,8 +136,6 @@ public class JobScheduler {
 									.tell(new InvokePluginDriverInternal(
 										tenantName, scheduler, startFromFirst));
 
-								ctx.getSelf()
-									.tell(new StartVectorPipeline(tenantName, scheduler));
 							});
 					}
 				)
@@ -412,23 +410,28 @@ public class JobScheduler {
 			case HTTP: {
 				VertxUtil.runOnContext(
 					() -> httpPluginDriverClient.invoke(
-						Json.decodeValue(
-							pluginDriver.getJsonConfig(),
-							HttpPluginDriverInfo.class),
-						HttpPluginDriverContext
-							.builder()
-							.timestamp(lastIngestionDate)
-							.tenantId(tenantName)
-							.datasourceId(datasource.getId())
-							.scheduleId(scheduler.getScheduleId())
-							.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
-							.build()
-					)
-					.onFailure()
-					.invoke(throwable -> ctx
-						.getSelf()
-						.tell(new CancelScheduling(tenantName, scheduler))
-					)
+							Json.decodeValue(
+								pluginDriver.getJsonConfig(),
+								HttpPluginDriverInfo.class
+							),
+							HttpPluginDriverContext
+								.builder()
+								.timestamp(lastIngestionDate)
+								.tenantId(tenantName)
+								.datasourceId(datasource.getId())
+								.scheduleId(scheduler.getScheduleId())
+								.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
+								.build()
+						)
+						.onItem()
+						.invoke(() -> ctx
+							.getSelf()
+							.tell(new StartVectorPipeline(tenantName, scheduler)))
+						.onFailure()
+						.invoke(throwable -> ctx
+							.getSelf()
+							.tell(new CancelScheduling(tenantName, scheduler))
+						)
 				);
 			}
 		}
