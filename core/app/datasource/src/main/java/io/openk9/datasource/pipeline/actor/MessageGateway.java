@@ -42,7 +42,6 @@ import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
-import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
 import io.openk9.datasource.pipeline.consumer.MainConsumer;
 import io.openk9.datasource.pipeline.consumer.RetryConsumer;
@@ -122,13 +121,16 @@ public class MessageGateway
 	private Behavior<Command> onReroute(Reroute reroute) {
 
 		QueueManager.QueueBind queueBind = reroute.queueBind;
+		var schedulingKey = queueBind.schedulingKey();
 
 		ActorSystem<Void> system = getContext().getSystem();
 
 		ClusterSharding clusterSharding = ClusterSharding.get(system);
 
 		EntityRef<Scheduling.Command> entityRef = clusterSharding.entityRefFor(
-			BasePipeline.ENTITY_TYPE_KEY, queueBind.schedulingKey());
+			SchedulingEntityType.getTypeKey(ShardingKey.fromString(schedulingKey)),
+			schedulingKey
+		);
 
 		AskPattern.ask(
 			entityRef,
@@ -140,13 +142,13 @@ public class MessageGateway
 				if (t != null || r instanceof Scheduling.Failure) {
 					log.warnf(
 						"error when restart scheduling %s",
-						queueBind.schedulingKey()
+						schedulingKey
 					);
 				}
 				else {
 					log.infof(
 						"restart scheduling with key %s",
-						queueBind.schedulingKey()
+						schedulingKey
 					);
 
 					channel.basicQos(1);

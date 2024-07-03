@@ -24,11 +24,11 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.typesafe.config.Config;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.AkkaUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.base.BasePipeline;
-import io.openk9.datasource.pipeline.vector.VectorPipeline;
+import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 
 import java.time.Duration;
 
@@ -55,21 +55,19 @@ public abstract class BaseConsumer extends DefaultConsumer {
 
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-		if (queueBind.schedulingKey().endsWith(VectorPipeline.VECTOR_PIPELINE_SUFFIX)) {
+		var schedulingKey = queueBind.schedulingKey();
 
-			return clusterSharding.entityRefFor(
-				VectorPipeline.ENTITY_TYPE_KEY, queueBind.schedulingKey());
+		return clusterSharding.entityRefFor(
+			SchedulingEntityType.getTypeKey(ShardingKey.fromString(schedulingKey)),
+			schedulingKey
+		);
 
-		}
-		else {
-
-			return clusterSharding.entityRefFor(
-				BasePipeline.ENTITY_TYPE_KEY, queueBind.schedulingKey());
-
-		}
 	}
 
 	private static Duration getTimeout(Config config) {
-		return AkkaUtils.getProperty(config, CONSUMER_TIMEOUT, config::getDuration, Duration.ofMinutes(10));
+		return AkkaUtils.getProperty(
+			config, CONSUMER_TIMEOUT, config::getDuration,
+			Duration.ofMinutes(10)
+		);
 	}
 }

@@ -29,7 +29,7 @@ import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.base.BasePipeline;
+import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
@@ -113,10 +113,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
+					var shardingKey = ShardingKey.fromStrings(tenantId, scheduler.getScheduleId());
+					var typeKey = SchedulingEntityType.getTypeKey(shardingKey);
+
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-						BasePipeline.ENTITY_TYPE_KEY,
-						ShardingKey.asString(tenantId, scheduler.getScheduleId())
-					);
+						typeKey, shardingKey.asString());
 
 					schedulingRef.tell(Scheduling.Close.INSTANCE);
 					yield Uni.createFrom().voidItem();
@@ -134,10 +135,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
+					var shardingKey = ShardingKey.fromStrings(tenantId, scheduler.getScheduleId());
+					var typeKey = SchedulingEntityType.getTypeKey(shardingKey);
+
 					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-						BasePipeline.ENTITY_TYPE_KEY,
-						ShardingKey.asString(tenantId, scheduler.getScheduleId())
-					);
+						typeKey, shardingKey.asString());
 
 					schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
 					yield Uni.createFrom().voidItem();
