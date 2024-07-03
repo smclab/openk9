@@ -108,7 +108,7 @@ public class EnrichPipelineGraphqlResource {
 	@Mutation
 	public Uni<Response<EnrichPipeline>> enrichPipelineWithEnrichItems(
 		@Id Long id, PipelineWithItemsDTO pipelineWithItemsDTO,
-		List<Long> enrichItemIds, @DefaultValue("false") boolean patch) {
+		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
 			return createEnrichPipeline(pipelineWithItemsDTO);
