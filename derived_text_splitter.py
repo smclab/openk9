@@ -1,6 +1,7 @@
-from langchain_text_splitters import TextSplitter
-from typing import List
 from textwrap import wrap
+from typing import List
+
+from langchain_text_splitters import TextSplitter
 
 
 class DerivedTextSplitter(TextSplitter):

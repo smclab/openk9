@@ -1,13 +1,26 @@
-import grpc
+import logging
+import os
+import time
 from concurrent import futures
-from derived_text_splitter import DerivedTextSplitter
+from logging.handlers import TimedRotatingFileHandler
+
+import grpc
+from google.protobuf import json_format
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+
 import embedding_pb2
 import embedding_pb2_grpc
-from google.protobuf import json_format
-from langchain_text_splitters import CharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
-import os
+from derived_text_splitter import DerivedTextSplitter
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler = TimedRotatingFileHandler(
+    "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 # default text splitters parameters
 DEFAULT_CHUNK_SIZE = 100
@@ -23,6 +36,8 @@ DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
+        start = time.time()
+
         chunk = request.chunk
         chunk_type = chunk.type
         chunk_jsonConfig = json_format.MessageToDict(chunk.jsonConfig)
@@ -132,6 +147,15 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "vectors": embeddings.embed_query(chunk_text),
             }
             chunks.append(chunk)
+
+        end = time.time()
+
+        logger.info("request: %s", request)
+        logger.info(
+            "text splitted in %s chunks in %s seconds",
+            total_chunks,
+            round(end - start, 2),
+        )
 
         return embedding_pb2.EmbeddingResponse(chunks=chunks)
 
