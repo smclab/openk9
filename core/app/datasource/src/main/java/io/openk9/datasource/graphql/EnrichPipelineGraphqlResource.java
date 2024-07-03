@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
@@ -100,6 +101,21 @@ public class EnrichPipelineGraphqlResource {
 			return patch
 				? patchEnrichPipeline(id, enrichPipelineDTO)
 				: updateEnrichPipeline(id, enrichPipelineDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<EnrichPipeline>> enrichPipelineWithEnrichItems(
+		@Id Long id, PipelineWithItemsDTO pipelineWithItemsDTO,
+		List<Long> enrichItemIds, @DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createEnrichPipeline(pipelineWithItemsDTO);
+		} else {
+			return patch
+				? patchEnrichPipeline(id, pipelineWithItemsDTO)
+				: updateEnrichPipeline(id, pipelineWithItemsDTO);
 		}
 
 	}
