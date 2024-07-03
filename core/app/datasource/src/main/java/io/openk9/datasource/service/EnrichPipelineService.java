@@ -153,7 +153,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 						var entity = mapper.patch(prev, dto);
 
-						return persist(session, entity);
+						return merge(session, entity);
 					});
 			}
 
@@ -196,7 +196,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 						entity.setEnrichPipelineItems(enrichPipelineItems);
 
-						return persist(session, entity);
+						return merge(session, entity);
 					});
 
 			}
