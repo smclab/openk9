@@ -72,6 +72,12 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return new String[]{EnrichPipeline_.NAME, EnrichPipeline_.DESCRIPTION};
 	}
 
+
+	public Uni<EnrichPipeline> create(EnrichPipelineDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, dto));
+	}
+
 	@Override
 	public Uni<EnrichPipeline> create(Mutiny.Session s, EnrichPipelineDTO dto) {
 		if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
@@ -108,6 +114,76 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		}
 
 		return super.create(s, dto);
+	}
+
+	@Override
+	public Uni<EnrichPipeline> patch(long id, EnrichPipelineDTO dto) {
+		return sessionFactory.withTransaction(session -> {
+			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
+
+				return findById(session, id)
+					.onItem().ifNotNull()
+					.transformToUni(prev -> {
+						if (pipelineWithItemsDTO.getItems() != null) {
+							var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
+
+							for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
+								var enrichItem = session.getReference(EnrichItem.class, item.getEnrichItemId());
+
+								var enrichPipelineItem = new EnrichPipelineItem();
+								enrichPipelineItem.setEnrichPipeline(prev);
+								enrichPipelineItem.setEnrichItem(enrichItem);
+								enrichPipelineItem.setWeight(item.getWeight());
+
+								enrichPipelineItems.add(enrichPipelineItem);
+							}
+							prev.setEnrichPipelineItems(enrichPipelineItems);
+						}
+
+						var entity = mapper.patch(prev, dto);
+
+						return persist(session, entity);
+					});
+			}
+
+			return super.patch(session, id, dto);
+		});
+	}
+
+	@Override
+	public Uni<EnrichPipeline> update(long id, EnrichPipelineDTO dto) {
+		return sessionFactory.withTransaction(session -> {
+			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
+
+				return findById(session, id)
+					.onItem().ifNotNull()
+					.transformToUni(prev -> {
+						var entity = mapper.update(prev, dto);
+
+						if (pipelineWithItemsDTO.getItems() != null) {
+						var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
+
+							for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
+								var enrichItem = session.getReference(EnrichItem.class, item.getEnrichItemId());
+
+								var enrichPipelineItem = new EnrichPipelineItem();
+								enrichPipelineItem.setEnrichPipeline(prev);
+								enrichPipelineItem.setEnrichItem(enrichItem);
+								enrichPipelineItem.setWeight(item.getWeight());
+
+								enrichPipelineItems.add(enrichPipelineItem);
+							}
+
+							entity.setEnrichPipelineItems(enrichPipelineItems);
+						}
+
+						return persist(session, entity);
+					});
+
+			}
+
+			return super.update(session, id, dto);
+		});
 	}
 
 	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
