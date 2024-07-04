@@ -485,7 +485,12 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onInitialMessageGatewaySubscription(
-		ActorContext<Command> ctx, MessageGatewaySubscription mgs, QuartzSchedulerTypedExtension quartzSchedulerTypedExtension, HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory, RestHighLevelClient restHighLevelClient, ActorRef<MessageGateway.Command> messageGateway, List<String> jobNames) {
+		ActorContext<Command> ctx, MessageGatewaySubscription mgs,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		HttpPluginDriverClient httpPluginDriverClient,
+		Mutiny.SessionFactory sessionFactory,
+		RestHighLevelClient restHighLevelClient,
+		ActorRef<MessageGateway.Command> messageGateway, List<String> jobNames) {
 
 		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
 			.getServiceInstances(MessageGateway.SERVICE_KEY)
@@ -494,7 +499,10 @@ public class JobScheduler {
 			.findFirst();
 
 		if (actorRefOptional.isPresent()) {
-			return initial(ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, actorRefOptional.get(), jobNames);
+			return initial(
+				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
+				sessionFactory, restHighLevelClient, actorRefOptional.get(), jobNames
+			);
 		}
 
 		return Behaviors.same();
