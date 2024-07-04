@@ -30,6 +30,7 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
@@ -64,6 +65,8 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
+	@Inject
+	VectorIndexService vectorIndexService;
 
 	DatasourceService(DatasourceMapper mapper) {
 		this.mapper = mapper;
@@ -319,7 +322,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Response<Datasource>> createDatasourceConnection(
 		DatasourceConnectionDTO datasourceConnection) {
 
-
 		return Uni
 			.createFrom()
 			.item(() -> {
@@ -338,22 +340,35 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					.flatMap(pluginDriver -> getOrCreateEnrichPipeline(
 							session,
 							datasourceConnection
-						)
-							.flatMap(enrichPipeline -> {
-								var datasource = mapper.create(datasourceConnection);
+						).flatMap(enrichPipeline -> {
+							var datasource = mapper.create(datasourceConnection);
 
-								datasource.setPluginDriver(pluginDriver);
-								datasource.setEnrichPipeline(enrichPipeline);
+							datasource.setPluginDriver(pluginDriver);
+							datasource.setEnrichPipeline(enrichPipeline);
 
-								return create(session, datasource);
-							})
-							.flatMap(datasource -> dataIndexService
-								.createByDatasource(session, datasource)
-								.flatMap(dataIndex -> {
+							return create(session, datasource);
+						}).flatMap(datasource -> dataIndexService
+							.createByDatasource(session, datasource)
+							.flatMap(dataIndex -> {
+								if (datasourceConnection.getVectorIndexConfigurations() != null) {
+									return vectorIndexService.create(
+											VectorIndexDTO.builder()
+												.name(dataIndex.getName() + "-vector-index")
+												.configurations(datasourceConnection.getVectorIndexConfigurations())
+												.build())
+										.flatMap(vectorIndex -> dataIndexService.bindVectorDataIndex(
+											dataIndex.getId(), vectorIndex.getId()))
+										.flatMap(dataIndexWithVectorIndex -> {
+											datasource.setDataIndex(dataIndexWithVectorIndex);
+											return persist(session, datasource);
+										});
+								}
+								else {
 									datasource.setDataIndex(dataIndex);
 									return persist(session, datasource);
-								})
-							)
+								}
+							})
+						)
 					)
 			))
 			.onItemOrFailure()

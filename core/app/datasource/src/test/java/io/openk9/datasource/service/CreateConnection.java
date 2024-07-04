@@ -24,7 +24,9 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 
@@ -60,8 +62,28 @@ public class CreateConnection {
 	public static final long PIPELINE_ID = 10L;
 	public static final long DATASOURCE_ID = 12312L;
 	public static final long DATA_INDEX_ID = 1111L;
+	public static final long VECTOR_INDEX_ID = 2199L;
 
-	public static final DatasourceConnectionDTO NEW_ENTITIES_DTO = DatasourceConnectionDTO.builder()
+	public static final DatasourceConnectionDTO NEW_ENTITIES_VECTOR_DTO =
+		DatasourceConnectionDTO.builder()
+			.name(DATASOURCE_NAME)
+			.description(DATASOURCE_DESCRIPTION)
+			.reindexRate(REINDEX_RATE)
+			.schedulable(SCHEDULABLE)
+			.jsonConfig(DATASOURCE_JSON_CONFIG)
+			.scheduling(SCHEDULING)
+			.pluginDriver(PLUGIN_DRIVER_DTO)
+			.pipeline(PIPELINE_WITH_ITEMS_DTO)
+			.vectorIndexConfigurations(VectorIndexDTO
+				.ConfigurationsDTO.builder()
+				.chunkType(VectorIndex.ChunkType.DEFAULT)
+				.fieldJsonPath("$.rawContent")
+				.build()
+			)
+			.build();
+
+	public static final DatasourceConnectionDTO NEW_ENTITIES_BASE_DTO =
+		DatasourceConnectionDTO.builder()
 		.name(DATASOURCE_NAME)
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
@@ -71,6 +93,7 @@ public class CreateConnection {
 		.pluginDriver(PLUGIN_DRIVER_DTO)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
+
 	public static final DatasourceConnectionDTO PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME)
@@ -82,6 +105,7 @@ public class CreateConnection {
 			.pluginDriverId(PLUGIN_DRIVER_ID)
 			.pipeline(PIPELINE_WITH_ITEMS_DTO)
 			.build();
+
 	public static final DatasourceConnectionDTO AMBIGUOUS_DTO = DatasourceConnectionDTO.builder()
 		.name(DATASOURCE_NAME)
 		.description(DATASOURCE_DESCRIPTION)
@@ -94,6 +118,7 @@ public class CreateConnection {
 		.pipelineId(PIPELINE_ID)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
+
 	public static final DatasourceConnectionDTO NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME)
@@ -130,6 +155,7 @@ public class CreateConnection {
 	public static EnrichPipeline PIPELINE;
 	public static Datasource DATASOURCE;
 	public static DataIndex DATAINDEX;
+	public static VectorIndex VECTORINDEX;
 
 	static {
 		var pluginDriver = new PluginDriver();
@@ -153,16 +179,26 @@ public class CreateConnection {
 
 		var datasource = new Datasource();
 		datasource.setId(DATASOURCE_ID);
-		datasource.setName(NEW_ENTITIES_DTO.getName());
+		datasource.setName(NEW_ENTITIES_BASE_DTO.getName());
 		datasource.setPluginDriver(PLUGIN_DRIVER);
 		datasource.setEnrichPipeline(PIPELINE);
 		DATASOURCE = datasource;
 
 		var dataIndex = new DataIndex();
 		dataIndex.setId(DATA_INDEX_ID);
-		dataIndex.setName(DATASOURCE_NAME + " DataIndex");
+		dataIndex.setName(DATASOURCE_NAME + "-data-index");
 		dataIndex.setDatasource(DATASOURCE);
 		DATAINDEX = dataIndex;
+
+		var vectorIndex = new VectorIndex();
+		vectorIndex.setId(VECTOR_INDEX_ID);
+		vectorIndex.setName(DATASOURCE_NAME + "-vector-index");
+		vectorIndex.setDataIndex(dataIndex);
+		vectorIndex.setJsonConfig("{}");
+		vectorIndex.setFieldJsonPath("$.rawContent");
+		vectorIndex.setChunkType(VectorIndex.ChunkType.DEFAULT);
+		VECTORINDEX = vectorIndex;
+
 	}
 
 }

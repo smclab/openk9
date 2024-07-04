@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
 import io.quarkus.test.Mock;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import javax.inject.Inject;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -52,33 +54,79 @@ class DatasourceCreateConnectionTest {
 	@InjectMock
 	DataIndexService dataIndexService;
 
+	@InjectMock
+	VectorIndexService vectorIndexService;
+
 	@Inject
 	MockDatasourceService datasourceService;
 
 	@Test
 	@RunOnVertxContext
-	void should_create_everything(UniAsserter asserter) {
+	void should_create_everything_base(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_DTO),
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_BASE_DTO),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
 						any(Mutiny.Session.class),
-						eq(CreateConnection.NEW_ENTITIES_DTO.getPluginDriver())
+						eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
 					.should(times(1))
 					.create(
 						any(Mutiny.Session.class),
-						eq(CreateConnection.NEW_ENTITIES_DTO.getPipeline())
+						eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPipeline())
 					);
 
 				then(dataIndexService)
 					.should(times(1))
 					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+			}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_create_everything_vector(UniAsserter asserter) {
+
+		given(dataIndexService.createByDatasource(any(), any()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
+		given(vectorIndexService.create(any(VectorIndexDTO.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
+
+		asserter.assertThat(
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_VECTOR_DTO),
+			response -> {
+				then(pluginDriverService)
+					.should(times(1))
+					.create(
+						any(Mutiny.Session.class),
+						eq(CreateConnection.NEW_ENTITIES_VECTOR_DTO.getPluginDriver())
+					);
+
+				then(enrichPipelineService)
+					.should(times(1))
+					.create(
+						any(Mutiny.Session.class),
+						eq(CreateConnection.NEW_ENTITIES_VECTOR_DTO.getPipeline())
+					);
+
+				then(dataIndexService)
+					.should(times(1))
+					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+
+				then(vectorIndexService)
+					.should(times(1))
+					.create(any(VectorIndexDTO.class));
+
+				then(dataIndexService)
+					.should(times(1))
+					.bindVectorDataIndex(anyLong(), anyLong());
 			}
 		);
 
@@ -214,19 +262,19 @@ class DatasourceCreateConnectionTest {
 			.willReturn(Uni.createFrom().failure(RuntimeException::new));
 
 		asserter.assertFailedWith(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_DTO),
+			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_BASE_DTO),
 			failure -> {
 
 				Assertions.assertInstanceOf(K9Error.class, failure);
 
 				then(pluginDriverService).should(times(1)).create(
 					any(Mutiny.Session.class),
-					eq(CreateConnection.NEW_ENTITIES_DTO.getPluginDriver())
+					eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPluginDriver())
 				);
 
 				then(enrichPipelineService).should(times(1)).create(
 					any(Mutiny.Session.class),
-					eq(CreateConnection.NEW_ENTITIES_DTO.getPipeline())
+					eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPipeline())
 				);
 
 				then(dataIndexService).shouldHaveNoInteractions();

@@ -19,6 +19,7 @@ package io.openk9.datasource.graphql.dto;
 
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,11 +44,15 @@ public class DatasourceConnectionDTO extends DatasourceDTO {
 	private Long pipelineId;
 
 	@Nullable
-	@Description(("PluginDriver to be created and associated (optional)"))
+	@Description("PluginDriver to be created and associated (optional)")
 	private PluginDriverDTO pluginDriver;
 
 	@Nullable
-	@Description(("Pipeline to be created and associated (optional)"))
+	@Description("Pipeline to be created and associated (optional)")
 	private PipelineWithItemsDTO pipeline;
+
+	@Nullable
+	@Description("Configurations used for indexing vectors (optional)")
+	private VectorIndexDTO.ConfigurationsDTO vectorIndexConfigurations;
 
 }
