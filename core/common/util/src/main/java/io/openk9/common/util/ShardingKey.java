@@ -18,6 +18,7 @@
 package io.openk9.common.util;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public record ShardingKey(String... elements) {
 
@@ -81,6 +82,19 @@ public record ShardingKey(String... elements) {
 	@Override
 	public String toString() {
 		return "ShardingKey[elements=" + Arrays.toString(elements) + "]";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {return true;}
+		if (o == null || getClass() != o.getClass()) {return false;}
+		ShardingKey that = (ShardingKey) o;
+		return Objects.deepEquals(elements, that.elements);
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(elements);
 	}
 
 }
