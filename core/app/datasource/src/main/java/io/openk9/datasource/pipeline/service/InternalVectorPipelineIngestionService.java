@@ -25,6 +25,10 @@ import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
+import io.openk9.datasource.util.QuarkusCacheUtil;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
+import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
@@ -55,6 +59,9 @@ public class InternalVectorPipelineIngestionService {
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
+	@CacheName("bucket-resource")
+	Cache cache;
+
 
 	public static CompletionStage<Void> send(ShardingKey shardingKey, byte[] payload) {
 
@@ -74,7 +81,10 @@ public class InternalVectorPipelineIngestionService {
 		var scheduleId = shardingKey.scheduleId();
 		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
 
-		return sessionFactory.withStatelessSession(tenantId, (s -> s
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(scheduleId),
+			sessionFactory.withStatelessSession(tenantId, (s -> s
 			.createNamedQuery(VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
 			.setParameter("scheduleId", scheduleId)
 			.getSingleResult()
@@ -84,7 +94,8 @@ public class InternalVectorPipelineIngestionService {
 					)
 					.getSingleResult()
 			)
-		)).onItem().invoke(() -> {
+			))
+		).onItem().invoke(() -> {
 
 			log.infof("VectorIndex is active for scheduleId %s", scheduleId);
 
