@@ -28,6 +28,8 @@ import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -45,6 +47,7 @@ public class InternalVectorPipelineIngestionService {
 	private static final String SEND_REQUEST = "InternalVectorPipelineIngestionService#send";
 	private static final Logger log =
 		Logger.getLogger(InternalVectorPipelineIngestionService.class);
+
 	@Inject
 	@Channel("internal-ingest")
 	Emitter<IngestionIndexWriterPayload> emitter;
@@ -53,10 +56,10 @@ public class InternalVectorPipelineIngestionService {
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
 
-	public static CompletionStage<Void> send(ShardingKey shardingKey, DataPayload dataPayload) {
+	public static CompletionStage<Void> send(ShardingKey shardingKey, byte[] payload) {
 
 		return EventBusInstanceHolder.getEventBus()
-			.request(SEND_REQUEST, new SendRequest(shardingKey, dataPayload))
+			.request(SEND_REQUEST, new SendRequest(shardingKey, payload))
 			.replaceWithVoid()
 			.subscribeAsCompletionStage();
 
@@ -66,7 +69,6 @@ public class InternalVectorPipelineIngestionService {
 	Uni<Void> send(SendRequest sendRequest) {
 
 		var shardingKey = sendRequest.shardingKey();
-		var dataPayload = sendRequest.dataPayload();
 
 		var tenantId = shardingKey.tenantId();
 		var scheduleId = shardingKey.scheduleId();
@@ -86,6 +88,9 @@ public class InternalVectorPipelineIngestionService {
 
 			log.infof("VectorIndex is active for scheduleId %s", scheduleId);
 
+			var payload = sendRequest.payload();
+
+			var dataPayload = Json.decodeValue(Buffer.buffer(payload), DataPayload.class);
 			var ingestionPayload = ingestionPayloadMapper.map(dataPayload);
 
 			var metadata = Metadata.of(
@@ -108,6 +113,6 @@ public class InternalVectorPipelineIngestionService {
 
 	}
 
-	private record SendRequest(ShardingKey shardingKey, DataPayload dataPayload) {}
+	private record SendRequest(ShardingKey shardingKey, byte[] payload) {}
 
 }

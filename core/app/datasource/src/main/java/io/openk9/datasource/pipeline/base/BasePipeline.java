@@ -26,6 +26,7 @@ import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
+import io.openk9.datasource.pipeline.actor.closing.SendLast;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.actor.working.Forward;
@@ -52,7 +53,8 @@ public class BasePipeline {
 				BasePipeline::closeResponseAggregator,
 				UpdateDatasource::create,
 				DeletionCompareNotifier::create,
-				EvaluateStatus::create
+				EvaluateStatus::create,
+				SendLast::create
 			)
 		);
 	}

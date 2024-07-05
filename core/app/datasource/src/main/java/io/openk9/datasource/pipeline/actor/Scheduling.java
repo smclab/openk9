@@ -333,7 +333,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.lastRequest = LocalDateTime.now();
 
 		this.workStage.tell(new WorkStage.StartWorker(
-				getScheduler(),
+			getScheduler(),
 			ingest.payload(),
 				ingest.replyTo()
 			)

@@ -39,10 +39,18 @@ public class EndProcess extends AggregateBehavior {
 	}
 
 	public static Behavior<AggregateBehavior.Command> create(
-		List<ActorRef<AggregateItem.Command>> handlers,
-		ActorRef<Response> replyTo) {
+		List<Behavior<AggregateItem.Command>> handlersBehaviors, ActorRef<Response> replyTo) {
 
-		return Behaviors.setup(ctx -> new EndProcess(ctx, handlers, replyTo));
+		return Behaviors.setup(ctx -> {
+			List<ActorRef<AggregateItem.Command>> endProcessHandlers = new ArrayList<>();
+
+			for (Behavior<AggregateItem.Command> behavior : handlersBehaviors) {
+				var endProcessHandler = ctx.spawnAnonymous(behavior);
+				endProcessHandlers.add(endProcessHandler);
+			}
+
+			return new EndProcess(ctx, endProcessHandlers, replyTo);
+		});
 	}
 
 	@Override
@@ -94,12 +102,10 @@ public class EndProcess extends AggregateBehavior {
 
 	public record StartHandler(
 		byte[] payload, HeldMessage heldMessage, ActorRef<AggregateItem.Reply> replyTo
-	)
-		implements AggregateItem.Starter {}
+	) implements AggregateItem.Starter {}
 
 	public record HandlerReply(HeldMessage heldMessage) implements AggregateItem.Reply {}
 
 	public record EndProcessDone(HeldMessage heldMessage) implements AggregateBehavior.Response {}
-
 
 }

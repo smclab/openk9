@@ -113,6 +113,18 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			ctx, shardingKey, replyTo, configurations));
 	}
 
+	@Override
+	public Receive<Command> createReceive() {
+		return newReceiveBuilder()
+			.onMessage(StartWorker.class, this::onStartWorker)
+			.onMessage(PostProcess.class, this::onPostProcess)
+			.onMessage(Write.class, this::onWrite)
+			.onMessage(PostWrite.class, this::onPostWrite)
+			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
+			.onMessage(LastForwarded.class, this::onLastForwarded)
+			.build();
+	}
+
 	private Behavior<Command> onPostWrite(PostWrite postWrite) {
 
 		var response = postWrite.response();
@@ -122,17 +134,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			var payload = success.dataPayload();
 			var heldMessage = success.heldMessage();
 
-			List<ActorRef<AggregateItem.Command>> endProcessHandlers = new ArrayList<>();
-
-			for (Behavior<AggregateItem.Command> behavior : endProcessHandlersBehaviors) {
-				var endProcessHandler = getContext().spawnAnonymous(behavior);
-				endProcessHandlers.add(endProcessHandler);
-			}
-
-			var endProcess = getContext().spawnAnonymous(EndProcess.create(
-				endProcessHandlers,
-				endProcessAdapter
-			));
+			var endProcess = getContext().spawnAnonymous(
+				EndProcess.create(endProcessHandlersBehaviors, endProcessAdapter));
 
 			endProcess.tell(new EndProcess.Start(payload, heldMessage));
 
@@ -149,17 +152,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 
 		return Behaviors.same();
-	}
-
-	@Override
-	public Receive<Command> createReceive() {
-		return newReceiveBuilder()
-			.onMessage(StartWorker.class, this::onStartWorker)
-			.onMessage(PostProcess.class, this::onPostProcess)
-			.onMessage(Write.class, this::onWrite)
-			.onMessage(PostWrite.class, this::onPostWrite)
-			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
-			.build();
 	}
 
 	private Behavior<Command> onStartWorker(StartWorker startWorker) {
@@ -296,6 +288,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	}
 
+	private Behavior<Command> onLastForwarded(LastForwarded lastForwarded) {
+
+		this.replyTo.tell(new Last(lastForwarded.requester()));
+
+		return Behaviors.same();
+
+	}
+
+
 	public sealed interface Command {}
 
 	public sealed interface Response {}
@@ -334,5 +335,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public record Done(HeldMessage heldMessage) implements Callback {}
 
 	public record Failed(String errorMessage, HeldMessage heldMessage) implements Callback {}
+
+	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
 
 }

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.actor.working;
+package io.openk9.datasource.pipeline.actor.closing;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -26,67 +26,59 @@ import akka.actor.typed.javadsl.Receive;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.InternalVectorPipelineIngestionService;
-import io.openk9.datasource.pipeline.stages.working.EndProcess;
+import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+import io.vertx.core.json.JsonObject;
 
-public class Forward extends AbstractBehavior<AggregateItem.Command> {
+public class SendLast extends AbstractBehavior<AggregateItem.Command> {
 
 	private final ShardingKey shardingKey;
-	private ActorRef<AggregateItem.Reply> replyTo;
+	private final byte[] LAST_MESSAGE = JsonObject
+		.of("last", true)
+		.toBuffer()
+		.getBytes();
 
-	public Forward(
+	public SendLast(
 		ActorContext<AggregateItem.Command> context,
 		ShardingKey shardingKey) {
-
 		super(context);
 		this.shardingKey = shardingKey;
 	}
 
 	public static Behavior<AggregateItem.Command> create(ShardingKey shardingKey) {
-		return Behaviors.setup(ctx -> new Forward(ctx, shardingKey));
+
+		return Behaviors.setup(ctx -> new SendLast(ctx, shardingKey));
+
 	}
 
 	@Override
 	public Receive<AggregateItem.Command> createReceive() {
-
 		return newReceiveBuilder()
-			.onMessage(EndProcess.StartHandler.class, this::onStart)
-			.onMessageEquals(Sent.INSTANCE, this::onSent)
+			.onMessage(CloseStage.StartHandler.class, this::onStart)
+			.onMessage(Stop.class, this::onStop)
 			.build();
-
 	}
 
-	public Behavior<AggregateItem.Command> onStart(EndProcess.StartHandler start) {
-
-		this.replyTo = start.replyTo();
-		var heldMessage = start.heldMessage();
-
-		var payload = start.payload();
-		var shardingKey = heldMessage.shardingKey();
+	private Behavior<AggregateItem.Command> onStart(CloseStage.StartHandler startHandler) {
 
 		getContext().pipeToSelf(
-			InternalVectorPipelineIngestionService.send(shardingKey, payload),
-			(res, err) -> Sent.INSTANCE
+			InternalVectorPipelineIngestionService.send(shardingKey, LAST_MESSAGE),
+			(result, exception) -> new Stop(startHandler.replyTo())
 		);
 
-
 		return this;
-
 	}
 
-	public Behavior<AggregateItem.Command> onSent() {
+	private Behavior<AggregateItem.Command> onStop(Stop stop) {
 
-		this.replyTo.tell(Done.INSTANCE);
+		stop.replyTo.tell(Success.INSTANCE);
 
 		return Behaviors.stopped();
-
 	}
 
-	private enum Sent implements AggregateItem.Command {
+	public enum Success implements AggregateItem.Reply {
 		INSTANCE
 	}
 
-	private enum Done implements AggregateItem.Reply {
-		INSTANCE
-	}
+	private record Stop(ActorRef<AggregateItem.Reply> replyTo) implements AggregateItem.Command {}
 
 }
