@@ -75,7 +75,7 @@ public class EmbeddingService {
 
 				String text = documentContext.read(configurations.fieldJsonPath);
 				String contentId = documentContext.read("$.contentId");
-				Map<String, List<String>> acl = documentContext.read("$.acl");
+				Map<String, Object> acl = documentContext.read("$.acl");
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
 						.setApiKey(apiKey)
@@ -159,7 +159,7 @@ public class EmbeddingService {
 	public record EmbeddedChunk(
 		String indexName,
 		String contentId,
-		Map<String, List<String>> acl,
+		Map<String, Object> acl,
 		int number,
 		int total,
 		String chunkText,

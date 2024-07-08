@@ -29,7 +29,6 @@ import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
@@ -236,11 +235,20 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		var bulkOperations = new ArrayList<BulkOperation>();
 
 		for (EmbeddingService.EmbeddedChunk chunk : embeddedChunks.list()) {
-			var document = JsonObject.mapFrom(chunk);
 
-			Map<?, ?> acl = (Map<?, ?>) document.getValue("acl");
+			var document = chunk;
+
+			var acl = chunk.acl();
 			if (acl == null || acl.isEmpty()) {
-				document.put("acl", Map.of("public", true));
+				document = new EmbeddingService.EmbeddedChunk(
+					chunk.indexName(),
+					chunk.contentId(),
+					Map.of("public", true),
+					chunk.number(),
+					chunk.total(),
+					chunk.chunkText(),
+					chunk.vector()
+				);
 			}
 
 			var bulkOperation = new BulkOperation.Builder()
