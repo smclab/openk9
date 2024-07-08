@@ -52,8 +52,14 @@ public class VectorIndex extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "field_json_path", nullable = false)
-	private String fieldJsonPath;
+	@Column(name = "text_embedding_field", nullable = false)
+	private String textEmbeddingField;
+
+	@Column(name = "title_field", nullable = false)
+	private String titleField;
+
+	@Column(name = "url_field", nullable = false)
+	private String urlField;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "chunk_type")

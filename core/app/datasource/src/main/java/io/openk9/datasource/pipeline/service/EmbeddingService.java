@@ -74,6 +74,9 @@ public class EmbeddingService {
 					JsonPath.using(VertxJsonNodeJsonProvider.CONFIGURATION).parseUtf8(payload);
 
 				String text = documentContext.read(configurations.fieldJsonPath);
+				String title = documentContext.read(configurations.fieldTitle);
+				String url = documentContext.read(configurations.fieldUrl);
+
 				String contentId = documentContext.read("$.contentId");
 				Map<String, Object> acl = documentContext.read("$.acl");
 
@@ -96,7 +99,16 @@ public class EmbeddingService {
 							var vector = responseChunk.getVectorsList();
 
 							var embeddedChunk = new EmbeddedChunk(
-								indexName, contentId, acl, number, total, chunkText, vector);
+								indexName,
+								contentId,
+								title,
+								url,
+								acl,
+								number,
+								total,
+								chunkText,
+								vector
+							);
 
 							list.add(embeddedChunk);
 
@@ -124,7 +136,9 @@ public class EmbeddingService {
 						.map(vectorIndex -> new EmbeddingConfiguration(
 							embeddingModel.getApiUrl(),
 							embeddingModel.getApiKey(),
-							vectorIndex.getFieldJsonPath(),
+							vectorIndex.getTextEmbeddingField(),
+							vectorIndex.getTitleField(),
+							vectorIndex.getUrlField(),
 							vectorIndex.getChunkType(),
 							vectorIndex.getJsonConfig(),
 							vectorIndex.getDataIndex().getName()
@@ -151,6 +165,8 @@ public class EmbeddingService {
 		String apiUrl,
 		String apiKey,
 		String fieldJsonPath,
+		String fieldTitle,
+		String fieldUrl,
 		VectorIndex.ChunkType chunkType,
 		String jsonConfig,
 		String indexName
@@ -159,6 +175,8 @@ public class EmbeddingService {
 	public record EmbeddedChunk(
 		String indexName,
 		String contentId,
+		String title,
+		String url,
 		Map<String, Object> acl,
 		int number,
 		int total,

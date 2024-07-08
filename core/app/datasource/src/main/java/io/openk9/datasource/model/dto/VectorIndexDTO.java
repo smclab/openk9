@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 import javax.validation.constraints.NotNull;
 
@@ -49,10 +50,21 @@ public class VectorIndexDTO extends K9EntityDTO {
 
 		@JsonPath
 		@NotNull
-		private String fieldJsonPath;
+		@Description("The field used during the text embedding, defined as JsonPath")
+		private String textEmbeddingField;
+		@JsonPath
 		@NotNull
+		@Description("The field used as title, defined as JsonPath")
+		private String titleField;
+		@JsonPath
+		@NotNull
+		@Description("The field used as url, defined as JsonPath")
+		private String urlField;
+		@NotNull
+		@Description("The chunk strategy to apply")
 		private VectorIndex.ChunkType chunkType;
 		@Json
+		@Description("The configurations needed by the embedding model")
 		private String jsonConfig;
 
 	}

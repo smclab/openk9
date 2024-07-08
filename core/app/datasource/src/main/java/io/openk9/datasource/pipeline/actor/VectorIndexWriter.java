@@ -243,6 +243,8 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 				document = new EmbeddingService.EmbeddedChunk(
 					chunk.indexName(),
 					chunk.contentId(),
+					chunk.title(),
+					chunk.url(),
 					Map.of("public", true),
 					chunk.number(),
 					chunk.total(),

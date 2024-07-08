@@ -77,7 +77,9 @@ public class CreateConnection {
 			.vectorIndexConfigurations(VectorIndexDTO
 				.ConfigurationsDTO.builder()
 				.chunkType(VectorIndex.ChunkType.DEFAULT)
-				.fieldJsonPath("$.rawContent")
+				.textEmbeddingField("$.rawContent")
+				.titleField("$.title")
+				.urlField("$.url")
 				.build()
 			)
 			.build();
@@ -195,7 +197,9 @@ public class CreateConnection {
 		vectorIndex.setName(DATASOURCE_NAME + "-vector-index");
 		vectorIndex.setDataIndex(dataIndex);
 		vectorIndex.setJsonConfig("{}");
-		vectorIndex.setFieldJsonPath("$.rawContent");
+		vectorIndex.setTextEmbeddingField("$.rawContent");
+		vectorIndex.setTitleField("$.title");
+		vectorIndex.setUrlField("$.url");
 		vectorIndex.setChunkType(VectorIndex.ChunkType.DEFAULT);
 		VECTORINDEX = vectorIndex;
 
