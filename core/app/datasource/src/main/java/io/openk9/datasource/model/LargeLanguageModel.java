@@ -19,41 +19,44 @@ package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "tenant_binding")
+@Table(name = "large_language_model")
+@NamedQuery(
+	name = LargeLanguageModel.FETCH_CURRENT,
+	query = "select llm from LargeLanguageModel llm join llm.tenantBinding t where t is not null"
+)
 @Getter
 @Setter
-@ToString
-@RequiredArgsConstructor
-public class TenantBinding extends K9Entity {
+public class LargeLanguageModel extends K9Entity {
 
-	@Column(name = "virtual_host", nullable = false, unique = true)
-	private String virtualHost;
+	public static final String FETCH_CURRENT = "LargeLanguageModel#fetchCurrent";
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "tenant_binding_bucket_id")
-	@ToString.Exclude
-	private Bucket bucket;
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "embedding_model_id")
-	@ToString.Exclude
-	private EmbeddingModel embeddingModel;
+	@Column(name = "description", length = 4096)
+	private String description;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "large_language_model_id")
-	@ToString.Exclude
-	private LargeLanguageModel largeLanguageModel;
+	@Column(name = "api_url")
+	private String apiUrl;
+
+	@Column(name = "api_key")
+	private String apiKey;
+
+	@Lob
+	@Column(name = "prompt_template")
+	private String prompt_template;
+
+	@OneToOne(mappedBy = "embeddingModel")
+	private TenantBinding tenantBinding;
 
 }
