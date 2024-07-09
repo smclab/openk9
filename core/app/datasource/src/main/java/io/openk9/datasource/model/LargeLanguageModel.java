@@ -53,8 +53,8 @@ public class LargeLanguageModel extends K9Entity {
 	private String apiKey;
 
 	@Lob
-	@Column(name = "prompt_template")
-	private String prompt_template;
+	@Column(name = "json_config")
+	private String jsonConfig;
 
 	@OneToOne(mappedBy = "embeddingModel")
 	private TenantBinding tenantBinding;
