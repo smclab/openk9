@@ -32,6 +32,7 @@ import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
+import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
@@ -175,15 +176,39 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 								.knn(true))
 							.mappings(mapping -> mapping
 								.properties("indexName", p -> p
-									.text(text -> text))
+									.text(text -> text.fields(
+										"keyword",
+										Property.of(field -> field
+											.keyword(keyword -> keyword.ignoreAbove(256)))
+									)))
 								.properties("contentId", p -> p
-									.text(text -> text))
+									.text(text -> text.fields(
+										"keyword",
+										Property.of(field -> field
+											.keyword(keyword -> keyword.ignoreAbove(256)))
+									)))
 								.properties("number", p -> p
 									.integer(int_ -> int_))
 								.properties("total", p -> p
 									.integer(int_ -> int_))
-								.properties("text", p -> p
-									.text(text -> text))
+								.properties("chunkText", p -> p
+									.text(text -> text.fields(
+										"keyword",
+										Property.of(field -> field
+											.keyword(keyword -> keyword.ignoreAbove(256)))
+									)))
+								.properties("title", p -> p
+									.text(text -> text.fields(
+										"keyword",
+										Property.of(field -> field
+											.keyword(keyword -> keyword.ignoreAbove(256)))
+									)))
+								.properties("url", p -> p
+									.text(text -> text.fields(
+										"keyword",
+										Property.of(field -> field
+											.keyword(keyword -> keyword.ignoreAbove(256)))
+									)))
 								.properties("vector", p -> p
 									.knnVector(knn -> knn.dimension(vectorSize)))
 							)
