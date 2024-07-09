@@ -54,6 +54,7 @@ message QueryParserRequest {
   repeated Sort sort = 9;
   optional string sortAfterKey = 10;
   optional string language = 11;
+  optional bool vectorIndices = 12;
 }
 
 message Sort {
