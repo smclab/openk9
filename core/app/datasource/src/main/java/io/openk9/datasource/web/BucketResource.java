@@ -551,8 +551,9 @@ public class BucketResource {
 		boolean refreshOnSuggestionCategory,
 		boolean refreshOnTab,
 		boolean refreshOnDate,
-		boolean refreshOnQuery
-		)
+		boolean refreshOnQuery,
+		Bucket.RetrieveType retrieveType
+	)
 	{}
 
 }

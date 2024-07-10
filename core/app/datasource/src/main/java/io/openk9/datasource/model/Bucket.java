@@ -24,9 +24,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -39,12 +47,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "bucket")
@@ -183,6 +185,10 @@ public class Bucket extends K9Entity {
 	@ToString.Exclude
 	private Language defaultLanguage;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "retrieve_type")
+	private RetrieveType retrieveType;
+
 	@Transient
 	private boolean enabled = false;
 
@@ -286,6 +292,12 @@ public class Bucket extends K9Entity {
 	@PostLoad
 	void postLoad() {
 		this.enabled = tenantBinding != null;
+	}
+
+	public enum RetrieveType {
+		KNN,
+		HYBRID,
+		MATCH
 	}
 
 }
