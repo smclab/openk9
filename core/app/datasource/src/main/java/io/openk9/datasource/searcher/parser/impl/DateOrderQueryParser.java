@@ -22,6 +22,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -45,7 +46,7 @@ public class DateOrderQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
@@ -89,6 +90,8 @@ public class DateOrderQueryParser implements QueryParser {
 			mutableQuery.should(boolQueryBuilder);
 
 		}
+
+		return Uni.createFrom().voidItem();
 	}
 
 	static String getScale(JsonObject queryParserConfig) {

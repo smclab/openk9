@@ -23,6 +23,7 @@ import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -62,7 +63,7 @@ public class AclQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		BoolQueryBuilder innerQuery =
 			QueryBuilders
@@ -123,6 +124,7 @@ public class AclQueryParser implements QueryParser {
 
 		parserContext.getMutableQuery().filter(innerQuery);
 
+		return Uni.createFrom().voidItem();
 	}
 
 	@Override

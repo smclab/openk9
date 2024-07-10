@@ -21,6 +21,7 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.smallrye.mutiny.Uni;
 import org.opensearch.index.query.QueryBuilders;
 
 import java.util.Iterator;
@@ -36,7 +37,7 @@ public class DatasourceIdQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		Bucket currentTenant = parserContext.getCurrentTenant();
 
@@ -59,6 +60,7 @@ public class DatasourceIdQueryParser implements QueryParser {
 				.termsQuery("datasourceId", ids)
 		);
 
+		return Uni.createFrom().voidItem();
 	}
 
 }

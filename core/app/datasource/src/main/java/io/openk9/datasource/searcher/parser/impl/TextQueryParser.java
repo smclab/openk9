@@ -28,6 +28,7 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
@@ -59,7 +60,7 @@ public class TextQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
@@ -78,7 +79,7 @@ public class TextQueryParser implements QueryParser {
 				.toList();
 
 		if (docTypeFieldList.isEmpty()) {
-			return;
+			return Uni.createFrom().voidItem();
 		}
 
 		for (ParserSearchToken token : parserContext.getTokenTypeGroup()) {
@@ -86,7 +87,7 @@ public class TextQueryParser implements QueryParser {
 			List<String> values = token.getValues();
 
 			if (values == null || values.isEmpty()) {
-				return;
+				return Uni.createFrom().voidItem();
 			}
 
 			String keywordKey = token.getKeywordKey();
@@ -173,6 +174,7 @@ public class TextQueryParser implements QueryParser {
 
 		}
 
+		return Uni.createFrom().voidItem();
 	}
 
 	protected void doAddTokenClause(

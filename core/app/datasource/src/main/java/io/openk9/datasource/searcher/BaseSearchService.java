@@ -179,13 +179,15 @@ public abstract class BaseSearchService {
 
 	}
 
-	protected BoolQueryBuilder createBoolQuery(
+	protected Uni<BoolQueryBuilder> createBoolQuery(
 		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
 		JWT jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
 		boolean hasToken = tokenGroup != null && !tokenGroup.isEmpty();
+
+		List<Uni<Void>> queryParserUnis = new ArrayList<>();
 
 		if (hasToken) {
 
@@ -196,7 +198,7 @@ public abstract class BaseSearchService {
 				for (QueryParser queryParser : queryParserInstance) {
 					if (queryParser.isQueryParserGroup() &&
 						queryParser.getType().equals(tokenType)) {
-						queryParser.accept(
+						var queryParserUni = queryParser.apply(
 							ParserContext
 								.builder()
 								.tokenTypeGroup(parserSearchTokens)
@@ -208,6 +210,7 @@ public abstract class BaseSearchService {
 								.language(language)
 								.build()
 						);
+						queryParserUnis.add(queryParserUni);
 					}
 				}
 			}
@@ -232,7 +235,7 @@ public abstract class BaseSearchService {
 					}
 				}
 
-				queryParser.accept(
+				var queryParserUni = queryParser.apply(
 					ParserContext
 						.builder()
 						.tokenTypeGroup(parserSearchTokens)
@@ -246,10 +249,12 @@ public abstract class BaseSearchService {
 						.build()
 				);
 
+				queryParserUnis.add(queryParserUni);
+
 			}
 		}
 
-		return boolQueryBuilder;
+		return Uni.join().all(queryParserUnis).andCollectFailures().map(voids -> boolQueryBuilder);
 	}
 
 	protected Map<String, List<ParserSearchToken>> createTokenGroup(

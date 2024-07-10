@@ -24,6 +24,7 @@ import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.smallrye.mutiny.Uni;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -44,7 +45,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
@@ -58,6 +59,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 				searchToken, mutableQuery, currentTenant.getDatasources());
 		}
 
+		return Uni.createFrom().voidItem();
 	}
 
 	private void _termSearchAsYouTypeQueryValues(

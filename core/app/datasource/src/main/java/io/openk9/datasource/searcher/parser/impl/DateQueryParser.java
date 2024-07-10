@@ -23,6 +23,7 @@ import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vavr.Function0;
 import io.vertx.core.json.JsonObject;
@@ -45,7 +46,7 @@ public class DateQueryParser implements QueryParser {
 	}
 
 	@Override
-	public void accept(ParserContext parserContext) {
+	public Uni<Void> apply(ParserContext parserContext) {
 
 		List<ParserSearchToken> searchTokens =
 			parserContext.getTokenTypeGroup();
@@ -191,6 +192,7 @@ public class DateQueryParser implements QueryParser {
 
 		}
 
+		return Uni.createFrom().voidItem();
 	}
 
 }

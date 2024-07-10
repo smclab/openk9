@@ -153,237 +153,249 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					String language = _getLanguage(request, tenant);
 
-					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
-						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
+					return createBoolQuery(
+						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language)
+						.flatMap(boolQueryBuilder -> {
 
-					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-					searchSourceBuilder.query(boolQueryBuilder);
+							searchSourceBuilder.query(boolQueryBuilder);
 
-					List<CompositeValuesSourceBuilder<?>> compositeValuesSourceBuilders =
-						new ArrayList<>();
+							List<CompositeValuesSourceBuilder<?>> compositeValuesSourceBuilders =
+								new ArrayList<>();
 
-					String suggestKeyword = request.getSuggestKeyword();
+							String suggestKeyword = request.getSuggestKeyword();
 
-					List<DocTypeField> docTypeFieldList =
-						Utils
-							.getDocTypeFieldsFrom(tenant)
-							.filter(docTypeField -> !docTypeField.isI18N())
-							.toList();
+							List<DocTypeField> docTypeFieldList =
+								Utils
+									.getDocTypeFieldsFrom(tenant)
+									.filter(docTypeField -> !docTypeField.isI18N())
+									.toList();
 
-					List<Tuple2<Long, DocTypeField>> suggestionDocTypeFields = new ArrayList<>();
+							List<Tuple2<Long, DocTypeField>> suggestionDocTypeFields =
+								new ArrayList<>();
 
-					for (SuggestionCategory suggestionCategory : suggestionCategories) {
-						Set<DocTypeField> docTypeFields = suggestionCategory.getDocTypeFields();
-						for (DocTypeField docTypeField : docTypeFields) {
-							if (docTypeField.isI18N()) {
-								DocTypeField field = getI18nDocTypeField(docTypeField, language, docTypeFieldList);
-								if (field != null) {
-									suggestionDocTypeFields.add(
-										Tuple2.of(suggestionCategory.getId(), field));
-								}
-							}
-							else if (docTypeField.isKeyword()) {
-								suggestionDocTypeFields.add(
-									Tuple2.of(suggestionCategory.getId(), docTypeField));
-							}
-						}
-					}
-
-					if (!suggestionCategories.isEmpty()) {
-
-						for (Tuple2<Long, DocTypeField> tuple2 : suggestionDocTypeFields) {
-							DocTypeField docTypeField = tuple2.getItem2();
-							String name = docTypeField.getPath();
-							compositeValuesSourceBuilders.add(
-								new TermsValuesSourceBuilder(name)
-									.field(name)
-									.missingBucket(true));
-						}
-
-						CompositeAggregationBuilder compositeAggregation =
-							AggregationBuilders.composite(
-								"composite", compositeValuesSourceBuilders);
-
-						String afterKey = request.getAfterKey();
-
-						if (StringUtils.isNotBlank(afterKey)) {
-							byte[] afterKeyDecoded =
-								Base64.getDecoder().decode(afterKey);
-
-							Map<String, Object> map =
-								new JsonObject(
-									new String(afterKeyDecoded)).getMap();
-
-							compositeAggregation.aggregateAfter(map);
-
-						}
-
-						if (request.getRangeCount() == 2) {
-							int size = request.getRange(1);
-							compositeAggregation.size(size);
-						}
-
-						if (
-							request.getSuggestionCategoryId() != 0 &&
-							StringUtils.isNotBlank(suggestKeyword)) {
-
-							String[] fields = suggestionDocTypeFields
-								.stream()
-								.map(Tuple2::getItem2)
-								.map(DocTypeField::getParentDocTypeField)
-								.filter(dtf -> dtf != null && dtf.getFieldType() == FieldType.TEXT)
-								.map(DocTypeField::getPath)
-								.distinct()
-								.toArray(String[]::new);
-
-							if (fields.length > 0) {
-
-								BoolQueryBuilder builder = QueryBuilders.boolQuery();
-
-								for (String field : fields) {
-									builder.should(
-										QueryBuilders.matchPhrasePrefixQuery(field, suggestKeyword)
-									);
-								}
-
-								FilterAggregationBuilder suggestions =
-									AggregationBuilders
-										.filter("suggestions", builder)
-										.subAggregation(compositeAggregation);
-
-								searchSourceBuilder.aggregation(suggestions);
-
-							}
-						}
-						else {
-							searchSourceBuilder.aggregation(
-								compositeAggregation);
-						}
-
-					}
-
-					searchSourceBuilder.from(0);
-					searchSourceBuilder.size(0);
-
-					SearchConfig searchConfig = tenant.getSearchConfig();
-
-					if (searchConfig != null && searchConfig.isMinScoreSuggestions()) {
-						searchSourceBuilder.minScore(searchConfig.getMinScore());
-					}
-
-					searchSourceBuilder.highlighter(null);
-
-					String[] indexNames = getIndexNames(request, tenant);
-
-					SearchRequest searchRequest =
-						new SearchRequest(indexNames, searchSourceBuilder);
-
-					Uni<SearchResponse> searchResponseUni = _search(searchRequest);
-
-					return searchResponseUni.map(searchResponse -> {
-
-							Aggregations aggregations =
-								searchResponse.getAggregations();
-
-							if (aggregations == null) {
-								return SuggestionsResponse
-									.newBuilder()
-									.build();
-							}
-
-							CompositeAggregation responseCompositeAggregation =
-								_getCompositeAggregation(searchResponse);
-
-							if (responseCompositeAggregation == null) {
-								return SuggestionsResponse
-									.newBuilder()
-									.build();
-							}
-
-							Map<String, Long> fieldNameCategoryIdMap =
-								suggestionDocTypeFields
-									.stream()
-									.collect(
-										Collectors.toMap(
-											t -> t.getItem2().getPath(),
-											Tuple2::getItem1
-										)
-									);
-
-							List<? extends CompositeAggregation.Bucket> buckets =
-								responseCompositeAggregation.getBuckets();
-
-							LinkedList<Suggestions> suggestions =
-								new LinkedList<>();
-
-							BiConsumer<String, Suggestions> addSuggestions;
-
-							if (StringUtils.isNotBlank(suggestKeyword)) {
-								addSuggestions = (key, sugg) -> {
-
-									if (!suggestions.contains(sugg)) {
-										if (containsIgnoreCase(key, suggestKeyword)) {
-											suggestions.addFirst(sugg);
+							for (SuggestionCategory suggestionCategory : suggestionCategories) {
+								Set<DocTypeField> docTypeFields =
+									suggestionCategory.getDocTypeFields();
+								for (DocTypeField docTypeField : docTypeFields) {
+									if (docTypeField.isI18N()) {
+										DocTypeField field = getI18nDocTypeField(
+											docTypeField,
+											language,
+											docTypeFieldList
+										);
+										if (field != null) {
+											suggestionDocTypeFields.add(
+												Tuple2.of(suggestionCategory.getId(), field));
 										}
 									}
-								};
-							}
-							else {
-								addSuggestions = (key, sugg) -> {
-									if (!suggestions.contains(sugg)) {
-										suggestions.add(sugg);
+									else if (docTypeField.isKeyword()) {
+										suggestionDocTypeFields.add(
+											Tuple2.of(suggestionCategory.getId(), docTypeField));
 									}
-								};
+								}
 							}
 
-							for (CompositeAggregation.Bucket bucket : buckets) {
+							if (!suggestionCategories.isEmpty()) {
 
-								Map<String, Object> keys = new HashMap<>(bucket.getKey());
+								for (Tuple2<Long, DocTypeField> tuple2 : suggestionDocTypeFields) {
+									DocTypeField docTypeField = tuple2.getItem2();
+									String name = docTypeField.getPath();
+									compositeValuesSourceBuilders.add(
+										new TermsValuesSourceBuilder(name)
+											.field(name)
+											.missingBucket(true));
+								}
 
-								for (Map.Entry<String, Object> entry : keys.entrySet()) {
+								CompositeAggregationBuilder compositeAggregation =
+									AggregationBuilders.composite(
+										"composite", compositeValuesSourceBuilders);
 
-									String key = entry.getKey();
-									String value = (String)entry.getValue();
+								String afterKey = request.getAfterKey();
 
-									Long suggestionCategoryId =
-										fieldNameCategoryIdMap.get(key);
+								if (StringUtils.isNotBlank(afterKey)) {
+									byte[] afterKeyDecoded =
+										Base64.getDecoder().decode(afterKey);
 
-									if (value == null) {
-										continue;
+									Map<String, Object> map =
+										new JsonObject(
+											new String(afterKeyDecoded)).getMap();
+
+									compositeAggregation.aggregateAfter(map);
+
+								}
+
+								if (request.getRangeCount() == 2) {
+									int size = request.getRange(1);
+									compositeAggregation.size(size);
+								}
+
+								if (
+									request.getSuggestionCategoryId() != 0 &&
+									StringUtils.isNotBlank(suggestKeyword)) {
+
+									String[] fields = suggestionDocTypeFields
+										.stream()
+										.map(Tuple2::getItem2)
+										.map(DocTypeField::getParentDocTypeField)
+										.filter(dtf -> dtf != null &&
+													   dtf.getFieldType() == FieldType.TEXT)
+										.map(DocTypeField::getPath)
+										.distinct()
+										.toArray(String[]::new);
+
+									if (fields.length > 0) {
+
+										BoolQueryBuilder builder = QueryBuilders.boolQuery();
+
+										for (String field : fields) {
+											builder.should(
+												QueryBuilders.matchPhrasePrefixQuery(
+													field,
+													suggestKeyword
+												)
+											);
+										}
+
+										FilterAggregationBuilder suggestions =
+											AggregationBuilders
+												.filter("suggestions", builder)
+												.subAggregation(compositeAggregation);
+
+										searchSourceBuilder.aggregation(suggestions);
+
 									}
-
-									long docCount = bucket.getDocCount();
-
-									addSuggestions.accept(
-										value,
-										SuggestionsUtil.filter(
-											value, suggestionCategoryId,
-											key, docCount
-										)
-									);
+								}
+								else {
+									searchSourceBuilder.aggregation(
+										compositeAggregation);
 								}
 
 							}
 
-							Map<String, Object> map =
-								responseCompositeAggregation.afterKey();
-							String newAfterKey = "";
+							searchSourceBuilder.from(0);
+							searchSourceBuilder.size(0);
 
-							if (map != null) {
-								newAfterKey = Json.encode(map);
-								newAfterKey = Base64.getEncoder().encodeToString(
-									newAfterKey.getBytes(StandardCharsets.UTF_8));
+							SearchConfig searchConfig = tenant.getSearchConfig();
+
+							if (searchConfig != null && searchConfig.isMinScoreSuggestions()) {
+								searchSourceBuilder.minScore(searchConfig.getMinScore());
 							}
 
-							return SuggestionsResponse
-								.newBuilder()
-								.addAllResult(suggestions)
-								.setAfterKey(newAfterKey)
-								.build();
+							searchSourceBuilder.highlighter(null);
 
-					});
+							String[] indexNames = getIndexNames(request, tenant);
 
+							SearchRequest searchRequest =
+								new SearchRequest(indexNames, searchSourceBuilder);
+
+							Uni<SearchResponse> searchResponseUni = _search(searchRequest);
+
+							return searchResponseUni.map(searchResponse -> {
+
+								Aggregations aggregations =
+									searchResponse.getAggregations();
+
+								if (aggregations == null) {
+									return SuggestionsResponse
+										.newBuilder()
+										.build();
+								}
+
+								CompositeAggregation responseCompositeAggregation =
+									_getCompositeAggregation(searchResponse);
+
+								if (responseCompositeAggregation == null) {
+									return SuggestionsResponse
+										.newBuilder()
+										.build();
+								}
+
+								Map<String, Long> fieldNameCategoryIdMap =
+									suggestionDocTypeFields
+										.stream()
+										.collect(
+											Collectors.toMap(
+												t -> t.getItem2().getPath(),
+												Tuple2::getItem1
+											)
+										);
+
+								List<? extends CompositeAggregation.Bucket> buckets =
+									responseCompositeAggregation.getBuckets();
+
+								LinkedList<Suggestions> suggestions =
+									new LinkedList<>();
+
+								BiConsumer<String, Suggestions> addSuggestions;
+
+								if (StringUtils.isNotBlank(suggestKeyword)) {
+									addSuggestions = (key, sugg) -> {
+
+										if (!suggestions.contains(sugg)) {
+											if (containsIgnoreCase(key, suggestKeyword)) {
+												suggestions.addFirst(sugg);
+											}
+										}
+									};
+								}
+								else {
+									addSuggestions = (key, sugg) -> {
+										if (!suggestions.contains(sugg)) {
+											suggestions.add(sugg);
+										}
+									};
+								}
+
+								for (CompositeAggregation.Bucket bucket : buckets) {
+
+									Map<String, Object> keys = new HashMap<>(bucket.getKey());
+
+									for (Map.Entry<String, Object> entry : keys.entrySet()) {
+
+										String key = entry.getKey();
+										String value = (String) entry.getValue();
+
+										Long suggestionCategoryId =
+											fieldNameCategoryIdMap.get(key);
+
+										if (value == null) {
+											continue;
+										}
+
+										long docCount = bucket.getDocCount();
+
+										addSuggestions.accept(
+											value,
+											SuggestionsUtil.filter(
+												value, suggestionCategoryId,
+												key, docCount
+											)
+										);
+									}
+
+								}
+
+								Map<String, Object> map =
+									responseCompositeAggregation.afterKey();
+								String newAfterKey = "";
+
+								if (map != null) {
+									newAfterKey = Json.encode(map);
+									newAfterKey = Base64.getEncoder().encodeToString(
+										newAfterKey.getBytes(StandardCharsets.UTF_8));
+								}
+
+								return SuggestionsResponse
+									.newBuilder()
+									.addAllResult(suggestions)
+									.setAfterKey(newAfterKey)
+									.build();
+
+							});
+
+						});
 				});
 
 		});
@@ -423,57 +435,65 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
 					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
-				.map(tenant -> {
+				.flatMap(tenant -> {
 
 					if (tenant == null) {
-						return QueryParserResponse
+						return Uni.createFrom().item(QueryParserResponse
 							.newBuilder()
-							.build();
+							.build()
+						);
 					}
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
 					String language = _getLanguage(request, tenant);
 
-					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
-							tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
+					return createBoolQuery(
+						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language)
+						.map(boolQueryBuilder -> {
 
-					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-					searchSourceBuilder.trackTotalHits(true);
+							searchSourceBuilder.trackTotalHits(true);
 
-					searchSourceBuilder.query(boolQueryBuilder);
+							searchSourceBuilder.query(boolQueryBuilder);
 
-					if (request.getRangeCount() == 2) {
-						searchSourceBuilder.from(request.getRange(0));
-						searchSourceBuilder.size(request.getRange(1));
-					}
+							if (request.getRangeCount() == 2) {
+								searchSourceBuilder.from(request.getRange(0));
+								searchSourceBuilder.size(request.getRange(1));
+							}
 
-					List<DocTypeField> docTypeFieldList = Utils
-						.getDocTypeFieldsFrom(tenant)
-						.filter(docTypeField -> !docTypeField.isI18N())
-						.toList();
+							List<DocTypeField> docTypeFieldList = Utils
+								.getDocTypeFieldsFrom(tenant)
+								.filter(docTypeField -> !docTypeField.isI18N())
+								.toList();
 
-					applySort(
-						docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-						searchSourceBuilder);
+							applySort(
+								docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+								searchSourceBuilder
+							);
 
-					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, language);
+							applyHighlightAndIncludeExclude(
+								searchSourceBuilder,
+								docTypeFieldList,
+								language
+							);
 
-					List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+							List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
 
-					SearchConfig searchConfig = tenant.getSearchConfig();
+							SearchConfig searchConfig = tenant.getSearchConfig();
 
-					applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+							applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
 
-					String[] indexNames = getIndexNames(request, tenant);
+							String[] indexNames = getIndexNames(request, tenant);
 
-					return QueryParserResponse
-						.newBuilder()
-						.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
-						.addAllIndexName(List.of(indexNames))
-						.build();
+							return QueryParserResponse
+								.newBuilder()
+								.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
+								.addAllIndexName(List.of(indexNames))
+								.build();
 
+						});
 				});
 
 		});
