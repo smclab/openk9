@@ -144,7 +144,7 @@ public class EntityQueryParser implements QueryParser {
 				SearcherService.getQueryParserConfig(
 					currentTenant, textQueryParser.getType());
 
-			textQueryParser.accept(
+			return textQueryParser.apply(
 				ParserContext
 					.builder()
 					.mutableQuery(mutableQuery)
