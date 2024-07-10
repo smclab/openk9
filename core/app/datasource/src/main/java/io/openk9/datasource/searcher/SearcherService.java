@@ -110,79 +110,8 @@ import javax.inject.Inject;
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
 
-	@Override
-	@ActivateRequestContext
-	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
+	private static Logger log = Logger.getLogger(SearcherService.class);
 
-		return Uni.createFrom().deferred(() -> {
-
-			Map<String, List<ParserSearchToken>> tokenGroup =
-				createTokenGroup(request);
-
-
-			return QuarkusCacheUtil.getAsync(
-					cache,
-					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
-					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
-				)
-				.map(tenant -> {
-
-					if (tenant == null) {
-						return QueryParserResponse
-							.newBuilder()
-							.build();
-					}
-
-					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
-
-					String language = _getLanguage(request, tenant);
-
-					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
-							tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
-
-					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-					searchSourceBuilder.trackTotalHits(true);
-
-					searchSourceBuilder.query(boolQueryBuilder);
-
-					if (request.getRangeCount() == 2) {
-						searchSourceBuilder.from(request.getRange(0));
-						searchSourceBuilder.size(request.getRange(1));
-					}
-
-					List<DocTypeField> docTypeFieldList =
-						Utils
-							.getDocTypeFieldsFrom(tenant)
-							.filter(docTypeField -> !docTypeField.isI18N())
-							.toList();
-
-					applySort(
-						docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-						searchSourceBuilder);
-
-					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, language);
-
-					List<SearchTokenRequest> searchQuery =
-						request.getSearchQueryList();
-
-					SearchConfig searchConfig = tenant.getSearchConfig();
-
-					applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-					String[] indexNames = getIndexNames(request, tenant);
-
-					return QueryParserResponse
-						.newBuilder()
-						.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
-						.addAllIndexName(List.of(indexNames))
-						.build();
-
-				});
-
-		});
-
-	}
 	@Override
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
 		return Uni.createFrom().deferred(() -> {
@@ -480,176 +409,74 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	}
 
 	@Override
-	public Uni<QueryAnalysisResponse> queryAnalysis(QueryAnalysisRequest request) {
+	@ActivateRequestContext
+	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
 
-		String searchText = request.getSearchText();
+		return Uni.createFrom().deferred(() -> {
 
-		String mode = request.getMode();
-
-		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
-
-		return grammarUni.map(grammar -> {
-
-			Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
-				Utils.toTokenIndexMap(searchText);
-
-			Map<Tuple<Integer>, Map<String, Object>> chart =
-				_getRequestTokensMap(tokenIndexMap, request.getTokensList());
-
-			List<Parse> parses = grammar.parseInput(request.getSearchText());
-
-				parses = parses
-					.stream()
-					.limit(20)
-					.toList();
+			Map<String, List<ParserSearchToken>> tokenGroup =
+				createTokenGroup(request);
 
 
-				if (logger.isDebugEnabled()) {
+			return QuarkusCacheUtil.getAsync(
+					cache,
+					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
+					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+				)
+				.map(tenant -> {
 
-				JsonArray reduce = parses
-					.stream()
-					.map(Parse::toJson)
-					.reduce(
-						new JsonArray(),
-						JsonArray::add, (a, b) -> b);
-
-				logger.debug(reduce.toString());
-
-			}
-
-			List<SemanticsPos> list = new ArrayList<>();
-
-			for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-				list.add(SemanticsPos.of(e.getKey(), e.getValue()));
-			}
-
-			for (int i = parses.size() - 1; i >= 0; i--) {
-				SemanticTypes semanticTypes =
-					parses.get(i).getSemantics().apply();
-
-				List<SemanticType> semanticTypeList =
-					semanticTypes.getSemanticTypes();
-
-				for (SemanticType maps : semanticTypeList) {
-					for (Map<String, Object> map : maps) {
-						Object tokenType = map.get("tokenType");
-						int startPos = maps.getPos().get(0);
-						Object keywordKey = map.get("keywordKey");
-
-						if (Objects.equals(mode, "semantic-autocomplete")) {
-							logger.info(mode);
-							if (startPos > 0 && keywordKey != null) {
-								continue;
-							}
-						}
-
-						if (tokenType != null && !tokenType.equals("TOKEN")) {
-							list.add(SemanticsPos.of(maps.getPos(), map));
-						}
+					if (tenant == null) {
+						return QueryParserResponse
+							.newBuilder()
+							.build();
 					}
-				}
-			}
 
-			logger.debug(list.toString());
+					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-			list.sort(SemanticsPos::compareTo);
+					String language = _getLanguage(request, tenant);
 
-			logger.debug("Sorted list: " + list);
+					BoolQueryBuilder boolQueryBuilder = createBoolQuery(
+							tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language);
 
-			Set<SemanticsPos> set = new TreeSet<>(
-				SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
+					SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
-			set.addAll(list);
+					searchSourceBuilder.trackTotalHits(true);
 
-			logger.debug("Set: " + set);
+					searchSourceBuilder.query(boolQueryBuilder);
 
-			Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
-				Collectors.toCollection(LinkedHashSet::new));
+					if (request.getRangeCount() == 2) {
+						searchSourceBuilder.from(request.getRange(0));
+						searchSourceBuilder.size(request.getRange(1));
+					}
 
-			scoreOrderedSet.addAll(set);
+					List<DocTypeField> docTypeFieldList = Utils
+						.getDocTypeFieldsFrom(tenant)
+						.filter(docTypeField -> !docTypeField.isI18N())
+						.toList();
 
-			logger.debug("scoreOrderedSet: " + set);
+					applySort(
+						docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+						searchSourceBuilder);
 
-			List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+					applyHighlightAndIncludeExclude(searchSourceBuilder, docTypeFieldList, language);
 
-			Map<Tuple<Integer>, List<Map<String, Object>>> collect =
-				scoreOrderedSet
-					.stream()
-					.collect(
-						Collectors.groupingBy(
-							SemanticsPos::getPos,
-							Collectors.mapping(
-								SemanticsPos::getSemantics,
-								Collectors.toList())
-						)
-					);
+					List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
 
-			for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
-				collect.entrySet()) {
+					SearchConfig searchConfig = tenant.getSearchConfig();
 
-				Integer startPos =
-					entry.getKey().getOrDefault(0, -1);
+					applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
 
-				if (startPos < 0) {
-					continue;
-				}
+					String[] indexNames = getIndexNames(request, tenant);
 
-				Utils.TokenIndex startTokenIndex =
-					tokenIndexMap.get(startPos);
+					return QueryParserResponse
+						.newBuilder()
+						.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
+						.addAllIndexName(List.of(indexNames))
+						.build();
 
-				if (startTokenIndex == null) {
-					continue;
-				}
+				});
 
-				Integer endPos =
-					entry.getKey().getOrDefault(1, -1);
-
-				if (endPos >= 0 && (endPos - startPos) > 1) {
-
-					Utils.TokenIndex endTokenIndex =
-						tokenIndexMap.get(endPos - 1);
-
-					result.add(
-						QueryAnalysisTokens.newBuilder()
-							.setText(
-								searchText.substring(
-									startTokenIndex.getStartIndex(),
-									endTokenIndex.getEndIndex()))
-								.setStart(startTokenIndex.getStartIndex())
-							.setEnd(endTokenIndex.getEndIndex())
-							.addAllTokens(_toAnalysisTokens(entry.getValue()))
-							.addPos(startTokenIndex.getPos())
-							.addPos(endTokenIndex.getPos())
-							.build()
-					);
-
-				}
-				else {
-					result.add(
-						QueryAnalysisTokens.newBuilder()
-							.setText(
-								searchText.substring(
-									startTokenIndex.getStartIndex(),
-									startTokenIndex.getEndIndex()))
-							.setStart(startTokenIndex.getStartIndex())
-							.setEnd(startTokenIndex.getEndIndex())
-							.addAllTokens(_toAnalysisTokens(entry.getValue()))
-							.addPos(startTokenIndex.getPos())
-							.build()
-					);
-				}
-
-			}
-
-			return QueryAnalysisResponse.newBuilder()
-				.setSearchText(searchText)
-				.addAllAnalysis(result)
-				.build();
-
-		})
-		.onFailure()
-		.recoverWithItem(() -> QueryAnalysisResponse.newBuilder().build());
+		});
 
 	}
 
@@ -907,61 +734,177 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 	}
 
-	private void applySort(
-		List<DocTypeField> docTypeFieldList, List<Sort> sortList,
-		String sortAfterKey, SearchSourceBuilder searchSourceBuilder) {
+	@Override
+	public Uni<QueryAnalysisResponse> queryAnalysis(QueryAnalysisRequest request) {
 
-		if (sortList == null || sortList.isEmpty()) {
-			return;
-		}
+		String searchText = request.getSearchText();
 
-		List<String> docTypeFieldNameSortable =
-			docTypeFieldList
-				.stream()
-				.filter(DocTypeField::isSortable)
-				.map(DocTypeField::getPath)
-				.toList();
+		String mode = request.getMode();
 
-		if (docTypeFieldNameSortable.isEmpty()) {
-			logger.warn("No sortable doc type field found");
-			return;
-		}
+		Uni<Grammar> grammarUni =
+			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
 
-		for (Sort sort : sortList) {
+		return grammarUni.map(grammar -> {
 
-			String field = sort.getField();
+			Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
+				Utils.toTokenIndexMap(searchText);
 
-			if (!docTypeFieldNameSortable.contains(field)) {
-				logger.warn("Field " + field + " is not sortable");
-				continue;
+			Map<Tuple<Integer>, Map<String, Object>> chart =
+				_getRequestTokensMap(tokenIndexMap, request.getTokensList());
+
+			List<Parse> parses = grammar.parseInput(request.getSearchText());
+
+				parses = parses
+					.stream()
+					.limit(20)
+					.toList();
+
+
+				if (log.isDebugEnabled()) {
+
+				JsonArray reduce = parses
+					.stream()
+					.map(Parse::toJson)
+					.reduce(
+						new JsonArray(),
+						JsonArray::add, (a, b) -> b);
+
+					log.debug(reduce.toString());
+
 			}
 
-			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(field);
+			List<SemanticsPos> list = new ArrayList<>();
 
-			Map<String, String> extrasMap = sort.getExtrasMap();
-
-			String sortValue = extrasMap.get("sort");
-
-			if (sortValue != null && (sortValue.equalsIgnoreCase("asc") || sortValue.equalsIgnoreCase("desc"))) {
-				fieldSortBuilder.order(SortOrder.fromString(sortValue));
+			for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+				list.add(SemanticsPos.of(e.getKey(), e.getValue()));
 			}
 
-			String missingValue = extrasMap.get("missing");
+			for (int i = parses.size() - 1; i >= 0; i--) {
+				SemanticTypes semanticTypes =
+					parses.get(i).getSemantics().apply();
 
-			if (missingValue != null && (missingValue.equals("_last") || missingValue.equals("_first"))) {
-				fieldSortBuilder.missing(missingValue);
+				List<SemanticType> semanticTypeList =
+					semanticTypes.getSemanticTypes();
+
+				for (SemanticType maps : semanticTypeList) {
+					for (Map<String, Object> map : maps) {
+						Object tokenType = map.get("tokenType");
+						int startPos = maps.getPos().get(0);
+						Object keywordKey = map.get("keywordKey");
+
+						if (Objects.equals(mode, "semantic-autocomplete")) {
+							log.info(mode);
+							if (startPos > 0 && keywordKey != null) {
+								continue;
+							}
+						}
+
+						if (tokenType != null && !tokenType.equals("TOKEN")) {
+							list.add(SemanticsPos.of(maps.getPos(), map));
+						}
+					}
+				}
 			}
 
-			searchSourceBuilder.sort(fieldSortBuilder);
+				log.debug(list.toString());
 
-			if (sortAfterKey != null && !sortAfterKey.isBlank()) {
-				byte[] decode = Base64.getDecoder().decode(sortAfterKey);
-				JsonArray objects = new JsonArray(Buffer.buffer(decode));
-				Object[] array = objects.getList().toArray();
-				searchSourceBuilder.searchAfter(array);
+			list.sort(SemanticsPos::compareTo);
+
+				log.debug("Sorted list: " + list);
+
+			Set<SemanticsPos> set = new TreeSet<>(
+				SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
+
+			set.addAll(list);
+
+				log.debug("Set: " + set);
+
+			Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
+				Collectors.toCollection(LinkedHashSet::new));
+
+			scoreOrderedSet.addAll(set);
+
+				log.debug("scoreOrderedSet: " + set);
+
+			List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+
+			Map<Tuple<Integer>, List<Map<String, Object>>> collect =
+				scoreOrderedSet
+					.stream()
+					.collect(
+						Collectors.groupingBy(
+							SemanticsPos::getPos,
+							Collectors.mapping(
+								SemanticsPos::getSemantics,
+								Collectors.toList())
+						)
+					);
+
+			for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
+				collect.entrySet()) {
+
+				Integer startPos =
+					entry.getKey().getOrDefault(0, -1);
+
+				if (startPos < 0) {
+					continue;
+				}
+
+				Utils.TokenIndex startTokenIndex =
+					tokenIndexMap.get(startPos);
+
+				if (startTokenIndex == null) {
+					continue;
+				}
+
+				Integer endPos =
+					entry.getKey().getOrDefault(1, -1);
+
+				if (endPos >= 0 && (endPos - startPos) > 1) {
+
+					Utils.TokenIndex endTokenIndex =
+						tokenIndexMap.get(endPos - 1);
+
+					result.add(
+						QueryAnalysisTokens.newBuilder()
+							.setText(
+								searchText.substring(
+									startTokenIndex.getStartIndex(),
+									endTokenIndex.getEndIndex()))
+								.setStart(startTokenIndex.getStartIndex())
+							.setEnd(endTokenIndex.getEndIndex())
+							.addAllTokens(_toAnalysisTokens(entry.getValue()))
+							.addPos(startTokenIndex.getPos())
+							.addPos(endTokenIndex.getPos())
+							.build()
+					);
+
+				}
+				else {
+					result.add(
+						QueryAnalysisTokens.newBuilder()
+							.setText(
+								searchText.substring(
+									startTokenIndex.getStartIndex(),
+									startTokenIndex.getEndIndex()))
+							.setStart(startTokenIndex.getStartIndex())
+							.setEnd(startTokenIndex.getEndIndex())
+							.addAllTokens(_toAnalysisTokens(entry.getValue()))
+							.addPos(startTokenIndex.getPos())
+							.build()
+					);
+				}
+
 			}
 
-		}
+			return QueryAnalysisResponse.newBuilder()
+				.setSearchText(searchText)
+				.addAllAnalysis(result)
+				.build();
+
+		})
+		.onFailure()
+		.recoverWithItem(() -> QueryAnalysisResponse.newBuilder().build());
 
 	}
 
@@ -1008,9 +951,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	GrammarProvider grammarProvider;
-
-	@Inject
-	Logger logger;
 
 	@Inject
 	@CacheName("searcher-service")
@@ -1106,6 +1046,64 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		return Language.NONE;
+	}
+
+	private static void applySort(
+		List<DocTypeField> docTypeFieldList, List<Sort> sortList,
+		String sortAfterKey, SearchSourceBuilder searchSourceBuilder) {
+
+		if (sortList == null || sortList.isEmpty()) {
+			return;
+		}
+
+		List<String> docTypeFieldNameSortable =
+			docTypeFieldList
+				.stream()
+				.filter(DocTypeField::isSortable)
+				.map(DocTypeField::getPath)
+				.toList();
+
+		if (docTypeFieldNameSortable.isEmpty()) {
+			log.warn("No sortable doc type field found");
+			return;
+		}
+
+		for (Sort sort : sortList) {
+
+			String field = sort.getField();
+
+			if (!docTypeFieldNameSortable.contains(field)) {
+				log.warn("Field " + field + " is not sortable");
+				continue;
+			}
+
+			FieldSortBuilder fieldSortBuilder = SortBuilders.fieldSort(field);
+
+			Map<String, String> extrasMap = sort.getExtrasMap();
+
+			String sortValue = extrasMap.get("sort");
+
+			if (sortValue != null && (sortValue.equalsIgnoreCase("asc") || sortValue.equalsIgnoreCase("desc"))) {
+				fieldSortBuilder.order(SortOrder.fromString(sortValue));
+			}
+
+			String missingValue = extrasMap.get("missing");
+
+			if (missingValue != null && (missingValue.equals("_last") || missingValue.equals("_first"))) {
+				fieldSortBuilder.missing(missingValue);
+			}
+
+			searchSourceBuilder.sort(fieldSortBuilder);
+
+			if (sortAfterKey != null && !sortAfterKey.isBlank()) {
+				byte[] decode = Base64.getDecoder().decode(sortAfterKey);
+				JsonArray objects = new JsonArray(Buffer.buffer(decode));
+				Object[] array = objects.getList().toArray();
+				searchSourceBuilder.searchAfter(array);
+			}
+
+		}
+
 	}
 
 }
