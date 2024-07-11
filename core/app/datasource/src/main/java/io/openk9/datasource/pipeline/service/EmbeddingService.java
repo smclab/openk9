@@ -44,8 +44,8 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class EmbeddingService {
 
-	private static final String GET_CONFIGURATIONS =
-		"EmbeddingService#getConfigurations";
+	private static final String GET_EMBEDDING_CHUNKS_CONFIGURATION =
+		"EmbeddingService#getEmbeddingChunksConfiguration";
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -57,9 +57,12 @@ public class EmbeddingService {
 		String tenantId, String scheduleId, byte[] payload) {
 
 		return EventBusInstanceHolder.getEventBus()
-			.request(GET_CONFIGURATIONS, new ConfigurationsRequest(tenantId, scheduleId))
+			.request(
+				GET_EMBEDDING_CHUNKS_CONFIGURATION,
+				new EmbeddingChunksConfigurationRequest(tenantId, scheduleId)
+			)
 			.flatMap(message -> {
-				var configurations = (EmbeddingConfiguration) message.body();
+				var configurations = (EmbeddingChunksConfiguration) message.body();
 
 				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
 
@@ -120,8 +123,44 @@ public class EmbeddingService {
 			.subscribeAsCompletionStage();
 	}
 
-	@ConsumeEvent(GET_CONFIGURATIONS)
-	Uni<EmbeddingConfiguration> getConfigurations(ConfigurationsRequest request) {
+	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
+
+		return getEmbeddingConfiguration(tenantId)
+			.flatMap(configuration -> {
+				var client = EmbeddingStubRegistry.getStub(configuration.apiUrl());
+				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
+					.setText(text)
+					.setApiKey(configuration.apiKey())
+					.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
+						.setType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
+						.build())
+					.build());
+			})
+			.map(embeddingResponse -> new EmbeddedText(
+				embeddingResponse.getChunks(0).getVectorsList()));
+
+	}
+
+	Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(tenantId),
+			sessionFactory.withTransaction(
+				tenantId, (s, t) -> s
+					.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+					.getSingleResult()
+					.map(embeddingModel -> new EmbeddingConfiguration(
+						embeddingModel.getApiUrl(),
+						embeddingModel.getApiKey()
+					)))
+		);
+
+	}
+
+	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
+	Uni<EmbeddingChunksConfiguration> getEmbeddingChunksConfigurations(
+		EmbeddingChunksConfigurationRequest request) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
@@ -133,7 +172,7 @@ public class EmbeddingService {
 							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
 						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId)
 						.getSingleResult()
-						.map(vectorIndex -> new EmbeddingConfiguration(
+						.map(vectorIndex -> new EmbeddingChunksConfiguration(
 							embeddingModel.getApiUrl(),
 							embeddingModel.getApiKey(),
 							vectorIndex.getTextEmbeddingField(),
@@ -148,7 +187,7 @@ public class EmbeddingService {
 		);
 	}
 
-	private static EmbeddingOuterClass.ChunkType mapChunkType(EmbeddingConfiguration configurations) {
+	private static EmbeddingOuterClass.ChunkType mapChunkType(EmbeddingChunksConfiguration configurations) {
 		return switch (configurations.chunkType()) {
 			case DEFAULT -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 			case TEXT_SPLITTER -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER;
@@ -159,9 +198,9 @@ public class EmbeddingService {
 		};
 	}
 
-	private record ConfigurationsRequest(String tenantId, String scheduleId) {}
+	private record EmbeddingChunksConfigurationRequest(String tenantId, String scheduleId) {}
 
-	public record EmbeddingConfiguration(
+	public record EmbeddingChunksConfiguration(
 		String apiUrl,
 		String apiKey,
 		String fieldJsonPath,
@@ -170,6 +209,11 @@ public class EmbeddingService {
 		VectorIndex.ChunkType chunkType,
 		String jsonConfig,
 		String indexName
+	) {}
+
+	public record EmbeddingConfiguration(
+		String apiUrl,
+		String apiKey
 	) {}
 
 	public record EmbeddedChunk(
@@ -181,6 +225,10 @@ public class EmbeddingService {
 		int number,
 		int total,
 		String chunkText,
+		List<Float> vector
+	) {}
+
+	public record EmbeddedText(
 		List<Float> vector
 	) {}
 
