@@ -1,7 +1,7 @@
 FROM python:3.12.3-alpine3.20
 
 RUN mkdir -p /embedding-module
-RUN mkdir -p /embedding-module/logs
+RUN mkdir -p /var/log/openk9
 WORKDIR /embedding-module/
 COPY ./requirements.txt ./
 COPY ./embedding.proto ./

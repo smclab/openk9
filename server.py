@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 handler = TimedRotatingFileHandler(
-    "./logs/embedding-module.log", when="D", interval=1, backupCount=10
+    "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
 )
 handler.setFormatter(formatter)
 logger.addHandler(handler)
