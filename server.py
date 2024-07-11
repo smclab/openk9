@@ -105,7 +105,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             )
             text_splitted = text_splitter.split_text(text)
 
-        elif chunk_type == 3:
+        elif chunk_type == 3 or chunk_type == 0:
             chunk_size = (
                 int(chunk_jsonConfig["size"])
                 if "size" in chunk_jsonConfig
