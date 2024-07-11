@@ -72,6 +72,7 @@ public class KnnQueryParser implements QueryParser {
 					.getEmbeddedText(tenantId, value)
 					.map(embeddedText -> new KnnQuery.Builder()
 						.k(kNeighbors)
+						.field("vector")
 						.vector(toVector(embeddedText))
 						.build()
 						.toQuery()
