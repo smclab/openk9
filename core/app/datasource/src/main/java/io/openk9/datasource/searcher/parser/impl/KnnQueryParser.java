@@ -25,6 +25,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.json.Json;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.index.query.QueryBuilders;
 
 import java.io.ByteArrayOutputStream;
@@ -55,7 +56,7 @@ public class KnnQueryParser implements QueryParser {
 
 		var tenantId = currentTenant.getTenant();
 
-		var knnQueryUnis = new ArrayList<Uni<KnnQuery>>();
+		var knnQueryUnis = new ArrayList<Uni<Query>>();
 
 		for (ParserSearchToken parserSearchToken : tokenTypeGroup) {
 
@@ -74,6 +75,7 @@ public class KnnQueryParser implements QueryParser {
 						.field("vector")
 						.vector(toVector(embeddedText))
 						.build()
+						.toQuery()
 					);
 
 				knnQueryUnis.add(knnQuery);
@@ -86,26 +88,32 @@ public class KnnQueryParser implements QueryParser {
 			.andCollectFailures()
 			.invoke(knnQueries -> {
 
-				for (KnnQuery knnQuery : knnQueries) {
+				for (Query knnQuery : knnQueries) {
 
-					try (var os = new ByteArrayOutputStream()) {
-
-						var generator = Json.createGenerator(os);
-
-						knnQuery.serialize(generator, new JacksonJsonpMapper());
-
-						var wrapperQueryBuilder = QueryBuilders.wrapperQuery(os.toByteArray());
-
-						parserContext.getMutableQuery().must(wrapperQueryBuilder);
-
-					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					addsKnnQuery(parserContext, knnQuery);
 				}
 
 			})
 			.replaceWithVoid();
+	}
+
+	protected static void addsKnnQuery(ParserContext parserContext, Query knnQuery) {
+		try (var os = new ByteArrayOutputStream()) {
+
+			var generator = Json.createGenerator(os);
+
+			knnQuery.serialize(generator, new JacksonJsonpMapper());
+
+			generator.close();
+
+			var wrapperQueryBuilder = QueryBuilders.wrapperQuery(os.toByteArray());
+
+			parserContext.getMutableQuery().must(wrapperQueryBuilder);
+
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static float[] toVector(EmbeddingService.EmbeddedText embeddedText) {
