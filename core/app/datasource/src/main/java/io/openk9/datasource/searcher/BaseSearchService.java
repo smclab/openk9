@@ -166,6 +166,8 @@ public abstract class BaseSearchService {
 			.fetch(DocType_.docTypeFields, JoinType.LEFT)
 			.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
+		dataIndexRoot.fetch(DataIndex_.vectorIndex, JoinType.LEFT);
+
 		expressions.add(
 			criteriaBuilder.equal(
 				tenantBindingJoin.get(TenantBinding_.virtualHost),
