@@ -43,12 +43,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
@@ -72,10 +74,14 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return new String[]{EnrichPipeline_.NAME, EnrichPipeline_.DESCRIPTION};
 	}
 
-
 	public Uni<EnrichPipeline> create(EnrichPipelineDTO dto) {
 		return sessionFactory.withTransaction(
 			(session, transaction) -> create(session, dto));
+	}
+
+	public Uni<EnrichPipeline> patch(long id, EnrichPipelineDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> patch(session, id, dto));
 	}
 
 	@Override
@@ -118,48 +124,72 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	@Override
-	public Uni<EnrichPipeline> patch(long id, EnrichPipelineDTO dto) {
-		return sessionFactory.withTransaction(session -> {
-			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
+	public Uni<EnrichPipeline> patch(Mutiny.Session s, long id, EnrichPipelineDTO dto) {
+		if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
 
-				return findById(session, id)
-					.call(enrichPipeline -> Mutiny.fetch(enrichPipeline.getEnrichPipelineItems()))
-					.onItem().ifNotNull()
-					.transformToUni(prev -> {
-						var entity = mapper.patch(prev, dto);
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
+				cb.createCriteriaDelete(EnrichPipelineItem.class);
+			Root<EnrichPipelineItem> deleteFrom =
+				deletePipelineItem.from(EnrichPipelineItem.class);
 
-						if (pipelineWithItemsDTO.getItems() != null) {
-							var enrichPipelineItems = entity.getEnrichPipelineItems();
-							enrichPipelineItems.clear();
+			var itemDTOSet = pipelineWithItemsDTO.getItems();
 
-							for (PipelineWithItemsDTO.ItemDTO item :
-									pipelineWithItemsDTO.getItems()) {
+			return findById(s, id)
+				.call(pipeline -> Mutiny.fetch(pipeline.getEnrichPipelineItems()))
+				.call(pipeline -> {
+					if (itemDTOSet != null) {
+						//retrieves item ids to keep
+						var itemIdsToKeep = itemDTOSet.stream()
+							.map(PipelineWithItemsDTO.ItemDTO::getEnrichItemId)
+							.collect(Collectors.toSet());
 
-								var enrichItem =
-									session.getReference(EnrichItem.class, item.getEnrichItemId());
+						var pipelineIdPath = deleteFrom.get("enrichPipeline").get("id");
+						var itemIdPath = deleteFrom.get("enrichItem").get("id");
 
-								var enrichPipelineItem = new EnrichPipelineItem();
-								enrichPipelineItem.setEnrichPipeline(prev);
-								enrichPipelineItem.setEnrichItem(enrichItem);
-								enrichPipelineItem.setWeight(item.getWeight());
+						deletePipelineItem.where(
+							cb.and(
+								pipelineIdPath.in(id),
+								cb.not(itemIdPath.in(itemIdsToKeep))
+							));
 
-								var key = EnrichPipelineItemKey.of(
-									prev.getId(),
-									item.getEnrichItemId()
-								);
+						//removes pipeline-item old list
+						return s.createQuery(deletePipelineItem).executeUpdate()
+							.map(v -> pipeline);
+					}
+					return Uni.createFrom().item(pipeline);
+				})
+				.call(s::flush)
+				.call(Mutiny::fetch)
+				.onItem().ifNotNull()
+				.transformToUni(pipeline -> {
+					var patchedPipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
 
-								enrichPipelineItem.setKey(key);
+					//set new pipeline-item Set
+					if (itemDTOSet != null) {
+						patchedPipeline.getEnrichPipelineItems().clear();
 
-								enrichPipelineItems.add(enrichPipelineItem);
-							}
-						}
+						itemDTOSet.forEach(itemDTO -> {
+							var itemId = itemDTO.getEnrichItemId();
+							var key = EnrichPipelineItemKey.of(id, itemId);
+							var itemReference = s.getReference(EnrichItem.class, itemId);
 
-						return merge(session, entity);
-					});
-			}
+							var enrichPipelineItem = new EnrichPipelineItem();
+							enrichPipelineItem.setEnrichPipeline(patchedPipeline);
+							enrichPipelineItem.setEnrichItem(itemReference);
+							enrichPipelineItem.setKey(key);
+							enrichPipelineItem.setWeight(itemDTO.getWeight());
 
-			return super.patch(session, id, dto);
-		});
+						});
+					}
+
+					return s.merge(patchedPipeline)
+						.map(v -> patchedPipeline)
+						.call(s::flush);
+				});
+		}
+
+		return super.patch(s, id, dto);
 	}
 
 	@Override
