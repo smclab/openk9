@@ -49,6 +49,18 @@ public class LargeLanguageModelService
 		return new String[]{LargeLanguageModel_.NAME, LargeLanguageModel_.DESCRIPTION};
 	}
 
+	public Uni<LargeLanguageModel> fetchCurrent(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
+			.getSingleResult());
+	}
+
+	public Uni<LargeLanguageModel> fetchCurrent() {
+		return sessionFactory.withTransaction((s, t) -> s
+			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
+			.getSingleResult());
+	}
+
 	public Uni<LargeLanguageModel> enable(Mutiny.Session s, long id) {
 		return findById(s, id)
 			.flatMap(largeLanguageModel -> {

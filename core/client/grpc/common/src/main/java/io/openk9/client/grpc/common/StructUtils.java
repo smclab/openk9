@@ -30,7 +30,7 @@ public class StructUtils {
 
 		try {
 			var structBuilder = Struct.newBuilder();
-			JsonFormat.parser().merge(json, structBuilder);
+			JsonFormat.parser().merge(json != null ? json : "{}", structBuilder);
 			return structBuilder.build();
 		}
 		catch (InvalidProtocolBufferException e) {
@@ -43,7 +43,7 @@ public class StructUtils {
 
 		try {
 			var structBuilder = Struct.newBuilder();
-			JsonFormat.parser().merge(json, structBuilder);
+			JsonFormat.parser().merge(json != null ? json : Reader.nullReader(), structBuilder);
 			return structBuilder.build();
 		}
 		catch (IOException e) {
