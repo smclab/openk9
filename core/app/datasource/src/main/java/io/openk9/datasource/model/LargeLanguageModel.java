@@ -56,7 +56,7 @@ public class LargeLanguageModel extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
-	@OneToOne(mappedBy = "embeddingModel")
+	@OneToOne(mappedBy = "largeLanguageModel")
 	private TenantBinding tenantBinding;
 
 }
