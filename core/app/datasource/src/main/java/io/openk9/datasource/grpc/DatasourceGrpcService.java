@@ -97,11 +97,8 @@ public class DatasourceGrpcService implements Datasource {
 			.fetchCurrent(request.getSchemaName())
 			.map(llm -> {
 				var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
-					.setApiUrl(llm.getApiUrl());
-
-				if (llm.getJsonConfig() != null) {
-					responseBuilder.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
-				}
+					.setApiUrl(llm.getApiUrl())
+					.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
 
 				if (llm.getApiKey() != null) {
 					responseBuilder.setApiKey(llm.getApiKey());
