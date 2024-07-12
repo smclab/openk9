@@ -15,6 +15,7 @@ def run(
     sort,
     sortAfterKey,
     language,
+    vectorIndices,
 ):
     with grpc.insecure_channel("159.122.129.226:30370") as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
@@ -31,6 +32,7 @@ def run(
                 sort=sort,
                 sortAfterKey=sortAfterKey,
                 language=language,
+                vectorIndices=vectorIndices,
             )
         )
     query = response.query
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     sort = []
     sortAfterKey = ""
     language = "it_IT"
+    vectorIndices = True
 
     run(
         searchQuery,
@@ -85,4 +88,5 @@ if __name__ == "__main__":
         sort,
         sortAfterKey,
         language,
+        vectorIndices,
     )
