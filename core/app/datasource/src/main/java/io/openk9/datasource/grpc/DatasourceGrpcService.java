@@ -95,11 +95,20 @@ public class DatasourceGrpcService implements Datasource {
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
 		return largeLanguageModelService
 			.fetchCurrent(request.getSchemaName())
-			.map(llm -> GetLLMConfigurationsResponse.newBuilder()
-				.setApiUrl(llm.getApiUrl())
-				.setApiKey(llm.getApiKey())
-				.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()))
-				.build());
+			.map(llm -> {
+				var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
+					.setApiUrl(llm.getApiUrl());
+
+				if (llm.getJsonConfig() != null) {
+					responseBuilder.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+				}
+
+				if (llm.getApiKey() != null) {
+					responseBuilder.setApiKey(llm.getApiKey());
+				}
+
+				return responseBuilder.build();
+			});
 	}
 
 	private Uni<CreatePluginDriverResponse> upsertPluginDriver(
