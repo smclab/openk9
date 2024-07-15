@@ -103,15 +103,8 @@ public class EmbeddingService {
 							var vector = responseChunk.getVectorsList();
 
 							var embeddedChunk = new EmbeddedChunk(
-								indexName,
-								contentId,
-								title,
-								url,
-								acl,
-								number,
-								total,
-								chunkText,
-								vector
+								indexName, contentId, title, url, acl, number,
+								total, chunkText, vector
 							);
 
 							list.add(embeddedChunk);
@@ -161,7 +154,9 @@ public class EmbeddingService {
 							vectorIndex.getTextEmbeddingField(),
 							vectorIndex.getTitleField(),
 							vectorIndex.getUrlField(),
+							vectorIndex.getMetadataMapping(),
 							vectorIndex.getChunkType(),
+							vectorIndex.getChunkWindowSize(),
 							vectorIndex.getJsonConfig(),
 							vectorIndex.getDataIndex().getName()
 						))
@@ -206,7 +201,9 @@ public class EmbeddingService {
 		String fieldJsonPath,
 		String fieldTitle,
 		String fieldUrl,
+		String metadataMapping,
 		VectorIndex.ChunkType chunkType,
+		int chunkWindowSize,
 		String jsonConfig,
 		String indexName
 	) {}

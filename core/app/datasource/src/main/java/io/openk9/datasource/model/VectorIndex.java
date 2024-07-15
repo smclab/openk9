@@ -69,6 +69,12 @@ public class VectorIndex extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Column(name = "chunk_window_size")
+	private int chunkWindowSize;
+
+	@Column(name = "metadata_mapping")
+	private String metadataMapping;
+
 	@OneToOne(mappedBy = "vectorIndex")
 	private DataIndex dataIndex;
 
