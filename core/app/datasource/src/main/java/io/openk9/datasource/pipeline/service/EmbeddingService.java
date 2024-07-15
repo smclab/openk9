@@ -94,7 +94,8 @@ public class EmbeddingService {
 					.map(embeddingResponse -> {
 						List<EmbeddedChunk> list = new ArrayList<>();
 
-						for (EmbeddingOuterClass.ResponseChunk responseChunk : embeddingResponse.getChunksList()) {
+						for (EmbeddingOuterClass.ResponseChunk responseChunk :
+							embeddingResponse.getChunksList()) {
 
 							var number = responseChunk.getNumber();
 							var total = responseChunk.getTotal();
@@ -141,7 +142,35 @@ public class EmbeddingService {
 
 	}
 
-	Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
+	Uni<EmbeddingChunksConfiguration> getEmbeddingChunksConfigurations(
+		EmbeddingChunksConfigurationRequest request) {
+
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(request),
+			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
+				getEmbeddingConfiguration(request.tenantId)
+					.flatMap(embeddingConfiguration -> s.createNamedQuery(
+							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
+						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId)
+						.getSingleResult()
+						.map(vectorIndex -> new EmbeddingChunksConfiguration(
+							embeddingConfiguration.apiUrl(),
+							embeddingConfiguration.apiKey(),
+							vectorIndex.getTextEmbeddingField(),
+							vectorIndex.getTitleField(),
+							vectorIndex.getUrlField(),
+							vectorIndex.getChunkType(),
+							vectorIndex.getJsonConfig(),
+							vectorIndex.getDataIndex().getName()
+						))
+					)
+			)
+		);
+	}
+
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
@@ -156,35 +185,6 @@ public class EmbeddingService {
 					)))
 		);
 
-	}
-
-	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
-	Uni<EmbeddingChunksConfiguration> getEmbeddingChunksConfigurations(
-		EmbeddingChunksConfigurationRequest request) {
-
-		return QuarkusCacheUtil.getAsync(
-			cache,
-			new CompositeCacheKey(request),
-			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-				s.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-					.getSingleResult()
-					.flatMap(embeddingModel -> s.createNamedQuery(
-							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
-						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId)
-						.getSingleResult()
-						.map(vectorIndex -> new EmbeddingChunksConfiguration(
-							embeddingModel.getApiUrl(),
-							embeddingModel.getApiKey(),
-							vectorIndex.getTextEmbeddingField(),
-							vectorIndex.getTitleField(),
-							vectorIndex.getUrlField(),
-							vectorIndex.getChunkType(),
-							vectorIndex.getJsonConfig(),
-							vectorIndex.getDataIndex().getName()
-						))
-					)
-			)
-		);
 	}
 
 	private static EmbeddingOuterClass.ChunkType mapChunkType(EmbeddingChunksConfiguration configurations) {
