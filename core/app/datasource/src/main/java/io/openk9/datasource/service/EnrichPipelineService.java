@@ -180,6 +180,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 							enrichPipelineItem.setKey(key);
 							enrichPipelineItem.setWeight(itemDTO.getWeight());
 
+							patchedPipeline.getEnrichPipelineItems().add(enrichPipelineItem);
 						});
 					}
 
