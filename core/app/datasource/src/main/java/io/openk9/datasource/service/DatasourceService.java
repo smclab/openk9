@@ -422,7 +422,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		var pipelineId = datasourceConnectionDTO.getPipelineId();
 
 		if (pipelineDto != null) {
-			return enrichPipelineService.create(session, pipelineDto);
+			return enrichPipelineService.createWithItems(session, pipelineDto);
 		}
 		else if (pipelineId != null) {
 			return enrichPipelineService.findById(session, pipelineId);

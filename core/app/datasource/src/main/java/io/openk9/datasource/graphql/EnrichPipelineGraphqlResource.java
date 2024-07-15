@@ -111,7 +111,7 @@ public class EnrichPipelineGraphqlResource {
 		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
-			return createEnrichPipeline(pipelineWithItemsDTO);
+			return enrichPipelineService.createWithItems(pipelineWithItemsDTO);
 		} else {
 			return patch
 				? patchEnrichPipeline(id, pipelineWithItemsDTO)

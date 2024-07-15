@@ -18,6 +18,8 @@
 package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
@@ -38,15 +40,6 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -57,6 +50,15 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import javax.validation.ConstraintViolationException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 ;
 
@@ -74,9 +76,25 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return new String[]{EnrichPipeline_.NAME, EnrichPipeline_.DESCRIPTION};
 	}
 
-	public Uni<EnrichPipeline> create(EnrichPipelineDTO dto) {
+	public Uni<Response<EnrichPipeline>> createWithItems(PipelineWithItemsDTO dto) {
 		return sessionFactory.withTransaction(
-			(session, transaction) -> create(session, dto));
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if ( !constraintViolations.isEmpty() ) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return createWithItems(session, dto)
+					.flatMap(enrichPipeline ->
+						Uni.createFrom().item(Response.of(enrichPipeline,null)));
+			});
 	}
 
 	public Uni<EnrichPipeline> patch(long id, EnrichPipelineDTO dto) {
@@ -84,43 +102,39 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			(session, transaction) -> patch(session, id, dto));
 	}
 
-	@Override
-	public Uni<EnrichPipeline> create(Mutiny.Session s, EnrichPipelineDTO dto) {
-		if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
-			var transientPipeline = mapper.create(dto);
+	public Uni<EnrichPipeline> createWithItems(
+			Mutiny.Session s, PipelineWithItemsDTO pipelineWithItemsDTO) {
 
-			return super.create(s, transientPipeline)
-				.flatMap(pipeline -> {
-					var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
+		var transientPipeline = mapper.create(pipelineWithItemsDTO);
 
-					for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
-						var enrichItem =
-							s.getReference(EnrichItem.class, item.getEnrichItemId());
+		return super.create(s, transientPipeline)
+			.flatMap(pipeline -> {
+				var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
 
-						var enrichPipelineItem = new EnrichPipelineItem();
-						enrichPipelineItem.setEnrichPipeline(pipeline);
-						enrichPipelineItem.setEnrichItem(enrichItem);
-						enrichPipelineItem.setWeight(item.getWeight());
-						enrichPipelineItems.add(enrichPipelineItem);
+				for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
+					var enrichItem =
+						s.getReference(EnrichItem.class, item.getEnrichItemId());
 
-						var key = EnrichPipelineItemKey.of(
-							pipeline.getId(),
-							item.getEnrichItemId()
-						);
+					var enrichPipelineItem = new EnrichPipelineItem();
+					enrichPipelineItem.setEnrichPipeline(pipeline);
+					enrichPipelineItem.setEnrichItem(enrichItem);
+					enrichPipelineItem.setWeight(item.getWeight());
+					enrichPipelineItems.add(enrichPipelineItem);
 
-						enrichPipelineItem.setKey(key);
-					}
+					var key = EnrichPipelineItemKey.of(
+						pipeline.getId(),
+						item.getEnrichItemId()
+					);
 
-					pipeline.setEnrichPipelineItems(enrichPipelineItems);
+					enrichPipelineItem.setKey(key);
+				}
 
-					return s
-						.persist(pipeline)
-						.flatMap(__ -> s.merge(pipeline));
-				});
+				pipeline.setEnrichPipelineItems(enrichPipelineItems);
 
-		}
-
-		return super.create(s, dto);
+				return s
+					.persist(pipeline)
+					.flatMap(__ -> s.merge(pipeline));
+			});
 	}
 
 	@Override
