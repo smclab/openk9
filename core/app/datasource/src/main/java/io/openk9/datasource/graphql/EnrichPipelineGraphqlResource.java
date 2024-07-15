@@ -113,9 +113,7 @@ public class EnrichPipelineGraphqlResource {
 		if (id == null) {
 			return enrichPipelineService.createWithItems(pipelineWithItemsDTO);
 		} else {
-			return patch
-				? patchEnrichPipeline(id, pipelineWithItemsDTO)
-				: updateEnrichPipeline(id, pipelineWithItemsDTO);
+			return enrichPipelineService.patchOrUpdateWithItems(id, pipelineWithItemsDTO, patch);
 		}
 
 	}
