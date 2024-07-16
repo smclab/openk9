@@ -245,51 +245,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			});
 	}
 
-	@Override
-	public Uni<EnrichPipeline> update(long id, EnrichPipelineDTO dto) {
-		return sessionFactory.withTransaction(session -> {
-			if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
-
-				return findById(session, id)
-					.call(enrichPipeline -> Mutiny.fetch(enrichPipeline.getEnrichPipelineItems()))
-					.onItem().ifNotNull()
-					.transformToUni(prev -> {
-						var entity = mapper.update(prev, dto);
-
-						var enrichPipelineItems = entity.getEnrichPipelineItems();
-						enrichPipelineItems.clear();
-
-						if (pipelineWithItemsDTO.getItems() != null) {
-
-							for (PipelineWithItemsDTO.ItemDTO item :
-									pipelineWithItemsDTO.getItems()) {
-
-								var enrichItem =
-									session.getReference(EnrichItem.class, item.getEnrichItemId());
-
-								var enrichPipelineItem = new EnrichPipelineItem();
-								enrichPipelineItem.setEnrichPipeline(prev);
-								enrichPipelineItem.setEnrichItem(enrichItem);
-								enrichPipelineItem.setWeight(item.getWeight());
-
-								var key =
-									EnrichPipelineItemKey.of(prev.getId(), item.getEnrichItemId());
-
-								enrichPipelineItem.setKey(key);
-
-								enrichPipelineItems.add(enrichPipelineItem);
-							}
-						}
-
-						return merge(session, entity);
-					});
-
-			}
-
-			return super.update(session, id, dto);
-		});
-	}
-
 	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
 		long enrichPipelineId, String after,
 		String before, Integer first, Integer last, String searchText,
