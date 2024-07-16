@@ -70,7 +70,7 @@ public class VectorIndex extends K9Entity {
 	private String jsonConfig;
 
 	@Column(name = "chunk_window_size")
-	private int chunkWindowSize;
+	private int chunkWindowSize = 0;
 
 	@Column(name = "metadata_mapping")
 	private String metadataMapping;
