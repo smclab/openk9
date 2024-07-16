@@ -274,7 +274,10 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 					chunk.number(),
 					chunk.total(),
 					chunk.chunkText(),
-					chunk.vector()
+					chunk.metadata(),
+					chunk.vector(),
+					chunk.previous(),
+					chunk.next()
 				);
 			}
 

@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
@@ -24,7 +25,6 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.util.QuarkusCacheUtil;
-import io.openk9.datasource.util.VertxJsonNodeJsonProvider;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
@@ -35,6 +35,8 @@ import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -73,8 +75,7 @@ public class EmbeddingService {
 					: "{}";
 				var chunkType = mapChunkType(configurations);
 
-				var documentContext =
-					JsonPath.using(VertxJsonNodeJsonProvider.CONFIGURATION).parseUtf8(payload);
+				var documentContext = JsonPath.parse(payload);
 
 				String text = documentContext.read(configurations.fieldJsonPath);
 				String title = documentContext.read(configurations.fieldTitle);
@@ -83,7 +84,13 @@ public class EmbeddingService {
 				String contentId = documentContext.read("$.contentId");
 				Map<String, Object> acl = documentContext.read("$.acl");
 
-				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
+				var metadataMap = getMetadataMap(
+					documentContext,
+					configurations.metadataMapping()
+				);
+
+				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
+						.newBuilder()
 						.setApiKey(apiKey)
 						.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
 							.setType(chunkType)
@@ -104,7 +111,7 @@ public class EmbeddingService {
 
 							var embeddedChunk = new EmbeddedChunk(
 								indexName, contentId, title, url, acl, number,
-								total, chunkText, vector
+								total, chunkText, metadataMap, vector, List.of(), List.of()
 							);
 
 							list.add(embeddedChunk);
@@ -115,6 +122,51 @@ public class EmbeddingService {
 					});
 			})
 			.subscribeAsCompletionStage();
+	}
+
+	protected static Map<String, Object> getMetadataMap(
+		DocumentContext documentContext, String metadataMapping) {
+
+		var metadata = new HashMap<String, Object>() {};
+
+		for (String expression : metadataMapping.split(";")) {
+
+			expression = expression.trim();
+			var splits = expression.split("\\.");
+
+			var key = splits[splits.length - 1];
+
+			var paths = Arrays.copyOfRange(splits, 1, splits.length - 1);
+
+			var value = documentContext.read(expression);
+
+			traverse(paths, metadata, key, value);
+
+		}
+
+		return metadata;
+	}
+
+	private static void traverse(
+		String[] paths, Map<String, Object> root, String key, Object value) {
+
+		for (String path : paths) {
+
+			var nextRoot = (Map<String, Object>) root.computeIfAbsent(
+				path,
+				k -> new HashMap<String, Object>()
+			);
+
+			var nextPaths = Arrays.copyOfRange(paths, 1, paths.length);
+
+			traverse(nextPaths, nextRoot, key, value);
+
+			return;
+
+		}
+
+		root.put(key, value);
+
 	}
 
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
@@ -220,9 +272,11 @@ public class EmbeddingService {
 		String url,
 		Map<String, Object> acl,
 		int number,
-		int total,
-		String chunkText,
-		List<Float> vector
+		int total, String chunkText,
+		Map<String, Object> metadata,
+		List<Float> vector,
+		List<EmbeddedChunk> previous,
+		List<EmbeddedChunk> next
 	) {}
 
 	public record EmbeddedText(
