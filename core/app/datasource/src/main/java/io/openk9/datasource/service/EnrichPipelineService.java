@@ -53,6 +53,7 @@ import javax.persistence.criteria.Subquery;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -209,18 +210,19 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			.transformToUni(pipeline -> {
 
 				EnrichPipeline newPipeline;
+				var newHashSet = new HashSet<EnrichPipelineItem>();
 
 				if ( patch ) {
 					newPipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
 				}
 				else {
 					newPipeline = mapper.update(pipeline, pipelineWithItemsDTO);
-					newPipeline.getEnrichPipelineItems().clear();
+					newPipeline.setEnrichPipelineItems(newHashSet);
 				}
 
 				//set new pipeline-item Set
 				if (itemDTOSet != null) {
-					newPipeline.getEnrichPipelineItems().clear();
+					newPipeline.setEnrichPipelineItems(newHashSet);
 
 					itemDTOSet.forEach(itemDTO -> {
 						var itemId = itemDTO.getEnrichItemId();
