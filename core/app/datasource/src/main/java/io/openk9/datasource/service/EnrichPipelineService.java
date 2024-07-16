@@ -170,14 +170,27 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return findById(s, id)
 			.call(pipeline -> Mutiny.fetch(pipeline.getEnrichPipelineItems()))
 			.call(pipeline -> {
-				if (!patch || itemDTOSet != null) {
+
+				var pipelineIdPath = deleteFrom.get("enrichPipeline").get("id");
+				var itemIdPath = deleteFrom.get("enrichItem").get("id");
+
+				if (itemDTOSet == null || itemDTOSet.isEmpty() ) {
+					if ( patch ) {
+						return Uni.createFrom().item(pipeline);
+					}
+					else {
+						deletePipelineItem.where(pipelineIdPath.in(id));
+
+						//removes pipeline-item old list
+						return s.createQuery(deletePipelineItem).executeUpdate()
+							.map(v -> pipeline);
+					}
+				}
+				else {
 					//retrieves item ids to keep
 					var itemIdsToKeep = itemDTOSet.stream()
 						.map(PipelineWithItemsDTO.ItemDTO::getEnrichItemId)
 						.collect(Collectors.toSet());
-
-					var pipelineIdPath = deleteFrom.get("enrichPipeline").get("id");
-					var itemIdPath = deleteFrom.get("enrichItem").get("id");
 
 					deletePipelineItem.where(
 						cb.and(
@@ -189,7 +202,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					return s.createQuery(deletePipelineItem).executeUpdate()
 						.map(v -> pipeline);
 				}
-				return Uni.createFrom().item(pipeline);
 			})
 			.call(s::flush)
 			.call(Mutiny::fetch)
@@ -203,10 +215,11 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				}
 				else {
 					newPipeline = mapper.update(pipeline, pipelineWithItemsDTO);
+					newPipeline.getEnrichPipelineItems().clear();
 				}
 
 				//set new pipeline-item Set
-				if (!patch || itemDTOSet != null) {
+				if (itemDTOSet != null) {
 					newPipeline.getEnrichPipelineItems().clear();
 
 					itemDTOSet.forEach(itemDTO -> {
