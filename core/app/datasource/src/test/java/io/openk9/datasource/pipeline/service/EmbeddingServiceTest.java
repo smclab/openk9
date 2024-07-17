@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import io.openk9.datasource.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -32,11 +33,14 @@ class EmbeddingServiceTest {
 	@Test
 	void getMetadataMap() {
 
-		var datapayload = TestUtils.getResourceAsStream("embedding/datapayload.json");
+		var datapayload = TestUtils
+			.getResourceAsJsonObject("embedding/datapayload.json")
+			.toBuffer()
+			.getBytes();
 
-		var documentContext = JsonPath.parse(
-			datapayload
-		);
+		var documentContext = JsonPath
+			.using(Configuration.defaultConfiguration())
+			.parseUtf8(datapayload);
 
 		var metadataMap = EmbeddingService.getMetadataMap(
 			documentContext,

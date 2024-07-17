@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import io.openk9.client.grpc.common.StructUtils;
@@ -75,7 +76,9 @@ public class EmbeddingService {
 					: "{}";
 				var chunkType = mapChunkType(configurations);
 
-				var documentContext = JsonPath.parse(payload);
+				var documentContext = JsonPath
+					.using(Configuration.defaultConfiguration())
+					.parseUtf8(payload);
 
 				String text = documentContext.read(configurations.fieldJsonPath);
 				String title = documentContext.read(configurations.fieldTitle);
