@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from app.grpc import searcher_pb2 as app_dot_grpc_dot_searcher__pb2
+from app.grpc.searcher import searcher_pb2 as app_dot_grpc_dot_searcher_dot_searcher__pb2
 
 GRPC_GENERATED_VERSION = '1.64.1'
 GRPC_VERSION = grpc.__version__
@@ -20,7 +20,7 @@ except ImportError:
 if _version_not_supported:
     warnings.warn(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in app/grpc/searcher_pb2_grpc.py depends on'
+        + f' but the generated code in app/grpc/searcher/searcher_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -41,18 +41,18 @@ class SearcherStub(object):
         """
         self.QueryParser = channel.unary_unary(
                 '/grpc.Searcher/QueryParser',
-                request_serializer=app_dot_grpc_dot_searcher__pb2.QueryParserRequest.SerializeToString,
-                response_deserializer=app_dot_grpc_dot_searcher__pb2.QueryParserResponse.FromString,
+                request_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.SerializeToString,
+                response_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserResponse.FromString,
                 _registered_method=True)
         self.SuggestionsQueryParser = channel.unary_unary(
                 '/grpc.Searcher/SuggestionsQueryParser',
-                request_serializer=app_dot_grpc_dot_searcher__pb2.QueryParserRequest.SerializeToString,
-                response_deserializer=app_dot_grpc_dot_searcher__pb2.SuggestionsResponse.FromString,
+                request_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.SerializeToString,
+                response_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.SuggestionsResponse.FromString,
                 _registered_method=True)
         self.QueryAnalysis = channel.unary_unary(
                 '/grpc.Searcher/QueryAnalysis',
-                request_serializer=app_dot_grpc_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
-                response_deserializer=app_dot_grpc_dot_searcher__pb2.QueryAnalysisResponse.FromString,
+                request_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
+                response_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.FromString,
                 _registered_method=True)
 
 
@@ -82,18 +82,18 @@ def add_SearcherServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'QueryParser': grpc.unary_unary_rpc_method_handler(
                     servicer.QueryParser,
-                    request_deserializer=app_dot_grpc_dot_searcher__pb2.QueryParserRequest.FromString,
-                    response_serializer=app_dot_grpc_dot_searcher__pb2.QueryParserResponse.SerializeToString,
+                    request_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.FromString,
+                    response_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserResponse.SerializeToString,
             ),
             'SuggestionsQueryParser': grpc.unary_unary_rpc_method_handler(
                     servicer.SuggestionsQueryParser,
-                    request_deserializer=app_dot_grpc_dot_searcher__pb2.QueryParserRequest.FromString,
-                    response_serializer=app_dot_grpc_dot_searcher__pb2.SuggestionsResponse.SerializeToString,
+                    request_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.FromString,
+                    response_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.SuggestionsResponse.SerializeToString,
             ),
             'QueryAnalysis': grpc.unary_unary_rpc_method_handler(
                     servicer.QueryAnalysis,
-                    request_deserializer=app_dot_grpc_dot_searcher__pb2.QueryAnalysisRequest.FromString,
-                    response_serializer=app_dot_grpc_dot_searcher__pb2.QueryAnalysisResponse.SerializeToString,
+                    request_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.FromString,
+                    response_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -121,8 +121,8 @@ class Searcher(object):
             request,
             target,
             '/grpc.Searcher/QueryParser',
-            app_dot_grpc_dot_searcher__pb2.QueryParserRequest.SerializeToString,
-            app_dot_grpc_dot_searcher__pb2.QueryParserResponse.FromString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.SerializeToString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -148,8 +148,8 @@ class Searcher(object):
             request,
             target,
             '/grpc.Searcher/SuggestionsQueryParser',
-            app_dot_grpc_dot_searcher__pb2.QueryParserRequest.SerializeToString,
-            app_dot_grpc_dot_searcher__pb2.SuggestionsResponse.FromString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryParserRequest.SerializeToString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.SuggestionsResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -175,8 +175,8 @@ class Searcher(object):
             request,
             target,
             '/grpc.Searcher/QueryAnalysis',
-            app_dot_grpc_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
-            app_dot_grpc_dot_searcher__pb2.QueryAnalysisResponse.FromString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.FromString,
             options,
             channel_credentials,
             insecure,
