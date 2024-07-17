@@ -18,7 +18,9 @@
 package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
 import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
@@ -303,4 +305,17 @@ public class PluginDriverService
 		});
 	}
 
+
+	public Uni<Response<PluginDriver>> createWithDocType(
+		PluginWithDocTypeDTO pluginWithDocTypeDTO) {
+
+		return null;
+	}
+
+
+	public Uni<Response<PluginDriver>> patchOrUpdateWithDocType(
+		Long pluginId, PluginWithDocTypeDTO pluginWithDocTypeDTO, boolean patch) {
+
+		return null;
+	}
 }

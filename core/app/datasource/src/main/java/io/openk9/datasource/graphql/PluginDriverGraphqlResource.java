@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
 import io.openk9.datasource.graphql.response.PluginDriverAclMapping;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
@@ -144,6 +145,19 @@ public class PluginDriverGraphqlResource {
 				id,
 				pluginDriverDTO
 			);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<PluginDriver>> pluginDriverWithDocType(
+		@Id Long id, PluginWithDocTypeDTO pluginWithDocTypeDTO, @DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return pluginDriverService.createWithDocType(pluginWithDocTypeDTO);
+		}
+		else {
+			return pluginDriverService.patchOrUpdateWithDocType(id, pluginWithDocTypeDTO, patch);
 		}
 
 	}
