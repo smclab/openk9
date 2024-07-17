@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
@@ -38,11 +39,8 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -53,6 +51,11 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PluginDriverService
@@ -307,9 +310,62 @@ public class PluginDriverService
 
 
 	public Uni<Response<PluginDriver>> createWithDocType(
-		PluginWithDocTypeDTO pluginWithDocTypeDTO) {
+		PluginWithDocTypeDTO dto) {
 
-		return null;
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if (!constraintViolations.isEmpty()) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return createWithDocType(session, dto)
+					.flatMap(pluginDriver ->
+						Uni.createFrom().item(Response.of(pluginDriver,null)));
+			}
+		);
+	}
+
+	public Uni<PluginDriver> createWithDocType(Mutiny.Session s, PluginWithDocTypeDTO dto) {
+
+		var transientPluginDriver = mapper.create(dto);
+
+		return super.create(s, transientPluginDriver)
+			.flatMap(pluginDriver -> {
+				var aclMappings = new LinkedHashSet<AclMapping>();
+
+				for (PluginWithDocTypeDTO.DocTypeUserDTO docTypeUser
+						: dto.getDocTypeUserDTOSet()) {
+
+					var docTypeField =
+						s.getReference(DocTypeField.class, docTypeUser.getDocTypeId());
+
+					var aclMapping = new AclMapping();
+					aclMapping.setPluginDriver(pluginDriver);
+					aclMapping.setDocTypeField(docTypeField);
+					aclMapping.setUserField(docTypeUser.getUserField());
+
+					var key = PluginDriverDocTypeFieldKey.of(
+						pluginDriver.getId(), docTypeUser.getDocTypeId());
+
+					aclMapping.setKey(key);
+
+					aclMappings.add(aclMapping);
+				}
+
+				pluginDriver.setAclMappings(aclMappings);
+
+				return s
+					.persist(pluginDriver)
+					.flatMap(__ -> s.merge(pluginDriver));
+			});
 	}
 
 
