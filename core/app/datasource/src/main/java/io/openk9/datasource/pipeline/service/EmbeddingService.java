@@ -361,24 +361,8 @@ public class EmbeddingService {
 		String apiKey
 	) {}
 
-	public record EmbeddedChunk(
-		String indexName,
-		String contentId,
-		String title,
-		String url,
-		Map<String, Object> acl,
-		int number,
-		int total, String chunkText,
-		Map<String, Object> metadata,
-		List<Float> vector,
-		List<EmbeddedChunk> previous,
-		List<EmbeddedChunk> next
-	) {}
-
 	public record EmbeddedText(
 		List<Float> vector
 	) {}
-
-	public record EmbeddedChunks(List<EmbeddedChunk> list) {}
 
 }
