@@ -1,0 +1,80 @@
+[
+	{
+		"contentId": 3062252989527342,
+		"sample": {
+			"firstName": "John",
+			"lastName": "Doe",
+			"email": "john.doe@acme.com",
+			"age": 20
+		},
+		"acl": {
+			"public": true
+		},
+		"number": 1,
+		"total": 3,
+		"vector": [
+			1.23,
+			2.235,
+			1.1234,
+			2.4341,
+			2.5353,
+			1.82344
+		],
+		"chunkText": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ",
+		"title": "Lorem Ipsum",
+		"url": "lipsum.com",
+		"indexName": "anIndexName"
+	},
+	{
+		"contentId": 3062252989527342,
+		"sample": {
+			"firstName": "John",
+			"lastName": "Doe",
+			"email": "john.doe@acme.com",
+			"age": 20
+		},
+		"acl": {
+			"public": true
+		},
+		"number": 3,
+		"total": 3,
+		"vector": [
+			1.23,
+			1.234,
+			3.1234,
+			2.2341,
+			1.5353,
+			1.82344
+		],
+		"chunkText": "It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.\n\n",
+		"title": "Lorem Ipsum",
+		"url": "lipsum.com",
+		"indexName": "anIndexName"
+	},
+	{
+		"contentId": 3062252989527342,
+		"sample": {
+			"firstName": "John",
+			"lastName": "Doe",
+			"email": "john.doe@acme.com",
+			"age": 20
+		},
+		"acl": {
+			"public": true
+		},
+		"number": 2,
+		"total": 3,
+		"vector": [
+			2.13,
+			3.414,
+			3.1234,
+			2.2341,
+			2.3353,
+			2.82344
+		],
+		"chunkText": " It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
+		"title": "Lorem Ipsum",
+		"url": "lipsum.com",
+		"indexName": "anIndexName"
+	}
+]

@@ -23,13 +23,12 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
@@ -44,6 +43,8 @@ import org.opensearch.client.transport.endpoints.BooleanResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.enterprise.inject.spi.CDI;
@@ -79,6 +80,20 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		return Behaviors.setup(ctx -> new VectorIndexWriter(ctx, scheduler, replyTo));
 	}
 
+	protected static List<Object> getChunks(byte[] json) {
+		return JsonPath.using(Configuration.defaultConfiguration())
+			.parseUtf8(json)
+			.read("$.*");
+	}
+
+	protected static int getVectorSize(byte[] json) {
+		List<List<Float>> jsonPathResult = JsonPath.using(Configuration.defaultConfiguration())
+			.parseUtf8(json)
+			.read("$.[:1].vector");
+
+		return jsonPathResult.stream().mapToInt(Collection::size).findAny().orElse(0);
+	}
+
 	@Override
 	public Receive<Writer.Command> createReceive() {
 		return newReceiveBuilder()
@@ -96,9 +111,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		var data = start.dataPayload();
 		var heldMessage = start.heldMessage();
 
-		var dataPayload = new JsonArray(Buffer.buffer(data));
-
-		getContext().getSelf().tell(new CheckIndexTemplate(dataPayload, heldMessage));
+		getContext().getSelf().tell(new CheckIndexTemplate(data, heldMessage));
 
 		return this;
 	}
@@ -158,12 +171,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 		else {
 
-			var chunks = response.embeddedChunks().iterator();
-
-			if (chunks.hasNext()) {
-				var chunk = (JsonObject) chunks.next();
-				this.vectorSize = chunk.getJsonArray("vector").size();
-			}
+			this.vectorSize = getVectorSize(response.embeddedChunks());
 
 			try {
 
@@ -210,16 +218,11 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 											.keyword(keyword -> keyword.ignoreAbove(256)))
 									)))
 								.properties("vector", p -> p
-									.knnVector(knn -> knn.dimension(vectorSize)))
+									.knnVector(knn -> knn.dimension(this.vectorSize)))
 							)
 						)
 					),
-					(r, t) -> new PutTemplateResponse(
-						response.embeddedChunks(),
-						heldMessage,
-						r,
-						t
-					)
+					(r, t) -> new PutTemplateResponse(response.embeddedChunks(), heldMessage, r, t)
 				);
 
 			}
@@ -259,7 +262,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		var bulkOperations = new ArrayList<BulkOperation>();
 
-		for (Object chunk : embeddedChunks) {
+		for (Object chunk : getChunks(embeddedChunks)) {
 
 			var bulkOperation = new BulkOperation.Builder()
 				.index(new IndexOperation.Builder<>()
@@ -334,12 +337,12 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	}
 
 	private record CheckIndexTemplate(
-		JsonArray embeddedChunks,
+		byte[] embeddedChunks,
 		HeldMessage heldMessage
 	) implements Writer.Command {}
 
 	private record CheckIndexTemplateResponse(
-		JsonArray embeddedChunks,
+		byte[] embeddedChunks,
 		HeldMessage heldMessage,
 		BooleanResponse exists,
 		Throwable throwable
@@ -347,7 +350,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		implements Writer.Command {}
 
 	private record PutTemplateResponse(
-		JsonArray embeddedChunks,
+		byte[] embeddedChunks,
 		HeldMessage heldMessage,
 		PutIndexTemplateResponse response,
 		Throwable throwable
@@ -355,13 +358,13 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		implements Writer.Command {}
 
 	private record IndexDocument(
-		JsonArray embeddedChunks,
+		byte[] embeddedChunks,
 		HeldMessage heldMessage
 	)
 		implements Writer.Command {}
 
 	private record IndexDocumentResponse(
-		JsonArray embeddedChunks,
+		byte[] embeddedChunks,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception

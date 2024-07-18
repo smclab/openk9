@@ -19,6 +19,7 @@ package io.openk9.datasource;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
@@ -40,4 +41,12 @@ public class TestUtils {
 		}
 	}
 
+	public static JsonArray getResourceAsJsonArray(String path) {
+		try (InputStream in = getResourceAsStream(path)) {
+			return (JsonArray) Json.decodeValue(Buffer.buffer(in.readAllBytes()));
+		}
+		catch (IOException ioe) {
+			return null;
+		}
+	}
 }
