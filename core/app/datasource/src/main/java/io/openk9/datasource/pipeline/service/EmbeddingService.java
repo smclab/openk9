@@ -32,10 +32,10 @@ import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -102,26 +102,45 @@ public class EmbeddingService {
 						.setText(text)
 						.build())
 					.map(embeddingResponse -> {
-						List<EmbeddedChunk> list = new ArrayList<>();
+						var jsonArray = new JsonArray();
 
 						for (EmbeddingOuterClass.ResponseChunk responseChunk :
 							embeddingResponse.getChunksList()) {
+
+							var jsonObject = new JsonObject();
 
 							var number = responseChunk.getNumber();
 							var total = responseChunk.getTotal();
 							var chunkText = responseChunk.getText();
 							var vector = responseChunk.getVectorsList();
 
-							var embeddedChunk = new EmbeddedChunk(
-								indexName, contentId, title, url, acl, number,
-								total, chunkText, metadataMap, vector, List.of(), List.of()
-							);
+							jsonObject.put("number", number);
+							jsonObject.put("total", total);
+							jsonObject.put("chunkText", chunkText);
+							jsonObject.put("vector", vector);
+							jsonObject.put("indexName", indexName);
+							jsonObject.put("contentId", contentId);
+							jsonObject.put("title", title);
+							jsonObject.put("url", url);
 
-							list.add(embeddedChunk);
+							if (acl == null || acl.isEmpty()) {
+								jsonObject.put("acl", Map.of("public", true));
+							}
+							else {
+								jsonObject.put("acl", acl);
+							}
+
+							for (Map.Entry<String, Object> entry : metadataMap.entrySet()) {
+
+								jsonObject.put(entry.getKey(), entry.getValue());
+
+							}
+
+							jsonArray.add(jsonObject);
 
 						}
 
-						return Json.encodeToBuffer(new EmbeddedChunks(list)).getBytes();
+						return jsonArray.toBuffer().getBytes();
 					});
 			})
 			.subscribeAsCompletionStage();
@@ -131,6 +150,10 @@ public class EmbeddingService {
 		DocumentContext documentContext, String metadataMapping) {
 
 		var metadata = new HashMap<String, Object>() {};
+
+		if (metadataMapping == null) {
+			return metadata;
+		}
 
 		for (String expression : metadataMapping.split(";")) {
 

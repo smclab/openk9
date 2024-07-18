@@ -23,12 +23,13 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
@@ -43,7 +44,6 @@ import org.opensearch.client.transport.endpoints.BooleanResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.enterprise.inject.spi.CDI;
@@ -96,8 +96,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		var data = start.dataPayload();
 		var heldMessage = start.heldMessage();
 
-		EmbeddingService.EmbeddedChunks dataPayload = Json.decodeValue(
-			Buffer.buffer(data), EmbeddingService.EmbeddedChunks.class);
+		var dataPayload = new JsonArray(Buffer.buffer(data));
 
 		getContext().getSelf().tell(new CheckIndexTemplate(dataPayload, heldMessage));
 
@@ -159,10 +158,11 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 		else {
 
-			var chunks = response.embeddedChunks().list().iterator();
+			var chunks = response.embeddedChunks().iterator();
 
 			if (chunks.hasNext()) {
-				this.vectorSize = chunks.next().vector().size();
+				var chunk = (JsonObject) chunks.next();
+				this.vectorSize = chunk.getJsonArray("vector").size();
 			}
 
 			try {
@@ -259,32 +259,12 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		var bulkOperations = new ArrayList<BulkOperation>();
 
-		for (EmbeddingService.EmbeddedChunk chunk : embeddedChunks.list()) {
-
-			var document = chunk;
-
-			var acl = chunk.acl();
-			if (acl == null || acl.isEmpty()) {
-				document = new EmbeddingService.EmbeddedChunk(
-					chunk.indexName(),
-					chunk.contentId(),
-					chunk.title(),
-					chunk.url(),
-					Map.of("public", true),
-					chunk.number(),
-					chunk.total(),
-					chunk.chunkText(),
-					chunk.metadata(),
-					chunk.vector(),
-					chunk.previous(),
-					chunk.next()
-				);
-			}
+		for (Object chunk : embeddedChunks) {
 
 			var bulkOperation = new BulkOperation.Builder()
 				.index(new IndexOperation.Builder<>()
 					.index(vectorIndexName)
-					.document(document)
+					.document(chunk)
 					.build())
 				.build();
 
@@ -354,12 +334,12 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	}
 
 	private record CheckIndexTemplate(
-		EmbeddingService.EmbeddedChunks embeddedChunks,
+		JsonArray embeddedChunks,
 		HeldMessage heldMessage
 	) implements Writer.Command {}
 
 	private record CheckIndexTemplateResponse(
-		EmbeddingService.EmbeddedChunks embeddedChunks,
+		JsonArray embeddedChunks,
 		HeldMessage heldMessage,
 		BooleanResponse exists,
 		Throwable throwable
@@ -367,7 +347,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		implements Writer.Command {}
 
 	private record PutTemplateResponse(
-		EmbeddingService.EmbeddedChunks embeddedChunks,
+		JsonArray embeddedChunks,
 		HeldMessage heldMessage,
 		PutIndexTemplateResponse response,
 		Throwable throwable
@@ -375,13 +355,13 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		implements Writer.Command {}
 
 	private record IndexDocument(
-		EmbeddingService.EmbeddedChunks embeddedChunks,
+		JsonArray embeddedChunks,
 		HeldMessage heldMessage
 	)
 		implements Writer.Command {}
 
 	private record IndexDocumentResponse(
-		EmbeddingService.EmbeddedChunks embeddedChunks,
+		JsonArray embeddedChunks,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
