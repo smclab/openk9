@@ -75,6 +75,7 @@ public class EmbeddingService {
 					? configurations.jsonConfig()
 					: "{}";
 				var chunkType = mapChunkType(configurations);
+				var windowSize = configurations.chunkWindowSize();
 
 				var documentContext = JsonPath
 					.using(Configuration.defaultConfiguration())
@@ -101,47 +102,11 @@ public class EmbeddingService {
 							.build())
 						.setText(text)
 						.build())
-					.map(embeddingResponse -> {
-						var jsonArray = new JsonArray();
-
-						for (EmbeddingOuterClass.ResponseChunk responseChunk :
-							embeddingResponse.getChunksList()) {
-
-							var jsonObject = new JsonObject();
-
-							var number = responseChunk.getNumber();
-							var total = responseChunk.getTotal();
-							var chunkText = responseChunk.getText();
-							var vector = responseChunk.getVectorsList();
-
-							jsonObject.put("number", number);
-							jsonObject.put("total", total);
-							jsonObject.put("chunkText", chunkText);
-							jsonObject.put("vector", vector);
-							jsonObject.put("indexName", indexName);
-							jsonObject.put("contentId", contentId);
-							jsonObject.put("title", title);
-							jsonObject.put("url", url);
-
-							if (acl == null || acl.isEmpty()) {
-								jsonObject.put("acl", Map.of("public", true));
-							}
-							else {
-								jsonObject.put("acl", acl);
-							}
-
-							for (Map.Entry<String, Object> entry : metadataMap.entrySet()) {
-
-								jsonObject.put(entry.getKey(), entry.getValue());
-
-							}
-
-							jsonArray.add(jsonObject);
-
-						}
-
-						return jsonArray.toBuffer().getBytes();
-					});
+					.map(embeddingResponse -> EmbeddingService.mapToPayload(
+							embeddingResponse, indexName, contentId, title, url,
+							acl, metadataMap, windowSize
+						)
+					);
 			})
 			.subscribeAsCompletionStage();
 	}
@@ -171,6 +136,111 @@ public class EmbeddingService {
 		}
 
 		return metadata;
+	}
+
+	protected static byte[] mapToPayload(
+		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
+		String indexName, String contentId, String title, String url,
+		Map<String, Object> acl, Map<String, Object> metadataMap,
+		int windowSize) {
+
+		var jsonArray = new JsonArray();
+
+		var chunks = embeddingResponse.getChunksList();
+
+		for (EmbeddingOuterClass.ResponseChunk responseChunk : chunks) {
+
+			var number = responseChunk.getNumber();
+			var total = responseChunk.getTotal();
+			var chunkText = responseChunk.getText();
+			var vector = responseChunk.getVectorsList();
+
+			var jsonObject = mapToJsonObject(
+				indexName, contentId, title, url,
+				acl, metadataMap,
+				number, total, chunkText, vector
+			);
+
+			var previous = getPrevious(windowSize, number, chunks)
+				.stream().map(it -> mapToJsonObject(
+						indexName, contentId, title, url,
+						acl, metadataMap,
+						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
+					)
+				);
+
+			var next = getNext(windowSize, number, total, chunks)
+				.stream().map(it -> mapToJsonObject(
+						indexName, contentId, title, url,
+						acl, metadataMap,
+						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
+					)
+				);
+
+			jsonObject.put("previous", previous);
+			jsonObject.put("next", next);
+
+			jsonArray.add(jsonObject);
+
+		}
+
+		return jsonArray.toBuffer().getBytes();
+	}
+
+	protected static <T> List<T> getPrevious(
+		int windowSize, int number, List<T> chunks) {
+
+		var fromIndex = Math.max(number - 1 - windowSize, 0);
+		var toIndex = Math.min(number - 1 + windowSize, number - 1);
+
+		return chunks.subList(fromIndex, toIndex);
+	}
+
+	protected static <T> List<T> getNext(
+		int windowSize, int number, int total, List<T> chunks) {
+
+		var fromIndex = Math.max(number, 0);
+		var toIndex = Math.min(fromIndex + windowSize, total);
+
+		return chunks.subList(fromIndex, toIndex);
+	}
+
+	private static JsonObject mapToJsonObject(
+		String indexName,
+		String contentId,
+		String title,
+		String url,
+		Map<String, Object> acl,
+		Map<String, Object> metadataMap,
+		int number,
+		int total,
+		String chunkText,
+		List<Float> vector) {
+
+		var jsonObject = new JsonObject();
+
+		jsonObject.put("number", number);
+		jsonObject.put("total", total);
+		jsonObject.put("chunkText", chunkText);
+		jsonObject.put("vector", vector);
+		jsonObject.put("indexName", indexName);
+		jsonObject.put("contentId", contentId);
+		jsonObject.put("title", title);
+		jsonObject.put("url", url);
+
+		if (acl == null || acl.isEmpty()) {
+			jsonObject.put("acl", Map.of("public", true));
+		}
+		else {
+			jsonObject.put("acl", acl);
+		}
+
+		for (Map.Entry<String, Object> entry : metadataMap.entrySet()) {
+
+			jsonObject.put(entry.getKey(), entry.getValue());
+
+		}
+		return jsonObject;
 	}
 
 	private static void traverse(

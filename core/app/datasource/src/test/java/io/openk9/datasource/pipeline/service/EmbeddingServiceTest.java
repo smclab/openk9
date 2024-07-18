@@ -22,6 +22,7 @@ import com.jayway.jsonpath.JsonPath;
 import io.openk9.datasource.TestUtils;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,4 +61,35 @@ class EmbeddingServiceTest {
 
 	}
 
+	@Test
+	void should_get_windows() {
+		var window = 3;
+		var total = 5;
+		var integers = List.of(1, 2, 3, 4, 5);
+
+		var result = integers.stream().map(i -> {
+			var previous = EmbeddingService.getPrevious(window, i, integers);
+
+			var next = EmbeddingService.getNext(window, i, total, integers);
+
+			return new ItemWithNeighbors(i, previous, next);
+		}).toList();
+
+		assertEquals(0, result.get(0).previous().size());
+		assertEquals(3, result.get(0).next().size());
+
+		assertEquals(1, result.get(1).previous().size());
+		assertEquals(3, result.get(1).next().size());
+
+		assertEquals(2, result.get(2).previous().size());
+		assertEquals(2, result.get(2).next().size());
+
+		assertEquals(3, result.get(3).previous().size());
+		assertEquals(1, result.get(3).next().size());
+
+		assertEquals(3, result.get(4).previous().size());
+		assertEquals(0, result.get(4).next().size());
+	}
+
+	record ItemWithNeighbors(int i, List<Integer> previous, List<Integer> next) {}
 }
