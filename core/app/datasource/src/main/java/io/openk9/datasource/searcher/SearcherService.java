@@ -712,7 +712,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				"number",
 				"total",
 				"title",
-				"url"
+				"url",
+				"previous",
+				"next"
 			));
 		}
 
