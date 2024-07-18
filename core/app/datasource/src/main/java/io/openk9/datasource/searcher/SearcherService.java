@@ -476,6 +476,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							applyHighlightAndIncludeExclude(
 								searchSourceBuilder,
 								docTypeFieldList,
+								request.getVectorIndices(),
 								language
 							);
 
@@ -634,7 +635,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
-		List<DocTypeField> docTypeFieldList, String language) {
+		List<DocTypeField> docTypeFieldList,
+		boolean vectorIndices,
+		String language) {
+
 		Set<String> includes = new HashSet<>();
 		Set<String> excludes = new HashSet<>();
 		Set<HighlightBuilder.Field> highlightFields = new HashSet<>();
@@ -698,6 +702,18 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			}
 
+		}
+
+		if (vectorIndices) {
+			includes.addAll(List.of(
+				"chunkText",
+				"indexName",
+				"contentId",
+				"number",
+				"total",
+				"title",
+				"url"
+			));
 		}
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
