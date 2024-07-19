@@ -26,6 +26,7 @@ import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey_;
@@ -411,8 +412,10 @@ public class PluginDriverService
 			.call(plugin -> Mutiny.fetch(plugin.getAclMappings()))
 			.call(plugin -> {
 
-				var pluginIdPath = deleteFrom.get("pluginDriver").get("id");
-				var docTypeIdPath = deleteFrom.get("docTypeField").get("id");
+				var pluginIdPath =
+					deleteFrom.get(AclMapping_.pluginDriver).get(PluginDriver_.id);
+				var docTypeIdPath =
+					deleteFrom.get(AclMapping_.docTypeField).get(DocTypeField_.id);
 
 				if ( docTypeUserDTOSet == null || docTypeUserDTOSet.isEmpty() ) {
 					if ( patch ) {
@@ -435,7 +438,7 @@ public class PluginDriverService
 					deleteAclMapping.where(
 						cb.and(
 							pluginIdPath.in(pluginId),
-							cb.not(docTypeIdPath.in(docTypeUserDTOSet))
+							cb.not(docTypeIdPath.in(docTypeIdsToKeep))
 						));
 
 					//removes aclMapping old list

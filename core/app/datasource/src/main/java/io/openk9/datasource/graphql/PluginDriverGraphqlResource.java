@@ -151,7 +151,8 @@ public class PluginDriverGraphqlResource {
 
 	@Mutation
 	public Uni<Response<PluginDriver>> pluginDriverWithDocType(
-		@Id Long id, PluginWithDocTypeDTO pluginWithDocTypeDTO, @DefaultValue("false") boolean patch) {
+		@Id Long id, PluginWithDocTypeDTO pluginWithDocTypeDTO,
+		@DefaultValue("false") boolean patch) {
 
 		if (id == null) {
 			return pluginDriverService.createWithDocType(pluginWithDocTypeDTO);
