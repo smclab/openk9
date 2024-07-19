@@ -44,6 +44,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Join;
@@ -51,6 +52,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import javax.validation.ConstraintViolation;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -368,10 +371,118 @@ public class PluginDriverService
 			});
 	}
 
-
 	public Uni<Response<PluginDriver>> patchOrUpdateWithDocType(
-		Long pluginId, PluginWithDocTypeDTO pluginWithDocTypeDTO, boolean patch) {
+		Long pluginId, PluginWithDocTypeDTO dto, boolean patch) {
 
-		return null;
+
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if ( !constraintViolations.isEmpty() ) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return patchOrUpdateWithDocType(session, pluginId, dto, patch)
+					.flatMap(pluginDriver ->
+						Uni.createFrom().item(Response.of(pluginDriver, null)));
+			});
+	}
+
+	public Uni<PluginDriver> patchOrUpdateWithDocType(
+		Mutiny.Session s, Long pluginId, PluginWithDocTypeDTO dto, boolean patch) {
+
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		CriteriaDelete<AclMapping> deleteAclMapping =
+			cb.createCriteriaDelete(AclMapping.class);
+		Root<AclMapping> deleteFrom =
+			deleteAclMapping.from(AclMapping.class);
+
+		var docTypeUserDTOSet = dto.getDocTypeUserDTOSet();
+
+		return findById(s, pluginId)
+			.call(plugin -> Mutiny.fetch(plugin.getAclMappings()))
+			.call(plugin -> {
+
+				var pluginIdPath = deleteFrom.get("pluginDriver").get("id");
+				var docTypeIdPath = deleteFrom.get("docTypeField").get("id");
+
+				if ( docTypeUserDTOSet == null || docTypeUserDTOSet.isEmpty() ) {
+					if ( patch ) {
+						return Uni.createFrom().item(plugin);
+					}
+					else {
+						deleteAclMapping.where(pluginIdPath.in(pluginId));
+
+						//removes aclMapping old list
+						return s.createQuery(deleteAclMapping).executeUpdate()
+							.map(v -> plugin);
+					}
+				}
+				else {
+					//retrieves docType ids to keep
+					var docTypeIdsToKeep = docTypeUserDTOSet.stream()
+						.map(PluginWithDocTypeDTO.DocTypeUserDTO::getDocTypeId)
+						.collect(Collectors.toSet());
+
+					deleteAclMapping.where(
+						cb.and(
+							pluginIdPath.in(pluginId),
+							cb.not(docTypeIdPath.in(docTypeUserDTOSet))
+						));
+
+					//removes aclMapping old list
+					return s.createQuery(deleteAclMapping).executeUpdate()
+						.map(v -> plugin);
+				}
+			})
+			.call(s::flush)
+			.call(Mutiny::fetch)
+			.onItem().ifNotNull()
+			.transformToUni(plugin -> {
+
+				PluginDriver newPluginDriver;
+				var newHashSet = new HashSet<AclMapping>();
+
+				if ( patch ) {
+					newPluginDriver = mapper.patch(plugin, dto);
+				}
+				else {
+					newPluginDriver = mapper.patch(plugin, dto);
+					newPluginDriver.setAclMappings(newHashSet);
+				}
+
+				//set new aclMapping Set
+				if ( docTypeUserDTOSet != null ) {
+					newPluginDriver.setAclMappings(newHashSet);
+
+					docTypeUserDTOSet.forEach(docTypeUserDTO -> {
+						var docTypeId = docTypeUserDTO.getDocTypeId();
+						var key =
+							PluginDriverDocTypeFieldKey.of(pluginId, docTypeId);
+						var docTypeReference =
+							s.getReference(DocTypeField.class, docTypeId);
+
+						var aclMapping = new AclMapping();
+						aclMapping.setPluginDriver(plugin);
+						aclMapping.setDocTypeField(docTypeReference);
+						aclMapping.setKey(key);
+						aclMapping.setUserField(docTypeUserDTO.getUserField());
+
+						newPluginDriver.getAclMappings().add(aclMapping);
+					});
+				}
+
+				return s.merge(newPluginDriver)
+					.map(v -> newPluginDriver)
+					.call(s::flush);
+			});
 	}
 }
