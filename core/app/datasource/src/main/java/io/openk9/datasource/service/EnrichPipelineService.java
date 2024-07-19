@@ -24,6 +24,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.EnrichPipelineItemKey;
@@ -172,8 +173,10 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			.call(pipeline -> Mutiny.fetch(pipeline.getEnrichPipelineItems()))
 			.call(pipeline -> {
 
-				var pipelineIdPath = deleteFrom.get("enrichPipeline").get("id");
-				var itemIdPath = deleteFrom.get("enrichItem").get("id");
+				var pipelineIdPath =
+					deleteFrom.get(EnrichPipelineItem_.enrichPipeline).get(EnrichPipeline_.id);
+				var itemIdPath =
+					deleteFrom.get(EnrichPipelineItem_.enrichItem).get(EnrichItem_.id);
 
 				if (itemDTOSet == null || itemDTOSet.isEmpty() ) {
 					if ( patch ) {
