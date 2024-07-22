@@ -66,13 +66,14 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 					return findById(s, tabId)
 						.flatMap(tab -> {
 							var transientTab = mapper.patch(tab, tabWithTokenTabsDTO);
+							var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-							var tokenTabs =
-								tabWithTokenTabsDTO.getTokenTabIds().stream()
+							if (tokenTabIds != null) {
+								var tokenTabs =
+								tokenTabIds.stream()
 									.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
 									.collect(Collectors.toSet());
 
-							if (tokenTabs != null) {
 								transientTab.getTokenTabs().clear();
 								transientTab.setTokenTabs(tokenTabs);
 							}
