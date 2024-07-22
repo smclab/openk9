@@ -2,6 +2,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
 import io.openk9.datasource.mapper.TabMapper;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
@@ -17,6 +18,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -30,6 +32,21 @@ import java.util.Set;
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	TabService(TabMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<Tab> create(TabDTO tabDTO){
+		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
+			var transientTab = mapper.create(tabWithTokenTabsDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> {
+					return super.create(s, transientTab);
+				}
+			);
+
+		}
+
+		return super.create(tabDTO);
 	}
 
 	@Override
