@@ -3,6 +3,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
 import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
@@ -145,6 +146,21 @@ public class TabGraphqlResource {
 			return patch
 				? patchTab(id, tabDTO)
 				: updateTab(id, tabDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<Tab>> tabWithTokenTabs(
+		@Id Long id, TabWithTokenTabsDTO tabWithTokenTabsDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createTab(tabWithTokenTabsDTO);
+		} else {
+			return patch
+				? patchTab(id, tabWithTokenTabsDTO)
+				: updateTab(id, tabWithTokenTabsDTO);
 		}
 
 	}
