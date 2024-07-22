@@ -18,7 +18,6 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -27,6 +26,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
@@ -39,9 +39,18 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			var transientTab = mapper.create(tabWithTokenTabsDTO);
 
 			return sessionFactory.withTransaction(
-				(s, transaction) -> {
-					return super.create(s, transientTab);
-				}
+				(s, transaction) -> super.create(s, transientTab)
+					.flatMap(tab -> {
+						var tokenTabs =
+							tabWithTokenTabsDTO.getTokenTabIds().stream()
+								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
+								.collect(Collectors.toSet());
+
+						tab.setTokenTabs(tokenTabs);
+
+						return s.persist(tab)
+							.flatMap(__ -> s.merge(tab));
+					})
 			);
 
 		}
