@@ -69,8 +69,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 							var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
 							if (tokenTabIds != null) {
-								var tokenTabs =
-								tokenTabIds.stream()
+								var tokenTabs = tokenTabIds.stream()
 									.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
 									.collect(Collectors.toSet());
 
@@ -85,6 +84,35 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		}
 
 		return super.patch(tabId, tabDTO);
+	}
+
+	public Uni<Tab> update(long tabId, TabDTO tabDTO) {
+		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> {
+					return findById(s, tabId)
+						.flatMap(tab -> {
+							var transientTab = mapper.update(tab, tabWithTokenTabsDTO);
+							var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+
+							transientTab.getTokenTabs().clear();
+
+							if (tokenTabIds != null) {
+								var tokenTabs = tokenTabIds.stream()
+									.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
+									.collect(Collectors.toSet());
+
+								transientTab.setTokenTabs(tokenTabs);
+							}
+
+							return s.merge(transientTab)
+								.map(__ -> transientTab);
+						});
+				});
+		}
+
+		return super.update(tabId, tabDTO);
 	}
 
 	@Override
