@@ -15,6 +15,7 @@ service Searcher {
 message QueryParserResponse {
   bytes query = 1;
   repeated string indexName = 2;
+  map<string, string> queryParameters = 3;
 }
 
 message SuggestionsResponse {
