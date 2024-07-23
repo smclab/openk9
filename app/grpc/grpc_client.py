@@ -55,8 +55,12 @@ def get_llm_configuration(virtualHost):
 
     api_url = response.apiUrl
     api_key = response.apiKey
-    json_config = response.jsonConfig
+    json_config = response.jsonConfig.fields
 
-    configuration = {"api_url": api_url, "api_key": api_key, "json_config": json_config}
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "json_config": json_config,
+    }
 
     return configuration
