@@ -488,10 +488,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							String[] indexNames = getIndexNames(request, tenant);
 
+							var queryParams = getQueryParams(tokenGroup, tenant);
+
 							return QueryParserResponse
 								.newBuilder()
 								.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
 								.addAllIndexName(List.of(indexNames))
+								.putAllQueryParameters(queryParams)
 								.build();
 
 						});
@@ -499,6 +502,22 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		});
 
+	}
+
+	private Map<String, String> getQueryParams(
+		Map<String, List<ParserSearchToken>> tokenGroup,
+		Bucket tenant) {
+		var queryParams = new HashMap<String, String>();
+
+		if (tokenGroup.containsKey("HYBRID") || tokenGroup.containsKey("hybrid")) {
+
+			var searchConfigName = tenant.getSearchConfig().getName();
+			var pipelineName = io.openk9.common.util.StringUtils.retainsAlnum(searchConfigName);
+
+			queryParams.put("search_pipeline", pipelineName);
+		}
+
+		return queryParams;
 	}
 
 	private List<QueryAnalysisSearchToken> _toAnalysisTokens(
