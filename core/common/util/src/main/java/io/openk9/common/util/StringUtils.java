@@ -19,11 +19,22 @@ package io.openk9.common.util;
 
 import lombok.NonNull;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtils {
 
 	private StringUtils() {}
 
 
+	/**
+	 * Adds a suffix to a {@link String}.
+	 * This method concatenates two {@link String} with a '-' character between them.
+	 *
+	 * @param value  cannot be null, the string where to add the suffix.
+	 * @param suffix the optional suffix that need to be added to the value.
+	 * @return the source string without any characters than alphanumeric
+	 */
 	public static String withSuffix(@NonNull String value, String suffix) {
 		if (suffix == null) {
 			return value;
@@ -34,6 +45,20 @@ public class StringUtils {
 		}
 
 		return String.format("%s-%s", value, suffix);
+	}
+
+	/**
+	 * This method retains only alphanumeric characters in a {@link String}.
+	 *
+	 * @param source the string that has to be processed
+	 * @return the source string without any characters than alphanumeric
+	 */
+	public static String retainsAlnum(String source) {
+
+		final Pattern pattern = Pattern.compile("[^a-zA-Z0-9]");
+		final Matcher matcher = pattern.matcher(source);
+
+		return matcher.replaceAll("");
 	}
 
 }

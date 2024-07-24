@@ -19,29 +19,37 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.common.util.StringUtils;
 import io.openk9.datasource.mapper.QueryParserConfigMapper;
 import io.openk9.datasource.mapper.SearchConfigMapper;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
+import io.openk9.datasource.model.dto.HybridSearchPipelineDTO;
 import io.openk9.datasource.model.dto.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.SearchConfigDTO;
+import io.openk9.datasource.model.dto.SearchPipelineResponseDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import jakarta.json.Json;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.generic.Bodies;
+import org.opensearch.client.opensearch.generic.Requests;
 
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Set;
+import javax.validation.constraints.NotNull;
 
-;
 
 @ApplicationScoped
 public class SearchConfigService extends BaseK9EntityService<SearchConfig, SearchConfigDTO> {
+
 	 SearchConfigService(SearchConfigMapper mapper) {
 		 this.mapper = mapper;
 	}
@@ -141,8 +149,61 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	@Inject
-	QueryParserConfigService queryParserConfigService;
-	 @Inject
+	OpenSearchClient openSearchClient;
+	@Inject
 	QueryParserConfigMapper _queryParserConfigMapper;
+	@Inject
+	QueryParserConfigService queryParserConfigService;
+
+	public Uni<SearchPipelineResponseDTO> configureHybridSearch(
+		long id, @NotNull HybridSearchPipelineDTO pipelineDTO) {
+
+		return sessionFactory.withTransaction((s) -> findById(s, id))
+			.flatMap(searchConfig -> Uni.createFrom()
+				.completionStage(openSearchClient
+					.generic()
+					.executeAsync(Requests.builder()
+						.method("PUT")
+						.endpoint(
+							"_search/pipeline/" + StringUtils.retainsAlnum(searchConfig.getName()))
+						.json(Json.createObjectBuilder()
+							.add("description", "Post processor for hybrid search")
+							.add("phase_results_processors", Json.createArrayBuilder()
+								.add(Json.createObjectBuilder()
+									.add("normalization-processor", Json.createObjectBuilder()
+										.add("normalization", Json.createObjectBuilder()
+											.add(
+												"technique",
+												pipelineDTO.getNormalizationTechnique().getValue()
+											)
+										)
+										.add("combination", Json.createObjectBuilder()
+											.add(
+												"technique",
+												pipelineDTO.getCombinationTechnique().getValue()
+											)
+											.add("parameters", Json.createObjectBuilder()
+												.add(
+													"weights",
+													Json.createArrayBuilder(
+														pipelineDTO.getWeights()
+													)
+												)
+											)
+										)
+									)
+								)
+							)
+						)
+						.build()
+					)
+				)
+			)
+			.map(response -> new SearchPipelineResponseDTO(
+				response.getStatus(),
+				response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
+				response.getReason()
+			));
+	}
 
 }
