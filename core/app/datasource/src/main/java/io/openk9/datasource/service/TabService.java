@@ -18,6 +18,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -62,25 +63,24 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
 
 			return sessionFactory.withTransaction(
-				(s, transaction) -> {
-					return findById(s, tabId)
-						.flatMap(tab -> {
-							var transientTab = mapper.patch(tab, tabWithTokenTabsDTO);
-							var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+				(s, transaction) -> findById(s, tabId)
+					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.flatMap(tab -> {
+						var transientTab = mapper.patch(tab, tabWithTokenTabsDTO);
+						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-							if (tokenTabIds != null) {
-								var tokenTabs = tokenTabIds.stream()
-									.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
-									.collect(Collectors.toSet());
+						if (tokenTabIds != null) {
+							var tokenTabs = tokenTabIds.stream()
+								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
+								.collect(Collectors.toSet());
 
-								transientTab.getTokenTabs().clear();
-								transientTab.setTokenTabs(tokenTabs);
-							}
+							transientTab.getTokenTabs().clear();
+							transientTab.setTokenTabs(tokenTabs);
+						}
 
-							return s.merge(transientTab)
-								.map(__ -> transientTab);
-						});
-				});
+						return s.merge(transientTab)
+							.map(__ -> transientTab);
+					}));
 		}
 
 		return super.patch(tabId, tabDTO);
@@ -90,26 +90,25 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
 
 			return sessionFactory.withTransaction(
-				(s, transaction) -> {
-					return findById(s, tabId)
-						.flatMap(tab -> {
-							var transientTab = mapper.update(tab, tabWithTokenTabsDTO);
-							var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+				(s, transaction) -> findById(s, tabId)
+					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.flatMap(tab -> {
+						var transientTab = mapper.update(tab, tabWithTokenTabsDTO);
+						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-							transientTab.getTokenTabs().clear();
+						transientTab.getTokenTabs().clear();
 
-							if (tokenTabIds != null) {
-								var tokenTabs = tokenTabIds.stream()
-									.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
-									.collect(Collectors.toSet());
+						if (tokenTabIds != null) {
+							var tokenTabs = tokenTabIds.stream()
+								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
+								.collect(Collectors.toSet());
 
-								transientTab.setTokenTabs(tokenTabs);
-							}
+							transientTab.setTokenTabs(tokenTabs);
+						}
 
-							return s.merge(transientTab)
-								.map(__ -> transientTab);
-						});
-				});
+						return s.merge(transientTab)
+							.map(__ -> transientTab);
+					}));
 		}
 
 		return super.update(tabId, tabDTO);
