@@ -389,9 +389,13 @@ public class SearchResource {
 				String indexNames =
 					String.join(",", indexNameList);
 
+				var queryParams = queryParserResponse.getQueryParametersMap();
+
 				org.opensearch.client.Request request =
 					new org.opensearch.client.Request(
 						"GET", "/" + indexNames + "/_search");
+
+				request.addParameters(queryParams);
 
 				request.setJsonEntity(searchRequestBody);
 
