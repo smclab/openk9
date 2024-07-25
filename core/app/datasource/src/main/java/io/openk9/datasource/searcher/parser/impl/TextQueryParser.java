@@ -208,7 +208,7 @@ public class TextQueryParser implements QueryParser {
 			   || !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
 	}
 
-	private static float getBoost(
+	protected static float getBoost(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
 		return ParserContext.getFloat(token, jsonConfig, BOOST)
@@ -231,7 +231,7 @@ public class TextQueryParser implements QueryParser {
 			.orElse(QueryType.MUST);
 	}
 
-	private org.opensearch.common.unit.Fuzziness getFuzziness(
+	protected static org.opensearch.common.unit.Fuzziness getFuzziness(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
 		return FuzzinessMapper.map(ParserContext

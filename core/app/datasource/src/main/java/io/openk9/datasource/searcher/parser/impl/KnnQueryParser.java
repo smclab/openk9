@@ -23,6 +23,7 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
@@ -56,23 +57,13 @@ public class KnnQueryParser implements QueryParser {
 
 		for (ParserSearchToken parserSearchToken : tokenTypeGroup) {
 
-			var kNeighbors = ParserContext.getInteger(
-				parserSearchToken,
-				queryParserConfig,
-				"kNeighbors"
-			).orElse(2);
+			var kNeighbors = getKNeighbors(parserSearchToken, queryParserConfig);
 
 			for (String value : parserSearchToken.getValues()) {
 
 				var knnQuery = embeddingService
 					.getEmbeddedText(tenantId, value)
-					.map(embeddedText -> new KnnQuery.Builder()
-						.k(kNeighbors)
-						.field("vector")
-						.vector(toVector(embeddedText))
-						.build()
-						.toQuery()
-					);
+					.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors));
 
 				knnQueryUnis.add(knnQuery);
 
@@ -91,6 +82,28 @@ public class KnnQueryParser implements QueryParser {
 
 			})
 			.replaceWithVoid();
+	}
+
+	protected static Integer getKNeighbors(
+		ParserSearchToken parserSearchToken,
+		JsonObject queryParserConfig) {
+		var kNeighbors = ParserContext.getInteger(
+			parserSearchToken,
+			queryParserConfig,
+			"kNeighbors"
+		).orElse(2);
+		return kNeighbors;
+	}
+
+	protected static Query toKnnQuery(
+		EmbeddingService.EmbeddedText embeddedText, Integer kNeighbors) {
+
+		return new KnnQuery.Builder()
+			.k(kNeighbors)
+			.field("vector")
+			.vector(toVector(embeddedText))
+			.build()
+			.toQuery();
 	}
 
 	protected static void addKnnQuery(ParserContext parserContext, Query query) {
