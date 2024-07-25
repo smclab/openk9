@@ -20,15 +20,11 @@ package io.openk9.datasource.service;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
-import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
-import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
-import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.model.dto.TranslationKeyDTO;
 import io.openk9.datasource.resource.util.Filter;
@@ -52,9 +48,9 @@ public class SuggestionCategoryService extends
 		 this.mapper = mapper;
 	}
 
-	public Uni<SuggestionCategory> create(SuggestionCategoryDTO suggestionCategoryDTO){
+	public Uni<SuggestionCategory> create(SuggestionCategoryDTO suggestionDTO){
 
-		if (suggestionCategoryDTO instanceof
+		if (suggestionDTO instanceof
 			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
 
 			var transientSuggestionCategory =
@@ -62,22 +58,22 @@ public class SuggestionCategoryService extends
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> super.create(s, transientSuggestionCategory)
-					.flatMap(suggestionCategory -> {
+					.flatMap(suggestion -> {
 						var docTypeFields =
 							withDocTypeFieldDTO.getDocTypeFieldIds().stream()
 								.map(docTypeFieldId ->
 									s.getReference(DocTypeField.class, docTypeFieldId))
 								.collect(Collectors.toSet());
 
-						suggestionCategory.setDocTypeFields(docTypeFields);
+						suggestion.setDocTypeFields(docTypeFields);
 
-						return s.persist(suggestionCategory)
-							.flatMap(__ -> s.merge(suggestionCategory));
+						return s.persist(suggestion)
+							.flatMap(__ -> s.merge(suggestion));
 					})
 			);
 		}
 
-		return super.create(suggestionCategoryDTO);
+		return super.create(suggestionDTO);
 	}
 
 	@Override
