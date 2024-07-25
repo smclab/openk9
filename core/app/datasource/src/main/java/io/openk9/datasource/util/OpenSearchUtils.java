@@ -23,6 +23,8 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.opensearch.Version;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.cluster.metadata.IndexMetadata;
 import org.opensearch.common.bytes.BytesArray;
 import org.opensearch.common.settings.Settings;
@@ -37,9 +39,13 @@ import org.opensearch.index.mapper.MapperService;
 import org.opensearch.index.mapper.Mapping;
 import org.opensearch.index.mapper.ParsedDocument;
 import org.opensearch.index.mapper.SourceToParse;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.index.query.WrapperQueryBuilder;
 import org.opensearch.index.similarity.SimilarityService;
 import org.opensearch.indices.IndicesModule;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -99,6 +105,24 @@ public class OpenSearchUtils {
 		);
 
 		return mappings;
+	}
+
+	public static WrapperQueryBuilder toWrapperQueryBuilder(Query query) {
+
+		try (var os = new ByteArrayOutputStream()) {
+
+			var generator = jakarta.json.Json.createGenerator(os);
+
+			query.serialize(generator, new JacksonJsonpMapper());
+
+			generator.close();
+
+			return QueryBuilders.wrapperQuery(os.toByteArray());
+
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static SourceToParse sourceToParse(byte[] payload) {

@@ -20,16 +20,12 @@ package io.openk9.datasource.searcher.parser.impl;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.smallrye.mutiny.Uni;
-import jakarta.json.Json;
-import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
-import org.opensearch.index.query.QueryBuilders;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -90,30 +86,18 @@ public class KnnQueryParser implements QueryParser {
 
 				for (Query knnQuery : knnQueries) {
 
-					addsKnnQuery(parserContext, knnQuery);
+					addKnnQuery(parserContext, knnQuery);
 				}
 
 			})
 			.replaceWithVoid();
 	}
 
-	protected static void addsKnnQuery(ParserContext parserContext, Query knnQuery) {
-		try (var os = new ByteArrayOutputStream()) {
+	protected static void addKnnQuery(ParserContext parserContext, Query query) {
 
-			var generator = Json.createGenerator(os);
+		var wrapperQueryBuilder = OpenSearchUtils.toWrapperQueryBuilder(query);
 
-			knnQuery.serialize(generator, new JacksonJsonpMapper());
-
-			generator.close();
-
-			var wrapperQueryBuilder = QueryBuilders.wrapperQuery(os.toByteArray());
-
-			parserContext.getMutableQuery().must(wrapperQueryBuilder);
-
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		parserContext.getMutableQuery().must(wrapperQueryBuilder);
 	}
 
 	private static float[] toVector(EmbeddingService.EmbeddedText embeddedText) {

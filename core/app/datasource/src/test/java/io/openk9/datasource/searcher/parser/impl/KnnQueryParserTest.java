@@ -33,7 +33,7 @@ class KnnQueryParserTest {
 	private static final int K_NEIGHBORS = 2;
 
 	@Test
-	void addsKnnQuery() {
+	void should_adds_a_must_clause_with_a_wrapped_knn_query() {
 
 		var parserContext = new ParserContext();
 
@@ -48,7 +48,7 @@ class KnnQueryParserTest {
 			.build()
 			.toQuery();
 
-		KnnQueryParser.addsKnnQuery(parserContext, knnQueryBuilder);
+		KnnQueryParser.addKnnQuery(parserContext, knnQueryBuilder);
 
 		var query = parserContext.getMutableQuery().toString();
 
