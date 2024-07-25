@@ -1,21 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-RUN pip install poetry==1.6.1
-
-RUN poetry config virtualenvs.create false
-
-WORKDIR /code
-
-COPY ./pyproject.toml ./README.md ./poetry.lock* ./
-
-COPY ./package[s] ./packages
-
-RUN poetry install  --no-interaction --no-ansi --no-root
-
+RUN mkdir -p /rag-module
+WORKDIR /rag-module/
+COPY ./requirements.txt ./
 COPY ./app ./app
 
-RUN poetry install --no-interaction --no-ansi
+RUN pip install -r requirements.txt
+RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./app/grpc/searcher/searcher.proto
+RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. ./app/grpc/datasource/datasource.proto
 
-EXPOSE 8080
+EXPOSE 5000
 
-CMD exec uvicorn app.server:app --host 0.0.0.0 --port 8080
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "5000"]
