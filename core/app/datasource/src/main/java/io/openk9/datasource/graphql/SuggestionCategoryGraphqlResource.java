@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
@@ -110,6 +111,21 @@ public class SuggestionCategoryGraphqlResource {
 			return patch
 				? patchSuggestionCategory(id, suggestionCategoryDTO)
 				: updateSuggestionCategory(id, suggestionCategoryDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<SuggestionCategory>> suggestionCategoryWithDocTypeField(
+		@Id Long id, SuggestionCategoryWithDocTypeFieldDTO suggestionCategoryWithDocTypeFieldDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createSuggestionCategory(suggestionCategoryWithDocTypeFieldDTO);
+		} else {
+			return patch
+				? patchSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO)
+				: updateSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO);
 		}
 
 	}
