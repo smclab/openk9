@@ -8,6 +8,7 @@ import grpc
 from google.protobuf import json_format
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 
 import embedding_pb2
 import embedding_pb2_grpc
@@ -46,6 +47,8 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         text = request.text
         text_splitted = []
         chunks = []
+
+        embeddings = OpenAIEmbeddings(model=DEFAULT_OPENAI_EMBEDDING_MODEL)
 
         if chunk_type == 1:
             chunk_size = (
@@ -135,9 +138,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             )
             text_splitted = text_splitter.split_text(text)
 
-        total_chunks = len(text_splitted)
+        elif chunk_type == 4:
+            text_splitter = SemanticChunker(
+                embeddings
+            )
+            text_splitted = text_splitter.split_text(text)
 
-        embeddings = OpenAIEmbeddings(model=DEFAULT_OPENAI_EMBEDDING_MODEL)
+        total_chunks = len(text_splitted)
 
         for index, chunk_text in enumerate(text_splitted, start=1):
             chunk = {
