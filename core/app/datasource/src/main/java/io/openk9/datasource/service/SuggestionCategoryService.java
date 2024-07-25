@@ -33,6 +33,7 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -53,11 +54,11 @@ public class SuggestionCategoryService extends
 		if (suggestionDTO instanceof
 			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
 
-			var transientSuggestionCategory =
+			var transientSuggestion =
 				mapper.create(withDocTypeFieldDTO);
 
 			return sessionFactory.withTransaction(
-				(s, transaction) -> super.create(s, transientSuggestionCategory)
+				(s, transaction) -> super.create(s, transientSuggestion)
 					.flatMap(suggestion -> {
 						var docTypeFields =
 							withDocTypeFieldDTO.getDocTypeFieldIds().stream()
@@ -74,6 +75,38 @@ public class SuggestionCategoryService extends
 		}
 
 		return super.create(suggestionDTO);
+	}
+
+	public Uni<SuggestionCategory> patch(long suggestionId,
+		SuggestionCategoryDTO suggestionDTO) {
+
+		if (suggestionDTO instanceof
+			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, suggestionId)
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
+					.flatMap(suggestion -> {
+						var transientSuggestion =
+							mapper.patch(suggestion, withDocTypeFieldDTO);
+						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
+
+						if (docTypeFieldIds != null) {
+							var docTypeFields = docTypeFieldIds.stream()
+								.map(docTypeFieldId ->
+									s.getReference(DocTypeField.class, docTypeFieldId))
+								.collect(Collectors.toSet());
+
+							transientSuggestion.getDocTypeFields().clear();
+							transientSuggestion.setDocTypeFields(docTypeFields);
+						}
+
+						return s.merge(transientSuggestion)
+							.map(__ -> transientSuggestion);
+					}));
+		}
+
+		return super.patch(suggestionId, suggestionDTO);
 	}
 
 	@Override
