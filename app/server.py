@@ -43,11 +43,8 @@ async def search_query(search_query: SearchQuery, request: Request):
     searchText = search_query.searchText
 
     # TODO: replace "gamahiro.openk9.io" with virtualHost
-    virtualHost = (
-        request.client.host
-        if request.client.host != "127.0.0.1"
-        else "gamahiro.openk9.io"
-    )
+    # virtualHost = request.client.host
+    virtualHost = "gamahiro.openk9.io"
 
     chain = get_chain(
         searchQuery,
@@ -65,9 +62,3 @@ async def search_query(search_query: SearchQuery, request: Request):
         searchText,
     )
     return StreamingResponse(chain, media_type="text/event-stream")
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
