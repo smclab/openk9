@@ -109,6 +109,39 @@ public class SuggestionCategoryService extends
 		return super.patch(suggestionId, suggestionDTO);
 	}
 
+	public Uni<SuggestionCategory> update(long suggestionId,
+		SuggestionCategoryDTO suggestionDTO) {
+
+		if (suggestionDTO instanceof
+			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, suggestionId)
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
+					.flatMap(suggestion -> {
+						var transientSuggestion =
+							mapper.update(suggestion, withDocTypeFieldDTO);
+						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
+
+						transientSuggestion.getDocTypeFields().clear();
+
+						if (docTypeFieldIds != null) {
+							var docTypeFields = docTypeFieldIds.stream()
+								.map(docTypeFieldId ->
+									s.getReference(DocTypeField.class, docTypeFieldId))
+								.collect(Collectors.toSet());
+
+							transientSuggestion.setDocTypeFields(docTypeFields);
+						}
+
+						return s.merge(transientSuggestion)
+							.map(__ -> transientSuggestion);
+					}));
+		}
+
+		return super.update(suggestionId, suggestionDTO);
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {
