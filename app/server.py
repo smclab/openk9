@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel
@@ -15,14 +17,14 @@ async def redirect_root_to_docs():
 class SearchQuery(BaseModel):
     searchQuery: list
     range: list
-    afterKey: str
-    suggestKeyword: str
-    suggestionCategoryId: int
-    jwt: str
-    extra: dict
-    sort: list
-    sortAfterKey: str
-    language: str
+    afterKey: Optional[str] = None
+    suggestKeyword: Optional[str] = None
+    suggestionCategoryId: Optional[int] = None
+    jwt: Optional[str] = None
+    extra: Optional[dict] = None
+    sort: Optional[list] = None
+    sortAfterKey: Optional[str] = None
+    language: Optional[str] = None
     vectorIndices: bool
     searchText: str
 
