@@ -101,6 +101,62 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return super.create(bucketDTO);
 	}
 
+	public Uni<Bucket> patch(long bucketId, BucketDTO bucketDTO) {
+		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO ) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, bucketId)
+					.call(bucket -> Mutiny.fetch(bucket.getDatasources()))
+					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
+					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
+					.flatMap(bucket -> {
+						var transientBucket = mapper.patch(bucket, bucketWithListsDTO);
+
+						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+
+						if (datasourceIds != null) {
+							var datasources = datasourceIds.stream()
+								.map(id -> s.getReference(Datasource.class, id))
+								.collect(Collectors.toSet());
+
+							transientBucket.getDatasources().clear();
+							transientBucket.setDatasources(datasources);
+						}
+
+						var suggestionCategoryIds =
+							bucketWithListsDTO.getSuggestionCategoryIds();
+
+
+						if (suggestionCategoryIds != null) {
+							var suggestionCategories =
+								suggestionCategoryIds.stream()
+									.map(id -> s.getReference(SuggestionCategory.class, id))
+									.collect(Collectors.toSet());
+
+							transientBucket.getSuggestionCategories().clear();
+							transientBucket.setSuggestionCategories(suggestionCategories);
+						}
+
+						var tabIds = bucketWithListsDTO.getTabIds();
+
+						if (tabIds != null) {
+							var tabs = tabIds.stream()
+								.map(id -> s.getReference(Tab.class, id))
+								.collect(Collectors.toList());
+
+							transientBucket.getTabs().clear();
+							transientBucket.setTabs(tabs);
+						}
+
+						return s.merge(transientBucket)
+							.map(__ -> transientBucket);
+					})
+			);
+		}
+
+		return super.patch(bucketId, bucketDTO);
+	}
+
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
