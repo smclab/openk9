@@ -471,6 +471,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.apply(
 								ParserContext
 									.builder()
+									.currentTenant(bucket)
 									.queryParserConfig(queryParserConfig)
 									.tokenTypeGroup(searchTokens)
 									.jwt(JWT.of(request.getJwt()))
