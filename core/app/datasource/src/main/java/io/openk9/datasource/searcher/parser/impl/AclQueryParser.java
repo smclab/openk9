@@ -65,6 +65,17 @@ public class AclQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
+		var innerQuery = getAclFilterQuery(
+			parserContext, this.extraParamsKey, this.extraParamsEnabled);
+
+		parserContext.getMutableQuery().filter(innerQuery);
+
+		return Uni.createFrom().voidItem();
+	}
+
+	protected static BoolQueryBuilder getAclFilterQuery(
+		ParserContext parserContext, String extraParamsKey, boolean extraParamsEnabled) {
+
 		BoolQueryBuilder innerQuery =
 			QueryBuilders
 				.boolQuery()
@@ -121,10 +132,7 @@ public class AclQueryParser implements QueryParser {
 				}
 			}
 		}
-
-		parserContext.getMutableQuery().filter(innerQuery);
-
-		return Uni.createFrom().voidItem();
+		return innerQuery;
 	}
 
 	@Override
