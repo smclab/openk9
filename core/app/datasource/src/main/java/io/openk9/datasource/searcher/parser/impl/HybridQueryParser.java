@@ -19,75 +19,79 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
-import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.client.opensearch._types.query_dsl.HybridQuery;
 import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
-public class HybridQueryParser implements QueryParser {
+public class HybridQueryParser {
+
+	@ConfigProperty(
+		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
+	)
+	String extraParamsKey;
+	@ConfigProperty(
+		name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false"
+	)
+	boolean extraParamsEnabled;
 
 	@Inject
 	EmbeddingService embeddingService;
 
-	@Override
-	public String getType() {
-		return "HYBRID";
-	}
+	public Uni<SearchSourceBuilder> apply(
+		ParserContext parserContext, SearchSourceBuilder searchSourceBuilder) {
 
-	@Override
-	public Uni<Void> apply(ParserContext parserContext) {
+		var bucket = parserContext.getCurrentTenant();
+		var jsonConfig = parserContext.getQueryParserConfig();
+		var parserSearchToken = parserContext.getTokenTypeGroup().iterator().next();
 
-		var currentTenant = parserContext.getCurrentTenant();
+		var tenantId = bucket.getTenant();
 
-		var tenantId = currentTenant.getTenant();
+		var kNeighbors = KnnQueryParser.getKNeighbors(parserSearchToken, jsonConfig);
+		var boost = TextQueryParser.getBoost(parserSearchToken, jsonConfig);
+		var fuzziness = TextQueryParser.getFuzziness(parserSearchToken, jsonConfig);
 
-		var mutableQuery = parserContext.getMutableQuery();
+		var values = parserSearchToken.getValues().iterator();
 
-		var queryParserConfig = parserContext.getQueryParserConfig();
+		if (values.hasNext()) {
+			var value = values.next();
 
-		var parserSearchTokens = parserContext.getTokenTypeGroup().iterator();
+			var matchQuery = new MatchQuery.Builder()
+				.field("chunkText")
+				.query(q -> q.stringValue(value))
+				.fuzziness(fuzziness.asString())
+				.boost(boost)
+				.build()
+				.toQuery();
 
-		if (parserSearchTokens.hasNext()) {
-			var parserSearchToken = parserSearchTokens.next();
-
-			var kNeighbors = KnnQueryParser.getKNeighbors(parserSearchToken, queryParserConfig);
-			var boost = TextQueryParser.getBoost(parserSearchToken, queryParserConfig);
-			var fuzziness = TextQueryParser.getFuzziness(parserSearchToken, queryParserConfig);
-
-			var values = parserSearchToken.getValues().iterator();
-
-			if (values.hasNext()) {
-				var value = values.next();
-
-				var matchQuery = new MatchQuery.Builder()
-					.field("chunkText")
-					.query(q -> q.stringValue(value))
-					.fuzziness(fuzziness.asString())
-					.boost(boost)
+			return embeddingService.getEmbeddedText(tenantId, value)
+				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
+				.map(knnQuery -> new HybridQuery.Builder()
+					.queries(matchQuery, knnQuery)
 					.build()
-					.toQuery();
+					.toQuery()
+				)
+				.map(OpenSearchUtils::toWrapperQueryBuilder)
+				.map(hybridQuery -> {
+					searchSourceBuilder.query(hybridQuery);
 
-				return embeddingService.getEmbeddedText(tenantId, value)
-					.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
-					.map(knnQuery -> new HybridQuery.Builder()
-						.queries(matchQuery, knnQuery)
-						.build()
-						.toQuery()
-					)
-					.map(OpenSearchUtils::toWrapperQueryBuilder)
-					.invoke(hybridQuery -> mutableQuery.must(hybridQuery))
-					.replaceWithVoid();
+					var aclFilterQuery = AclQueryParser.getAclFilterQuery(
+						parserContext, extraParamsKey, extraParamsEnabled);
 
-			}
+					searchSourceBuilder.postFilter(aclFilterQuery);
+
+					return searchSourceBuilder;
+				});
 
 		}
 
-		return Uni.createFrom().voidItem();
+		return Uni.createFrom().item(searchSourceBuilder);
 	}
 
 }

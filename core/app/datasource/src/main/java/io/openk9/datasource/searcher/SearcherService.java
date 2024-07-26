@@ -27,6 +27,8 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.parser.ParserContext;
+import io.openk9.datasource.searcher.parser.impl.HybridQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
 import io.openk9.datasource.searcher.queryanalysis.GrammarProvider;
 import io.openk9.datasource.searcher.queryanalysis.Parse;
@@ -111,6 +113,9 @@ import javax.inject.Inject;
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static Logger log = Logger.getLogger(SearcherService.class);
+
+	@Inject
+	HybridQueryParser hybridQueryParser;
 
 	@Override
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
@@ -285,7 +290,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							searchSourceBuilder.highlighter(null);
 
-							String[] indexNames = getIndexNames(request, tenant);
+							String[] indexNames = _getIndexNames(request, tenant);
 
 							SearchRequest searchRequest =
 								new SearchRequest(indexNames, searchSourceBuilder);
@@ -435,9 +440,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
 					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
-				.flatMap(tenant -> {
+				.flatMap(bucket -> {
 
-					if (tenant == null) {
+					if (bucket == null) {
 						return Uni.createFrom().item(QueryParserResponse
 							.newBuilder()
 							.build()
@@ -446,75 +451,119 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-					String language = _getLanguage(request, tenant);
+					String language = _getLanguage(request, bucket);
 
-					return createBoolQuery(
-						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language)
-						.map(boolQueryBuilder -> {
+					var searchSourceBuilder = _getSearchSourceBuilder(request, bucket, language);
 
-							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+					String[] indexNames = _getIndexNames(request, bucket);
 
-							searchSourceBuilder.trackTotalHits(true);
+					Map<String, String> queryParams;
 
-							searchSourceBuilder.query(boolQueryBuilder);
+					if (tokenGroup.containsKey("HYBRID")) {
 
-							if (request.getRangeCount() == 2) {
-								searchSourceBuilder.from(request.getRange(0));
-								searchSourceBuilder.size(request.getRange(1));
-							}
+						queryParams = _getQueryParams(bucket);
 
-							List<DocTypeField> docTypeFieldList = Utils
-								.getDocTypeFieldsFrom(tenant)
-								.filter(docTypeField -> !docTypeField.isI18N())
-								.toList();
+						var searchTokens = tokenGroup.get("HYBRID");
 
-							applySort(
-								docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+						var queryParserConfig = getQueryParserConfig(bucket, "HYBRID");
+
+						return hybridQueryParser
+							.apply(
+								ParserContext
+									.builder()
+									.queryParserConfig(queryParserConfig)
+									.tokenTypeGroup(searchTokens)
+									.jwt(JWT.of(request.getJwt()))
+									.extraParams(extraParams)
+									.language(language)
+									.build(),
 								searchSourceBuilder
-							);
-
-							applyHighlightAndIncludeExclude(
-								searchSourceBuilder,
-								docTypeFieldList,
-								request.getVectorIndices(),
-								language
-							);
-
-							List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
-
-							SearchConfig searchConfig = tenant.getSearchConfig();
-
-							applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-							String[] indexNames = getIndexNames(request, tenant);
-
-							var queryParams = getQueryParams(tokenGroup, tenant);
-
-							return QueryParserResponse
-								.newBuilder()
-								.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
+							)
+							.map(searchSource -> QueryParserResponse.newBuilder()
+								.setQuery(searchSourceBuilderToOutput(searchSource))
 								.addAllIndexName(List.of(indexNames))
 								.putAllQueryParameters(queryParams)
-								.build();
+								.build());
 
-						});
+					}
+					else {
+
+						queryParams = new HashMap<>();
+
+						return createBoolQuery(
+							tokenGroup, bucket, JWT.of(request.getJwt()), extraParams, language)
+							.map(boolQueryBuilder -> {
+
+								searchSourceBuilder.query(boolQueryBuilder);
+
+								return QueryParserResponse
+									.newBuilder()
+									.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
+									.addAllIndexName(List.of(indexNames))
+									.putAllQueryParameters(queryParams)
+									.build();
+
+							});
+					}
+
 				});
 
 		});
 
 	}
 
-	private Map<String, String> getQueryParams(
-		Map<String, List<ParserSearchToken>> tokenGroup,
-		Bucket tenant) {
+	private static SearchSourceBuilder _getSearchSourceBuilder(
+		QueryParserRequest request, Bucket tenant, String language) {
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.trackTotalHits(true);
+
+		if (request.getRangeCount() == 2) {
+			searchSourceBuilder.from(request.getRange(0));
+			searchSourceBuilder.size(request.getRange(1));
+		}
+
+		List<DocTypeField> docTypeFieldList = Utils
+			.getDocTypeFieldsFrom(tenant)
+			.filter(docTypeField -> !docTypeField.isI18N())
+			.toList();
+
+		applySort(
+			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+			searchSourceBuilder
+		);
+
+		applyHighlightAndIncludeExclude(
+			searchSourceBuilder,
+			docTypeFieldList,
+			request.getVectorIndices(),
+			language
+		);
+
+		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+
+		return searchSourceBuilder;
+	}
+
+	private static Map<String, String> _getQueryParams(
+		Bucket bucket) {
+
 		var queryParams = new HashMap<String, String>();
 
-		if (tokenGroup.containsKey("HYBRID") || tokenGroup.containsKey("hybrid")) {
+		var searchConfig = bucket.getSearchConfig();
 
-			var searchConfigName = tenant.getSearchConfig().getName();
+		if (searchConfig != null) {
+
+			var searchConfigName = searchConfig.getName();
 			var pipelineName = io.openk9.common.util.StringUtils.retainsAlnum(searchConfigName);
 
 			queryParams.put("search_pipeline", pipelineName);
+
 		}
 
 		return queryParams;
@@ -981,7 +1030,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	}
 
 
-	private static String[] getIndexNames(QueryParserRequest request, Bucket tenant) {
+	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
 		String[] indexNames;
 		var dataIndices = tenant.getDatasources()
 			.stream()
