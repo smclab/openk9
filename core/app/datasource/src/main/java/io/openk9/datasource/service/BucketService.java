@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
@@ -46,10 +47,6 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -57,11 +54,51 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	 BucketService(BucketMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Bucket> create(BucketDTO bucketDTO) {
+		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO) {
+			var transientBucket = mapper.create(bucketWithListsDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, transientBucket)
+					.flatMap(bucket -> {
+						var datasources =
+							bucketWithListsDTO.getDatasourceIds().stream()
+								.map(datasourceId ->
+									s.getReference(Datasource.class, datasourceId))
+								.collect(Collectors.toSet());
+
+						var suggestionCategories =
+							bucketWithListsDTO.getSuggestionCategoryIds().stream()
+								.map(suggestionId ->
+									s.getReference(SuggestionCategory.class, suggestionId))
+								.collect(Collectors.toSet());
+
+						var tabs = bucketWithListsDTO.getTabIds().stream()
+							.map(tabId -> s.getReference(Tab.class, tabId))
+							.collect(Collectors.toList());
+
+						bucket.setDatasources(datasources);
+						bucket.setSuggestionCategories(suggestionCategories);
+						bucket.setTabs(tabs);
+
+						return s.persist(bucket)
+							.flatMap(__ -> s.merge(bucket));
+					}));
+		}
+
+		return super.create(bucketDTO);
 	}
 
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
