@@ -81,8 +81,12 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						var suggestionCategories =
 							bucketWithListsDTO.getSuggestionCategoryIds().stream()
-								.map(suggestionId ->
-									s.getReference(SuggestionCategory.class, suggestionId))
+								.map(suggestionId -> {
+									var suggestionCategory =
+										s.getReference(SuggestionCategory.class, suggestionId);
+									suggestionCategory.setBucket(bucket);
+									return suggestionCategory;
+								})
 								.collect(Collectors.toSet());
 
 						var tabs = bucketWithListsDTO.getTabIds().stream()
