@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -220,6 +221,21 @@ public class BucketGraphqlResource {
 			return patch
 				? patchBucket(id, bucketDTO)
 				: updateBucket(id, bucketDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<Bucket>> bucketWithLists(
+		@Id Long id, BucketWithListsDTO bucketWithListsDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createBucket(bucketWithListsDTO);
+		} else {
+			return patch
+				? patchBucket(id, bucketWithListsDTO)
+				: updateBucket(id, bucketWithListsDTO);
 		}
 
 	}
