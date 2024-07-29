@@ -89,7 +89,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								.flatMap(datasources -> {
 										var uniList = datasources.stream()
 											.map(datasource ->
-												addDatasource(bucket.getId(), datasource.getId())
+												s.fetch(datasource.getBuckets()).flatMap(buckets -> {
+													if (buckets.add(bucket)) {
+														datasource.setBuckets(buckets);
+														return persist(s, datasource);
+													}
+													return Uni.createFrom().nullItem();
+												})
+												//addDatasource(bucket.getId(), datasource.getId())
 											)
 											.collect(Collectors.toList());
 										return Uni.join().all(uniList).andCollectFailures()
@@ -97,15 +104,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									}
 								);
 
-							builder.add(datasourceUni.replaceWithVoid());
-
-							var datasources =
-								datasourceIds.stream()
-									.map(datasourceId ->
-										s.getReference(Datasource.class, datasourceId))
-									.collect(Collectors.toSet());
-
-							bucket.setDatasources(datasources);
+							builder.add(datasourceUni);
 						}
 
 						//Suggestion Category
