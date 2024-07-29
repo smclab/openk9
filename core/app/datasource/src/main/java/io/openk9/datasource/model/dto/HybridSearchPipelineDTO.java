@@ -35,7 +35,7 @@ public class HybridSearchPipelineDTO {
 	@Builder.Default
 	private CombinationTechnique combinationTechnique = CombinationTechnique.ARITHMETIC_MEAN;
 	@Builder.Default
-	private List<Float> weights = List.of(0.3f, 0.7f);
+	private List<Double> weights = List.of(0.3d, 0.7d);
 
 	@Getter
 	public enum NormalizationTechnique {

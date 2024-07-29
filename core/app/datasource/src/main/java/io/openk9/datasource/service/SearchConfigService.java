@@ -37,6 +37,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.generic.Bodies;
 import org.opensearch.client.opensearch.generic.Requests;
@@ -166,34 +167,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 						.method("PUT")
 						.endpoint(
 							"_search/pipeline/" + StringUtils.retainsAlnum(searchConfig.getName()))
-						.json(Json.createObjectBuilder()
-							.add("description", "Post processor for hybrid search")
-							.add("phase_results_processors", Json.createArrayBuilder()
-								.add(Json.createObjectBuilder()
-									.add("normalization-processor", Json.createObjectBuilder()
-										.add("normalization", Json.createObjectBuilder()
-											.add(
-												"technique",
-												pipelineDTO.getNormalizationTechnique().getValue()
-											)
-										)
-										.add("combination", Json.createObjectBuilder()
-											.add(
-												"technique",
-												pipelineDTO.getCombinationTechnique().getValue()
-											)
-											.add("parameters", Json.createObjectBuilder()
-												.add(
-													"weights",
-													Json.createArrayBuilder(
-														pipelineDTO.getWeights()
-													)
-												)
-											)
-										)
-									)
-								)
-							)
+						.json(getJsonBody(pipelineDTO)
 						)
 						.build()
 					)
@@ -204,6 +178,39 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 				response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
 				response.getReason()
 			));
+	}
+
+	protected static JsonObject getJsonBody(HybridSearchPipelineDTO pipelineDTO) {
+		return Json.createObjectBuilder()
+			.add("description", "Post processor for hybrid search")
+			.add("phase_results_processors", Json.createArrayBuilder()
+				.add(Json.createObjectBuilder()
+					.add("normalization-processor", Json.createObjectBuilder()
+						.add("normalization", Json.createObjectBuilder()
+							.add(
+								"technique",
+								pipelineDTO.getNormalizationTechnique().getValue()
+							)
+						)
+						.add("combination", Json.createObjectBuilder()
+							.add(
+								"technique",
+								pipelineDTO.getCombinationTechnique().getValue()
+							)
+							.add("parameters", Json.createObjectBuilder()
+								.add(
+									"weights",
+									Json.createArrayBuilder(
+										pipelineDTO.getWeights()
+									)
+
+								)
+							)
+						)
+					)
+				)
+			)
+			.build();
 	}
 
 }
