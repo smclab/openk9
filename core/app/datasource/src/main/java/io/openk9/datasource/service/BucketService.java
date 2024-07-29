@@ -54,6 +54,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,9 +85,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							var datasourceUni =
-								s.find(Datasource.class, datasourceIds.toArray())
-								.map(datasources -> {
+							var datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
+								.flatMap(datasources -> {
 										var uniList = datasources.stream()
 											.map(datasource ->
 												addDatasource(bucket.getId(), datasource.getId())
@@ -95,8 +95,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										return Uni.join().all(uniList).andCollectFailures()
 											.replaceWithVoid();
 									}
-								)
-								.flatMap(voidUni -> voidUni);
+								);
 
 							builder.add(datasourceUni.replaceWithVoid());
 
