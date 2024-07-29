@@ -84,8 +84,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							var datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
-								.flatMap(datasources -> {
+							var datasourceUni =
+								s.find(Datasource.class, datasourceIds.toArray())
+								.map(datasources -> {
 										var uniList = datasources.stream()
 											.map(datasource ->
 												addDatasource(bucket.getId(), datasource.getId())
@@ -94,7 +95,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										return Uni.join().all(uniList).andCollectFailures()
 											.replaceWithVoid();
 									}
-								);
+								)
+									.flatMap(voidUni -> voidUni);
 
 							builder.add(datasourceUni);
 
