@@ -76,12 +76,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				(s, transaction) -> super.create(s, transientBucket)
 					.flatMap(bucket -> {
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+
+						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
-						var datasourceUni = Uni.createFrom().voidItem();
 
 						if (datasourceIds != null) {
 
-							datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
+							var datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
 								.flatMap(datasources -> {
 										var uniList = datasources.stream()
 											.map(datasource ->
@@ -93,6 +96,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									}
 								);
 
+							builder.add(datasourceUni);
+
 							var datasources =
 								datasourceIds.stream()
 									.map(datasourceId ->
@@ -102,14 +107,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setDatasources(datasources);
 						}
 
+						//Suggestion Category
 						var suggestionCategoryIds =
 							bucketWithListsDTO.getSuggestionCategoryIds();
-						var suggestionCategoryUni = Uni.createFrom().voidItem();
 
 
 						if (suggestionCategoryIds != null) {
 
-							suggestionCategoryUni = s.find(
+							var suggestionCategoryUni = s.find(
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
 								.flatMap(suggestionCategories -> {
 										suggestionCategories.forEach(suggestionCategory ->
@@ -117,6 +122,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										return s.persistAll(suggestionCategories.toArray());
 									}
 								);
+
+							builder.add(suggestionCategoryUni);
 
 							var suggestionCategories =
 								suggestionCategoryIds.stream()
@@ -127,14 +134,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setSuggestionCategories(suggestionCategories);
 						}
 
+						//Tab
 						var tabs = bucketWithListsDTO.getTabIds().stream()
 							.map(tabId -> s.getReference(Tab.class, tabId))
 							.collect(Collectors.toList());
 
 						bucket.setTabs(tabs);
 
-						return Uni.join().all(
-							datasourceUni, suggestionCategoryUni, s.persist(bucket))
+						builder.add(s.persist(bucket));
+
+						return builder.joinAll()
 							.andCollectFailures()
 							.flatMap(__ -> s.merge(bucket));
 					}));
