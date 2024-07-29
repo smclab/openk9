@@ -96,9 +96,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 											.replaceWithVoid();
 									}
 								)
-									.flatMap(voidUni -> voidUni);
+								.flatMap(voidUni -> voidUni);
 
-							builder.add(datasourceUni);
+							builder.add(datasourceUni.replaceWithVoid());
 
 							var datasources =
 								datasourceIds.stream()
