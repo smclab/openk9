@@ -85,24 +85,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							var datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
-								.flatMap(datasources -> {
-										var uniList = datasources.stream()
-											.map(datasource ->
-												s.fetch(datasource.getBuckets()).flatMap(buckets -> {
-													if (buckets.add(bucket)) {
-														datasource.setBuckets(buckets);
-														return persist(s, datasource);
-													}
-													return Uni.createFrom().nullItem();
-												})
-												//addDatasource(bucket.getId(), datasource.getId())
-											)
-											.collect(Collectors.toList());
-										return Uni.join().all(uniList).andCollectFailures()
-											.replaceWithVoid();
-									}
-								);
+							var datasourceUni =
+								//s.find(Datasource.class, datasourceIds.toArray())
+								s.createQuery(
+									"SELECT d FROM Datasource d JOIN FETCH d.buckets",
+									Datasource.class)
+									.getResultList()
+									.flatMap(datasources -> {
+										datasources.forEach(datasource ->
+											datasource.getBuckets().add(bucket)
+										);
+
+										return s.persistAll(datasources.toArray());
+									});
 
 							builder.add(datasourceUni);
 						}
