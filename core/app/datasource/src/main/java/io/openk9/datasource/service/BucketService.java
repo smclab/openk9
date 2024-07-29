@@ -44,6 +44,7 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -55,6 +56,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -73,31 +75,67 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			return sessionFactory.withTransaction(
 				(s, transaction) -> super.create(s, transientBucket)
 					.flatMap(bucket -> {
-						var datasources =
-							bucketWithListsDTO.getDatasourceIds().stream()
-								.map(datasourceId ->
-									s.getReference(Datasource.class, datasourceId))
-								.collect(Collectors.toSet());
 
-						var suggestionCategories =
-							bucketWithListsDTO.getSuggestionCategoryIds().stream()
-								.map(suggestionId -> {
-									var suggestionCategory =
-										s.getReference(SuggestionCategory.class, suggestionId);
-									suggestionCategory.setBucket(bucket);
-									return suggestionCategory;
-								})
-								.collect(Collectors.toSet());
+						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+						var datasourceUni = Uni.createFrom().voidItem();
+
+						if (datasourceIds != null) {
+
+							datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
+								.flatMap(datasources -> {
+										datasources.forEach(datasource ->
+											datasource.getBuckets().add(bucket));
+										return s.persistAll(datasources.toArray());
+									}
+								);
+
+							var datasources =
+								datasourceIds.stream()
+									.map(datasourceId ->
+										s.getReference(Datasource.class, datasourceId))
+									.collect(Collectors.toSet());
+
+							bucket.setDatasources(datasources);
+						}
+
+						var suggestionCategoryIds =
+							bucketWithListsDTO.getSuggestionCategoryIds();
+						var suggestionCategoryUni = Uni.createFrom().voidItem();
+
+
+						if (suggestionCategoryIds != null) {
+
+							suggestionCategoryUni = s.find(
+								SuggestionCategory.class, suggestionCategoryIds.toArray())
+								.flatMap(suggestionCategories -> {
+										suggestionCategories.forEach(suggestionCategory ->
+											suggestionCategory.setBucket(bucket));
+										return s.persistAll(suggestionCategories.toArray());
+									}
+								);
+
+							var suggestionCategories =
+								suggestionCategoryIds.stream()
+									.map(suggestionId -> {
+										var suggestionCategory =
+											s.getReference(SuggestionCategory.class, suggestionId);
+										suggestionCategory.setBucket(bucket);
+										return suggestionCategory;
+									})
+									.collect(Collectors.toSet());
+
+							bucket.setSuggestionCategories(suggestionCategories);
+						}
 
 						var tabs = bucketWithListsDTO.getTabIds().stream()
 							.map(tabId -> s.getReference(Tab.class, tabId))
 							.collect(Collectors.toList());
 
-						bucket.setDatasources(datasources);
-						bucket.setSuggestionCategories(suggestionCategories);
 						bucket.setTabs(tabs);
 
-						return s.persist(bucket)
+						return Uni.join().all(
+							datasourceUni, suggestionCategoryUni, s.persist(bucket))
+							.andCollectFailures()
 							.flatMap(__ -> s.merge(bucket));
 					}));
 		}
