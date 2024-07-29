@@ -135,6 +135,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//Tab
+						//TODO aggiungi controllo != null
 						var tabs = bucketWithListsDTO.getTabIds().stream()
 							.map(tabId -> s.getReference(Tab.class, tabId))
 							.collect(Collectors.toList());
@@ -145,6 +146,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						return builder.joinAll()
 							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
 							.flatMap(__ -> s.merge(bucket));
 					}));
 		}
