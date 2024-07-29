@@ -338,6 +338,7 @@ public class EmbeddingService {
 				EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TOKEN_TEXT_SPLITTER;
 			case CHARACTER_TEXT_SPLITTER ->
 				EmbeddingOuterClass.ChunkType.CHUNK_TYPE_CHARACTER_TEXT_SPLITTER;
+			case SEMANTIC_SPLITTER -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_SEMANTIC_SPLITTER;
 		};
 	}
 
