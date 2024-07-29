@@ -82,7 +82,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
 
-						if (datasourceIds != null) {
+						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
 							var datasourceUni = s.find(Datasource.class, datasourceIds.toArray())
 								.flatMap(datasources -> {
@@ -112,7 +112,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucketWithListsDTO.getSuggestionCategoryIds();
 
 
-						if (suggestionCategoryIds != null) {
+						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
 
 							var suggestionCategoryUni = s.find(
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
