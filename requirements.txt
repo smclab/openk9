@@ -7,3 +7,4 @@ fastapi
 uvicorn 
 grpcio 
 grpcio-tools
+python-keycloak
