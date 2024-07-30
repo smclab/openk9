@@ -21,6 +21,7 @@ import akka.actor.typed.ActorSystem;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.cache.P2PCache;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
+import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -80,6 +81,19 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		invalidateLocalCache();
 
 		return super.onFlushDirty(entity, id, currentState, previousState, propertyNames, types);
+	}
+
+	@Override
+	public void onCollectionUpdate(Object collection, Serializable key)
+	throws CallbackException {
+
+		if (log.isTraceEnabled()) {
+			log.trace("intercepted collectionUpdate");
+		}
+
+		invalidateLocalCache();
+
+		super.onCollectionUpdate(collection, key);
 	}
 
 	private void invalidateLocalCache() {
