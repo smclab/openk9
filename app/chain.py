@@ -3,24 +3,9 @@ import json
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
 
 from app.grpc.grpc_client import get_llm_configuration
 from app.retriever import OpenSearchRetriever
-
-
-class QueryInput(BaseModel):
-    searchQuery: list
-    range: list
-    afterKey: str
-    suggestKeyword: str
-    suggestionCategoryId: int
-    virtualHost: str
-    jwt: str
-    extra: dict
-    sort: list
-    sortAfterKey: str
-    language: str
 
 
 def get_chain(

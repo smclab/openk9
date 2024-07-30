@@ -1,11 +1,12 @@
 from typing import Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from app.chain import get_chain, get_chat_chain
+from app.keykloak import Keycloak
 
 app = FastAPI()
 
@@ -31,7 +32,11 @@ class SearchQuery(BaseModel):
 
 
 @app.post("/api/rag/generate")
-async def search_query(search_query: SearchQuery, request: Request):
+async def search_query(
+    search_query: SearchQuery,
+    request: Request,
+    authorization: Optional[str] = Header(None),
+):
     searchQuery = search_query.searchQuery
     range = search_query.range
     afterKey = search_query.afterKey
@@ -49,22 +54,31 @@ async def search_query(search_query: SearchQuery, request: Request):
     # virtualHost = request.client.host
     virtualHost = "gamahiro.openk9.io"
 
-    chain = get_chain(
-        searchQuery,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
-        jwt,
-        extra,
-        sort,
-        sortAfterKey,
-        language,
-        vectorIndices,
-        virtualHost,
-        searchText,
-    )
-    return EventSourceResponse(chain)
+    if authorization and not Keycloak.verify_token(
+        authorization.replace("Bearer ", "")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    else:
+        chain = get_chain(
+            searchQuery,
+            range,
+            afterKey,
+            suggestKeyword,
+            suggestionCategoryId,
+            jwt,
+            extra,
+            sort,
+            sortAfterKey,
+            language,
+            vectorIndices,
+            virtualHost,
+            searchText,
+        )
+        return EventSourceResponse(chain)
 
 
 class SearchQueryChat(BaseModel):
@@ -84,7 +98,11 @@ class SearchQueryChat(BaseModel):
 
 
 @app.post("/api/rag/chat")
-async def search_query(search_query: SearchQueryChat, request: Request):
+async def search_query(
+    search_query: SearchQueryChat,
+    request: Request,
+    authorization: Optional[str] = Header(None),
+):
     searchText = search_query.searchText
     chatId = search_query.chatId
     searchQuery = search_query.searchQuery
@@ -103,19 +121,28 @@ async def search_query(search_query: SearchQueryChat, request: Request):
     # virtualHost = request.client.host
     virtualHost = "k9-backend.openk9.io"
 
-    chain = get_chat_chain(
-        searchQuery,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
-        jwt,
-        extra,
-        sort,
-        sortAfterKey,
-        language,
-        vectorIndices,
-        virtualHost,
-        searchText,
-    )
-    return EventSourceResponse(chain)
+    if authorization and not Keycloak.verify_token(
+        authorization.replace("Bearer ", "")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    else:
+        chain = get_chat_chain(
+            searchQuery,
+            range,
+            afterKey,
+            suggestKeyword,
+            suggestionCategoryId,
+            jwt,
+            extra,
+            sort,
+            sortAfterKey,
+            language,
+            vectorIndices,
+            virtualHost,
+            searchText,
+        )
+        return EventSourceResponse(chain)
