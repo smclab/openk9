@@ -1,0 +1,5 @@
+services:
+  rag_module:
+    image: openk9-rag-module:latest
+    ports:
+      - "5000:5000"

@@ -1,0 +1,9 @@
+langchain-core 
+langchain-cli 
+langchain-community 
+langchain-openai 
+opensearch-py 
+fastapi 
+uvicorn 
+grpcio 
+grpcio-tools
