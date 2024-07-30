@@ -25,7 +25,7 @@ class SearchQuery(BaseModel):
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
-    vectorIndices: bool
+    vectorIndices: Optional[bool] = True
     searchText: str
 
 
@@ -44,9 +44,9 @@ async def search_query(search_query: SearchQuery, request: Request):
     vectorIndices = search_query.vectorIndices
     searchText = search_query.searchText
 
-    # TODO: replace "gamahiro.openk9.io" with virtualHost
+    # TODO: replace "k9-backend.openk9.io" with virtualHost
     # virtualHost = request.client.host
-    virtualHost = "gamahiro.openk9.io"
+    virtualHost = "k9-backend.openk9.io"
 
     chain = get_chain(
         searchQuery,
@@ -79,7 +79,7 @@ class SearchQueryChat(BaseModel):
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
-    vectorIndices: bool = False
+    vectorIndices: Optional[bool] = False
     searchText: str
 
 
