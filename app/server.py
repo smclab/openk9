@@ -68,7 +68,6 @@ async def search_query(search_query: SearchQuery, request: Request):
 
 
 class SearchQueryChat(BaseModel):
-    searchText: str
     chatId: Optional[str] = None
     searchQuery: list
     range: list = [0, 7]
