@@ -1,8 +1,9 @@
 from typing import Optional
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, StreamingResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 
 from app.chain import get_chain, get_chat_chain
 
@@ -63,7 +64,7 @@ async def search_query(search_query: SearchQuery, request: Request):
         virtualHost,
         searchText,
     )
-    return StreamingResponse(chain, media_type="text/event-stream")
+    return EventSourceResponse(chain)
 
 
 class SearchQueryChat(BaseModel):
@@ -118,4 +119,4 @@ async def search_query(search_query: SearchQueryChat, request: Request):
         virtualHost,
         searchText,
     )
-    return StreamingResponse(chain, media_type="text/event-stream")
+    return EventSourceResponse(chain)
