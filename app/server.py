@@ -26,7 +26,7 @@ class SearchQuery(BaseModel):
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
-    vectorIndices: Optional[bool] = True
+    vectorIndices: Optional[bool] = False
     searchText: str
 
 
@@ -79,7 +79,7 @@ class SearchQueryChat(BaseModel):
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
-    vectorIndices: Optional[bool] = False
+    vectorIndices: Optional[bool] = True
     searchText: str
 
 
