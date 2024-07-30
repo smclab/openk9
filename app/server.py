@@ -45,9 +45,9 @@ async def search_query(search_query: SearchQuery, request: Request):
     vectorIndices = search_query.vectorIndices
     searchText = search_query.searchText
 
-    # TODO: replace "k9-backend.openk9.io" with virtualHost
+    # TODO: replace "gamahiro.openk9.io" with virtualHost
     # virtualHost = request.client.host
-    virtualHost = "k9-backend.openk9.io"
+    virtualHost = "gamahiro.openk9.io"
 
     chain = get_chain(
         searchQuery,
@@ -99,9 +99,9 @@ async def search_query(search_query: SearchQueryChat, request: Request):
     language = search_query.language
     vectorIndices = search_query.vectorIndices
 
-    # TODO: replace "gamahiro.openk9.io" with virtualHost
+    # TODO: replace "k9-backend.openk9.io" with virtualHost
     # virtualHost = request.client.host
-    virtualHost = "gamahiro.openk9.io"
+    virtualHost = "k9-backend.openk9.io"
 
     chain = get_chat_chain(
         searchQuery,
