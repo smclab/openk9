@@ -139,6 +139,22 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                 label="Maching Learning"
                 path="maching-learning"
               />
+              <SideNavigationCollapsible label="Embedding models">
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Embedding models"
+                  path="/embedding-models"
+                />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Large language models"
+                  path="/large-languages-models"
+                />
+              </SideNavigationCollapsible>
             </ul>
           </nav>
         </div>

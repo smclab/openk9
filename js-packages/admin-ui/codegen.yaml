@@ -1,5 +1,5 @@
 schema:
-  - https://test.openk9.io/api/datasource/graphql:
+  - https://k9-frontend.openk9.io/api/datasource/graphql:
       headers:
         Authorization: "Bearer "
 

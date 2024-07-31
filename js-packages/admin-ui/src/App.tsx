@@ -94,6 +94,10 @@ import { Languages } from "./components/Languages";
 import { BucketLanguage } from "./components/BucketLanguage";
 import { Language } from "./components/Language";
 import { DocTypeFieldsSearch } from "./components/DocTypeFieldsSearch";
+import { EmbeddingModels } from "./components/EmbeddingModels";
+import { LargeLanguageModels } from "./components/LargeLanguageModels";
+import { EmbeddingModel } from "./components/EmbeddingModel";
+import { LargeLanguageModelE } from "./components/LargeLanguageModel";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -482,6 +486,10 @@ export default function App() {
                         <Route path="" element={<Annotator />} />
                       </Route>
                     </Route>
+                    <Route path="embedding-models" element={<EmbeddingModels />} />
+                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModel />} />
+                    <Route path="large-languages-models" element={<LargeLanguageModels />} />
+                    <Route path="large-languages-models/:largeLanguagesModelsId" element={<LargeLanguageModelE />} />
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>
