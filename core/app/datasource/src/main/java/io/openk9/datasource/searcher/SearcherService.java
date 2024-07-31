@@ -19,14 +19,12 @@ package io.openk9.datasource.searcher;
 
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.impl.HybridQueryParser;
@@ -96,7 +94,6 @@ import org.opensearch.search.sort.SortOrder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -1058,25 +1055,29 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 
 	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
-		String[] indexNames;
-		var dataIndices = tenant.getDatasources()
-			.stream()
-			.map(Datasource::getDataIndex)
-			.distinct()
-			.toArray(DataIndex[]::new);
+		var indexNames = new HashSet<String>();
+
+		var datasources = tenant.getDatasources();
 
 		if (request.hasVectorIndices() && request.getVectorIndices()) {
-			indexNames = Arrays.stream(dataIndices)
-				.map(DataIndex::getVectorIndex)
-				.map(VectorIndex::getName)
-				.toArray(String[]::new);
+			for (Datasource datasource : datasources) {
+				var dataIndex = datasource.getDataIndex();
+				var vectorIndex = dataIndex.getVectorIndex();
+
+				if (vectorIndex != null) {
+					indexNames.add(vectorIndex.getName());
+				}
+			}
 		}
 		else {
-			indexNames = Arrays.stream(dataIndices)
-				.map(DataIndex::getName)
-				.toArray(String[]::new);
+			for (Datasource datasource : datasources) {
+				var dataIndex = datasource.getDataIndex();
+
+				indexNames.add(dataIndex.getName());
+			}
 		}
-		return indexNames;
+
+		return indexNames.toArray(String[]::new);
 	}
 
 	@Inject
