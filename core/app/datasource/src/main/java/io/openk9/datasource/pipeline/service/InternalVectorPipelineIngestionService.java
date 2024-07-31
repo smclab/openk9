@@ -119,7 +119,7 @@ public class InternalVectorPipelineIngestionService {
 			emitter.send(Message.of(ingestionIndexWriterPayload, metadata));
 
 		}).onFailure().invoke((throwable) ->
-			log.error("No vector index for scheduleId %s", scheduleId, throwable)
+			log.infof(throwable, "No active vector index for scheduleId %s", scheduleId)
 		).replaceWithVoid();
 
 	}
