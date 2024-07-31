@@ -5,10 +5,10 @@ import warnings
 
 from app.grpc.searcher import searcher_pb2 as app_dot_grpc_dot_searcher_dot_searcher__pb2
 
-GRPC_GENERATED_VERSION = '1.64.1'
+GRPC_GENERATED_VERSION = '1.65.1'
 GRPC_VERSION = grpc.__version__
-EXPECTED_ERROR_RELEASE = '1.65.0'
-SCHEDULED_RELEASE_DATE = 'June 25, 2024'
+EXPECTED_ERROR_RELEASE = '1.66.0'
+SCHEDULED_RELEASE_DATE = 'August 6, 2024'
 _version_not_supported = False
 
 try:
@@ -54,6 +54,11 @@ class SearcherStub(object):
                 request_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
                 response_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.FromString,
                 _registered_method=True)
+        self.GetLLMConfigurations = channel.unary_unary(
+                '/grpc.Searcher/GetLLMConfigurations',
+                request_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsRequest.SerializeToString,
+                response_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsResponse.FromString,
+                _registered_method=True)
 
 
 class SearcherServicer(object):
@@ -77,6 +82,12 @@ class SearcherServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetLLMConfigurations(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_SearcherServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -94,6 +105,11 @@ def add_SearcherServicer_to_server(servicer, server):
                     servicer.QueryAnalysis,
                     request_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.FromString,
                     response_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.SerializeToString,
+            ),
+            'GetLLMConfigurations': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLLMConfigurations,
+                    request_deserializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsRequest.FromString,
+                    response_serializer=app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -177,6 +193,33 @@ class Searcher(object):
             '/grpc.Searcher/QueryAnalysis',
             app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisRequest.SerializeToString,
             app_dot_grpc_dot_searcher_dot_searcher__pb2.QueryAnalysisResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetLLMConfigurations(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/grpc.Searcher/GetLLMConfigurations',
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsRequest.SerializeToString,
+            app_dot_grpc_dot_searcher_dot_searcher__pb2.GetLLMConfigurationsResponse.FromString,
             options,
             channel_credentials,
             insecure,
