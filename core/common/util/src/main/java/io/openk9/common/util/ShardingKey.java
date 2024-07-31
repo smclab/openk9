@@ -22,7 +22,7 @@ import java.util.Objects;
 
 public record ShardingKey(String... elements) {
 
-	private static final char SEPARATOR = '_';
+	private static final char SEPARATOR = '#';
 
 	public ShardingKey {
 		assert elements.length >= 2 : "Must have at least 2 elements (tenantId, scheduleId)";
