@@ -262,7 +262,7 @@ public class JobScheduler {
 
 		if (oldDataIndex == null) {
 			log.infof(
-				"VectorPipeline skipped because no dataIndex is associated for scheduleId %.",
+				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
 				scheduler.getScheduleId()
 			);
 
@@ -273,7 +273,7 @@ public class JobScheduler {
 
 		if (vectorIndex == null) {
 			log.infof(
-				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %.",
+				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
 				scheduler.getScheduleId()
 			);
 
