@@ -23,8 +23,7 @@ def get_chain(
     virtualHost,
     question,
 ):
-    # TODO: replace "jynx" with virtualHost
-    configuration = get_llm_configuration("jynx")
+    configuration = get_llm_configuration(virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     json_config = configuration["json_config"]
@@ -75,8 +74,7 @@ def get_chat_chain(
     virtualHost,
     searchText
 ):
-    # TODO: replace "jynx" with virtualHost
-    configuration = get_llm_configuration("jynx")
+    configuration = get_llm_configuration(virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     json_config = configuration["json_config"]

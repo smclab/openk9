@@ -1,6 +1,5 @@
 import grpc
 
-from .datasource import datasource_pb2, datasource_pb2_grpc
 from .searcher import searcher_pb2, searcher_pb2_grpc
 
 GRPC_HOST = "159.122.129.226:30370"
@@ -46,10 +45,10 @@ def query_parser(
 def get_llm_configuration(virtualHost):
 
     with grpc.insecure_channel(GRPC_HOST) as channel:
-        stub = datasource_pb2_grpc.DatasourceStub(channel)
+        stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.GetLLMConfigurations(
-            datasource_pb2.GetLLMConfigurationsRequest(
-                schemaName=virtualHost,
+            searcher_pb2.GetLLMConfigurationsRequest(
+                virtualHost=virtualHost,
             )
         )
 
