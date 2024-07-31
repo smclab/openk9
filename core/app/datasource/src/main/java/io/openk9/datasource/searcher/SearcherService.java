@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.searcher;
 
+import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -37,9 +38,12 @@ import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
+import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -112,10 +116,32 @@ import javax.inject.Inject;
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
 
-	private static Logger log = Logger.getLogger(SearcherService.class);
+	private static final Logger log = Logger.getLogger(SearcherService.class);
 
 	@Inject
 	HybridQueryParser hybridQueryParser;
+
+	@Inject
+	LargeLanguageModelService largeLanguageModelService;
+
+	@Override
+	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
+		return getTenant(request.getVirtualHost())
+			.flatMap(tenantResponse -> largeLanguageModelService
+				.fetchCurrent(tenantResponse.getSchemaName())
+				.map(llm -> {
+					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
+						.setApiUrl(llm.getApiUrl())
+						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+
+					if (llm.getApiKey() != null) {
+						responseBuilder.setApiKey(llm.getApiKey());
+					}
+
+					return responseBuilder.build();
+				})
+			);
+	}
 
 	@Override
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {

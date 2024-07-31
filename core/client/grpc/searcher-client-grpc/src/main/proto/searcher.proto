@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
+
 option java_multiple_files = true;
 option java_package = "io.openk9.searcher.grpc";
 option java_outer_classname = "SearcherProto";
@@ -10,6 +12,7 @@ service Searcher {
   rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
   rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
   rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
+  rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
 }
 
 message QueryParserResponse {
@@ -87,6 +90,10 @@ message QueryAnalysisRequest {
   string mode = 5;
 }
 
+message GetLLMConfigurationsRequest {
+  string virtualHost = 1;
+}
+
 message QueryAnalysisToken {
   string text = 1;
   int32 start = 2;
@@ -120,3 +127,10 @@ message QueryAnalysisResponse {
   string searchText = 1;
   repeated QueryAnalysisTokens analysis = 2;
 }
+
+message GetLLMConfigurationsResponse {
+  string apiUrl = 1;
+  optional string apiKey = 2;
+  .google.protobuf.Struct jsonConfig = 3;
+}
+

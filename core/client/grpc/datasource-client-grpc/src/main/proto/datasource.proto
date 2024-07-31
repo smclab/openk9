@@ -13,7 +13,6 @@ service Datasource {
   rpc CreateEnrichItem(CreateEnrichItemRequest) returns (CreateEnrichItemResponse) {}
   rpc CreatePluginDriver(CreatePluginDriverRequest) returns (CreatePluginDriverResponse) {}
   rpc CreatePresetPluginDriver(CreatePresetPluginDriverRequest) returns (CreatePluginDriverResponse) {}
-  rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
 }
 
 message InitTenantRequest {
@@ -51,10 +50,6 @@ message CreatePresetPluginDriverRequest {
   Preset preset = 2;
 }
 
-message GetLLMConfigurationsRequest {
-  string schemaName = 1;
-}
-
 message InitTenantResponse {
   int64 bucketId = 1;
 }
@@ -65,12 +60,6 @@ message CreateEnrichItemResponse {
 
 message CreatePluginDriverResponse {
   int64 pluginDriverId = 1;
-}
-
-message GetLLMConfigurationsResponse {
-  string apiUrl = 1;
-  optional string apiKey = 2;
-  .google.protobuf.Struct jsonConfig = 3;
 }
 
 enum EnrichItemType {

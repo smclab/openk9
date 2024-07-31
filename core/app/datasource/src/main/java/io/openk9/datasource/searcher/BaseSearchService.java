@@ -44,6 +44,7 @@ import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
@@ -78,11 +79,16 @@ import javax.persistence.criteria.Root;
 
 public abstract class BaseSearchService {
 
+	protected Uni<TenantResponse> getTenant(String virtualHost) {
+		return tenantManager.findTenant(TenantRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build());
+	}
+
 	protected Uni<Bucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		return tenantManager
-			.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
+		return getTenant(virtualHost)
 			.flatMap(tenantResponse -> sf
 				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
 

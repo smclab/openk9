@@ -17,13 +17,11 @@
 
 package io.openk9.datasource.grpc;
 
-import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
 import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
-import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.quarkus.grpc.GrpcService;
@@ -44,8 +42,6 @@ public class DatasourceGrpcService implements Datasource {
 	EnrichItemMapper enrichItemMapper;
 	@Inject
 	PluginDriverMapper pluginDriverMapper;
-	@Inject
-	LargeLanguageModelService largeLanguageModelService;
 
 	@Override
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
@@ -89,23 +85,6 @@ public class DatasourceGrpcService implements Datasource {
 		);
 
 		return upsertPluginDriver(tenantId, pluginDriverDTO);
-	}
-
-	@Override
-	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
-		return largeLanguageModelService
-			.fetchCurrent(request.getSchemaName())
-			.map(llm -> {
-				var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
-					.setApiUrl(llm.getApiUrl())
-					.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
-
-				if (llm.getApiKey() != null) {
-					responseBuilder.setApiKey(llm.getApiKey());
-				}
-
-				return responseBuilder.build();
-			});
 	}
 
 	private Uni<CreatePluginDriverResponse> upsertPluginDriver(
