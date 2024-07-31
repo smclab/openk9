@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,9 @@ import javax.persistence.Entity;
 import javax.persistence.Lob;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "large_language_model")
@@ -57,6 +60,16 @@ public class LargeLanguageModel extends K9Entity {
 	private String jsonConfig;
 
 	@OneToOne(mappedBy = "largeLanguageModel")
+	@JsonIgnore
 	private TenantBinding tenantBinding;
+
+	@Transient
+	private boolean enabled = false;
+
+	@PostLoad
+	void postLoad() {
+		this.enabled = tenantBinding != null;
+	}
+
 
 }
