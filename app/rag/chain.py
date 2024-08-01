@@ -4,8 +4,8 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 
-from app.grpc.grpc_client import get_llm_configuration
-from app.retriever import OpenSearchRetriever
+from app.external_services.grpc.grpc_client import get_llm_configuration
+from app.rag.retriever import OpenSearchRetriever
 
 
 def get_chain(

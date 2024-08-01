@@ -4,7 +4,7 @@ from langchain.schema import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
-from app.grpc.grpc_client import query_parser
+from app.external_services.grpc.grpc_client import query_parser
 
 OPENSEARCH_HOST = "https://opensearch-backend.openk9.io/"
 
