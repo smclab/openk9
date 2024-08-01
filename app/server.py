@@ -82,7 +82,7 @@ async def search_query(
 class SearchQueryChat(BaseModel):
     chatId: Optional[str] = None
     searchQuery: list
-    range: list = [0, 7]
+    range: list
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
