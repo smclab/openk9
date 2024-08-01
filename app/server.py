@@ -13,6 +13,7 @@ from app.utils.keykloak import Keycloak
 app = FastAPI()
 
 origins = os.environ.get("ORIGINS")
+origins = origins.split(",")
 
 app.add_middleware(
     CORSMiddleware,

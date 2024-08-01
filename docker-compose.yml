@@ -2,6 +2,6 @@ services:
   rag_module:
     image: openk9-rag-module:latest
     environment:
-      - ORIGINS=[http://localhost]
+      - ORIGINS="http://localhost"
     ports:
       - "5000:5000"
