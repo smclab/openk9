@@ -5,8 +5,8 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from app.chain import get_chain, get_chat_chain
-from app.keykloak import Keycloak
+from app.rag.chain import get_chain, get_chat_chain
+from app.utils.keykloak import Keycloak
 
 app = FastAPI()
 
@@ -22,7 +22,6 @@ class SearchQuery(BaseModel):
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
-    jwt: Optional[str] = None
     extra: Optional[dict] = None
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
@@ -42,7 +41,6 @@ async def search_query(
     afterKey = search_query.afterKey
     suggestKeyword = search_query.suggestKeyword
     suggestionCategoryId = search_query.suggestionCategoryId
-    jwt = search_query.jwt
     extra = search_query.extra
     sort = search_query.sort
     sortAfterKey = search_query.sortAfterKey
@@ -54,31 +52,31 @@ async def search_query(
     # virtualHost = request.client.host
     virtualHost = "gamahiro.openk9.io"
 
-    if authorization and not Keycloak.verify_token(
-        authorization.replace("Bearer ", "")
-    ):
+    token = authorization.replace("Bearer ", "") if authorization else None
+
+    if token and not Keycloak.verify_token(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    else:
-        chain = get_chain(
-            searchQuery,
-            range,
-            afterKey,
-            suggestKeyword,
-            suggestionCategoryId,
-            jwt,
-            extra,
-            sort,
-            sortAfterKey,
-            language,
-            vectorIndices,
-            virtualHost,
-            searchText,
-        )
-        return EventSourceResponse(chain)
+
+    chain = get_chain(
+        searchQuery,
+        range,
+        afterKey,
+        suggestKeyword,
+        suggestionCategoryId,
+        token,
+        extra,
+        sort,
+        sortAfterKey,
+        language,
+        vectorIndices,
+        virtualHost,
+        searchText,
+    )
+    return EventSourceResponse(chain)
 
 
 class SearchQueryChat(BaseModel):
@@ -88,7 +86,6 @@ class SearchQueryChat(BaseModel):
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
-    jwt: Optional[str] = None
     extra: Optional[dict] = None
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
@@ -110,7 +107,6 @@ async def search_query(
     afterKey = search_query.afterKey
     suggestKeyword = search_query.suggestKeyword
     suggestionCategoryId = search_query.suggestionCategoryId
-    jwt = search_query.jwt
     extra = search_query.extra
     sort = search_query.sort
     sortAfterKey = search_query.sortAfterKey
@@ -121,28 +117,28 @@ async def search_query(
     # virtualHost = request.client.host
     virtualHost = "k9-backend.openk9.io"
 
-    if authorization and not Keycloak.verify_token(
-        authorization.replace("Bearer ", "")
-    ):
+    token = authorization.replace("Bearer ", "") if authorization else None
+
+    if token and not Keycloak.verify_token(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    else:
-        chain = get_chat_chain(
-            searchQuery,
-            range,
-            afterKey,
-            suggestKeyword,
-            suggestionCategoryId,
-            jwt,
-            extra,
-            sort,
-            sortAfterKey,
-            language,
-            vectorIndices,
-            virtualHost,
-            searchText,
-        )
-        return EventSourceResponse(chain)
+
+    chain = get_chat_chain(
+        searchQuery,
+        range,
+        afterKey,
+        suggestKeyword,
+        suggestionCategoryId,
+        token,
+        extra,
+        sort,
+        sortAfterKey,
+        language,
+        vectorIndices,
+        virtualHost,
+        searchText,
+    )
+    return EventSourceResponse(chain)
