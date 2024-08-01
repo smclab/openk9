@@ -1,6 +1,8 @@
+import os
 from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -9,6 +11,16 @@ from app.rag.chain import get_chain, get_chat_chain
 from app.utils.keykloak import Keycloak
 
 app = FastAPI()
+
+origins = os.environ.get("ORIGINS")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
