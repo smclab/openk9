@@ -408,12 +408,16 @@ public class JobScheduler {
 
 		switch (pluginDriver.getType()) {
 			case HTTP: {
-				VertxUtil.runOnContext(
-					() -> httpPluginDriverClient.invoke(
+
+				VertxUtil.runOnContext(() -> Uni.createFrom().item(() ->
 							Json.decodeValue(
 								pluginDriver.getJsonConfig(),
 								HttpPluginDriverInfo.class
-							),
+							)
+						)
+						.flatMap(httpPluginDriverInfo -> httpPluginDriverClient
+								.invoke(
+									httpPluginDriverInfo,
 							HttpPluginDriverContext
 								.builder()
 								.timestamp(lastIngestionDate)
@@ -422,6 +426,7 @@ public class JobScheduler {
 								.scheduleId(scheduler.getScheduleId())
 								.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
 								.build()
+						)
 						)
 						.onItem()
 						.invoke(() -> ctx
@@ -433,6 +438,7 @@ public class JobScheduler {
 							.tell(new CancelScheduling(tenantName, scheduler))
 						)
 				);
+
 			}
 		}
 
