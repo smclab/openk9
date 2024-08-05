@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from app.rag.chain import get_chain, get_chat_chain
-from app.utils.keykloak import Keycloak
+from app.utils.keycloak import Keycloak
 
 app = FastAPI()
 
