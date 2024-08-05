@@ -12,6 +12,7 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { debounce } from "lodash";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -35,8 +36,8 @@ export function App() {
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedInput, setFocusedInput] = React.useState(null);
   const [isClickReset, setIsClickReset] = React.useState(false);
-  const [isPanelVisible, setIsPanelVisible] = React.useState(false);
-
+  const [isPanelVisible, setIsPanelVisible] = React.useState(true);
+  const [searchText, setSearchText] = React.useState("");
   React.useEffect(() => {
     document.body.classList.toggle(
       "no-scroll",
@@ -52,6 +53,16 @@ export function App() {
       setIsVisibleSearchMobile(true);
     }
   };
+  const debouncedUpdateSearch = debounce((search) => {
+    const text = search?.[0]?.values?.[0] || undefined;
+    setSearchText(text);
+  }, 200);
+
+  React.useEffect(() => {
+    openk9.addEventListener("queryStateChange", (newConfig) => {
+      debouncedUpdateSearch(newConfig.searchTokens);
+    });
+  }, [openk9]);
 
   return (
     <div
@@ -252,34 +263,36 @@ export function App() {
               })
             }
           >
-            <button
-              onClick={() => setIsPanelVisible(!isPanelVisible)}
-              css={css`
-                display: none;
-                justify-self: center;
-                background: red;
-                border: 1px solid red;
-                border-radius: 20px;
-                padding: 10px;
-                color: white;
-                gap: 10px;
-                cursor: pointer;
-                @media (max-width: 768px) {
-                  display: flex;
-                  align-items: center;
-                }
-              `}
-            >
-              {isPanelVisible ? (
-                <>
-                  Chiudi Pannello <Logo />
-                </>
-              ) : (
-                <>
-                  Generate response <Logo />
-                </>
-              )}
-            </button>{" "}
+            {searchText !== undefined && (
+              <button
+                onClick={() => setIsPanelVisible(!isPanelVisible)}
+                css={css`
+                  display: none;
+                  justify-self: center;
+                  background: red;
+                  border: 1px solid red;
+                  border-radius: 20px;
+                  padding: 10px;
+                  color: white;
+                  gap: 10px;
+                  cursor: pointer;
+                  @media (max-width: 768px) {
+                    display: flex;
+                    align-items: center;
+                  }
+                `}
+              >
+                {isPanelVisible ? (
+                  <>
+                    Chiudi Pannello <Logo />
+                  </>
+                ) : (
+                  <>
+                    Generate response <Logo />
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           <div
@@ -392,35 +405,37 @@ export function App() {
             >
               <FilterHorizontalSvg />
             </button>
-            <button
-              onClick={() => setIsPanelVisible(!isPanelVisible)}
-              css={css`
-                justify-self: center;
-                border: 1px solid red;
-                border-radius: 20px;
-                background: red;
-                border: 1px solid red;
-                border-radius: 20px;
-                color: white;
-                gap: 10px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                @media (min-width: 480px) {
-                  display: none;
-                }
-              `}
-            >
-              {isPanelVisible ? (
-                <>
-                  Chiudi Pannello <Logo />
-                </>
-              ) : (
-                <>
-                  Genera <Logo />
-                </>
-              )}
-            </button>
+            {searchText !== undefined && (
+              <button
+                onClick={() => setIsPanelVisible(!isPanelVisible)}
+                css={css`
+                  justify-self: center;
+                  border: 1px solid red;
+                  border-radius: 20px;
+                  background: red;
+                  border: 1px solid red;
+                  border-radius: 20px;
+                  color: white;
+                  gap: 10px;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  @media (min-width: 480px) {
+                    display: none;
+                  }
+                `}
+              >
+                {isPanelVisible ? (
+                  <>
+                    Chiudi Pannello <Logo />
+                  </>
+                ) : (
+                  <>
+                    Genera <Logo />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -475,71 +490,73 @@ export function App() {
           }
         `}
       />
-      <div
-        css={css`
-          grid-area: panel;
-          display: flex;
-          flex-direction: column;
-          @media (max-width: 480px) {
-            margin-inline: 5%;
-          }
-        `}
-      >
+      {searchText !== undefined && (
         <div
           css={css`
-            background: white;
+            grid-area: panel;
             display: flex;
-            justify-content: flex-end;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            border-bottom-left-radius: ${!isPanelVisible ? "10px" : "unset"};
-            border-bottom-right-radius: ${!isPanelVisible ? "10px" : "unset"};
+            flex-direction: column;
+            @media (max-width: 480px) {
+              margin-inline: 5%;
+            }
           `}
         >
-          <button
-            onClick={() => setIsPanelVisible(!isPanelVisible)}
+          <div
             css={css`
-              justify-self: center;
-              border: 1px solid red;
-              border-radius: 20px;
-              background: red;
-              border: 1px solid red;
-              border-radius: 20px;
-              padding: 10px;
-              color: white;
-              gap: 10px;
-              cursor: pointer;
+              background: white;
               display: flex;
-              align-items: center;
-              margin: 10px;
-              @media (max-width: 768px) {
-                display: none;
-              }
+              justify-content: flex-end;
+              border-top-left-radius: 10px;
+              border-top-right-radius: 10px;
+              border-bottom-left-radius: ${!isPanelVisible ? "10px" : "unset"};
+              border-bottom-right-radius: ${!isPanelVisible ? "10px" : "unset"};
             `}
           >
-            {isPanelVisible ? (
-              <>
-                Chiudi Pannello <Logo />
-              </>
-            ) : (
-              <>
-                Genera risposta <Logo />
-              </>
-            )}
-          </button>
+            <button
+              onClick={() => setIsPanelVisible(!isPanelVisible)}
+              css={css`
+                justify-self: center;
+                border: 1px solid red;
+                border-radius: 20px;
+                background: red;
+                border: 1px solid red;
+                border-radius: 20px;
+                padding: 10px;
+                color: white;
+                gap: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                margin: 10px;
+                @media (max-width: 768px) {
+                  display: none;
+                }
+              `}
+            >
+              {isPanelVisible ? (
+                <>
+                  Chiudi Pannello <Logo />
+                </>
+              ) : (
+                <>
+                  Genera risposta <Logo />
+                </>
+              )}
+            </button>
+          </div>
+          <div
+            ref={(element) =>
+              openk9.updateConfiguration({
+                generateResponse: element,
+              })
+            }
+            css={css`
+              color: black;
+              display: ${isPanelVisible ? "block" : "none"};
+            `}
+          ></div>
         </div>
-        <div
-          ref={(element) =>
-            openk9.updateConfiguration({
-              generateResponse: element,
-            })
-          }
-          css={css`
-            color: black;
-            display: ${isPanelVisible ? "block" : "none"};
-          `}
-        ></div>
-      </div>
+      )}
 
       <div
         className="openk9-results-container openk9-box"

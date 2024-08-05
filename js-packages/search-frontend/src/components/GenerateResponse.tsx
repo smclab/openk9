@@ -52,14 +52,18 @@ export default function GenerateResponse({
   ]);
 
   return (
-    <Container>
-      <>
-        <ContainerBox>
-          {message?.question && <Question>Search: {message.question}</Question>}
-          {message?.answer && <Answer>Generate: {message.answer}</Answer>}
-        </ContainerBox>
-      </>
-    </Container>
+    <>
+      {question !== "" && (
+        <Container>
+          <>
+            <ContainerBox>
+              {message?.question && <Question>Generate answer</Question>}
+              {message?.answer && <Answer>{message.answer}</Answer>}
+            </ContainerBox>
+          </>
+        </Container>
+      )}
+    </>
   );
 }
 
