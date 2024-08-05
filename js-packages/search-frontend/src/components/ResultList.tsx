@@ -13,6 +13,7 @@ import { ResultSvg } from "../svgElement/ResultSvg";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
 import { Options, setSortResultsType } from "./SortResults";
+import { useRange } from "./useRange";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -769,6 +770,7 @@ export function useInfiniteResults<E>(
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
+  const { setRange } = useRange();
 
   return useInfiniteQuery(
     ["results", searchQueryData, sortData, language] as const,
@@ -776,6 +778,8 @@ export function useInfiniteResults<E>(
       const RangePage: [number, number] = !(sortData && sortAfterKey)
         ? [pageParam * pageSize, pageSize]
         : [0, pageSize];
+
+      setRange(RangePage);
 
       return client.doSearch<E>({
         range: RangePage,
@@ -802,7 +806,7 @@ export function useInfiniteResults<E>(
     },
   );
 }
-function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {
+export function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {
   const searchQueryData = searchQuery.filter(
     (info) => !info.hasOwnProperty("isSort"),
   );

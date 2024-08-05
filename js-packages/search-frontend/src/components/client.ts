@@ -115,6 +115,18 @@ export function OpenK9Client({
       const data = await response.json();
       return data;
     },
+    async generateResponse<E>(searchRequest: GenerateRequest): Promise<any> {
+      const response = await authFetch(`/api/rag/generate`, {
+        method: "POST",
+        body: JSON.stringify(searchRequest),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      return data;
+    },
     async getDateFilterFields() {
       const response = await authFetch(`/api/datasource/v1/date-filter`, {
         method: "GET",
@@ -542,6 +554,15 @@ type SearchRequest = {
   sort: SortField[];
   language: string;
   sortAfterKey: string;
+};
+
+export type GenerateRequest = {
+  searchQuery: Array<SearchToken>;
+  range: [number, number];
+  sort: SortField[];
+  language: string;
+  sortAfterKey: string;
+  searchText: string;
 };
 
 type SearchResult<E> = {

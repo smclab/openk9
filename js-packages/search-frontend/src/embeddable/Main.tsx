@@ -55,6 +55,7 @@ import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
 import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
+import GenerateResponse from "../components/GenerateResponse";
 
 type MainProps = {
   configuration: Configuration;
@@ -321,6 +322,15 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.removeFilters,
+      )}
+      {renderPortal(
+        <GenerateResponse
+          question={selectionsState.text}
+          searchQuery={searchQuery}
+          language={languageSelect}
+          sortAfterKey={sortAfterKey}
+        />,
+        configuration.generateResponse,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -1519,8 +1529,6 @@ function calculateSpans(
   text: string,
   analysis: AnalysisResponseEntry[] | undefined,
 ): AnalysisResponseEntry[] {
-  console.log(analysis);
-
   const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];

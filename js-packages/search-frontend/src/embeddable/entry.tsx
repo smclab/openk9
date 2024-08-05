@@ -12,6 +12,7 @@ import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
 import { Options } from "../components/Select";
+import { RangeProvider } from "../components/useRange";
 
 export const rendererComponents = RendererComponents;
 
@@ -87,11 +88,13 @@ export class OpenK9 {
           <React.Suspense>
             <OpenK9ClientContext.Provider value={this.client}>
               <QueryClientProvider client={this.queryClient}>
-                <Main
-                  configuration={this.configuration}
-                  onConfigurationChange={this.updateConfiguration}
-                  onQueryStateChange={this.onQueryStateChange}
-                />
+                <RangeProvider>
+                  <Main
+                    configuration={this.configuration}
+                    onConfigurationChange={this.updateConfiguration}
+                    onQueryStateChange={this.onQueryStateChange}
+                  />
+                </RangeProvider>
               </QueryClientProvider>
             </OpenK9ClientContext.Provider>
           </React.Suspense>
@@ -355,6 +358,7 @@ export type Configuration = {
   detailMobile: Element | string | null;
   details: Element | string | null;
   filters: Element | string | null;
+  generateResponse: Element | string | null;
   login: Element | string | null;
   queryStringValues: queryStringValues;
   results: Element | string | null;
@@ -413,6 +417,7 @@ const defaultConfiguration: Configuration = {
   filtersMobile: null,
   filtersMobileLiveChange: null,
   filterTokens: [],
+  generateResponse: null,
   isActiveSkeleton: null,
   isQueryAnalysis: true,
   login: null,

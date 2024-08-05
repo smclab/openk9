@@ -26,35 +26,32 @@ export function App() {
   if (serviceStatus === "down") {
     return <MaintenancePage />;
   }
+
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
   const [isVisibleCalendar, setIsVisibleCalendar] = React.useState(false);
-
-  React.useState(false);
-  const handleClick = (event: any) => {
-    const elementWidth = window.innerWidth;
-    if (elementWidth < 480) {
-      setIsVisibleSearchMobile(true);
-    }
-  };
   const [startDate, setStartDate] = React.useState<any | null>(null);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedInput, setFocusedInput] = React.useState(null);
-  const [isCLickReset, setIsClickReset] = React.useState(false);
+  const [isClickReset, setIsClickReset] = React.useState(false);
+  const [isPanelVisible, setIsPanelVisible] = React.useState(false);
 
   React.useEffect(() => {
-    if (isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar) {
-      document.body.classList.add("no-scroll");
-    } else {
-      document.body.classList.remove("no-scroll");
-    }
-    return () => {
-      document.body.classList.remove("no-scroll");
-    };
-  }, [isVisibleFilters]);
+    document.body.classList.toggle(
+      "no-scroll",
+      isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar,
+    );
+    return () => document.body.classList.remove("no-scroll");
+  }, [isVisibleFilters, isVisibleSearchMobile, isVisibleCalendar]);
 
   const { t } = useTranslation();
+
+  const handleClick = () => {
+    if (window.innerWidth < 480) {
+      setIsVisibleSearchMobile(true);
+    }
+  };
 
   return (
     <div
@@ -63,51 +60,59 @@ export function App() {
         background-color: var(
           --openk9-embeddable-search--secondary-background-color
         );
-        width: 100vw;
+        width:100vw;
         height: 100vh;
         display: grid;
         grid-column-gap: 30px;
-        padding-bottom: 30px;
-        padding-left: 50px;
-        padding-right: 50px;
+        padding:  50px ;
+        padding-block:0px;
         box-sizing: border-box;
-        @media (max-width: 480px) {
-          padding-left: 0px;
-          padding-right: 0px;
-          grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto 1fr;
-          overflow: hidden;
-          grid-template-areas:
-            "dockbar"
-            "tabs"
-            "search"
-            "result";
-        }
-        @media (min-width: 481px) and (max-width: 768px) {
-          grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto 1fr;
-          grid-template-areas:
-            "dockbar"
-            "tabs"
-            "search"
-            "result";
-        }
-        @media (min-width: 769px) and (max-width: 1024px) {
-          grid-template-columns: 1fr 2fr;
-          grid-template-rows: auto auto auto 1fr;
-          grid-template-areas:
-            "dockbar dockbar"
-            "tabs tabs"
-            "search search"
-            "filters result";
-        }
         grid-template-columns: 1fr 2.5fr 1.8fr;
-        grid-template-rows: auto auto auto 1fr;
+        grid-template-rows: auto auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"
           "tabs tabs tabs"
           "search search search"
+          "filters panel panel"
           "filters result detail";
+
+        @media (max-width: 480px) {
+          padding: 0;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto auto 1fr;
+          grid-template-areas:
+            "dockbar"
+            "tabs"
+            "search"
+            "panel"
+            "result";
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+         padding-block:0;
+        padding-inline:20px;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto auto 1fr;
+          grid-template-areas:
+            "dockbar"
+            "tabs"
+            "search"
+            "panel"
+            "result";
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+          grid-template-columns: 1fr 2fr;
+          grid-template-rows: auto auto auto auto 1fr;
+          grid-template-areas:
+            "dockbar dockbar"
+            "tabs tabs"
+            "search search"
+            "filters panel"
+            "filters result";
+            "result";
+
+        }
       `}
     >
       <div
@@ -115,22 +120,23 @@ export function App() {
         css={css`
           grid-area: dockbar;
           padding: 8px 50px;
-          margin: 0px -50px;
-          box-shadow: 0 1px 2px 0 rgb(0 0 0 / 10%);
+          margin: 0 -50px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           display: flex;
           align-items: center;
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
+
           @media (max-width: 480px) {
-            margin: 0px -30px;
+            margin: 0 -30px;
           }
         `}
       >
         <div
           className="openk9-navbar-container-logo"
           css={css`
-            font-size: 20;
+            font-size: 20px;
             color: #1e1c21;
             display: flex;
             align-items: center;
@@ -167,33 +173,37 @@ export function App() {
           <div
             className="openk9-navbar-login"
             ref={(element) => openk9.updateConfiguration({ login: element })}
-          ></div>
+          />
           <div
             className="openk9-navbar-change-language"
             ref={(element) =>
               openk9.updateConfiguration({ changeLanguage: element })
             }
-          ></div>{" "}
+          />
         </div>
       </div>
+
       <div
         ref={(element) => openk9.updateConfiguration({ tabs: element })}
         className="openk9-container-tabs"
         css={css`
           grid-area: tabs;
-          padding: 8px 16px 0px 0px;
+          padding: 8px 16px 0;
           margin-bottom: -16px;
           overflow: auto;
+
           @media (max-width: 480px) {
             display: none;
           }
         `}
-      ></div>
+      />
+
       <div
         css={css`
           grid-area: search;
-          padding: 16px 0px 16px 0px;
-          @media (min-width: 377px) and (max-width: 480px) {
+          padding: 16px 0;
+
+          @media (max-width: 480px) {
             padding-inline: 16px;
           }
         `}
@@ -205,6 +215,7 @@ export function App() {
             width: 100%;
             justify-content: center;
             align-items: baseline;
+
             @media (max-width: 768px) {
               flex-direction: column;
             }
@@ -212,61 +223,72 @@ export function App() {
         >
           <div
             css={css`
-              display: flex;
-              gap: 18px;
-              align-items: flex-end;
               width: 100%;
             `}
-          >
-            <div
-              css={css`
-                width: 100%;
-              `}
-              onClick={handleClick}
-              className="openk9-update-configuration"
-              ref={(element) =>
-                openk9.updateConfiguration({
-                  search: element,
-                })
-              }
-            ></div>
-            <button
-              css={css`
-                padding: 6px 10px;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                background: white;
-                border-radius: 50px;
-                @media (min-width: 480px) {
-                  display: none;
-                }
-              `}
-              onClick={() => {
-                setIsVisibleFilters(true);
-              }}
-            >
-              <FilterHorizontalSvg />
-            </button>
-          </div>
+            onClick={handleClick}
+            className="openk9-update-configuration-search"
+            ref={(element) => openk9.updateConfiguration({ search: element })}
+          />
           <div
             css={css`
+              @media (max-width: 768px) {
+                display: flex;
+                gap: 20px;
+                flex-direction: row-reverse;
+                align-items: center;
+              }
               @media (max-width: 480px) {
                 display: none;
               }
             `}
-            className="openk9-update-configuration"
+            className="openk9-update-configuration-datapicker"
             ref={(element) =>
               openk9.updateConfiguration({
                 dataRangePicker: {
-                  element: element,
+                  element,
                   start: startDate,
                   end: endDate,
                 },
               })
             }
-          ></div>
+          >
+            <button
+              onClick={() => setIsPanelVisible(!isPanelVisible)}
+              css={css`
+                display: none;
+                justify-self: center;
+                background: red;
+                border: 1px solid red;
+                border-radius: 20px;
+                padding: 10px;
+                color: white;
+                gap: 10px;
+                cursor: pointer;
+                @media (max-width: 768px) {
+                  display: flex;
+                  align-items: center;
+                }
+              `}
+            >
+              {isPanelVisible ? (
+                <>
+                  Chiudi Pannello <Logo />
+                </>
+              ) : (
+                <>
+                  Generate response <Logo />
+                </>
+              )}
+            </button>{" "}
+          </div>
+
           <div
             css={css`
               width: 100%;
+              display: flex;
+              gap: 1%;
+              flex-wrap: wrap;
+
               @media (min-width: 480px) {
                 display: none;
               }
@@ -281,45 +303,60 @@ export function App() {
                 border: 1px solid #ced4da;
                 justify-content: space-between;
                 align-items: center;
+                padding: 8px 12px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
               `}
             >
               <div
                 css={css`
-                  padding: ${startDate === null ? " 7px 10px;" : "7px 0px"};
                   display: flex;
-                  max-width: 100px;
-                  gap: ${startDate === null ? "43px" : "23px"};
+                  align-items: center;
+                  gap: 12px;
+                  flex: 1;
                 `}
+                onClick={() => setIsVisibleCalendar(true)}
               >
                 <CalendarMobileSvg />
                 <div
-                  onClick={() => {
-                    setIsVisibleCalendar(true);
-                  }}
                   css={css`
-                    white-space: nowrap;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex: 1;
                   `}
+                  onClick={() => setIsVisibleCalendar(true)}
                 >
-                  {startDate === null
-                    ? t("start-day")
-                    : moment(startDate).format("DD MMMM YYYY")}
-                </div>
-                <div
-                  css={css`
-                    border: 1px solid #ced4da;
-                  `}
-                ></div>
-                <div
-                  css={css`
-                    white-space: nowrap;
-                  `}
-                  onClick={() => {
-                    setIsVisibleCalendar(true);
-                  }}
-                >
-                  {endDate === null
-                    ? t("end-day")
-                    : moment(endDate).format("DD MMMM YYYY")}
+                  <div
+                    css={css`
+                      white-space: nowrap;
+                      color: #495057;
+                      font-size: 14px;
+                    `}
+                  >
+                    {startDate === null
+                      ? "Seleziona una data"
+                      : moment(startDate).format("DD MMM YYYY")}
+                  </div>
+                  {endDate !== null && (
+                    <div
+                      css={css`
+                        height: 20px;
+                        width: 1px;
+                        background-color: #ced4da;
+                      `}
+                    />
+                  )}
+                  <div
+                    css={css`
+                      white-space: nowrap;
+                      color: #495057;
+                      font-size: 14px;
+                    `}
+                  >
+                    {endDate === null
+                      ? ""
+                      : moment(endDate).format("DD MMM YYYY")}
+                  </div>
                 </div>
               </div>
               {startDate !== null && (
@@ -330,45 +367,94 @@ export function App() {
                     setIsClickReset(true);
                   }}
                   css={css`
-                    margin-right: 10px;
+                    margin-left: 10px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
                   `}
                 >
                   <DeleteLogo />
                 </div>
               )}
             </div>
+            <button
+              css={css`
+                padding: 6px 10px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                background: white;
+                border-radius: 50px;
+
+                @media (min-width: 480px) {
+                  display: none;
+                }
+              `}
+              onClick={() => setIsVisibleFilters(true)}
+            >
+              <FilterHorizontalSvg />
+            </button>
+            <button
+              onClick={() => setIsPanelVisible(!isPanelVisible)}
+              css={css`
+                justify-self: center;
+                border: 1px solid red;
+                border-radius: 20px;
+                background: red;
+                border: 1px solid red;
+                border-radius: 20px;
+                color: white;
+                gap: 10px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                @media (min-width: 480px) {
+                  display: none;
+                }
+              `}
+            >
+              {isPanelVisible ? (
+                <>
+                  Chiudi Pannello <Logo />
+                </>
+              ) : (
+                <>
+                  Genera <Logo />
+                </>
+              )}
+            </button>
           </div>
         </div>
-        <div
-          className="openk9-container-active-filters"
-          css={css`
-            padding-top: 10px;
-            @media (min-width: 480px) {
-              display: none;
-            }
-          `}
-        >
-          <div
-            className="openk9-filters-container openk9-box"
-            ref={(element) =>
-              openk9.updateConfiguration({ activeFilters: element })
-            }
-          />
-        </div>
       </div>
+
+      <div
+        className="openk9-container-active-filters"
+        css={css`
+          @media (min-width: 480px) {
+            display: none;
+          }
+        `}
+      >
+        <div
+          className="openk9-filters-container openk9-box"
+          ref={(element) =>
+            openk9.updateConfiguration({ activeFilters: element })
+          }
+        />
+      </div>
+
       <div
         className="openk9-filters-mobile-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
             filtersMobileLiveChange: {
-              element: element,
+              element,
               isVisible: isVisibleFilters,
               setIsVisible: setIsVisibleFilters,
               viewTabs: true,
             },
           })
         }
-      ></div>
+      />
+
       <div
         className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}
@@ -379,23 +465,88 @@ export function App() {
           );
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
+
           @media (max-width: 480px) {
             display: none;
           }
+
           @media (min-width: 481px) and (max-width: 768px) {
             display: none;
           }
         `}
-      ></div>
+      />
+      <div
+        css={css`
+          grid-area: panel;
+          display: flex;
+          flex-direction: column;
+          @media (max-width: 480px) {
+            margin-inline: 5%;
+          }
+        `}
+      >
+        <div
+          css={css`
+            background: white;
+            display: flex;
+            justify-content: flex-end;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: ${!isPanelVisible ? "10px" : "unset"};
+            border-bottom-right-radius: ${!isPanelVisible ? "10px" : "unset"};
+          `}
+        >
+          <button
+            onClick={() => setIsPanelVisible(!isPanelVisible)}
+            css={css`
+              justify-self: center;
+              border: 1px solid red;
+              border-radius: 20px;
+              background: red;
+              border: 1px solid red;
+              border-radius: 20px;
+              padding: 10px;
+              color: white;
+              gap: 10px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              margin: 10px;
+              @media (max-width: 768px) {
+                display: none;
+              }
+            `}
+          >
+            {isPanelVisible ? (
+              <>
+                Chiudi Pannello <Logo />
+              </>
+            ) : (
+              <>
+                Genera risposta <Logo />
+              </>
+            )}
+          </button>
+        </div>
+        <div
+          ref={(element) =>
+            openk9.updateConfiguration({
+              generateResponse: element,
+            })
+          }
+          css={css`
+            color: black;
+            display: ${isPanelVisible ? "block" : "none"};
+          `}
+        ></div>
+      </div>
+
       <div
         className="openk9-results-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            results: element,
-          })
-        }
+        ref={(element) => openk9.updateConfiguration({ results: element })}
         css={css`
           grid-area: result;
+          margin-top: 20px;
           overflow-y: auto;
           background-color: var(
             --openk9-embeddable-search--primary-background-color
@@ -403,7 +554,8 @@ export function App() {
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
         `}
-      ></div>
+      />
+
       <div
         className="openk9-results-container openk9-box"
         ref={(element) =>
@@ -415,34 +567,32 @@ export function App() {
             },
           })
         }
-      ></div>
+      />
+
       <div
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
             calendarMobile: {
-              element: element,
+              element,
               isVisible: isVisibleCalendar,
               setIsVisible: setIsVisibleCalendar,
-              startDate: startDate,
-              setStartDate: setStartDate,
-              endDate: endDate,
-              setEndDate: setEndDate,
-              focusedInput: focusedInput,
-              setFocusedInput: setFocusedInput,
-              isCLickReset: isCLickReset,
+              startDate,
+              setStartDate,
+              endDate,
+              setEndDate,
+              focusedInput,
+              setFocusedInput,
+              isCLickReset: isClickReset,
               setIsCLickReset: setIsClickReset,
             },
           })
         }
-      ></div>
+      />
+
       <div
         className="openk9-preview-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            details: element,
-          })
-        }
+        ref={(element) => openk9.updateConfiguration({ details: element })}
         css={css`
           grid-area: detail;
           overflow-y: auto;
@@ -452,28 +602,35 @@ export function App() {
           );
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
+          margin-top: 20px;
+
           @media (max-width: 480px) {
             display: none;
           }
+
           @media (min-width: 481px) and (max-width: 768px) {
             display: none;
           }
+
           @media (min-width: 769px) and (max-width: 1024px) {
             display: none;
           }
         `}
-      ></div>
+      />
+
       <div
         ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
-      ></div>
+      />
     </div>
   );
 }
 
 function useServiceStatus() {
   const [serviceStatus, setServiceStatus] = React.useState<"up" | "down">("up");
+
   React.useEffect(() => {
     openk9.client.getServiceStatus().then(setServiceStatus);
   }, []);
+
   return serviceStatus;
 }
