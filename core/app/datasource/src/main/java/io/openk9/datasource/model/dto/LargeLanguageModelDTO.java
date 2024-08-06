@@ -39,6 +39,6 @@ public class LargeLanguageModelDTO extends K9EntityDTO {
 	private String apiUrl;
 	private String apiKey;
 	@Json
-	private String promptTemplate;
+	private String jsonConfig;
 
 }
