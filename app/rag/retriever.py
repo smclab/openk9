@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from langchain.schema import Document
@@ -5,8 +6,6 @@ from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
-
-OPENSEARCH_HOST = "https://opensearch-backend.openk9.io/"
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -25,6 +24,8 @@ class OpenSearchRetriever(BaseRetriever):
         sortAfterKey,
         language,
         vectorIndices,
+        opensearch_host,
+        grpc_host,
     ) -> List[Document]:
         query_data = query_parser(
             searchQuery,
@@ -39,12 +40,13 @@ class OpenSearchRetriever(BaseRetriever):
             sortAfterKey,
             language,
             vectorIndices,
+            grpc_host,
         )
         query = query_data.query
         index_name = query_data.indexName[0]
 
         client = OpenSearch(
-            hosts=[OPENSEARCH_HOST],
+            hosts=[opensearch_host],
         )
 
         response = client.search(body=query, index=index_name)

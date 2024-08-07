@@ -2,8 +2,6 @@ import grpc
 
 from .searcher import searcher_pb2, searcher_pb2_grpc
 
-GRPC_HOST = "159.122.129.226:30370"
-
 
 def query_parser(
     searchQuery,
@@ -18,9 +16,10 @@ def query_parser(
     sortAfterKey,
     language,
     vectorIndices,
+    grpc_host,
 ):
 
-    with grpc.insecure_channel(GRPC_HOST) as channel:
+    with grpc.insecure_channel(grpc_host) as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.QueryParser(
             searcher_pb2.QueryParserRequest(
@@ -42,9 +41,9 @@ def query_parser(
     return response
 
 
-def get_llm_configuration(virtualHost):
+def get_llm_configuration(grpc_host, virtualHost):
 
-    with grpc.insecure_channel(GRPC_HOST) as channel:
+    with grpc.insecure_channel(grpc_host) as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.GetLLMConfigurations(
             searcher_pb2.GetLLMConfigurationsRequest(

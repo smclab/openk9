@@ -8,3 +8,4 @@ uvicorn
 grpcio 
 grpcio-tools
 python-keycloak
+python-dotenv

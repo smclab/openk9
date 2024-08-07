@@ -1,14 +1,12 @@
 import requests
 from keycloak import KeycloakOpenID
 
-KEYKLOAK_INFO_API_URL = "https://k9-backend.openk9.io/api/datasource/oauth2/settings"
-
 
 class Keycloak:
 
-    def verify_token(token) -> dict:
+    def verify_token(keykloak_info_api_url, token) -> dict:
         try:
-            keykloak_request = requests.get(KEYKLOAK_INFO_API_URL)
+            keykloak_request = requests.get(keykloak_info_api_url)
             keykloak_info = keykloak_request.json()
 
             keykloak_url = keykloak_info["url"]
