@@ -2,7 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
-import { useEmbeddingModelsQuery, useEnableEmbeddingModelMutation } from "../graphql-generated";
+import { useDeleteEmbeddingModelMutation, useEmbeddingModelsQuery, useEnableEmbeddingModelMutation } from "../graphql-generated";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
 
@@ -30,26 +30,32 @@ gql`
   }
 `;
 
+gql`
+  mutation DeleteEmbeddingModel($id: ID!) {
+    deleteEmbeddingModel(embeddingModelId: $id) {
+      id
+      name
+    }
+  }
+`;
+
 export function EmbeddingModels() {
   const showToast = useToast();
   const embeddingModelsQuery = useEmbeddingModelsQuery();
   const [updateEnableModel] = useEnableEmbeddingModelMutation({
     refetchQueries: [EmbeddingModelsQuery],
   });
-  //   const [updateBucketsMutate] = useEnableBucketMutation({
-  //     refetchQueries: [EmbeddingModelsQuery],
-  //   });
-  //   const [deleteBucketMutate] = useDeleteBucketMutation({
-  //     refetchQueries: [EmbeddingModelsQuery],
-  //     onCompleted(data) {
-  //       if (data.deleteBucket?.id) {
-  //         showToast({ displayType: "success", title: "Bucket deleted", content: data.deleteBucket.name ?? "" });
-  //       }
-  //     },
-  //     onError(error) {
-  //       showToast({ displayType: "danger", title: "Buckets error", content: error.message ?? "" });
-  //     },
-  //   });
+  const [deleteModelsMutate] = useDeleteEmbeddingModelMutation({
+    refetchQueries: [EmbeddingModelsQuery],
+    onCompleted(data) {
+      if (data.deleteEmbeddingModel?.id) {
+        showToast({ displayType: "success", title: "Models deleted", content: data.deleteEmbeddingModel.name ?? "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "embedding models error", content: error.message ?? "" });
+    },
+  });
 
   return (
     <Table
@@ -59,8 +65,9 @@ export function EmbeddingModels() {
       }}
       viewAdd={true}
       onCreatePath="create/new/"
-      haveActions={false}
-      onDelete={(tenant) => {}}
+      onDelete={(model) => {
+        if (model?.id) deleteModelsMutate({ variables: { id: model.id } });
+      }}
       columns={[
         { header: "Name", content: (enabledModel) => formatName(enabledModel) },
         { header: "Description", content: (enabledModel) => enabledModel?.description },

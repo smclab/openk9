@@ -2,7 +2,11 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
-import { useEnableLargeLanguageModelMutation, useLargeLanguageModelsQuery } from "../graphql-generated";
+import {
+  useDeleteLargeLanguageModelMutation,
+  useEnableLargeLanguageModelMutation,
+  useLargeLanguageModelsQuery,
+} from "../graphql-generated";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
 
@@ -34,11 +38,32 @@ gql`
   }
 `;
 
+gql`
+  mutation DeleteLargeLanguageModel($id: ID!) {
+    deleteLargeLanguageModel(largeLanguageModelId: $id) {
+      id
+      name
+    }
+  }
+`;
+
 export function LargeLanguageModels() {
   const showToast = useToast();
   const largeLanguageModels = useLargeLanguageModelsQuery();
   const [updateEnableLargeLaguageModel] = useEnableLargeLanguageModelMutation({
     refetchQueries: [LargeLanguageModelsQuery],
+  });
+
+  const [deleteModelsMutate] = useDeleteLargeLanguageModelMutation({
+    refetchQueries: [LargeLanguageModelsQuery],
+    onCompleted(data) {
+      if (data.deleteLargeLanguageModel?.id) {
+        showToast({ displayType: "success", title: "Models deleted", content: data.deleteLargeLanguageModel.name ?? "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "largeLanguage error", content: error.message ?? "" });
+    },
   });
 
   return (
@@ -48,8 +73,9 @@ export function LargeLanguageModels() {
         field: (data) => data?.largeLanguageModels,
       }}
       onCreatePath="create/new/"
-      onDelete={(tenant) => {}}
-      haveActions={false}
+      onDelete={(model) => {
+        if (model?.id) deleteModelsMutate({ variables: { id: model.id } });
+      }}
       columns={[
         { header: "Name", content: (tenant) => formatName(tenant) },
         { header: "Description", content: (tenant) => tenant?.description },

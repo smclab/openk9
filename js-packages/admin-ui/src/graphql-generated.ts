@@ -5007,6 +5007,13 @@ export type EnableEmbeddingModelMutationVariables = Exact<{
 
 export type EnableEmbeddingModelMutation = { __typename?: 'Mutation', enableEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
 
+export type DeleteEmbeddingModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteEmbeddingModelMutation = { __typename?: 'Mutation', deleteEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
+
 export type EnrichItemQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -5193,6 +5200,13 @@ export type EnableLargeLanguageModelMutationVariables = Exact<{
 
 
 export type EnableLargeLanguageModelMutation = { __typename?: 'Mutation', enableLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
+
+export type DeleteLargeLanguageModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteLargeLanguageModelMutation = { __typename?: 'Mutation', deleteLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
 
 export type MonitoringEventsQueryVariables = Exact<{
   field?: InputMaybe<EventSortable>;
@@ -10022,6 +10036,40 @@ export function useEnableEmbeddingModelMutation(baseOptions?: Apollo.MutationHoo
 export type EnableEmbeddingModelMutationHookResult = ReturnType<typeof useEnableEmbeddingModelMutation>;
 export type EnableEmbeddingModelMutationResult = Apollo.MutationResult<EnableEmbeddingModelMutation>;
 export type EnableEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>;
+export const DeleteEmbeddingModelDocument = gql`
+    mutation DeleteEmbeddingModel($id: ID!) {
+  deleteEmbeddingModel(embeddingModelId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteEmbeddingModelMutationFn = Apollo.MutationFunction<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
+
+/**
+ * __useDeleteEmbeddingModelMutation__
+ *
+ * To run a mutation, you first call `useDeleteEmbeddingModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteEmbeddingModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteEmbeddingModelMutation, { data, loading, error }] = useDeleteEmbeddingModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>(DeleteEmbeddingModelDocument, options);
+      }
+export type DeleteEmbeddingModelMutationHookResult = ReturnType<typeof useDeleteEmbeddingModelMutation>;
+export type DeleteEmbeddingModelMutationResult = Apollo.MutationResult<DeleteEmbeddingModelMutation>;
+export type DeleteEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
 export const EnrichItemDocument = gql`
     query EnrichItem($id: ID!) {
   enrichItem(id: $id) {
@@ -11020,6 +11068,40 @@ export function useEnableLargeLanguageModelMutation(baseOptions?: Apollo.Mutatio
 export type EnableLargeLanguageModelMutationHookResult = ReturnType<typeof useEnableLargeLanguageModelMutation>;
 export type EnableLargeLanguageModelMutationResult = Apollo.MutationResult<EnableLargeLanguageModelMutation>;
 export type EnableLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>;
+export const DeleteLargeLanguageModelDocument = gql`
+    mutation DeleteLargeLanguageModel($id: ID!) {
+  deleteLargeLanguageModel(largeLanguageModelId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteLargeLanguageModelMutationFn = Apollo.MutationFunction<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
+
+/**
+ * __useDeleteLargeLanguageModelMutation__
+ *
+ * To run a mutation, you first call `useDeleteLargeLanguageModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLargeLanguageModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLargeLanguageModelMutation, { data, loading, error }] = useDeleteLargeLanguageModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>(DeleteLargeLanguageModelDocument, options);
+      }
+export type DeleteLargeLanguageModelMutationHookResult = ReturnType<typeof useDeleteLargeLanguageModelMutation>;
+export type DeleteLargeLanguageModelMutationResult = Apollo.MutationResult<DeleteLargeLanguageModelMutation>;
+export type DeleteLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
 export const MonitoringEventsDocument = gql`
     query MonitoringEvents($field: EventSortable, $ordering: String) {
   event(sortBy: $field, sortType: $ordering, from: 0, size: 10) {
@@ -14222,4 +14304,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-08-07T14:43:22+02:00
+// Generated on 2024-08-07T15:32:59+02:00
