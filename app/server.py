@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request, status
@@ -67,10 +68,7 @@ async def search_query(
     language = search_query.language
     vectorIndices = search_query.vectorIndices
     searchText = search_query.searchText
-
-    # TODO: replace "gamahiro.openk9.io" with virtualHost
-    # virtualHost = request.client.host
-    virtualHost = "gamahiro.openk9.io"
+    virtualHost = urlparse(str(request.base_url)).hostname
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
@@ -134,10 +132,7 @@ async def search_query(
     sortAfterKey = search_query.sortAfterKey
     language = search_query.language
     vectorIndices = search_query.vectorIndices
-
-    # TODO: replace "k9-backend.openk9.io" with virtualHost
-    # virtualHost = request.client.host
-    virtualHost = "k9-backend.openk9.io"
+    virtualHost = urlparse(str(request.base_url)).hostname
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
