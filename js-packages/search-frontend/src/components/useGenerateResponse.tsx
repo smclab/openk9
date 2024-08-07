@@ -13,7 +13,7 @@ export interface Message {
 
 const useGenerateResponse = ({
   initialMessages,
-  isMockEnabled = true,
+  isMockEnabled = false,
 }: {
   initialMessages: Message[];
   isMockEnabled?: boolean;
