@@ -81,6 +81,10 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               <Route path="logs/*" element={"Logs"} />
               <Route path="maching-learning" element={"Maching Learning"} />
               <Route path="maching-learning/*" element={"Maching Learning"} />
+              <Route path="large-languages-models" element={"Large Languages Models"} />
+              <Route path="large-languages-models/*" element={"Large Languages Model"} />
+              <Route path="embedding-models" element={"Embedding Models"} />
+              <Route path="embedding-models/*" element={"Embedding Model"} />
               <Route path="wizards">
                 <Route path="" element={"Connect your stuff"} />
                 <Route path="sitemap" element={"Connect Site Map"} />

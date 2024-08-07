@@ -2,13 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
-import {
-  useBucketsQuery,
-  useDeleteBucketMutation,
-  useEmbeddingModelsQuery,
-  useEnableBucketMutation,
-  useLargeLanguageModelsQuery,
-} from "../graphql-generated";
+import { useEnableLargeLanguageModelMutation, useLargeLanguageModelsQuery } from "../graphql-generated";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
 
@@ -20,6 +14,7 @@ export const LargeLanguageModelsQuery = gql`
           id
           name
           description
+          enabled
         }
       }
       pageInfo {
@@ -30,10 +25,22 @@ export const LargeLanguageModelsQuery = gql`
   }
 `;
 
+gql`
+  mutation EnableLargeLanguageModel($id: ID!) {
+    enableLargeLanguageModel(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
 export function LargeLanguageModels() {
   const showToast = useToast();
   const largeLanguageModels = useLargeLanguageModelsQuery();
-  //   const [updateBucketsMutate] = useEnableBucketMutation({
+  const [updateEnableLargeLaguageModel] = useEnableLargeLanguageModelMutation({
+    refetchQueries: [LargeLanguageModelsQuery],
+  });
+  //   const [updatelargeLanguageMutate] = useEnableBucketMutation({
   //     refetchQueries: [EmbeddingModelsQuery],
   //   });
   //   const [deleteBucketMutate] = useDeleteBucketMutation({
@@ -44,7 +51,7 @@ export function LargeLanguageModels() {
   //       }
   //     },
   //     onError(error) {
-  //       showToast({ displayType: "danger", title: "Buckets error", content: error.message ?? "" });
+  //       showToast({ displayType: "danger", title: "largeLanguage error", content: error.message ?? "" });
   //     },
   //   });
 
@@ -63,23 +70,23 @@ export function LargeLanguageModels() {
       columns={[
         { header: "Name", content: (tenant) => formatName(tenant) },
         { header: "Description", content: (tenant) => tenant?.description },
-        // {
-        //   header: "Enabled",
-        //   content: (buckets) => (
-        //     <React.Fragment>
-        //       <ClayToggle
-        //         toggled={buckets?.enabled ?? false}
-        //         onToggle={(enabled) => {
-        //           if (buckets && buckets.id && buckets.name && !buckets.enabled)
-        //             updateBucketsMutate({
-        //               variables: { id: buckets.id },
-        //             });
-        //         }}
-        //       />
-        //       <style type="text/css">{StyleToggle}</style>
-        //     </React.Fragment>
-        //   ),
-        // },
+        {
+          header: "Enabled",
+          content: (largeLanguage) => (
+            <React.Fragment>
+              <ClayToggle
+                toggled={largeLanguage?.enabled ?? false}
+                onToggle={() => {
+                  if (largeLanguage && largeLanguage.id && largeLanguage.name && !largeLanguage.enabled)
+                    updateEnableLargeLaguageModel({
+                      variables: { id: largeLanguage.id },
+                    });
+                }}
+              />
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
+          ),
+        },
       ]}
     />
   );

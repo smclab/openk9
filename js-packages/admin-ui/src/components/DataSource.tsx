@@ -83,7 +83,6 @@ gql`
     $scheduling: String!
     $jsonConfig: String
     $reindexRate: Int!
-
   ) {
     datasource(
       id: $id
@@ -122,7 +121,7 @@ export function DataSource() {
   });
   const [createOrUpdateDataSourceMutate, createOrUpdateDataSourceMutation] = useCreateOrUpdateDataSourceMutation({
     refetchQueries: [DataSourceQuery, DataSourcesQuery, BucketsdataSources, AddDataSourceToBucket, RemoveDataSourceFromBucket],
-    onCompleted(data) {
+    onCompleted(data: any) {
       if (data.datasource?.entity) {
         if (datasourceId === "new") {
           navigate(`/data-sources/`, { replace: true });
@@ -285,7 +284,7 @@ export function DataSource() {
             {...form.inputProps("schedulable")}
             description={"If datasource is automatically schedulable"}
           />
-          <div style={{width: '15%'}}>
+          <div style={{ width: "15%" }}>
             <NumberInput label="Reindex iterations" {...form.inputProps("reindexRate")} />
           </div>
           {!datasourceQuery.loading && <CronInput label="Scheduling" {...form.inputProps("scheduling")} />}

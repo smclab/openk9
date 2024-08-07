@@ -2,7 +2,7 @@ import React from "react";
 import { gql } from "@apollo/client";
 import { formatName, Table } from "./Table";
 import { useToast } from "./ToastProvider";
-import { useBucketsQuery, useDeleteBucketMutation, useEmbeddingModelsQuery, useEnableBucketMutation } from "../graphql-generated";
+import { useEmbeddingModelsQuery, useEnableEmbeddingModelMutation } from "../graphql-generated";
 import { ClayToggle } from "@clayui/form";
 import { StyleToggle } from "./Form";
 
@@ -14,8 +14,18 @@ export const EmbeddingModelsQuery = gql`
           id
           name
           description
+          enabled
         }
       }
+    }
+  }
+`;
+
+gql`
+  mutation EnableEmbeddingModel($id: ID!) {
+    enableEmbeddingModel(id: $id) {
+      id
+      name
     }
   }
 `;
@@ -23,6 +33,9 @@ export const EmbeddingModelsQuery = gql`
 export function EmbeddingModels() {
   const showToast = useToast();
   const embeddingModelsQuery = useEmbeddingModelsQuery();
+  const [updateEnableModel] = useEnableEmbeddingModelMutation({
+    refetchQueries: [EmbeddingModelsQuery],
+  });
   //   const [updateBucketsMutate] = useEnableBucketMutation({
   //     refetchQueries: [EmbeddingModelsQuery],
   //   });
@@ -44,32 +57,30 @@ export function EmbeddingModels() {
         queryResult: embeddingModelsQuery,
         field: (data) => data?.embeddingModels,
       }}
-      viewAdd={false}
-      onCreatePath=""
+      viewAdd={true}
+      onCreatePath="create/new/"
       haveActions={false}
-      onDelete={(tenant) => {
-        //   if (tenant?.id) deleteBucketMutate({ variables: { id: tenant.id } });
-      }}
+      onDelete={(tenant) => {}}
       columns={[
-        { header: "Name", content: (tenant) => formatName(tenant) },
-        { header: "Description", content: (tenant) => tenant?.description },
-        // {
-        //   header: "Enabled",
-        //   content: (buckets) => (
-        //     <React.Fragment>
-        //       <ClayToggle
-        //         toggled={buckets?.enabled ?? false}
-        //         onToggle={(enabled) => {
-        //           if (buckets && buckets.id && buckets.name && !buckets.enabled)
-        //             updateBucketsMutate({
-        //               variables: { id: buckets.id },
-        //             });
-        //         }}
-        //       />
-        //       <style type="text/css">{StyleToggle}</style>
-        //     </React.Fragment>
-        //   ),
-        // },
+        { header: "Name", content: (enabledModel) => formatName(enabledModel) },
+        { header: "Description", content: (enabledModel) => enabledModel?.description },
+        {
+          header: "Enabled",
+          content: (enabledModel) => (
+            <React.Fragment>
+              <ClayToggle
+                toggled={enabledModel?.enabled ?? false}
+                onToggle={() => {
+                  if (enabledModel && enabledModel.id && enabledModel.name && !enabledModel.enabled)
+                    updateEnableModel({
+                      variables: { id: enabledModel.id },
+                    });
+                }}
+              />
+              <style type="text/css">{StyleToggle}</style>
+            </React.Fragment>
+          ),
+        },
       ]}
     />
   );
