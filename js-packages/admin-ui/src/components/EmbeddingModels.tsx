@@ -64,7 +64,7 @@ export function EmbeddingModels() {
         field: (data) => data?.embeddingModels,
       }}
       viewAdd={true}
-      onCreatePath="create/new/"
+      onCreatePath="new/"
       onDelete={(model) => {
         if (model?.id) deleteModelsMutate({ variables: { id: model.id } });
       }}

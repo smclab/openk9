@@ -132,14 +132,14 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                 />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Logs" path="/logs" />
               </SideNavigationCollapsible>
-              <SideNavigationItem
-                IsChildren={false}
-                setSelect={setSelect}
-                elementSelect={select}
-                label="Maching Learning"
-                path="maching-learning"
-              />
-              <SideNavigationCollapsible label="Embedding models">
+              <SideNavigationCollapsible label="Machine Learning">
+                <SideNavigationItem
+                  IsChildren={false}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Hugging Face Integration"
+                  path="maching-learning"
+                />
                 <SideNavigationItem
                   IsChildren={true}
                   setSelect={setSelect}

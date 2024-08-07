@@ -4983,6 +4983,7 @@ export type EmbeddingModelQueryVariables = Exact<{
 export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null } | null };
 
 export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
   apiKey?: InputMaybe<Scalars['String']>;
   apiUrl: Scalars['String'];
   description: Scalars['String'];
@@ -5176,6 +5177,7 @@ export type LargeLanguageModelQueryVariables = Exact<{
 export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null } | null };
 
 export type CreateOrUpdateLargeLanguageModelMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
   apiKey?: InputMaybe<Scalars['String']>;
   apiUrl: Scalars['String'];
   description: Scalars['String'];
@@ -9919,8 +9921,9 @@ export type EmbeddingModelQueryHookResult = ReturnType<typeof useEmbeddingModelQ
 export type EmbeddingModelLazyQueryHookResult = ReturnType<typeof useEmbeddingModelLazyQuery>;
 export type EmbeddingModelQueryResult = Apollo.QueryResult<EmbeddingModelQuery, EmbeddingModelQueryVariables>;
 export const CreateOrUpdateEmbeddingModelDocument = gql`
-    mutation CreateOrUpdateEmbeddingModel($apiKey: String, $apiUrl: String!, $description: String!, $name: String!) {
+    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!) {
   embeddingModel(
+    id: $id
     embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description}
   ) {
     entity {
@@ -9945,6 +9948,7 @@ export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<Cre
  * @example
  * const [createOrUpdateEmbeddingModelMutation, { data, loading, error }] = useCreateOrUpdateEmbeddingModelMutation({
  *   variables: {
+ *      id: // value for 'id'
  *      apiKey: // value for 'apiKey'
  *      apiUrl: // value for 'apiUrl'
  *      description: // value for 'description'
@@ -10946,8 +10950,9 @@ export type LargeLanguageModelQueryHookResult = ReturnType<typeof useLargeLangua
 export type LargeLanguageModelLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelLazyQuery>;
 export type LargeLanguageModelQueryResult = Apollo.QueryResult<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>;
 export const CreateOrUpdateLargeLanguageModelDocument = gql`
-    mutation CreateOrUpdateLargeLanguageModel($apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String) {
+    mutation CreateOrUpdateLargeLanguageModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String) {
   largeLanguageModel(
+    id: $id
     largeLanguageModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, jsonConfig: $jsonConfig}
   ) {
     entity {
@@ -10972,6 +10977,7 @@ export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction
  * @example
  * const [createOrUpdateLargeLanguageModelMutation, { data, loading, error }] = useCreateOrUpdateLargeLanguageModelMutation({
  *   variables: {
+ *      id: // value for 'id'
  *      apiKey: // value for 'apiKey'
  *      apiUrl: // value for 'apiUrl'
  *      description: // value for 'description'
@@ -14304,4 +14310,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-08-07T15:32:59+02:00
+// Generated on 2024-08-07T17:25:10+02:00

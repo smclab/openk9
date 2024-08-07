@@ -5,7 +5,7 @@ import { useLargeLanguageModelQuery } from "../graphql-generated";
 import { ContainerFluid, MainTitle, TextInput } from "./Form";
 import React from "react";
 
-const LargeLanguageModel = gql`
+export const LargeLanguageModelQ = gql`
   query LargeLanguageModel($id: ID!) {
     largeLanguageModel(id: $id) {
       name

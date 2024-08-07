@@ -487,11 +487,11 @@ export default function App() {
                       </Route>
                     </Route>
                     <Route path="embedding-models" element={<EmbeddingModels />} />
-                    <Route path="embedding-models/create/new" element={<EmbeddingModelCreate />} />
-                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModel />} />
+                    <Route path="embedding-models/new" element={<EmbeddingModelCreate />} />
+                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModelCreate />} />
                     <Route path="large-languages-models" element={<LargeLanguageModels />} />
-                    <Route path="large-languages-models/:largeLanguagesModelsId" element={<LargeLanguageModelE />} />
-                    <Route path="large-languages-models/create/new" element={<LargeLanguageModel />} />
+                    <Route path="large-languages-models/new" element={<LargeLanguageModel />} />
+                    <Route path="large-languages-models/:largeLanguageModelId" element={<LargeLanguageModel />} />
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>

@@ -5,10 +5,20 @@ import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery
 import { ContainerFluid, CustomButtom, MainTitle, TextInput, fromFieldValidators, useForm } from "./Form";
 import React from "react";
 import { CodeInput } from "./CodeInput";
+import { LargeLanguageModelsQuery } from "./LargeLanguageModels";
+import { LargeLanguageModelQ } from "./LargeLanguageModel";
 
-gql`
-  mutation CreateOrUpdateLargeLanguageModel($apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String) {
+const create = gql`
+  mutation CreateOrUpdateLargeLanguageModel(
+    $id: ID
+    $apiKey: String
+    $apiUrl: String!
+    $description: String!
+    $name: String!
+    $jsonConfig: String
+  ) {
     largeLanguageModel(
+      id: $id
       largeLanguageModelDTO: { name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, jsonConfig: $jsonConfig }
     ) {
       entity {
@@ -28,13 +38,14 @@ export function LargeLanguageModel() {
     skip: !largeLanguageModelId || largeLanguageModelId === "new",
   });
   const [createOrUpdateEmbeddingModelsMutate] = useCreateOrUpdateLargeLanguageModelMutation({
-    refetchQueries: [],
+    refetchQueries: [create, LargeLanguageModelsQuery, LargeLanguageModelQ],
     onCompleted(data) {
       if (data.largeLanguageModel?.entity) {
         if (largeLanguageModelId === "new") {
           navigate(`/large-languages-models/`, { replace: true });
           showToast({ displayType: "success", title: "Models created", content: data.largeLanguageModel.entity.name ?? "" });
         } else {
+          navigate(`/large-languages-models/`, { replace: true });
           showToast({ displayType: "info", title: "Models updated", content: data.largeLanguageModel.entity.name ?? "" });
         }
       }
@@ -54,7 +65,9 @@ export function LargeLanguageModel() {
     originalValues: modelQuery.data?.largeLanguageModel,
     isLoading: modelQuery.loading || modelQuery.loading,
     onSubmit(data) {
-      createOrUpdateEmbeddingModelsMutate({ variables: { ...data } });
+      createOrUpdateEmbeddingModelsMutate({
+        variables: { id: largeLanguageModelId !== "new" ? largeLanguageModelId : undefined, ...data },
+      });
     },
     getValidationMessages: fromFieldValidators(null),
   });

@@ -4,10 +4,12 @@ import { useToast } from "./ToastProvider";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../graphql-generated";
 import { ContainerFluid, CustomButtom, MainTitle, TextInput, fromFieldValidators, useForm } from "./Form";
 import React from "react";
+import { EmbeddingModelQuery } from "./EmbeddingModel";
+import { EmbeddingModelsQuery } from "./EmbeddingModels";
 
 gql`
-  mutation CreateOrUpdateEmbeddingModel($apiKey: String, $apiUrl: String!, $description: String!, $name: String!) {
-    embeddingModel(embeddingModelDTO: { name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description }) {
+  mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!) {
+    embeddingModel(id: $id, embeddingModelDTO: { name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description }) {
       entity {
         id
         name
@@ -25,13 +27,14 @@ export function EmbeddingModelCreate() {
     skip: !embeddingModelsId || embeddingModelsId === "new",
   });
   const [createOrUpdateEmbeddingModelsMutate] = useCreateOrUpdateEmbeddingModelMutation({
-    refetchQueries: [],
+    refetchQueries: [EmbeddingModelsQuery, EmbeddingModelQuery],
     onCompleted(data) {
       if (data.embeddingModel?.entity) {
         if (embeddingModelsId === "new") {
           navigate(`/embedding-models/`, { replace: true });
           showToast({ displayType: "success", title: "Models created", content: data.embeddingModel.entity.name ?? "" });
         } else {
+          navigate(`/embedding-models/`, { replace: true });
           showToast({ displayType: "info", title: "Models updated", content: data.embeddingModel.entity.name ?? "" });
         }
       }
@@ -50,7 +53,7 @@ export function EmbeddingModelCreate() {
     originalValues: modelQuery.data?.embeddingModel,
     isLoading: modelQuery.loading || modelQuery.loading,
     onSubmit(data) {
-      createOrUpdateEmbeddingModelsMutate({ variables: { ...data } });
+      createOrUpdateEmbeddingModelsMutate({ variables: { id: embeddingModelsId !== "new" ? embeddingModelsId : undefined, ...data } });
     },
     getValidationMessages: fromFieldValidators(null),
   });

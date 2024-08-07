@@ -72,7 +72,7 @@ export function LargeLanguageModels() {
         queryResult: largeLanguageModels,
         field: (data) => data?.largeLanguageModels,
       }}
-      onCreatePath="create/new/"
+      onCreatePath="new/"
       onDelete={(model) => {
         if (model?.id) deleteModelsMutate({ variables: { id: model.id } });
       }}
