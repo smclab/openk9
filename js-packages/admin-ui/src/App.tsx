@@ -97,6 +97,7 @@ import { LargeLanguageModels } from "./components/LargeLanguageModels";
 import { EmbeddingModel } from "./components/EmbeddingModel";
 import { LargeLanguageModelE } from "./components/LargeLanguageModel";
 import { EmbeddingModelCreate } from "./components/EmbeddingModelCreate";
+import { LargeLanguageModel } from "./components/LargeLanguageModelCreate";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -490,6 +491,7 @@ export default function App() {
                     <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModel />} />
                     <Route path="large-languages-models" element={<LargeLanguageModels />} />
                     <Route path="large-languages-models/:largeLanguagesModelsId" element={<LargeLanguageModelE />} />
+                    <Route path="large-languages-models/create/new" element={<LargeLanguageModel />} />
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>

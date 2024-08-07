@@ -1565,8 +1565,8 @@ export type LargeLanguageModelDtoInput = {
   apiKey?: InputMaybe<Scalars['String']>;
   apiUrl: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
-  promptTemplate?: InputMaybe<Scalars['String']>;
 };
 
 /** Mutation root */
@@ -5167,6 +5167,17 @@ export type LargeLanguageModelQueryVariables = Exact<{
 
 
 export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null } | null };
+
+export type CreateOrUpdateLargeLanguageModelMutationVariables = Exact<{
+  apiKey?: InputMaybe<Scalars['String']>;
+  apiUrl: Scalars['String'];
+  description: Scalars['String'];
+  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type CreateOrUpdateLargeLanguageModelMutation = { __typename?: 'Mutation', largeLanguageModel?: { __typename?: 'Response_LargeLanguageModel', entity?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null } | null };
 
 export type LargeLanguageModelsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -10886,6 +10897,48 @@ export function useLargeLanguageModelLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type LargeLanguageModelQueryHookResult = ReturnType<typeof useLargeLanguageModelQuery>;
 export type LargeLanguageModelLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelLazyQuery>;
 export type LargeLanguageModelQueryResult = Apollo.QueryResult<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>;
+export const CreateOrUpdateLargeLanguageModelDocument = gql`
+    mutation CreateOrUpdateLargeLanguageModel($apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String) {
+  largeLanguageModel(
+    largeLanguageModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, jsonConfig: $jsonConfig}
+  ) {
+    entity {
+      id
+      name
+    }
+  }
+}
+    `;
+export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
+
+/**
+ * __useCreateOrUpdateLargeLanguageModelMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateLargeLanguageModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateLargeLanguageModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateLargeLanguageModelMutation, { data, loading, error }] = useCreateOrUpdateLargeLanguageModelMutation({
+ *   variables: {
+ *      apiKey: // value for 'apiKey'
+ *      apiUrl: // value for 'apiUrl'
+ *      description: // value for 'description'
+ *      name: // value for 'name'
+ *      jsonConfig: // value for 'jsonConfig'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>(CreateOrUpdateLargeLanguageModelDocument, options);
+      }
+export type CreateOrUpdateLargeLanguageModelMutationHookResult = ReturnType<typeof useCreateOrUpdateLargeLanguageModelMutation>;
+export type CreateOrUpdateLargeLanguageModelMutationResult = Apollo.MutationResult<CreateOrUpdateLargeLanguageModelMutation>;
+export type CreateOrUpdateLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
 export const LargeLanguageModelsDocument = gql`
     query LargeLanguageModels($searchText: String, $cursor: String) {
   largeLanguageModels(searchText: $searchText, first: 25, after: $cursor) {
@@ -14169,4 +14222,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-08-07T10:53:09+02:00
+// Generated on 2024-08-07T14:43:22+02:00

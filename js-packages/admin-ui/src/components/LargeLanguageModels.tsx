@@ -40,20 +40,6 @@ export function LargeLanguageModels() {
   const [updateEnableLargeLaguageModel] = useEnableLargeLanguageModelMutation({
     refetchQueries: [LargeLanguageModelsQuery],
   });
-  //   const [updatelargeLanguageMutate] = useEnableBucketMutation({
-  //     refetchQueries: [EmbeddingModelsQuery],
-  //   });
-  //   const [deleteBucketMutate] = useDeleteBucketMutation({
-  //     refetchQueries: [EmbeddingModelsQuery],
-  //     onCompleted(data) {
-  //       if (data.deleteBucket?.id) {
-  //         showToast({ displayType: "success", title: "Bucket deleted", content: data.deleteBucket.name ?? "" });
-  //       }
-  //     },
-  //     onError(error) {
-  //       showToast({ displayType: "danger", title: "largeLanguage error", content: error.message ?? "" });
-  //     },
-  //   });
 
   return (
     <Table
@@ -61,11 +47,8 @@ export function LargeLanguageModels() {
         queryResult: largeLanguageModels,
         field: (data) => data?.largeLanguageModels,
       }}
-      onCreatePath=""
-      onDelete={(tenant) => {
-        //   if (tenant?.id) deleteBucketMutate({ variables: { id: tenant.id } });
-      }}
-      viewAdd={false}
+      onCreatePath="create/new/"
+      onDelete={(tenant) => {}}
       haveActions={false}
       columns={[
         { header: "Name", content: (tenant) => formatName(tenant) },
