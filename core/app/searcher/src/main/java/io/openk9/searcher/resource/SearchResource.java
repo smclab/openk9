@@ -486,6 +486,7 @@ public class SearchResource {
 
 			hitMap.put("source", sourceMap);
 			hitMap.put("highlight", highlightMap);
+			hitMap.put("score", hit.getScore());
 
 			Object[] sortValues = hit.getSortValues();
 
