@@ -1,16 +1,8 @@
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "./ToastProvider";
-import {
-  useBucketQuery,
-  useCreateOrUpdateBucketMutation,
-  useCreateOrUpdateLanguageMutation,
-  useEmbeddingModelQuery,
-  useLanguageQuery,
-  useLargeLanguageModelQuery,
-} from "../graphql-generated";
-import { LanguagesQuery } from "./Languages";
-import { ContainerFluid, CustomButtom, MainTitle, TextInput, fromFieldValidators, useForm } from "./Form";
+import { useEmbeddingModelQuery } from "../graphql-generated";
+import { ContainerFluid, MainTitle, TextInput } from "./Form";
 import React from "react";
 
 export const EmbeddingModelQuery = gql`
@@ -63,9 +55,6 @@ export function EmbeddingModel() {
           validationMessages={[]}
           value={apiUrl || ""}
         />
-        <div className="sheet-footer">
-          {/* <CustomButtom nameButton={languageId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" /> */}
-        </div>
       </form>
     </ContainerFluid>
   );
