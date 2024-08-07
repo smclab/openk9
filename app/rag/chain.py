@@ -22,8 +22,10 @@ def get_chain(
     vectorIndices,
     virtualHost,
     question,
+    opensearch_host,
+    grpc_host
 ):
-    configuration = get_llm_configuration(virtualHost)
+    configuration = get_llm_configuration(grpc_host, virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     json_config = configuration["json_config"]
@@ -41,6 +43,8 @@ def get_chain(
         sortAfterKey,
         language,
         vectorIndices,
+        opensearch_host,
+        grpc_host
     )
 
     model = ChatOpenAI(openai_api_key=api_key)
@@ -72,9 +76,11 @@ def get_chat_chain(
     language,
     vectorIndices,
     virtualHost,
-    searchText
+    searchText,
+    opensearch_host,
+    grpc_host
 ):
-    configuration = get_llm_configuration(virtualHost)
+    configuration = get_llm_configuration(grpc_host, virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     json_config = configuration["json_config"]
@@ -92,6 +98,8 @@ def get_chat_chain(
         sortAfterKey,
         language,
         vectorIndices,
+        opensearch_host,
+        grpc_host
     )
 
     model = ChatOpenAI(openai_api_key=api_key)
