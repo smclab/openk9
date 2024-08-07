@@ -2,6 +2,7 @@ langchain-core
 langchain-cli 
 langchain-community 
 langchain-openai 
+langchain-ollama
 opensearch-py 
 fastapi 
 uvicorn 
