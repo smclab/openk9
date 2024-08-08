@@ -31,9 +31,12 @@ export default function GenerateResponse({
     if (!isEqual(searchQuery, prevSearchQuery) || !isEqual(range, prevRange)) {
       setPrevSearchQuery(searchQuery);
       setPrevRange(range);
+      const clearSearchQuery = searchQuery.map(
+        ({ isSearch, isTab, filter, goToSuggestion, ...rest }) => rest,
+      );
       generateResponse(
         question,
-        searchQuery,
+        clearSearchQuery,
         language,
         sortAfterKey,
         sortData,

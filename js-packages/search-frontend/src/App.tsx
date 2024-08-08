@@ -37,7 +37,9 @@ export function App() {
   const [focusedInput, setFocusedInput] = React.useState(null);
   const [isClickReset, setIsClickReset] = React.useState(false);
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
-  const [searchText, setSearchText] = React.useState("");
+  const [searchText, setSearchText] = React.useState<string | null | undefined>(
+    undefined,
+  );
   React.useEffect(() => {
     document.body.classList.toggle(
       "no-scroll",
@@ -563,7 +565,7 @@ export function App() {
         ref={(element) => openk9.updateConfiguration({ results: element })}
         css={css`
           grid-area: result;
-          margin-top: 20px;
+          margin-top: ${searchText !== undefined ? "20px" : "unset"};
           overflow-y: auto;
           background-color: var(
             --openk9-embeddable-search--primary-background-color
