@@ -54,7 +54,14 @@ class OpenSearchRetriever(BaseRetriever):
         documents = []
 
         for row in response["hits"]["hits"]:
-            document = Document(row["_source"]["web"]["content"])
+            if vectorIndices:
+                page_content = row["_source"]["chunkText"]
+                title = row["_source"]["title"]
+                url = row["_source"]["url"]
+                source = "local"
+                document = Document(page_content, metadata={"source": source, "title": title, "url": url})
+            else:
+                document = Document(row["_source"]["web"]["content"][:2000])
             documents.append(document)
 
         return documents
