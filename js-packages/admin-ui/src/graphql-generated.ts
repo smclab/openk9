@@ -5174,7 +5174,7 @@ export type LargeLanguageModelQueryVariables = Exact<{
 }>;
 
 
-export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null } | null };
+export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, jsonConfig?: string | null } | null };
 
 export type CreateOrUpdateLargeLanguageModelMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -10918,6 +10918,7 @@ export const LargeLanguageModelDocument = gql`
     description
     apiUrl
     apiKey
+    jsonConfig
   }
 }
     `;
@@ -14310,4 +14311,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-08-07T17:25:10+02:00
+// Generated on 2024-08-08T12:33:20+02:00

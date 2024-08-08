@@ -58,7 +58,7 @@ export function LargeLanguageModel() {
         apiKey: "",
         apiUrl: "",
         description: "",
-        json: "",
+        jsonConfig: "",
       }),
       []
     ),
@@ -85,7 +85,7 @@ export function LargeLanguageModel() {
         <TextInput label="Description" {...form.inputProps("description")} />
         <TextInput label="Api Url" {...form.inputProps("apiKey")} />
         <TextInput label="Api Key" {...form.inputProps("apiUrl")} />
-        <CodeInput language="json" label="Configuration" {...form.inputProps("json")} />
+        <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
 
         <div className="sheet-footer">
           <CustomButtom

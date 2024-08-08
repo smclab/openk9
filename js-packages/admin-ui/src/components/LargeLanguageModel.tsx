@@ -12,6 +12,7 @@ export const LargeLanguageModelQ = gql`
       description
       apiUrl
       apiKey
+      jsonConfig
     }
   }
 `;
