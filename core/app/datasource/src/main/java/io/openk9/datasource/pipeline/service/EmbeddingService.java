@@ -35,6 +35,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,60 +57,7 @@ public class EmbeddingService {
 	@CacheName("bucket-resource")
 	Cache cache;
 
-	public static CompletionStage<byte[]> getEmbeddedPayload(
-		String tenantId, String scheduleId, byte[] payload) {
-
-		return EventBusInstanceHolder.getEventBus()
-			.request(
-				GET_EMBEDDING_CHUNKS_CONFIGURATION,
-				new EmbeddingChunksConfigurationRequest(tenantId, scheduleId)
-			)
-			.flatMap(message -> {
-				var configurations = (EmbeddingChunksConfiguration) message.body();
-
-				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
-
-				var apiKey = configurations.apiKey();
-				var indexName = configurations.indexName();
-				var jsonConfig = configurations.jsonConfig() != null
-					? configurations.jsonConfig()
-					: "{}";
-				var chunkType = mapChunkType(configurations);
-				var windowSize = configurations.chunkWindowSize();
-
-				var documentContext = JsonPath
-					.using(Configuration.defaultConfiguration())
-					.parseUtf8(payload);
-
-				String text = documentContext.read(configurations.fieldJsonPath);
-				String title = documentContext.read(configurations.fieldTitle);
-				String url = documentContext.read(configurations.fieldUrl);
-
-				String contentId = documentContext.read("$.contentId");
-				Map<String, Object> acl = documentContext.read("$.acl");
-
-				var metadataMap = getMetadataMap(
-					documentContext,
-					configurations.metadataMapping()
-				);
-
-				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
-						.newBuilder()
-						.setApiKey(apiKey)
-						.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
-							.setType(chunkType)
-							.setJsonConfig(StructUtils.fromJson(jsonConfig))
-							.build())
-						.setText(text)
-						.build())
-					.map(embeddingResponse -> EmbeddingService.mapToPayload(
-							embeddingResponse, indexName, contentId, title, url,
-							acl, metadataMap, windowSize
-						)
-					);
-			})
-			.subscribeAsCompletionStage();
-	}
+	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
 	protected static Map<String, Object> getMetadataMap(
 		DocumentContext documentContext, String metadataMapping) {
@@ -265,9 +213,66 @@ public class EmbeddingService {
 
 	}
 
+	public static CompletionStage<byte[]> getEmbeddedPayload(
+		String tenantId, String scheduleId, byte[] payload) {
+
+		return EventBusInstanceHolder.getEventBus()
+			.request(
+				GET_EMBEDDING_CHUNKS_CONFIGURATION,
+				new EmbeddingChunksConfigurationRequest(tenantId, scheduleId)
+			)
+			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
+			.flatMap(message -> {
+				var configurations = (EmbeddingChunksConfiguration) message.body();
+
+				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
+
+				var apiKey = configurations.apiKey();
+				var indexName = configurations.indexName();
+				var jsonConfig = configurations.jsonConfig() != null
+					? configurations.jsonConfig()
+					: "{}";
+				var chunkType = mapChunkType(configurations);
+				var windowSize = configurations.chunkWindowSize();
+
+				var documentContext = JsonPath
+					.using(Configuration.defaultConfiguration())
+					.parseUtf8(payload);
+
+				String text = documentContext.read(configurations.fieldJsonPath);
+				String title = documentContext.read(configurations.fieldTitle);
+				String url = documentContext.read(configurations.fieldUrl);
+
+				String contentId = documentContext.read("$.contentId");
+				Map<String, Object> acl = documentContext.read("$.acl");
+
+				var metadataMap = getMetadataMap(
+					documentContext,
+					configurations.metadataMapping()
+				);
+
+				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
+						.newBuilder()
+						.setApiKey(apiKey)
+						.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
+							.setType(chunkType)
+							.setJsonConfig(StructUtils.fromJson(jsonConfig))
+							.build())
+						.setText(text)
+						.build())
+					.map(embeddingResponse -> EmbeddingService.mapToPayload(
+							embeddingResponse, indexName, contentId, title, url,
+							acl, metadataMap, windowSize
+						)
+					);
+			})
+			.subscribeAsCompletionStage();
+	}
+
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
 
 		return getEmbeddingConfiguration(tenantId)
+			.onItem().ifNull().failWith(ConfigurationNotFound::new)
 			.flatMap(configuration -> {
 				var client = EmbeddingStubRegistry.getStub(configuration.apiUrl());
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
@@ -292,10 +297,12 @@ public class EmbeddingService {
 			new CompositeCacheKey(request),
 			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
 				getEmbeddingConfiguration(request.tenantId)
+					.onItem().ifNull().failWith(ConfigurationNotFound::new)
 					.flatMap(embeddingConfiguration -> s.createNamedQuery(
 							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
 						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId)
-						.getSingleResult()
+						.getSingleResultOrNull()
+						.onItem().ifNull().failWith(VectorIndexNotFound::new)
 						.map(vectorIndex -> new EmbeddingChunksConfiguration(
 							embeddingConfiguration.apiUrl(),
 							embeddingConfiguration.apiKey(),
@@ -308,26 +315,17 @@ public class EmbeddingService {
 							vectorIndex.getJsonConfig(),
 							vectorIndex.getDataIndex().getName()
 						))
+					))
+				.onFailure(EmbeddingServiceException.class)
+				.invoke(throwable -> log.warnf(
+						throwable,
+						"Embedding service is not configured for tenantId: %s",
+						request.tenantId()
 					)
-			)
+				)
+				.onFailure()
+				.recoverWithNull()
 		);
-	}
-
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
-
-		return QuarkusCacheUtil.getAsync(
-			cache,
-			new CompositeCacheKey(tenantId),
-			sessionFactory.withTransaction(
-				tenantId, (s, t) -> s
-					.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-					.getSingleResult()
-					.map(embeddingModel -> new EmbeddingConfiguration(
-						embeddingModel.getApiUrl(),
-						embeddingModel.getApiKey()
-					)))
-		);
-
 	}
 
 	private static EmbeddingOuterClass.ChunkType mapChunkType(EmbeddingChunksConfiguration configurations) {
@@ -366,4 +364,23 @@ public class EmbeddingService {
 		List<Float> vector
 	) {}
 
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(tenantId),
+			sessionFactory.withTransaction(
+				tenantId, (s, t) -> s
+					.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+					.getSingleResult()
+					.map(embeddingModel -> new EmbeddingConfiguration(
+						embeddingModel.getApiUrl(),
+						embeddingModel.getApiKey()
+					))
+					.onFailure()
+					.recoverWithNull()
+			)
+		);
+
+	}
 }
