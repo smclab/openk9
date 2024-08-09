@@ -58,7 +58,7 @@ def get_chain(
     chain = prompt | model | parser
 
     for chunk in chain.stream({"question": question, "context": documents}):
-        yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+            yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
     yield json.dumps({"chunk": "", "type": "END"})
 
@@ -115,4 +115,6 @@ def get_chat_chain(
     for chunk in chain.stream({"question": searchText, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
-    yield json.dumps({"chunk": "", "type": "END"})    
+    for element in documents:
+        yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
+        yield json.dumps({"chunk": "", "type": "END"})
