@@ -537,11 +537,11 @@ export function App() {
             >
               {isPanelVisible ? (
                 <>
-                  Chiudi Pannello <Logo />
+                  Chiudi Risposta Generata <Logo />
                 </>
               ) : (
                 <>
-                  Genera risposta <Logo />
+                  Apri Risposta Generata <Logo />
                 </>
               )}
             </button>
