@@ -53,7 +53,7 @@ module.exports = {
     },
     proxy: {
       "/api": {
-        target: "https://axa.openk9.io",
+        target: "https://k9-backend.openk9.io",
         changeOrigin: true,
         secure: false,
       },

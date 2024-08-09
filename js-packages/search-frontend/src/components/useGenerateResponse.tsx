@@ -22,6 +22,7 @@ const useGenerateResponse = ({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [isChatting, setIsChatting] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialMessages.length > 0) {
@@ -93,7 +94,6 @@ const useGenerateResponse = ({
         status: "CHUNK",
         sources: [],
       };
-
       setMessage(newMessage);
       setIsChatting(true);
 
@@ -104,8 +104,9 @@ const useGenerateResponse = ({
         await generateMockResponse(query);
         return;
       }
+      setIsLoading(true);
 
-      const url = "https://k9-backend.openk9.io/api/rag/generate";
+      const url = "/api/rag/generate";
 
       const searchQueryT: GenerateRequest = {
         searchText: query,
@@ -129,8 +130,7 @@ const useGenerateResponse = ({
 
         if (response.ok) {
           const reader = response.body?.getReader();
-          console.log(response);
-
+          setIsLoading(false);
           const decoder = new TextDecoder("utf-8");
           let done = false;
           let buffer = "";
@@ -191,6 +191,7 @@ const useGenerateResponse = ({
 
   const cancelResponse = () => {
     if (abortController) {
+      setIsLoading(false);
       abortController.abort();
       setMessage((prev) =>
         prev
@@ -210,6 +211,7 @@ const useGenerateResponse = ({
 
   const cancelAllResponses = () => {
     if (abortController) {
+      setIsLoading(false);
       abortController.abort();
       setMessage((prev) =>
         prev
@@ -231,6 +233,7 @@ const useGenerateResponse = ({
     cancelResponse,
     cancelAllResponses,
     isChatting,
+    isLoading,
   };
 };
 

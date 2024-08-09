@@ -621,7 +621,7 @@ export function App() {
           );
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
-          margin-top: 20px;
+          margin-top: ${searchText !== undefined ? "20px" : "unset"};
 
           @media (max-width: 480px) {
             display: none;

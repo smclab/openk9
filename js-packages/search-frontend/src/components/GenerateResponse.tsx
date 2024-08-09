@@ -1,5 +1,5 @@
 import useGenerateResponse from "./useGenerateResponse";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import React from "react";
 import isEqual from "lodash/isEqual";
 import { recoverySearchQueryAndSort } from "./ResultList";
@@ -19,9 +19,10 @@ export default function GenerateResponse({
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
   const { range } = useRange();
 
-  const { generateResponse, message, isChatting } = useGenerateResponse({
-    initialMessages: [],
-  });
+  const { generateResponse, message, isChatting, isLoading } =
+    useGenerateResponse({
+      initialMessages: [],
+    });
 
   const [prevSearchQuery, setPrevSearchQuery] =
     React.useState<any[]>(searchQueryData);
@@ -61,7 +62,11 @@ export default function GenerateResponse({
           <>
             <ContainerBox>
               {message?.question && <Question>Generate answer</Question>}
-              {message?.answer && <Answer>{message.answer}</Answer>}
+              {isLoading ? (
+                <SmallLoader />
+              ) : (
+                message?.answer && <Answer>{message?.answer}</Answer>
+              )}
             </ContainerBox>
           </>
         </Container>
@@ -69,7 +74,6 @@ export default function GenerateResponse({
     </>
   );
 }
-
 const Container = styled.div`
   background: white;
   border-bottom-left-radius: 10px;
@@ -91,5 +95,49 @@ const Question = styled.div`
 const Answer = styled.div`
   font-size: 1rem;
   color: #555;
-  white-space: pre-wrap; /* Preserva i ritorni a capo */
+  white-space: pre-wrap;
+`;
+
+const spVortex = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+`;
+
+const SmallLoader = styled.div`
+  width: 1rem;
+  height: 1rem;
+  clear: both;
+  margin: 1rem left;
+  border: 2px black solid;
+  border-radius: 100%;
+  overflow: hidden;
+  position: relative;
+
+  &:before,
+  &:after {
+    content: "";
+    border-radius: 50%;
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    animation: ${spVortex} 2s infinite linear;
+  }
+
+  &:before {
+    border-top: 0.5rem black solid;
+    top: -0.1875rem;
+    left: calc(-50% - 0.1875rem);
+    transform-origin: right center;
+  }
+
+  &:after {
+    border-bottom: 0.5rem black solid;
+    top: 0.1875rem;
+    right: calc(-50% - 0.1875rem);
+    transform-origin: left center;
+  }
 `;
