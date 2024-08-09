@@ -83,17 +83,21 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 
 	private Behavior<Processor.Command> onEmbeddingResponse(EmbeddingResponse response) {
 
-		if (response.payload != null) {
+		if (response.payload() != null) {
 
 			replyTo.tell(new Processor.Success(response.payload, heldMessage));
+
+		}
+		else if (response.throwable() != null) {
+
+			replyTo.tell(new Processor.Failure(
+				new DataProcessException(response.throwable), heldMessage));
 
 		}
 		else {
 
 			replyTo.tell(new Processor.Failure(
-				new DataProcessException(response.throwable),
-				heldMessage
-			));
+				new DataProcessException("Unknown error"), heldMessage));
 
 		}
 
