@@ -61,7 +61,7 @@ class OpenSearchRetriever(BaseRetriever):
                 source = "local"
                 document = Document(page_content, metadata={"source": source, "title": title, "url": url})
             else:
-                document = Document(row["_source"]["web"]["content"][:2000])
+                document = Document(row["_source"]["web"]["content"][:2000], metadata={})
             documents.append(document)
 
         return documents
