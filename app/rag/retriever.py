@@ -43,7 +43,7 @@ class OpenSearchRetriever(BaseRetriever):
             grpc_host,
         )
         query = query_data.query
-        index_name = query_data.indexName[0]
+        index_name = list(query_data.indexName)
 
         client = OpenSearch(
             hosts=[opensearch_host],
@@ -61,7 +61,7 @@ class OpenSearchRetriever(BaseRetriever):
                 source = "local"
                 document = Document(page_content, metadata={"source": source, "title": title, "url": url})
             else:
-                document = Document(row["_source"]["web"]["content"][:2000], metadata={})
+                document = Document(row["_source"]["rawContent"], metadata={})
             documents.append(document)
 
         return documents

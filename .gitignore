@@ -163,3 +163,5 @@ cython_debug/
 
 # Other
 .directory
+
+.idea
