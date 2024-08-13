@@ -1,0 +1,52 @@
+Build Latest Admin Ui Docker Image:
+  image: docker:24.0.2
+  services:
+    - docker:24.0.2-dind
+  stage: build-image
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 0
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  only:
+    refs:
+      - main
+    changes:
+      - js-packages/admin-ui/**/*
+      - .gitlab/.gitlab-ci-admin-frontend.yml
+  except:
+    - schedules
+  before_script:
+    - sleep 5
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t openk9-admin-ui:latest -f js-packages/admin-ui/Dockerfile .
+    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+
+
+Build Tagged Admin Ui Docker Image:
+  image: docker:24.0.2
+  services:
+    - docker:24.0.2-dind
+  stage: build-image
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  only:
+    refs:
+      - tags
+    changes:
+      - js-packages/admin-ui/**/*
+  except:
+    - schedules
+  before_script:
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
+    - apk add --update curl && rm -rf /var/cache/apk/*
+  script:
+    - docker build -t openk9-admin-ui:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
+    - docker tag openk9-admin-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/openk9-admin-ui:${CI_COMMIT_REF_NAME}
+    - docker push $CI_REGISTRY_NAME/openk9openk9-admin-ui:${CI_COMMIT_REF_NAME}
