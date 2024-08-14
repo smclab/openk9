@@ -51,13 +51,13 @@ Build Datasource image:
     - FEATURE_BRANCH_REGEX='^\d+-.*$'
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then                                               
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true 
+        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+      elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
+        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
       elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) && "$CI_COMMIT_AUTHOR" == "michele.bastianelli" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
       elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
-      elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
       fi
   artifacts:
     paths:
