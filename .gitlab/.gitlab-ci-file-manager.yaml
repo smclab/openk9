@@ -46,14 +46,15 @@ Build File-Manager image:
       VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
+    - FEATURE_BRANCH_REGEX='^\d+-.*$'
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^\d+-.*$ && "$CI_COMMIT_AUTHOR" == "michele.bastianelli" ]]; then
+      elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) && "$CI_COMMIT_AUTHOR" == "michele.bastianelli" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^\d+-.*$ ]]; then
+      elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
-      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+      elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/file-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false -P 'exclude-quarkus-test'
       fi
   artifacts:
@@ -61,7 +62,7 @@ Build File-Manager image:
       - .version
     expire_in: 24 hours
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+-.*$/ || $CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/ || $CI_MERGE_REQUEST_ID'
 
 ############## Container scanning ##############
 

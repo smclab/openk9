@@ -14,16 +14,6 @@ cache:
   key: "${CI_COMMIT_REF_SLUG}"
 
 include:
-  - local: '/.gitlab/.gitlab-ci-datasource.yaml'
-  - local: '/.gitlab/.gitlab-ci-file-manager.yaml'
-  - local: '/.gitlab/.gitlab-ci-ingestion.yaml'
-  - local: '/.gitlab/.gitlab-ci-k8s-client.yaml'
-  - local: '/.gitlab/.gitlab-ci-searcher.yaml'
-  - local: '/.gitlab/.gitlab-ci-tenant-manager.yaml'
-  - local: '/.gitlab/.gitlab-ci-tika-no-ocr.yaml'
-  - local: '/.gitlab/.gitlab-ci-entity-manager.yaml'
-  - local: '/.gitlab/.gitlab-ci-resources-validator.yaml'
-  - local: '/.gitlab/.gitlab-ci-tika-ocr.yaml'
   - local: '/.gitlab/.gitlab-ci-search-frontend.yaml'
   - local: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
   - local: '/.gitlab/.gitlab-ci-site.yaml'
