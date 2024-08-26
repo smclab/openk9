@@ -18,9 +18,9 @@ load_dotenv()
 
 ORIGINS = os.getenv("ORIGINS")
 ORIGINS = ORIGINS.split(",")
-KEYKLOAK_INFO_API_URL = os.getenv("KEYKLOAK_INFO_API_URL")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
-GRPC_HOST = os.getenv("GRPC_HOST")
+GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
+GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 
 
 app.add_middleware(
@@ -72,7 +72,9 @@ async def search_query(
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
-    if token and not Keycloak.verify_token(KEYKLOAK_INFO_API_URL, token):
+    if token and not Keycloak.verify_token(
+        GRPC_TENANT_MANAGER_HOST, virtualHost, token
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
@@ -94,7 +96,7 @@ async def search_query(
         virtualHost,
         searchText,
         OPENSEARCH_HOST,
-        GRPC_HOST,
+        GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
 
@@ -136,7 +138,9 @@ async def search_query(
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
-    if token and not Keycloak.verify_token(KEYKLOAK_INFO_API_URL, token):
+    if token and not Keycloak.verify_token(
+        GRPC_TENANT_MANAGER_HOST, virtualHost, token
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
@@ -158,6 +162,6 @@ async def search_query(
         virtualHost,
         searchText,
         OPENSEARCH_HOST,
-        GRPC_HOST,
+        GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
