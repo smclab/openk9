@@ -160,20 +160,6 @@ public class DataIndexResource {
 		private List<Long> docTypeIds;
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class CreateDataIndexFromDocTypesRequest {
-		private List<Long> docTypeIds;
-		private String indexName;
-	}
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	IndexerEvents indexerEvents;
-
 	@Path("/create-data-index-from-doc-types/{datasourceId}")
 	@POST
 	public Uni<DataIndex> createDataIndexFromDocTypes(
@@ -229,8 +215,16 @@ public class DataIndexResource {
 
 								Settings settings;
 
-								Map<String, Object> settingsMap =
-									MappingsUtil.docTypesToSettings(di.getDocTypes());
+								Map<String, Object> settingsMap = null;
+
+								Map<String, Object> requestSettings = request.getSettings();
+
+								if (requestSettings != null && !requestSettings.isEmpty()) {
+									settingsMap = requestSettings;
+								}
+								else {
+									settingsMap = MappingsUtil.docTypesToSettings(di.getDocTypes());
+								}
 
 								if (settingsMap.isEmpty()) {
 									settings = Settings.EMPTY;
@@ -270,6 +264,21 @@ public class DataIndexResource {
 
 		});
 
+	}
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	@Inject
+	IndexerEvents indexerEvents;
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CreateDataIndexFromDocTypesRequest {
+		private List<Long> docTypeIds;
+		private String indexName;
+		private Map<String, Object> settings;
 	}
 
 	@Inject
