@@ -1,7 +1,6 @@
 import json
 
 from langchain.prompts import ChatPromptTemplate
-from langchain_community.chat_message_histories import ElasticsearchChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
@@ -33,9 +32,8 @@ def get_chain(
     configuration = get_llm_configuration(grpc_host, virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
-    json_config = configuration["json_config"]
-    model_type = json_config["type"] if json_config["type"] else DEFAULT_MODEL_TYPE
-    model = json_config["model"] if json_config["model"] else DEFAULT_MODEL
+    model_type = configuration["model_type"] if configuration["model_type"]  else DEFAULT_MODEL_TYPE
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
 
     documents = OpenSearchRetriever._get_relevant_documents(
         searchQuery,
@@ -54,18 +52,13 @@ def get_chain(
         grpc_host
     )
 
-
-    history = ElasticsearchChatMessageHistory(
-        es_url=opensearch_host, index="test-history", session_id="test-session"
-    )
-
     if model_type == 'openai':
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
     elif model_type == 'ollama':
         llm = ChatOllama(model=model, base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(
-        f"{json_config["prompt"]}"
+        f"{configuration["prompt"]}"
     )
 
     parser = StrOutputParser()
@@ -98,9 +91,8 @@ def get_chat_chain(
     configuration = get_llm_configuration(grpc_host, virtualHost)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
-    json_config = configuration["json_config"]
-    model_type = json_config["type"] if json_config["type"] else DEFAULT_MODEL_TYPE
-    model = json_config["model"] if json_config["model"] else DEFAULT_MODEL
+    model_type = configuration["model_type"] if configuration["model_type"]  else DEFAULT_MODEL_TYPE
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
 
     documents = OpenSearchRetriever._get_relevant_documents(
         searchQuery,
@@ -125,7 +117,7 @@ def get_chat_chain(
         llm = ChatOllama(model=model, base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(
-        f"{json_config["prompt"]}"
+        f"{configuration["prompt"]}"
     )
 
     parser = StrOutputParser()
