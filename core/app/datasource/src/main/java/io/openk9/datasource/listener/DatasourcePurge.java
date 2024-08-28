@@ -72,7 +72,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private Behavior<Command> onDeleteEsIndices() {
 		String[] names = currentChunk
 			.stream()
-			.map(DataIndex::getName)
+			.map(DataIndex::getIndexName)
 			.toArray(String[]::new);
 
 		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);

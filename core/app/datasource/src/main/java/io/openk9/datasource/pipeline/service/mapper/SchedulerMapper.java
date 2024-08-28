@@ -38,11 +38,11 @@ public interface SchedulerMapper {
 		@Mapping(source = "datasource.id", target = "datasourceId"),
 		@Mapping(source = "datasource.enrichPipeline", target = "enrichItems"),
 		@Mapping(source = "oldDataIndex.id", target = "oldDataIndexId"),
-		@Mapping(source = "oldDataIndex.name", target = "oldDataIndexName"),
+		@Mapping(source = "oldDataIndex.indexName", target = "oldDataIndexName"),
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
-		@Mapping(source = "newDataIndex.name", target = "newDataIndexName"),
+		@Mapping(source = "newDataIndex.indexName", target = "newDataIndexName"),
 		@Mapping(
-			source = "oldDataIndex.vectorIndex.name",
+			source = "oldDataIndex.vectorIndex.indexName",
 			target = "vectorIndexName"
 		)
 	})

@@ -86,4 +86,7 @@ public class VectorIndex extends K9Entity {
 		SEMANTIC_SPLITTER
 	}
 
+	public String getIndexName() {
+		return getTenant() + "-" + name;
+	}
 }

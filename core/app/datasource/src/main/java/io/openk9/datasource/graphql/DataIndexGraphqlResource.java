@@ -77,11 +77,11 @@ public class DataIndexGraphqlResource {
 
 
 	public Uni<Long> getDocCount(@Source DataIndex dataIndex) {
-		return dataIndexService.getCountIndexDocuments(dataIndex.getName());
+		return dataIndexService.getCountIndexDocuments(dataIndex.getIndexName());
 	}
 
 	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
-		return indexService.get_catIndicesFirst(dataIndex.getName());
+		return indexService.get_catIndicesFirst(dataIndex.getIndexName());
 	}
 
 	@Query
@@ -91,13 +91,13 @@ public class DataIndexGraphqlResource {
 
 	public Uni<String> mappings(@Source DataIndex dataIndex) {
 		return indexService
-			.getMappings(dataIndex.getName())
+			.getMappings(dataIndex.getIndexName())
 			.map(Json::encode);
 	}
 
 	public Uni<String> settings(@Source DataIndex dataIndex) {
 		return indexService
-			.getSettings(dataIndex.getName())
+			.getSettings(dataIndex.getIndexName())
 			.map(Json::encode);
 	}
 

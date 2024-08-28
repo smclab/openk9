@@ -83,4 +83,8 @@ public class DataIndex extends K9Entity {
 		docTypes.remove(docType);
 	}
 
+	public String getIndexName() {
+		return getTenant() + "-" + name;
+	}
+
 }

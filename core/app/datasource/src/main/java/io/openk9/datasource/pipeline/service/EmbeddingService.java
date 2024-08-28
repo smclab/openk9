@@ -313,7 +313,7 @@ public class EmbeddingService {
 							vectorIndex.getChunkType(),
 							vectorIndex.getChunkWindowSize(),
 							vectorIndex.getJsonConfig(),
-							vectorIndex.getDataIndex().getName()
+							vectorIndex.getDataIndex().getIndexName()
 						))
 					))
 				.onFailure(EmbeddingServiceException.class)

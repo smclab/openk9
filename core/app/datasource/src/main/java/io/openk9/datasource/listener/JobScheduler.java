@@ -149,12 +149,12 @@ public class JobScheduler {
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		String newDataIndexName = newDataIndex.getName();
+		String newDataIndexName = newDataIndex.getIndexName();
 
 		IndicesClient indices = restHighLevelClient.indices();
 
 		indices.getIndexTemplateAsync(
-			new GetComposableIndexTemplateRequest(oldDataIndex.getName() + "-template"),
+			new GetComposableIndexTemplateRequest(oldDataIndex.getIndexName() + "-template"),
 			RequestOptions.DEFAULT, new ActionListener<>() {
 				@Override
 				public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {

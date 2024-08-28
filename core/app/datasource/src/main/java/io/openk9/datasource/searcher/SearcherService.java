@@ -1065,7 +1065,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				var vectorIndex = dataIndex.getVectorIndex();
 
 				if (vectorIndex != null) {
-					indexNames.add(vectorIndex.getName());
+					indexNames.add(vectorIndex.getIndexName());
 				}
 			}
 		}
@@ -1073,7 +1073,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			for (Datasource datasource : datasources) {
 				var dataIndex = datasource.getDataIndex();
 
-				indexNames.add(dataIndex.getName());
+				indexNames.add(dataIndex.getIndexName());
 			}
 		}
 

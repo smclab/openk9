@@ -213,7 +213,7 @@ public class DataIndexService
 					.<AcknowledgedResponse>emitter(emitter -> {
 
 						DeleteIndexRequest deleteIndexRequest =
-							new DeleteIndexRequest(dataIndex.getName());
+							new DeleteIndexRequest(dataIndex.getIndexName());
 
 						deleteIndexRequest
 							.indicesOptions(
