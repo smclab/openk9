@@ -68,8 +68,7 @@ async def search_query(
     language = search_query.language
     vectorIndices = search_query.vectorIndices
     searchText = search_query.searchText
-    # virtualHost = urlparse(str(request.base_url)).hostname
-    virtualHost = "k9-backend.openk9.io"
+    virtualHost = urlparse(str(request.base_url)).hostname
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
@@ -135,8 +134,7 @@ async def search_query(
     sortAfterKey = search_query.sortAfterKey
     language = search_query.language
     vectorIndices = search_query.vectorIndices
-    # virtualHost = urlparse(str(request.base_url)).hostname
-    virtualHost = "k9-backend.openk9.io"
+    virtualHost = urlparse(str(request.base_url)).hostname
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
