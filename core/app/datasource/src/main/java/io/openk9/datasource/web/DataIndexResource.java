@@ -34,6 +34,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.opensearch.OpenSearchStatusException;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
@@ -42,7 +43,6 @@ import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
-import org.opensearch.indices.InvalidIndexTemplateException;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
@@ -54,10 +54,10 @@ import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 @CircuitBreaker
@@ -258,18 +258,19 @@ public class DataIndexResource {
 
 								sink.complete(null);
 							}
+							catch (OpenSearchStatusException e) {
+								sink.fail(new WebApplicationException(Response
+									.status(e.status().getStatus())
+									.entity(JsonObject.of(
+										"details", e.getMessage()))
+									.build()));
+							}
 							catch (Exception e) {
-								if (e instanceof InvalidIndexTemplateException ose) {
-									sink.fail(new BadRequestException(Response
-										.status(400)
-										.entity(JsonObject.of(
-											"details",
-											ose.getDetailedMessage()
-										))
-										.build()));
-									return;
-								}
-								sink.fail(e);
+								sink.fail(new WebApplicationException(Response
+									.status(Response.Status.INTERNAL_SERVER_ERROR)
+									.entity(JsonObject.of(
+										"details", e.getMessage()))
+									.build()));
 							}
 
 						}));
