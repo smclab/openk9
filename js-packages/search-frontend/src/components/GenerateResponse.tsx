@@ -33,7 +33,7 @@ export default function GenerateResponse({
       setPrevSearchQuery(searchQuery);
       setPrevRange(range);
       const clearSearchQuery = searchQuery.map(
-        ({ isSearch, isTab, filter, goToSuggestion, ...rest }) => rest,
+        ({ isSearch, isTab, filter, goToSuggestion, count, ...rest }) => rest,
       );
       generateResponse(
         question,
