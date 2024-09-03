@@ -108,11 +108,10 @@ function Detail<E>(props: DetailProps<E>) {
       aria-labelledby="title-preview-openk9"
       className="openk9-detail-overlay-scrollbars-component"
       css={css`
-        position: relative;
         width: 100%;
         height: 100%;
         box-sizing: border-box;
-        overflow: auto;
+        min-height: 350px;
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -223,7 +222,6 @@ function Detail<E>(props: DetailProps<E>) {
         <div
           className="openk9-detail-container-card button-start-detail"
           css={css`
-            position: absolute;
             width: 100%;
             box-sizing: border-box;
             padding: 8px 16px;
@@ -261,7 +259,7 @@ function Detail<E>(props: DetailProps<E>) {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            height: 60vh;
           `}
         >
           <h3>{t("no-details")}</h3>
