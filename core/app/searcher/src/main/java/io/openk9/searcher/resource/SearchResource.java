@@ -89,6 +89,31 @@ import javax.ws.rs.core.MediaType;
 @RequestScoped
 public class SearchResource {
 
+	private static final Logger logger = Logger.getLogger(SearchResource.class);
+	private static final Object namedXContentRegistryKey = new Object();
+	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
+		"\\.i18n\\..{5,}$|\\.base$");
+	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
+		Collections.synchronizedMap(new IdentityHashMap<>());
+	@GrpcClient("searcher")
+	Searcher searcherClient;
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken;
+	@Inject
+	SearcherMapper searcherMapper;
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+	@Context
+	HttpServerRequest request;
+	@Context
+	HttpHeaders
+		headers;
+	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
+	List<String> supportedHeadersName;
+
 	@POST
 	@Path("/search-query")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -609,36 +634,6 @@ public class SearchResource {
 
 		return new Response(result, totalHits.value);
 	}
-
-	private static final Logger logger = Logger.getLogger(SearchResource.class);
-	@GrpcClient("searcher")
-	Searcher searcherClient;
-
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken;
-	@Inject
-	SearcherMapper searcherMapper;
-	@Inject
-	InternalSearcherMapper internalSearcherMapper;
-	@Inject
-	RestHighLevelClient restHighLevelClient;
-
-	@Context
-	HttpServerRequest request;
-
-	@Context
-	HttpHeaders
-	headers;
-
-	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
-	List<String> supportedHeadersName;
-
-	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
-		Collections.synchronizedMap(new IdentityHashMap<>());
-
-	private static final Object namedXContentRegistryKey = new Object();
-	private static final Pattern i18nHighlithKeyPattern = Pattern.compile("\\.i18n\\..{5,}$|\\.base$");
 
 	private void printShardFailures(SearchResponse searchResponse) {
 		if (searchResponse.getShardFailures() != null) {
