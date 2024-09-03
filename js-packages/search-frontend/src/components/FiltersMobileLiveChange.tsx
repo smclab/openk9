@@ -158,11 +158,10 @@ function FiltersMobileLiveChange<E>({
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
       </div>
-      <OverlayScrollbarsComponent
+      <div
         className="openk9-filter-overlay-scrollbars"
         style={{
           overflowY: "auto",
-          position: "relative",
           height: "calc(100vh - 210px)",
           borderRadius: "8px",
         }}
@@ -195,7 +194,7 @@ function FiltersMobileLiveChange<E>({
             ) : null
           }
         />
-      </OverlayScrollbarsComponent>
+      </div>
 
       <footer
         className="openk9-filter-horizontal-container-submit"
@@ -381,6 +380,7 @@ function ViewAllTabs({
       <ul
         className="openk9-filter-tabs-list"
         css={css`
+          padding: 0px;
           margin: 10px 0px;
         `}
       >
