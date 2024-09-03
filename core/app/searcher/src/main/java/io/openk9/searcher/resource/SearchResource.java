@@ -110,8 +110,6 @@ public class SearchResource {
 
 	}
 
-	private static final Logger logger = Logger.getLogger(SearchResource.class);
-
 	@POST
 	@Path("/suggestions")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -125,12 +123,6 @@ public class SearchResource {
 			.map(internalSearcherMapper::toSuggestionsResponse);
 
 	}
-	@Inject
-	SearcherMapper searcherMapper;
-	@Inject
-	InternalSearcherMapper internalSearcherMapper;
-	@Inject
-	RestHighLevelClient restHighLevelClient;
 
 	@POST
 	@Path("/search")
@@ -556,13 +548,6 @@ public class SearchResource {
 		}
 	}
 
-	@GrpcClient("searcher")
-	Searcher searcherClient;
-
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken;
-
 	private Response toSearchResponse(SearchResponse searchResponse) {
 		printShardFailures(searchResponse);
 
@@ -625,6 +610,20 @@ public class SearchResource {
 		return new Response(result, totalHits.value);
 	}
 
+	private static final Logger logger = Logger.getLogger(SearchResource.class);
+	@GrpcClient("searcher")
+	Searcher searcherClient;
+
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken;
+	@Inject
+	SearcherMapper searcherMapper;
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
 	@Context
 	HttpServerRequest request;
 
@@ -648,4 +647,5 @@ public class SearchResource {
 			}
 		}
 	}
+
 }
