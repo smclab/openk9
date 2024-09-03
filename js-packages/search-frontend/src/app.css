@@ -24,6 +24,11 @@
   background-color: white;
 }
 
+body {
+  background-color: var(--openk9-embeddable-search--secondary-background-color);
+  overflow-x: hidden !important;
+}
+
 .openk9-embeddable-search--result-container {
   margin: 16px 16px 0px 16px;
   border: 2px solid
@@ -49,5 +54,5 @@
 }
 
 .no-scroll {
-  overflow: hidden;
+  overflow: hidden !important;
 }

@@ -209,6 +209,12 @@ function FiltersMobileLiveChange<E>({
             padding-inline: 20px;
             flex-direction: column;
           }
+          @media (min-width: 481px) and (max-width: 768px) {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 180px;
+          }
         `}
       >
         <button
