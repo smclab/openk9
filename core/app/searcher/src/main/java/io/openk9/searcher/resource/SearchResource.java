@@ -19,6 +19,7 @@ package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -297,7 +298,33 @@ public class SearchResource {
 		return qastBuilder;
 	}
 
+	private static void setVectorIndices(
+		SearchRequest searchRequest,
+		QueryParserRequest.Builder requestBuilder) {
+		var searchTokens = searchRequest.getSearchQuery();
+
+		for (ParserSearchToken token : searchTokens) {
+
+			var tokenType = token.getTokenType();
+
+			if (tokenType != null
+				&& (tokenType.equalsIgnoreCase("knn")
+					|| tokenType.equalsIgnoreCase("hybrid"))) {
+
+				requestBuilder.setVectorIndices(true);
+				break;
+			}
+
+		}
+	}
+
 	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
+
+		var requestBuilder = searcherMapper
+			.toQueryParserRequest(searchRequest)
+			.toBuilder();
+
+		setVectorIndices(searchRequest, requestBuilder);
 
 		Map<String, Value> extra = new HashMap<>();
 
@@ -311,9 +338,7 @@ public class SearchResource {
 		String sortAfterKey = searchRequest.getSortAfterKey();
 		String language = searchRequest.getLanguage();
 
-		return searcherMapper
-			.toQueryParserRequest(searchRequest)
-			.toBuilder()
+		return requestBuilder
 			.setVirtualHost(request.host())
 			.setJwt(rawToken == null ? "" : rawToken)
 			.putAllExtra(extra)
