@@ -57,7 +57,7 @@ def get_chain(
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
     elif model_type == 'ollama':
         llm = ChatOllama(model=model, base_url=api_url)
-    elif model_type == 'ollama':
+    elif model_type == 'hugging-face-custom':
         llm = CustomChatHuggingFaceModel(base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(
@@ -118,6 +118,8 @@ def get_chat_chain(
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
     elif model_type == 'ollama':
         llm = ChatOllama(model=model, base_url=api_url)
+    elif model_type == 'hugging-face-custom':
+        llm = CustomChatHuggingFaceModel(base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(
         f"{configuration["prompt"]}"
