@@ -7,6 +7,7 @@ from langchain_openai import ChatOpenAI
 
 from app.external_services.grpc.grpc_client import get_llm_configuration
 from app.rag.retriever import OpenSearchRetriever
+from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 
 DEFAULT_MODEL_TYPE = 'openai'
 DEFAULT_MODEL = 'gpt-3.5-turbo'
@@ -56,6 +57,8 @@ def get_chain(
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
     elif model_type == 'ollama':
         llm = ChatOllama(model=model, base_url=api_url)
+    elif model_type == 'ollama':
+        llm = CustomChatHuggingFaceModel(base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(
         f"{configuration["prompt"]}"
