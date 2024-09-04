@@ -148,6 +148,9 @@ class SearchQueryChat(BaseModel):
     language: Optional[str] = None
     vectorIndices: Optional[bool] = True
     searchText: str
+    userId: str
+    timestamp: str
+    chatSequenceNumber: int
 
 
 @app.post("/api/rag/chat")
@@ -156,7 +159,6 @@ async def search_query(
     request: Request,
     authorization: Optional[str] = Header(None),
 ):
-    searchText = search_query.searchText
     chatId = search_query.chatId
     searchQuery = search_query.searchQuery
     range = search_query.range
@@ -168,6 +170,10 @@ async def search_query(
     sortAfterKey = search_query.sortAfterKey
     language = search_query.language
     vectorIndices = search_query.vectorIndices
+    searchText = search_query.searchText
+    userId = search_query.userId
+    timestamp = search_query.timestamp
+    chatSequenceNumber = search_query.chatSequenceNumber
     virtualHost = urlparse(str(request.base_url)).hostname
 
     search_query_to_proto_list = []
