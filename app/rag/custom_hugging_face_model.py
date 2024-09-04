@@ -98,7 +98,7 @@ class CustomChatHuggingFaceModel(BaseChatModel):
 
         import time
 
-        responses = requests.post(self.url, json=body, stream=True)
+        responses = requests.post(self.base_url, json=body, stream=True)
 
         for token in responses:
             token = token.decode("utf-8")
