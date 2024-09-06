@@ -547,7 +547,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						int startPos = maps.getPos().get(0);
 						Object keywordKey = map.get("keywordKey");
 
-						if (startPos >= 1 && keywordKey != null) {
+						if (startPos >= 1) {
 							continue;
 						}
 

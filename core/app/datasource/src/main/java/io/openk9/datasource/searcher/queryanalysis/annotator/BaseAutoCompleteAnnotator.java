@@ -153,7 +153,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (!value.equals(token)) {
+						if (!((String) value).toLowerCase().equals(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$AUTOCOMPLETE",
@@ -171,8 +171,8 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
 							if (e2.getValue() instanceof ArrayList) {
 								for (String name : ((ArrayList<String>) e2.getValue())) {
-									if (!name.equals(token) &&
-										(name.contains(token))) {
+									if (!name.toLowerCase().equals(token) &&
+										(name.toLowerCase().contains(token))) {
 										categorySemantics.add(
 											CategorySemantics.of(
 												"$AUTOCOMPLETE",
@@ -189,7 +189,8 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 								}
 							}
 							else {
-								if (!e2.getValue().equals(token)) {
+								String name = e2.getValue().toString().toLowerCase();
+								if (!name.equals(token)) {
 									categorySemantics.add(
 										CategorySemantics.of(
 											"$AUTOCOMPLETE",
@@ -259,7 +260,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 	@Override
 	public int getLastTokenCount() {
-		return 6;
+		return 7;
 	}
 
 }
