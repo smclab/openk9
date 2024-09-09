@@ -23,10 +23,14 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,6 +41,21 @@ class OpenSearchUtilsTest {
 
 	private static final IngestionPayloadMapper mapper =
 		Mappers.getMapper(IngestionPayloadMapper.class);
+
+	@ParameterizedTest
+	@MethodSource("indexNames")
+	void should_sanitize_indexName(String actual, String expected) {
+		assertEquals(expected, OpenSearchUtils.indexNameSanitizer(actual));
+	}
+
+	private static Stream<Arguments> indexNames() {
+		return Stream.of(
+			Arguments.of("---aaa", "aaa"),
+			Arguments.of("---AAA-aaa", "aaa-aaa"),
+			Arguments.of("___Aaa", "aaa"),
+			Arguments.of("---A**AA", "a__aa")
+		);
+	}
 
 	@Test
 	void should_create_dynamic_mapping_for_json() throws IOException {
