@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.util.OpenSearchUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +85,8 @@ public class DataIndex extends K9Entity {
 	}
 
 	public String getIndexName() {
-		return getTenant() + "-" + name;
+		return OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", getTenant(), getName()));
 	}
 
 }
