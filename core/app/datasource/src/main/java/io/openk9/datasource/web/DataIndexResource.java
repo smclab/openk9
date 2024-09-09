@@ -170,13 +170,13 @@ public class DataIndexResource {
 		@PathParam("datasourceId") long datasourceId,
 		CreateDataIndexFromDocTypesRequest request) {
 
-		String indexName;
+		String dataIndexName;
 
 		if (request.getIndexName() == null) {
-			indexName = "data-" + OffsetDateTime.now();
+			dataIndexName = "data-" + OffsetDateTime.now();
 		}
 		else {
-			indexName = request.getIndexName();
+			dataIndexName = request.getIndexName();
 		}
 
 		return sessionFactory.withTransaction(s -> {
@@ -200,7 +200,7 @@ public class DataIndexResource {
 
 					dataIndex.setDescription("auto-generated");
 
-					dataIndex.setName(indexName);
+					dataIndex.setName(dataIndexName);
 
 					dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
 
@@ -245,13 +245,13 @@ public class DataIndexResource {
 
 								ComposableIndexTemplate composableIndexTemplate =
 									new ComposableIndexTemplate(
-										List.of(indexName),
+										List.of(di.getIndexName()),
 										new Template(settings, new CompressedXContent(
 											Json.encode(mappings)), null),
 										null, null, null, null);
 
 								putComposableIndexTemplateRequest
-									.name(indexName + "-template")
+									.name(di.getIndexName() + "-template")
 									.indexTemplate(composableIndexTemplate);
 
 								indices.putIndexTemplate(putComposableIndexTemplateRequest, RequestOptions.DEFAULT);
