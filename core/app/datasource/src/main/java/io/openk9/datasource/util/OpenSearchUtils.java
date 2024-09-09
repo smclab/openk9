@@ -216,11 +216,12 @@ public class OpenSearchUtils {
 
 		StringBuilder builder = new StringBuilder();
 
-		if (name.charAt(0) != '_' && name.charAt(0) != '-') {
-			builder.append(name.charAt(0));
+		int i = 0;
+		while (name.charAt(i) == '_' || name.charAt(i) == '-') {
+			i++;
 		}
 
-		for (int i = 1; i < n; i++) {
+		for (; i < n; i++) {
 			if (FORBIDDEN_CHARACTERS.contains(name.charAt(i))) {
 				builder.append("_");
 			}
