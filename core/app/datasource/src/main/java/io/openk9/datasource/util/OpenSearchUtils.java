@@ -47,7 +47,9 @@ import org.opensearch.indices.IndicesModule;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OpenSearchUtils {
@@ -105,6 +107,32 @@ public class OpenSearchUtils {
 		);
 
 		return mappings;
+	}
+
+	public static void validateIndexName(String name) {
+
+		var forbiddenCharacters =
+			Set.of(':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
+
+		if (name.startsWith("_")) {
+			throw new IllegalArgumentException("name must not start with '_'");
+		}
+		if (name.startsWith("-")) {
+			throw new IllegalArgumentException("name must not start with '-'");
+		}
+		if (!name.toLowerCase(Locale.ROOT).equals(name)) {
+			throw new IllegalArgumentException("name must be lower cased");
+		}
+		var n = name.length();
+		for (int i = 0; i < n; i++) {
+			if (forbiddenCharacters.contains(name.charAt(i))) {
+				throw new IllegalArgumentException(
+					String.format(
+						"name must not contains any forbidden character: %s",
+						forbiddenCharacters
+					));
+			}
+		}
 	}
 
 	public static WrapperQueryBuilder toWrapperQueryBuilder(Query query) {
