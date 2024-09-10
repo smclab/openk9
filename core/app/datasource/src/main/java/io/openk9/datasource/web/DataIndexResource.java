@@ -227,6 +227,7 @@ public class DataIndexResource {
 					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
 					return s.persist(dataIndex)
+						.invoke(s::flush)
 						.map(__ -> {
 
 							Map<MappingsKey, Object> mappings =
