@@ -230,6 +230,7 @@ public class DataIndexResource {
 					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
 					return dataIndexService.persist(s, dataIndex)
+						.flatMap(persisted -> dataIndexService.findById(s, dataIndex.getId()))
 						.map(persisted -> {
 
 							Map<MappingsKey, Object> mappings =
