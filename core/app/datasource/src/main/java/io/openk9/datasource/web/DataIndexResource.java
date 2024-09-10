@@ -228,10 +228,11 @@ public class DataIndexResource {
 
 					return s.persist(dataIndex)
 						.invoke(s::flush)
-						.map(__ -> {
+						.flatMap(__ -> s.merge(dataIndex))
+						.map(persisted -> {
 
 							Map<MappingsKey, Object> mappings =
-								MappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
+								MappingsUtil.docTypesToMappings(persisted.getDocTypes());
 
 							Settings settings;
 
@@ -244,7 +245,7 @@ public class DataIndexResource {
 							}
 							else {
 								settingsMap =
-									MappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+									MappingsUtil.docTypesToSettings(persisted.getDocTypes());
 							}
 
 							if (settingsMap.isEmpty()) {
@@ -264,7 +265,7 @@ public class DataIndexResource {
 
 							try {
 								composableIndexTemplate = new ComposableIndexTemplate(
-									List.of(dataIndex.getIndexName()),
+									List.of(persisted.getIndexName()),
 									new Template(settings, new CompressedXContent(
 										Json.encode(mappings)), null),
 									null, null, null, null
@@ -280,7 +281,7 @@ public class DataIndexResource {
 							}
 
 							putComposableIndexTemplateRequest
-								.name(dataIndex.getIndexName() + "-template")
+								.name(persisted.getIndexName() + "-template")
 								.indexTemplate(composableIndexTemplate);
 
 							return putComposableIndexTemplateRequest;
