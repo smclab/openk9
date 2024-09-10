@@ -228,7 +228,7 @@ public class DataIndexResource {
 
 					return s.persist(dataIndex)
 						.invoke(s::flush)
-						.flatMap(__ -> s.merge(dataIndex))
+						.flatMap(__ -> s.find(DataIndex.class, dataIndex.getId()))
 						.map(persisted -> {
 
 							Map<MappingsKey, Object> mappings =
