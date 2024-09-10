@@ -28,7 +28,7 @@ public class DataIndexEntityListener {
 	@PostLoad
 	@PostPersist
 	@PostUpdate
-	private void setupIndexName(DataIndex dataIndex) {
+	public void setupIndexName(DataIndex dataIndex) {
 
 		dataIndex.setIndexName(OpenSearchUtils.indexNameSanitizer(
 			String.format("%s-%s", dataIndex.getTenant(), dataIndex.getName()))
