@@ -19,7 +19,6 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.util.OpenSearchUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,15 +30,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -49,6 +46,7 @@ import javax.persistence.Transient;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@EntityListeners(DataIndexEntityListener.class)
 @AllArgsConstructor(staticName = "of")
 public class DataIndex extends K9Entity {
 
@@ -82,7 +80,7 @@ public class DataIndex extends K9Entity {
 	private VectorIndex vectorIndex;
 
 	@Transient
-	@Setter(AccessLevel.NONE)
+	@Setter(AccessLevel.PROTECTED)
 	private String indexName;
 
 	public void addDocType(DocType docType) {
@@ -91,14 +89,6 @@ public class DataIndex extends K9Entity {
 
 	public void removeDocType(DocType docType) {
 		docTypes.remove(docType);
-	}
-
-	@PostLoad
-	@PostPersist
-	@PostUpdate
-	void setIndexName() {
-		this.indexName = OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", getTenant(), getName()));
 	}
 
 }
