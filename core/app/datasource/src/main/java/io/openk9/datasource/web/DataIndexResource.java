@@ -44,6 +44,7 @@ import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -164,6 +165,26 @@ public class DataIndexResource {
 		private List<Long> docTypeIds;
 	}
 
+	private static final String DETAILS_FIELD = "details";
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	@Inject
+	IndexerEvents indexerEvents;
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class CreateDataIndexFromDocTypesRequest {
+		private List<Long> docTypeIds;
+		private String indexName;
+		private Map<String, Object> settings;
+	}
+
+	@Inject
+	DocTypeService docTypeService;
+
 	@Path("/create-data-index-from-doc-types/{datasourceId}")
 	@POST
 	public Uni<DataIndex> createDataIndexFromDocTypes(
@@ -207,54 +228,69 @@ public class DataIndexResource {
 					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
 					return s.persist(dataIndex)
-						.map(__ -> dataIndex)
-						.call(s::flush)
-						.call((di) -> Uni.createFrom().emitter((sink) -> {
+						.map(__ -> {
+
+							Map<MappingsKey, Object> mappings =
+								MappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
+
+							Settings settings;
+
+							Map<String, Object> settingsMap = null;
+
+							Map<String, Object> requestSettings = request.getSettings();
+
+							if (requestSettings != null && !requestSettings.isEmpty()) {
+								settingsMap = requestSettings;
+							}
+							else {
+								settingsMap =
+									MappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+							}
+
+							if (settingsMap.isEmpty()) {
+								settings = Settings.EMPTY;
+							}
+							else {
+								settings = Settings.builder()
+									.loadFromMap(settingsMap)
+									.build();
+							}
+
+							PutComposableIndexTemplateRequest
+								putComposableIndexTemplateRequest =
+								new PutComposableIndexTemplateRequest();
+
+							ComposableIndexTemplate composableIndexTemplate = null;
+
+							try {
+								composableIndexTemplate = new ComposableIndexTemplate(
+									List.of(dataIndex.getIndexName()),
+									new Template(settings, new CompressedXContent(
+										Json.encode(mappings)), null),
+									null, null, null, null
+								);
+							}
+							catch (IOException e) {
+								throw new WebApplicationException(Response
+									.status(Response.Status.INTERNAL_SERVER_ERROR)
+									.entity(JsonObject.of(
+										DETAILS_FIELD, "failed creating IndexTemplate"
+									))
+									.build());
+							}
+
+							putComposableIndexTemplateRequest
+								.name(dataIndex.getIndexName() + "-template")
+								.indexTemplate(composableIndexTemplate);
+
+							return putComposableIndexTemplateRequest;
+						})
+						.call((req) -> Uni.createFrom().emitter((sink) -> {
 
 							try {
 								IndicesClient indices = restHighLevelClient.indices();
 
-								Map<MappingsKey, Object> mappings =
-									MappingsUtil.docTypesToMappings(di.getDocTypes());
-
-								Settings settings;
-
-								Map<String, Object> settingsMap = null;
-
-								Map<String, Object> requestSettings = request.getSettings();
-
-								if (requestSettings != null && !requestSettings.isEmpty()) {
-									settingsMap = requestSettings;
-								}
-								else {
-									settingsMap = MappingsUtil.docTypesToSettings(di.getDocTypes());
-								}
-
-								if (settingsMap.isEmpty()) {
-									settings = Settings.EMPTY;
-								}
-								else {
-									settings = Settings.builder()
-										.loadFromMap(settingsMap)
-										.build();
-								}
-
-								PutComposableIndexTemplateRequest
-									putComposableIndexTemplateRequest =
-									new PutComposableIndexTemplateRequest();
-
-								ComposableIndexTemplate composableIndexTemplate =
-									new ComposableIndexTemplate(
-										List.of(di.getIndexName()),
-										new Template(settings, new CompressedXContent(
-											Json.encode(mappings)), null),
-										null, null, null, null);
-
-								putComposableIndexTemplateRequest
-									.name(di.getIndexName() + "-template")
-									.indexTemplate(composableIndexTemplate);
-
-								indices.putIndexTemplate(putComposableIndexTemplateRequest, RequestOptions.DEFAULT);
+								indices.putIndexTemplate(req, RequestOptions.DEFAULT);
 
 								sink.complete(null);
 							}
@@ -262,41 +298,24 @@ public class DataIndexResource {
 								sink.fail(new WebApplicationException(Response
 									.status(e.status().getStatus())
 									.entity(JsonObject.of(
-										"details", e.getMessage()))
+										DETAILS_FIELD, e.getMessage()))
 									.build()));
 							}
 							catch (Exception e) {
 								sink.fail(new WebApplicationException(Response
 									.status(Response.Status.INTERNAL_SERVER_ERROR)
 									.entity(JsonObject.of(
-										"details", e.getMessage()))
+										DETAILS_FIELD, e.getMessage()))
 									.build()));
 							}
 
-						}));
+						}))
+						.map(__ -> dataIndex);
 
 				}));
 
 		});
 
 	}
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	IndexerEvents indexerEvents;
-
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class CreateDataIndexFromDocTypesRequest {
-		private List<Long> docTypeIds;
-		private String indexName;
-		private Map<String, Object> settings;
-	}
-
-	@Inject
-	DocTypeService docTypeService;
 
 }
