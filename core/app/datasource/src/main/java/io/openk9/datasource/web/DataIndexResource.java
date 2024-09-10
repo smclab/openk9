@@ -24,6 +24,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.unchecked.Unchecked;
@@ -75,6 +76,8 @@ public class DataIndexResource {
 	IndexerEvents indexerEvents;
 	@Inject
 	DocTypeService docTypeService;
+	@Inject
+	DataIndexService dataIndexService;
 
 	@Data
 	@AllArgsConstructor
@@ -226,10 +229,7 @@ public class DataIndexResource {
 
 					dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-					return s.persist(dataIndex)
-						.invoke(s::flush)
-						.invoke(() -> s.detach(dataIndex))
-						.flatMap(__ -> s.find(DataIndex.class, dataIndex.getId()))
+					return dataIndexService.persist(s, dataIndex)
 						.map(persisted -> {
 
 							Map<MappingsKey, Object> mappings =
