@@ -228,6 +228,7 @@ public class DataIndexResource {
 
 					return s.persist(dataIndex)
 						.invoke(s::flush)
+						.invoke(() -> s.detach(dataIndex))
 						.flatMap(__ -> s.find(DataIndex.class, dataIndex.getId()))
 						.map(persisted -> {
 
