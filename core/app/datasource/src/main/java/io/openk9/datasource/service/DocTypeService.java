@@ -19,6 +19,8 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.mappings.MappingsUtil;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
@@ -42,6 +44,11 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -53,9 +60,6 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -330,6 +334,27 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			.call(docType -> s.createQuery(updateDocType).executeUpdate())
 			.call(docType -> remove(s, docType))
 		);
+	}
+
+	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds, Mutiny.Session session) {
+
+		return getDocTypesAndDocTypeFields(session, docTypeIds).map(LinkedList::new);
+	}
+
+
+	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
+
+		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
+	}
+
+	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
+
+		return findDocTypes(docTypeIds).map(MappingsUtil::docTypesToMappings);
+	}
+
+	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
+
+		return findDocTypes(docTypeIds).map(MappingsUtil::docTypesToSettings);
 	}
 
 	@Inject

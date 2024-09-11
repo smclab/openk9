@@ -20,6 +20,8 @@ package io.openk9.datasource.service;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.mappings.MappingsUtil;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
@@ -39,19 +41,31 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.support.IndicesOptions;
 import org.opensearch.action.support.master.AcknowledgedResponse;
+import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.cluster.metadata.ComposableIndexTemplate;
+import org.opensearch.cluster.metadata.Template;
+import org.opensearch.common.compress.CompressedXContent;
+import org.opensearch.common.settings.Settings;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class DataIndexService
@@ -69,6 +83,8 @@ public class DataIndexService
 	IndexerEvents indexerEvents;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
+
+	private static final String DETAILS_FIELD = "details";
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -277,6 +293,113 @@ public class DataIndexService
 						.flatMap(__ -> findById(session, dataIndex.getId()))
 					);
 			});
+	}
+
+	public Uni<DataIndex> createDataIndexFromDocTypes(
+		long datasourceId, List<Long> docTypeIds, String indexName,
+		Map<String, Object> indexSettings) {
+
+		String dataIndexName = indexName == null ? "data-" + OffsetDateTime.now() : indexName;
+
+		return sessionFactory.withTransaction((s, t) -> docTypeService
+			.findDocTypes(docTypeIds, s)
+			.flatMap(docTypeList -> {
+
+				if (docTypeList.size() != docTypeIds.size()) {
+					throw new RuntimeException(
+						"docTypeIds found: " + docTypeList.size() +
+						" docTypeIds requested: " + docTypeIds.size());
+				}
+
+				DataIndex dataIndex = new DataIndex();
+
+				dataIndex.setDescription("auto-generated");
+
+				dataIndex.setName(dataIndexName);
+
+				dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
+
+				dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
+
+				return persist(s, dataIndex)
+					.map(__ -> {
+						Map<MappingsKey, Object> mappings =
+							MappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
+
+						Settings settings;
+
+						Map<String, Object> settingsMap =
+							indexSettings != null && !indexSettings.isEmpty() ?
+								indexSettings :
+								MappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+
+						if (settingsMap.isEmpty()) {
+							settings = Settings.EMPTY;
+						}
+						else {
+							settings = Settings.builder()
+								.loadFromMap(settingsMap)
+								.build();
+						}
+
+						PutComposableIndexTemplateRequest
+							putComposableIndexTemplateRequest =
+							new PutComposableIndexTemplateRequest();
+
+						ComposableIndexTemplate composableIndexTemplate = null;
+
+						try {
+							composableIndexTemplate = new ComposableIndexTemplate(
+								List.of(dataIndex.getIndexName()),
+								new Template(settings, new CompressedXContent(
+									Json.encode(mappings)), null),
+								null, null, null, null
+							);
+						}
+						catch (IOException e) {
+							throw new WebApplicationException(javax.ws.rs.core.Response
+								.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+								.entity(JsonObject.of(
+									DETAILS_FIELD, "failed creating IndexTemplate"
+								))
+								.build());
+						}
+
+						putComposableIndexTemplateRequest
+							.name(dataIndex.getIndexName() + "-template")
+							.indexTemplate(composableIndexTemplate);
+
+						return putComposableIndexTemplateRequest;
+					})
+					.call((req) -> Uni.createFrom().emitter((sink) -> {
+
+						try {
+							IndicesClient indices = restHighLevelClient.indices();
+
+							indices.putIndexTemplate(req, RequestOptions.DEFAULT);
+
+							sink.complete(null);
+						}
+						catch (OpenSearchStatusException e) {
+							sink.fail(new WebApplicationException(javax.ws.rs.core.Response
+								.status(e.status().getStatus())
+								.entity(JsonObject.of(
+									DETAILS_FIELD, e.getMessage()))
+								.build()));
+						}
+						catch (Exception e) {
+							sink.fail(new WebApplicationException(javax.ws.rs.core.Response
+								.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+								.entity(JsonObject.of(
+									DETAILS_FIELD, e.getMessage()))
+								.build()));
+						}
+
+					}))
+					.map(__ -> dataIndex);
+
+			})
+		);
 	}
 
 }
