@@ -40,6 +40,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
 import javax.persistence.PostUpdate;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -94,6 +95,7 @@ public class DataIndex extends K9Entity {
 	}
 
 	@PostLoad
+	@PrePersist
 	@PostPersist
 	@PostUpdate
 	public void setupIndexName() {
