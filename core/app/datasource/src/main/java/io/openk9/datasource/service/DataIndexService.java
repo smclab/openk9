@@ -321,7 +321,7 @@ public class DataIndexService
 
 				dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-				return persist(s, dataIndex)
+				return s.persist(dataIndex)
 					.map(__ -> {
 						Map<MappingsKey, Object> mappings =
 							MappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
