@@ -107,15 +107,22 @@ public class DataIndex extends K9Entity {
 		String tenantId = getTenant();
 
 		// This is a workaround needed when a new DataIndex is being created.
-		// The tenant is not identified, probably because the entity has not
+		// The tenant is not identified, likely because the entity has not
 		// been persisted yet. Therefore, it is obtained from an entity that
-		// is already in the persistence context, in this case, the first
-		// DocType associated with the new DataIndex.
+		// is already in the persistence context, typically, the first
+		// DocType associated with the new DataIndex, or alternatively,
+		// the Datasource associated with it.
 		if (tenantId == null) {
 			var iterator = docTypes.iterator();
 			if (iterator.hasNext()) {
 				var docType = iterator.next();
 				tenantId = docType.getTenant();
+			}
+			else {
+				var ds = getDatasource();
+				if (ds != null) {
+					tenantId = ds.getTenant();
+				}
 			}
 			if (tenantId == null) {
 				throw new UnknownTenantException(
