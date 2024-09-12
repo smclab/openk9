@@ -38,9 +38,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
 import javax.persistence.PostUpdate;
-import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -84,6 +82,7 @@ public class DataIndex extends K9Entity {
 
 	@Transient
 	@Setter(AccessLevel.NONE)
+	@Getter(AccessLevel.NONE)
 	private String indexName;
 
 	public void addDocType(DocType docType) {
@@ -94,14 +93,38 @@ public class DataIndex extends K9Entity {
 		docTypes.remove(docType);
 	}
 
+	public String getIndexName() throws UnknownTenantException {
+		if (indexName == null) {
+			setupIndexName();
+		}
+
+		return indexName;
+	}
+
 	@PostLoad
-	@PrePersist
-	@PostPersist
 	@PostUpdate
-	public void setupIndexName() {
+	protected void setupIndexName() throws UnknownTenantException {
+		String tenantId = getTenant();
+
+		// This is a workaround needed when a new DataIndex is being created.
+		// The tenant is not identified, probably because the entity has not
+		// been persisted yet. Therefore, it is obtained from an entity that
+		// is already in the persistence context, in this case, the first
+		// DocType associated with the new DataIndex.
+		if (tenantId == null) {
+			var iterator = docTypes.iterator();
+			if (iterator.hasNext()) {
+				var docType = iterator.next();
+				tenantId = docType.getTenant();
+			}
+			if (tenantId == null) {
+				throw new UnknownTenantException(
+					String.format("Cannot identify the tenant for DataIndex: %s", getName()));
+			}
+		}
 
 		this.indexName = OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", getTenant(), getName())
+			String.format("%s-%s", tenantId, getName())
 		);
 	}
 }

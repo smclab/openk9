@@ -28,6 +28,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
@@ -66,6 +67,7 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 @ApplicationScoped
 public class DataIndexService
@@ -228,18 +230,18 @@ public class DataIndexService
 				.transformToUni(dataIndex -> Uni.createFrom()
 					.<AcknowledgedResponse>emitter(emitter -> {
 
-						DeleteIndexRequest deleteIndexRequest =
-							new DeleteIndexRequest(dataIndex.getIndexName());
-
-						deleteIndexRequest
-							.indicesOptions(
-								IndicesOptions.fromMap(
-									Map.of("ignore_unavailable", true),
-									deleteIndexRequest.indicesOptions()
-								)
-							);
-
 						try {
+							DeleteIndexRequest deleteIndexRequest =
+								new DeleteIndexRequest(dataIndex.getIndexName());
+
+							deleteIndexRequest
+								.indicesOptions(
+									IndicesOptions.fromMap(
+										Map.of("ignore_unavailable", true),
+										deleteIndexRequest.indicesOptions()
+									)
+								);
+
 							AcknowledgedResponse delete = restHighLevelClient.indices().delete(
 								deleteIndexRequest,
 								RequestOptions.DEFAULT
@@ -247,7 +249,7 @@ public class DataIndexService
 
 							emitter.complete(delete);
 						}
-						catch (IOException e) {
+						catch (UnknownTenantException | IOException e) {
 							emitter.fail(e);
 						}
 					})
@@ -296,10 +298,10 @@ public class DataIndexService
 	}
 
 	public Uni<DataIndex> createDataIndexFromDocTypes(
-		long datasourceId, List<Long> docTypeIds, String indexName,
+		long datasourceId, List<Long> docTypeIds, String name,
 		Map<String, Object> indexSettings) {
 
-		String dataIndexName = indexName == null ? "data-" + OffsetDateTime.now() : indexName;
+		String dataIndexName = name == null ? "data-" + OffsetDateTime.now() : name;
 
 		return sessionFactory.withTransaction((s, t) -> docTypeService
 			.findDocTypes(docTypeIds, s)
@@ -321,7 +323,7 @@ public class DataIndexService
 
 				dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-				return s.persist(dataIndex)
+				return persist(s, dataIndex)
 					.map(__ -> {
 						Map<MappingsKey, Object> mappings =
 							MappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
@@ -349,27 +351,38 @@ public class DataIndexService
 						ComposableIndexTemplate composableIndexTemplate = null;
 
 						try {
+							var indexName = dataIndex.getIndexName();
+
 							composableIndexTemplate = new ComposableIndexTemplate(
-								List.of(dataIndex.getIndexName()),
+								List.of(indexName),
 								new Template(settings, new CompressedXContent(
 									Json.encode(mappings)), null),
 								null, null, null, null
 							);
+
+							putComposableIndexTemplateRequest
+								.name(indexName + "-template")
+								.indexTemplate(composableIndexTemplate);
+
+							return putComposableIndexTemplateRequest;
+						}
+						catch (UnknownTenantException e) {
+							throw new WebApplicationException(Response
+								.status(Response.Status.INTERNAL_SERVER_ERROR)
+								.entity(JsonObject.of(
+									DETAILS_FIELD, "cannot obtain a proper index name"
+								))
+								.build());
 						}
 						catch (IOException e) {
-							throw new WebApplicationException(javax.ws.rs.core.Response
-								.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+							throw new WebApplicationException(Response
+								.status(Response.Status.INTERNAL_SERVER_ERROR)
 								.entity(JsonObject.of(
 									DETAILS_FIELD, "failed creating IndexTemplate"
 								))
 								.build());
 						}
 
-						putComposableIndexTemplateRequest
-							.name(dataIndex.getIndexName() + "-template")
-							.indexTemplate(composableIndexTemplate);
-
-						return putComposableIndexTemplateRequest;
 					})
 					.call((req) -> Uni.createFrom().emitter((sink) -> {
 
