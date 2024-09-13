@@ -143,10 +143,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (response instanceof Writer.Failure failure) {
 
 			var heldMessage = failure.heldMessage();
+			var exception = failure.exception();
+			log.errorf(exception, "write failure for %s", heldMessage);
 
 			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(failure.exception()),
-				heldMessage
+				heldMessage,
+				new Error(
+					Phase.WRITING,
+					ExceptionUtil.generateStackTrace(exception)
+				)
 			));
 
 		}
@@ -230,7 +235,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		var heldMessage = response.heldMessage();
 
 		if (response instanceof Processor.Success success) {
-			log.infof("data process success for %s", heldMessage);
+
+			if (log.isDebugEnabled()) {
+				log.infof("data process success for %s", heldMessage);
+			}
 
 			getContext().getSelf().tell(new Write(
 				success.payload(),
@@ -244,7 +252,12 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			log.errorf(exception, "data process failure for %s", heldMessage);
 
 			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(exception), heldMessage));
+				heldMessage,
+				new Error(
+					Phase.PROCESSING,
+					ExceptionUtil.generateStackTrace(exception)
+				)
+			));
 
 		}
 
@@ -334,8 +347,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
 
-	public record Failed(String errorMessage, HeldMessage heldMessage) implements Callback {}
+	public enum Phase {
+		PROCESSING,
+		WRITING
+	}
 
 	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
+
+	public record Failed(HeldMessage heldMessage, Error error) implements Callback {}
+
+	public record Error(Phase phase, String message) {}
 
 }

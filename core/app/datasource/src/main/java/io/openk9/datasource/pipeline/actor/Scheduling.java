@@ -468,13 +468,14 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		else if (response instanceof WorkStage.Failed failed) {
 
 			var heldMessage = failed.heldMessage();
+			var error = failed.error();
 			var replyTo = heldMessages.remove(heldMessage);
 
-			log.error("work failed");
+			log.errorf("work failed for %s", heldMessage);
 
 			this.failureTracked = true;
 
-			replyTo.tell(new Failure(failed.errorMessage()));
+			replyTo.tell(new Failure(error.message()));
 
 		}
 		else {
