@@ -97,7 +97,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		else {
 
 			replyTo.tell(new Processor.Failure(
-				new DataProcessException("Unknown error"), heldMessage));
+				new DataProcessException("Empty response"), heldMessage));
 
 		}
 
