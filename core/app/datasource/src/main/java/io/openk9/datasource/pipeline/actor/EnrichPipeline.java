@@ -76,7 +76,12 @@ public class EnrichPipeline {
 
 		var dataPayload = prepareDataPayload(payloadArray, scheduler);
 
-		log.infof("start pipeline for datasource with id %s", scheduler.getDatasourceId());
+		log.infof(
+			"[schedulerId: %s, messageNumber: %s] start enrichPipeline for %s.",
+			scheduler.getId(),
+			heldMessage.messageNumber(),
+			heldMessage
+		);
 
 		ActorRef<HttpSupervisor.Command> supervisorActorRef =
 			ctx.spawnAnonymous(HttpSupervisor.create(processKey.baseKey()));
@@ -87,6 +92,7 @@ public class EnrichPipeline {
 			scheduling,
 			heldMessage,
 			dataPayload,
+			scheduler.getId(),
 			scheduler.getEnrichItems()
 		);
 
@@ -98,12 +104,20 @@ public class EnrichPipeline {
 		ActorRef<Processor.Response> replyTo,
 		HeldMessage heldMessage,
 		DataPayload dataPayload,
+		long schedulerId,
 		Set<EnrichItemDTO> enrichPipelineItems
 	) {
 
 		if (enrichPipelineItems.isEmpty()) {
 
-			log.info("pipeline is empty, ready for the next step");
+			if (log.isDebugEnabled()) {
+				log.debugf(
+					"[schedulerId: %s, messageNumber: %s] pipeline is empty, " +
+					"ready for the next step.",
+					schedulerId,
+					heldMessage
+				);
+			}
 
 			var buffer = Json.encodeToBuffer(dataPayload);
 
@@ -115,7 +129,15 @@ public class EnrichPipeline {
 		EnrichItemDTO enrichItem = Collections.head(enrichPipelineItems);
 		Set<EnrichItemDTO> tail = Collections.tail(enrichPipelineItems);
 
-		log.infof("start enrich for enrichItem with id %s", enrichItem.getId());
+
+		if (log.isDebugEnabled()) {
+			log.debugf(
+				"[schedulerId %s, messageNumber: %s] start enrichItem with id %s.",
+				schedulerId,
+				heldMessage.messageNumber(),
+				enrichItem.getId()
+			);
+		}
 
 		String jsonPath = enrichItem.getJsonPath();
 		EnrichItem.BehaviorMergeType behaviorMergeType = enrichItem.getBehaviorMergeType();
@@ -137,10 +159,10 @@ public class EnrichPipeline {
 					enrichItem, dataPayload, expiredDate, enrichItemReplyTo),
 			(r, t) -> {
 				if (t != null) {
-					return new EnrichItemError(enrichItem, t);
+					return new EnrichItemError(new DataProcessException(t));
 				}
-				else if (r instanceof EnrichItemSupervisor.Error error) {
-					return new EnrichItemError(enrichItem, new RuntimeException(error.error()));
+				else if (r instanceof EnrichItemSupervisor.Error supervisorError) {
+					return new EnrichItemError(new DataProcessException(supervisorError.error()));
 				}
 				else {
 					return new EnrichItemSupervisorResponseWrapper(r);
@@ -151,51 +173,45 @@ public class EnrichPipeline {
 		return Behaviors.receive(Processor.Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
-				EnrichItemDTO enrichItemError = param.enrichItem();
-
-				EnrichItem.BehaviorOnError behaviorOnError = enrichItemError.getBehaviorOnError();
+				EnrichItem.BehaviorOnError behaviorOnError = enrichItem.getBehaviorOnError();
 
 				switch (behaviorOnError) {
 					case SKIP -> {
 
-						log.errorf(
+						log.warnf(
 							param.exception,
-							"behaviorOnError is SKIP, call next enrichItem: %s",
-							enrichItemError.getId()
+							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected, " +
+							"behavior is SKIP, " +
+							"pipeline is going on.",
+							schedulerId,
+							heldMessage.messageNumber(),
+							enrichItem.getId()
 						);
 
-						if (!tail.isEmpty()) {
-							log.info("call next enrichItem");
+						if (!tail.isEmpty() && log.isDebugEnabled()) {
+							log.debugf(
+								"[schedulerId: %s, messageNumber: %s] call next enrichItem.",
+								schedulerId,
+								heldMessage.messageNumber()
+							);
 						}
 
 						return initPipeline(
 							ctx, httpSupervisor, replyTo,
-							heldMessage, dataPayload, tail
+							heldMessage, dataPayload, schedulerId, tail
 						);
 
-					}
-					case FAIL -> {
-
-						log.infof(
-							param.exception,
-							"behaviorOnError is FAIL, stop pipeline: %s",
-							enrichItemError.getId()
-						);
-
-						Throwable throwable = param.exception;
-
-						ctx.getSelf().tell(
-							new InternalError(throwable.getMessage())
-						);
-
-						return Behaviors.same();
 					}
 					case REJECT -> {
 
-						log.errorf(
+						log.warnf(
 							param.exception,
-							"behaviorOnError is REJECT, stop pipeline: %s",
-							enrichItemError.getId()
+							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected " +
+							"behavior is REJECT, " +
+							"pipeline is stopped and processor is succeeded.",
+							schedulerId,
+							heldMessage.messageNumber(),
+							enrichItem.getId()
 						);
 
 						var buffer = Json.encodeToBuffer(dataPayload);
@@ -203,11 +219,24 @@ public class EnrichPipeline {
 						replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
 
 						return Behaviors.stopped();
+
 					}
-					default -> {
+					case FAIL, default -> {
+
+						log.warnf(
+							param.exception,
+							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected " +
+							"behavior is FAIL (default), " +
+							"raising error to the pipeline.",
+							schedulerId,
+							heldMessage.messageNumber(),
+							enrichItem.getId()
+						);
+
+						Throwable throwable = param.exception;
 
 						ctx.getSelf().tell(
-							new InternalError("behaviorOnError is not valid: " + behaviorOnError)
+							new InternalError(throwable.getMessage())
 						);
 
 						return Behaviors.same();
@@ -224,6 +253,15 @@ public class EnrichPipeline {
 				}
 				else {
 					EnrichItemSupervisor.Error error = (EnrichItemSupervisor.Error) response;
+
+					log.warnf(
+						"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected, " +
+						"raising error to the pipeline.",
+						schedulerId,
+						heldMessage.messageNumber(),
+						enrichItem.getId()
+					);
+
 					ctx.getSelf().tell(new InternalError(error.error()));
 				}
 
@@ -234,10 +272,21 @@ public class EnrichPipeline {
 
 				JsonObject result = new JsonObject(new String(srw.jsonObject()));
 
-				log.infof("enrichItem: %s OK", enrichItem.getId());
+				if (log.isDebugEnabled()) {
+					log.debugf(
+						"[schedulerId: %s, messageNumber: %s] enrichItem %s response is OK.",
+						schedulerId,
+						heldMessage.messageNumber(),
+						enrichItem.getId()
+					);
 
-				if (!tail.isEmpty()) {
-					log.info("call next enrichItem");
+					if (!tail.isEmpty()) {
+						log.debugf(
+							"[schedulerId: %s, messageNumber: %s] call next enrichItem.",
+							schedulerId,
+							heldMessage.messageNumber()
+						);
+					}
 				}
 
 				JsonObject newJsonPayload = result.getJsonObject("payload");
@@ -249,7 +298,10 @@ public class EnrichPipeline {
 				if (newJsonPayload.getBoolean("_openk9SkipDocument", false)) {
 
 					log.infof(
-						"Document with contentId %s can be skipped.",
+						"[schedulerId: %s, messageNumber: %s] document with contentId %s " +
+						"can be skipped.",
+						schedulerId,
+						heldMessage.messageNumber(),
 						dataPayload.getContentId()
 					);
 
@@ -272,6 +324,7 @@ public class EnrichPipeline {
 					replyTo,
 					heldMessage,
 					newDataPayload,
+					schedulerId,
 					tail
 				);
 
@@ -279,9 +332,6 @@ public class EnrichPipeline {
 			.onMessage(InternalError.class, srw -> {
 
 				String error = srw.error();
-
-				log.errorf("enrichItem: %s occurred error: %s", enrichItem.getId(), error);
-				log.error("terminating pipeline");
 
 				replyTo.tell(new Processor.Failure(
 					new DataProcessException(error),
@@ -337,7 +387,6 @@ public class EnrichPipeline {
 	) implements Processor.Command {}
 
 	private record EnrichItemError(
-		EnrichItemDTO enrichItem,
 		Throwable exception
 	) implements Processor.Command {}
 
