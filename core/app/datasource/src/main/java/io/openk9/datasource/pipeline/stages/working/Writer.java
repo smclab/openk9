@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
+import io.openk9.datasource.pipeline.actor.WriterException;
 import io.openk9.datasource.util.CborSerializable;
 
 public interface Writer {
@@ -37,6 +38,6 @@ public interface Writer {
 		HeldMessage heldMessage
 	) implements Response {}
 
-	record Failure(Exception exception, HeldMessage heldMessage) implements Response {}
+	record Failure(WriterException exception, HeldMessage heldMessage) implements Response {}
 
 }

@@ -17,24 +17,23 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-public class DataProcessException extends WorkStageException {
-
-	public DataProcessException() {
+public class WriterException extends WorkStageException {
+	public WriterException() {
 	}
 
-	public DataProcessException(String message) {
+	public WriterException(String message) {
 		super(message);
 	}
 
-	public DataProcessException(String message, Throwable cause) {
+	public WriterException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public DataProcessException(Throwable cause) {
+	public WriterException(Throwable cause) {
 		super(cause);
 	}
 
-	public DataProcessException(
+	public WriterException(
 		String message,
 		Throwable cause,
 		boolean enableSuppression,

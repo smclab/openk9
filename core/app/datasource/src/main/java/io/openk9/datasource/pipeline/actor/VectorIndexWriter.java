@@ -141,7 +141,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 		catch (IOException e) {
 
-			replyTo.tell(new Writer.Failure(e, heldMessage));
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 
 		}
 
@@ -156,7 +156,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		if (throwable != null) {
 
-			replyTo.tell(new Writer.Failure((Exception) throwable, heldMessage));
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
 
 			return this;
 
@@ -228,7 +228,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			}
 			catch (IOException e) {
 
-				replyTo.tell(new Writer.Failure(e, heldMessage));
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 
 			}
 
@@ -245,7 +245,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		if (throwable != null) {
 
-			replyTo.tell(new Writer.Failure((Exception) throwable, heldMessage));
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
 
 			return this;
 		}
@@ -290,7 +290,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		}
 		catch (IOException e) {
-			replyTo.tell(new Writer.Failure(e, heldMessage));
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 		}
 
 		return this;
@@ -315,9 +315,9 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 					.map(ErrorCause::reason)
 					.collect(Collectors.joining());
 
-				log.error("Bulk request error: " + reasons);
+				log.warnf("Bulk request error: %s", reasons);
 				replyTo.tell(new Writer.Failure(
-					new RuntimeException(reasons),
+					new WriterException(reasons),
 					heldMessage
 				));
 			}
@@ -325,8 +325,8 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 
 		if (throwable != null) {
-			log.error("Error on bulk request", throwable);
-			replyTo.tell(new Writer.Failure(throwable, heldMessage));
+			log.warn("Error on bulk request", throwable);
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
 		}
 		else {
 			var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();

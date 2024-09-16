@@ -30,12 +30,12 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.quarkus.runtime.util.ExceptionUtil;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.jboss.logging.Logger;
@@ -145,13 +145,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			var heldMessage = failure.heldMessage();
 			var exception = failure.exception();
 
-			this.replyTo.tell(new Failed(
-				heldMessage,
-				new Error(
-					Phase.WRITING,
-					ExceptionUtil.generateStackTrace(exception)
-				)
-			));
+			this.replyTo.tell(new Failed(heldMessage, exception));
 
 		}
 
@@ -243,15 +237,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 		else if (response instanceof Processor.Failure failure) {
 
-			Exception exception = failure.exception();
+			var exception = failure.exception();
 
-			this.replyTo.tell(new Failed(
-				heldMessage,
-				new Error(
-					Phase.PROCESSING,
-					ExceptionUtil.generateStackTrace(exception)
-				)
-			));
+			this.replyTo.tell(new Failed(heldMessage, exception));
 
 		}
 
@@ -348,8 +336,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
 
-	public record Failed(HeldMessage heldMessage, Error error) implements Callback {}
-
-	public record Error(Phase phase, String message) {}
+	public record Failed(HeldMessage heldMessage, WorkStageException exception)
+		implements Callback {}
 
 }

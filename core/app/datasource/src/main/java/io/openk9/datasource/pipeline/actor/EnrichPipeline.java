@@ -171,7 +171,9 @@ public class EnrichPipeline {
 		);
 
 		return Behaviors.receive(Processor.Command.class)
-			.onMessage(EnrichItemError.class, param -> {
+			.onMessage(EnrichItemError.class, enrichItemError -> {
+
+				var exception = enrichItemError.exception();
 
 				EnrichItem.BehaviorOnError behaviorOnError;
 
@@ -192,10 +194,9 @@ public class EnrichPipeline {
 					case SKIP -> {
 
 						log.warnf(
-							param.exception,
+							exception,
 							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected, " +
-							"behavior is SKIP, " +
-							"pipeline is going on.",
+							"behavior is SKIP, pipeline is going on. Caught",
 							schedulerId,
 							heldMessage.messageNumber(),
 							enrichItem.getId()
@@ -218,10 +219,10 @@ public class EnrichPipeline {
 					case REJECT -> {
 
 						log.warnf(
-							param.exception,
+							exception,
 							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected " +
 							"behavior is REJECT, " +
-							"pipeline is stopped and processor is succeeded.",
+							"pipeline is stopped and processor is succeeded. Caught",
 							schedulerId,
 							heldMessage.messageNumber(),
 							enrichItem.getId()
@@ -237,7 +238,7 @@ public class EnrichPipeline {
 					case FAIL -> {
 
 						log.warnf(
-							param.exception,
+							exception,
 							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected " +
 							"behavior is FAIL (default), " +
 							"raising error to the pipeline.",
@@ -246,11 +247,7 @@ public class EnrichPipeline {
 							enrichItem.getId()
 						);
 
-						Throwable throwable = param.exception;
-
-						ctx.getSelf().tell(
-							new InternalError(throwable.getMessage())
-						);
+						ctx.getSelf().tell(new InternalError(exception));
 
 						yield Behaviors.same();
 
@@ -275,7 +272,7 @@ public class EnrichPipeline {
 						enrichItem.getId()
 					);
 
-					ctx.getSelf().tell(new InternalError(error.error()));
+					ctx.getSelf().tell(new InternalError(new DataProcessException(error.error())));
 				}
 
 				return Behaviors.same();
@@ -342,12 +339,10 @@ public class EnrichPipeline {
 				);
 
 			})
-			.onMessage(InternalError.class, srw -> {
-
-				String error = srw.error();
+			.onMessage(InternalError.class, internalError -> {
 
 				replyTo.tell(new Processor.Failure(
-					new DataProcessException(error),
+					internalError.exception(),
 					heldMessage
 				));
 
@@ -399,12 +394,10 @@ public class EnrichPipeline {
 		EnrichItemSupervisor.Response response
 	) implements Processor.Command {}
 
-	private record EnrichItemError(
-		Throwable exception
-	) implements Processor.Command {}
+	private record EnrichItemError(DataProcessException exception) implements Processor.Command {}
 
 	private record InternalResponseWrapper(byte[] jsonObject) implements Processor.Command {}
 
-	private record InternalError(String error) implements Processor.Command {}
+	private record InternalError(DataProcessException exception) implements Processor.Command {}
 
 }

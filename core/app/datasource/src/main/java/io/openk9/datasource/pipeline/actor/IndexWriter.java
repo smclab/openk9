@@ -134,9 +134,9 @@ public class IndexWriter {
 						.build()
 				);
 
-				logger.error("Bulk request error: " + errorMessage);
+				logger.warn("Bulk request error: {}", errorMessage);
 				replyTo.tell(new Writer.Failure(
-					new RuntimeException(errorMessage),
+					new WriterException(errorMessage),
 					heldMessage
 				));
 			}
@@ -144,8 +144,8 @@ public class IndexWriter {
 		}
 
 		if (throwable != null) {
-			logger.error("Error on bulk request", throwable);
-			replyTo.tell(new Writer.Failure(throwable, heldMessage));
+			logger.warn("Error on bulk request", throwable);
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
 		}
 		else {
 
