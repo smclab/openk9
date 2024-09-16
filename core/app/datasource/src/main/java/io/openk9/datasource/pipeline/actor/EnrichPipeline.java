@@ -173,9 +173,22 @@ public class EnrichPipeline {
 		return Behaviors.receive(Processor.Command.class)
 			.onMessage(EnrichItemError.class, param -> {
 
-				EnrichItem.BehaviorOnError behaviorOnError = enrichItem.getBehaviorOnError();
+				EnrichItem.BehaviorOnError behaviorOnError;
 
-				switch (behaviorOnError) {
+				if (enrichItem.getBehaviorOnError() == null) {
+					if (log.isDebugEnabled()) {
+						log.debugf(
+							"[schedulerId: %s, messageNumber: %s] enrichItem %s " +
+							"behavior on error fallback to FAIL");
+					}
+
+					behaviorOnError = EnrichItem.BehaviorOnError.FAIL;
+				}
+				else {
+					behaviorOnError = enrichItem.getBehaviorOnError();
+				}
+
+				return switch (behaviorOnError) {
 					case SKIP -> {
 
 						log.warnf(
@@ -196,7 +209,7 @@ public class EnrichPipeline {
 							);
 						}
 
-						return initPipeline(
+						yield initPipeline(
 							ctx, httpSupervisor, replyTo,
 							heldMessage, dataPayload, schedulerId, tail
 						);
@@ -218,10 +231,10 @@ public class EnrichPipeline {
 
 						replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
 
-						return Behaviors.stopped();
+						yield Behaviors.stopped();
 
 					}
-					case FAIL, default -> {
+					case FAIL -> {
 
 						log.warnf(
 							param.exception,
@@ -239,10 +252,10 @@ public class EnrichPipeline {
 							new InternalError(throwable.getMessage())
 						);
 
-						return Behaviors.same();
+						yield Behaviors.same();
 
 					}
-				}
+				};
 
 			})
 			.onMessage(EnrichItemSupervisorResponseWrapper.class, garw -> {
