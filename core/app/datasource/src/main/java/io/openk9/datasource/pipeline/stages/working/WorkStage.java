@@ -144,7 +144,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var heldMessage = failure.heldMessage();
 			var exception = failure.exception();
-			log.errorf(exception, "write failure for %s", heldMessage);
 
 			this.replyTo.tell(new Failed(
 				heldMessage,
@@ -236,10 +235,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		if (response instanceof Processor.Success success) {
 
-			if (log.isDebugEnabled()) {
-				log.infof("data process success for %s", heldMessage);
-			}
-
 			getContext().getSelf().tell(new Write(
 				success.payload(),
 				heldMessage
@@ -249,7 +244,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (response instanceof Processor.Failure failure) {
 
 			Exception exception = failure.exception();
-			log.errorf(exception, "data process failure for %s", heldMessage);
 
 			this.replyTo.tell(new Failed(
 				heldMessage,
