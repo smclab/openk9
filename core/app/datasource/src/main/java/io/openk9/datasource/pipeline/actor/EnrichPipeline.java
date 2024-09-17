@@ -238,13 +238,13 @@ public class EnrichPipeline {
 					case FAIL -> {
 
 						log.warnf(
-							exception,
-							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected " +
+							"[schedulerId: %s, messageNumber: %s] enrichItem %s error detected, " +
 							"behavior is FAIL (default), " +
-							"raising error to the pipeline.",
+							"raising error to the pipeline: %s",
 							schedulerId,
 							heldMessage.messageNumber(),
-							enrichItem.getId()
+							enrichItem.getId(),
+							exception
 						);
 
 						ctx.getSelf().tell(new InternalError(exception));
