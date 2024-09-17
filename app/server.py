@@ -12,7 +12,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.rag.chain import get_chain, get_chat_chain
-from app.utils.keycloak import Keycloak
+from app.utils.keycloak import verify_token
 
 app = FastAPI()
 
@@ -66,33 +66,31 @@ class SearchQuery(BaseModel):
 
 
 @app.post("/api/rag/generate")
-async def search_query(
-    search_query: SearchQuery,
+async def rag_generatey(
+    search_query_request: SearchQuery,
     request: Request,
     authorization: Optional[str] = Header(None),
     openk9_acl: Optional[list[str]] = Header(None),
 ):
-    searchQuery = search_query.searchQuery
-    range = search_query.range
-    afterKey = search_query.afterKey
-    suggestKeyword = search_query.suggestKeyword
-    suggestionCategoryId = search_query.suggestionCategoryId
-    extra = search_query.extra
-    sort = search_query.sort
-    sortAfterKey = search_query.sortAfterKey
-    language = search_query.language
-    vectorIndices = search_query.vectorIndices
-    searchText = search_query.searchText
-    reformulate = search_query.reformulate
-    virtualHost = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtualHost = "test.openk9.io"
+    """Definition of /api/rag/generate api."""
+    search_query = search_query_request.searchQuery
+    range_values = search_query_request.range
+    after_key = search_query_request.afterKey
+    suggest_keyword = search_query_request.suggestKeyword
+    suggestion_category_id = search_query_request.suggestionCategoryId
+    extra = search_query_request.extra
+    sort = search_query_request.sort
+    sort_after_key = search_query_request.sortAfterKey
+    language = search_query_request.language
+    vector_indices = search_query_request.vectorIndices
+    search_text = search_query_request.searchText
+    virtual_host = urlparse(str(request.base_url)).hostname
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
     extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
 
     search_query_to_proto_list = []
-    for query in searchQuery:
+    for query in search_query:
         search_query_to_proto = SearchTokenRequest()
         search_query_to_proto.tokenType = query.tokenType
         search_query_to_proto.keywordKey = query.keywordKey
@@ -105,9 +103,7 @@ async def search_query(
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
-    if token and not Keycloak.verify_token(
-        GRPC_TENANT_MANAGER_HOST, virtualHost, token
-    ):
+    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
@@ -116,19 +112,18 @@ async def search_query(
 
     chain = get_chain(
         search_query_to_proto_list,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
         token,
         extra,
         sort,
-        sortAfterKey,
+        sort_after_key,
         language,
-        vectorIndices,
-        virtualHost,
-        searchText,
-        reformulate,
+        vector_indices,
+        virtual_host,
+        search_text,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
@@ -136,6 +131,8 @@ async def search_query(
 
 
 class SearchQueryChat(BaseModel):
+    """SearchQueryChat class model."""
+
     chatId: Optional[str] = None
     searchQuery: list[SearchToken]
     range: list = [0, 7]
@@ -154,30 +151,31 @@ class SearchQueryChat(BaseModel):
 
 
 @app.post("/api/rag/chat")
-async def search_query(
-    search_query: SearchQueryChat,
+async def rag_chat(
+    search_query_chat: SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(None),
 ):
-    chatId = search_query.chatId
-    searchQuery = search_query.searchQuery
-    range = search_query.range
-    afterKey = search_query.afterKey
-    suggestKeyword = search_query.suggestKeyword
-    suggestionCategoryId = search_query.suggestionCategoryId
-    extra = search_query.extra
-    sort = search_query.sort
-    sortAfterKey = search_query.sortAfterKey
-    language = search_query.language
-    vectorIndices = search_query.vectorIndices
-    searchText = search_query.searchText
-    userId = search_query.userId
-    timestamp = search_query.timestamp
-    chatSequenceNumber = search_query.chatSequenceNumber
-    virtualHost = urlparse(str(request.base_url)).hostname
+    """Definition of /api/rag/chat api."""
+    chat_id = search_query_chat.chatId
+    search_query = search_query_chat.searchQuery
+    range_values = search_query_chat.range
+    after_key = search_query_chat.afterKey
+    suggest_keyword = search_query_chat.suggestKeyword
+    suggestion_category_id = search_query_chat.suggestionCategoryId
+    extra = search_query_chat.extra
+    sort = search_query_chat.sort
+    sort_after_key = search_query_chat.sortAfterKey
+    language = search_query_chat.language
+    vector_indices = search_query_chat.vectorIndices
+    search_text = search_query_chat.searchText
+    user_id = search_query_chat.userId
+    timestamp = search_query_chat.timestamp
+    chat_sequence_number = search_query_chat.chatSequenceNumber
+    virtual_host = urlparse(str(request.base_url)).hostname
 
     search_query_to_proto_list = []
-    for query in searchQuery:
+    for query in search_query:
         search_query_to_proto = SearchTokenRequest()
         search_query_to_proto.tokenType = query.tokenType
         search_query_to_proto.keywordKey = query.keywordKey
@@ -190,9 +188,7 @@ async def search_query(
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
-    if token and not Keycloak.verify_token(
-        GRPC_TENANT_MANAGER_HOST, virtualHost, token
-    ):
+    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token.",
@@ -201,18 +197,22 @@ async def search_query(
 
     chain = get_chat_chain(
         search_query_to_proto_list,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
         token,
         extra,
         sort,
-        sortAfterKey,
+        sort_after_key,
         language,
-        vectorIndices,
-        virtualHost,
-        searchText,
+        vector_indices,
+        virtual_host,
+        search_text,
+        chat_id,
+        user_id,
+        timestamp,
+        chat_sequence_number,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
