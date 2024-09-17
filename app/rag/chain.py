@@ -119,13 +119,18 @@ def get_chat_chain(
     configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
+    model_type = (
+        configuration["model_type"]
+        if configuration["model_type"]
+        else DEFAULT_MODEL_TYPE
+    )
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    prompt_template = configuration["prompt"]
 
     # TODO: hardcoded opensearch host
     open_search_client = OpenSearch(
         hosts=["https://opensearch-test.openk9.io/"],
     )
-
-    llm = ChatOpenAI(openai_api_key=api_key)
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
@@ -146,13 +151,14 @@ def get_chat_chain(
 
     documents = retriever.invoke(search_text)
 
-    contextualize_q_system_prompt = (
-        "Given a chat history and the latest user question "
-        "which might reference context in the chat history, "
-        "formulate a standalone question which can be understood "
-        "without the chat history. Do NOT answer the question, "
-        "just reformulate it if needed and otherwise return it as is."
-    )
+    if model_type == "openai":
+        llm = ChatOpenAI(model=model, openai_api_key=api_key)
+    elif model_type == "ollama":
+        llm = ChatOllama(model=model, base_url=api_url)
+    elif model_type == "hugging-face-custom":
+        llm = CustomChatHuggingFaceModel(base_url=api_url)
+
+    contextualize_q_system_prompt = prompt_template
 
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
