@@ -244,7 +244,7 @@ public class JobScheduler {
 				StartVectorPipeline.class,
 				msg -> onStartVectorPipeline(ctx, sessionFactory, messageGateway, msg)
 			)
-			.onMessage(CancelScheduling.class, cs -> onCancelScheduling(ctx, cs))
+			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs))
 			.build();
 
 	}
@@ -435,7 +435,11 @@ public class JobScheduler {
 						.onFailure()
 						.invoke(throwable -> ctx
 							.getSelf()
-							.tell(new CancelScheduling(tenantName, scheduler))
+							.tell(new HaltScheduling(
+								tenantName,
+								scheduler,
+								new InvokePluginDriverException(throwable)
+							))
 						)
 				);
 
@@ -596,11 +600,13 @@ public class JobScheduler {
 			.map(integer -> integer.equals(0));
 	}
 
-	private static Behavior<Command> onCancelScheduling(
-		ActorContext<Command> ctx, CancelScheduling cs) {
+	private static Behavior<Command> onHaltScheduling(
+		ActorContext<Command> ctx, HaltScheduling cs) {
 
 		String tenantName = cs.tenantName;
 		Scheduler scheduler = cs.scheduler;
+		var exception = cs.exception;
+
 		String scheduleId = scheduler.getScheduleId();
 
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
@@ -873,7 +879,11 @@ public class JobScheduler {
 
 	private record StartVectorPipeline(String tenantName, Scheduler scheduler) implements Command {}
 
-	private record CancelScheduling(String tenantName, Scheduler scheduler) implements Command {}
+	private record HaltScheduling(
+		String tenantName,
+		Scheduler scheduler,
+		InvokePluginDriverException exception
+	) implements Command {}
 
 	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
 		return actorRef.path().address().port().isEmpty();

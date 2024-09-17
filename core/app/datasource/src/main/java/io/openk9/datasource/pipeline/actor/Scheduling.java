@@ -206,7 +206,26 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			)
 			.onMessage(UpdateStatus.class, this::onUpdateStatus)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
+			.onMessage(Halt.class, this::onHalt)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
+	}
+
+	private Behavior<Command> onHalt(Halt halt) {
+
+		var replyTo = getContext().messageAdapter(
+			Response.class,
+			__ -> new GracefulEnd(Scheduler.SchedulerStatus.FAILURE)
+		);
+
+		getContext().pipeToSelf(
+			SchedulingService.persistErrorDescription(shardingKey, halt.exception()),
+			(scheduler, throwable) -> new UpdateScheduler(
+				scheduler, (Exception) throwable, replyTo)
+		);
+
+		return newReceiveBuilder()
+			.onMessage(GracefulEnd.class, this::onGracefulEnd)
+			.build();
 	}
 
 	private Receive<Command> settingUp() {
@@ -727,7 +746,11 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		INSTANCE
 	}
 
+	public record Failure(String error) implements Response {}
+
 	public record GracefulEnd(Scheduler.SchedulerStatus status) implements Command {}
+
+	public record Halt(Exception exception) implements Command {}
 
 	private enum Setup implements Command {
 		INSTANCE
@@ -740,9 +763,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private enum Tick implements Command {
 		INSTANCE
 	}
-
-	public record Failure(String error) implements Response {}
-
 	private enum StartInternalClock implements Command {
 		INSTANCE
 	}

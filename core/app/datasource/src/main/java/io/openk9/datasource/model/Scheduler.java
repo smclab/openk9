@@ -156,6 +156,9 @@ public class Scheduler extends K9Entity {
 	private SchedulerStatus status;
 	@Column(name = "last_ingestion_date")
 	private OffsetDateTime lastIngestionDate;
+	@Column(name = "error_description")
+	private String errorDescription;
+
 	public enum SchedulerStatus {
 		RUNNING,
 		FINISHED,

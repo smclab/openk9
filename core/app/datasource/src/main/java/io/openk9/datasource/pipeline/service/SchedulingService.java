@@ -23,6 +23,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.service.SchedulerService;
+import io.quarkus.runtime.util.ExceptionUtil;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -40,6 +41,8 @@ public class SchedulingService {
 	private final static String PERSIST_STATUS = "SchedulingService#persistStatus";
 	private final static String PERSIST_LAST_INGESTION_DATE =
 		"SchedulingService#persistLastIngestionDate";
+	private final static String PERSIST_ERROR_DESCRIPTION =
+		"SchedulingService#persistErrorDescription";
 	private static final String GET_DELETED_CONTENT_ID = "SchedulingService#getDeletedContentId";
 
 	@Inject
@@ -78,6 +81,18 @@ public class SchedulingService {
 			.subscribeAsCompletionStage();
 	}
 
+	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
+		ShardingKey shardingKey, Exception exception) {
+
+		return EventBusInstanceHolder.getEventBus()
+			.request(
+				PERSIST_LAST_INGESTION_DATE,
+				new PersistErrorDescription(shardingKey, exception)
+			)
+			.map(message -> (SchedulerDTO) message.body())
+			.subscribeAsCompletionStage();
+	}
+
 	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
 
 		return EventBusInstanceHolder.getEventBus()
@@ -104,8 +119,7 @@ public class SchedulingService {
 	}
 
 	@ConsumeEvent(PERSIST_STATUS)
-	Uni<SchedulerDTO> persistStatus(
-		PersistStatusRequest request) {
+	Uni<SchedulerDTO> persistStatus(PersistStatusRequest request) {
 
 		var schedulingKey = request.shardingKey();
 		var tenantId = schedulingKey.tenantId();
@@ -141,6 +155,26 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
+	@ConsumeEvent(PERSIST_ERROR_DESCRIPTION)
+	Uni<SchedulerDTO> persistErrorDescription(PersistErrorDescription request) {
+
+		var schedulingKey = request.shardingKey();
+		var tenantId = schedulingKey.tenantId();
+		var scheduleId = schedulingKey.scheduleId();
+		var exception = request.exception();
+
+		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
+				s, scheduleId)
+				.flatMap(entity -> {
+					var errorDescription = ExceptionUtil.generateStackTrace(exception);
+					entity.setErrorDescription(errorDescription);
+
+					return s.merge(entity);
+				})
+			)
+			.map(schedulerMapper::map);
+	}
+
 	@ConsumeEvent(GET_DELETED_CONTENT_ID)
 	Uni<List<String>> getDeletedContentId(GetDeletedContentIdRequest request) {
 		var schedulingKey = request.shardingKey();
@@ -168,6 +202,11 @@ public class SchedulingService {
 	private record PersistLastIngestionDateRequest(
 		ShardingKey shardingKey,
 		OffsetDateTime lastIngestionDate
+	) {}
+
+	private record PersistErrorDescription(
+		ShardingKey shardingKey,
+		Exception exception
 	) {}
 
 	private record GetDeletedContentIdRequest(ShardingKey shardingKey) {}
