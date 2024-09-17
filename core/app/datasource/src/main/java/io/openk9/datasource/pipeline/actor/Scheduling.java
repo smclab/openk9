@@ -207,7 +207,33 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			.onMessage(UpdateStatus.class, this::onUpdateStatus)
 			.onMessageEquals(Close.INSTANCE, this::onClose)
 			.onMessage(Halt.class, this::onHalt)
+			.onMessage(PersistException.class, this::onPersistException)
+			.onMessage(TrackFailure.class, this::onTrackFailure)
 			.onMessage(GracefulEnd.class, this::onGracefulEnd);
+	}
+
+	private Behavior<Command> onTrackFailure(TrackFailure trackFailure) {
+		if (trackFailure.response() instanceof Success) {
+			this.failureTracked = true;
+		}
+
+		return next();
+	}
+
+	private Behavior<Command> onPersistException(PersistException persistException) {
+
+		if (!failureTracked) {
+			var replyTo = getContext().messageAdapter(Response.class, TrackFailure::new);
+
+			getContext().pipeToSelf(
+				SchedulingService.persistErrorDescription(
+					shardingKey, persistException.exception()),
+				(scheduler, throwable) -> new UpdateScheduler(
+					scheduler, (Exception) throwable, replyTo)
+			);
+		}
+
+		return Behaviors.same();
 	}
 
 	private Behavior<Command> onHalt(Halt halt) {
@@ -492,6 +518,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			log.errorf(exception, "work failed for %s", heldMessage);
 
+			getContext().getSelf().tell(new PersistException(exception));
 			this.failureTracked = true;
 
 			replyTo.tell(new Failure("work stage failed"));
@@ -796,5 +823,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
 	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
+
+	private record PersistException(WorkStageException exception) implements Command {}
+
+	private record TrackFailure(Response response) implements Command {}
 
 }
