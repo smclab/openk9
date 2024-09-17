@@ -86,7 +86,7 @@ public class SchedulingService {
 
 		return EventBusInstanceHolder.getEventBus()
 			.request(
-				PERSIST_LAST_INGESTION_DATE,
+				PERSIST_ERROR_DESCRIPTION,
 				new PersistErrorDescription(shardingKey, exception)
 			)
 			.map(message -> (SchedulerDTO) message.body())
