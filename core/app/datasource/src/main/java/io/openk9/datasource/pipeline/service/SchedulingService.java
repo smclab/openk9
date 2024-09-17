@@ -166,7 +166,11 @@ public class SchedulingService {
 		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
 				s, scheduleId)
 				.flatMap(entity -> {
-					var errorDescription = ExceptionUtil.generateStackTrace(exception);
+					var invertedStackTrace = ExceptionUtil.rootCauseFirstStackTrace(exception);
+
+					var errorDescription = invertedStackTrace.substring(
+						0, Math.min(invertedStackTrace.length(), 4000));
+
 					entity.setErrorDescription(errorDescription);
 
 					return s.merge(entity);
