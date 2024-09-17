@@ -614,7 +614,7 @@ public class JobScheduler {
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantName, scheduleId));
 
-		schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
+		schedulingRef.tell(new Scheduling.Halt(exception));
 
 		return Behaviors.same();
 	}
