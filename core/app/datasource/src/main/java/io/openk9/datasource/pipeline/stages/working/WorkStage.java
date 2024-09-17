@@ -316,23 +316,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public record Invalid(String errorMessage, ActorRef<Scheduling.Response> requester)
 		implements Response {}
 
-	private record Write(
-		byte[] payload,
-		HeldMessage heldMessage
-	) implements Command {}
+	private record Write(byte[] payload, HeldMessage heldMessage) implements Command {}
 
-	private record PostWrite(
-		Writer.Response response
-	) implements Command {}
+	private record PostWrite(Writer.Response response) implements Command {}
 
 	private record EndProcessResponse(AggregateBehavior.Response response) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
-
-	public enum Phase {
-		PROCESSING,
-		WRITING
-	}
 
 	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
 
