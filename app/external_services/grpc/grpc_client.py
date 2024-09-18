@@ -1,4 +1,5 @@
 import grpc
+from google.protobuf import json_format
 
 from .searcher import searcher_pb2, searcher_pb2_grpc
 from .tenant_manager import tenant_manager_pb2, tenant_manager_pb2_grpc
@@ -54,12 +55,17 @@ def get_llm_configuration(grpc_host, virtualHost):
 
     api_url = response.apiUrl
     api_key = response.apiKey
-    json_config = response.jsonConfig.fields
+    json_config = json_format.MessageToDict(response.jsonConfig)
+    model_type = json_config["type"]
+    model = json_config["model"]
+    prompt = json_config["prompt"]
 
     configuration = {
         "api_url": api_url,
         "api_key": api_key,
-        "json_config": json_config,
+        "model_type": model_type,
+        "model": model,
+        "prompt": prompt,
     }
 
     return configuration
