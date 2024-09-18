@@ -28,9 +28,12 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -155,28 +158,19 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
-	@ConsumeEvent(PERSIST_ERROR_DESCRIPTION)
-	Uni<SchedulerDTO> persistErrorDescription(PersistErrorDescription request) {
+	protected static String getErrorDescription(Exception exception) {
+		var invertedStackTrace =
+			ExceptionUtil.rootCauseFirstStackTrace(exception);
 
-		var schedulingKey = request.shardingKey();
-		var tenantId = schedulingKey.tenantId();
-		var scheduleId = schedulingKey.scheduleId();
-		var exception = request.exception();
+		var stringReader = new StringReader(invertedStackTrace);
+		var lineNumberReader = new LineNumberReader(stringReader);
 
-		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
-				s, scheduleId)
-				.flatMap(entity -> {
-					var invertedStackTrace = ExceptionUtil.rootCauseFirstStackTrace(exception);
+		var collapsed = lineNumberReader.lines()
+			.filter(line -> !line.startsWith("\tat"))
+			.filter(line -> !line.startsWith("\t..."))
+			.collect(Collectors.joining("\n"));
 
-					var errorDescription = invertedStackTrace.substring(
-						0, Math.min(invertedStackTrace.length(), 4000));
-
-					entity.setErrorDescription(errorDescription);
-
-					return s.merge(entity);
-				})
-			)
-			.map(schedulerMapper::map);
+		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
 	}
 
 	@ConsumeEvent(GET_DELETED_CONTENT_ID)
@@ -194,6 +188,27 @@ public class SchedulingService {
 			.setParameter("scheduleId", scheduleId)
 			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
 			.getSingleResult();
+	}
+
+	@ConsumeEvent(PERSIST_ERROR_DESCRIPTION)
+	Uni<SchedulerDTO> persistErrorDescription(PersistErrorDescription request) {
+
+		var schedulingKey = request.shardingKey();
+		var tenantId = schedulingKey.tenantId();
+		var scheduleId = schedulingKey.scheduleId();
+		var exception = request.exception();
+
+		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
+				s, scheduleId)
+				.flatMap(entity -> {
+					var errorDescription = getErrorDescription(exception);
+
+					entity.setErrorDescription(errorDescription);
+
+					return s.merge(entity);
+				})
+			)
+			.map(schedulerMapper::map);
 	}
 
 	private record FetchRequest(ShardingKey shardingKey) {}
