@@ -346,6 +346,7 @@ export type Configuration = {
   token: string | null;
   useQueryAnalysis: boolean;
   useKeycloak: boolean;
+  useGenerativeApi: boolean | null | undefined;
   useQueryString: boolean;
   useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
@@ -455,6 +456,7 @@ const defaultConfiguration: Configuration = {
   totalResult: null,
   totalResultConfigurable: null,
   totalResultMobile: null,
+  useGenerativeApi: null,
   useQueryAnalysis: true,
   useKeycloak: true,
   useQueryString: true,

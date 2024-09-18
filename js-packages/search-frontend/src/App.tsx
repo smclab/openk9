@@ -20,6 +20,7 @@ export const openk9 = new OpenK9({
   searchReplaceText: true,
   isActiveSkeleton: true,
   memoryResults: false,
+  useGenerativeApi: true,
 });
 
 export function App() {

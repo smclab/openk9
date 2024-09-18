@@ -75,6 +75,7 @@ export function Main({
   const memoryResults = configuration.memoryResults || false;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
+  const useGenerativeApi = configuration.useGenerativeApi;
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
@@ -324,12 +325,14 @@ export function Main({
         configuration.removeFilters,
       )}
       {renderPortal(
-        <GenerateResponse
-          question={selectionsState.text}
-          searchQuery={searchQuery}
-          language={languageSelect}
-          sortAfterKey={sortAfterKey}
-        />,
+        useGenerativeApi ? (
+          <GenerateResponse
+            question={selectionsState.text}
+            searchQuery={searchQuery}
+            language={languageSelect}
+            sortAfterKey={sortAfterKey}
+          />
+        ) : null,
         configuration.generateResponse,
       )}
       {renderPortal(
