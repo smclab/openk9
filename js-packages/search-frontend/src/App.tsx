@@ -19,28 +19,29 @@ export const openk9 = new OpenK9({
   searchReplaceText: true,
   isActiveSkeleton: true,
   memoryResults: false,
-  template: [
-    {
-      source: "web",
-      Template: (props: any) => {
-        console.log(props);
+  // example of template
+  // template: [
+  //   {
+  //     source: "web",
+  //     Template: (props: any) => {
+  //       console.log(props);
 
-        return (
-          <>
-            <div>paperino</div>
-          </>
-        );
-      },
-    },
-    {
-      source: "document",
-      Template: () => (
-        <>
-          <div>pluto</div>
-        </>
-      ),
-    },
-  ],
+  //       return (
+  //         <>
+  //           <div>paperino</div>
+  //         </>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     source: "document",
+  //     Template: () => (
+  //       <>
+  //         <div>pluto</div>
+  //       </>
+  //     ),
+  //   },
+  // ],
 });
 
 export function App() {
