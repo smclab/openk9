@@ -19,6 +19,28 @@ export const openk9 = new OpenK9({
   searchReplaceText: true,
   isActiveSkeleton: true,
   memoryResults: false,
+  template: [
+    {
+      source: "web",
+      Template: (props: any) => {
+        console.log(props);
+
+        return (
+          <>
+            <div>paperino</div>
+          </>
+        );
+      },
+    },
+    {
+      source: "document",
+      Template: () => (
+        <>
+          <div>pluto</div>
+        </>
+      ),
+    },
+  ],
 });
 
 export function App() {
@@ -391,7 +413,10 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            results: element,
+            resultList: {
+              element,
+              changeOnOver: false,
+            },
           })
         }
         css={css`

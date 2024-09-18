@@ -13,6 +13,7 @@ import { ResultSvg } from "../svgElement/ResultSvg";
 import { useTranslation } from "react-i18next";
 import { result } from "lodash";
 import { Options, setSortResultsType } from "./SortResults";
+import { TemplatesProps } from "../embeddable/entry";
 const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
 
 export type ResultsDisplayMode =
@@ -40,7 +41,9 @@ type ResultsProps<E> = {
   selectOptions: Options;
   classNameLabel?: string | undefined;
   viewButton: boolean;
-  NoResultsCustom?: React.ReactNode;
+  templateCustom: TemplatesProps | null;
+  NoResultsCustom?: any | undefined | null;
+  BoxTitle?: any | undefined | null;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   selectedSort: any;
   setSelectedSort: setSortResultsType;
@@ -74,6 +77,8 @@ function Results<E>({
   selectedSort,
   setSelectedSort,
   setViewButtonDetail,
+  BoxTitle,
+  templateCustom,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
@@ -130,6 +135,7 @@ function Results<E>({
           setViewButtonDetail={setViewButtonDetail}
           noResultsCustom={NoResultsCustom}
           setSelectedSort={setSelectedSort}
+          templateCustom={templateCustom}
         />
       );
     case "virtual":
@@ -378,6 +384,7 @@ export function FiniteResults<E>({
           >
             {results.data?.pages[0].total}
           </ResultCount>
+
           {results.data?.pages[0].result.map((result, index) => {
             return (
               <ResultMemo<E>
@@ -417,6 +424,7 @@ type InfiniteResultsProps<E> = ResulListProps<E> & {
   viewButton: boolean;
   noResultsCustom: React.ReactNode;
   setSelectedSort: setSortResultsType;
+  templateCustom?: TemplatesProps | null;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -440,6 +448,7 @@ export function InfiniteResults<E>({
   memoryResults,
   noResultsCustom,
   viewButton,
+  templateCustom,
   setViewButtonDetail,
 }: InfiniteResultsProps<E>) {
   const results = useInfiniteResults<E>(
@@ -548,6 +557,7 @@ export function InfiniteResults<E>({
                           setIdPreview={setIdPreview}
                           viewButton={viewButton}
                           setViewButtonDetail={setViewButtonDetail}
+                          templateCustom={templateCustom}
                         />
                       </li>
                     );

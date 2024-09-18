@@ -512,6 +512,7 @@ export function Main({
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
+              templateCustom={configuration.template}
               setViewButtonDetail={setViewButtonDetail}
               selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
@@ -581,6 +582,7 @@ export function Main({
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
               NoResultsCustom={configuration.resultList?.noResultsCustom}
+              templateCustom={configuration.template}
             />
           )}
         </I18nextProvider>,
@@ -1516,8 +1518,6 @@ function calculateSpans(
   text: string,
   analysis: AnalysisResponseEntry[] | undefined,
 ): AnalysisResponseEntry[] {
-  console.log(analysis);
-
   const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];

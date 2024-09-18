@@ -7,9 +7,11 @@ import { PdfResult } from "../renderers/openk9/pdf/PdfResult";
 import { Renderers } from "./useRenderers";
 import { MobileLogoSvg } from "../svgElement/MobileLogoSvg";
 import { useTranslation } from "react-i18next";
+import { TemplatesProps } from "../embeddable/entry";
 
 type ResultProps<E> = {
   renderers: Renderers;
+  templateCustom?: TemplatesProps | null;
   result: GenericResultItem<E>;
   onDetail(result: GenericResultItem<E> | null): void;
   isMobile: boolean;
@@ -22,15 +24,35 @@ type ResultProps<E> = {
     | undefined
     | null;
 };
+
 function Result<E>(props: ResultProps<E>) {
   const result = props.result as any;
-  const { onDetail, renderers } = props;
-  const isMobile = props.isMobile;
-  const setIdPreview = props.setIdPreview;
-  const setDetailMobile = props.setDetailMobile;
-  const viewButton = props.viewButton;
-  const overChangeCard = props.overChangeCard;
-  const setViewButtonDetail = props.setViewButtonDetail;
+  const {
+    onDetail,
+    renderers,
+    isMobile,
+    setIdPreview,
+    setDetailMobile,
+    viewButton,
+    overChangeCard,
+    setViewButtonDetail,
+    templateCustom,
+  } = props;
+
+  const classContainer = result?.source?.documentTypes
+    .map((element: string) => "openk9-card-" + element)
+    .join(" ", "");
+
+  const getCustomTemplate = () => {
+    if (!templateCustom || templateCustom.length === 0) return null;
+
+    const matchedTemplate = templateCustom.find((template) =>
+      result.source.documentTypes.includes(template.source),
+    );
+
+    return matchedTemplate?.Template ?? null;
+  };
+
   return (
     <div
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
@@ -51,94 +73,112 @@ function Result<E>(props: ResultProps<E>) {
       `}
     >
       {(() => {
+        const CustomTemplate = getCustomTemplate();
+
+        if (CustomTemplate) {
+          return (
+            <React.Fragment>
+              <CustomTemplate {...result} />
+              {isMobile && (
+                <CreateButton
+                  setIdPreview={setIdPreview}
+                  setDetailMobile={setDetailMobile}
+                  result={result}
+                />
+              )}
+            </React.Fragment>
+          );
+        }
+
         const Renderer: React.FC<ResultRendererProps<E>> =
           result.source.documentTypes
             .map((k: string) => renderers?.resultRenderers[k])
             .find(Boolean);
-        if (Renderer) {
+
+        if (Renderer && typeof Renderer === "function") {
           return (
             <React.Fragment>
               <Renderer result={result} />
-              {isMobile &&
-                CreateButton({
-                  setIdPreview,
-                  setDetailMobile,
-                  result,
-                })}
-              {viewButton &&
-                !isMobile &&
-                ButtonDetail({
-                  result,
-                  onDetail,
-                  setIdPreview,
-                  setViewButtonDetail,
-                })}
+              {isMobile && (
+                <CreateButton
+                  setIdPreview={setIdPreview}
+                  setDetailMobile={setDetailMobile}
+                  result={result}
+                />
+              )}
+              {viewButton && !isMobile && (
+                <ButtonDetail
+                  result={result}
+                  onDetail={onDetail}
+                  setIdPreview={setIdPreview}
+                  setViewButtonDetail={setViewButtonDetail}
+                />
+              )}
             </React.Fragment>
           );
         }
+
         if (result.source.documentTypes.includes("pdf")) {
           return (
             <React.Fragment>
               <PdfResult result={result} />
-              {isMobile &&
-                CreateButton({
-                  setIdPreview,
-                  setDetailMobile,
-                  result,
-                })}
-              {viewButton &&
-                !isMobile &&
-                ButtonDetail({
-                  result,
-                  onDetail,
-                  setIdPreview,
-                  setViewButtonDetail,
-                })}
+              {isMobile && (
+                <CreateButton
+                  setIdPreview={setIdPreview}
+                  setDetailMobile={setDetailMobile}
+                  result={result}
+                />
+              )}
             </React.Fragment>
           );
         }
+
         if (result.source.documentTypes.includes("document")) {
           return (
             <React.Fragment>
               <DocumentResult result={result} />
-              {isMobile &&
-                CreateButton({
-                  setIdPreview,
-                  setDetailMobile,
-                  result,
-                })}
-              {viewButton &&
-                !isMobile &&
-                ButtonDetail({
-                  result,
-                  onDetail,
-                  setIdPreview,
-                  setViewButtonDetail,
-                })}
+              {isMobile && (
+                <CreateButton
+                  setIdPreview={setIdPreview}
+                  setDetailMobile={setDetailMobile}
+                  result={result}
+                />
+              )}
+              {viewButton && !isMobile && (
+                <ButtonDetail
+                  result={result}
+                  onDetail={onDetail}
+                  setIdPreview={setIdPreview}
+                  setViewButtonDetail={setViewButtonDetail}
+                />
+              )}
             </React.Fragment>
           );
         }
+
         if (result.source.documentTypes.includes("web")) {
           return (
             <React.Fragment>
               <WebResult result={result} />
-              {isMobile &&
-                CreateButton({
-                  setIdPreview,
-                  setDetailMobile,
-                  result,
-                })}
-              {viewButton &&
-                !isMobile &&
-                ButtonDetail({
-                  result,
-                  onDetail,
-                  setIdPreview,
-                  setViewButtonDetail,
-                })}
+              {isMobile && (
+                <CreateButton
+                  setIdPreview={setIdPreview}
+                  setDetailMobile={setDetailMobile}
+                  result={result}
+                />
+              )}
+              {viewButton && !isMobile && (
+                <ButtonDetail
+                  result={result}
+                  onDetail={onDetail}
+                  setIdPreview={setIdPreview}
+                  setViewButtonDetail={setViewButtonDetail}
+                />
+              )}
             </React.Fragment>
           );
         }
+
         return (
           <pre
             className="openk9-embeddable-search--no-result-container"
@@ -155,6 +195,7 @@ function Result<E>(props: ResultProps<E>) {
     </div>
   );
 }
+
 function CreateButton({
   setDetailMobile,
   result,
@@ -201,7 +242,7 @@ function CreateButton({
           setDetailMobile(result);
         }}
       >
-        <span> {t("preview")}</span>
+        <span>{t("preview")}</span>
         <MobileLogoSvg />
       </button>
     </div>
@@ -263,7 +304,7 @@ function ButtonDetail<E>({
           if (recoveryButton) recoveryButton.focus();
         }}
       >
-        <span> {t("preview")}</span>
+        <span>{t("preview")}</span>
         <MobileLogoSvg />
       </button>
     </div>
