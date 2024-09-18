@@ -519,7 +519,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			log.errorf(exception, "work failed for %s", heldMessage);
 
 			getContext().getSelf().tell(new PersistException(exception));
-			this.failureTracked = true;
 
 			replyTo.tell(new Failure("work stage failed"));
 
