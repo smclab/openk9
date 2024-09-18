@@ -468,9 +468,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			var requester = halt.requester();
 
 			requester.tell(Success.INSTANCE);
+
 			getContext()
 				.getSelf()
-				.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
+				.tell(new Halt(halt.exception()));
 
 		}
 		else if (response instanceof WorkStage.Last last) {

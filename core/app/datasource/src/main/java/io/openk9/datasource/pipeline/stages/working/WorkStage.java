@@ -29,6 +29,7 @@ import akka.cluster.sharding.typed.javadsl.EntityRef;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
+import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
@@ -168,7 +169,24 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				shardingKey
 			);
 
-			this.replyTo.tell(new Halt(requester));
+			DataProcessException exception;
+
+			var rawContent = dataPayload.getRawContent();
+
+			if (rawContent != null
+				&& !rawContent.isEmpty()) {
+
+				exception = new DataProcessException(rawContent);
+			}
+			else {
+				exception = new DataProcessException(String.format(
+					"Halt received from the source for scheduling %s.",
+					shardingKey
+				)
+				);
+			}
+
+			this.replyTo.tell(new Halt(exception, requester));
 
 		}
 		else if (dataPayload.getContentId() != null) {
@@ -306,7 +324,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private record PostProcess(Processor.Response response) implements Command {}
 
-	public record Halt(ActorRef<Scheduling.Response> requester) implements Response {}
+	public record Halt(DataProcessException exception, ActorRef<Scheduling.Response> requester)
+		implements Response {}
 
 	public record Last(ActorRef<Scheduling.Response> requester) implements Response {}
 
