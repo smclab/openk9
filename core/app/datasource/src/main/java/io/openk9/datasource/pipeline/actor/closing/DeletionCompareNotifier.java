@@ -29,6 +29,7 @@ import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
@@ -99,24 +100,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 		return Behaviors.same();
 	}
 
-	private Behavior<AggregateItem.Command> onSendEvents(SendEvents sendEvents) {
-		var scheduler = sendEvents.scheduler();
-		var list = sendEvents.list();
-		var tenantId = shardingKey.tenantId();
-		var replyTo = sendEvents.replyTo();
-
-		Long datasourceId = scheduler.getDatasourceId();
-		String newDataIndexName = scheduler.getNewDataIndexName();
-
-		for (String deletedContentId : list) {
-			DatasourceEventBus.sendDeleteEvent(
-				tenantId, datasourceId, newDataIndexName, deletedContentId);
-		}
-
-		getContext().getSelf().tell(new Stop(replyTo));
-
-		return Behaviors.same();
-	}
+	private static Logger log = Logger.getLogger(DeletionCompareNotifier.class);
 
 	private Behavior<AggregateItem.Command> onStop(Stop stop) {
 		stop.replyTo().tell(Success.INSTANCE);
@@ -137,4 +121,30 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 		ActorRef<AggregateItem.Reply> replyTo
 	) implements AggregateItem.Command {}
 
+	private Behavior<AggregateItem.Command> onSendEvents(SendEvents sendEvents) {
+		var scheduler = sendEvents.scheduler();
+		var list = sendEvents.list();
+		var tenantId = shardingKey.tenantId();
+		var replyTo = sendEvents.replyTo();
+
+		Long datasourceId = scheduler.getDatasourceId();
+		String newDataIndexName = scheduler.getNewDataIndexName();
+
+		if (list != null) {
+			for (String deletedContentId : list) {
+				DatasourceEventBus.sendDeleteEvent(
+					tenantId, datasourceId, newDataIndexName, deletedContentId);
+			}
+		}
+		else {
+			log.warnf(
+				"%s cannot send delete events because deleted contents are unknown.",
+				shardingKey
+			);
+		}
+
+		getContext().getSelf().tell(new Stop(replyTo));
+
+		return Behaviors.same();
+	}
 }
