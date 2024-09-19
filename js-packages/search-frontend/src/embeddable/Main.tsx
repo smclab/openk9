@@ -246,29 +246,26 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          {isSearchLoading ? null : (
-            <Search
-              configuration={configuration}
-              spans={spans}
-              selectionsState={selectionsState}
-              selectionsDispatch={selectionsDispatch}
-              showSyntax={isQueryAnalysisComplete}
-              btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
-              htmlKey={configuration.searchConfigurable?.htmlKey}
-              viewColor={configuration.showSyntax}
-              messageSearchIsVisible={
-                configuration?.searchConfigurable?.messageSearchIsVisible ??
-                true
-              }
-              customMessageSearch={
-                configuration?.searchConfigurable?.customMessageSearch
-              }
-              actionOnClick={configuration?.searchConfigurable?.actionOnClick}
-              callbackClickSearch={
-                configuration?.searchConfigurable?.callbackClickSearch
-              }
-            />
-          )}
+          <Search
+            configuration={configuration}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
+            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+            htmlKey={configuration.searchConfigurable?.htmlKey}
+            viewColor={configuration.showSyntax}
+            messageSearchIsVisible={
+              configuration?.searchConfigurable?.messageSearchIsVisible ?? true
+            }
+            customMessageSearch={
+              configuration?.searchConfigurable?.customMessageSearch
+            }
+            actionOnClick={configuration?.searchConfigurable?.actionOnClick}
+            callbackClickSearch={
+              configuration?.searchConfigurable?.callbackClickSearch
+            }
+          />
         </I18nextProvider>,
         configuration.searchConfigurable
           ? configuration.searchConfigurable.element
@@ -515,6 +512,7 @@ export function Main({
               classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
+              templateCustom={configuration.template}
               setViewButtonDetail={setViewButtonDetail}
               selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
@@ -584,6 +582,7 @@ export function Main({
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
               NoResultsCustom={configuration.resultList?.noResultsCustom}
+              templateCustom={configuration.template}
             />
           )}
         </I18nextProvider>,

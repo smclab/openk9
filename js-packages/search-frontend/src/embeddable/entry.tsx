@@ -319,6 +319,8 @@ type searchWithSuggestionsProps =
   | null
   | undefined;
 
+export type TemplatesProps = Array<{ source: string; Template: React.FC<any> }>;
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -385,6 +387,7 @@ export type Configuration = {
   sortResultConfigurable: SortResultConfigurableProps | null;
   sortResultListCustom: SortResultListCustomProps | null;
   tabsConfigurable: TabsProps | null;
+  template: TemplatesProps | null;
   totalResultConfigurable: totalResultProps | null;
   // functions
   changeSortResult: (
@@ -445,6 +448,7 @@ const defaultConfiguration: Configuration = {
   skeletonTabsCustom: null,
   tabs: null,
   tabsConfigurable: null,
+  template: null,
   tenant: null,
   token: null,
   totalResult: null,

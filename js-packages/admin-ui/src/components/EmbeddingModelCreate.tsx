@@ -69,8 +69,8 @@ export function EmbeddingModelCreate() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Description" {...form.inputProps("description")} />
-        <TextInput label="Api Url" {...form.inputProps("apiKey")} />
-        <TextInput label="Api Key" {...form.inputProps("apiUrl")} />
+        <TextInput label="Api Url" {...form.inputProps("apiUrl")} />
+        <TextInput label="Api Key" {...form.inputProps("apiKey")} />
 
         <div className="sheet-footer">
           <CustomButtom nameButton={embeddingModelsId === "new" ? "Create" : "Update"} canSubmit={!form.canSubmit} typeSelectet="submit" />

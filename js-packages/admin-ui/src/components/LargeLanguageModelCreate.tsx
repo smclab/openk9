@@ -83,8 +83,8 @@ export function LargeLanguageModel() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <TextInput label="Description" {...form.inputProps("description")} />
-        <TextInput label="Api Url" {...form.inputProps("apiKey")} />
-        <TextInput label="Api Key" {...form.inputProps("apiUrl")} />
+        <TextInput label="Api Url" {...form.inputProps("apiUrl")} />
+        <TextInput label="Api Key" {...form.inputProps("apiKey")} />
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
 
         <div className="sheet-footer">

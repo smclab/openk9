@@ -48,6 +48,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class OpenSearchUtils {
@@ -106,6 +108,9 @@ public class OpenSearchUtils {
 
 		return mappings;
 	}
+
+	private static final Set<Character> FORBIDDEN_CHARACTERS = Set.of(
+		':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
 
 	public static WrapperQueryBuilder toWrapperQueryBuilder(Query query) {
 
@@ -191,6 +196,41 @@ public class OpenSearchUtils {
 
 		IndexSettings indexSettings = new IndexSettings(indexMetadata, Settings.EMPTY);
 		return indexSettings;
+	}
+
+	/**
+	 * Take a candidate indexName and removes illegal first characters
+	 * then replace all forbidden characters (include uppercase).
+	 *
+	 * @param name the candidate name
+	 * @return the sanitized name
+	 */
+	public static String indexNameSanitizer(String name) {
+		Objects.requireNonNull(name);
+
+		var n = name.length();
+
+		if (n == 0) {
+			throw new IllegalArgumentException("name is empty");
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		int i = 0;
+		while (name.charAt(i) == '_' || name.charAt(i) == '-') {
+			i++;
+		}
+
+		for (; i < n; i++) {
+			if (FORBIDDEN_CHARACTERS.contains(name.charAt(i))) {
+				builder.append("_");
+			}
+			else {
+				builder.append(name.charAt(i));
+			}
+		}
+
+		return builder.toString().toLowerCase();
 	}
 
 }
