@@ -107,6 +107,21 @@ public class SchedulingService {
 			.subscribeAsCompletionStage();
 	}
 
+	protected static String getErrorDescription(Exception exception) {
+		var invertedStackTrace =
+			ExceptionUtil.rootCauseFirstStackTrace(exception);
+
+		var stringReader = new StringReader(invertedStackTrace);
+		var lineNumberReader = new LineNumberReader(stringReader);
+
+		var collapsed = lineNumberReader.lines()
+			.filter(line -> !line.startsWith("\tat"))
+			.filter(line -> !line.startsWith("\t..."))
+			.collect(Collectors.joining("\n"));
+
+		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
+	}
+
 	@ConsumeEvent(FETCH_SCHEDULER)
 	Uni<SchedulerDTO> fetchScheduler(FetchRequest request) {
 
@@ -158,36 +173,12 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
-	protected static String getErrorDescription(Exception exception) {
-		var invertedStackTrace =
-			ExceptionUtil.rootCauseFirstStackTrace(exception);
-
-		var stringReader = new StringReader(invertedStackTrace);
-		var lineNumberReader = new LineNumberReader(stringReader);
-
-		var collapsed = lineNumberReader.lines()
-			.filter(line -> !line.startsWith("\tat"))
-			.filter(line -> !line.startsWith("\t..."))
-			.collect(Collectors.joining("\n"));
-
-		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
-	}
-
 	@ConsumeEvent(GET_DELETED_CONTENT_ID)
 	Uni<List<String>> getDeletedContentId(GetDeletedContentIdRequest request) {
 		var schedulingKey = request.shardingKey();
 
 		return schedulerService.getDeletedContentIds(
 			schedulingKey.tenantId(), schedulingKey.scheduleId());
-	}
-
-	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
-
-		return s
-			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-			.setParameter("scheduleId", scheduleId)
-			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-			.getSingleResult();
 	}
 
 	@ConsumeEvent(PERSIST_ERROR_DESCRIPTION)
@@ -209,6 +200,15 @@ public class SchedulingService {
 				})
 			)
 			.map(schedulerMapper::map);
+	}
+
+	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
+
+		return s
+			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+			.setParameter("scheduleId", scheduleId)
+			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+			.getSingleResult();
 	}
 
 	private record FetchRequest(ShardingKey shardingKey) {}
