@@ -1,0 +1,119 @@
+stages:
+  - build-image
+  - container-scanning
+  - deploy
+  - restart
+
+variables:
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
+
+########################     TEMPLATES     ########################
+
+
+
+# Template per i lavori di costruzione Docker
+.build_template: &build_template
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  variables:
+    TEST_NAME: "local/test"
+    DOCKER_HOST: "tcp://localhost:2375"
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode "
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  cache:
+    key: ${CI_PROJECT_PATH_SLUG}-${CI_COMMIT_REF_SLUG}-entity-manager
+    paths:
+      - $CI_PROJECT_DIR/.m2/repository
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/core/app/entity-manager/target/
+    expire_in: 2 days
+
+########################################################
+######################### JOBS #########################
+########################################################
+
+Build Entity-Manager image:
+  <<: *build_template
+  stage: build-image
+  before_script:
+    - apt-get update && apt-get install -y maven
+  script:
+    - cd core
+    - |
+      # Estrai la versione dal pom.xml e impostala come variabile di ambiente
+      VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+      echo "VERSION=$VERSION"
+      echo "$VERSION" > $CI_PROJECT_DIR/.version
+    - FEATURE_BRANCH_REGEX='^\d+-.*$'
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then                                               
+        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+      elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
+        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+      elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) && "$CI_COMMIT_AUTHOR" == "michele.bastianelli" ]]; then
+        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
+      elif [[ "$CI_COMMIT_BRANCH" =~ $(FEATURE_BRANCH_REGEX) ]]; then
+        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+      fi
+  artifacts:
+    paths:
+      - .version
+    expire_in: 24 hours
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/ || $CI_MERGE_REQUEST_ID'
+
+############## Container scanning ##############
+
+Container Scanning Entity-Manager:
+  stage: container-scanning
+  image: $CS_ANALYZER_IMAGE
+  variables:
+    CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
+    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    GIT_STRATEGY: fetch
+  allow_failure: true
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+      cyclonedx: "**/gl-sbom-*.cdx.json"
+    paths: [gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json"]
+  dependencies: [Build Entity-Manager image]
+  before_script:
+    - export VERSION=$(cat $CI_PROJECT_DIR/.version | grep -oE '^[^=]+$')
+    - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/openk9-entity-manager:$VERSION"
+    - echo "Using version $VERSION"
+  script:
+    - gtcs scan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+############## Restart ##############
+
+Trigger Restart Entity-Manager:
+  image: alpine:latest
+  stage: restart
+  script:
+    - apk add --no-cache curl
+    - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
+    - echo "CI_COMMIT_AUTHOR=$CI_COMMIT_AUTHOR"
+    - AUTHOR_NAME=$(echo $CI_COMMIT_AUTHOR | cut -d ' ' -f 1)
+    - echo "AUTHOR_NAME=$AUTHOR_NAME"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+        echo "Branch matches main or pattern"
+        if [[ "$AUTHOR_NAME" == "michele.bastianelli" ]]; then
+          echo "Triggering restart-entity-manager with backend version"
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-entity-manager" -F "variables[NAMESPACE]=k9-backend01" -F ref=master $RESTART_TRIGGER_URL
+        else
+          echo "Commit author does not match"
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-entity-manager" -F ref=master $RESTART_TRIGGER_URL
+        fi
+      else
+        echo "Branch does not match main or pattern"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+

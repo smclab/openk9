@@ -42,7 +42,6 @@ public class K9EntityListener {
 		_handle(k9Entity, EventType.UPDATE);
 	}
 
-
 	@PostRemove
 	public void postRemove(K9Entity k9Entity) {
 		_handle(k9Entity, EventType.DELETE);

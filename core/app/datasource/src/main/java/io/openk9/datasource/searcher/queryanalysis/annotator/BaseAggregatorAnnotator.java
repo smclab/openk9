@@ -136,7 +136,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 				.getDatasources()
 				.stream()
 				.map(Datasource::getDataIndex)
-				.map(DataIndex::getName)
+				.map(DataIndex::getIndexName)
 				.toArray(String[]::new);
 
 		SearchRequest searchRequest = new SearchRequest(indexNames);

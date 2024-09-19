@@ -210,8 +210,9 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest.indices(
-			scheduler.getOldDataIndex().getName(),
-			scheduler.getNewDataIndex().getName());
+			scheduler.getOldDataIndex().getIndexName(),
+			scheduler.getNewDataIndex().getIndexName()
+		);
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		TermsAggregationBuilder aggregation = AggregationBuilders

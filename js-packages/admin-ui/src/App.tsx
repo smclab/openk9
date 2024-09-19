@@ -90,10 +90,14 @@ import { InformationBuckets } from "./components/InformationBuckets";
 import { InformationDataSource } from "./components/InformationDataSource";
 import { TabsTranslations } from "./components/TabsTranslations";
 import { TabTokenTabsAssociation } from "./components/TabTokenTabs";
-import { Languages } from "./components/Languages";
 import { BucketLanguage } from "./components/BucketLanguage";
-import { Language } from "./components/Language";
 import { DocTypeFieldsSearch } from "./components/DocTypeFieldsSearch";
+import { EmbeddingModels } from "./components/EmbeddingModels";
+import { LargeLanguageModels } from "./components/LargeLanguageModels";
+import { EmbeddingModel } from "./components/EmbeddingModel";
+import { LargeLanguageModelE } from "./components/LargeLanguageModel";
+import { EmbeddingModelCreate } from "./components/EmbeddingModelCreate";
+import { LargeLanguageModel } from "./components/LargeLanguageModelCreate";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -482,6 +486,12 @@ export default function App() {
                         <Route path="" element={<Annotator />} />
                       </Route>
                     </Route>
+                    <Route path="embedding-models" element={<EmbeddingModels />} />
+                    <Route path="embedding-models/new" element={<EmbeddingModelCreate />} />
+                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModelCreate />} />
+                    <Route path="large-languages-models" element={<LargeLanguageModels />} />
+                    <Route path="large-languages-models/new" element={<LargeLanguageModel />} />
+                    <Route path="large-languages-models/:largeLanguageModelId" element={<LargeLanguageModel />} />
                     <Route path="wizard">
                       <Route path="web-crawler" element={<WebCrawlerWizard />} />
                     </Route>

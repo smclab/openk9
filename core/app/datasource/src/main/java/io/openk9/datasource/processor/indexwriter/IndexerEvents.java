@@ -72,12 +72,12 @@ public class IndexerEvents {
 		}
 
 		return indexService
-			.getMappings(dataIndex.getName())
+			.getMappings(dataIndex.getIndexName())
 			.map(IndexerEvents::toDocTypeFields)
 			.plug(docTypeFields -> Uni.combine().all()
 				.unis(
 					docTypeFields,
-					_getDocumentTypes(dataIndex.getName())
+					_getDocumentTypes(dataIndex.getIndexName())
 				)
 				.asTuple()
 			)

@@ -1,0 +1,232 @@
+stages:
+  - trigger
+  - build-image
+  - restart
+  - maven_build
+  - maven_dependency_check
+  - quality
+  - container-scanning
+
+cache:
+  paths:
+    - .m2/repository
+    - .sonar/cache
+  key: "${CI_COMMIT_REF_SLUG}"
+
+include:
+  - local: '/.gitlab/.gitlab-ci-search-frontend.yaml'
+  - local: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
+  - local: '/.gitlab/.gitlab-ci-site.yaml'
+  - local: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
+
+
+####################################################
+################## DATASOURCE ######################
+####################################################
+
+Trigger Datasource:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/ || $CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - core/app/datasource/**/*
+        - core/service/**/*
+        - core/common/graphql-util/**/*
+        - core/common/model/**/*
+        - core/common/resources-common/**/*
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-datasource.yaml'
+
+####################################################
+##################  SEARCHER  ######################
+####################################################
+
+Trigger Searcher:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/common/resources-common/**/*
+        - core/app/searcher/**/*
+        - core/service/**/*
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-searcher.yaml'
+
+####################################################
+##################  INGESTION  #####################
+####################################################
+
+Trigger Ingestion:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/app/ingestion/**/*
+        - core/common/util/**/*
+        - core/common/resources-common/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-ingestion.yaml'
+
+####################################################
+##################  K8S-CLIENT  ####################
+####################################################
+
+Trigger K8S-Client:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/app/k8s-client/**/*
+        - core/app/service/**/*
+        - core/client/grpc/**/*
+        - core/common/k8s-manifest/**/*
+        - core/common/resources-common/**/*
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/api/tenant-manager-api/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-k8s-client.yaml'
+
+
+####################################################
+##################  FILE-MANAGER  ##################
+####################################################
+
+Trigger File-Manager:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/app/file-manager/**/*
+        - core/common/resources-common /**/*
+        - core/client/grpc/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-file-manager.yaml'
+
+####################################################
+################  TENANT-MANAGER  ##################
+####################################################
+
+Trigger Tenant-Manager:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/app/tenant-manager/**/*
+        - core/common/graphql-util/**/*
+        - core/common/model/**/*
+        - core/common/resources-common/**/*
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-tenant-manager.yaml'
+
+####################################################
+#####################   TIKA   #####################
+####################################################
+
+Trigger Tika no-ocr:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^\d+-.*$/'
+      changes:
+        - core/app/tika/**/*
+        - core/common/resources-common/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-tika-no-ocr.yaml'
+
+##################################################################################################
+#  Rerfactoring delle 2 installazioni mvn per alleggerire il carico e non andare out of memory   #
+##################################################################################################
+
+Maven Install Hibernate:
+  stage: maven_build
+  image: maven:3.8.4-openjdk-17
+  script:
+    - cd vendor/hibernate-rx-multitenancy
+    - mvn install
+  artifacts:
+    paths:
+      - vendor/hibernate-rx-multitenancy/target
+    expire_in: 1 week
+  cache:
+    key: "${CI_COMMIT_BRANCH}-dependency-hibernate"
+    paths:
+      - $CI_PROJECT_DIR/.m2/repository
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+Maven Install Core:
+  stage: maven_build
+  image: maven:3.8.4-openjdk-17
+  needs:
+    - job: "Maven Install Hibernate"
+      artifacts: true
+  script:
+    - cd core
+    - mvn install -P 'exclude-quarkus-test'
+  artifacts:
+    paths:
+      - core/target
+    expire_in: 1 week
+  cache:
+    key: "${CI_COMMIT_BRANCH}-dependency-core"
+    paths:
+      - $CI_PROJECT_DIR/.m2/repository
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+Maven Dependency Check:
+  stage: maven_dependency_check
+  image: maven:3.8.4-openjdk-17
+  needs:
+    - job: "Maven Install Core"
+      artifacts: true
+  variables:
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  script:
+    - cd core
+    - mvn -B org.owasp:dependency-check-maven:aggregate -P 'exclude-quarkus-test'
+  artifacts:
+    paths:
+      - core/target/dependency-check-report.html
+    expire_in: 1 week
+  cache:
+    key: "${CI_COMMIT_BRANCH}-dependency-check"
+    paths:
+      - $CI_PROJECT_DIR/.m2/repository
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+#######################################################################################################
+################################        SONARQUBE         #############################################
+#######################################################################################################
+
+SonarQube Check:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  before_script:
+    - mkdir /tmp/empty
+  script:
+    - sonar-scanner -Dsonar.qualitygate.wait=true
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"'

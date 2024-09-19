@@ -563,7 +563,14 @@ export function App() {
 
       <div
         className="openk9-results-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ results: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            resultList: {
+              element,
+              changeOnOver: false,
+            },
+          })
+        }
         css={css`
           grid-area: result;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};

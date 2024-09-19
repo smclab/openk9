@@ -30,7 +30,9 @@ public class DataProcessException extends RuntimeException {
 		super(message, cause);
 	}
 
-	public DataProcessException(Throwable cause) {}
+	public DataProcessException(Throwable cause) {
+		super(cause);
+	}
 
 	public DataProcessException(
 		String message,

@@ -15,30 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.pipeline.service;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.validation.json.Json;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+public class PayloadEmbeddingFailed extends EmbeddingServiceException {
+	public PayloadEmbeddingFailed() {
+		super();
+	}
 
-import javax.validation.constraints.NotNull;
+	public PayloadEmbeddingFailed(String message) {
+		super(message);
+	}
 
+	public PayloadEmbeddingFailed(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-@NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
-@EqualsAndHashCode(callSuper = true)
-public class LargeLanguageModelDTO extends K9EntityDTO {
+	public PayloadEmbeddingFailed(Throwable cause) {
+		super(cause);
+	}
 
-	@NotNull
-	private String apiUrl;
-	private String apiKey;
-	@Json
-	private String jsonConfig;
+	protected PayloadEmbeddingFailed(
+		String message,
+		Throwable cause,
+		boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 
 }

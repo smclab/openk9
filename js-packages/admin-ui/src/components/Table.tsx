@@ -306,6 +306,8 @@ export function Table<
   onDelete,
   rowActions = () => [],
   rowsActions = () => [],
+  viewAdd = true,
+  haveActions = true,
 }: {
   data: {
     queryResult: QueryResult<Query, Parameters>;
@@ -324,6 +326,8 @@ export function Table<
   onCreatePath: string;
   rowActions?(row: Row | undefined): Array<{ label: string; icon: string; onClick(): void }>;
   rowsActions?(rows: Array<Row>): Array<{ label: string; onClick(): void }>;
+  haveActions?: boolean;
+  viewAdd?: boolean;
 }) {
   const [searchText, setSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
@@ -362,14 +366,16 @@ export function Table<
               </div>
             </ClayToolbar.Item>
             <ClayToolbar.Item>
-              <Link to={onCreatePath}>
-                <ClayButton className={`${ClassNameButton} btn-sm`}>
-                  <span className="inline-item inline-item-before">
-                    <ClayIcon symbol="plus" />
-                  </span>
-                  {"Add New"}
-                </ClayButton>
-              </Link>
+              {viewAdd && (
+                <Link to={onCreatePath}>
+                  <ClayButton className={`${ClassNameButton} btn-sm`}>
+                    <span className="inline-item inline-item-before">
+                      <ClayIcon symbol="plus" />
+                    </span>
+                    {"Add New"}
+                  </ClayButton>
+                </Link>
+              )}
             </ClayToolbar.Item>
             {isItemsSelectable && (
               <React.Fragment>
@@ -473,7 +479,7 @@ export function Table<
                   </ClayTable.Cell>
                 );
               })}
-              <ClayTable.Cell headingCell style={{ width: "56px" }} />
+              {haveActions && <ClayTable.Cell headingCell style={{ width: "56px" }} />}
             </ClayTable.Row>
           )}
           itemContent={(index) => {
@@ -499,18 +505,20 @@ export function Table<
                 {columns.map((column, index) => {
                   return <ClayTable.Cell key={index}>{column.content(row)}</ClayTable.Cell>;
                 })}
-                <ClayTable.Cell>
-                  <TableRowActions
-                    actions={[
-                      ...rowActions(row),
-                      {
-                        label: "Delete",
-                        icon: "trash",
-                        onClick: () => onDelete(row),
-                      },
-                    ]}
-                  />
-                </ClayTable.Cell>
+                {haveActions && (
+                  <ClayTable.Cell>
+                    <TableRowActions
+                      actions={[
+                        ...rowActions(row),
+                        {
+                          label: "Delete",
+                          icon: "trash",
+                          onClick: () => onDelete(row),
+                        },
+                      ]}
+                    />
+                  </ClayTable.Cell>
+                )}
               </React.Fragment>
             );
           }}

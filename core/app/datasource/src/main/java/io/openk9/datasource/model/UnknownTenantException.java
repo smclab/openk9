@@ -15,30 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.model;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.validation.json.Json;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import io.openk9.datasource.service.exception.K9Error;
 
-import javax.validation.constraints.NotNull;
+public class UnknownTenantException extends K9Error {
 
+	public UnknownTenantException(String message) {
+		super(message);
+	}
 
-@NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
-@EqualsAndHashCode(callSuper = true)
-public class LargeLanguageModelDTO extends K9EntityDTO {
+	public UnknownTenantException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-	@NotNull
-	private String apiUrl;
-	private String apiKey;
-	@Json
-	private String jsonConfig;
+	public UnknownTenantException(Throwable cause) {
+		super(cause);
+	}
 
 }

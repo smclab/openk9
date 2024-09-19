@@ -19,6 +19,8 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.util.OpenSearchUtils;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +37,10 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
+import javax.persistence.PostUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 @Entity
 @Table(name = "data_index")
@@ -75,6 +80,11 @@ public class DataIndex extends K9Entity {
 	@JoinColumn(name = "vector_index_id", referencedColumnName = "id")
 	private VectorIndex vectorIndex;
 
+	@Transient
+	@Setter(AccessLevel.NONE)
+	@Getter(AccessLevel.NONE)
+	private String indexName;
+
 	public void addDocType(DocType docType) {
 		docTypes.add(docType);
 	}
@@ -83,4 +93,45 @@ public class DataIndex extends K9Entity {
 		docTypes.remove(docType);
 	}
 
+	public String getIndexName() throws UnknownTenantException {
+		if (indexName == null) {
+			setupIndexName();
+		}
+
+		return indexName;
+	}
+
+	@PostLoad
+	@PostUpdate
+	protected void setupIndexName() throws UnknownTenantException {
+		String tenantId = getTenant();
+
+		// This is a workaround needed when a new DataIndex is being created.
+		// The tenant is not identified, likely because the entity has not
+		// been persisted yet. Therefore, it is obtained from an entity that
+		// is already in the persistence context, typically, the first
+		// DocType associated with the new DataIndex, or alternatively,
+		// the Datasource associated with it.
+		if (tenantId == null) {
+			var iterator = docTypes.iterator();
+			if (iterator.hasNext()) {
+				var docType = iterator.next();
+				tenantId = docType.getTenant();
+			}
+			else {
+				var ds = getDatasource();
+				if (ds != null) {
+					tenantId = ds.getTenant();
+				}
+			}
+			if (tenantId == null) {
+				throw new UnknownTenantException(
+					String.format("Cannot identify the tenant for DataIndex: %s", getName()));
+			}
+		}
+
+		this.indexName = OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, getName())
+		);
+	}
 }

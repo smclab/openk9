@@ -15,30 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.pipeline.service;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.validation.json.Json;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+public class VectorIndexNotFound extends EmbeddingServiceException {
+	public VectorIndexNotFound() {
+		super();
+	}
 
-import javax.validation.constraints.NotNull;
+	public VectorIndexNotFound(String message) {
+		super(message);
+	}
 
+	public VectorIndexNotFound(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-@NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
-@EqualsAndHashCode(callSuper = true)
-public class LargeLanguageModelDTO extends K9EntityDTO {
+	public VectorIndexNotFound(Throwable cause) {
+		super(cause);
+	}
 
-	@NotNull
-	private String apiUrl;
-	private String apiKey;
-	@Json
-	private String jsonConfig;
+	protected VectorIndexNotFound(
+		String message,
+		Throwable cause,
+		boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 
 }

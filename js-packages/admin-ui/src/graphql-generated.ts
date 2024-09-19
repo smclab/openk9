@@ -159,6 +159,7 @@ export type Bucket = {
   refreshOnQuery?: Maybe<Scalars['Boolean']>;
   refreshOnSuggestionCategory?: Maybe<Scalars['Boolean']>;
   refreshOnTab?: Maybe<Scalars['Boolean']>;
+  retrieveType?: Maybe<RetrieveType>;
   searchConfig?: Maybe<SearchConfig>;
   sortings?: Maybe<Connection_Sorting>;
   suggestionCategories?: Maybe<Connection_SuggestionCategory>;
@@ -263,6 +264,27 @@ export type CharFilterDtoInput = {
   type: Scalars['String'];
 };
 
+export enum ChunkType {
+  CharacterTextSplitter = 'CHARACTER_TEXT_SPLITTER',
+  Default = 'DEFAULT',
+  SemanticSplitter = 'SEMANTIC_SPLITTER',
+  TextSplitter = 'TEXT_SPLITTER',
+  TokenTextSplitter = 'TOKEN_TEXT_SPLITTER'
+}
+
+export type ConfigurationsDtoInput = {
+  /** The chunk strategy to apply */
+  chunkType: ChunkType;
+  /** The configurations needed by the embedding model */
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  /** The field used during the text embedding, defined as JsonPath */
+  textEmbeddingField: Scalars['String'];
+  /** The field used as title, defined as JsonPath */
+  titleField: Scalars['String'];
+  /** The field used as url, defined as JsonPath */
+  urlField: Scalars['String'];
+};
+
 /** A connection to a list of items. */
 export type Connection_Analyzer = {
   /** A list of edges. */
@@ -336,6 +358,14 @@ export type Connection_DocTypeTemplate = {
 };
 
 /** A connection to a list of items. */
+export type Connection_EmbeddingModel = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_EmbeddingModel>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
 export type Connection_EnrichItem = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_EnrichItem>>>;
@@ -355,6 +385,14 @@ export type Connection_EnrichPipeline = {
 export type Connection_Language = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_Language>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
+export type Connection_LargeLanguageModel = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_LargeLanguageModel>>>;
   /** details about this specific page */
   pageInfo?: Maybe<PageInfo>;
 };
@@ -463,6 +501,14 @@ export type Connection_Tokenizer = {
   pageInfo?: Maybe<PageInfo>;
 };
 
+/** A connection to a list of items. */
+export type Connection_VectorIndex = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_VectorIndex>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
 export type DataIndex = {
   __typename?: 'DataIndex';
   cat?: Maybe<CatResponse>;
@@ -561,6 +607,8 @@ export type DatasourceConnectionDtoInput = {
   schedulable: Scalars['Boolean'];
   /** Chron quartz expression to define scheduling of datasource */
   scheduling: Scalars['String'];
+  /** Configurations used for indexing vectors (optional) */
+  vectorIndexConfigurations?: InputMaybe<ConfigurationsDtoInput>;
 };
 
 export type DatasourceDtoInput = {
@@ -630,6 +678,12 @@ export type DefaultConnection_DocTypeTemplate = Connection_DocTypeTemplate & {
   pageInfo?: Maybe<PageInfo>;
 };
 
+export type DefaultConnection_EmbeddingModel = Connection_EmbeddingModel & {
+  __typename?: 'DefaultConnection_EmbeddingModel';
+  edges?: Maybe<Array<Maybe<Edge_EmbeddingModel>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
 export type DefaultConnection_EnrichItem = Connection_EnrichItem & {
   __typename?: 'DefaultConnection_EnrichItem';
   edges?: Maybe<Array<Maybe<Edge_EnrichItem>>>;
@@ -645,6 +699,12 @@ export type DefaultConnection_EnrichPipeline = Connection_EnrichPipeline & {
 export type DefaultConnection_Language = Connection_Language & {
   __typename?: 'DefaultConnection_Language';
   edges?: Maybe<Array<Maybe<Edge_Language>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
+export type DefaultConnection_LargeLanguageModel = Connection_LargeLanguageModel & {
+  __typename?: 'DefaultConnection_LargeLanguageModel';
+  edges?: Maybe<Array<Maybe<Edge_LargeLanguageModel>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
@@ -726,6 +786,12 @@ export type DefaultConnection_Tokenizer = Connection_Tokenizer & {
   pageInfo?: Maybe<PageInfo>;
 };
 
+export type DefaultConnection_VectorIndex = Connection_VectorIndex & {
+  __typename?: 'DefaultConnection_VectorIndex';
+  edges?: Maybe<Array<Maybe<Edge_VectorIndex>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
 export type DefaultEdge_Analyzer = Edge_Analyzer & {
   __typename?: 'DefaultEdge_Analyzer';
   cursor?: Maybe<Scalars['String']>;
@@ -780,6 +846,12 @@ export type DefaultEdge_DocTypeTemplate = Edge_DocTypeTemplate & {
   node?: Maybe<DocTypeTemplate>;
 };
 
+export type DefaultEdge_EmbeddingModel = Edge_EmbeddingModel & {
+  __typename?: 'DefaultEdge_EmbeddingModel';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<EmbeddingModel>;
+};
+
 export type DefaultEdge_EnrichItem = Edge_EnrichItem & {
   __typename?: 'DefaultEdge_EnrichItem';
   cursor?: Maybe<Scalars['String']>;
@@ -796,6 +868,12 @@ export type DefaultEdge_Language = Edge_Language & {
   __typename?: 'DefaultEdge_Language';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<Language>;
+};
+
+export type DefaultEdge_LargeLanguageModel = Edge_LargeLanguageModel & {
+  __typename?: 'DefaultEdge_LargeLanguageModel';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<LargeLanguageModel>;
 };
 
 export type DefaultEdge_PluginDriver = Edge_PluginDriver & {
@@ -874,6 +952,12 @@ export type DefaultEdge_Tokenizer = Edge_Tokenizer & {
   __typename?: 'DefaultEdge_Tokenizer';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<Tokenizer>;
+};
+
+export type DefaultEdge_VectorIndex = Edge_VectorIndex & {
+  __typename?: 'DefaultEdge_VectorIndex';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<VectorIndex>;
 };
 
 export type DefaultPageInfo = PageInfo & {
@@ -1081,6 +1165,14 @@ export type Edge_DocTypeTemplate = {
 };
 
 /** An edge in a connection */
+export type Edge_EmbeddingModel = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<EmbeddingModel>;
+};
+
+/** An edge in a connection */
 export type Edge_EnrichItem = {
   /** cursor marks a unique position or index into the connection */
   cursor?: Maybe<Scalars['String']>;
@@ -1102,6 +1194,14 @@ export type Edge_Language = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<Language>;
+};
+
+/** An edge in a connection */
+export type Edge_LargeLanguageModel = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<LargeLanguageModel>;
 };
 
 /** An edge in a connection */
@@ -1206,6 +1306,35 @@ export type Edge_Tokenizer = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<Tokenizer>;
+};
+
+/** An edge in a connection */
+export type Edge_VectorIndex = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<VectorIndex>;
+};
+
+export type EmbeddingModel = {
+  __typename?: 'EmbeddingModel';
+  apiKey?: Maybe<Scalars['String']>;
+  apiUrl?: Maybe<Scalars['String']>;
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  description?: Maybe<Scalars['String']>;
+  enabled: Scalars['Boolean'];
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+export type EmbeddingModelDtoInput = {
+  apiKey?: InputMaybe<Scalars['String']>;
+  apiUrl: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
 };
 
 export type EnrichItem = {
@@ -1417,6 +1546,29 @@ export type LanguageDtoInput = {
   value?: InputMaybe<Scalars['String']>;
 };
 
+export type LargeLanguageModel = {
+  __typename?: 'LargeLanguageModel';
+  apiKey?: Maybe<Scalars['String']>;
+  apiUrl?: Maybe<Scalars['String']>;
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  description?: Maybe<Scalars['String']>;
+  enabled: Scalars['Boolean'];
+  id?: Maybe<Scalars['ID']>;
+  jsonConfig?: Maybe<Scalars['String']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+export type LargeLanguageModelDtoInput = {
+  apiKey?: InputMaybe<Scalars['String']>;
+  apiUrl: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+};
+
 /** Mutation root */
 export type Mutation = {
   __typename?: 'Mutation';
@@ -1455,6 +1607,7 @@ export type Mutation = {
   bindQueryAnalysisToBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
   bindSearchConfigToBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
   bindTokenizerToAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
+  bindVectorIndex?: Maybe<DataIndex>;
   bucket?: Maybe<Response_Bucket>;
   charFilter?: Maybe<Response_CharFilter>;
   createDatasourceAndAddPluginDriver?: Maybe<Tuple2_Datasource_PluginDriver>;
@@ -1471,9 +1624,11 @@ export type Mutation = {
   deleteDocType?: Maybe<DocType>;
   deleteDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
   deleteDocTypeTemplate?: Maybe<DocTypeTemplate>;
+  deleteEmbeddingModel?: Maybe<EmbeddingModel>;
   deleteEnrichItem?: Maybe<EnrichItem>;
   deleteEnrichPipeline?: Maybe<EnrichPipeline>;
   deleteLanguage?: Maybe<Language>;
+  deleteLargeLanguageModel?: Maybe<LargeLanguageModel>;
   deletePluginDriver?: Maybe<PluginDriver>;
   deleteQueryAnalysis?: Maybe<QueryAnalysis>;
   deleteRule?: Maybe<Rule>;
@@ -1486,13 +1641,18 @@ export type Mutation = {
   deleteTokenFilter?: Maybe<TokenFilter>;
   deleteTokenTab?: Maybe<TokenTab>;
   deleteTokenizer?: Maybe<Tokenizer>;
+  deleteVectorIndex?: Maybe<VectorIndex>;
   docType?: Maybe<Response_DocType>;
   docTypeField?: Maybe<Response_DocTypeField>;
   docTypeTemplate?: Maybe<Response_DocTypeTemplate>;
+  embeddingModel?: Maybe<Response_EmbeddingModel>;
   enableBucket?: Maybe<Bucket>;
+  enableEmbeddingModel?: Maybe<EmbeddingModel>;
+  enableLargeLanguageModel?: Maybe<LargeLanguageModel>;
   enrichItem?: Maybe<Response_EnrichItem>;
   enrichPipeline?: Maybe<Response_EnrichPipeline>;
   language?: Maybe<Response_Language>;
+  largeLanguageModel?: Maybe<Response_LargeLanguageModel>;
   multiSelect?: Maybe<SuggestionCategory>;
   pluginDriver?: Maybe<Response_PluginDriver>;
   queryAnalysis?: Maybe<Response_QueryAnalysis>;
@@ -1538,7 +1698,9 @@ export type Mutation = {
   unbindQueryAnalysisFromBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
   unbindTokenizerFromAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
+  unbindVectorIndex?: Maybe<DataIndex>;
   userField?: Maybe<AclMapping>;
+  vectorIndex?: Maybe<Response_VectorIndex>;
 };
 
 
@@ -1802,6 +1964,13 @@ export type MutationBindTokenizerToAnalyzerArgs = {
 
 
 /** Mutation root */
+export type MutationBindVectorIndexArgs = {
+  dataIndexId: Scalars['ID'];
+  vectorIndexId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationBucketArgs = {
   bucketDTO?: InputMaybe<BucketDtoInput>;
   id?: InputMaybe<Scalars['ID']>;
@@ -1910,6 +2079,12 @@ export type MutationDeleteDocTypeTemplateArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteEmbeddingModelArgs = {
+  embeddingModelId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeleteEnrichItemArgs = {
   enrichItemId: Scalars['ID'];
 };
@@ -1924,6 +2099,12 @@ export type MutationDeleteEnrichPipelineArgs = {
 /** Mutation root */
 export type MutationDeleteLanguageArgs = {
   languageId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationDeleteLargeLanguageModelArgs = {
+  largeLanguageModelId: Scalars['ID'];
 };
 
 
@@ -2006,6 +2187,12 @@ export type MutationDeleteTokenizerArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteVectorIndexArgs = {
+  vectorIndexId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDocTypeArgs = {
   docTypeDTO?: InputMaybe<DocTypeDtoInput>;
   id?: InputMaybe<Scalars['ID']>;
@@ -2031,7 +2218,27 @@ export type MutationDocTypeTemplateArgs = {
 
 
 /** Mutation root */
+export type MutationEmbeddingModelArgs = {
+  embeddingModelDTO?: InputMaybe<EmbeddingModelDtoInput>;
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
 export type MutationEnableBucketArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationEnableEmbeddingModelArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationEnableLargeLanguageModelArgs = {
   id: Scalars['ID'];
 };
 
@@ -2056,6 +2263,14 @@ export type MutationEnrichPipelineArgs = {
 export type MutationLanguageArgs = {
   id?: InputMaybe<Scalars['ID']>;
   languageDTO?: InputMaybe<LanguageDtoInput>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
+export type MutationLargeLanguageModelArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  largeLanguageModelDTO?: InputMaybe<LargeLanguageModelDtoInput>;
   patch?: InputMaybe<Scalars['Boolean']>;
 };
 
@@ -2377,10 +2592,24 @@ export type MutationUnbindTokenizerFromAnalyzerArgs = {
 
 
 /** Mutation root */
+export type MutationUnbindVectorIndexArgs = {
+  dataIndexId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationUserFieldArgs = {
   docTypeFieldId: Scalars['ID'];
   pluginDriverId: Scalars['ID'];
   userField?: InputMaybe<UserField>;
+};
+
+
+/** Mutation root */
+export type MutationVectorIndexArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  vectorIndexDTO?: InputMaybe<VectorIndexDtoInput>;
 };
 
 export enum Operator {
@@ -2511,6 +2740,8 @@ export type Query = {
   docTypeTemplate?: Maybe<DocTypeTemplate>;
   docTypeTemplates?: Maybe<Connection_DocTypeTemplate>;
   docTypes?: Maybe<Connection_DocType>;
+  embeddingModel?: Maybe<EmbeddingModel>;
+  embeddingModels?: Maybe<Connection_EmbeddingModel>;
   enabledBucket?: Maybe<Bucket>;
   enrichItem?: Maybe<EnrichItem>;
   enrichItems?: Maybe<Connection_EnrichItem>;
@@ -2524,6 +2755,8 @@ export type Query = {
   eventOptions?: Maybe<Array<Maybe<EventOption>>>;
   language?: Maybe<Language>;
   languages?: Maybe<Connection_Language>;
+  largeLanguageModel?: Maybe<LargeLanguageModel>;
+  largeLanguageModels?: Maybe<Connection_LargeLanguageModel>;
   pluginDriver?: Maybe<PluginDriver>;
   pluginDrivers?: Maybe<Connection_PluginDriver>;
   pluginDriversPageFilter?: Maybe<Page_PluginDriver>;
@@ -2551,6 +2784,8 @@ export type Query = {
   tokenizers?: Maybe<Connection_Tokenizer>;
   totalSortings?: Maybe<Connection_Sorting>;
   totalTokenTabs?: Maybe<Connection_TokenTab>;
+  vectorIndex?: Maybe<VectorIndex>;
+  vectorIndices?: Maybe<Connection_VectorIndex>;
 };
 
 
@@ -2786,6 +3021,23 @@ export type QueryDocTypesArgs = {
 
 
 /** Query root */
+export type QueryEmbeddingModelArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QueryEmbeddingModelsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
 export type QueryEnrichItemArgs = {
   id: Scalars['ID'];
 };
@@ -2858,6 +3110,23 @@ export type QueryLanguageArgs = {
 
 /** Query root */
 export type QueryLanguagesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryLargeLanguageModelArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QueryLargeLanguageModelsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -3105,6 +3374,23 @@ export type QueryTotalTokenTabsArgs = {
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
+
+/** Query root */
+export type QueryVectorIndexArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QueryVectorIndicesArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
 export type QueryAnalysis = {
   __typename?: 'QueryAnalysis';
   annotators?: Maybe<Connection_Annotator>;
@@ -3222,6 +3508,12 @@ export type Response_DocTypeTemplate = {
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
+export type Response_EmbeddingModel = {
+  __typename?: 'Response_EmbeddingModel';
+  entity?: Maybe<EmbeddingModel>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
 export type Response_EnrichItem = {
   __typename?: 'Response_EnrichItem';
   entity?: Maybe<EnrichItem>;
@@ -3237,6 +3529,12 @@ export type Response_EnrichPipeline = {
 export type Response_Language = {
   __typename?: 'Response_Language';
   entity?: Maybe<Language>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
+export type Response_LargeLanguageModel = {
+  __typename?: 'Response_LargeLanguageModel';
+  entity?: Maybe<LargeLanguageModel>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
@@ -3306,6 +3604,18 @@ export type Response_Tokenizer = {
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
+export type Response_VectorIndex = {
+  __typename?: 'Response_VectorIndex';
+  entity?: Maybe<VectorIndex>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
+export enum RetrieveType {
+  Hybrid = 'HYBRID',
+  Knn = 'KNN',
+  Match = 'MATCH'
+}
+
 export type Rule = {
   __typename?: 'Rule';
   /** ISO-8601 */
@@ -3345,8 +3655,10 @@ export type Scheduler = {
 export enum SchedulerStatus {
   Cancelled = 'CANCELLED',
   Error = 'ERROR',
+  Failure = 'FAILURE',
   Finished = 'FINISHED',
-  Started = 'STARTED'
+  Running = 'RUNNING',
+  Stale = 'STALE'
 }
 
 export type SearchConfig = {
@@ -3462,12 +3774,18 @@ export type Subscription = {
   docTypeTemplateDeleted?: Maybe<DocTypeTemplate>;
   docTypeTemplateUpdated?: Maybe<DocTypeTemplate>;
   docTypeUpdated?: Maybe<DocType>;
+  embeddingModelCreated?: Maybe<EmbeddingModel>;
+  embeddingModelDeleted?: Maybe<EmbeddingModel>;
+  embeddingModelUpdated?: Maybe<EmbeddingModel>;
   enrichItemCreated?: Maybe<EnrichItem>;
   enrichItemDeleted?: Maybe<EnrichItem>;
   enrichItemUpdated?: Maybe<EnrichItem>;
   enrichPipelineCreated?: Maybe<EnrichPipeline>;
   enrichPipelineDeleted?: Maybe<EnrichPipeline>;
   enrichPipelineUpdated?: Maybe<EnrichPipeline>;
+  largeLanguageModelCreated?: Maybe<LargeLanguageModel>;
+  largeLanguageModelDeleted?: Maybe<LargeLanguageModel>;
+  largeLanguageModelUpdated?: Maybe<LargeLanguageModel>;
   pluginDriverCreated?: Maybe<PluginDriver>;
   pluginDriverDeleted?: Maybe<PluginDriver>;
   pluginDriverUpdated?: Maybe<PluginDriver>;
@@ -3492,6 +3810,9 @@ export type Subscription = {
   tokenizerCreated?: Maybe<Tokenizer>;
   tokenizerDeleted?: Maybe<Tokenizer>;
   tokenizerUpdated?: Maybe<Tokenizer>;
+  vectorIndexCreated?: Maybe<VectorIndex>;
+  vectorIndexDeleted?: Maybe<VectorIndex>;
+  vectorIndexUpdated?: Maybe<VectorIndex>;
 };
 
 export type SuggestionCategory = {
@@ -3864,6 +4185,31 @@ export enum UserField {
   Surname = 'SURNAME',
   Username = 'USERNAME'
 }
+
+export type VectorIndex = {
+  __typename?: 'VectorIndex';
+  chunkType?: Maybe<ChunkType>;
+  chunkWindowSize?: Maybe<Scalars['Int']>;
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  dataIndex?: Maybe<DataIndex>;
+  description?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['ID']>;
+  jsonConfig?: Maybe<Scalars['String']>;
+  metadataMapping?: Maybe<Scalars['String']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  textEmbeddingField?: Maybe<Scalars['String']>;
+  titleField?: Maybe<Scalars['String']>;
+  urlField?: Maybe<Scalars['String']>;
+};
+
+export type VectorIndexDtoInput = {
+  configurations: ConfigurationsDtoInput;
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+};
 
 export type AnalyzerQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -4629,6 +4975,46 @@ export type DeleteDocumentTypeMutationVariables = Exact<{
 
 export type DeleteDocumentTypeMutation = { __typename?: 'Mutation', deleteDocType?: { __typename?: 'DocType', id?: string | null } | null };
 
+export type EmbeddingModelQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null } | null };
+
+export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  apiKey?: InputMaybe<Scalars['String']>;
+  apiUrl: Scalars['String'];
+  description: Scalars['String'];
+  name: Scalars['String'];
+}>;
+
+
+export type CreateOrUpdateEmbeddingModelMutation = { __typename?: 'Mutation', embeddingModel?: { __typename?: 'Response_EmbeddingModel', entity?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null } | null };
+
+export type EmbeddingModelsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type EmbeddingModelsQuery = { __typename?: 'Query', embeddingModels?: { __typename?: 'DefaultConnection_EmbeddingModel', edges?: Array<{ __typename?: 'DefaultEdge_EmbeddingModel', node?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null, description?: string | null, enabled: boolean } | null } | null> | null } | null };
+
+export type EnableEmbeddingModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type EnableEmbeddingModelMutation = { __typename?: 'Mutation', enableEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
+
+export type DeleteEmbeddingModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteEmbeddingModelMutation = { __typename?: 'Mutation', deleteEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
+
 export type EnrichItemQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -4782,6 +5168,47 @@ export type DeleteLanguageMutationVariables = Exact<{
 
 
 export type DeleteLanguageMutation = { __typename?: 'Mutation', deleteLanguage?: { __typename?: 'Language', id?: string | null, name?: string | null } | null };
+
+export type LargeLanguageModelQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, jsonConfig?: string | null } | null };
+
+export type CreateOrUpdateLargeLanguageModelMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  apiKey?: InputMaybe<Scalars['String']>;
+  apiUrl: Scalars['String'];
+  description: Scalars['String'];
+  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type CreateOrUpdateLargeLanguageModelMutation = { __typename?: 'Mutation', largeLanguageModel?: { __typename?: 'Response_LargeLanguageModel', entity?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null } | null };
+
+export type LargeLanguageModelsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type LargeLanguageModelsQuery = { __typename?: 'Query', largeLanguageModels?: { __typename?: 'DefaultConnection_LargeLanguageModel', edges?: Array<{ __typename?: 'DefaultEdge_LargeLanguageModel', node?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null, description?: string | null, enabled: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type EnableLargeLanguageModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type EnableLargeLanguageModelMutation = { __typename?: 'Mutation', enableLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
+
+export type DeleteLargeLanguageModelMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteLargeLanguageModelMutation = { __typename?: 'Mutation', deleteLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
 
 export type MonitoringEventsQueryVariables = Exact<{
   field?: InputMaybe<EventSortable>;
@@ -9455,6 +9882,198 @@ export function useDeleteDocumentTypeMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteDocumentTypeMutationHookResult = ReturnType<typeof useDeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationResult = Apollo.MutationResult<DeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>;
+export const EmbeddingModelDocument = gql`
+    query EmbeddingModel($id: ID!) {
+  embeddingModel(id: $id) {
+    name
+    description
+    apiUrl
+    apiKey
+  }
+}
+    `;
+
+/**
+ * __useEmbeddingModelQuery__
+ *
+ * To run a query within a React component, call `useEmbeddingModelQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEmbeddingModelQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEmbeddingModelQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useEmbeddingModelQuery(baseOptions: Apollo.QueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
+      }
+export function useEmbeddingModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
+        }
+export type EmbeddingModelQueryHookResult = ReturnType<typeof useEmbeddingModelQuery>;
+export type EmbeddingModelLazyQueryHookResult = ReturnType<typeof useEmbeddingModelLazyQuery>;
+export type EmbeddingModelQueryResult = Apollo.QueryResult<EmbeddingModelQuery, EmbeddingModelQueryVariables>;
+export const CreateOrUpdateEmbeddingModelDocument = gql`
+    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!) {
+  embeddingModel(
+    id: $id
+    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description}
+  ) {
+    entity {
+      id
+      name
+    }
+  }
+}
+    `;
+export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>;
+
+/**
+ * __useCreateOrUpdateEmbeddingModelMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateEmbeddingModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateEmbeddingModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateEmbeddingModelMutation, { data, loading, error }] = useCreateOrUpdateEmbeddingModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      apiKey: // value for 'apiKey'
+ *      apiUrl: // value for 'apiUrl'
+ *      description: // value for 'description'
+ *      name: // value for 'name'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>(CreateOrUpdateEmbeddingModelDocument, options);
+      }
+export type CreateOrUpdateEmbeddingModelMutationHookResult = ReturnType<typeof useCreateOrUpdateEmbeddingModelMutation>;
+export type CreateOrUpdateEmbeddingModelMutationResult = Apollo.MutationResult<CreateOrUpdateEmbeddingModelMutation>;
+export type CreateOrUpdateEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>;
+export const EmbeddingModelsDocument = gql`
+    query EmbeddingModels($searchText: String, $cursor: String) {
+  embeddingModels(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        description
+        enabled
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useEmbeddingModelsQuery__
+ *
+ * To run a query within a React component, call `useEmbeddingModelsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEmbeddingModelsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEmbeddingModelsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useEmbeddingModelsQuery(baseOptions?: Apollo.QueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
+      }
+export function useEmbeddingModelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
+        }
+export type EmbeddingModelsQueryHookResult = ReturnType<typeof useEmbeddingModelsQuery>;
+export type EmbeddingModelsLazyQueryHookResult = ReturnType<typeof useEmbeddingModelsLazyQuery>;
+export type EmbeddingModelsQueryResult = Apollo.QueryResult<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>;
+export const EnableEmbeddingModelDocument = gql`
+    mutation EnableEmbeddingModel($id: ID!) {
+  enableEmbeddingModel(id: $id) {
+    id
+    name
+  }
+}
+    `;
+export type EnableEmbeddingModelMutationFn = Apollo.MutationFunction<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>;
+
+/**
+ * __useEnableEmbeddingModelMutation__
+ *
+ * To run a mutation, you first call `useEnableEmbeddingModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useEnableEmbeddingModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [enableEmbeddingModelMutation, { data, loading, error }] = useEnableEmbeddingModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useEnableEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>(EnableEmbeddingModelDocument, options);
+      }
+export type EnableEmbeddingModelMutationHookResult = ReturnType<typeof useEnableEmbeddingModelMutation>;
+export type EnableEmbeddingModelMutationResult = Apollo.MutationResult<EnableEmbeddingModelMutation>;
+export type EnableEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>;
+export const DeleteEmbeddingModelDocument = gql`
+    mutation DeleteEmbeddingModel($id: ID!) {
+  deleteEmbeddingModel(embeddingModelId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteEmbeddingModelMutationFn = Apollo.MutationFunction<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
+
+/**
+ * __useDeleteEmbeddingModelMutation__
+ *
+ * To run a mutation, you first call `useDeleteEmbeddingModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteEmbeddingModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteEmbeddingModelMutation, { data, loading, error }] = useDeleteEmbeddingModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>(DeleteEmbeddingModelDocument, options);
+      }
+export type DeleteEmbeddingModelMutationHookResult = ReturnType<typeof useDeleteEmbeddingModelMutation>;
+export type DeleteEmbeddingModelMutationResult = Apollo.MutationResult<DeleteEmbeddingModelMutation>;
+export type DeleteEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
 export const EnrichItemDocument = gql`
     query EnrichItem($id: ID!) {
   enrichItem(id: $id) {
@@ -10292,6 +10911,204 @@ export function useDeleteLanguageMutation(baseOptions?: Apollo.MutationHookOptio
 export type DeleteLanguageMutationHookResult = ReturnType<typeof useDeleteLanguageMutation>;
 export type DeleteLanguageMutationResult = Apollo.MutationResult<DeleteLanguageMutation>;
 export type DeleteLanguageMutationOptions = Apollo.BaseMutationOptions<DeleteLanguageMutation, DeleteLanguageMutationVariables>;
+export const LargeLanguageModelDocument = gql`
+    query LargeLanguageModel($id: ID!) {
+  largeLanguageModel(id: $id) {
+    name
+    description
+    apiUrl
+    apiKey
+    jsonConfig
+  }
+}
+    `;
+
+/**
+ * __useLargeLanguageModelQuery__
+ *
+ * To run a query within a React component, call `useLargeLanguageModelQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLargeLanguageModelQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLargeLanguageModelQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useLargeLanguageModelQuery(baseOptions: Apollo.QueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(LargeLanguageModelDocument, options);
+      }
+export function useLargeLanguageModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(LargeLanguageModelDocument, options);
+        }
+export type LargeLanguageModelQueryHookResult = ReturnType<typeof useLargeLanguageModelQuery>;
+export type LargeLanguageModelLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelLazyQuery>;
+export type LargeLanguageModelQueryResult = Apollo.QueryResult<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>;
+export const CreateOrUpdateLargeLanguageModelDocument = gql`
+    mutation CreateOrUpdateLargeLanguageModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String) {
+  largeLanguageModel(
+    id: $id
+    largeLanguageModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, jsonConfig: $jsonConfig}
+  ) {
+    entity {
+      id
+      name
+    }
+  }
+}
+    `;
+export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
+
+/**
+ * __useCreateOrUpdateLargeLanguageModelMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateLargeLanguageModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateLargeLanguageModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateLargeLanguageModelMutation, { data, loading, error }] = useCreateOrUpdateLargeLanguageModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      apiKey: // value for 'apiKey'
+ *      apiUrl: // value for 'apiUrl'
+ *      description: // value for 'description'
+ *      name: // value for 'name'
+ *      jsonConfig: // value for 'jsonConfig'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>(CreateOrUpdateLargeLanguageModelDocument, options);
+      }
+export type CreateOrUpdateLargeLanguageModelMutationHookResult = ReturnType<typeof useCreateOrUpdateLargeLanguageModelMutation>;
+export type CreateOrUpdateLargeLanguageModelMutationResult = Apollo.MutationResult<CreateOrUpdateLargeLanguageModelMutation>;
+export type CreateOrUpdateLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
+export const LargeLanguageModelsDocument = gql`
+    query LargeLanguageModels($searchText: String, $cursor: String) {
+  largeLanguageModels(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        description
+        enabled
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useLargeLanguageModelsQuery__
+ *
+ * To run a query within a React component, call `useLargeLanguageModelsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLargeLanguageModelsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLargeLanguageModelsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useLargeLanguageModelsQuery(baseOptions?: Apollo.QueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(LargeLanguageModelsDocument, options);
+      }
+export function useLargeLanguageModelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(LargeLanguageModelsDocument, options);
+        }
+export type LargeLanguageModelsQueryHookResult = ReturnType<typeof useLargeLanguageModelsQuery>;
+export type LargeLanguageModelsLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelsLazyQuery>;
+export type LargeLanguageModelsQueryResult = Apollo.QueryResult<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>;
+export const EnableLargeLanguageModelDocument = gql`
+    mutation EnableLargeLanguageModel($id: ID!) {
+  enableLargeLanguageModel(id: $id) {
+    id
+    name
+  }
+}
+    `;
+export type EnableLargeLanguageModelMutationFn = Apollo.MutationFunction<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>;
+
+/**
+ * __useEnableLargeLanguageModelMutation__
+ *
+ * To run a mutation, you first call `useEnableLargeLanguageModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useEnableLargeLanguageModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [enableLargeLanguageModelMutation, { data, loading, error }] = useEnableLargeLanguageModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useEnableLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>(EnableLargeLanguageModelDocument, options);
+      }
+export type EnableLargeLanguageModelMutationHookResult = ReturnType<typeof useEnableLargeLanguageModelMutation>;
+export type EnableLargeLanguageModelMutationResult = Apollo.MutationResult<EnableLargeLanguageModelMutation>;
+export type EnableLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>;
+export const DeleteLargeLanguageModelDocument = gql`
+    mutation DeleteLargeLanguageModel($id: ID!) {
+  deleteLargeLanguageModel(largeLanguageModelId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteLargeLanguageModelMutationFn = Apollo.MutationFunction<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
+
+/**
+ * __useDeleteLargeLanguageModelMutation__
+ *
+ * To run a mutation, you first call `useDeleteLargeLanguageModelMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLargeLanguageModelMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLargeLanguageModelMutation, { data, loading, error }] = useDeleteLargeLanguageModelMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>(DeleteLargeLanguageModelDocument, options);
+      }
+export type DeleteLargeLanguageModelMutationHookResult = ReturnType<typeof useDeleteLargeLanguageModelMutation>;
+export type DeleteLargeLanguageModelMutationResult = Apollo.MutationResult<DeleteLargeLanguageModelMutation>;
+export type DeleteLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
 export const MonitoringEventsDocument = gql`
     query MonitoringEvents($field: EventSortable, $ordering: String) {
   event(sortBy: $field, sortType: $ordering, from: 0, size: 10) {
@@ -13494,4 +14311,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-04-11T13:02:38+02:00
+// Generated on 2024-08-08T12:33:20+02:00

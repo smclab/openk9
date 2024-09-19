@@ -2,7 +2,7 @@ Build Latest Tenant Ui Docker Image:
   image: docker:24.0.2
   services:
     - docker:24.0.2-dind
-  stage: build-docker
+  stage: build-image
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
@@ -30,7 +30,7 @@ Build Tagged Tenant Ui Docker Image:
   image: docker:24.0.2
   services:
     - docker:24.0.2-dind
-  stage: build-docker
+  stage: build-image
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
@@ -51,20 +51,3 @@ Build Tagged Tenant Ui Docker Image:
     - docker build -t tenant-ui:${CI_COMMIT_REF_NAME} -f js-packages/tenant-ui/Dockerfile .
     - docker tag tenant-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
     - docker push $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
-
-trigger_deploy_tenant_frontend:
-  image: curlimages/curl
-  stage: deploy
-  needs: ['Build Latest Tenant Ui Docker Image']
-  only:
-    refs:
-      - main
-    changes:
-      - js-packages/tenant-ui/**/*
-      - .gitlab/.gitlab-ci-tenant-frontend.yml
-  except:
-    - schedules
-  before_script:
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - curl -X POST -F token=$DEPLOY_TOKEN -F "variables[TRIGGER_JOB]=deploy-admin-ui" -F ref=master $DEPLOY_TRIGGER_URL

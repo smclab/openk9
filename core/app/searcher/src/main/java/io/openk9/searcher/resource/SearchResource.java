@@ -19,6 +19,7 @@ package io.openk9.searcher.resource;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -88,6 +89,31 @@ import javax.ws.rs.core.MediaType;
 @RequestScoped
 public class SearchResource {
 
+	private static final Logger logger = Logger.getLogger(SearchResource.class);
+	private static final Object namedXContentRegistryKey = new Object();
+	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
+		"\\.i18n\\..{5,}$|\\.base$");
+	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
+		Collections.synchronizedMap(new IdentityHashMap<>());
+	@GrpcClient("searcher")
+	Searcher searcherClient;
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken;
+	@Inject
+	SearcherMapper searcherMapper;
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+	@Context
+	HttpServerRequest request;
+	@Context
+	HttpHeaders
+		headers;
+	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
+	List<String> supportedHeadersName;
+
 	@POST
 	@Path("/search-query")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -109,9 +135,6 @@ public class SearchResource {
 
 	}
 
-	@Inject
-	RestHighLevelClient restHighLevelClient;
-
 	@POST
 	@Path("/suggestions")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -127,6 +150,75 @@ public class SearchResource {
 	}
 
 	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<Response> search(SearchRequest searchRequest) {
+
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
+
+		Uni<QueryParserResponse> queryParserResponseUni =
+			searcherClient.queryParser(queryParserRequest);
+
+		return queryParserResponseUni
+			.flatMap(queryParserResponse -> {
+
+				ByteString query = queryParserResponse.getQuery();
+
+				String searchRequestBody = query.toStringUtf8();
+
+				ProtocolStringList indexNameList =
+					queryParserResponse.getIndexNameList();
+
+				if (indexNameList == null || indexNameList.isEmpty()) {
+					return Uni.createFrom().item(Response.EMPTY);
+				}
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				var queryParams = queryParserResponse.getQueryParametersMap();
+
+				org.opensearch.client.Request request =
+					new org.opensearch.client.Request(
+						"GET", "/" + indexNames + "/_search");
+
+				request.addParameters(queryParams);
+
+				request.setJsonEntity(searchRequestBody);
+
+				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
+						.getLowLevelClient()
+						.performRequestAsync(request, new ResponseListener() {
+							@Override
+							public void onSuccess(
+								org.opensearch.client.Response response) {
+								try {
+									SearchResponse searchResponse =
+										parseEntity(
+											response.getEntity(),
+											SearchResponse::fromXContent
+										);
+
+									sink.complete(searchResponse);
+								}
+								catch (IOException e) {
+									sink.fail(e);
+								}
+							}
+
+							@Override
+							public void onFailure(Exception e) {
+								sink.fail(e);
+							}
+						}))
+					.map(this::toSearchResponse);
+
+			});
+
+	}
+
+	@POST
 	@Path("/query-analysis")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> queryAnalysis(
@@ -137,10 +229,9 @@ public class SearchResource {
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
-			.map(this::_toQueryAnalysisResponse);
+			.map(this::toQueryAnalysisResponse);
 
 	}
-
 
 	@POST
 	@Path("/semantic-autocomplete")
@@ -153,11 +244,191 @@ public class SearchResource {
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
-			.map(this::_toQueryAnalysisResponse);
+			.map(this::toQueryAnalysisResponse);
 
 	}
 
-	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse _toQueryAnalysisResponse(
+	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
+
+		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+			Object value = entry.getValue();
+			if (value instanceof Map) {
+				Map<String, Object> objectMap = (Map<String, Object>) value;
+				if (objectMap.containsKey("i18n")) {
+
+					Map<String, Object> i18nMap =
+						(Map<String, Object>) objectMap.get("i18n");
+
+					if (!i18nMap.isEmpty()) {
+						if (i18nMap.values().iterator().next() instanceof String) {
+							String i18nString =
+								(String) i18nMap.values().iterator().next();
+							entry.setValue(i18nString);
+						}
+						else if (i18nMap.values().iterator().next() instanceof List<?>) {
+							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
+								.stream()
+								.map(object -> String.valueOf(object))
+								.toList();
+							entry.setValue(i18nList);
+						}
+						else {
+							logger.warn("The object i18nList is not a String or a List<String>");
+						}
+					}
+
+				}
+				else if (objectMap.containsKey("base")) {
+					entry.setValue(objectMap.get("base"));
+				}
+				else {
+					mapI18nFields((Map<String, Object>) value);
+				}
+			}
+			if (value instanceof Iterable) {
+				for (Object item : (Iterable<?>) value) {
+					if (item instanceof Map) {
+						mapI18nFields((Map<String, Object>) item);
+					}
+				}
+			}
+		}
+
+	}
+
+	private static Iterable<Integer> toList(Integer[] pos) {
+		if (pos == null || pos.length == 0) {
+			return List.of();
+		}
+		return List.of(pos);
+	}
+
+	private static QueryAnalysisSearchToken.Builder createQastBuilder(
+		QueryAnalysisToken token) {
+		Map<String, Object> tokenMap = token.getToken();
+		QueryAnalysisSearchToken.Builder qastBuilder =
+			QueryAnalysisSearchToken.newBuilder();
+
+		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			if (value == null) {
+				continue;
+			}
+			switch (key) {
+				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
+				case "value" -> qastBuilder.setValue((String) value);
+				case "score" -> qastBuilder.setScore(((Number) value).floatValue());
+				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
+				case "keywordName" -> qastBuilder.setKeywordName((String) value);
+				case "entityType" -> qastBuilder.setEntityType((String) value);
+				case "entityName" -> qastBuilder.setEntityName((String) value);
+				case "tenantId" -> qastBuilder.setTenantId((String) value);
+				case "label" -> qastBuilder.setLabel((String) value);
+			}
+		}
+
+		return qastBuilder;
+	}
+
+	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
+
+		var requestBuilder = searcherMapper
+			.toQueryParserRequest(searchRequest)
+			.toBuilder();
+
+		setVectorIndices(searchRequest, requestBuilder);
+
+		Map<String, Value> extra = new HashMap<>();
+
+		for (String headerName : supportedHeadersName) {
+			List<String> requestHeader = headers.getRequestHeader(headerName);
+			if (requestHeader != null && !requestHeader.isEmpty()) {
+				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
+			}
+		}
+
+		String sortAfterKey = searchRequest.getSortAfterKey();
+		String language = searchRequest.getLanguage();
+
+		return requestBuilder
+			.setVirtualHost(request.host())
+			.setJwt(rawToken == null ? "" : rawToken)
+			.putAllExtra(extra)
+			.addAllSort(mapToGrpc(searchRequest.getSort()))
+			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
+			.setLanguage(language == null ? "" : language)
+			.build();
+
+	}
+
+	private Iterable<Sort> mapToGrpc(
+		List<Map<String, Map<String, String>>> sort) {
+
+		if (sort == null || sort.isEmpty()) {
+			return List.of();
+		}
+
+		Set<Sort> sortList = new HashSet<>(sort.size());
+
+		for (Map<String, Map<String, String>> map : sort) {
+
+			for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
+
+				String fieldName = entry.getKey();
+
+				Sort.Builder builder =
+					Sort
+						.newBuilder()
+						.setField(fieldName);
+
+				Map<String, String> value = entry.getValue();
+
+				if (value != null && !value.isEmpty()) {
+					builder.putAllExtras(value);
+				}
+
+				sortList.add(builder.build());
+
+			}
+
+		}
+
+		return sortList;
+
+	}
+
+	private static void setVectorIndices(
+		SearchRequest searchRequest,
+		QueryParserRequest.Builder requestBuilder) {
+		var searchTokens = searchRequest.getSearchQuery();
+
+		for (ParserSearchToken token : searchTokens) {
+
+			var tokenType = token.getTokenType();
+
+			if (tokenType != null
+				&& (tokenType.equalsIgnoreCase("knn")
+					|| tokenType.equalsIgnoreCase("hybrid"))) {
+
+				requestBuilder.setVectorIndices(true);
+				break;
+			}
+
+		}
+	}
+
+	private static String getHighlightName(String highlightName) {
+		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
+		if (matcher.find()) {
+			return matcher.replaceFirst("");
+		}
+		else {
+			return highlightName;
+		}
+	}
+
+	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse toQueryAnalysisResponse(
 		QueryAnalysisResponse queryAnalysisResponse) {
 
 		io.openk9.searcher.queryanalysis.QueryAnalysisResponse.QueryAnalysisResponseBuilder
@@ -229,6 +500,25 @@ public class SearchResource {
 
 	}
 
+	private NamedXContentRegistry getNamedXContentRegistry() {
+
+		return namedXContentRegistryMap.computeIfAbsent(
+			namedXContentRegistryKey, o -> {
+				try {
+					Field registry =
+						RestHighLevelClient.class.getDeclaredField("registry");
+
+					registry.setAccessible(true);
+
+					return (NamedXContentRegistry) registry.get(restHighLevelClient);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+
+	}
+
 	private QueryAnalysisRequest getQueryAnalysisRequest(
 		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
 
@@ -244,7 +534,7 @@ public class SearchResource {
 
 			for (QueryAnalysisToken token : searchRequest.getTokens()) {
 				QueryAnalysisSearchToken.Builder qastBuilder =
-					_createQastBuilder(token);
+					createQastBuilder(token);
 				builder
 					.addTokens(
 						io.openk9.searcher.grpc.QueryAnalysisToken
@@ -252,7 +542,7 @@ public class SearchResource {
 							.setText(token.getText())
 							.setEnd(token.getEnd())
 							.setStart(token.getStart())
-							.addAllPos(_toList(token.getPos()))
+							.addAllPos(toList(token.getPos()))
 							.setToken(qastBuilder));
 			}
 
@@ -262,174 +552,11 @@ public class SearchResource {
 
 	}
 
-	private static Iterable<Integer> _toList(Integer[] pos) {
-		if (pos == null || pos.length == 0) {
-			return List.of();
-		}
-		return List.of(pos);
-	}
+	private <Resp> Resp parseEntity(
+		final HttpEntity entity,
+		final CheckedFunction<XContentParser, Resp, IOException> entityParser)
+	throws IOException {
 
-	private static QueryAnalysisSearchToken.Builder _createQastBuilder(
-		QueryAnalysisToken token) {
-		Map<String, Object> tokenMap = token.getToken();
-		QueryAnalysisSearchToken.Builder qastBuilder =
-			QueryAnalysisSearchToken.newBuilder();
-
-		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-			if (value == null) {
-				continue;
-			}
-			switch (key) {
-				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
-				case "value" -> qastBuilder.setValue((String) value);
-				case "score" -> qastBuilder.setScore(((Number)value).floatValue());
-				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
-				case "keywordName" -> qastBuilder.setKeywordName((String) value);
-				case "entityType" -> qastBuilder.setEntityType((String) value);
-				case "entityName" -> qastBuilder.setEntityName((String) value);
-				case "tenantId" -> qastBuilder.setTenantId((String) value);
-				case "label" -> qastBuilder.setLabel((String) value);
-			}
-		}
-
-		return qastBuilder;
-	}
-
-	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
-
-		Map<String, Value> extra = new HashMap<>();
-
-		for (String headerName : supportedHeadersName) {
-			List<String> requestHeader = headers.getRequestHeader(headerName);
-			if (requestHeader != null && !requestHeader.isEmpty()) {
-				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
-			}
-		}
-
-		String sortAfterKey = searchRequest.getSortAfterKey();
-		String language = searchRequest.getLanguage();
-
-		return searcherMapper
-			.toQueryParserRequest(searchRequest)
-			.toBuilder()
-			.setVirtualHost(request.host())
-			.setJwt(rawToken == null ? "" : rawToken)
-			.putAllExtra(extra)
-			.addAllSort(mapToGrpc(searchRequest.getSort()))
-			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
-			.setLanguage(language == null ? "" : language)
-			.build();
-
-	}
-
-	private Iterable<Sort> mapToGrpc(
-		List<Map<String, Map<String, String>>> sort) {
-
-		if (sort == null || sort.isEmpty()) {
-			return List.of();
-		}
-
-		Set<Sort> sortList = new HashSet<>(sort.size());
-
-		for (Map<String, Map<String, String>> map : sort) {
-
-			for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
-
-				String fieldName = entry.getKey();
-
-				Sort.Builder builder =
-					Sort
-						.newBuilder()
-						.setField(fieldName);
-
-				Map<String, String> value = entry.getValue();
-
-				if (value != null && !value.isEmpty()) {
-					builder.putAllExtras(value);
-				}
-
-				sortList.add(builder.build());
-
-			}
-
-		}
-
-		return sortList;
-
-	}
-
-
-	@POST
-	@Path("/search")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<Response> search(SearchRequest searchRequest) {
-
-		QueryParserRequest queryParserRequest =
-			getQueryParserRequest(searchRequest);
-
-		Uni<QueryParserResponse> queryParserResponseUni =
-			searcherClient.queryParser(queryParserRequest);
-
-		return queryParserResponseUni
-			.flatMap(queryParserResponse -> {
-
-				ByteString query = queryParserResponse.getQuery();
-
-				String searchRequestBody = query.toStringUtf8();
-
-				ProtocolStringList indexNameList =
-					queryParserResponse.getIndexNameList();
-
-				if (indexNameList == null || indexNameList.isEmpty()) {
-					return Uni.createFrom().item(Response.EMPTY);
-				}
-
-				String indexNames =
-					String.join(",", indexNameList);
-
-				var queryParams = queryParserResponse.getQueryParametersMap();
-
-				org.opensearch.client.Request request =
-					new org.opensearch.client.Request(
-						"GET", "/" + indexNames + "/_search");
-
-				request.addParameters(queryParams);
-
-				request.setJsonEntity(searchRequestBody);
-
-				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
-					.getLowLevelClient()
-					.performRequestAsync(request, new ResponseListener() {
-						@Override
-						public void onSuccess(
-							org.opensearch.client.Response response) {
-							try {
-								SearchResponse searchResponse =
-									parseEntity(response.getEntity(),
-										SearchResponse::fromXContent);
-
-								sink.complete(searchResponse);
-							}
-							catch (IOException e) {
-								sink.fail(e);
-							}
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							sink.fail(e);
-						}
-					}))
-					.map(this::_toSearchResponse);
-
-			});
-
-	}
-
-	protected final <Resp> Resp parseEntity(final HttpEntity entity,
-											final CheckedFunction<XContentParser, Resp, IOException> entityParser) throws IOException {
 		if (entity == null) {
 			throw new IllegalStateException("Response body expected but not returned");
 		}
@@ -446,8 +573,8 @@ public class SearchResource {
 		}
 	}
 
-	private Response _toSearchResponse(SearchResponse searchResponse) {
-		_printShardFailures(searchResponse);
+	private Response toSearchResponse(SearchResponse searchResponse) {
+		printShardFailures(searchResponse);
 
 		SearchHits hits = searchResponse.getHits();
 
@@ -486,6 +613,7 @@ public class SearchResource {
 
 			hitMap.put("source", sourceMap);
 			hitMap.put("highlight", highlightMap);
+			hitMap.put("score", hit.getScore());
 
 			Object[] sortValues = hit.getSortValues();
 
@@ -507,121 +635,12 @@ public class SearchResource {
 		return new Response(result, totalHits.value);
 	}
 
-	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
-
-		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
-			Object value = entry.getValue();
-			if (value instanceof Map) {
-				Map<String, Object> objectMap = (Map<String, Object>) value;
-				if (objectMap.containsKey("i18n")) {
-
-					Map<String, Object> i18nMap =
-						(Map<String, Object>) objectMap.get("i18n");
-
-					if (!i18nMap.isEmpty()) {
-						if (i18nMap.values().iterator().next() instanceof String) {
-							String i18nString =
-								(String) i18nMap.values().iterator().next();
-							entry.setValue(i18nString);
-						}
-						else if (i18nMap.values().iterator().next() instanceof List<?>) {
-							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
-								.stream()
-								.map(object -> String.valueOf(object))
-								.toList();
-							entry.setValue(i18nList);
-						}
-						else {
-							logger.warn("The object i18nList is not a String or a List<String>");
-						}
-					}
-
-				}
-				else if (objectMap.containsKey("base")) {
-					entry.setValue(objectMap.get("base"));
-				}
-				else {
-					mapI18nFields((Map<String, Object>) value);
-				}
-			}
-			if (value instanceof Iterable) {
-				for (Object item: (Iterable<?>) value) {
-					if (item instanceof Map) {
-						mapI18nFields((Map<String, Object>) item);
-					}
-				}
-			}
-		}
-
-	}
-
-	private static String getHighlightName(String highlightName) {
-		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
-		if (matcher.find()) {
-			return matcher.replaceFirst("");
-		}
-		else  {
-			return highlightName;
-		}
-	}
-
-	private void _printShardFailures(SearchResponse searchResponse) {
+	private void printShardFailures(SearchResponse searchResponse) {
 		if (searchResponse.getShardFailures() != null) {
 			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
 				logger.warn(failure.reason());
 			}
 		}
 	}
-
-	@Inject
-	SearcherMapper searcherMapper;
-
-	@Inject
-	InternalSearcherMapper internalSearcherMapper;
-
-	private NamedXContentRegistry getNamedXContentRegistry() {
-
-		return namedXContentRegistryMap.computeIfAbsent(
-			namedXContentRegistryKey, o -> {
-				try {
-					Field registry =
-						RestHighLevelClient.class.getDeclaredField("registry");
-
-					registry.setAccessible(true);
-
-					return (NamedXContentRegistry) registry.get(restHighLevelClient);
-				}
-				catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			});
-
-	}
-
-	@GrpcClient("searcher")
-	Searcher searcherClient;
-
-
-	static Logger logger = Logger.getLogger(SearchResource.class);
-
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken;
-
-	@Context
-	HttpServerRequest request;
-
-	@Context
-	HttpHeaders
-	headers;
-
-	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
-	List<String> supportedHeadersName;
-
-	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
-		Collections.synchronizedMap(new IdentityHashMap<>());
-
-	private static final Object namedXContentRegistryKey = new Object();
-	private static final Pattern i18nHighlithKeyPattern = Pattern.compile("\\.i18n\\..{5,}$|\\.base$");
 
 }
