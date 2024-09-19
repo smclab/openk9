@@ -460,6 +460,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			var requester = invalid.requester();
 
+			log.warnf("Received an invalid payload to work: %s", invalid.errorMessage());
+
 			requester.tell(new Failure(invalid.errorMessage()));
 
 		}
