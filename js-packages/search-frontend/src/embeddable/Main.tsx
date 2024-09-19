@@ -1519,8 +1519,6 @@ function calculateSpans(
   text: string,
   analysis: AnalysisResponseEntry[] | undefined,
 ): AnalysisResponseEntry[] {
-  console.log(analysis);
-
   const spans: Array<AnalysisResponseEntry> = [
     { text: "", start: 0, end: 0, tokens: [] },
   ];
