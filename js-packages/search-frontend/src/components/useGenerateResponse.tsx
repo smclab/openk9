@@ -14,9 +14,11 @@ export interface Message {
 const useGenerateResponse = ({
   initialMessages,
   isMockEnabled = false,
+  setIsRequestLoading,
 }: {
   initialMessages: Message[];
   isMockEnabled?: boolean;
+  setIsRequestLoading?: any;
 }) => {
   const [message, setMessage] = useState<Message | null>(null);
   const [abortController, setAbortController] =
@@ -28,6 +30,7 @@ const useGenerateResponse = ({
     if (initialMessages.length > 0) {
       setMessage(initialMessages[0]);
       setIsChatting(false);
+      setIsRequestLoading(false);
     }
   }, [initialMessages]);
 
@@ -50,6 +53,7 @@ const useGenerateResponse = ({
             : prev,
         );
         setIsChatting(false);
+        setIsRequestLoading(false);
         return;
       }
 
@@ -76,6 +80,7 @@ const useGenerateResponse = ({
         : prev,
     );
     setIsChatting(false);
+    setIsRequestLoading(false);
   };
 
   const generateResponse = useCallback(
@@ -96,6 +101,7 @@ const useGenerateResponse = ({
       };
       setMessage(newMessage);
       setIsChatting(true);
+      setIsRequestLoading(false);
 
       const controller = new AbortController();
       setAbortController(controller);
@@ -159,6 +165,7 @@ const useGenerateResponse = ({
                   );
                   if (data.type === "END") {
                     setIsChatting(false);
+                    setIsRequestLoading(false);
                   }
                 } catch (e) {
                   console.error("Error parsing JSON", e);
@@ -178,10 +185,12 @@ const useGenerateResponse = ({
               : prev,
           );
           setIsChatting(false);
+          setIsRequestLoading(false);
         }
       } catch (error) {
         console.error("Error during response generation", error);
         setIsChatting(false);
+        setIsRequestLoading(false);
       }
 
       setAbortController(null);
@@ -224,6 +233,7 @@ const useGenerateResponse = ({
       );
       setAbortController(null);
       setIsChatting(false);
+      setIsRequestLoading(false);
     }
   };
 

@@ -18,10 +18,13 @@ export default function GenerateResponse({
 }) {
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
   const { range } = useRange();
+  //da rimuovere quando passiamo alla search con il pulsante
+  const [loadingSearch, setLoadingSearch] = React.useState(false);
 
   const { generateResponse, message, isChatting, isLoading } =
     useGenerateResponse({
       initialMessages: [],
+      setIsRequestLoading: setLoadingSearch,
     });
 
   const [prevSearchQuery, setPrevSearchQuery] =
@@ -30,6 +33,7 @@ export default function GenerateResponse({
 
   React.useEffect(() => {
     if (!isEqual(searchQuery, prevSearchQuery) || !isEqual(range, prevRange)) {
+      setLoadingSearch(true);
       setPrevSearchQuery(searchQuery);
       setPrevRange(range);
       const clearSearchQuery = searchQuery.map(
@@ -57,18 +61,16 @@ export default function GenerateResponse({
 
   return (
     <>
-      {question !== "" && (
+      {question && (
         <Container>
-          <>
-            <ContainerBox>
-              {message?.question && <Question>Generate answer</Question>}
-              {isLoading ? (
-                <SmallLoader />
-              ) : (
-                message?.answer && <Answer>{message?.answer}</Answer>
-              )}
-            </ContainerBox>
-          </>
+          <ContainerBox>
+            <Question>Generate answer</Question>
+            {isChatting || loadingSearch ? (
+              <SmallLoader />
+            ) : (
+              message?.answer && <Answer>{message.answer}</Answer>
+            )}
+          </ContainerBox>
         </Container>
       )}
     </>
