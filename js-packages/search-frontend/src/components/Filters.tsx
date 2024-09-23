@@ -4,65 +4,56 @@ import { SearchToken, SortField } from "./client";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
-import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { FilterSvg } from "../svgElement/FiltersSvg";
-import { DeleteLogo } from "./DeleteLogo";
 import { Logo } from "./Logo";
 import {
   FilterCategoryDynamicMemo,
   WhoIsDynamic,
 } from "./FilterCategoryDynamic";
 import { useTranslation } from "react-i18next";
-import { SelectionsAction } from "./useSelections";
 import CustomSkeleton from "./Skeleton";
+import { IconsCustom } from "../embeddable/entry";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
   onAddFilterToken(searchToke: SearchToken): void;
   onRemoveFilterToken(searchToken: SearchToken): void;
-  onConfigurationChange: ConfigurationUpdateFunction;
-  filtersSelect: SearchToken[];
   sort: SortField[];
-  dynamicFilters: boolean;
   preFilters?: React.ReactNode;
   language: string;
   sortAfterKey: string;
-  isCollapsable?: boolean;
   numberItems?: number | null | undefined;
   numberOfResults: number;
   isDynamicElement: WhoIsDynamic[];
   noResultMessage?: string | null | undefined;
-  selectionsDispatch?: React.Dispatch<SelectionsAction>;
   isActiveSkeleton: boolean;
   skeletonCategoryCustom: React.ReactNode | null;
   memoryResults: boolean;
+  placeholder?: string | null | undefined;
+  iconCustom: IconsCustom;
 };
 function Filters({
   searchQuery,
   onAddFilterToken,
-  onConfigurationChange,
   onRemoveFilterToken,
-  filtersSelect,
   sort,
-  dynamicFilters,
   preFilters,
   language,
   sortAfterKey,
-  isCollapsable = true,
   numberItems,
   numberOfResults,
   isDynamicElement,
   noResultMessage,
   isActiveSkeleton,
-  selectionsDispatch,
   skeletonCategoryCustom,
   memoryResults,
+  placeholder,
+  iconCustom,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
-  const { t } = useTranslation();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { data, isPreviousData } = useInfiniteResults(
+  const { isPreviousData } = useInfiniteResults(
     searchQuery,
     sort,
     language,
@@ -75,202 +66,59 @@ function Filters({
       setLastSearchQueryWithResults(searchQuery);
     }
   }, [isPreviousData, searchQuery]);
-  const [count, setCount] = React.useState(0);
-  React.useEffect(() => {
-    let accumulatore = 0;
-    searchQuery
-      .filter((search) => "goToSuggestion" in search)
-      .forEach((filter) => {
-        if (filter && filter.values)
-          accumulatore = accumulatore + filter.values?.length || 0;
-      });
-    setCount(accumulatore);
-  }, [searchQuery]);
 
   return (
-    <div
-      className="openk9-filter-overlay-scrollbars"
-      css={css`
-        overflow-y: auto;
-        height: 100%;
-        border-radius: 8px;
-        overflow-x: hidden;
-        ::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background-color: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: rgba(0, 0, 0, 0.4);
-          border-radius: 10px;
-          height: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(0, 0, 0, 0.55);
-          height: 5px;
-        }
-      `}
-    >
-      <div
-        className="openk9-filter-list-container-title box-title"
-        css={css`
-          padding: 0px 16px;
-          width: 100%;
-          background: #fafafa;
-          padding-top: 20px;
-          padding-bottom: 13px;
-          display: flex;
-          @media (max-width: 480px) {
-            display: none;
-          }
-        `}
-      >
+    <>
+      {suggestionCategories.data?.length === 0 && !preFilters && (
         <div
-          className="openk9-filter-list-container-internal-title "
+          className="openk9-filters-container-internal-no-filters"
           css={css`
+            color: var(--openk9-embeddable-search--secondary-text-color);
             display: flex;
-            gap: 5px;
-          `}
-        >
-          <span>
-            <FilterSvg />
-          </span>
-          <span className="openk9-filters-list-title title">
-            <h2
-              css={css`
-                font-style: normal;
-                font-weight: 700;
-                font-size: 18px;
-                height: 18px;
-                line-height: 22px;
-                display: flex;
-                align-items: center;
-                color: #3f3f46;
-                margin: 0;
-              `}
-            >
-              {t("filters")}
-            </h2>
-          </span>
-        </div>
-      </div>
-      <div
-        className="openk9-number-filter-list-container-wrapper"
-        css={css`
-          padding: 8px 24px;
-          @media (max-width: 480px) {
-            display: none;
-          }
-        `}
-      >
-        <div
-          className="openk9-number-filters-list-container more-detail-content"
-          css={css`
-            display: flex;
-            padding: 8px 8px;
-            justify-content: space-between;
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            border-radius: 8px;
+            flex-direction: column;
             align-items: center;
-            margin-left: -8px;
-            width: 100%;
-            margin-top: 8px;
+            justify-content: center;
+            height: 50vh;
+            margin-left: 30px;
           `}
         >
-          <div>
-            <span
-              className="openk9-number-filters-list-number-of-results"
-              css={css`
-                color: var(--openk9-embeddable-search--active-color);
-                font-weight: 700;
-              `}
-            >
-              {count}{" "}
-            </span>
-            <span>{t("active-filters")}</span>
-          </div>
-          <div className="openk9-active-container-number-filters-list-number-of-results">
-            <CreateLabel
-              label={t("remove-filters")}
-              action={() => {
-                onConfigurationChange({ filterTokens: [] });
-                if (selectionsDispatch)
-                  selectionsDispatch({ type: "reset-filters" });
-              }}
-              svgIconRight={
-                <DeleteLogo
-                  heightParam={8}
-                  widthParam={8}
-                  colorSvg={"#C0272B"}
-                />
-              }
-              marginRigthOfSvg={"6px"}
-            />
-          </div>
+          <Logo size={100} />
+          <h4>No Filters </h4>
         </div>
-      </div>
-
-      <div
-        className="openk9-filters-container-internal"
-        css={css`
-          padding: 16px 16px 0px 0px;
-        `}
-      >
-        {suggestionCategories.data?.length === 0 && !preFilters && (
-          <div
-            className="openk9-filters-container-internal-no-filters"
-            css={css`
-              color: var(--openk9-embeddable-search--secondary-text-color);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 50vh;
-              margin-left: 30px;
-            `}
-          >
-            <Logo size={100} />
-            <h4>No Filters </h4>
-          </div>
-        )}
-        {preFilters}
-        {suggestionCategories.data?.map((suggestionCategory, index) => (
-          <React.Suspense
-            key={index}
-            fallback={
-              skeletonCategoryCustom
-                ? isActiveSkeleton && skeletonCategoryCustom
-                : isActiveSkeleton && <SkeletonCategory />
-            }
-          >
-            <FilterCategoryDynamicMemo
-              key={suggestionCategory.id}
-              suggestionCategoryName={translateSuggesionCategoryName({
-                names: suggestionCategory.translationMap,
-                language: language,
-                defaultValue: suggestionCategory.name,
-              })}
-              suggestionCategoryId={suggestionCategory.id}
-              tokens={lastSearchQueryWithResults}
-              onAdd={onAddFilterToken}
-              onRemove={onRemoveFilterToken}
-              multiSelect={suggestionCategory?.multiSelect}
-              searchQuery={searchQuery}
-              language={language}
-              isCollapsable={isCollapsable}
-              numberItems={numberItems}
-              isDynamicElement={isDynamicElement}
-              noResultMessage={noResultMessage}
-            />
-          </React.Suspense>
-        ))}
-      </div>
-    </div>
+      )}
+      {preFilters}
+      {suggestionCategories.data?.map((suggestionCategory, index) => (
+        <React.Suspense
+          key={index}
+          fallback={
+            skeletonCategoryCustom
+              ? isActiveSkeleton && skeletonCategoryCustom
+              : isActiveSkeleton && <SkeletonCategory />
+          }
+        >
+          <FilterCategoryDynamicMemo
+            key={suggestionCategory.id}
+            suggestionCategoryName={translateSuggesionCategoryName({
+              names: suggestionCategory.translationMap,
+              language: language,
+              defaultValue: suggestionCategory.name,
+            })}
+            suggestionCategoryId={suggestionCategory.id}
+            tokens={lastSearchQueryWithResults}
+            onAdd={onAddFilterToken}
+            onRemove={onRemoveFilterToken}
+            multiSelect={suggestionCategory?.multiSelect}
+            searchQuery={searchQuery}
+            language={language}
+            numberItems={numberItems}
+            isDynamicElement={isDynamicElement}
+            noResultMessage={noResultMessage}
+            placeholder={placeholder}
+            iconCustom={iconCustom}
+          />
+        </React.Suspense>
+      ))}
+    </>
   );
 }
 export const FiltersMemo = React.memo(Filters);

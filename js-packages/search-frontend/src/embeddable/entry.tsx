@@ -258,9 +258,9 @@ type SearchProps = {
 
 type FilterProps = {
   element: Element | string | null;
-  isCollapsable?: boolean;
   numberItems?: number | null | undefined;
   noResultMessage?: string | null | undefined;
+  placeholder?: string | null | undefined;
 };
 
 type ResulListPaginationProps = {
@@ -324,6 +324,15 @@ type searchWithSuggestionsProps =
 
 export type TemplatesProps = Array<{ source: string; Template: React.FC<any> }>;
 
+export type IconsCustom =
+  | {
+      IcondownDropdown?: React.ReactNode;
+      IconUpDropdropdown?: React.ReactNode;
+      Search?: React.ReactNode;
+    }
+  | null
+  | undefined;
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -331,6 +340,7 @@ export type Configuration = {
   defaultString: string | null | undefined;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
+  icons: IconsCustom;
   isQueryAnalysis: boolean | null;
   isActiveSkeleton: boolean | null;
   numberResult: number | null | undefined;
@@ -422,6 +432,7 @@ const defaultConfiguration: Configuration = {
   filtersMobileLiveChange: null,
   filterTokens: [],
   generateResponse: null,
+  icons: null,
   isActiveSkeleton: null,
   isQueryAnalysis: true,
   login: null,

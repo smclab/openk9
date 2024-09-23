@@ -12,6 +12,7 @@ import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
 import { useTranslation } from "react-i18next";
 import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
+import { IconsCustom } from "../embeddable/entry";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -21,13 +22,14 @@ type FilterCategoryDynamicallyProps = {
   onRemove(searchToken: SearchToken): void;
   multiSelect: boolean;
   searchQuery: SearchToken[];
-  isCollapsable?: boolean;
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   language: string;
   isDynamicElement: WhoIsDynamic[];
+  placeholder?: string | undefined | null;
   noResultMessage?: string | null | undefined;
   numberItems?: number | null | undefined;
+  iconCustom: IconsCustom;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
@@ -40,7 +42,6 @@ function FilterCategoryDynamic({
   onRemove,
   multiSelect,
   searchQuery,
-  isCollapsable = true,
   isUniqueLoadMore = false,
   loadAll = false,
   language,
@@ -48,6 +49,8 @@ function FilterCategoryDynamic({
   isDynamicElement,
   setHasMoreSuggestionsCategories = undefined,
   noResultMessage,
+  placeholder,
+  iconCustom,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -99,7 +102,6 @@ function FilterCategoryDynamic({
     <fieldset
       className="openk9-filter-category-container"
       css={css`
-        margin-bottom: 16px;
         ${isUniqueLoadMore ? "width: 50%" : null}
         @media  (max-width: 768px) {
           width: 100%;
@@ -113,73 +115,52 @@ function FilterCategoryDynamic({
         background-image: none;
         font: inherit;
         color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 8px;
       `}
     >
-      <div>
-        <div
-          className="openk9-filter-category-title"
+      <div
+        className="openk9-filter-category-title"
+        css={css`
+          user-select: none;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        `}
+      >
+        <legend
           css={css`
-            user-select: none;
-            margin-left: 16px;
-            display: flex;
-            align-items: center;
-            width: 100% !important;
+            :first-letter {
+              text-transform: uppercase;
+            }
           `}
         >
-          <legend
-            css={css`
-              flex-grow: 1;
-              :first-letter {
-                text-transform: uppercase;
-              }
-            `}
-          >
-            <strong>{suggestionCategoryName}</strong>
-          </legend>
-          {isCollapsable && (
-            <button
-              aria-label={
-                t("openk9-collapsable-filter") || "openk9 collapsable filter"
-              }
-              aria-expanded={isOpen ? "true" : "false"}
-              style={{ background: "inherit", border: "none" }}
-              onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
-            >
-              <FontAwesomeIcon
-                icon={isOpen ? faChevronUp : faChevronDown}
-                style={{
-                  color:
-                    "var(--openk9-embeddable-search--secondary-text-color)",
-                  marginRight: "8px",
-                }}
-              />
-            </button>
-          )}
-        </div>
+          <strong>{suggestionCategoryName}</strong>
+        </legend>
+
+        <button
+          aria-label={
+            t("openk9-collapsable-filter") || "openk9 collapsable filter"
+          }
+          aria-expanded={isOpen ? "true" : "false"}
+          style={{ background: "inherit", border: "none" }}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <FontAwesomeIcon
+            icon={isOpen ? faChevronUp : faChevronDown}
+            style={{
+              color: "var(--openk9-embeddable-search--secondary-text-color)",
+              cursor: "pointer",
+            }}
+          />
+        </button>
       </div>
       {isOpen && (
         <React.Fragment>
           {!isUniqueLoadMore && (
-            <div
-              className="openk9-filter-category-container-search"
-              css={css`
-                display: flex;
-                align-items: center;
-                margin-bottom: 10px;
-              `}
-            >
-              <FontAwesomeIcon
-                icon={faSearch}
-                style={{
-                  color:
-                    "var(--openk9-embeddable-search--secondary-text-color)",
-                  marginLeft: "25px",
-                  opacity: "0.3",
-                  zIndex: "3",
-                  marginTop: "16px",
-                  height: "15px",
-                }}
-              />
+            <>
               <label
                 htmlFor={"search-category-" + suggestionCategoryId}
                 className="visually-hidden"
@@ -206,38 +187,67 @@ function FilterCategoryDynamic({
               >
                 {t("search-filters")}
               </label>
-              <input
-                className="openk9-filter-category-search"
-                type="text"
-                id={"search-category-" + suggestionCategoryId}
-                value={text}
-                placeholder={t("search-filters") || ""}
-                onChange={(event) => setText(event.currentTarget.value)}
+              <div
                 css={css`
-                  margin-top: 17px;
-                  flex-grow: 1;
-                  text-indent: 25px;
-                  margin-left: -25px;
-                  margin-right: -9px;
-                  padding: 8px 16px 8px 8px;
-                  border-radius: 4px;
-                  border: 1px solid
-                    var(--openk9-embeddable-search--border-color);
-                  border-radius: 20px;
-                  background: #fafafa;
-                  :focus {
-                    border: 1px solid
-                      var(--openk9-embeddable-search--active-color);
-                    outline: none;
-                  }
-                  ::placeholder {
-                    font-style: normal;
-                    font-weight: 400;
-                    font-size: 15px;
-                  }
+                  position: relative;
                 `}
-              />
-            </div>
+              >
+                {iconCustom?.Search ? (
+                  iconCustom?.Search
+                ) : (
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    width={10}
+                    css={css`
+                      position: absolute;
+                      top: 45%;
+                      left: 10px;
+                      transform: translateY(-50%);
+                      color: silver;
+                      display: inline-block;
+                      width: 0.75em;
+                      height: 0.75em;
+                      stroke-width: 0;
+                      stroke: currentColor;
+                      fill: currentColor;
+                    `}
+                  />
+                )}
+                <input
+                  type="text"
+                  placeholder={placeholder || t("search-filters") || ""}
+                  onChange={(event) => setText(event.currentTarget.value)}
+                  className="openk9-filter-category-search"
+                  id={"search-category-" + suggestionCategoryId}
+                  value={text}
+                  css={css`
+                    padding-left: calc(1em + 10px + 8px);
+                    height: 2em;
+                    width: -moz-available;
+                    width: -webkit-fill-available;
+                    width: fill-available;
+                    padding: 3px;
+                    flex-grow: 1;
+                    text-indent: 25px;
+                    border-radius: 4px;
+                    border: 1px solid
+                      var(--openk9-embeddable-search--border-color);
+                    border-radius: 20px;
+                    background: #fafafa;
+                    :focus {
+                      border: 1px solid
+                        var(--openk9-embeddable-search--active-color);
+                      outline: none;
+                    }
+                    ::placeholder {
+                      font-style: normal;
+                      font-weight: 400;
+                      font-size: 15px;
+                    }
+                  `}
+                />
+              </div>
+            </>
           )}
           <ul
             className="openk9-filter-form-check-container"
@@ -246,7 +256,8 @@ function FilterCategoryDynamic({
               flex-direction: ${isUniqueLoadMore ? "row" : "column"};
               gap: ${isUniqueLoadMore ? "0" : "5px"};
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
-              padding-left: 13px;
+              padding-left: unset;
+              margin: 0;
             `}
           >
             {filters.map((suggestion, index) => {
@@ -285,57 +296,16 @@ function FilterCategoryDynamic({
                     `}
                   >
                     {multiSelect ? (
-                      <React.Fragment>
-                        <input
-                          className={`form-check-input ${
-                            isChecked
-                              ? "checked-checkbox filter-dynamic-check"
-                              : "not-checked-checkbox filter-dynamic-not-check"
-                          }`}
-                          id={
-                            "checkbox-dynamic-" +
-                            suggestion.value +
-                            "-" +
-                            suggestionCategoryId
-                          }
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(event) => {
-                            if (event.currentTarget.checked) {
-                              if (multiSelect) {
-                                onAdd(asSearchToken);
-                              } else {
-                                tokens.some((searchToken) => {
-                                  if (
-                                    JSON.parse(JSON.stringify(searchToken))
-                                      ?.multiSelect
-                                  )
-                                    onRemove(searchToken);
-                                });
-                                onAdd(asSearchToken);
-                              }
-                            } else {
-                              onRemove(asSearchToken);
-                            }
-                          }}
-                          css={css`
-                            width: 14px;
-                            appearance: none;
-                            min-width: 15px;
-                            min-height: 15px;
-                            border-radius: 4px;
-                            border: 2px solid #ccc;
-                            background-color: ${isChecked
-                              ? "var(--openk9-embeddable-search--secondary-active-color)"
-                              : "#fff"};
-                            background-size: 100%;
-                            background-position: center;
-                            background-repeat: no-repeat;
-                            cursor: pointer;
-                            margin-right: 10px;
-                          `}
-                        />
-                      </React.Fragment>
+                      <CheckBoxSelect
+                        isChecked={isChecked}
+                        suggestion={suggestion}
+                        asSearchToken={asSearchToken}
+                        multiSelect={multiSelect}
+                        onAdd={onAdd}
+                        onRemove={onRemove}
+                        suggestionCategoryId={suggestionCategoryId}
+                        tokens={tokens}
+                      />
                     ) : (
                       <SingleSelect
                         isChecked={isChecked}
@@ -349,53 +319,46 @@ function FilterCategoryDynamic({
                         suggestionCategoryId={"" + suggestionCategoryId}
                       />
                     )}
-                    <span
+                    <label
+                      className="form-check-label"
+                      htmlFor={
+                        multiSelect
+                          ? "checkbox-dynamic-" +
+                            suggestion.value +
+                            "-" +
+                            suggestionCategoryId
+                          : "radio-button-dynamic-" +
+                            suggestion.value +
+                            "-" +
+                            suggestionCategoryId
+                      }
                       css={css`
-                        margin-left: 5px;
+                        text-overflow: ellipsis;
+                        font-style: normal;
+                        font-weight: 600;
+                        line-height: 22px;
+                        color: #000000;
                       `}
                     >
-                      <label
-                        className="form-check-label"
-                        htmlFor={
-                          multiSelect
-                            ? "checkbox-dynamic-" +
-                              suggestion.value +
-                              "-" +
-                              suggestionCategoryId
-                            : "radio-button-dynamic-" +
-                              suggestion.value +
-                              "-" +
-                              suggestionCategoryId
-                        }
-                        css={css`
-                          text-overflow: ellipsis;
-                          font-style: normal;
-                          font-weight: 600;
-                          line-height: 22px;
-                          /* or 147% */
-                          color: #000000;
-                        `}
-                      >
-                        {suggestion.tokenType === "ENTITY" ? (
-                          <>
-                            <strong
-                              className="openk9-filter-category-suggestion-value"
-                              css={css`
-                                :first-letter {
-                                  text-transform: uppercase;
-                                }
-                                display: inline-block;
-                              `}
-                            >
-                              {suggestion.entityType}
-                            </strong>
-                            : {suggestion.entityValue}
-                          </>
-                        ) : (
-                          capitalize(suggestion.value)
-                        )}
-                      </label>
-                    </span>
+                      {suggestion.tokenType === "ENTITY" ? (
+                        <>
+                          <strong
+                            className="openk9-filter-category-suggestion-value"
+                            css={css`
+                              :first-letter {
+                                text-transform: uppercase;
+                              }
+                              display: inline-block;
+                            `}
+                          >
+                            {suggestion.entityType}
+                          </strong>
+                          : {suggestion.entityValue}
+                        </>
+                      ) : (
+                        capitalize(suggestion.value)
+                      )}
+                    </label>
                   </li>
                 </React.Fragment>
               );
@@ -408,7 +371,6 @@ function FilterCategoryDynamic({
                 text-align: center;
                 width: 100%;
                 display: flex;
-                margin-left: 12px;
                 margin-top: 10px;
                 margin-bottom: 20px;
                 justify-content: center;
@@ -715,4 +677,61 @@ export function createSuggestion(
 export function haveSomeValue(values: string[], value: string[]) {
   const singleValue = value[0];
   return values.includes(singleValue);
+}
+
+function CheckBoxSelect({
+  isChecked,
+  suggestion,
+  asSearchToken,
+  suggestionCategoryId,
+  onAdd,
+  multiSelect,
+  tokens,
+  onRemove,
+}: {
+  isChecked: boolean;
+  suggestion: SuggestionResult;
+  asSearchToken: SearchToken;
+  suggestionCategoryId: number;
+  onAdd: (searchToken: SearchToken) => void;
+  multiSelect: boolean;
+  tokens: SearchToken[];
+  onRemove: (searchToken: SearchToken) => void;
+}) {
+  return (
+    <React.Fragment>
+      <input
+        className={`form-check-input ${
+          isChecked
+            ? "checked-checkbox filter-dynamic-check"
+            : "not-checked-checkbox filter-dynamic-not-check"
+        }`}
+        id={"checkbox-dynamic-" + suggestion.value + "-" + suggestionCategoryId}
+        type="checkbox"
+        checked={isChecked}
+        onChange={(event) => {
+          if (event.currentTarget.checked) {
+            onAdd(asSearchToken);
+          } else {
+            onRemove(asSearchToken);
+          }
+        }}
+        css={css`
+          width: 14px;
+          appearance: none;
+          min-width: 15px;
+          min-height: 15px;
+          border-radius: 4px;
+          border: 2px solid #ccc;
+          background-color: ${isChecked
+            ? "var(--openk9-embeddable-search--secondary-active-color)"
+            : "#fff"};
+          background-size: 100%;
+          background-position: center;
+          background-repeat: no-repeat;
+          cursor: pointer;
+        `}
+      />
+    </React.Fragment>
+  );
 }

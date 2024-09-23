@@ -79,6 +79,7 @@ export function Main({
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
   const useKeycloak = configuration.useKeycloak;
+  const iconCustom = configuration.icons;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
   const isActiveSkeleton = configuration?.isActiveSkeleton || false;
   const viewButton = configuration?.viewButton;
@@ -374,19 +375,14 @@ export function Main({
               onAddFilterToken={addFilterToken}
               numberOfResults={numberOfResults}
               onRemoveFilterToken={removeFilterToken}
-              onConfigurationChange={onConfigurationChange}
-              filtersSelect={configuration.filterTokens}
               sort={completelySort}
               sortAfterKey={sortAfterKey}
-              dynamicFilters={
-                dynamicFilters.data?.handleDynamicFilters || false
-              }
               language={languageSelect}
               isDynamicElement={dynamicData}
-              selectionsDispatch={selectionsDispatch}
               isActiveSkeleton={isActiveSkeleton}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
+              iconCustom={iconCustom}
             />
           )}
         </I18nextProvider>,
@@ -405,27 +401,20 @@ export function Main({
               searchQuery={searchQuery}
               onAddFilterToken={addFilterToken}
               onRemoveFilterToken={removeFilterToken}
-              onConfigurationChange={onConfigurationChange}
-              filtersSelect={configuration.filterTokens}
               sort={completelySort}
               sortAfterKey={sortAfterKey}
-              dynamicFilters={
-                dynamicFilters.data?.handleDynamicFilters || false
-              }
               language={languageSelect}
-              isCollapsable={
-                configuration.filtersConfigurable?.isCollapsable ?? true
-              }
               numberItems={configuration.filtersConfigurable?.numberItems}
               numberOfResults={numberOfResults}
               isDynamicElement={dynamicData}
               noResultMessage={
                 configuration.filtersConfigurable?.noResultMessage
               }
-              selectionsDispatch={selectionsDispatch}
               isActiveSkeleton={isActiveSkeleton}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
+              placeholder={configuration.filtersConfigurable?.placeholder}
+              iconCustom={iconCustom}
             />
           )}
         </I18nextProvider>,

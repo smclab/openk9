@@ -490,7 +490,11 @@ export function App() {
       />
       <div
         className="openk9-filters-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ filters: element })}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            filtersConfigurable: { element },
+          })
+        }
         css={css`
           grid-area: filters;
           display: flex;

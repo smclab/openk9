@@ -9,12 +9,10 @@ import isEqual from "lodash/isEqual";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
 import { useOpenK9Client } from "./client";
-import { Logo } from "./Logo";
-import { CreateLabel } from "./Filters";
-import { PlusSvg } from "../svgElement/PlusSvg";
 import { useTranslation } from "react-i18next";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { capitalize } from "lodash";
+import { IconsCustom } from "../embeddable/entry";
 
 type FilterCategoryProps = {
   suggestionCategoryId: number;
@@ -26,6 +24,7 @@ type FilterCategoryProps = {
   searchQuery: SearchToken[];
   isCollapsable?: boolean;
   isUniqueLoadMore?: boolean;
+  iconCustom: IconsCustom;
   loadAll?: boolean;
   dynamicFilters: boolean;
   numberItems?: number | null | undefined;
@@ -48,6 +47,7 @@ function FilterCategory({
   dynamicFilters,
   language,
   numberItems,
+  iconCustom,
   setHasMoreSuggestionsCategories = undefined,
 }: FilterCategoryProps) {
   const [text, setText] = React.useState("");
@@ -131,6 +131,7 @@ function FilterCategory({
               }
               style={{ background: "inherit", border: "none" }}
             >
+              {}
               <FontAwesomeIcon
                 icon={isOpen ? faChevronDown : faChevronUp}
                 style={{
@@ -669,68 +670,62 @@ export function NoFilter({
   const messageNoResult = noResultMessage
     ? noResultMessage.replaceAll("%s", suggestionCategoryName)
     : "";
+  const { t } = useTranslation();
 
   return (
-    <div>
-      <div>
-        <div
-          className="openk9-filter-category-no-results-container"
+    <fieldset
+      className="openk9-filter-category-container"
+      css={css`
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
+        background-image: none;
+        font: inherit;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 8px;
+      `}
+    >
+      <div
+        className="openk9-filter-category-title"
+        css={css`
+          user-select: none;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        `}
+      >
+        <legend
           css={css`
-            user-select: none;
-            margin-left: 16px;
-            display: flex;
-            align-items: center;
-            width: 100% !important;
-            margin-bottom: 16px;
+            :first-letter {
+              text-transform: uppercase;
+            }
           `}
+        >
+          <strong>{suggestionCategoryName}</strong>
+        </legend>
+
+        <button
+          aria-label={
+            t("openk9-collapsable-filter") || "openk9 collapsable filter"
+          }
+          aria-expanded={isOpen ? "true" : "false"}
+          style={{ background: "inherit", border: "none" }}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <div
-            className="openk9-filter-category-no-results-category-name"
-            css={css`
-              flex-grow: 1;
-              :first-letter {
-                text-transform: uppercase;
-              }
-            `}
-          >
-            <strong>{suggestionCategoryName}</strong>
-          </div>
           <FontAwesomeIcon
-            icon={isOpen ? faChevronDown : faChevronUp}
+            icon={faChevronUp}
             style={{
               color: "var(--openk9-embeddable-search--secondary-text-color)",
-              marginRight: "8px",
+              cursor: "pointer",
             }}
           />
-        </div>
+        </button>
       </div>
-      {isOpen && (
-        <div
-          className="openk9-filter-category-no-results-is-open"
-          css={css`
-            color: var(--openk9-embeddable-search--secondary-text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            margin-top: 18px;
-            margin-left: 10px;
-          `}
-        >
-          <div className="openk9-no-filter-svg">
-            <Logo size={100} />
-          </div>
-          <div className="openk9-no-results-message">
-            {noResultMessage ? (
-              <h4>{messageNoResult}</h4>
-            ) : (
-              <h4>No {suggestionCategoryName} </h4>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    </fieldset>
   );
 }
