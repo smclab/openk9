@@ -22,6 +22,19 @@ import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -31,19 +44,6 @@ import org.eclipse.microprofile.graphql.Description;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
 
 @Entity
 @Table(name = "datasource")
@@ -74,7 +74,9 @@ public class Datasource extends K9Entity {
 	private Boolean schedulable = false;
 
 	@ToString.Exclude
-	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
+	@OneToOne(
+		fetch = jakarta.persistence.FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL
+	)
 	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
 	@JsonIgnore
 	private DataIndex dataIndex;
@@ -86,10 +88,12 @@ public class Datasource extends K9Entity {
 
 	@ToString.Exclude
 	@ManyToOne(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
 	@JoinColumn(name = "enrich_pipeline_id")
 	@JsonIgnore
 	private EnrichPipeline enrichPipeline;
@@ -98,19 +102,23 @@ public class Datasource extends K9Entity {
 	@ManyToOne(
 		fetch = FetchType.LAZY,
 		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH})
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
+		}
+	)
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;
 
 	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.DETACH,
-		javax.persistence.CascadeType.REFRESH})
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.DETACH,
+		jakarta.persistence.CascadeType.REFRESH
+	}
+	)
 	@JoinTable(name = "datasource_buckets",
 		joinColumns = @JoinColumn(name = "datasource_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "buckets_id", referencedColumnName = "id"))

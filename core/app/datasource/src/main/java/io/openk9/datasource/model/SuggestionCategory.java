@@ -19,18 +19,18 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -56,10 +56,12 @@ public class SuggestionCategory extends K9Entity {
 
 
 	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.DETACH})
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
 	@JoinTable(name = "suggestion_category_doc_type_fields",
 		joinColumns = @JoinColumn(name = "suggestion_category_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id", referencedColumnName = "id"))
@@ -70,10 +72,10 @@ public class SuggestionCategory extends K9Entity {
 	@ToString.Exclude
 	@ManyToOne(
 		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
 		}
 	)
 	@JsonIgnore

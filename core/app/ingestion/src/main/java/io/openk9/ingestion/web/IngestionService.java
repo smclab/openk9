@@ -22,8 +22,7 @@ import io.openk9.ingestion.grpc.Ingestion;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 @GrpcService
 public class IngestionService implements Ingestion {

@@ -19,6 +19,9 @@ package io.openk9.datasource.entity;
 
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
@@ -31,9 +34,6 @@ import org.opensearch.common.xcontent.XContentParser;
 import org.opensearch.common.xcontent.XContentType;
 
 import java.io.IOException;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 
 @ApplicationScoped
 @IfBuildProperty(name = "openk9.entity.index.init", stringValue = "true", enableIfMissing = true)

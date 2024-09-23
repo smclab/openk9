@@ -30,6 +30,7 @@ import io.openk9.datasource.processor.payload.DataPayload;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.inject.spi.CDI;
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.DocWriteRequest;
 import org.opensearch.action.DocWriteResponse;
@@ -50,7 +51,6 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 
 import java.util.Map;
-import javax.enterprise.inject.spi.CDI;
 
 public class IndexWriter {
 

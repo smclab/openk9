@@ -32,13 +32,13 @@ import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class GrammarProvider {

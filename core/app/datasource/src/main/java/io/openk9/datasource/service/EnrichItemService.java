@@ -22,8 +22,7 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {

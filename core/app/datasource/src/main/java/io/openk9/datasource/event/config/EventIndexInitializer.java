@@ -21,6 +21,10 @@ import io.openk9.datasource.event.processor.EventProcessor;
 import io.openk9.datasource.event.sender.EventSender;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.Startup;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
@@ -34,10 +38,6 @@ import org.opensearch.common.xcontent.XContentType;
 
 import java.io.IOException;
 import java.util.List;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 
 @Dependent
 @Startup

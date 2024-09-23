@@ -33,9 +33,17 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.tuples.Tuple2;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.validation.Validator;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-import org.reactivestreams.Processor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,15 +53,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.validation.Validator;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends GraphQLService<ENTITY>
@@ -61,8 +60,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public static final DefaultPageInfo DEFAULT_PAGE_INFO =
 		new DefaultPageInfo(null, null, false, false);
-	private final Processor<K9EntityEvent<ENTITY>, K9EntityEvent<ENTITY>> processor =
+	private final BroadcastProcessor<K9EntityEvent<ENTITY>> processor =
 		BroadcastProcessor.create();
+
 	protected K9EntityMapper<ENTITY, DTO> mapper;
 	@Inject
 	protected Mutiny.SessionFactory sessionFactory;

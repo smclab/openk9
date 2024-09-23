@@ -21,6 +21,7 @@ import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import io.openk9.datasource.validation.json.JsonPath;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,8 +29,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
-
-import javax.validation.constraints.NotNull;
 
 @NoArgsConstructor
 @SuperBuilder

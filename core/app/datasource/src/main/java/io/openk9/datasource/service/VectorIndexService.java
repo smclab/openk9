@@ -22,8 +22,7 @@ import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.VectorIndex_;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class VectorIndexService extends BaseK9EntityService<VectorIndex, VectorIndexDTO> {

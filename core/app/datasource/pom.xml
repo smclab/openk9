@@ -47,17 +47,15 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-reactive</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
     </dependency>
+
     <dependency>
       <groupId>io.openk9</groupId>
-      <artifactId>hibernate-rx-multitenancy</artifactId>
+      <artifactId>quarkus-hibernate-reactive</artifactId>
       <version>${quarkus.platform.version}</version>
     </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-reactive-pg-client</artifactId>
@@ -85,7 +83,7 @@
     <dependency>
       <groupId>io.quarkiverse.rabbitmqclient</groupId>
       <artifactId>quarkus-rabbitmq-client</artifactId>
-      <version>0.5.3</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -127,12 +125,12 @@
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-      <version>0.2.6</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-java-client</artifactId>
-      <version>0.2.6</version>
+      <version>1.0.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.opensearch.client</groupId>
@@ -185,7 +183,8 @@
       <artifactId>lucene-suggest</artifactId>
       <version>9.5.0</version>
     </dependency>
-    <!-- dependencies needed for dynamicmapping -->
+
+    <!-- dependencies needed for dynamic mapping -->
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-sandbox</artifactId>
@@ -201,7 +200,8 @@
       <artifactId>lucene-analyzers-common</artifactId>
       <version>8.11.3</version>
     </dependency>
-    <!--  -->
+    <!--  end dynamic mapping -->
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-stork</artifactId>
@@ -214,6 +214,8 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
+
+    <!--  gRPC clients for openk9 services  -->
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>tenant-manager-client-grpc</artifactId>
@@ -234,6 +236,8 @@
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>text-embedding</artifactId>
     </dependency>
+    <!--  end gRPC clients  -->
+
     <dependency>
       <groupId>io.openk9.service</groupId>
       <artifactId>auth-service</artifactId>
@@ -250,6 +254,7 @@
       <groupId>io.openk9.common</groupId>
       <artifactId>model</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-actor-typed_${scala.version}</artifactId>
@@ -289,7 +294,7 @@
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
-      <version>2.7.0</version>
+      <version>2.9.0</version>
     </dependency>
     <dependency>
       <groupId>com.enragedginger</groupId>
@@ -300,12 +305,7 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-serialization-jackson_${scala.version}</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.github.tomakehurst</groupId>
-      <artifactId>wiremock-jre8</artifactId>
-      <scope>test</scope>
-      <version>3.0.1</version>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkiverse.file-vault</groupId>
       <artifactId>quarkus-file-vault</artifactId>
@@ -316,7 +316,17 @@
       <artifactId>quarkus-file-vault-config-source</artifactId>
       <version>2.0.0</version>
     </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock</artifactId>
+      <scope>test</scope>
+      <version>3.3.1</version>
+    </dependency>
+
   </dependencies>
+
   <build>
     <plugins>
       <plugin>

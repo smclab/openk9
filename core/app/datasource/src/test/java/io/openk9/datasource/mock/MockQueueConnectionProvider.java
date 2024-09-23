@@ -20,11 +20,11 @@ package io.openk9.datasource.mock;
 import io.openk9.datasource.queue.ChannelFactory;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.quarkus.test.Mock;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
 
 @Mock
 @ApplicationScoped

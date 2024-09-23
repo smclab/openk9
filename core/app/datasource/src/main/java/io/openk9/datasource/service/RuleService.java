@@ -22,8 +22,7 @@ import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.Rule_;
 import io.openk9.datasource.model.dto.RuleDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class RuleService extends BaseK9EntityService<Rule, RuleDTO> {

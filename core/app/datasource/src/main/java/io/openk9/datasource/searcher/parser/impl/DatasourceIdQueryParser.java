@@ -22,11 +22,11 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.opensearch.index.query.QueryBuilders;
 
 import java.util.Iterator;
 import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class DatasourceIdQueryParser implements QueryParser {

@@ -21,14 +21,14 @@ import akka.actor.typed.ActorSystem;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.cache.P2PCache;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import java.io.Serializable;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @PersistenceUnitExtension
 @ApplicationScoped

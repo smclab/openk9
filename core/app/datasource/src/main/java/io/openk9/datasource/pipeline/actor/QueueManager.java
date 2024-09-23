@@ -28,11 +28,11 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+import jakarta.enterprise.inject.spi.CDI;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.util.Map;
-import javax.enterprise.inject.spi.CDI;
 
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "schedulingKey-manager";

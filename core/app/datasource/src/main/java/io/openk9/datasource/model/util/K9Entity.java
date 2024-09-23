@@ -19,6 +19,10 @@ package io.openk9.datasource.model.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
+import io.openk9.datasource.type.TenantUserType;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +35,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 @Getter
@@ -42,12 +43,10 @@ import javax.persistence.MappedSuperclass;
 @RequiredArgsConstructor
 public abstract class K9Entity implements GraphqlId {
 
-
-	@Type(type = "io.openk9.datasource.type.TenantUserType")
-	// workaround to get the UserType valuated
-	@Column(name = "id", insertable = false, updatable = false)
-	@JsonIgnore
-	private String tenant;
+	@jakarta.persistence.Id
+	@GeneratedValue
+	@org.eclipse.microprofile.graphql.Id
+	public Long id;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
@@ -58,15 +57,11 @@ public abstract class K9Entity implements GraphqlId {
 	@Column(name = "modified_date")
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
-
-	@javax.persistence.Id
-	@GeneratedValue
-	@org.eclipse.microprofile.graphql.Id
-	public Long id;
-
-	public Long getId() {
-		return id;
-	}
+	@Type(TenantUserType.class)
+	// workaround to get the UserType valuated
+	@Column(name = "id", insertable = false, updatable = false)
+	@JsonIgnore
+	private String tenant;
 
 	@Override
 	public boolean equals(Object o) {

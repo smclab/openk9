@@ -19,6 +19,11 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -26,11 +31,6 @@ import lombok.ToString;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
 
 @Entity
 @Table(name = "enrich_pipeline")
@@ -45,7 +45,7 @@ public class EnrichPipeline extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@OneToMany(mappedBy = "enrichPipeline", cascade = javax.persistence.CascadeType.ALL)
+	@OneToMany(mappedBy = "enrichPipeline", cascade = jakarta.persistence.CascadeType.ALL)
 	@ToString.Exclude
 	@OrderBy("weight ASC")
 	@JsonIgnore

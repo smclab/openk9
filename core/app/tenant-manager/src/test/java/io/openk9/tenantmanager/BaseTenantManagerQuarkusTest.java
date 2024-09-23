@@ -20,8 +20,7 @@ package io.openk9.tenantmanager;
 import io.openk9.tenantmanager.init.TenantManagerInitializer;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public abstract class BaseTenantManagerQuarkusTest {
 

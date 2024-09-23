@@ -33,18 +33,18 @@ import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.queue.QueueConnectionProvider;
-import io.quarkus.arc.Priority;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 
 @Dependent
 public class ActorSystemConfig {

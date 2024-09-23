@@ -20,6 +20,18 @@ package io.openk9.datasource.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.util.OpenSearchUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,18 +41,6 @@ import lombok.ToString;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.PostUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 
 @Entity
 @Table(name = "data_index")
@@ -57,10 +57,12 @@ public class DataIndex extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
 	@JoinTable(name = "data_index_doc_types",
 		joinColumns = @JoinColumn(name = "data_index_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))

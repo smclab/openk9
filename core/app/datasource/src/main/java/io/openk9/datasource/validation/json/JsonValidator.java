@@ -19,10 +19,9 @@ package io.openk9.datasource.validation.json;
 
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 @ApplicationScoped
 public class JsonValidator implements ConstraintValidator<Json, String> {

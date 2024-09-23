@@ -70,7 +70,7 @@
 	</developers>
 
 	<modules>
-		<module>../vendor/hibernate-rx-multitenancy</module>
+		<module>../vendor/hibernate-reactive</module>
 		<module>api</module>
 		<module>app</module>
 		<module>client</module>
@@ -103,17 +103,18 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<compiler-plugin.version>3.10.1</compiler-plugin.version>
 		<dependency.version.lombok>1.18.22</dependency.version.lombok>
-		<dependency.version.mapstruct>1.5.3.Final</dependency.version.mapstruct>
+		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
+		<quarkus-plugin.version>3.0.4.Final</quarkus-plugin.version>
 		<quarkus.package.type>fast-jar</quarkus.package.type>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>2.16.12.Final</quarkus.platform.version>
-		<quarkus.version>${quarkus.platform.version}</quarkus.version>
+		<quarkus.platform.version>3.0.4.Final</quarkus.platform.version>
+		<quarkus.version>3.0.4.Final</quarkus.version>
+		<hibernate.version>6.2.31.Final</hibernate.version>
 		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
@@ -264,14 +265,14 @@
 								<version>${dependency.version.mapstruct}</version>
 							</path>
 							<path>
-								<groupId>org.hibernate</groupId>
+								<groupId>org.hibernate.orm</groupId>
 								<artifactId>hibernate-jpamodelgen</artifactId>
-								<version>5.6.10.Final</version>
+								<version>${hibernate.version}</version>
 							</path>
 							<path>
 								<groupId>no.entur.mapstruct.spi</groupId>
 								<artifactId>protobuf-spi-impl</artifactId> <!-- Make sure mapstruct version here is the same as below -->
-								<version>1.39</version>
+								<version>1.45</version>
 							</path>
 						</annotationProcessorPaths>
 					</configuration>

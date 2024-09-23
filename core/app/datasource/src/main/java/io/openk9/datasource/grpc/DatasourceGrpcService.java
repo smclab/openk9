@@ -26,8 +26,7 @@ import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 @GrpcService
 public class DatasourceGrpcService implements Datasource {

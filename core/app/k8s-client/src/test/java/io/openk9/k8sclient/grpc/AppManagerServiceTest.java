@@ -60,14 +60,14 @@ class AppManagerServiceTest {
 	@KubernetesTestServer
 	KubernetesServer mockServer;
 	@GrpcClient
-	AppManager client;
+	AppManager appManager;
 
 	@Test
 	@RunOnVertxContext
 	void deploySuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.applyResource(goodRequest),
+			() -> appManager.applyResource(goodRequest),
 			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich-mew")
 		);
 
@@ -91,7 +91,7 @@ class AppManagerServiceTest {
 			.once();
 
 		asserter.assertFailedWith(
-			() -> client.applyResource(goodRequest),
+			() -> appManager.applyResource(goodRequest),
 			StatusRuntimeException.class
 		);
 
@@ -102,7 +102,7 @@ class AppManagerServiceTest {
 	void deployBadRequest(UniAsserter asserter) {
 
 		asserter.assertFailedWith(
-			() -> client.applyResource(badRequest),
+			() -> appManager.applyResource(badRequest),
 			StatusRuntimeException.class
 		);
 
@@ -113,9 +113,9 @@ class AppManagerServiceTest {
 	void deleteWithResourceSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client
+			() -> appManager
 				.applyResource(goodRequest)
-				.call(() -> client.deleteResource(goodRequest)),
+				.call(() -> appManager.deleteResource(goodRequest)),
 			empty -> {}
 		);
 
@@ -126,7 +126,7 @@ class AppManagerServiceTest {
 	void deleteWithoutResourceSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequest),
 			empty -> {}
 		);
 
@@ -143,7 +143,7 @@ class AppManagerServiceTest {
 			.once();
 
 		asserter.assertFailedWith(
-			() -> client.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequest),
 			StatusRuntimeException.class
 		);
 
@@ -154,7 +154,7 @@ class AppManagerServiceTest {
 	void deleteBadRequest(UniAsserter asserter) {
 
 		asserter.assertFailedWith(
-			() -> client.deleteResource(badRequest),
+			() -> appManager.deleteResource(badRequest),
 			StatusRuntimeException.class
 		);
 
@@ -165,7 +165,7 @@ class AppManagerServiceTest {
 	void createIngressSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.createIngress(
+			() -> appManager.createIngress(
 				CreateIngressRequest
 					.newBuilder()
 					.setSchemaName("mew")
@@ -184,7 +184,7 @@ class AppManagerServiceTest {
 	void deleteIngressSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.deleteIngress(
+			() -> appManager.deleteIngress(
 				DeleteIngressRequest
 					.newBuilder()
 					.setSchemaName("mew")

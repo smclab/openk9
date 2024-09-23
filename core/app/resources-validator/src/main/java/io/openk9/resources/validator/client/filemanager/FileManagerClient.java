@@ -17,14 +17,14 @@
 
 package io.openk9.resources.validator.client.filemanager;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
 @Path("/api/file-manager/v1")
@@ -39,7 +39,8 @@ public interface FileManagerClient {
 
 	@POST
 	@Path("/delete/{resourceId}/{schemaName}")
-	void delete(@javax.ws.rs.PathParam("resourceId") String resourceId,
+	void delete(
+		@jakarta.ws.rs.PathParam("resourceId") String resourceId,
 				@PathParam("schemaName") String schemaName);
 
 }

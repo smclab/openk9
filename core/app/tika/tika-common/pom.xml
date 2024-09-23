@@ -50,11 +50,7 @@
 		<dependency>
 			<groupId>io.quarkiverse.tika</groupId>
 			<artifactId>quarkus-tika</artifactId>
-			<version>1.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-arc</artifactId>
+			<version>2.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -70,11 +66,11 @@
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-rest-client</artifactId>
+			<artifactId>quarkus-rest-client-reactive</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-rest-client-jackson</artifactId>
+			<artifactId>quarkus-rest-client-reactive-jackson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

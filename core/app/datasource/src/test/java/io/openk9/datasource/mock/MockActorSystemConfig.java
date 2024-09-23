@@ -21,11 +21,10 @@ import io.openk9.datasource.actor.ActorSystemBehaviorInitializer;
 import io.openk9.datasource.actor.ActorSystemConfig;
 import io.openk9.datasource.actor.ActorSystemInitializer;
 import io.quarkus.test.Mock;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
 import org.mockito.Mockito;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Produces;
 
 @Mock
 @Dependent

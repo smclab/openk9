@@ -20,6 +20,8 @@ package io.openk9.entity.manager.service.graph;
 import io.openk9.entity.manager.model.graph.DocumentGraph;
 import io.openk9.entity.manager.model.graph.EntityGraph;
 import io.quarkus.arc.Unremovable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.neo4j.cypherdsl.core.Statement;
 import org.neo4j.driver.Driver;
@@ -30,8 +32,6 @@ import org.neo4j.driver.Value;
 import org.neo4j.driver.Values;
 import org.neo4j.driver.types.Node;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.List;
 
 @ApplicationScoped

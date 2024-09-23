@@ -39,6 +39,15 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -506,8 +515,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			"where epi.enrichPipeline.id = :enrichPipelineId " +
 			"order by epi.weight asc";
 
-		Mutiny.Query<EnrichItem> query =
-			s.createQuery(queryString, EnrichItem.class);
+		var query = s.createQuery(queryString, EnrichItem.class);
 
 		query.setParameter("enrichPipelineId", enrichPipelineId);
 
@@ -534,8 +542,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				"and epi_next.weight > epi.weight " +
 				"order by epi_next.weight asc";
 
-			Mutiny.Query<EnrichItem> query =
-				s.createQuery(queryString, EnrichItem.class);
+			var query = s.createQuery(queryString, EnrichItem.class);
 
 			query.setParameter("enrichPipelineId", enrichPipelineId);
 			query.setParameter("enrichItemId", enrichItemId);

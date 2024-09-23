@@ -24,12 +24,11 @@ import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.ws.rs.NotFoundException;
 
 @ApplicationScoped
 public class LargeLanguageModelService

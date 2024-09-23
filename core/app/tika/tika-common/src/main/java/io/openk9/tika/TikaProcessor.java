@@ -25,14 +25,14 @@ import io.quarkus.tika.TikaMetadata;
 import io.quarkus.tika.TikaParser;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.time.Duration;

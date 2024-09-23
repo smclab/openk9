@@ -18,9 +18,10 @@
 package io.openk9.filemanager.web;
 
 import io.openk9.filemanager.service.DeleteService;
-
-import javax.inject.Inject;
-import javax.ws.rs.*;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 
 @Path("/v1/delete")
 public class DeleteEndpoint {

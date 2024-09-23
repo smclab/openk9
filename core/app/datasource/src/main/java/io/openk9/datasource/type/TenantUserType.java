@@ -1,8 +1,24 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.type;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.LongType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -11,40 +27,50 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
-public class TenantUserType implements UserType {
+public class TenantUserType implements UserType<String> {
+
 	@Override
-	public int[] sqlTypes() {
-		return new int[] {LongType.INSTANCE.sqlType()};
+	public int getSqlType() {
+		return SqlTypes.NVARCHAR;
 	}
 
 	@Override
-	public Class returnedClass() {
+	public Class<String> returnedClass() {
 		return String.class;
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(String x, String y) {
 		return x.equals(y);
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
-		return Objects.hash(x);
+	public int hashCode(String x) {
+		return Objects.hashCode(x);
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
+	public String nullSafeGet(
+		ResultSet rs,
+		int position,
+		SharedSessionContractImplementor session,
+		Object owner) throws SQLException {
+
 		return session.getTenantIdentifier();
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(
+		PreparedStatement st,
+		String value,
+		int index,
+		SharedSessionContractImplementor session) throws SQLException {
+
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
-		return value == null ? null : String.valueOf( value );
-
+	public String deepCopy(String value) {
+		return "";
 	}
 
 	@Override
@@ -53,17 +79,13 @@ public class TenantUserType implements UserType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
-		return (String) deepCopy(value);
+	public Serializable disassemble(String value) {
+		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
-		return deepCopy(cached);
+	public String assemble(Serializable cached, Object owner) {
+		return "";
 	}
 
-	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
-		return deepCopy(original);
-	}
 }

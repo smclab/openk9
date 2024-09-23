@@ -43,6 +43,10 @@ import io.openk9.datasource.util.OpenSearchUtils;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -64,10 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
 @ApplicationScoped
 public class DataIndexService
@@ -417,15 +417,15 @@ public class DataIndexService
 							sink.complete(null);
 						}
 						catch (OpenSearchStatusException e) {
-							sink.fail(new WebApplicationException(javax.ws.rs.core.Response
+							sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
 								.status(e.status().getStatus())
 								.entity(JsonObject.of(
 									DETAILS_FIELD, e.getMessage()))
 								.build()));
 						}
 						catch (Exception e) {
-							sink.fail(new WebApplicationException(javax.ws.rs.core.Response
-								.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+							sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
+								.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
 								.entity(JsonObject.of(
 									DETAILS_FIELD, e.getMessage()))
 								.build()));

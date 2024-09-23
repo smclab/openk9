@@ -24,14 +24,14 @@ import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.client.RestHighLevelClient;
 
 import java.util.List;
 import java.util.function.Supplier;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {

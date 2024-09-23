@@ -26,6 +26,8 @@ import io.openk9.datasource.service.SchedulerService;
 import io.quarkus.runtime.util.ExceptionUtil;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.io.LineNumberReader;
@@ -34,8 +36,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulingService {

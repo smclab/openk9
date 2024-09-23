@@ -32,6 +32,8 @@ import io.openk9.datasource.model.init.Languages;
 import io.openk9.datasource.model.init.QueryParserConfigs;
 import io.openk9.datasource.model.init.Rules;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
@@ -40,8 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class TenantInitializerService {

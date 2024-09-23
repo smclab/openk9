@@ -19,11 +19,10 @@ package io.openk9.datasource.mock;
 
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.test.Mock;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 import org.mockito.Mockito;
 import org.opensearch.client.RestHighLevelClient;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
 
 public final class MockedBeans {
 

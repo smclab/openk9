@@ -19,17 +19,16 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 @Entity
 @Table(name = "query_parser_config")
@@ -53,7 +52,7 @@ public class QueryParserConfig extends K9Entity {
 	private String jsonConfig;
 
 	@ToString.Exclude
-	@ManyToOne(cascade = javax.persistence.CascadeType.ALL)
+	@ManyToOne(cascade = jakarta.persistence.CascadeType.ALL)
 	@JoinColumn(name = "search_config")
 	@JsonIgnore
 	private SearchConfig searchConfig;

@@ -28,12 +28,13 @@ import io.fabric8.kubernetes.api.model.networking.v1.IngressTLSBuilder;
 import io.fabric8.kubernetes.api.model.networking.v1.ServiceBackendPort;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public final class IngressService {
@@ -51,32 +52,24 @@ public final class IngressService {
 	String secretName;
 
 	public Uni<HasMetadata> create(IngressDef ingressDef) {
-		return Uni.createFrom().emitter(emitter -> {
-			try {
+		return Uni.createFrom()
+			.item(() -> {
 				var ingress = getIngress(ingressDef);
 
-				Ingress resource = k8sClient.resource(ingress).createOrReplace();
-				emitter.complete(resource);
-			}
-			catch (Exception e) {
-				emitter.fail(e);
-			}
-		});
+				return k8sClient.resource(ingress).createOrReplace();
+			})
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+			.map(ingress -> ingress);
 	}
 
 	public Uni<List<StatusDetails>> delete(IngressDef ingressDef) {
-		return Uni.createFrom().emitter(emitter -> {
-			try {
+		return Uni.createFrom()
+			.item(() -> {
 				var ingress = getIngress(ingressDef);
 
-				var statusDetails = k8sClient.resource(ingress).delete();
-
-				emitter.complete(statusDetails);
-			}
-			catch (Exception e) {
-				emitter.fail(e);
-			}
-		});
+				return k8sClient.resource(ingress).delete();
+			})
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
 
 	private Ingress getIngress(IngressDef ingressDef) {
@@ -95,7 +88,7 @@ public final class IngressService {
 			ingressPaths.add(ingressPath);
 		}
 
-		Ingress ingress = new IngressBuilder()
+		return new IngressBuilder()
 			.withNewMetadata()
 			.withName(ingressDef.ingressName())
 			.withNamespace(namespace)
@@ -115,7 +108,6 @@ public final class IngressService {
 			)
 			.endSpec()
 			.build();
-		return ingress;
 	}
 
 	private static ServiceBackendPort servicePort(IngressDef.Route route) {

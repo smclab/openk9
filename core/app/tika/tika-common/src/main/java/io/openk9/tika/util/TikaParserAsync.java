@@ -20,10 +20,10 @@ package io.openk9.tika.util;
 import io.quarkus.tika.TikaContent;
 import io.quarkus.tika.TikaParser;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.xml.sax.ContentHandler;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.InputStream;
 
 @ApplicationScoped

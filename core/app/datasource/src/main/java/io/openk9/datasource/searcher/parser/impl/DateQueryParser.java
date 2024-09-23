@@ -27,6 +27,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vavr.Function0;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -35,7 +36,6 @@ import org.opensearch.index.query.RangeQueryBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class DateQueryParser implements QueryParser {
