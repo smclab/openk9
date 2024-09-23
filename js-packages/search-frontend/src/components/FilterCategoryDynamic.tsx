@@ -131,15 +131,17 @@ function FilterCategoryDynamic({
         `}
       >
         <legend
+          className="legend-filters"
           css={css`
             :first-letter {
               text-transform: uppercase;
             }
           `}
         >
-          <strong>{suggestionCategoryName}</strong>
+          <strong className="name-category-filter">
+            {suggestionCategoryName}
+          </strong>
         </legend>
-
         <button
           aria-label={
             t("openk9-collapsable-filter") || "openk9 collapsable filter"
@@ -149,6 +151,7 @@ function FilterCategoryDynamic({
           onClick={() => setIsOpen(!isOpen)}
         >
           <FontAwesomeIcon
+            className="icon-search icon-search-filters"
             icon={isOpen ? faChevronUp : faChevronDown}
             style={{
               color: "var(--openk9-embeddable-search--secondary-text-color)",

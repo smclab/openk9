@@ -326,8 +326,6 @@ export type TemplatesProps = Array<{ source: string; Template: React.FC<any> }>;
 
 export type IconsCustom =
   | {
-      IcondownDropdown?: React.ReactNode;
-      IconUpDropdropdown?: React.ReactNode;
       Search?: React.ReactNode;
     }
   | null
