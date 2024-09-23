@@ -76,7 +76,7 @@ export function Search({
           gap: 10px;
           width: 100%;
           @media (max-width: 480px) {
-            flex-direction: column;
+            flex-direction: row;
             margin-top: 15px;
           }
           .openk9-focusable:has(input:focus) {

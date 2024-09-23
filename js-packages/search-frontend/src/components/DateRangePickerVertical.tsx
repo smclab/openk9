@@ -36,10 +36,6 @@ export function DataRangePickerVertical({
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
   const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
-  const [manageAccessibilityStart, setManageAccessibilityStart] =
-    React.useState<boolean>(false);
-  const [manageAccessibilityEnd, setManageAccessibilityEnd] =
-    React.useState<boolean>(false);
   const [dataEnd, setDataEnd] = React.useState("");
   const [dataStart, setDataStart] = React.useState("");
   const [validationStart, setValidationStart] = React.useState("");
@@ -121,26 +117,6 @@ export function DataRangePickerVertical({
     }
   }
 
-  const [date, setDate] = React.useState(null);
-
-  const renderCustomInput = ({
-    ref,
-    onFocus,
-    onKeyDown,
-  }: {
-    ref: any;
-    onFocus: any;
-    onKeyDown: any;
-  }) => (
-    <button
-      ref={ref}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
-      className="your-custom-class"
-    >
-      Seleziona una data
-    </button>
-  );
   return (
     <div
       className={`DateRangePickerVertical-container openk9-class-tab-${classTab}`}
@@ -149,7 +125,6 @@ export function DataRangePickerVertical({
         height: "100%",
         justifyContent: "center",
         flexDirection: "column",
-        padding: "15px 0 15px 15px",
       }}
     >
       <div className="DateRangePickerVertical-startDate-container">
@@ -157,10 +132,6 @@ export function DataRangePickerVertical({
           Dal ({t("gg/mm/aaaa")}):
         </p>
         <div
-          onClick={() => setManageAccessibilityStart(!manageAccessibilityStart)}
-          onKeyDown={(e) =>
-            e.key === "Tab" ? setManageAccessibilityStart(false) : null
-          }
           css={css`
             display: flex;
           `}
@@ -210,6 +181,7 @@ export function DataRangePickerVertical({
               border-left: 1px solid black;
               border-bottom: 1px solid black;
               min-width: 130px;
+              width: 100%;
               height: 42px;
             `}
           />
@@ -251,6 +223,9 @@ export function DataRangePickerVertical({
                    .SingleDatePickerInput_clearDate__default_2{
                       width:88%;
                     }
+                      .SingleDatePickerInput__withBorder {
+                        background: inherit;
+                      }
            `}</style>
           </div>
         </div>
@@ -265,10 +240,6 @@ export function DataRangePickerVertical({
           Al ({t("gg/mm/aaaa")}):
         </p>
         <div
-          onClick={() => setManageAccessibilityEnd(!manageAccessibilityEnd)}
-          onKeyDown={(e) =>
-            e.key === "Tab" ? setManageAccessibilityEnd(false) : null
-          }
           css={css`
             display: flex;
           `}
@@ -318,6 +289,7 @@ export function DataRangePickerVertical({
               border-left: 1px solid black;
               border-bottom: 1px solid black;
               min-width: 130px;
+              width: 100%;
               height: 42px;
             `}
           />

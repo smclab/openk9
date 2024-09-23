@@ -410,6 +410,7 @@ function FilterCategoryDynamic({
                 display: flex;
                 margin-left: 12px;
                 margin-top: 10px;
+                margin-bottom: 20px;
                 justify-content: center;
                 @media (max-width: 480px) {
                   margin-top: 15px;

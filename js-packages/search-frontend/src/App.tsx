@@ -6,9 +6,9 @@ import "./index.css";
 import "./app.css";
 import { MaintenancePage } from "./components/MaintenancePage";
 import "./ScrollBar.css";
-import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import "./components/dataRangePicker.css";
 import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
+import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -67,8 +67,20 @@ export function App() {
     });
   }, [openk9]);
 
+  React.useEffect(() => {
+    if (isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar) {
+      document.body.classList.add("no-scroll");
+    } else {
+      document.body.classList.remove("no-scroll");
+    }
+    return () => {
+      document.body.classList.remove("no-scroll");
+    };
+  }, [isVisibleFilters, isVisibleCalendar, isVisibleSearchMobile]);
+
   return (
     <div
+      id="openk9-body"
       className="openk9-body"
       css={css`
         background-color: var(
@@ -143,7 +155,8 @@ export function App() {
           );
 
           @media (max-width: 480px) {
-            margin: 0 -30px;
+            margin: 0 0px;
+            padding: 8px 20px;
           }
         `}
       >
@@ -205,7 +218,7 @@ export function App() {
           padding: 8px 16px 0;
           margin-bottom: -16px;
           overflow: auto;
-
+          height: max-content;
           @media (max-width: 480px) {
             display: none;
           }
@@ -237,13 +250,16 @@ export function App() {
         >
           <div
             css={css`
+              display: flex;
+              gap: 18px;
+              align-items: flex-end;
               width: 100%;
             `}
             onClick={handleClick}
             className="openk9-update-configuration-search"
             ref={(element) => openk9.updateConfiguration({ search: element })}
           />
-          <div
+          {/* <div
             css={css`
               @media (max-width: 768px) {
                 display: flex;
@@ -296,7 +312,7 @@ export function App() {
                 )}
               </button>
             )}
-          </div>
+          </div> */}
 
           <div
             css={css`
@@ -472,12 +488,14 @@ export function App() {
           })
         }
       />
-
       <div
         className="openk9-filters-container openk9-box"
         ref={(element) => openk9.updateConfiguration({ filters: element })}
         css={css`
           grid-area: filters;
+          display: flex;
+          height: max-content;
+          flex-direction: column-reverse;
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
@@ -492,7 +510,17 @@ export function App() {
             display: none;
           }
         `}
-      />
+      >
+        <div
+          css={css`
+            padding: 16px;
+          `}
+          ref={(element) =>
+            openk9.updateConfiguration({ dataRangePickerVertical: { element } })
+          }
+        ></div>
+      </div>
+
       {searchText !== undefined && (
         <div
           css={css`
@@ -547,7 +575,7 @@ export function App() {
               )}
             </button>
           </div>
-          <div
+          {/* <div
             ref={(element) =>
               openk9.updateConfiguration({
                 generateResponse: element,
@@ -557,7 +585,7 @@ export function App() {
               color: black;
               display: ${isPanelVisible ? "block" : "none"};
             `}
-          ></div>
+          ></div> */}
         </div>
       )}
 
@@ -574,12 +602,8 @@ export function App() {
         css={css`
           grid-area: result;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
-          overflow-y: auto;
-          background-color: var(
-            --openk9-embeddable-search--primary-background-color
-          );
-          border-radius: 8px;
-          border: 1px solid var(--openk9-embeddable-search--border-color);
+          overflow: auto;
+          height: max-content;
         `}
       />
 
@@ -627,6 +651,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
+          height: fit-content;
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
           margin-top: ${searchText !== undefined ? "20px" : "unset"};

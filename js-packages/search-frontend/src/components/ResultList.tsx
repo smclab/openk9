@@ -212,7 +212,6 @@ function ResultCount({
         }`}
         css={css`
           padding: 0px 16px;
-          width: 100%;
           background: #fafafa;
           padding-top: 20.7px;
           padding-bottom: 12.7px;
@@ -364,13 +363,12 @@ export function FiniteResults<E>({
   return (
     <div
       className="openk9-finite-result-container"
-      style={{ height: "100%", overflowY: "auto", position: "relative" }}
+      style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}
     >
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
           className="openk9-finite-result"
           css={css`
-            position: absolute;
             width: 100%;
           `}
         >
@@ -480,15 +478,15 @@ export function InfiniteResults<E>({
   return (
     <div
       className="openk9-infinite-results-overlay-scrollbars"
-      style={{
-        height: "100%",
-        overflowY: "auto",
-        position: "relative",
-      }}
       css={css`
         height: 100%;
         overflow-y: auto;
-        position: relative;
+        overflow-x: hidden;
+        border: 1px solid var(--openk9-embeddable-search--border-color);
+        border-radius: 8px;
+        background-color: var(
+          --openk9-embeddable-search--primary-background-color
+        );
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -514,8 +512,6 @@ export function InfiniteResults<E>({
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`
-            position: absolute;
-            width: 100%;
             padding-bottom: 16px;
           `}
         >
@@ -571,9 +567,7 @@ export function InfiniteResults<E>({
             <div
               className="openk9-container-embeddable-result-button"
               css={css`
-                position: absolute;
-                left: 16px;
-                right: 16px;
+                padding-inline: 16px;
                 margin-top: 10px;
                 padding-bottom: 16px;
               `}

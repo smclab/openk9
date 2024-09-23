@@ -33,12 +33,14 @@
   padding: 0;
 }
 
-.SingleDatePickerInput_clearDate__default:focus, .SingleDatePickerInput_clearDate__default:hover {
+.SingleDatePickerInput_clearDate__default:focus,
+.SingleDatePickerInput_clearDate__default:hover {
   background-color: #fff;
   border-radius: 0;
 }
 
-.SingleDatePickerInput_clearDate__default:focus, .SingleDatePickerInput_clearDate__default:hover svg {
+.SingleDatePickerInput_clearDate__default:focus,
+.SingleDatePickerInput_clearDate__default:hover svg {
   fill: red;
 }
 
@@ -50,29 +52,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
 }
 
-.SingleDatePickerInput__withBorder{
-  border:none;
+.SingleDatePickerInput__withBorder {
+  border: none;
 }
 
-.SingleDatePickerInput_calendarIcon{
+.SingleDatePickerInput_calendarIcon {
   margin: 0px;
-  padding:0px;
+  padding: 0px;
   padding-inline: 6px;
 }
 
-.SingleDatePicker{
-  padding-top:12px;
+.SingleDatePicker {
+  padding: 12px;
 }
 
-.SingleDatePickerInput_calendarIcon_svg{
+.SingleDatePickerInput_calendarIcon_svg {
   height: 16px;
 }
 
-.SingleDatePickerInput_clearDate{
-  top:63%;
-}
-
-.SingleDatePickerInput_calendarIcon_1:focus-visible{
-  border:none;
-  outline:none;
+.SingleDatePickerInput_clearDate__default_2 {
+  left: -100%;
 }

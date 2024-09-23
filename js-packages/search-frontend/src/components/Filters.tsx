@@ -92,9 +92,9 @@ function Filters({
       className="openk9-filter-overlay-scrollbars"
       css={css`
         overflow-y: auto;
-        position: relative;
         height: 100%;
         border-radius: 8px;
+        overflow-x: hidden;
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -218,9 +218,7 @@ function Filters({
       <div
         className="openk9-filters-container-internal"
         css={css`
-          position: absolute;
           padding: 16px 16px 0px 0px;
-          width: calc(100% - 32px);
         `}
       >
         {suggestionCategories.data?.length === 0 && !preFilters && (
