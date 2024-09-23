@@ -726,6 +726,7 @@ export function NoFilter({
           />
         </button>
       </div>
+      <div id="no-filters-result" className="no-filters-result"></div>
     </fieldset>
   );
 }
