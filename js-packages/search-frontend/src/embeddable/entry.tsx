@@ -336,6 +336,7 @@ export type Configuration = {
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
   defaultString: string | null | undefined;
+  languageSelect: string | null | undefined;
   enabled: boolean;
   filterTokens: Array<SearchToken>;
   icons: IconsCustom;
@@ -418,6 +419,7 @@ const defaultConfiguration: Configuration = {
   dataRangePicker: null,
   dataRangePickerVertical: null,
   defaultString: null,
+  languageSelect: null,
   debounceTimeSearch: null,
   defaultTokens: [],
   detailMobile: null,

@@ -218,13 +218,18 @@ export function Main({
   }, [whoIsDynamicResponse.isSuccess, whoIsDynamicResponse.data]);
 
   React.useEffect(() => {
-    if (languageQuery.data?.value) {
+    if (configuration.languageSelect) {
+      i18n.changeLanguage(
+        remappingLanguage({ language: configuration.languageSelect }),
+      );
+      setLanguageSelect(configuration.languageSelect);
+    } else if (languageQuery.data?.value) {
       i18n.changeLanguage(
         remappingLanguage({ language: languageQuery.data.value }),
       );
       setLanguageSelect(languageQuery.data.value);
     }
-  }, [languageQuery.data, i18n]);
+  }, [languageQuery.data, i18n, configuration.languageSelect]);
 
   const isSearchLoading =
     dynamicFilters.isLoading ||
