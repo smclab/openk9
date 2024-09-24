@@ -168,17 +168,14 @@ function FiltersMobileLiveChange<E>({
       >
         <FiltersMemo
           memoryResults={memoryResults}
+          iconCustom={null}
           searchQuery={searchQuery}
           onAddFilterToken={onAddFilterToken}
           onRemoveFilterToken={onRemoveFilterToken}
-          onConfigurationChange={onConfigurationChange}
-          filtersSelect={configuration.filterTokens}
           sort={sort}
-          dynamicFilters={dynamicFilters}
           isDynamicElement={whoIsDynamic}
           language={language}
           sortAfterKey={sortAfterKey}
-          isCollapsable={isCollapsable}
           numberOfResults={numberOfResults}
           numberItems={numberItems}
           skeletonCategoryCustom={skeletonCategoryCustom}
@@ -370,7 +367,6 @@ function ViewAllTabs({
             style={{
               background: "inherit",
               border: "none",
-              margin: "1px -9px",
             }}
           >
             <FontAwesomeIcon

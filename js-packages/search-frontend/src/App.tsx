@@ -13,6 +13,7 @@ import moment from "moment";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { debounce } from "lodash";
+import { PreviewSvg } from "./svgElement/PreviewSvg";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -460,22 +461,6 @@ export function App() {
       </div>
 
       <div
-        className="openk9-container-active-filters"
-        css={css`
-          @media (min-width: 480px) {
-            display: none;
-          }
-        `}
-      >
-        <div
-          className="openk9-filters-container openk9-box"
-          ref={(element) =>
-            openk9.updateConfiguration({ activeFilters: element })
-          }
-        />
-      </div>
-
-      <div
         className="openk9-filters-mobile-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
@@ -489,40 +474,89 @@ export function App() {
         }
       />
       <div
-        className="openk9-filters-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            filtersConfigurable: { element },
-          })
-        }
+        className="openk9-detail-container-title box-title"
         css={css`
           grid-area: filters;
+          width: 100%;
+          background: #fafafa;
           display: flex;
-          height: max-content;
-          flex-direction: column-reverse;
-          background-color: var(
-            --openk9-embeddable-search--primary-background-color
-          );
+          flex-direction: column;
+          gap: 3px;
+          box-sizing: border-box;
+          height: fit-content;
           border-radius: 8px;
-          border: 1px solid var(--openk9-embeddable-search--border-color);
 
           @media (max-width: 480px) {
-            display: none;
-          }
-
-          @media (min-width: 481px) and (max-width: 768px) {
             display: none;
           }
         `}
       >
         <div
+          className="openk9-icon-and-title-filters"
           css={css`
-            padding: 16px;
+            display: flex;
+            gap: 5px;
+            padding: 8px 16px;
+            margin-top: 5px;
           `}
+        >
+          <div>
+            <PreviewSvg />
+          </div>
+          <h2
+            id="title-preview-openk9"
+            tabIndex={0}
+            className="openk9-detail-class-title"
+            css={css`
+              font-style: normal;
+              font-weight: 700;
+              font-size: 18px;
+              height: 18px;
+              line-height: 22px;
+              align-items: center;
+              color: #3f3f46;
+              margin: 0;
+            `}
+          >
+            {t("filters")}
+          </h2>
+        </div>
+        <div
+          className="openk9-filters-container openk9-box"
           ref={(element) =>
-            openk9.updateConfiguration({ dataRangePickerVertical: { element } })
+            openk9.updateConfiguration({
+              filtersConfigurable: { element },
+            })
           }
-        ></div>
+          css={css`
+            display: flex;
+            height: max-content;
+            flex-direction: column-reverse;
+            background-color: var(
+              --openk9-embeddable-search--primary-background-color
+            );
+            border-radius: 8px;
+
+            @media (max-width: 480px) {
+              display: none;
+            }
+
+            @media (min-width: 481px) and (max-width: 768px) {
+              display: none;
+            }
+          `}
+        >
+          <div
+            css={css`
+              padding: 16px;
+            `}
+            ref={(element) =>
+              openk9.updateConfiguration({
+                dataRangePickerVertical: { element },
+              })
+            }
+          ></div>
+        </div>
       </div>
 
       {searchText !== undefined && (
