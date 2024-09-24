@@ -86,7 +86,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
 							var datasourceUni =
-								//s.find(Datasource.class, datasourceIds.toArray())
 								s.createQuery(
 									"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
 									Datasource.class)
@@ -185,7 +184,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									.getResultList()
 									.flatMap(datasources -> {
 										datasources.forEach(datasource ->
-											datasource.getBuckets().add(bucket)
+											datasource.getBuckets().add(transientBucket)
 										);
 
 										return s.persistAll(datasources.toArray());
@@ -194,33 +193,55 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(datasourceUni);
 						}
 
+						//Suggestion Category
 						var suggestionCategoryIds =
 							bucketWithListsDTO.getSuggestionCategoryIds();
 
+						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
 
-						if (suggestionCategoryIds != null) {
+							//TODO controllare se necessario iterare sulle vecchie suggestionCategory
+							// per togliere il bucket a loro associato
+
+							var suggestionCategoryUni = s.find(
+								SuggestionCategory.class, suggestionCategoryIds.toArray())
+								.flatMap(suggestionCategories -> {
+										suggestionCategories.forEach(suggestionCategory ->
+											suggestionCategory.setBucket(transientBucket));
+										return s.persistAll(suggestionCategories.toArray());
+									}
+								);
+
+							builder.add(suggestionCategoryUni);
+
 							var suggestionCategories =
 								suggestionCategoryIds.stream()
-									.map(id -> s.getReference(SuggestionCategory.class, id))
+									.map(suggestionId ->
+										s.getReference(SuggestionCategory.class, suggestionId))
 									.collect(Collectors.toSet());
 
 							transientBucket.getSuggestionCategories().clear();
 							transientBucket.setSuggestionCategories(suggestionCategories);
 						}
 
+						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
 
-						if (tabIds != null) {
+						if (tabIds != null && !tabIds.isEmpty()) {
 							var tabs = tabIds.stream()
-								.map(id -> s.getReference(Tab.class, id))
+								.map(tabId -> s.getReference(Tab.class, tabId))
 								.collect(Collectors.toList());
 
 							transientBucket.getTabs().clear();
 							transientBucket.setTabs(tabs);
+
+							builder.add(s.persist(transientBucket));
 						}
 
-						return s.merge(transientBucket)
-							.map(__ -> transientBucket);
+						return builder.joinAll()
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
+							.flatMap(__ -> s.merge(transientBucket));
 					})
 			);
 		}
