@@ -260,43 +260,83 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.flatMap(bucket -> {
 						var transientBucket = mapper.update(bucket, bucketWithListsDTO);
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+
+						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+
+						//TODO iterare sui vecchi datasource per togliere il bucket dalla loro lista di buckets
 						transientBucket.getDatasources().clear();
 
 						if (datasourceIds != null) {
-							var datasources = datasourceIds.stream()
-								.map(id -> s.getReference(Datasource.class, id))
-								.collect(Collectors.toSet());
+							var datasourceUni =
+								s.createQuery(
+									"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
+									Datasource.class)
+									.setParameter("datasourceIds", datasourceIds)
+									.getResultList()
+									.flatMap(datasources -> {
+										datasources.forEach(datasource ->
+											datasource.getBuckets().add(transientBucket)
+										);
 
-							transientBucket.setDatasources(datasources);
+										return s.persistAll(datasources.toArray());
+									});
+
+							builder.add(datasourceUni);
 						}
 
+						//Suggestion Category
 						var suggestionCategoryIds =
 							bucketWithListsDTO.getSuggestionCategoryIds();
+
+						//TODO controllare se necessario iterare sulle vecchie suggestionCategory
+						// per togliere il bucket a loro associato
 						transientBucket.getSuggestionCategories().clear();
 
 						if (suggestionCategoryIds != null) {
+							var suggestionCategoryUni = s.find(
+								SuggestionCategory.class, suggestionCategoryIds.toArray())
+								.flatMap(suggestionCategories -> {
+										suggestionCategories.forEach(suggestionCategory ->
+											suggestionCategory.setBucket(transientBucket));
+										return s.persistAll(suggestionCategories.toArray());
+									}
+								);
+
+							builder.add(suggestionCategoryUni);
+
 							var suggestionCategories =
 								suggestionCategoryIds.stream()
-									.map(id -> s.getReference(SuggestionCategory.class, id))
+									.map(suggestionId ->
+										s.getReference(SuggestionCategory.class, suggestionId))
 									.collect(Collectors.toSet());
 
+							transientBucket.getSuggestionCategories().clear();
 							transientBucket.setSuggestionCategories(suggestionCategories);
 						}
 
+						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
 						transientBucket.getTabs().clear();
 
 						if (tabIds != null) {
 							var tabs = tabIds.stream()
-								.map(id -> s.getReference(Tab.class, id))
+								.map(tabId -> s.getReference(Tab.class, tabId))
 								.collect(Collectors.toList());
 
+							transientBucket.getTabs().clear();
 							transientBucket.setTabs(tabs);
+
+							builder.add(s.persist(transientBucket));
 						}
 
-						return s.merge(transientBucket)
-							.map(__ -> transientBucket);
+						return builder.joinAll()
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
+							.flatMap(__ -> s.merge(transientBucket));
 					})
 			);
 		}
