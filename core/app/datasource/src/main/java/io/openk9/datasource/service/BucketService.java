@@ -166,15 +166,32 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.flatMap(bucket -> {
 						var transientBucket = mapper.patch(bucket, bucketWithListsDTO);
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+
+						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
 
-						if (datasourceIds != null) {
-							var datasources = datasourceIds.stream()
-								.map(id -> s.getReference(Datasource.class, id))
-								.collect(Collectors.toSet());
+						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							transientBucket.getDatasources().clear();
-							transientBucket.setDatasources(datasources);
+							//transientBucket.getDatasources().clear();
+							//TODO iterare sui vecchi datasource per togliere il bucket dalla loro lista di buckets
+
+							var datasourceUni =
+								s.createQuery(
+									"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
+									Datasource.class)
+									.setParameter("datasourceIds", datasourceIds)
+									.getResultList()
+									.flatMap(datasources -> {
+										datasources.forEach(datasource ->
+											datasource.getBuckets().add(bucket)
+										);
+
+										return s.persistAll(datasources.toArray());
+									});
+
+							builder.add(datasourceUni);
 						}
 
 						var suggestionCategoryIds =
