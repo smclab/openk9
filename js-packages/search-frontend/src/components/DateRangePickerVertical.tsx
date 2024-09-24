@@ -321,7 +321,6 @@ export function DataRangePickerVertical({
               id="endDate"
               showClearDate
               showDefaultInputIcon
-              aria-describedby="error-message"
               inputIconPosition="after"
               isOutsideRange={(day) => {
                 return (
