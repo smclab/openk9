@@ -131,14 +131,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//Tab
-						//TODO aggiungi controllo != null
-						var tabs = bucketWithListsDTO.getTabIds().stream()
-							.map(tabId -> s.getReference(Tab.class, tabId))
-							.collect(Collectors.toList());
+						var tabIds = bucketWithListsDTO.getTabIds();
 
-						bucket.setTabs(tabs);
+						if (tabIds != null && !tabIds.isEmpty()) {
 
-						builder.add(s.persist(bucket));
+							var tabs = tabIds.stream()
+								.map(tabId -> s.getReference(Tab.class, tabId))
+								.collect(Collectors.toList());
+
+							bucket.setTabs(tabs);
+
+							builder.add(s.persist(bucket));
+						}
 
 						return builder.joinAll()
 							.andCollectFailures()
