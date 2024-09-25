@@ -173,8 +173,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							//transientBucket.getDatasources().clear();
-							//TODO iterare sui vecchi datasource per togliere il bucket dalla loro lista di buckets
+							//Iterate over the old datasources to remove the bucket from their list of buckets
+							var oldDatasources = transientBucket.getDatasources();
+
+							oldDatasources.forEach(oldDatasource ->
+								oldDatasource.getBuckets().remove(bucket));
+
+							var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
+
+							builder.add(oldDatasourceUni);
+
+							transientBucket.getDatasources().clear();
 
 							var datasourceUni =
 								s.createQuery(
@@ -186,6 +195,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										datasources.forEach(datasource ->
 											datasource.getBuckets().add(transientBucket)
 										);
+
+										transientBucket.setDatasources(new HashSet<>(datasources));
 
 										return s.persistAll(datasources.toArray());
 									});
@@ -199,8 +210,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
 
-							//TODO controllare se necessario iterare sulle vecchie suggestionCategory
-							// per togliere il bucket a loro associato
+							//Iterate over the old suggestionCategory to remove the bucket associated with them
+							var oldSuggestionCategories =
+								transientBucket.getSuggestionCategories();
+
+							oldSuggestionCategories.forEach(oldCategory ->
+								oldCategory.setBucket(null));
+
+							var oldSuggestionCategoryUni =
+								s.persistAll(oldSuggestionCategories.toArray());
+
+							builder.add(oldSuggestionCategoryUni);
 
 							var suggestionCategoryUni = s.find(
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
@@ -266,7 +286,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
 
-						//TODO iterare sui vecchi datasource per togliere il bucket dalla loro lista di buckets
+						//Iterate over the old datasources to remove the bucket from their list of buckets
+						var oldDatasources = transientBucket.getDatasources();
+
+						oldDatasources.forEach(oldDatasource ->
+							oldDatasource.getBuckets().remove(bucket));
+
+						var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
+
+						builder.add(oldDatasourceUni);
+
 						transientBucket.getDatasources().clear();
 
 						if (datasourceIds != null) {
@@ -281,6 +310,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 											datasource.getBuckets().add(transientBucket)
 										);
 
+										transientBucket.setDatasources(new HashSet<>(datasources));
+
 										return s.persistAll(datasources.toArray());
 									});
 
@@ -291,8 +322,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						var suggestionCategoryIds =
 							bucketWithListsDTO.getSuggestionCategoryIds();
 
-						//TODO controllare se necessario iterare sulle vecchie suggestionCategory
-						// per togliere il bucket a loro associato
+						//Iterate over the old suggestionCategory to remove the bucket associated with them
+						var oldSuggestionCategories =
+							transientBucket.getSuggestionCategories();
+
+						oldSuggestionCategories.forEach(oldCategory ->
+							oldCategory.setBucket(null));
+
+						var oldSuggestionCategoryUni =
+							s.persistAll(oldSuggestionCategories.toArray());
+
+						builder.add(oldSuggestionCategoryUni);
+
 						transientBucket.getSuggestionCategories().clear();
 
 						if (suggestionCategoryIds != null) {
