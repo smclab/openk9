@@ -62,10 +62,13 @@ Build Tika ocr:
 ############## Container scanning ##############
 
 Container Scanning Tika ocr:
+  dependencies: [Build Tika ocr]
   extends: .container-scanning-template
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tika-ocr"
-  dependencies: [Build Tika ocr]
+ rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
 
 
 

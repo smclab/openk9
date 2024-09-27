@@ -59,10 +59,13 @@ Build K8S-Client image:
 ############## Container scanning ##############
 
 Container Scanning K8S-Client:
+  dependencies: [Build K8S-Client image]
   extends: .container-scanning-template
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-k8s-client"
-  dependencies: [Build K8S-Client image]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
 
 
 
