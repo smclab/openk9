@@ -147,6 +147,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
+		logger.debug("Test pipeline log");
+
 		return findJoinConnection(
 			id, Bucket_.TABS, Tab.class,
 			tabService.getSearchFields(), after, before, first,
