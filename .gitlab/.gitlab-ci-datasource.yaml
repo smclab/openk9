@@ -68,6 +68,8 @@ Container Scanning Datasource:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-datasource"
   dependencies: [Build Datasource image]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_TAG != ""'
 
 
 ############## Restart ##############
@@ -83,10 +85,10 @@ Trigger Restart Datasource:
         echo "Branch matches main or pattern"
         if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
           echo "# Triggered by Michele #"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F "variables[NAMESPACE]=k9-backend01" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F "variables[NAMESPACE]=k9-backend01" -F ref=$CI_COMMIT_BRANCH $RESTART_TRIGGER_URL
         else
           echo "Commit author does not match"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F ref=$CI_COMMIT_BRANCH $RESTART_TRIGGER_URL
         fi
       else
         echo "Branch does not match main or pattern"
