@@ -1,0 +1,49 @@
+
+
+# Template generico di build che viene utilizzato da ogni componente (datasource,ingestion etc...)
+
+.build_template:
+  image: eclipse-temurin:17-jdk
+  services:
+    - docker:19.03.13-dind
+  variables:
+    TEST_NAME: "local/test"
+    DOCKER_HOST: "tcp://localhost:2375"
+    DOCKER_TLS_CERTDIR: ""
+    MAVEN_CLI_OPTS: "--batch-mode -DskipTests"
+    MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  cache:
+    key: "$COMPONENT"
+    paths:
+      - $CI_PROJECT_DIR/.m2/repository
+  artifacts:
+    paths:
+      - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
+    expire_in: 2 days
+
+
+
+.container-scanning-template:
+  stage: container-scanning
+  image: $CS_ANALYZER_IMAGE
+  variables:
+    CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
+    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    GIT_STRATEGY: fetch
+  allow_failure: true
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+      cyclonedx: "**/gl-sbom-*.cdx.json"
+    paths: [gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json"]
+  #dependencies: [$DEPENDS_ON]
+  before_script:
+    - export VERSION=$(cat $CI_PROJECT_DIR/.version | grep -oE '^[^=]+$')
+    - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Using version $VERSION"
+  script:
+    - gtcs scan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_TAG != ""'
+
+
