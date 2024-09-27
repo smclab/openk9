@@ -1,8 +1,10 @@
 import requests
+import os
 from keycloak import KeycloakOpenID
 
 from app.external_services.grpc.grpc_client import get_tenant_manager_configuration
 
+KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
 
 class Keycloak:
 
@@ -10,7 +12,7 @@ class Keycloak:
         try:
             keycloak_info = get_tenant_manager_configuration(grpc_host, virtualHost)
 
-            keycloak_url = keycloak_info["server_url"]
+            keycloak_url = KEYCLOAK_URL
             keycloak_client_id = keycloak_info["client_id"]
             keycloak_realm = keycloak_info["realm_name"]
 
