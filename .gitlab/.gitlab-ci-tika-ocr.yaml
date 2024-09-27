@@ -82,10 +82,10 @@ Trigger Restart Tika ocr:
         echo "Branch matches main or pattern"
         if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
           echo "Triggering restart-tika-ocr with backend version"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tika-ocr" -F "variables[NAMESPACE]=k9-backend01" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tika-ocr" -F "variables[NAMESPACE]=k9-backend01" -F ref=master $RESTART_TRIGGER_URL
         else
           echo "Triggering restart-tika-ocr (default)"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tika-ocr" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tika-ocr" -F ref=master $RESTART_TRIGGER_URL
         fi
       else
         echo "Branch does not match main or pattern"

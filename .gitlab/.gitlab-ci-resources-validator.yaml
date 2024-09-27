@@ -79,10 +79,10 @@ Trigger Restart Resources-Validator:
         echo "Branch matches main or pattern"
         if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
           echo "Triggering restart-resources-validator with backend version"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-resources-validator" -F "variables[NAMESPACE]=k9-backend01" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-resources-validator" -F "variables[NAMESPACE]=k9-backend01" -F ref=master $RESTART_TRIGGER_URL
         else
           echo "Triggering restart-resources-validator (default)"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-resources-validator" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-resources-validator" -F ref=master $RESTART_TRIGGER_URL
         fi
       else
         echo "Branch does not match main or pattern"

@@ -79,10 +79,10 @@ Trigger Restart File-Manager:
         echo "Branch matches main or pattern"
         if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
           echo "Triggering restart-file-manager with backend version"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-file-manager" -F "variables[NAMESPACE]=k9-backend01" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-file-manager" -F "variables[NAMESPACE]=k9-backend01" -F ref=master $RESTART_TRIGGER_URL
         else
           echo "Triggering restart-file-manager (default)"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-file-manager" -F ref=main $RESTART_TRIGGER_URL
+          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-file-manager" -F ref=master $RESTART_TRIGGER_URL
         fi
       else
         echo "Branch does not match main or pattern"
