@@ -79,7 +79,7 @@ Trigger Restart Tika no-ocr:
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ || "$CI_COMMIT_TAG" != "" ]]; then
         echo "Branch matches main or pattern"
-        if [[ $GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+        if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
           echo "Triggering restart-tika-no-ocr with backend version"
           curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-tika-no-ocr" -F "variables[NAMESPACE]=k9-backend01" -F ref=main $RESTART_TRIGGER_URL
         else
