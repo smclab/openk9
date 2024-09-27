@@ -176,8 +176,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							//Iterate over the old datasources to remove the bucket from their list of buckets
 							var oldDatasources = transientBucket.getDatasources();
 
-							oldDatasources.forEach(oldDatasource ->
-								oldDatasource.getBuckets().remove(bucket));
+							oldDatasources.forEach(oldDatasource -> {
+								var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
+									.flatMap(buckets -> {
+										buckets.remove(bucket);
+										return Uni.createFrom().item(buckets);
+									})
+									.replaceWithVoid();
+
+								builder.add(bucketsSetUni);
+							});
 
 							var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
 
@@ -289,8 +297,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Iterate over the old datasources to remove the bucket from their list of buckets
 						var oldDatasources = transientBucket.getDatasources();
 
-						oldDatasources.forEach(oldDatasource ->
-							oldDatasource.getBuckets().remove(bucket));
+						oldDatasources.forEach(oldDatasource -> {
+							var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
+								.flatMap(buckets -> {
+									buckets.remove(bucket);
+									return Uni.createFrom().item(buckets);
+								})
+								.replaceWithVoid();
+
+							builder.add(bucketsSetUni);
+						});
 
 						var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
 
