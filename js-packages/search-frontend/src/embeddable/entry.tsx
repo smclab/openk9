@@ -322,7 +322,11 @@ type searchWithSuggestionsProps =
   | null
   | undefined;
 
-export type TemplatesProps = Array<{ source: string; Template: React.FC<any> }>;
+export type TemplatesProps = Array<{
+  source: string;
+  Template: React.FC<any>;
+  TemplateDetail: React.FC<any>;
+}>;
 
 export type IconsCustom =
   | {

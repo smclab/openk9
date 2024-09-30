@@ -634,6 +634,7 @@ export function Main({
           <DetailMemo
             result={detail}
             actionOnCLose={() => {}}
+            template={configuration.template}
             cardDetailsOnOver={isHoverChangeDetail}
             callbackFocusedButton={() => {
               const recoveryButton = document.getElementById(

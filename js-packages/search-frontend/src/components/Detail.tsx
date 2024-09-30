@@ -8,6 +8,7 @@ import { useRenderers } from "./useRenderers";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { TemplatesProps } from "../embeddable/entry";
 
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
@@ -18,6 +19,7 @@ export type DetailProps<E> = {
   callbackFocusedButton?(): void;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   viewButtonDetail: boolean;
+  template: TemplatesProps | null;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
@@ -29,6 +31,8 @@ function Detail<E>(props: DetailProps<E>) {
   const viewButtonDetail = props.viewButtonDetail;
   const callbackFocusedButton = props.callbackFocusedButton;
   const cardDetailsOnOver = props.cardDetailsOnOver;
+  const template = props.template;
+
   const [showButton, setShowButton] = React.useState(false);
 
   const modalRef = React.useRef(null);
@@ -100,6 +104,16 @@ function Detail<E>(props: DetailProps<E>) {
       scrollContainer.scrollTop = 0;
     }
   }, []);
+
+  const getCustomTemplate = () => {
+    if (!template || template.length === 0) return null;
+
+    const matchedTemplate = template.find((templat) =>
+      result.source.documentTypes.includes(templat.source),
+    );
+
+    return matchedTemplate?.TemplateDetail ?? null;
+  };
 
   return (
     <div
@@ -235,6 +249,16 @@ function Detail<E>(props: DetailProps<E>) {
               result.source.documentTypes
                 .map((k: string) => renderers?.detailRenderers[k])
                 .find(Boolean);
+
+            const CustomTemplate = getCustomTemplate();
+
+            if (CustomTemplate) {
+              return (
+                <React.Fragment>
+                  <CustomTemplate {...result} />
+                </React.Fragment>
+              );
+            }
             if (Renderer) {
               return <Renderer result={result} />;
             }
