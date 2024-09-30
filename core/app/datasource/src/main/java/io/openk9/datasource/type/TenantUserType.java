@@ -31,7 +31,7 @@ public class TenantUserType implements UserType<String> {
 
 	@Override
 	public int getSqlType() {
-		return SqlTypes.NVARCHAR;
+		return SqlTypes.LONG32NVARCHAR;
 	}
 
 	@Override
