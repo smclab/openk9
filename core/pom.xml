@@ -70,7 +70,7 @@
 	</developers>
 
 	<modules>
-		<module>../vendor/hibernate-reactive</module>
+		<module>../vendor/hibernate-rx-multitenancy</module>
 		<module>api</module>
 		<module>app</module>
 		<module>client</module>

@@ -52,8 +52,8 @@
 
     <dependency>
       <groupId>io.openk9</groupId>
-      <artifactId>quarkus-hibernate-reactive</artifactId>
-      <version>${quarkus.platform.version}</version>
+      <artifactId>hibernate-rx-multitenancy</artifactId>
+      <version>${quarkus.version}</version>
     </dependency>
 
     <dependency>
