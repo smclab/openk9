@@ -18,20 +18,94 @@
 package io.openk9.datasource.type;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Objects;
 
 public class TenantUserType implements UserType<String> {
 
 	@Override
 	public int getSqlType() {
-		return SqlTypes.BIGINT;
+		return Types.BIGINT;
+	}
+
+	@Override
+	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
+		return new JdbcType() {
+			@Override
+			public int getJdbcTypeCode() {
+				return Types.BIGINT;
+			}
+
+			@Override
+			public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+				return new BasicBinder<>(javaType, this) {
+					@Override
+					protected void doBind(
+						PreparedStatement st,
+						X value,
+						int index,
+						WrapperOptions options) throws SQLException {
+
+					}
+
+					@Override
+					protected void doBind(
+						CallableStatement st,
+						X value,
+						String name,
+						WrapperOptions options) throws SQLException {
+
+					}
+				};
+			}
+
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new BasicExtractor<>(javaType, this) {
+					@Override
+					protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options)
+					throws SQLException {
+						return (X) options.getSession().getTenantIdentifier();
+					}
+
+					@Override
+					protected X doExtract(
+						CallableStatement statement,
+						int index,
+						WrapperOptions options) throws SQLException {
+						return (X) options.getSession().getTenantIdentifier();
+					}
+
+					@Override
+					protected X doExtract(
+						CallableStatement statement,
+						String name,
+						WrapperOptions options) throws SQLException {
+						return (X) options.getSession().getTenantIdentifier();
+					}
+				};
+			}
+
+			@Override
+			public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+				return String.class;
+			}
+		};
 	}
 
 	@Override
@@ -70,7 +144,7 @@ public class TenantUserType implements UserType<String> {
 
 	@Override
 	public String deepCopy(String value) {
-		return "";
+		return value == null ? null : new String(value);
 	}
 
 	@Override

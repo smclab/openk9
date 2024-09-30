@@ -57,6 +57,7 @@ public abstract class K9Entity implements GraphqlId {
 	@Column(name = "modified_date")
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
+
 	@Type(TenantUserType.class)
 	// workaround to get the UserType valuated
 	@Column(name = "id", insertable = false, updatable = false)
