@@ -19,7 +19,6 @@ package io.openk9.datasource.model.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
-import io.openk9.datasource.type.TenantUserType;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.MappedSuperclass;
@@ -30,8 +29,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.OracleDialect;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -58,10 +59,12 @@ public abstract class K9Entity implements GraphqlId {
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
 
-	@Type(TenantUserType.class)
-	// workaround to get the UserType valuated
-	@Column(name = "id", insertable = false, updatable = false)
 	@JsonIgnore
+	@Formula("current_schema()")
+	@DialectOverride.Formula(
+		dialect = OracleDialect.class,
+		override = @Formula("SYS_CONTEXT('USERENV','CURRENT_SCHEMA')")
+	)
 	private String tenant;
 
 	@Override
