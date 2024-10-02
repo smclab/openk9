@@ -15,5 +15,5 @@ import java.util.Set;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class TabWithTokenTabsDTO extends TabDTO {
-	private Set<Long> TokenTabIds;
+	private Set<Long> tokenTabIds;
 }
