@@ -26,6 +26,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Types;
 
 @Entity
 @Table(name = "char_filter")
@@ -42,6 +45,7 @@ public class CharFilter extends K9Entity {
 	private String description;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

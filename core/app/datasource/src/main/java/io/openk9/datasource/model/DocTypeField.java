@@ -40,7 +40,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.Types;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -117,6 +119,7 @@ public class DocTypeField extends BaseDocTypeField {
 	private Set<DocTypeField> subDocTypeFields = new LinkedHashSet<>();
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

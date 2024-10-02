@@ -28,6 +28,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Types;
 
 @Entity(name = EnrichItem.ENTITY_NAME)
 @Table(name = EnrichItem.TABLE_NAME)
@@ -53,6 +56,7 @@ public class EnrichItem extends K9Entity {
 	private String serviceName;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "script")
 	private String script;
 

@@ -28,6 +28,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Types;
 
 @Entity
 @Table(name = "vector_index")
@@ -65,6 +68,7 @@ public class VectorIndex extends K9Entity {
 	private ChunkType chunkType;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

@@ -29,6 +29,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Types;
 
 @Entity
 @Table(name = "large_language_model")
@@ -55,6 +58,7 @@ public class LargeLanguageModel extends K9Entity {
 	private String apiKey;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

@@ -37,8 +37,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -78,6 +80,7 @@ public class BackgroundProcess implements GraphqlId {
 	private Status status;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "message")
 	private String message;
 

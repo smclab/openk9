@@ -19,7 +19,6 @@ package io.openk9.datasource.model.dto;
 
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.model.util.TemplateType;
-import jakarta.persistence.Lob;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -37,11 +36,9 @@ public class DocTypeTemplateDTO extends K9EntityDTO {
 
 	@NotNull
 	private TemplateType templateType;
-	@Lob
 	@NotEmpty
 	@NotNull
 	private String source;
-	@Lob
 	@NotEmpty
 	@NotNull
 	private String compiled;

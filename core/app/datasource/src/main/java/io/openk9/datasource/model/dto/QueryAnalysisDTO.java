@@ -18,7 +18,6 @@
 package io.openk9.datasource.model.dto;
 
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import jakarta.persistence.Lob;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +30,5 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class QueryAnalysisDTO extends K9EntityDTO {
-    @Lob
     private String stopWords;
 }

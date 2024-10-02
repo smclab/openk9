@@ -31,7 +31,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.Types;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -53,6 +55,7 @@ public class QueryAnalysis extends K9Entity {
 	private String description;
 	@Column(name = "stopWords")
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	private String stopWords;
 
 	@ManyToMany(cascade = {

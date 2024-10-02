@@ -29,6 +29,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Types;
 
 @Entity
 @Table(name = "doc_type_template")
@@ -47,6 +50,7 @@ public class DocTypeTemplate extends K9Entity {
 	private TemplateType templateType;
 	@Column(name = "source")
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	private String source;
 	@Column(name = "compiled")
 	@Lob

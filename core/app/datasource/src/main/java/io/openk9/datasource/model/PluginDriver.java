@@ -30,7 +30,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.Types;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -55,6 +57,7 @@ public class PluginDriver extends K9Entity {
 	private PluginDriverType type;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 
