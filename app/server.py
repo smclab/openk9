@@ -49,6 +49,7 @@ class SearchQuery(BaseModel):
     language: Optional[str] = None
     vectorIndices: Optional[bool] = False
     searchText: str
+    reformulate: Optional[bool] = True
 
 
 @app.post("/api/rag/generate")
@@ -68,7 +69,10 @@ async def search_query(
     language = search_query.language
     vectorIndices = search_query.vectorIndices
     searchText = search_query.searchText
+    reformulate = search_query.reformulate
     virtualHost = urlparse(str(request.base_url)).hostname
+    # TODO remove line
+    virtualHost = "test.openk9.io"
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
@@ -95,6 +99,7 @@ async def search_query(
         vectorIndices,
         virtualHost,
         searchText,
+        reformulate,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
