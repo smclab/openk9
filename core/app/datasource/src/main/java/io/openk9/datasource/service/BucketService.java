@@ -164,7 +164,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
 					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
 					.flatMap(bucket -> {
-						var transientBucket = mapper.patch(bucket, bucketWithListsDTO);
+						var newStateBucket = mapper.patch(bucket, bucketWithListsDTO);
 
 						//UniBuilder to prevent empty unis
 						UniJoin.Builder<Void> builder = Uni.join().builder();
@@ -175,7 +175,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
 							//Iterate over the old datasources to remove the bucket from their list of buckets
-							var oldDatasources = transientBucket.getDatasources();
+							var oldDatasources = newStateBucket.getDatasources();
 
 							oldDatasources.forEach(oldDatasource -> {
 								var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
@@ -192,7 +192,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 							builder.add(oldDatasourceUni);
 
-							transientBucket.getDatasources().clear();
+							newStateBucket.getDatasources().clear();
 
 							var datasourceUni =
 								s.createQuery(
@@ -202,10 +202,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									.getResultList()
 									.flatMap(datasources -> {
 										datasources.forEach(datasource ->
-											datasource.getBuckets().add(transientBucket)
+											datasource.getBuckets().add(newStateBucket)
 										);
 
-										transientBucket.setDatasources(new HashSet<>(datasources));
+										newStateBucket.setDatasources(new HashSet<>(datasources));
 
 										return s.persistAll(datasources.toArray());
 									});
@@ -221,7 +221,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 							//Iterate over the old suggestionCategory to remove the bucket associated with them
 							var oldSuggestionCategories =
-								transientBucket.getSuggestionCategories();
+								newStateBucket.getSuggestionCategories();
 
 							oldSuggestionCategories.forEach(oldCategory ->
 								oldCategory.setBucket(null));
@@ -235,7 +235,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
 								.flatMap(suggestionCategories -> {
 										suggestionCategories.forEach(suggestionCategory ->
-											suggestionCategory.setBucket(transientBucket));
+											suggestionCategory.setBucket(newStateBucket));
 										return s.persistAll(suggestionCategories.toArray());
 									}
 								);
@@ -248,8 +248,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										s.getReference(SuggestionCategory.class, suggestionId))
 									.collect(Collectors.toSet());
 
-							transientBucket.getSuggestionCategories().clear();
-							transientBucket.setSuggestionCategories(suggestionCategories);
+							newStateBucket.getSuggestionCategories().clear();
+							newStateBucket.setSuggestionCategories(suggestionCategories);
 						}
 
 						//Tab
@@ -260,17 +260,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								.map(tabId -> s.getReference(Tab.class, tabId))
 								.collect(Collectors.toList());
 
-							transientBucket.getTabs().clear();
-							transientBucket.setTabs(tabs);
+							newStateBucket.getTabs().clear();
+							newStateBucket.setTabs(tabs);
 
-							builder.add(s.persist(transientBucket));
+							builder.add(s.persist(newStateBucket));
 						}
 
 						return builder.joinAll()
 							.andCollectFailures()
 							.onFailure()
 							.invoke(throwable -> logger.error(throwable))
-							.flatMap(__ -> s.merge(transientBucket));
+							.flatMap(__ -> s.merge(newStateBucket));
 					})
 			);
 		}
@@ -287,7 +287,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
 					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
 					.flatMap(bucket -> {
-						var transientBucket = mapper.update(bucket, bucketWithListsDTO);
+						var newStateBucket = mapper.update(bucket, bucketWithListsDTO);
 
 						//UniBuilder to prevent empty unis
 						UniJoin.Builder<Void> builder = Uni.join().builder();
@@ -296,7 +296,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
 
 						//Iterate over the old datasources to remove the bucket from their list of buckets
-						var oldDatasources = transientBucket.getDatasources();
+						var oldDatasources = newStateBucket.getDatasources();
 
 						oldDatasources.forEach(oldDatasource -> {
 							var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
@@ -313,7 +313,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						builder.add(oldDatasourceUni);
 
-						transientBucket.getDatasources().clear();
+						newStateBucket.getDatasources().clear();
 
 						if (datasourceIds != null) {
 							var datasourceUni =
@@ -324,10 +324,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									.getResultList()
 									.flatMap(datasources -> {
 										datasources.forEach(datasource ->
-											datasource.getBuckets().add(transientBucket)
+											datasource.getBuckets().add(newStateBucket)
 										);
 
-										transientBucket.setDatasources(new HashSet<>(datasources));
+										newStateBucket.setDatasources(new HashSet<>(datasources));
 
 										return s.persistAll(datasources.toArray());
 									});
@@ -341,7 +341,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						//Iterate over the old suggestionCategory to remove the bucket associated with them
 						var oldSuggestionCategories =
-							transientBucket.getSuggestionCategories();
+							newStateBucket.getSuggestionCategories();
 
 						oldSuggestionCategories.forEach(oldCategory ->
 							oldCategory.setBucket(null));
@@ -351,14 +351,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						builder.add(oldSuggestionCategoryUni);
 
-						transientBucket.getSuggestionCategories().clear();
+						newStateBucket.getSuggestionCategories().clear();
 
 						if (suggestionCategoryIds != null) {
 							var suggestionCategoryUni = s.find(
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
 								.flatMap(suggestionCategories -> {
 										suggestionCategories.forEach(suggestionCategory ->
-											suggestionCategory.setBucket(transientBucket));
+											suggestionCategory.setBucket(newStateBucket));
 										return s.persistAll(suggestionCategories.toArray());
 									}
 								);
@@ -371,30 +371,30 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 										s.getReference(SuggestionCategory.class, suggestionId))
 									.collect(Collectors.toSet());
 
-							transientBucket.getSuggestionCategories().clear();
-							transientBucket.setSuggestionCategories(suggestionCategories);
+							newStateBucket.getSuggestionCategories().clear();
+							newStateBucket.setSuggestionCategories(suggestionCategories);
 						}
 
 						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
-						transientBucket.getTabs().clear();
+						newStateBucket.getTabs().clear();
 
 						if (tabIds != null) {
 							var tabs = tabIds.stream()
 								.map(tabId -> s.getReference(Tab.class, tabId))
 								.collect(Collectors.toList());
 
-							transientBucket.getTabs().clear();
-							transientBucket.setTabs(tabs);
+							newStateBucket.getTabs().clear();
+							newStateBucket.setTabs(tabs);
 
-							builder.add(s.persist(transientBucket));
+							builder.add(s.persist(newStateBucket));
 						}
 
 						return builder.joinAll()
 							.andCollectFailures()
 							.onFailure()
 							.invoke(throwable -> logger.error(throwable))
-							.flatMap(__ -> s.merge(transientBucket));
+							.flatMap(__ -> s.merge(newStateBucket));
 					})
 			);
 		}

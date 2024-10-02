@@ -451,20 +451,20 @@ public class PluginDriverService
 			.onItem().ifNotNull()
 			.transformToUni(plugin -> {
 
-				PluginDriver newPluginDriver;
+				PluginDriver newStatePluginDriver;
 				var newHashSet = new HashSet<AclMapping>();
 
 				if ( patch ) {
-					newPluginDriver = mapper.patch(plugin, dto);
+					newStatePluginDriver = mapper.patch(plugin, dto);
 				}
 				else {
-					newPluginDriver = mapper.patch(plugin, dto);
-					newPluginDriver.setAclMappings(newHashSet);
+					newStatePluginDriver = mapper.patch(plugin, dto);
+					newStatePluginDriver.setAclMappings(newHashSet);
 				}
 
 				//set new aclMapping Set
 				if ( docTypeUserDTOSet != null ) {
-					newPluginDriver.setAclMappings(newHashSet);
+					newStatePluginDriver.setAclMappings(newHashSet);
 
 					docTypeUserDTOSet.forEach(docTypeUserDTO -> {
 						var docTypeId = docTypeUserDTO.getDocTypeId();
@@ -479,12 +479,12 @@ public class PluginDriverService
 						aclMapping.setKey(key);
 						aclMapping.setUserField(docTypeUserDTO.getUserField());
 
-						newPluginDriver.getAclMappings().add(aclMapping);
+						newStatePluginDriver.getAclMappings().add(aclMapping);
 					});
 				}
 
-				return s.merge(newPluginDriver)
-					.map(v -> newPluginDriver)
+				return s.merge(newStatePluginDriver)
+					.map(v -> newStatePluginDriver)
 					.call(s::flush);
 			});
 	}

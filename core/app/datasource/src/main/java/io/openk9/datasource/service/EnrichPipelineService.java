@@ -212,20 +212,20 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			.onItem().ifNotNull()
 			.transformToUni(pipeline -> {
 
-				EnrichPipeline newPipeline;
+				EnrichPipeline newStatePipeline;
 				var newHashSet = new HashSet<EnrichPipelineItem>();
 
 				if ( patch ) {
-					newPipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
+					newStatePipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
 				}
 				else {
-					newPipeline = mapper.update(pipeline, pipelineWithItemsDTO);
-					newPipeline.setEnrichPipelineItems(newHashSet);
+					newStatePipeline = mapper.update(pipeline, pipelineWithItemsDTO);
+					newStatePipeline.setEnrichPipelineItems(newHashSet);
 				}
 
 				//set new pipeline-item Set
 				if (itemDTOSet != null) {
-					newPipeline.setEnrichPipelineItems(newHashSet);
+					newStatePipeline.setEnrichPipelineItems(newHashSet);
 
 					itemDTOSet.forEach(itemDTO -> {
 						var itemId = itemDTO.getEnrichItemId();
@@ -233,17 +233,17 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						var itemReference = s.getReference(EnrichItem.class, itemId);
 
 						var enrichPipelineItem = new EnrichPipelineItem();
-						enrichPipelineItem.setEnrichPipeline(newPipeline);
+						enrichPipelineItem.setEnrichPipeline(newStatePipeline);
 						enrichPipelineItem.setEnrichItem(itemReference);
 						enrichPipelineItem.setKey(key);
 						enrichPipelineItem.setWeight(itemDTO.getWeight());
 
-						newPipeline.getEnrichPipelineItems().add(enrichPipelineItem);
+						newStatePipeline.getEnrichPipelineItems().add(enrichPipelineItem);
 					});
 				}
 
-				return s.merge(newPipeline)
-					.map(v -> newPipeline)
+				return s.merge(newStatePipeline)
+					.map(v -> newStatePipeline)
 					.call(s::flush);
 			});
 	}

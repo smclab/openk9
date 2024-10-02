@@ -87,7 +87,7 @@ public class SuggestionCategoryService extends
 				(s, transaction) -> findById(s, suggestionId)
 					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
 					.flatMap(suggestion -> {
-						var transientSuggestion =
+						var newStateSuggestion =
 							mapper.patch(suggestion, withDocTypeFieldDTO);
 						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
 
@@ -97,12 +97,12 @@ public class SuggestionCategoryService extends
 									s.getReference(DocTypeField.class, docTypeFieldId))
 								.collect(Collectors.toSet());
 
-							transientSuggestion.getDocTypeFields().clear();
-							transientSuggestion.setDocTypeFields(docTypeFields);
+							newStateSuggestion.getDocTypeFields().clear();
+							newStateSuggestion.setDocTypeFields(docTypeFields);
 						}
 
-						return s.merge(transientSuggestion)
-							.map(__ -> transientSuggestion);
+						return s.merge(newStateSuggestion)
+							.map(__ -> newStateSuggestion);
 					}));
 		}
 
@@ -119,11 +119,11 @@ public class SuggestionCategoryService extends
 				(s, transaction) -> findById(s, suggestionId)
 					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
 					.flatMap(suggestion -> {
-						var transientSuggestion =
+						var newStateSuggestion =
 							mapper.update(suggestion, withDocTypeFieldDTO);
 						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
 
-						transientSuggestion.getDocTypeFields().clear();
+						newStateSuggestion.getDocTypeFields().clear();
 
 						if (docTypeFieldIds != null) {
 							var docTypeFields = docTypeFieldIds.stream()
@@ -131,11 +131,11 @@ public class SuggestionCategoryService extends
 									s.getReference(DocTypeField.class, docTypeFieldId))
 								.collect(Collectors.toSet());
 
-							transientSuggestion.setDocTypeFields(docTypeFields);
+							newStateSuggestion.setDocTypeFields(docTypeFields);
 						}
 
-						return s.merge(transientSuggestion)
-							.map(__ -> transientSuggestion);
+						return s.merge(newStateSuggestion)
+							.map(__ -> newStateSuggestion);
 					}));
 		}
 
