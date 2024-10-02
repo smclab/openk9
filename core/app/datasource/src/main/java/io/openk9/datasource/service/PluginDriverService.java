@@ -446,7 +446,6 @@ public class PluginDriverService
 						.map(v -> plugin);
 				}
 			})
-			.call(s::flush)
 			.call(Mutiny::fetch)
 			.onItem().ifNotNull()
 			.transformToUni(plugin -> {
