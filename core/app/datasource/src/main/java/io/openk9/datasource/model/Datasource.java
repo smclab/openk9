@@ -29,7 +29,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -40,7 +39,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -131,7 +132,7 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private Set<Scheduler> schedulers = new LinkedHashSet<>();
 
-	@Lob
+	@JdbcTypeCode(Types.LONGVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 
