@@ -37,8 +37,18 @@ async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 
+class SearchToken(BaseModel):
+    tokenType: str
+    keywordKey: Optional[str] = None
+    values: list[str]
+    filter: bool
+    entityType: str
+    entityName: str
+    extra: dict[str, str]
+
+
 class SearchQuery(BaseModel):
-    searchQuery: list
+    searchQuery: list[SearchToken]
     range: list
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
@@ -103,7 +113,7 @@ async def search_query(
 
 class SearchQueryChat(BaseModel):
     chatId: Optional[str] = None
-    searchQuery: list
+    searchQuery: list[SearchToken]
     range: list = [0, 7]
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
