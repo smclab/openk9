@@ -548,6 +548,14 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 	}
 
+	public Uni<List<EnrichPipeline>> findUnboundEnrichPipelines(long itemId) {
+		return super.findAll().map(
+			enrichPipelines -> enrichPipelines.stream().filter(
+				pipeline -> pipeline.getEnrichPipelineItems().stream().anyMatch(
+					pipelineItem -> pipelineItem.getEnrichItem().getId() == itemId))
+				.collect(Collectors.toList()));
+	}
+
 	@Override
 	public Class<EnrichPipeline> getEntityClass() {
 		return EnrichPipeline.class;

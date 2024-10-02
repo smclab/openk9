@@ -78,6 +78,11 @@ public class EnrichPipelineGraphqlResource {
 		return enrichPipelineService.findById(id);
 	}
 
+	@Query
+	public Uni<List<EnrichPipeline>> getUnboundEnrichPipelines(long itemId) {
+		return enrichPipelineService.findUnboundEnrichPipelines(itemId);
+	}
+
 	public Uni<Response<EnrichPipeline>> patchEnrichPipeline(@Id long id, EnrichPipelineDTO enrichPipelineDTO) {
 		return enrichPipelineService.getValidator().patch(id, enrichPipelineDTO);
 	}
