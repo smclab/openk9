@@ -39,6 +39,7 @@ def save_chat_message(
     message = {
         "question": question,
         "answer": answer,
+        # TODO: context length
         "sources": documents[0:2],
         "chat_id": chat_id,
         "user_id": user_id,
