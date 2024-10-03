@@ -417,7 +417,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT b from Bucket " +
+			String queryString = "SELECT b from Bucket b " +
 				"WHERE b.id not in ( " +
 				"SELECT sc.bucket.id FROM SuggestionCategory sc " +
 				"WHERE sc.id = (:suggestionCategoryId))";
