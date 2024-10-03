@@ -402,6 +402,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return super.update(bucketId, bucketDTO);
 	}
 
+	public Uni<List<Bucket>> findUnboundBuckets(long datasourceId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT bucket.* from bucket " +
+				"WHERE bucket.id not in ( " +
+				"SELECT datasource_buckets.buckets_id FROM datasource_buckets " +
+				"WHERE datasource_buckets.datasource_id = (:datasourceId))";
+
+			return s.createNativeQuery(queryString, Bucket.class)
+				.setParameter("datasourceId", datasourceId)
+				.getResultList();
+		});
+	}
+
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
@@ -1011,5 +1024,4 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	Logger logger;
-
 }
