@@ -2,6 +2,7 @@ import json
 
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
@@ -27,6 +28,7 @@ def get_chain(
     vectorIndices,
     virtualHost,
     question,
+    reformulate,
     opensearch_host,
     grpc_host,
 ):
@@ -69,6 +71,14 @@ def get_chain(
     parser = StrOutputParser()
 
     chain = prompt | llm | parser
+
+    if reformulate:
+        reformulate_prompt = PromptTemplate.from_template(
+            "Reformulate the question {question} as question"
+        )
+
+        chain = reformulate_prompt | llm | parser
+        question = chain.invoke({"question": question})
 
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
