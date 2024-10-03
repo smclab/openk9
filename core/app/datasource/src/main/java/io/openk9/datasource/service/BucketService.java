@@ -415,6 +415,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		});
 	}
 
+	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT b from Bucket " +
+				"WHERE b.id not in ( " +
+				"SELECT sc.bucket.id FROM SuggestionCategory sc " +
+				"WHERE sc.id = (:suggestionCategoryId))";
+
+			return s.createQuery(queryString, Bucket.class)
+				.setParameter("suggestionCategoryId", suggestionCategoryId)
+				.getResultList();
+		});
+	}
+
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));

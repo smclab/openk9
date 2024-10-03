@@ -75,6 +75,11 @@ public class BucketGraphqlResource {
 		return bucketService.findUnboundBucketsByDatasource(datasourceId);
 	}
 
+	@Query
+	public Uni<List<Bucket>> getUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
+		return bucketService.findUnboundBucketsBySuggestionCategory(suggestionCategoryId);
+	}
+
 	public Uni<Connection<Datasource>> datasources(
 		@Source Bucket bucket,
 		@Description("fetching only nodes after this node (exclusive)") String after,
