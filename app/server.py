@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from google.protobuf.json_format import ParseDict
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
+from app.external_services.grpc.searcher.searcher_pb2 import Value
 from app.rag.chain import get_chain, get_chat_chain
 from app.utils.keycloak import Keycloak
 
@@ -21,6 +23,7 @@ ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
+OPENK9_ACL_HEADER = "OPENK9_ACL"
 
 
 app.add_middleware(
@@ -67,6 +70,7 @@ async def search_query(
     search_query: SearchQuery,
     request: Request,
     authorization: Optional[str] = Header(None),
+    openk9_acl: Optional[list[str]] = Header(None),
 ):
     searchQuery = search_query.searchQuery
     range = search_query.range
@@ -83,6 +87,9 @@ async def search_query(
     virtualHost = urlparse(str(request.base_url)).hostname
     # TODO remove line
     virtualHost = "test.openk9.io"
+
+    openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
+    extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
 
     token = authorization.replace("Bearer ", "") if authorization else None
 
