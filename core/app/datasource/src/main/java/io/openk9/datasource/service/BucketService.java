@@ -402,7 +402,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return super.update(bucketId, bucketDTO);
 	}
 
-	public Uni<List<Bucket>> findUnboundBuckets(long datasourceId) {
+	public Uni<List<Bucket>> findUnboundBucketsByDatasource(long datasourceId) {
 		return sessionFactory.withTransaction(s -> {
 			String queryString = "SELECT bucket.* from bucket " +
 				"WHERE bucket.id not in ( " +

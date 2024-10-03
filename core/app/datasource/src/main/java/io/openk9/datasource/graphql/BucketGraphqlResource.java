@@ -72,7 +72,7 @@ public class BucketGraphqlResource {
 
 	@Query
 	public Uni<List<Bucket>> getUnboundBuckets(long datasourceId) {
-		return bucketService.findUnboundBuckets(datasourceId);
+		return bucketService.findUnboundBucketsByDatasource(datasourceId);
 	}
 
 	public Uni<Connection<Datasource>> datasources(
