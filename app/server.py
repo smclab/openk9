@@ -39,7 +39,7 @@ async def redirect_root_to_docs():
 
 class SearchToken(BaseModel):
     tokenType: str
-    keywordKey: Optional[str] = None
+    keywordKey: str
     values: list[str]
     filter: bool
     entityType: str
