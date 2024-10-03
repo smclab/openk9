@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.MappedSuperclass;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -45,7 +46,10 @@ import java.util.Objects;
 public abstract class K9Entity implements GraphqlId {
 
 	@jakarta.persistence.Id
-	@GeneratedValue
+	@GeneratedValue(
+		strategy = GenerationType.SEQUENCE,
+		generator = "hibernate_sequence"
+	)
 	@org.eclipse.microprofile.graphql.Id
 	public Long id;
 
