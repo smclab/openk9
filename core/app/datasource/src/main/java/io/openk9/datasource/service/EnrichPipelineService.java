@@ -553,7 +553,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return sessionFactory.withTransaction(s ->{
 			String queryString = "SELECT p FROM EnrichPipeline p " +
 				"WHERE p.id not in (" +
-				"SELECT pi.id FROM EnrichPipelineItem pi " +
+				"SELECT pi.enrichPipeline.id FROM EnrichPipelineItem pi " +
 				"WHERE pi.enrichItem.id = (:itemId))";
 
 			return s.createQuery(queryString, EnrichPipeline.class)
