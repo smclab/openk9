@@ -73,6 +73,7 @@ import java.util.Set;
 				"left join fetch dtf." + DocTypeField_.PARENT_DOC_TYPE_FIELD + " pdtf " +
 				"left join fetch dtf." + DocTypeField_.SUB_DOC_TYPE_FIELDS + " sdtf " +
 				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa2 " +
+			"left join fetch qaa2." + Annotator_.EXTRA_PARAMS + " extra2 " +
 			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost " +
 			"and (" +
 				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
