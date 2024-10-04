@@ -31,6 +31,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -61,6 +62,12 @@ public class TabGraphqlResource {
 			tab.getId(), after, before, first, last, searchText, sortByList,
 			notEqual);
 	}
+
+	@Query
+	public Uni<List<Tab>> getUnboundTabsByTokenTab(long tokenTabId) {
+		return _tabService.findUnboundTabsByTokenTab(tokenTabId);
+	}
+
 
 	public Uni<Connection<Sorting>> sortings(
 		@Source Tab tab,

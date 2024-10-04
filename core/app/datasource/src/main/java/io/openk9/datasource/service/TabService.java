@@ -4,6 +4,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
 import io.openk9.datasource.mapper.TabMapper;
+import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
@@ -112,6 +113,19 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		}
 
 		return super.update(tabId, tabDTO);
+	}
+
+	public Uni<List<Tab>> findUnboundTabsByTokenTab(long tokenTabId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT tab.* " +
+				"WHERE tab.id not in (" +
+				"SELECT tab_token_tab.tab_id FROM tab_token_tab " +
+				"WHERE tab_token_tab.token_tab_id = (:tokenTabId))";
+
+			return s.createNativeQuery(queryString, Tab.class)
+				.setParameter("tokenTabId", tokenTabId)
+				.getResultList();
+		});
 	}
 
 	@Override
