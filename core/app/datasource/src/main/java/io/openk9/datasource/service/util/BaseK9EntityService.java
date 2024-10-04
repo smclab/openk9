@@ -502,7 +502,16 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.onItem()
 			.transformToUni((item) -> update(session, item.getId(), dto))
 			.onFailure()
-			.recoverWithUni(() -> create(session, mapper.create(dto)));
+			.recoverWithUni(() -> {
+					var entity = mapper.create(dto);
+
+					return session.persist(entity)
+						.map(v -> entity)
+						.invoke(e -> processor.onNext(
+							K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e))
+						);
+				}
+			);
 	}
 
 	public Uni<ENTITY> upsert(String tenantId, DTO dto) {
