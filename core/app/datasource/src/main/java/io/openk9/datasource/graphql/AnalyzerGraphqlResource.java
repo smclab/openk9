@@ -25,6 +25,7 @@ import org.eclipse.microprofile.graphql.Source;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -48,6 +49,10 @@ public class AnalyzerGraphqlResource {
 		return _analyzerService.findById(id);
 	}
 
+	@Query
+	public Uni<List<Analyzer>> getUnboundAnalyzersByTokenFilter(long tokenFilterId) {
+		return _analyzerService.findUnboundAnalyzersByTokenFilter(tokenFilterId);
+	}
 
 	public Uni<Connection<TokenFilter>> tokenFilters(
 		@Source Analyzer analyzer,

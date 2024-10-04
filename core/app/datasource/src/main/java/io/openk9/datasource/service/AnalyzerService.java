@@ -27,6 +27,19 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		this.mapper = mapper;
 	}
 
+	public Uni<List<Analyzer>> findUnboundAnalyzersByTokenFilter(long tokenFilterId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT analyzer.* from analyzer " +
+				"WHERE analyzer.id not in (" +
+				"SELECT analyzer_token_filter.analyzer FROM analyzer_token_filter " +
+				"WHERE analyzer_token_filter.token_filter = (:tokenFilterId))";
+
+			return s.createNativeQuery(queryString, Analyzer.class)
+				.setParameter("tokenFilterId", tokenFilterId)
+				.getResultList();
+		});
+	}
+
 	@Override
 	public Class<Analyzer> getEntityClass() {return Analyzer.class;} ;
 
