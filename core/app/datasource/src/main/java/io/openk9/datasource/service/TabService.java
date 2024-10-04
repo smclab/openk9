@@ -117,7 +117,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	public Uni<List<Tab>> findUnboundTabsByTokenTab(long tokenTabId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT tab.* " +
+			String queryString = "SELECT tab.* FROM tab " +
 				"WHERE tab.id not in (" +
 				"SELECT tab_token_tab.tab_id FROM tab_token_tab " +
 				"WHERE tab_token_tab.token_tab_id = (:tokenTabId))";
