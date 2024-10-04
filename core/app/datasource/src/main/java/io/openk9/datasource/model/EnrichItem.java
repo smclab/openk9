@@ -61,6 +61,7 @@ public class EnrichItem extends K9Entity {
 	private String script;
 
 	@Lob
+	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 
