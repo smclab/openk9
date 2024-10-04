@@ -40,6 +40,19 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 		});
 	}
 
+	public Uni<List<Analyzer>> findUnboundAnalyzersByCharFilter(long charFilterId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT analyzer.* from analyzer " +
+				"WHERE analyzer.id not in (" +
+				"SELECT analyzer_char_filter.analyzer FROM analyzer_char_filter " +
+				"WHERE analyzer_char_filter.char_filter = (:charFilterId))";
+
+			return s.createNativeQuery(queryString, Analyzer.class)
+				.setParameter("charFilterId", charFilterId)
+				.getResultList();
+		});
+	}
+
 	@Override
 	public Class<Analyzer> getEntityClass() {return Analyzer.class;} ;
 

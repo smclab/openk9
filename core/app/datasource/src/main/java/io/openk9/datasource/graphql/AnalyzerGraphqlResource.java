@@ -54,6 +54,11 @@ public class AnalyzerGraphqlResource {
 		return _analyzerService.findUnboundAnalyzersByTokenFilter(tokenFilterId);
 	}
 
+	@Query
+	public Uni<List<Analyzer>> getUnboundAnalyzersByCharFilter(long charFilterId) {
+		return _analyzerService.findUnboundAnalyzersByCharFilter(charFilterId);
+	}
+
 	public Uni<Connection<TokenFilter>> tokenFilters(
 		@Source Analyzer analyzer,
 		@Description("fetching only nodes after this node (exclusive)") String after,
