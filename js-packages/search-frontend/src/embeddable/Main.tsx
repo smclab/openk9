@@ -51,11 +51,11 @@ import {
 import _, { isEqual } from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
-import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
 import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 import GenerateResponse from "../components/GenerateResponse";
+import { SortResultListCustomMemo } from "../components/SortResultListCustom";
 
 type MainProps = {
   configuration: Configuration;
@@ -657,7 +657,7 @@ export function Main({
 
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultListCustom
+          <SortResultListCustomMemo
             classTab={tabs[selectedTabIndex]?.label}
             setSortResult={setSort}
             selectOptions={
@@ -1173,14 +1173,12 @@ function useTabs(
       sortList && sortList.find((sortElement) => sortElement.isDefault);
 
     const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
-    return (
-      {
-        tabTokens: completeTab,
-        sort: sort?.field
-          ? { sort: { field: sort.field, type: sort.type }, isSort: true }
-          : undefined,
-      } ?? {}
-    );
+    return {
+      tabTokens: completeTab,
+      sort: sort?.field
+        ? { sort: { field: sort.field, type: sort.type }, isSort: true }
+        : undefined,
+    };
   }, [selectedTabIndex, tabs, language]);
   const [tabsValue, setTabsValue] = React.useState(tabTokens);
   React.useEffect(() => {

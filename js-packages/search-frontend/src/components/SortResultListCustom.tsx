@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
 import { setSortResultsType } from "./SortResults";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 
 function SortResultList({
   classTab,
@@ -11,6 +13,7 @@ function SortResultList({
   HtmlString = "",
   language,
   selectOptions,
+  labelSelect,
 }: {
   classTab?: string;
   setSortResult: setSortResultsType;
@@ -18,6 +21,7 @@ function SortResultList({
   minHeight?: string;
   color?: string;
   HtmlString?: string;
+  labelSelect?: string;
   language?: string;
   selectOptions: Array<{
     value: { value: string; sort: string };
@@ -34,11 +38,11 @@ function SortResultList({
     name: defaultOption?.label,
     icon: "",
   });
-
+  const myValueMemo = React.useMemo(() => myValue, [myValue]);
   const { t } = useTranslation();
 
-  const sortOptions: Array<{ value: string; name: string; icon: string }> =
-    selectOptions.flatMap((option) => {
+  const sortOptions = React.useMemo(() => {
+    return selectOptions.flatMap((option) => {
       if (option.hasAscDesc) {
         return [
           {
@@ -69,6 +73,7 @@ function SortResultList({
         };
       }
     });
+  }, [selectOptions, t]);
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>
@@ -77,6 +82,36 @@ function SortResultList({
       </div>
     </components.SingleValue>
   );
+
+  const CustomDropdownIndicator = (props: any) => {
+    return (
+      <components.DropdownIndicator {...props}>
+        <div className="openk9-menu-open">
+          {props.selectProps.menuIsOpen ? (
+            <span className="" aria-hidden="true">
+              <FontAwesomeIcon
+                className="icon-search icon-search-filters"
+                icon={faChevronUp}
+                style={{ cursor: "pointer" }}
+              />
+            </span>
+          ) : (
+            <span
+              className="fas fa-chevron-down down-icon"
+              aria-hidden="true"
+              style={{ cursor: "pointer" }}
+            >
+              <FontAwesomeIcon
+                className="icon-search icon-search-filters"
+                icon={faChevronDown}
+                style={{ cursor: "pointer" }}
+              />
+            </span>
+          )}
+        </div>
+      </components.DropdownIndicator>
+    );
+  };
 
   // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
@@ -112,7 +147,7 @@ function SortResultList({
       }),
     }),
     indicatorSeparator: () => ({
-      display: "none", // Nasconde la linea separatoria
+      display: "none",
     }),
   };
 
@@ -127,25 +162,29 @@ function SortResultList({
     >
       {!HtmlString && (
         <label className="openk9-label-sort" htmlFor="defaultSort">
-          {"Ordina per:"}
+          {labelSelect}
         </label>
       )}
       <Select
         getOptionLabel={(event) => event.name || ""}
         tabIndex={0}
+        menuPlacement="auto"
         inputId={HtmlString || "defaultSort"}
         aria-label=""
         aria-labelledby=""
         ariaLiveMessages={{ onFocus }}
         className={`openk9-react-select-container SortResultListCustom-container`}
         classNamePrefix="openk9-react-select"
+        components={{
+          SingleValue,
+          DropdownIndicator: CustomDropdownIndicator,
+        }}
         options={sortOptions}
-        components={{ SingleValue }}
         onChange={handleChange}
-        value={myValue}
+        value={myValueMemo}
         styles={customStyles}
       />
     </span>
   );
 }
-export const SortResultListCustom = React.memo(SortResultList);
+export const SortResultListCustomMemo = React.memo(SortResultList);

@@ -237,6 +237,7 @@ type SortResultListCustomProps = {
     isDefault: boolean;
     hasAscDesc: boolean;
   }>;
+  labelSort?: string | null | undefined;
   element: Element | string | null;
 };
 
