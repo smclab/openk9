@@ -3,8 +3,6 @@ import json
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import ConfigurableFieldSpec
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -127,9 +125,8 @@ def get_chat_chain(
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     prompt_template = configuration["prompt"]
 
-    # TODO: hardcoded opensearch host
     open_search_client = OpenSearch(
-        hosts=["https://opensearch-test.openk9.io/"],
+        hosts=[opensearch_host],
     )
 
     retriever = OpenSearchRetriever(
