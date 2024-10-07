@@ -49,15 +49,20 @@ def save_chat_message(
 
     if not open_search_client.indices.exists(index=user_id):
         index_body = {
-            "settings": {"index": {"number_of_shards": 4}},
             "mappings": {
                 "properties": {
                     "question": {"type": "text"},
                     "answer": {"type": "text"},
-                    "sources": {"type": "nested"},
-                    "chat_id": {"type": "text"},
-                    "user_id": {"type": "text"},
-                    "timestamp": {"type": "text"},
+                    "sources": {"type": "text"},
+                    "chat_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                    },
+                    "user_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                    },
+                    "timestamp": {"type": "date"},
                     "chat_sequence_number": {"type": "integer"},
                 }
             },
