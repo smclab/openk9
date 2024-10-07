@@ -88,7 +88,7 @@ async def rag_generatey(
     language = search_query_request.language
     vector_indices = search_query_request.vectorIndices
     search_text = search_query_request.searchText
-    reformulate = search_query.reformulate
+    reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
