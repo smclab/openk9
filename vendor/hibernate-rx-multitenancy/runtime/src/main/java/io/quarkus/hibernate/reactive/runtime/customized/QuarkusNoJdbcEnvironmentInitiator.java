@@ -27,22 +27,22 @@ import java.util.Map;
 
 public class QuarkusNoJdbcEnvironmentInitiator extends NoJdbcEnvironmentInitiator {
 
-	private final Dialect dialect;
+    private final Dialect dialect;
 
-	public QuarkusNoJdbcEnvironmentInitiator(Dialect dialect) {
-		this.dialect = dialect;
-	}
+    public QuarkusNoJdbcEnvironmentInitiator(Dialect dialect) {
+        this.dialect = dialect;
+    }
 
-	@Override
-	public Class<JdbcEnvironment> getServiceInitiated() {
-		return JdbcEnvironment.class;
-	}
+    @Override
+    public Class<JdbcEnvironment> getServiceInitiated() {
+        return JdbcEnvironment.class;
+    }
 
-	@Override
-	public JdbcEnvironment initiateService(
-		Map configurationValues,
-		ServiceRegistryImplementor registry) {
-		return new JdbcEnvironmentImpl(registry, dialect);
-	}
+    @Override
+    public JdbcEnvironment initiateService(
+        Map configurationValues,
+        ServiceRegistryImplementor registry) {
+        return new JdbcEnvironmentImpl(registry, dialect);
+    }
 
 }

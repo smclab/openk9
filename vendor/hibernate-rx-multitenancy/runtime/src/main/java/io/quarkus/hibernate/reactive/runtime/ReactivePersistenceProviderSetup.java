@@ -36,13 +36,13 @@ public final class ReactivePersistenceProviderSetup {
     }
 
     public static void registerRuntimePersistenceProvider(
-		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
+        HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
             Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
         jakarta.persistence.spi.PersistenceProviderResolverHolder
                 .setPersistenceProviderResolver(
                         new SingletonPersistenceProviderResolver(
-							new FastBootHibernateReactivePersistenceProvider(
-								hibernateOrmRuntimeConfig,
+                            new FastBootHibernateReactivePersistenceProvider(
+                                hibernateOrmRuntimeConfig,
                                         integrationRuntimeDescriptors)));
     }
 

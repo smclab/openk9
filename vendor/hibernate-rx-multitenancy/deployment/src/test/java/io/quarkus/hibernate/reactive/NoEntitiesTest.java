@@ -23,13 +23,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class NoEntitiesTest {
 
-	@RegisterExtension
-	static QuarkusUnitTest runner = new QuarkusUnitTest()
-		.withEmptyApplication();
+    @RegisterExtension
+    static QuarkusUnitTest runner = new QuarkusUnitTest()
+        .withEmptyApplication();
 
-	@Test
-	public void testNoEntities() {
-		// When having no entities, we should still be able to start the application.
-	}
+    @Test
+    public void testNoEntities() {
+        // When having no entities, we should still be able to start the application.
+    }
 
 }

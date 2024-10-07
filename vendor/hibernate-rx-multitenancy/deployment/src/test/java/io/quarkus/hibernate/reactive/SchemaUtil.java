@@ -32,52 +32,52 @@ import java.util.Set;
 
 public final class SchemaUtil {
 
-	private SchemaUtil() {
-	}
+    private SchemaUtil() {
+    }
 
-	public static Set<String> getColumnNames(
-		EntityManagerFactory entityManagerFactory,
-		Class<?> entityType) {
-		Set<String> result = new HashSet<>();
-		AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class)
-			.getMetamodel().entityPersister(entityType);
-		if (persister == null) {
-			return result;
-		}
-		for (String propertyName : persister.getPropertyNames()) {
-			Collections.addAll(result, persister.getPropertyColumnNames(propertyName));
-		}
-		return result;
-	}
+    public static Set<String> getColumnNames(
+        EntityManagerFactory entityManagerFactory,
+        Class<?> entityType) {
+        Set<String> result = new HashSet<>();
+        AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
+            .unwrap(SessionFactoryImplementor.class)
+            .getMetamodel().entityPersister(entityType);
+        if (persister == null) {
+            return result;
+        }
+        for (String propertyName : persister.getPropertyNames()) {
+            Collections.addAll(result, persister.getPropertyColumnNames(propertyName));
+        }
+        return result;
+    }
 
-	public static String getColumnTypeName(
-		EntityManagerFactory entityManagerFactory, Class<?> entityType,
-		String columnName) {
-		MappingMetamodel domainModel = entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
-		EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
-		var columnFinder = new SelectableConsumer() {
-			private SelectableMapping found;
+    public static String getColumnTypeName(
+        EntityManagerFactory entityManagerFactory, Class<?> entityType,
+        String columnName) {
+        MappingMetamodel domainModel = entityManagerFactory
+            .unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
+        EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
+        var columnFinder = new SelectableConsumer() {
+            private SelectableMapping found;
 
-			@Override
-			public void accept(int selectionIndex, SelectableMapping selectableMapping) {
-				if (found == null && selectableMapping.getSelectableName().equals(columnName)) {
-					found = selectableMapping;
-				}
-			}
-		};
-		entityDescriptor.forEachSelectable(columnFinder);
-		return columnFinder.found.getJdbcMapping().getJdbcType().getFriendlyName();
-	}
+            @Override
+            public void accept(int selectionIndex, SelectableMapping selectableMapping) {
+                if (found == null && selectableMapping.getSelectableName().equals(columnName)) {
+                    found = selectableMapping;
+                }
+            }
+        };
+        entityDescriptor.forEachSelectable(columnFinder);
+        return columnFinder.found.getJdbcMapping().getJdbcType().getFriendlyName();
+    }
 
-	public static Generator getGenerator(
-		EntityManagerFactory entityManagerFactory,
-		Class<?> entityType) {
-		MappingMetamodel domainModel = entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
-		EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
-		return entityDescriptor.getGenerator();
-	}
+    public static Generator getGenerator(
+        EntityManagerFactory entityManagerFactory,
+        Class<?> entityType) {
+        MappingMetamodel domainModel = entityManagerFactory
+            .unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
+        EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
+        return entityDescriptor.getGenerator();
+    }
 
 }

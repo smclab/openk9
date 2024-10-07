@@ -25,12 +25,12 @@ import jakarta.persistence.SequenceGenerator;
 @Entity
 public class EntityWithSequenceGenerator {
 
-	@Id
-	@GeneratedValue(generator = "seq_gen")
-	@SequenceGenerator(name = "seq_gen")
-	Long id;
+    @Id
+    @GeneratedValue(generator = "seq_gen")
+    @SequenceGenerator(name = "seq_gen")
+    Long id;
 
-	public EntityWithSequenceGenerator() {
-	}
+    public EntityWithSequenceGenerator() {
+    }
 
 }

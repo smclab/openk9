@@ -28,15 +28,15 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 @Entity
 public class EntityWithGenericGeneratorAndPooledLoOptimizer {
 
-	@Id
-	@GeneratedValue(generator = "gen_gen_pooled_lo")
-	@GenericGenerator(
-		name = "gen_gen_pooled_lo", type = SequenceStyleGenerator.class,
-		parameters = @Parameter(name = OptimizableGenerator.OPT_PARAM, value = "pooled-lo")
-	)
-	Long id;
+    @Id
+    @GeneratedValue(generator = "gen_gen_pooled_lo")
+    @GenericGenerator(
+        name = "gen_gen_pooled_lo", type = SequenceStyleGenerator.class,
+        parameters = @Parameter(name = OptimizableGenerator.OPT_PARAM, value = "pooled-lo")
+    )
+    Long id;
 
-	public EntityWithGenericGeneratorAndPooledLoOptimizer() {
-	}
+    public EntityWithGenericGeneratorAndPooledLoOptimizer() {
+    }
 
 }

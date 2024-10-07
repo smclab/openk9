@@ -27,22 +27,22 @@ import java.util.Map;
 @Recorder
 public class HibernateReactiveRecorder {
 
-	/**
-	 * The feature needs to be initialized, even if it's not enabled.
-	 *
-	 * @param enabled Set to false if it's not being enabled, to log appropriately.
-	 */
-	public void callHibernateReactiveFeatureInit(boolean enabled) {
-		HibernateReactive.featureInit(enabled);
-	}
+    /**
+     * The feature needs to be initialized, even if it's not enabled.
+     *
+     * @param enabled Set to false if it's not being enabled, to log appropriately.
+     */
+    public void callHibernateReactiveFeatureInit(boolean enabled) {
+        HibernateReactive.featureInit(enabled);
+    }
 
-	public void initializePersistenceProvider(
-		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
-		Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
-		ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(
-			hibernateOrmRuntimeConfig,
-			integrationRuntimeDescriptors
-		);
-	}
+    public void initializePersistenceProvider(
+        HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
+        Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
+        ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(
+            hibernateOrmRuntimeConfig,
+            integrationRuntimeDescriptors
+        );
+    }
 
 }

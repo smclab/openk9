@@ -24,20 +24,20 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class IdOptimizerDefaultDefaultTest extends AbstractIdOptimizerDefaultTest {
 
-	@RegisterExtension
-	static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
-				EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
-				EntityWithGenericGeneratorAndPooledOptimizer.class,
-				EntityWithGenericGeneratorAndPooledLoOptimizer.class
-			)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties");
+    @RegisterExtension
+    static QuarkusUnitTest TEST = new QuarkusUnitTest()
+        .withApplicationRoot((jar) -> jar
+            .addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
+                EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
+                EntityWithGenericGeneratorAndPooledOptimizer.class,
+                EntityWithGenericGeneratorAndPooledLoOptimizer.class
+            )
+            .addClasses(SchemaUtil.class))
+        .withConfigurationResource("application.properties");
 
-	@Override
-	Class<?> defaultOptimizerType() {
-		return PooledLoOptimizer.class;
-	}
+    @Override
+    Class<?> defaultOptimizerType() {
+        return PooledLoOptimizer.class;
+    }
 
 }

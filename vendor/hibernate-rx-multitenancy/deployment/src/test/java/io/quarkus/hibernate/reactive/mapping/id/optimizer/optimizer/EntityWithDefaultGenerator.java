@@ -24,11 +24,11 @@ import jakarta.persistence.Id;
 @Entity
 public class EntityWithDefaultGenerator {
 
-	@Id
-	@GeneratedValue
-	Long id;
+    @Id
+    @GeneratedValue
+    Long id;
 
-	public EntityWithDefaultGenerator() {
-	}
+    public EntityWithDefaultGenerator() {
+    }
 
 }

@@ -28,23 +28,23 @@ import java.time.ZonedDateTime;
 @Entity
 public class EntityWithTimezones {
 
-	public ZonedDateTime zonedDateTime;
-	public OffsetDateTime offsetDateTime;
-	public OffsetTime offsetTime;
-	@Id
-	@GeneratedValue
-	Long id;
+    public ZonedDateTime zonedDateTime;
+    public OffsetDateTime offsetDateTime;
+    public OffsetTime offsetTime;
+    @Id
+    @GeneratedValue
+    Long id;
 
-	public EntityWithTimezones() {
-	}
+    public EntityWithTimezones() {
+    }
 
-	public EntityWithTimezones(
-		ZonedDateTime zonedDateTime,
-		OffsetDateTime offsetDateTime,
-		OffsetTime offsetTime) {
-		this.zonedDateTime = zonedDateTime;
-		this.offsetDateTime = offsetDateTime;
-		this.offsetTime = offsetTime;
-	}
+    public EntityWithTimezones(
+        ZonedDateTime zonedDateTime,
+        OffsetDateTime offsetDateTime,
+        OffsetTime offsetTime) {
+        this.zonedDateTime = zonedDateTime;
+        this.offsetDateTime = offsetDateTime;
+        this.offsetTime = offsetTime;
+    }
 
 }

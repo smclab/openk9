@@ -27,22 +27,22 @@ import java.util.Map;
 
 public class VertxInstanceInitiator implements StandardServiceInitiator<VertxInstance> {
 
-	private final Vertx vertx;
+    private final Vertx vertx;
 
-	public VertxInstanceInitiator(Vertx vertx) {
-		this.vertx = vertx;
-	}
+    public VertxInstanceInitiator(Vertx vertx) {
+        this.vertx = vertx;
+    }
 
-	@Override
-	public VertxInstance initiateService(
-		Map map,
-		ServiceRegistryImplementor serviceRegistryImplementor) {
-		return new ProvidedVertxInstance(vertx);
-	}
+    @Override
+    public VertxInstance initiateService(
+        Map map,
+        ServiceRegistryImplementor serviceRegistryImplementor) {
+        return new ProvidedVertxInstance(vertx);
+    }
 
-	@Override
-	public Class<VertxInstance> getServiceInitiated() {
-		return VertxInstance.class;
-	}
+    @Override
+    public Class<VertxInstance> getServiceInitiated() {
+        return VertxInstance.class;
+    }
 
 }

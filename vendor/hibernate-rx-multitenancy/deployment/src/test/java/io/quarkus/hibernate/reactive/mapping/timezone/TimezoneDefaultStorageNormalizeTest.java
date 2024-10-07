@@ -31,49 +31,49 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimezoneDefaultStorageNormalizeTest extends AbstractTimezoneDefaultStorageTest {
 
-	private static final ZoneId JDBC_TIMEZONE = ZoneId.of("America/Los_Angeles");
+    private static final ZoneId JDBC_TIMEZONE = ZoneId.of("America/Los_Angeles");
 
-	@RegisterExtension
-	static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(EntityWithTimezones.class)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "normalize")
-		.overrideConfigKey("quarkus.hibernate-orm.jdbc.timezone", JDBC_TIMEZONE.getId());
+    @RegisterExtension
+    static QuarkusUnitTest TEST = new QuarkusUnitTest()
+        .withApplicationRoot((jar) -> jar
+            .addClasses(EntityWithTimezones.class)
+            .addClasses(SchemaUtil.class))
+        .withConfigurationResource("application.properties")
+        .overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "normalize")
+        .overrideConfigKey("quarkus.hibernate-orm.jdbc.timezone", JDBC_TIMEZONE.getId());
 
-	@Test
-	public void schema() {
-		assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
-			.doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
-		assertThat(SchemaUtil.getColumnTypeName(
-			ormSessionFactory,
-			EntityWithTimezones.class,
-			"zonedDateTime"
-		))
-			.isEqualTo("TIMESTAMP");
-		assertThat(SchemaUtil.getColumnTypeName(
-			ormSessionFactory,
-			EntityWithTimezones.class,
-			"offsetDateTime"
-		))
-			.isEqualTo("TIMESTAMP");
-	}
+    @Test
+    public void schema() {
+        assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
+            .doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
+        assertThat(SchemaUtil.getColumnTypeName(
+            ormSessionFactory,
+            EntityWithTimezones.class,
+            "zonedDateTime"
+        ))
+            .isEqualTo("TIMESTAMP");
+        assertThat(SchemaUtil.getColumnTypeName(
+            ormSessionFactory,
+            EntityWithTimezones.class,
+            "offsetDateTime"
+        ))
+            .isEqualTo("TIMESTAMP");
+    }
 
-	@Test
-	@RunOnVertxContext
-	public void persistAndLoad(UniAsserter asserter) {
-		assertPersistedThenLoadedValues(
-			asserter,
-			PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneId.systemDefault()),
-			PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(
-				ZoneId
-					.systemDefault()
-					.getRules()
-					.getOffset(PERSISTED_OFFSET_DATE_TIME.toInstant())),
-			PERSISTED_OFFSET_TIME.withOffsetSameInstant(
-				ZoneId.systemDefault().getRules().getOffset(Instant.now()))
-		);
-	}
+    @Test
+    @RunOnVertxContext
+    public void persistAndLoad(UniAsserter asserter) {
+        assertPersistedThenLoadedValues(
+            asserter,
+            PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneId.systemDefault()),
+            PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(
+                ZoneId
+                    .systemDefault()
+                    .getRules()
+                    .getOffset(PERSISTED_OFFSET_DATE_TIME.toInstant())),
+            PERSISTED_OFFSET_TIME.withOffsetSameInstant(
+                ZoneId.systemDefault().getRules().getOffset(Instant.now()))
+        );
+    }
 
 }

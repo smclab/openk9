@@ -25,23 +25,23 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import java.util.Map;
 
 public class QuarkusNoJdbcConnectionProviderInitiator
-	implements StandardServiceInitiator<ConnectionProvider> {
-	public static final QuarkusNoJdbcConnectionProviderInitiator INSTANCE =
-		new QuarkusNoJdbcConnectionProviderInitiator();
+    implements StandardServiceInitiator<ConnectionProvider> {
+    public static final QuarkusNoJdbcConnectionProviderInitiator INSTANCE =
+        new QuarkusNoJdbcConnectionProviderInitiator();
 
-	private QuarkusNoJdbcConnectionProviderInitiator() {
-	}
+    private QuarkusNoJdbcConnectionProviderInitiator() {
+    }
 
-	@Override
-	public ConnectionProvider initiateService(
-		Map configurationValues,
-		ServiceRegistryImplementor registry) {
-		return NoJdbcConnectionProvider.INSTANCE;
-	}
+    @Override
+    public ConnectionProvider initiateService(
+        Map configurationValues,
+        ServiceRegistryImplementor registry) {
+        return NoJdbcConnectionProvider.INSTANCE;
+    }
 
-	@Override
-	public Class<ConnectionProvider> getServiceInitiated() {
-		return ConnectionProvider.class;
-	}
+    @Override
+    public Class<ConnectionProvider> getServiceInitiated() {
+        return ConnectionProvider.class;
+    }
 
 }

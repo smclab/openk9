@@ -36,62 +36,62 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SinglePersistenceUnitPackageAnnotationTest {
 
-	private static final Formatter LOG_FORMATTER = new PatternFormatter("%s");
+    private static final Formatter LOG_FORMATTER = new PatternFormatter("%s");
 
-	@RegisterExtension
-	static QuarkusUnitTest runner = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addPackage(EntityIncludedThroughPackageAnnotation.class.getPackage().getName())
-			.addPackage(ExcludedEntity.class.getPackage().getName()))
-		.withConfigurationResource("application.properties")
-		// Expect a warning on startup
-		.setLogRecordPredicate(
-			record -> record
-				.getMessage()
-				.contains("Could not find a suitable persistence unit for model classes"))
-		.assertLogRecords(records -> assertThat(records)
-			.as("Warnings on startup")
-			.hasSize(1)
-			.element(0).satisfies(record -> {
-				assertThat(record.getLevel()).isEqualTo(Level.WARNING);
-				assertThat(LOG_FORMATTER.formatMessage(record))
-					.contains(
-						io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.excludedpackage.ExcludedEntity.class
-							.getName());
-			}));
+    @RegisterExtension
+    static QuarkusUnitTest runner = new QuarkusUnitTest()
+        .withApplicationRoot((jar) -> jar
+            .addPackage(EntityIncludedThroughPackageAnnotation.class.getPackage().getName())
+            .addPackage(ExcludedEntity.class.getPackage().getName()))
+        .withConfigurationResource("application.properties")
+        // Expect a warning on startup
+        .setLogRecordPredicate(
+            record -> record
+                .getMessage()
+                .contains("Could not find a suitable persistence unit for model classes"))
+        .assertLogRecords(records -> assertThat(records)
+            .as("Warnings on startup")
+            .hasSize(1)
+            .element(0).satisfies(record -> {
+                assertThat(record.getLevel()).isEqualTo(Level.WARNING);
+                assertThat(LOG_FORMATTER.formatMessage(record))
+                    .contains(
+                        io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.excludedpackage.ExcludedEntity.class
+                            .getName());
+            }));
 
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
+    @Inject
+    Mutiny.SessionFactory sessionFactory;
 
-	@Test
-	@RunOnVertxContext
-	public void testIncluded(UniAsserter asserter) {
-		EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
-			"default");
-		asserter.assertThat(
-			() -> persist(entity).chain(() -> find(
-				EntityIncludedThroughPackageAnnotation.class,
-				entity.id
-			)),
-			retrievedEntity -> assertThat(retrievedEntity.name).isEqualTo(entity.name)
-		);
-	}
+    @Test
+    @RunOnVertxContext
+    public void testIncluded(UniAsserter asserter) {
+        EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
+            "default");
+        asserter.assertThat(
+            () -> persist(entity).chain(() -> find(
+                EntityIncludedThroughPackageAnnotation.class,
+                entity.id
+            )),
+            retrievedEntity -> assertThat(retrievedEntity.name).isEqualTo(entity.name)
+        );
+    }
 
-	@Test
-	@RunOnVertxContext
-	public void testExcluded(UniAsserter asserter) {
-		ExcludedEntity entity = new ExcludedEntity("gsmet");
-		asserter.assertFailedWith(() -> persist(entity), t -> {
-			assertThat(t).hasMessageContaining("Unable to locate persister");
-		});
-	}
+    @Test
+    @RunOnVertxContext
+    public void testExcluded(UniAsserter asserter) {
+        ExcludedEntity entity = new ExcludedEntity("gsmet");
+        asserter.assertFailedWith(() -> persist(entity), t -> {
+            assertThat(t).hasMessageContaining("Unable to locate persister");
+        });
+    }
 
-	private Uni<Void> persist(Object entity) {
-		return sessionFactory.withTransaction(s -> s.persist(entity));
-	}
+    private Uni<Void> persist(Object entity) {
+        return sessionFactory.withTransaction(s -> s.persist(entity));
+    }
 
-	private <T> Uni<T> find(Class<T> entityClass, Object id) {
-		return sessionFactory.withSession(s -> s.find(entityClass, id));
-	}
+    private <T> Uni<T> find(Class<T> entityClass, Object id) {
+        return sessionFactory.withSession(s -> s.find(entityClass, id));
+    }
 
 }

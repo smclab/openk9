@@ -24,21 +24,21 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class IdOptimizerDefaultPooledTest extends AbstractIdOptimizerDefaultTest {
 
-	@RegisterExtension
-	static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
-				EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
-				EntityWithGenericGeneratorAndPooledOptimizer.class,
-				EntityWithGenericGeneratorAndPooledLoOptimizer.class
-			)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.mapping.id.optimizer.default", "pooled");
+    @RegisterExtension
+    static QuarkusUnitTest TEST = new QuarkusUnitTest()
+        .withApplicationRoot((jar) -> jar
+            .addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
+                EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
+                EntityWithGenericGeneratorAndPooledOptimizer.class,
+                EntityWithGenericGeneratorAndPooledLoOptimizer.class
+            )
+            .addClasses(SchemaUtil.class))
+        .withConfigurationResource("application.properties")
+        .overrideConfigKey("quarkus.hibernate-orm.mapping.id.optimizer.default", "pooled");
 
-	@Override
-	Class<?> defaultOptimizerType() {
-		return PooledOptimizer.class;
-	}
+    @Override
+    Class<?> defaultOptimizerType() {
+        return PooledOptimizer.class;
+    }
 
 }

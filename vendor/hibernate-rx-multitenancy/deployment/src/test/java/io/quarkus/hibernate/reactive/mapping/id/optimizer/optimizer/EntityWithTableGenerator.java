@@ -25,12 +25,12 @@ import jakarta.persistence.TableGenerator;
 @Entity
 public class EntityWithTableGenerator {
 
-	@Id
-	@GeneratedValue(generator = "tab_gen")
-	@TableGenerator(name = "tab_gen")
-	Long id;
+    @Id
+    @GeneratedValue(generator = "tab_gen")
+    @TableGenerator(name = "tab_gen")
+    Long id;
 
-	public EntityWithTableGenerator() {
-	}
+    public EntityWithTableGenerator() {
+    }
 
 }

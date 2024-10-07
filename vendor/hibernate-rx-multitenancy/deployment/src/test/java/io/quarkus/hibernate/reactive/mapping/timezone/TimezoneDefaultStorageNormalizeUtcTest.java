@@ -30,44 +30,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimezoneDefaultStorageNormalizeUtcTest extends AbstractTimezoneDefaultStorageTest {
 
-	@RegisterExtension
-	static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(EntityWithTimezones.class)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey(
-			"quarkus.hibernate-orm.mapping.timezone.default-storage",
-			"normalize-utc"
-		);
+    @RegisterExtension
+    static QuarkusUnitTest TEST = new QuarkusUnitTest()
+        .withApplicationRoot((jar) -> jar
+            .addClasses(EntityWithTimezones.class)
+            .addClasses(SchemaUtil.class))
+        .withConfigurationResource("application.properties")
+        .overrideConfigKey(
+            "quarkus.hibernate-orm.mapping.timezone.default-storage",
+            "normalize-utc"
+        );
 
-	@Test
-	public void schema() {
-		assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
-			.doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
-		assertThat(SchemaUtil.getColumnTypeName(
-			ormSessionFactory,
-			EntityWithTimezones.class,
-			"zonedDateTime"
-		))
-			.isEqualTo("TIMESTAMP_UTC");
-		assertThat(SchemaUtil.getColumnTypeName(
-			ormSessionFactory,
-			EntityWithTimezones.class,
-			"offsetDateTime"
-		))
-			.isEqualTo("TIMESTAMP_UTC");
-	}
+    @Test
+    public void schema() {
+        assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
+            .doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
+        assertThat(SchemaUtil.getColumnTypeName(
+            ormSessionFactory,
+            EntityWithTimezones.class,
+            "zonedDateTime"
+        ))
+            .isEqualTo("TIMESTAMP_UTC");
+        assertThat(SchemaUtil.getColumnTypeName(
+            ormSessionFactory,
+            EntityWithTimezones.class,
+            "offsetDateTime"
+        ))
+            .isEqualTo("TIMESTAMP_UTC");
+    }
 
-	@Test
-	@RunOnVertxContext
-	public void persistAndLoad(UniAsserter asserter) {
-		assertPersistedThenLoadedValues(
-			asserter,
-			PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneOffset.UTC),
-			PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(ZoneOffset.UTC),
-			PERSISTED_OFFSET_TIME.withOffsetSameInstant(ZoneOffset.UTC)
-		);
-	}
+    @Test
+    @RunOnVertxContext
+    public void persistAndLoad(UniAsserter asserter) {
+        assertPersistedThenLoadedValues(
+            asserter,
+            PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneOffset.UTC),
+            PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(ZoneOffset.UTC),
+            PERSISTED_OFFSET_TIME.withOffsetSameInstant(ZoneOffset.UTC)
+        );
+    }
 
 }

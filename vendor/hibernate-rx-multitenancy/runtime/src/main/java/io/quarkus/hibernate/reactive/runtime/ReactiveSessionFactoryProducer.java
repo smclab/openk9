@@ -44,7 +44,7 @@ public class ReactiveSessionFactoryProducer {
     @ApplicationScoped
     @DefaultBean
     @Unremovable
-	@Typed({Mutiny.SessionFactory.class, MutinyImplementor.class, Implementor.class})
+    @Typed({Mutiny.SessionFactory.class, MutinyImplementor.class, Implementor.class})
     public MutinySessionFactoryImpl mutinySessionFactory() {
         if (jpaConfig.getDeactivatedPersistenceUnitNames()
                 .contains(HibernateReactive.DEFAULT_REACTIVE_PERSISTENCE_UNIT_NAME)) {
