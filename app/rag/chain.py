@@ -11,7 +11,7 @@ from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
 
 DEFAULT_MODEL_TYPE = "openai"
-DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 
 def get_chain(
@@ -41,6 +41,8 @@ def get_chain(
         else DEFAULT_MODEL_TYPE
     )
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    prompt_template = configuration["prompt"]
+    rephrase_prompt_template = configuration["rephrase_prompt"]
 
     documents = OpenSearchRetriever._get_relevant_documents(
         searchQuery,
@@ -66,18 +68,13 @@ def get_chain(
     elif model_type == "hugging-face-custom":
         llm = CustomChatHuggingFaceModel(base_url=api_url)
 
-    prompt = ChatPromptTemplate.from_template(configuration["prompt"])
-
+    prompt = ChatPromptTemplate.from_template(prompt_template)
     parser = StrOutputParser()
-
     chain = prompt | llm | parser
 
     if reformulate:
-        reformulate_prompt = PromptTemplate.from_template(
-            "Reformulate the question {question} as question"
-        )
-
-        chain = reformulate_prompt | llm | parser
+        rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+        chain = rephrase_prompt | llm | parser
         question = chain.invoke({"question": question})
 
     for chunk in chain.stream({"question": question, "context": documents}):
@@ -138,9 +135,7 @@ def get_chat_chain(
         llm = CustomChatHuggingFaceModel(base_url=api_url)
 
     prompt = ChatPromptTemplate.from_template(configuration["prompt"])
-
     parser = StrOutputParser()
-
     chain = prompt | llm | parser
 
     for chunk in chain.stream({"question": searchText, "context": documents}):

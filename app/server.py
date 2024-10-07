@@ -10,7 +10,7 @@ from google.protobuf.json_format import ParseDict
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from app.external_services.grpc.searcher.searcher_pb2 import Value
+from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.rag.chain import get_chain, get_chat_chain
 from app.utils.keycloak import Keycloak
 
@@ -91,6 +91,18 @@ async def search_query(
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
     extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
 
+    search_query_to_proto_list = []
+    for query in searchQuery:
+        search_query_to_proto = SearchTokenRequest()
+        search_query_to_proto.tokenType = query.tokenType
+        search_query_to_proto.keywordKey = query.keywordKey
+        search_query_to_proto.values.extend(query.values)
+        search_query_to_proto.filter = query.filter
+        search_query_to_proto.entityType = query.entityType
+        search_query_to_proto.entityName = query.entityName
+        search_query_to_proto.extra.update(query.extra)
+        search_query_to_proto_list.append(search_query_to_proto)
+
     token = authorization.replace("Bearer ", "") if authorization else None
 
     if token and not Keycloak.verify_token(
@@ -103,7 +115,7 @@ async def search_query(
         )
 
     chain = get_chain(
-        searchQuery,
+        search_query_to_proto_list,
         range,
         afterKey,
         suggestKeyword,
@@ -158,6 +170,18 @@ async def search_query(
     vectorIndices = search_query.vectorIndices
     virtualHost = urlparse(str(request.base_url)).hostname
 
+    search_query_to_proto_list = []
+    for query in searchQuery:
+        search_query_to_proto = SearchTokenRequest()
+        search_query_to_proto.tokenType = query.tokenType
+        search_query_to_proto.keywordKey = query.keywordKey
+        search_query_to_proto.values.extend(query.values)
+        search_query_to_proto.filter = query.filter
+        search_query_to_proto.entityType = query.entityType
+        search_query_to_proto.entityName = query.entityName
+        search_query_to_proto.extra.update(query.extra)
+        search_query_to_proto_list.append(search_query_to_proto)
+
     token = authorization.replace("Bearer ", "") if authorization else None
 
     if token and not Keycloak.verify_token(
@@ -170,7 +194,7 @@ async def search_query(
         )
 
     chain = get_chat_chain(
-        searchQuery,
+        search_query_to_proto_list,
         range,
         afterKey,
         suggestKeyword,
