@@ -41,6 +41,8 @@ async def redirect_root_to_docs():
 
 
 class SearchToken(BaseModel):
+    """SearchToken class model."""
+
     tokenType: str
     keywordKey: str
     values: list[str]
@@ -51,6 +53,8 @@ class SearchToken(BaseModel):
 
 
 class SearchQuery(BaseModel):
+    """SearchQuery class model."""
+
     searchQuery: list[SearchToken]
     range: list
     afterKey: Optional[str] = None
@@ -84,6 +88,7 @@ async def rag_generatey(
     language = search_query_request.language
     vector_indices = search_query_request.vectorIndices
     search_text = search_query_request.searchText
+    reformulate = search_query.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
@@ -124,6 +129,7 @@ async def rag_generatey(
         vector_indices,
         virtual_host,
         search_text,
+        reformulate,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
@@ -135,7 +141,7 @@ class SearchQueryChat(BaseModel):
 
     chatId: Optional[str] = None
     searchQuery: list[SearchToken]
-    range: list = [0, 7]
+    range: list
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
