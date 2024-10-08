@@ -1,55 +1,58 @@
 import grpc
 from google.protobuf import json_format
 
-from .searcher import searcher_pb2, searcher_pb2_grpc
-from .tenant_manager import tenant_manager_pb2, tenant_manager_pb2_grpc
+from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
+from app.external_services.grpc.tenant_manager import (
+    tenant_manager_pb2,
+    tenant_manager_pb2_grpc,
+)
 
 
 def query_parser(
-    searchQuery,
-    range,
-    afterKey,
-    suggestKeyword,
-    suggestionCategoryId,
-    virtualHost,
+    search_query,
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    virtual_host,
     jwt,
     extra,
     sort,
-    sortAfterKey,
+    sort_after_key,
     language,
-    vectorIndices,
+    vector_indices,
     grpc_host,
 ):
-
+    """Get opensearch query and index from grpc."""
     with grpc.insecure_channel(grpc_host) as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.QueryParser(
             searcher_pb2.QueryParserRequest(
-                searchQuery=searchQuery,
-                range=range,
-                afterKey=afterKey,
-                suggestKeyword=suggestKeyword,
-                suggestionCategoryId=suggestionCategoryId,
-                virtualHost=virtualHost,
+                searchQuery=search_query,
+                range=range_values,
+                afterKey=after_key,
+                suggestKeyword=suggest_keyword,
+                suggestionCategoryId=suggestion_category_id,
+                virtualHost=virtual_host,
                 jwt=jwt,
                 extra=extra,
                 sort=sort,
-                sortAfterKey=sortAfterKey,
+                sortAfterKey=sort_after_key,
                 language=language,
-                vectorIndices=vectorIndices,
+                vectorIndices=vector_indices,
             )
         )
 
     return response
 
 
-def get_llm_configuration(grpc_host, virtualHost):
-
+def get_llm_configuration(grpc_host, virtual_host):
+    """Get llm configuration from grpc."""
     with grpc.insecure_channel(grpc_host) as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.GetLLMConfigurations(
             searcher_pb2.GetLLMConfigurationsRequest(
-                virtualHost=virtualHost,
+                virtualHost=virtual_host,
             )
         )
 
@@ -73,13 +76,13 @@ def get_llm_configuration(grpc_host, virtualHost):
     return configuration
 
 
-def get_tenant_manager_configuration(grpc_host, virtualHost):
-
+def get_tenant_manager_configuration(grpc_host, virtual_host):
+    """Get tenant configuration from grpc."""
     with grpc.insecure_channel(grpc_host) as channel:
         stub = tenant_manager_pb2_grpc.TenantManagerStub(channel)
         response = stub.FindTenant(
             tenant_manager_pb2.TenantRequest(
-                virtualHost=virtualHost,
+                virtualHost=virtual_host,
             )
         )
 

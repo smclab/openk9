@@ -1,38 +1,43 @@
 import json
 
-from langchain.prompts import ChatPromptTemplate
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import ConfigurableFieldSpec
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import get_llm_configuration
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
+from app.utils.chat_history import get_chat_history, save_chat_message
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
 
 
 def get_chain(
-    searchQuery,
-    range,
-    afterKey,
-    suggestKeyword,
-    suggestionCategoryId,
+    search_query,
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
     jwt,
     extra,
     sort,
-    sortAfterKey,
+    sort_after_key,
     language,
-    vectorIndices,
-    virtualHost,
+    vector_indices,
+    virtual_host,
     question,
     reformulate,
     opensearch_host,
     grpc_host,
 ):
-    configuration = get_llm_configuration(grpc_host, virtualHost)
+    configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     model_type = (
@@ -44,22 +49,24 @@ def get_chain(
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
 
-    documents = OpenSearchRetriever._get_relevant_documents(
-        searchQuery,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
-        virtualHost,
-        jwt,
-        extra,
-        sort,
-        sortAfterKey,
-        language,
-        vectorIndices,
-        opensearch_host,
-        grpc_host,
+    retriever = OpenSearchRetriever(
+        search_query=search_query,
+        range_values=range_values,
+        after_key=after_key,
+        suggest_keyword=suggest_keyword,
+        suggestion_category_id=suggestion_category_id,
+        virtual_host=virtual_host,
+        jwt=jwt,
+        extra=extra,
+        sort=sort,
+        sort_after_key=sort_after_key,
+        language=language,
+        vector_indices=vector_indices,
+        opensearch_host=opensearch_host,
+        grpc_host=grpc_host,
     )
+
+    documents = retriever.invoke(question)
 
     if model_type == "openai":
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
@@ -80,27 +87,34 @@ def get_chain(
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
+    for element in documents:
+        yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
+
     yield json.dumps({"chunk": "", "type": "END"})
 
 
 def get_chat_chain(
-    searchQuery,
-    range,
-    afterKey,
-    suggestKeyword,
-    suggestionCategoryId,
+    search_query,
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
     jwt,
     extra,
     sort,
-    sortAfterKey,
+    sort_after_key,
     language,
-    vectorIndices,
-    virtualHost,
-    searchText,
+    vector_indices,
+    virtual_host,
+    search_text,
+    chat_id,
+    user_id,
+    timestamp,
+    chat_sequence_number,
     opensearch_host,
     grpc_host,
 ):
-    configuration = get_llm_configuration(grpc_host, virtualHost)
+    configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = configuration["api_url"]
     api_key = configuration["api_key"]
     model_type = (
@@ -109,23 +123,30 @@ def get_chat_chain(
         else DEFAULT_MODEL_TYPE
     )
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    prompt_template = configuration["prompt"]
 
-    documents = OpenSearchRetriever._get_relevant_documents(
-        searchQuery,
-        range,
-        afterKey,
-        suggestKeyword,
-        suggestionCategoryId,
-        virtualHost,
-        jwt,
-        extra,
-        sort,
-        sortAfterKey,
-        language,
-        vectorIndices,
-        opensearch_host,
-        grpc_host,
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
     )
+
+    retriever = OpenSearchRetriever(
+        search_query=search_query,
+        range_values=range_values,
+        after_key=after_key,
+        suggest_keyword=suggest_keyword,
+        suggestion_category_id=suggestion_category_id,
+        virtual_host=virtual_host,
+        jwt=jwt,
+        extra=extra,
+        sort=sort,
+        sort_after_key=sort_after_key,
+        language=language,
+        vector_indices=vector_indices,
+        opensearch_host=opensearch_host,
+        grpc_host=grpc_host,
+    )
+
+    documents = retriever.invoke(search_text)
 
     if model_type == "openai":
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
@@ -134,13 +155,103 @@ def get_chat_chain(
     elif model_type == "hugging-face-custom":
         llm = CustomChatHuggingFaceModel(base_url=api_url)
 
-    prompt = ChatPromptTemplate.from_template(configuration["prompt"])
-    parser = StrOutputParser()
-    chain = prompt | llm | parser
+    contextualize_q_system_prompt = prompt_template
 
-    for chunk in chain.stream({"question": searchText, "context": documents}):
-        yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+
+    history_aware_retriever = create_history_aware_retriever(
+        llm, retriever, contextualize_q_prompt
+    )
+
+    system_prompt = (
+        "You are an assistant for question-answering tasks. "
+        "Use the following pieces of retrieved context to answer "
+        "the question. If you don't know the answer, say that you "
+        "don't know. Use three sentences maximum and keep the "
+        "answer concise."
+        "\n\n"
+        "{context}"
+    )
+
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+
+    conversational_rag_chain = RunnableWithMessageHistory(
+        rag_chain,
+        get_chat_history,
+        input_messages_key="input",
+        history_messages_key="chat_history",
+        output_messages_key="answer",
+        history_factory_config=[
+            ConfigurableFieldSpec(
+                id="open_search_client",
+                annotation=str,
+                name="Opensearch client",
+                description="Opensearch client.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="user_id",
+                annotation=str,
+                name="User ID",
+                description="Unique identifier for the user.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="chat_id",
+                annotation=str,
+                name="Chat ID",
+                description="Unique identifier for the chat.",
+                default="",
+            ),
+        ],
+    )
+
+    result = conversational_rag_chain.stream(
+        {"input": search_text},
+        config={
+            "configurable": {
+                "open_search_client": open_search_client,
+                "user_id": user_id,
+                "chat_id": chat_id,
+            }
+        },
+    )
+
+    result_answer = ""
+
+    for chunk in result:
+        if "answer" in chunk.keys():
+            result_answer += chunk
+            yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
+
+    save_chat_message(
+        open_search_client,
+        search_text,
+        result_answer["answer"],
+        documents,
+        chat_id,
+        user_id,
+        timestamp,
+        chat_sequence_number,
+    )
 
     for element in documents:
         yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
-        yield json.dumps({"chunk": "", "type": "END"})
+
+    yield json.dumps({"chunk": "", "type": "END"})
