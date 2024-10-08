@@ -62,26 +62,27 @@ class OpenSearchRetriever(BaseRetriever):
         query = query_data.query
         index_name = list(query_data.indexName)
 
-        client = OpenSearch(
-            hosts=[self.opensearch_host],
-        )
-
-        response = client.search(body=query, index=index_name)
-
         documents = []
 
-        for row in response["hits"]["hits"]:
-            if self.vector_indices:
-                page_content = row["_source"]["chunkText"]
-                title = row["_source"]["title"]
-                url = row["_source"]["url"]
-                source = "local"
-                document = Document(
-                    page_content,
-                    metadata={"source": source, "title": title, "url": url},
-                )
-            else:
-                document = Document(row["_source"]["rawContent"], metadata={})
-            documents.append(document)
+        if len(index_name) > 0:
+            client = OpenSearch(
+                hosts=[self.opensearch_host],
+            )
+
+            response = client.search(body=query, index=index_name)
+
+            for row in response["hits"]["hits"]:
+                if self.vector_indices:
+                    page_content = row["_source"]["chunkText"]
+                    title = row["_source"]["title"]
+                    url = row["_source"]["url"]
+                    source = "local"
+                    document = Document(
+                        page_content,
+                        metadata={"source": source, "title": title, "url": url},
+                    )
+                else:
+                    document = Document(row["_source"]["rawContent"], metadata={})
+                documents.append(document)
 
         return documents
