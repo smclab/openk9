@@ -62,7 +62,7 @@ class DynamicMappingDataIndexTest {
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
 
-		var mockedSession = Mockito.mock(Mutiny.Session.class);
+		var useless = Mockito.mock(Mutiny.Session.class);
 
 		given(indexerEvents.generateDocTypeFields(
 			any(Mutiny.Session.class),
@@ -72,7 +72,7 @@ class DynamicMappingDataIndexTest {
 		)).willReturn(Uni.createFrom().voidItem());
 
 		asserter.assertThat(
-			() -> dataIndexService.createByDatasource(mockedSession, CreateConnection.DATASOURCE),
+			() -> dataIndexService.createByDatasource(useless, CreateConnection.DATASOURCE),
 			dataIndex -> {
 
 				then(httpPluginDriverClient)
