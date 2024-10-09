@@ -54,7 +54,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> then(mockSession).should(times(1)).merge(argThat(
 				UpdateDatasourceConnectionTest::hasNotPluginDriver))
@@ -132,6 +134,7 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
 					.pluginDriverId(CreateConnection.PLUGIN_DRIVER_ID)
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO)
 					.build()
@@ -161,7 +164,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> then(mockSession).should(times(1)).merge(argThat(
 				UpdateDatasourceConnectionTest::hasNotEnrichPipeline))
@@ -240,6 +245,7 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
 					.pipelineId(CreateConnection.PIPELINE_ID)
 					.pipeline(CreateConnection.PIPELINE_WITH_ITEMS_DTO)
 					.build()
@@ -273,7 +279,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
@@ -293,7 +301,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
@@ -317,13 +327,13 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> {
-				then(datasourceService).should(times(1))
-					.setDataIndex(anySession(), anyLong(), anyLong());
-				then(vectorIndexService).should(times(1))
-					.findById(anySession(), anyLong());
+				then(dataIndexService).should(times(1))
+					.findByIdWithVectorIndex(anySession(), anyLong());
 				then(vectorIndexService).should(times(1))
 					.update(anySession(), anyLong(), any(VectorIndexDTO.class));
 			}
@@ -340,17 +350,15 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> {
-				then(datasourceService).should(times(1))
-					.setDataIndex(anySession(), anyLong(), anyLong());
-				then(vectorIndexService).should(times(1))
-					.findById(anySession(), anyLong());
+				then(dataIndexService).should(times(1))
+					.findByIdWithVectorIndex(anySession(), anyLong());
 				then(vectorIndexService).should(times(1))
 					.create(anySession(), any(VectorIndexDTO.class));
-				then(dataIndexService).should(times(1))
-					.bindVectorDataIndex(anySession(), anyLong(), anyLong());
 			}
 		);
 	}
@@ -365,11 +373,14 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.dataIndexId(CreateConnection.DATA_INDEX_ID)
+					.build()
 			),
 			datasource -> {
-				then(datasourceService).should(times(1))
-					.setDataIndex(anySession(), anyLong(), anyLong());
+				then(mockSession).should(times(1))
+					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
 			}
 		);
 	}
@@ -384,11 +395,13 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
-				UpdateDatasourceConnectionDTO.builder().build()
+				UpdateDatasourceConnectionDTO.builder()
+					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.build()
 			),
 			datasource -> {
-				then(datasourceService).should(times(1))
-					.setDataIndex(anySession(), anyLong(), anyLong());
+				then(mockSession).should(times(1))
+					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
 			}
 		);
 	}
@@ -413,6 +426,10 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 	private static boolean hasNotEnrichPipeline(Datasource entity) {
 		return entity != null && entity.getEnrichPipeline() == null;
+	}
+
+	private static boolean hasDataIndex(Datasource datasource) {
+		return datasource != null && datasource.getDataIndex() != null;
 	}
 
 }

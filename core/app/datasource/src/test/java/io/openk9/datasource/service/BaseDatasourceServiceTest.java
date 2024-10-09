@@ -46,7 +46,6 @@ abstract class BaseDatasourceServiceTest {
 	@InjectMock
 	VectorIndexService vectorIndexService;
 
-
 	@Mock
 	public static class MockDatasourceService extends DatasourceService {
 
@@ -70,14 +69,6 @@ abstract class BaseDatasourceServiceTest {
 		@Override
 		public <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
 			return Uni.createFrom().item((T) CreateConnection.DATASOURCE);
-		}
-
-		@Override
-		protected Uni<Datasource> getDatasourceConnection(
-			Mutiny.Session session, long datasourceId) {
-
-			return Uni.createFrom().item(CreateConnection.DATASOURCE);
-
 		}
 
 		@Inject
