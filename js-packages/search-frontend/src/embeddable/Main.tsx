@@ -663,6 +663,9 @@ export function Main({
             selectOptions={
               configuration.sortResultListCustom?.selectOptions ?? []
             }
+            labelSelect={
+              configuration.sortResultListCustom?.labelSort || "ordina per"
+            }
           />
         </I18nextProvider>,
         configuration.sortResultListCustom
