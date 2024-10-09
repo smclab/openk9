@@ -30,6 +30,7 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -94,6 +95,25 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				tenantId, datasourceId, lastIngestionDate, newDataIndexId))
 			.map(message -> (Void) message.body())
 			.subscribeAsCompletionStage();
+	}
+
+	public Uni<Datasource> updateDatasourceConnection(
+		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+
+		return sessionFactory.withTransaction((s, t) ->
+			updateDatasourceConnection(s, updateConnectionDTO));
+	}
+
+	public Uni<Datasource> updateDatasourceConnection(
+		Mutiny.Session s, UpdateDatasourceConnectionDTO updateConnectionDTO) {
+
+		return getDatasourceConnection(s, updateConnectionDTO.getDatasourceId())
+			.flatMap(datasource -> updateOrCreatePluginDriver(s, updateConnectionDTO)
+				.invoke(datasource::setPluginDriver)
+				.flatMap(__ -> updateOrCreateEnrichPipeline(s, updateConnectionDTO))
+				.invoke(datasource::setEnrichPipeline)
+				.flatMap(__ -> merge(s, datasource))
+			);
 	}
 
 	@ConsumeEvent(UPDATE_DATASOURCE)
@@ -207,18 +227,26 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		).flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
 	}
 
-	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(
+		Mutiny.Session session, long datasourceId, long dataIndexId) {
+
+		return findById(session, datasourceId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(datasource -> dataIndexService
-				.findById(s, dataIndexId)
+				.findById(session, dataIndexId)
 				.onItem()
 				.ifNotNull()
 				.transformToUni(dataIndex -> {
 					datasource.setDataIndex(dataIndex);
-					return persist(s, datasource).map(d -> Tuple2.of(d, dataIndex));
-				})));
+					return persist(session, datasource)
+						.map(d -> Tuple2.of(d, dataIndex));
+				}));
+	}
+
+	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(long datasourceId, long dataIndexId) {
+		return sessionFactory.withTransaction(s ->
+			setDataIndex(s, datasourceId, dataIndexId));
 	}
 
 	public Uni<Datasource> unsetDataIndex(long datasourceId) {
@@ -397,6 +425,15 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			});
 	}
 
+	protected Uni<Datasource> getDatasourceConnection(
+		Mutiny.Session session, long datasourceId) {
+
+		return session
+			.createNamedQuery(Datasource.DATASOURCE_CONNECTION, Datasource.class)
+			.setParameter("datasourceId", datasourceId)
+			.getSingleResultOrNull();
+	}
+
 	private Uni<PluginDriver> getOrCreatePluginDriver(
 		Mutiny.Session session,
 		DatasourceConnectionDTO datasourceConnectionDTO) {
@@ -430,6 +467,52 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		else {
 			return Uni.createFrom().nullItem();
 		}
+	}
+
+	private Uni<PluginDriver> updateOrCreatePluginDriver(
+		Mutiny.Session session,
+		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+
+		var pluginDriverId = updateConnectionDTO.getPluginDriverId();
+		var pluginDriverDto = updateConnectionDTO.getPluginDriver();
+
+		if (pluginDriverId != null && pluginDriverDto != null) {
+			return pluginDriverService.update(
+				session, pluginDriverId, pluginDriverDto);
+		}
+		else if (pluginDriverId == null && pluginDriverDto != null) {
+			return pluginDriverService.create(session, pluginDriverDto);
+		}
+		else if (pluginDriverId != null) {
+			return pluginDriverService.findById(session, pluginDriverId);
+		}
+		else {
+			return Uni.createFrom().nullItem();
+		}
+
+	}
+
+	private Uni<EnrichPipeline> updateOrCreateEnrichPipeline(
+		Mutiny.Session session,
+		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+
+		var pipelineId = updateConnectionDTO.getPipelineId();
+		var pipelineDto = updateConnectionDTO.getPipeline();
+
+		if (pipelineId != null && pipelineDto != null) {
+			return enrichPipelineService.patchOrUpdateWithItems(
+				session, pipelineId, pipelineDto, false);
+		}
+		else if (pipelineId == null && pipelineDto != null) {
+			return enrichPipelineService.createWithItems(session, pipelineDto);
+		}
+		else if (pipelineId != null) {
+			return enrichPipelineService.findById(session, pipelineId);
+		}
+		else {
+			return Uni.createFrom().nullItem();
+		}
+
 	}
 
 	private void checkExclusiveFields(DatasourceConnectionDTO datasourceConnectionDTO)

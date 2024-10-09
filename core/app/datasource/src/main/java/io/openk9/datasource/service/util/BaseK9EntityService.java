@@ -577,7 +577,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					id + " not found"));
 	}
 
-	protected Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
+	public Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
 		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(

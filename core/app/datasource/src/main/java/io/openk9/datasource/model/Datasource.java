@@ -28,6 +28,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -38,12 +41,11 @@ import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "datasource")
@@ -52,7 +54,26 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @EntityListeners(K9EntityListener.class)
+@NamedQueries(
+	{
+		@NamedQuery(
+			name = Datasource.DATASOURCE_CONNECTION,
+			query = """
+				SELECT d
+				FROM Datasource d
+				JOIN FETCH d.pluginDriver pd
+				JOIN FETCH d.dataIndex di
+				JOIN FETCH d.enrichPipeline ep
+				JOIN FETCH di.vectorIndex vi
+				JOIN FETCH ep.enrichPipelineItems epi
+				WHERE d.id = :datasourceId
+				"""
+		)
+	}
+)
 public class Datasource extends K9Entity {
+
+	public static final String DATASOURCE_CONNECTION = "Datasource#datasourceConnection";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;

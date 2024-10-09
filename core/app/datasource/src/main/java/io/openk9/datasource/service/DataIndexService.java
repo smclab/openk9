@@ -99,30 +99,42 @@ public class DataIndexService
 
 	public Uni<DataIndex> bindVectorDataIndex(long dataIndexId, long vectorIndexId) {
 
-		return sessionFactory.withTransaction((s, t) -> s
-			.find(DataIndex.class, dataIndexId)
-			.flatMap(dataIndex -> s
+		return sessionFactory.withTransaction((s, t) ->
+			bindVectorDataIndex(s, dataIndexId, vectorIndexId));
+	}
+
+	public Uni<DataIndex> bindVectorDataIndex(
+		Mutiny.Session session, long dataIndexId, long vectorIndexId) {
+
+		return session.find(DataIndex.class, dataIndexId)
+			.flatMap(dataIndex -> session
 				.find(VectorIndex.class, vectorIndexId)
 				.flatMap(vectorIndex -> {
 					dataIndex.setVectorIndex(vectorIndex);
-					return s.persist(dataIndex)
+					return session.persist(dataIndex)
 						.map(unused -> dataIndex);
 				})
-			)
-		);
+			);
 
 	}
 
 	public Uni<DataIndex> unbindVectorDataIndex(long dataIndexId) {
 
-		return sessionFactory.withTransaction((s, t) -> s
-			.find(DataIndex.class, dataIndexId)
+		return sessionFactory.withTransaction((s, t) ->
+			unbindVectorDataIndex(s, dataIndexId));
+
+	}
+
+	public Uni<DataIndex> unbindVectorDataIndex(
+		Mutiny.Session session, long dataIndexId) {
+
+		return session.find(DataIndex.class, dataIndexId)
 			.flatMap(dataIndex -> {
-				dataIndex.setVectorIndex(null);
-				return s.persist(dataIndex)
-					.map(unused -> dataIndex);
-			})
-		);
+					dataIndex.setVectorIndex(null);
+					return session.persist(dataIndex)
+						.map(unused -> dataIndex);
+				}
+			);
 
 	}
 
