@@ -750,6 +750,7 @@ export function Main({
               ) as HTMLButtonElement;
               if (recoveryButton) recoveryButton.focus();
             }}
+            template={configuration.template}
           />
         </I18nextProvider>,
         configuration.detailMobile,

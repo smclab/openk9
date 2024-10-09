@@ -1,25 +1,29 @@
 import React from "react";
-import { css } from "styled-components/macro";
 import { GenericResultItem, DetailRendererProps } from "./client";
-import { useRenderers } from "./useRenderers";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { DetailMemo } from "./Detail";
 import { ModalDetail } from "./ModalDetail";
 import { useTranslation } from "react-i18next";
+import { TemplatesProps } from "../embeddable/entry";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
   setDetailMobile: any;
   onClose(): void;
   cardDetailsOnOver: boolean;
+  template: TemplatesProps | null;
 };
+
 function DetailMobile<E>(props: DetailMobileProps<E>) {
   const result = props.result as any;
   const setDetailMobile = props.setDetailMobile as any;
   const action = props.onClose;
   const cardDetailsOnOver = props.cardDetailsOnOver;
+  const template = props.template;
   const modalRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(true);
+  const [isViewButton, setIsViewButton] = React.useState(false);
+
   const { t } = useTranslation();
 
   React.useEffect(() => {
@@ -79,6 +83,9 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
         isMobile={true}
         actionOnCLose={action}
         cardDetailsOnOver={cardDetailsOnOver}
+        setViewButtonDetail={setIsViewButton}
+        viewButtonDetail={isViewButton}
+        template={template}
       />
     </div>
   );
