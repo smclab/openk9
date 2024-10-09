@@ -18,22 +18,16 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
-import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
-import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import javax.inject.Inject;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -43,22 +37,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
-class DatasourceCreateConnectionTest {
-
-	@InjectMock
-	PluginDriverService pluginDriverService;
-
-	@InjectMock
-	EnrichPipelineService enrichPipelineService;
-
-	@InjectMock
-	DataIndexService dataIndexService;
-
-	@InjectMock
-	VectorIndexService vectorIndexService;
-
-	@Inject
-	MockDatasourceService datasourceService;
+class DatasourceCreateConnectionTest extends BaseDatasourceServiceTest {
 
 	@Test
 	@RunOnVertxContext
@@ -70,20 +49,20 @@ class DatasourceCreateConnectionTest {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
-						any(Mutiny.Session.class),
+						anySession(),
 						eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
 					.should(times(1))
-					.create(
-						any(Mutiny.Session.class),
+					.createWithItems(
+						anySession(),
 						eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPipeline())
 					);
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+					.createByDatasource(anySession(), any(Datasource.class));
 			}
 		);
 
@@ -105,20 +84,20 @@ class DatasourceCreateConnectionTest {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
-						any(Mutiny.Session.class),
+						anySession(),
 						eq(CreateConnection.NEW_ENTITIES_VECTOR_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
 					.should(times(1))
-					.create(
-						any(Mutiny.Session.class),
+					.createWithItems(
+						anySession(),
 						eq(CreateConnection.NEW_ENTITIES_VECTOR_DTO.getPipeline())
 					);
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+					.createByDatasource(anySession(), any(Datasource.class));
 
 				then(vectorIndexService)
 					.should(times(1))
@@ -143,14 +122,14 @@ class DatasourceCreateConnectionTest {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
-						any(Mutiny.Session.class),
+						anySession(),
 						eq(CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService)
 					.should(times(1))
 					.findById(
-						any(Mutiny.Session.class),
+						anySession(),
 						eq(CreateConnection.PIPELINE_ID)
 					);
 
@@ -158,7 +137,7 @@ class DatasourceCreateConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+					.createByDatasource(anySession(), any(Datasource.class));
 			}
 		);
 
@@ -175,7 +154,7 @@ class DatasourceCreateConnectionTest {
 			response -> {
 
 				then(pluginDriverService).should(times(1)).findById(
-					any(Mutiny.Session.class),
+					anySession(),
 					eq(CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO.getPluginDriverId())
 				);
 
@@ -183,11 +162,11 @@ class DatasourceCreateConnectionTest {
 
 				then(enrichPipelineService)
 					.should(times(1))
-					.create(any(Mutiny.Session.class), any(PipelineWithItemsDTO.class));
+					.createWithItems(anySession(), any(PipelineWithItemsDTO.class));
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+					.createByDatasource(anySession(), any(Datasource.class));
 			}
 		);
 
@@ -203,7 +182,7 @@ class DatasourceCreateConnectionTest {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
-						any(Mutiny.Session.class),
+						anySession(),
 						eq(CreateConnection.NEW_PLUGIN_NO_PIPELINE_DTO.getPluginDriver())
 					);
 
@@ -211,7 +190,7 @@ class DatasourceCreateConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(any(Mutiny.Session.class), any(Datasource.class));
+					.createByDatasource(anySession(), any(Datasource.class));
 			}
 		);
 
@@ -258,7 +237,7 @@ class DatasourceCreateConnectionTest {
 	void should_fail_with_K9Error_when_transaction_exception(UniAsserter asserter) {
 
 		given(enrichPipelineService
-			.create(any(Mutiny.Session.class), any(PipelineWithItemsDTO.class)))
+			.createWithItems(anySession(), any(PipelineWithItemsDTO.class)))
 			.willReturn(Uni.createFrom().failure(RuntimeException::new));
 
 		asserter.assertFailedWith(
@@ -268,12 +247,12 @@ class DatasourceCreateConnectionTest {
 				Assertions.assertInstanceOf(K9Error.class, failure);
 
 				then(pluginDriverService).should(times(1)).create(
-					any(Mutiny.Session.class),
+					anySession(),
 					eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPluginDriver())
 				);
 
-				then(enrichPipelineService).should(times(1)).create(
-					any(Mutiny.Session.class),
+				then(enrichPipelineService).should(times(1)).createWithItems(
+					anySession(),
 					eq(CreateConnection.NEW_ENTITIES_BASE_DTO.getPipeline())
 				);
 
@@ -283,23 +262,8 @@ class DatasourceCreateConnectionTest {
 
 	}
 
-	@Mock
-	public static final class MockDatasourceService extends DatasourceService {
 
-		public MockDatasourceService() {
-			super(null);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
-			return Uni.createFrom().item((T) CreateConnection.DATASOURCE);
-		}
-
-		@Inject
-		void setDatasourceMapper(DatasourceMapper datasourceMapper) {
-			this.mapper = datasourceMapper;
-		}
-
+	private static Mutiny.Session anySession() {
+		return any(Mutiny.Session.class);
 	}
 }
