@@ -107,11 +107,13 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Datasource> updateDatasourceConnection(
 		Mutiny.Session s, UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
-		return getDatasourceConnection(s, updateConnectionDTO.getDatasourceId())
+		return findById(s, updateConnectionDTO.getDatasourceId())
 			.flatMap(datasource -> updateOrCreatePluginDriver(s, updateConnectionDTO)
 				.invoke(datasource::setPluginDriver)
 				.flatMap(__ -> updateOrCreateEnrichPipeline(s, updateConnectionDTO))
 				.invoke(datasource::setEnrichPipeline)
+				.flatMap(__ -> updateOrCreateDataIndex(s, datasource, updateConnectionDTO))
+				.invoke(datasource::setDataIndex)
 				.flatMap(__ -> merge(s, datasource))
 			);
 	}
@@ -377,25 +379,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
 							.createByDatasource(session, datasource)
-							.flatMap(dataIndex -> {
-								if (datasourceConnection.getVectorIndexConfigurations() != null) {
-									return vectorIndexService.create(
-											VectorIndexDTO.builder()
-												.name(dataIndex.getName() + "-vector-index")
-												.configurations(datasourceConnection.getVectorIndexConfigurations())
-												.build())
-										.flatMap(vectorIndex -> dataIndexService.bindVectorDataIndex(
-											dataIndex.getId(), vectorIndex.getId()))
-										.flatMap(dataIndexWithVectorIndex -> {
-											datasource.setDataIndex(dataIndexWithVectorIndex);
-											return persist(session, datasource);
-										});
-								}
-								else {
-									datasource.setDataIndex(dataIndex);
-									return persist(session, datasource);
-								}
-							})
+							.flatMap(dataIndex -> createVectorIndex(
+									session, dataIndex, datasourceConnection.getVectorIndexConfigurations()
+								)
+							)
+							.invoke(datasource::setDataIndex)
+							.flatMap(__ -> persist(session, datasource))
 						)
 					)
 			))
@@ -425,13 +414,34 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			});
 	}
 
-	protected Uni<Datasource> getDatasourceConnection(
-		Mutiny.Session session, long datasourceId) {
+	private Uni<DataIndex> createVectorIndex(
+		Mutiny.Session session,
+		DataIndex dataIndex,
+		VectorIndexDTO.ConfigurationsDTO vectorIndexConfigurations) {
 
-		return session
-			.createNamedQuery(Datasource.DATASOURCE_CONNECTION, Datasource.class)
-			.setParameter("datasourceId", datasourceId)
-			.getSingleResultOrNull();
+		if (vectorIndexConfigurations != null) {
+			VectorIndexDTO vectorIndexDTO = VectorIndexDTO.builder()
+				.name(dataIndex.getName() + "-vector-index")
+				.configurations(vectorIndexConfigurations)
+				.build();
+
+			if (dataIndex.getVectorIndex() == null) {
+				return vectorIndexService.create(
+						session, vectorIndexDTO)
+					.flatMap(vectorIndex -> dataIndexService.bindVectorDataIndex(
+						session, dataIndex.getId(), vectorIndex.getId()));
+			}
+			else {
+				return vectorIndexService.update(
+						session, dataIndex.getVectorIndex().getId(), vectorIndexDTO)
+					.map(vectorIndex -> dataIndex);
+			}
+
+		}
+		else {
+			return Uni.createFrom().item(dataIndex);
+		}
+
 	}
 
 	private Uni<PluginDriver> getOrCreatePluginDriver(
@@ -511,6 +521,27 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		}
 		else {
 			return Uni.createFrom().nullItem();
+		}
+
+	}
+
+	private Uni<DataIndex> updateOrCreateDataIndex(
+		Mutiny.Session session,
+		Datasource datasource,
+		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+
+		var dataIndexId = updateConnectionDTO.getDataIndexId();
+		var vectorIndexConfigurations = updateConnectionDTO.getVectorIndexConfigurations();
+
+		if (dataIndexId <= 0L) {
+			return dataIndexService.createByDatasource(session, datasource)
+				.flatMap(dataIndex ->
+					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
+		}
+		else {
+			return dataIndexService.findByIdWithVectorIndex(session, dataIndexId)
+				.flatMap(dataIndex ->
+					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
 		}
 
 	}

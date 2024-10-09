@@ -97,6 +97,17 @@ public class DataIndexService
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
+	public Uni<DataIndex> findByIdWithVectorIndex(Mutiny.Session session, long dataIndexId) {
+
+		return session.createQuery(
+				"from DataIndex di join fetch di.vectorIndex where di.id = :dataIndexId",
+				DataIndex.class
+			)
+			.setParameter("dataIndexId", dataIndexId)
+			.getSingleResultOrNull();
+
+	}
+
 	public Uni<DataIndex> bindVectorDataIndex(long dataIndexId, long vectorIndexId) {
 
 		return sessionFactory.withTransaction((s, t) ->
