@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
@@ -28,6 +29,8 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -276,6 +279,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
+		given(dataIndexService.createByDatasource(anySession(), any(Datasource.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
@@ -286,6 +292,11 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			datasource -> {
 				then(dataIndexService).should(times(1))
 					.createByDatasource(anySession(), any(Datasource.class));
+
+				then(vectorIndexService).shouldHaveNoInteractions();
+
+				then(mockSession).should(atLeastOnce())
+					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
 			}
 		);
 
@@ -298,20 +309,37 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
+		given(dataIndexService.createByDatasource(anySession(), any(Datasource.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
+		given(vectorIndexService.create(anySession(), any(VectorIndexDTO.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
+
+		given(dataIndexService.bindVectorDataIndex(anySession(), anyLong(), anyLong()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
 					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.vectorIndexConfigurations(
+						CreateConnection.NEW_ENTITIES_VECTOR_DTO
+							.getVectorIndexConfigurations())
 					.build()
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
 					.createByDatasource(anySession(), any(Datasource.class));
+
 				then(vectorIndexService).should(times(1))
-					.create(any(VectorIndexDTO.class));
+					.create(anySession(), any(VectorIndexDTO.class));
+
 				then(dataIndexService).should(times(1))
-					.bindVectorDataIndex(anyLong(), anyLong());
+					.bindVectorDataIndex(anySession(), anyLong(), anyLong());
+
+				then(mockSession).should(atLeastOnce())
+					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
 			}
 		);
 
@@ -324,16 +352,39 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
+		given(dataIndexService.findByIdWithVectorIndex(anySession(), anyLong()))
+			.willReturn(Uni.createFrom().item(() -> {
+				var dataIndex = new DataIndex();
+
+				dataIndex.setId(CreateConnection.DATA_INDEX_ID);
+				dataIndex.setName(CreateConnection.DATASOURCE_NAME + "-dataindex");
+				dataIndex.setTenant("mew");
+				dataIndex.setDescription("a dataindex");
+				dataIndex.setDocTypes(Set.of());
+				dataIndex.setVectorIndex(CreateConnection.VECTORINDEX);
+
+				return dataIndex;
+			}));
+
+		given(vectorIndexService.update(anySession(), anyLong(), any(VectorIndexDTO.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
+
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
 					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.dataIndexId(CreateConnection.DATA_INDEX_ID)
+					.vectorIndexConfigurations(
+						CreateConnection.NEW_ENTITIES_VECTOR_DTO
+							.getVectorIndexConfigurations())
 					.build()
 			),
 			datasource -> {
+
 				then(dataIndexService).should(times(1))
 					.findByIdWithVectorIndex(anySession(), anyLong());
+
 				then(vectorIndexService).should(times(1))
 					.update(anySession(), anyLong(), any(VectorIndexDTO.class));
 			}
@@ -347,18 +398,39 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
+		given(dataIndexService.findByIdWithVectorIndex(anySession(), anyLong()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
+		given(vectorIndexService.create(anySession(), any(VectorIndexDTO.class)))
+			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
+
+		given(dataIndexService.bindVectorDataIndex(anySession(), anyLong(), anyLong()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
+
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
 					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.dataIndexId(CreateConnection.DATA_INDEX_ID)
+					.vectorIndexConfigurations(
+						CreateConnection.NEW_ENTITIES_VECTOR_DTO
+							.getVectorIndexConfigurations())
 					.build()
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
 					.findByIdWithVectorIndex(anySession(), anyLong());
+
 				then(vectorIndexService).should(times(1))
 					.create(anySession(), any(VectorIndexDTO.class));
+
+				then(dataIndexService).should(times(1))
+					.bindVectorDataIndex(anySession(), anyLong(), anyLong());
+
+				then(mockSession).should(atLeastOnce())
+					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
 			}
 		);
 	}
@@ -369,6 +441,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		UniAsserter uniAsserter) {
 
 		var mockSession = mock(Mutiny.Session.class);
+
+		given(dataIndexService.findByIdWithVectorIndex(anySession(), anyLong()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
@@ -392,11 +467,15 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
+		given(dataIndexService.findByIdWithVectorIndex(anySession(), anyLong()))
+			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
+
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
 					.datasourceId(CreateConnection.DATASOURCE_ID)
+					.dataIndexId(CreateConnection.DATA_INDEX_ID)
 					.build()
 			),
 			datasource -> {
@@ -412,24 +491,27 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 		return any(Mutiny.Session.class);
 	}
 
-	private static boolean hasPluginDriver(Datasource entity) {
-		return entity != null && entity.getPluginDriver() != null;
+	private static boolean hasPluginDriver(Datasource datasource) {
+		return datasource != null && datasource.getPluginDriver() != null;
 	}
 
-	private static boolean hasNotPluginDriver(Datasource entity) {
-		return entity != null && entity.getPluginDriver() == null;
+	private static boolean hasNotPluginDriver(Datasource datasource) {
+		return datasource != null && datasource.getPluginDriver() == null;
 	}
 
-	private static boolean hasEnrichPipeline(Datasource entity) {
-		return entity != null && entity.getEnrichPipeline() != null;
+	private static boolean hasEnrichPipeline(Datasource datasource) {
+		return datasource != null && datasource.getEnrichPipeline() != null;
 	}
 
-	private static boolean hasNotEnrichPipeline(Datasource entity) {
-		return entity != null && entity.getEnrichPipeline() == null;
+	private static boolean hasNotEnrichPipeline(Datasource datasource) {
+		return datasource != null && datasource.getEnrichPipeline() == null;
 	}
 
 	private static boolean hasDataIndex(Datasource datasource) {
 		return datasource != null && datasource.getDataIndex() != null;
 	}
 
+	private static boolean hasNotDataIndex(Datasource datasource) {
+		return datasource != null && datasource.getDataIndex() == null;
+	}
 }

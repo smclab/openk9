@@ -75,7 +75,7 @@ class DatasourceCreateConnectionTest extends BaseDatasourceServiceTest {
 		given(dataIndexService.createByDatasource(any(), any()))
 			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
 
-		given(vectorIndexService.create(any(VectorIndexDTO.class)))
+		given(vectorIndexService.create(anySession(), any(VectorIndexDTO.class)))
 			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
 
 		asserter.assertThat(
@@ -101,11 +101,11 @@ class DatasourceCreateConnectionTest extends BaseDatasourceServiceTest {
 
 				then(vectorIndexService)
 					.should(times(1))
-					.create(any(VectorIndexDTO.class));
+					.create(anySession(), any(VectorIndexDTO.class));
 
 				then(dataIndexService)
 					.should(times(1))
-					.bindVectorDataIndex(anyLong(), anyLong());
+					.bindVectorDataIndex(anySession(), anyLong(), anyLong());
 			}
 		);
 
