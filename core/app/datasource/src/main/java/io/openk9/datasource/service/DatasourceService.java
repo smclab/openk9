@@ -133,14 +133,26 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		Mutiny.Session s, UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
 		return findById(s, updateConnectionDTO.getDatasourceId())
-			.flatMap(datasource -> updateOrCreatePluginDriver(s, updateConnectionDTO)
-				.invoke(datasource::setPluginDriver)
-				.flatMap(__ -> updateOrCreateEnrichPipeline(s, updateConnectionDTO))
-				.invoke(datasource::setEnrichPipeline)
-				.flatMap(__ -> updateOrCreateDataIndex(s, datasource, updateConnectionDTO))
-				.invoke(datasource::setDataIndex)
-				.map(__ -> mapper.update(datasource, updateConnectionDTO))
-				.flatMap(__ -> merge(s, datasource))
+			.flatMap(datasource -> updateOrCreatePluginDriver(
+				s, updateConnectionDTO)
+				.map(pluginDriver -> {
+					datasource.setPluginDriver(pluginDriver);
+					return datasource;
+				})
+				.flatMap(datasourceWithPlugin -> updateOrCreateEnrichPipeline(
+					s, updateConnectionDTO)
+					.map(enrichPipeline -> {
+						datasourceWithPlugin.setEnrichPipeline(enrichPipeline);
+						return datasourceWithPlugin;
+					}))
+				.flatMap(datasourceWithPipeline -> updateOrCreateDataIndex(
+					s, datasourceWithPipeline, updateConnectionDTO)
+					.map(dataIndex -> {
+						datasourceWithPipeline.setDataIndex(dataIndex);
+						return datasourceWithPipeline;
+					}))
+				.flatMap(datasourceWithAll -> merge(
+					s, mapper.update(datasourceWithAll, updateConnectionDTO)))
 			);
 	}
 
