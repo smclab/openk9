@@ -65,8 +65,8 @@ public class LargeLanguageModelService
 
 		String queryString = "SELECT tb " +
 			"FROM TenantBinding tb " +
-			"JOIN FETCH tb.largeLanguageModel llm " +
-			"JOIN FETCH tb.bucket b ";
+			"LEFT JOIN FETCH tb.largeLanguageModel llm " +
+			"LEFT JOIN FETCH tb.bucket b ";
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> s
 			.createQuery(queryString, TenantBinding.class)
