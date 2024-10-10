@@ -222,8 +222,8 @@ async def rag_chat(
     return EventSourceResponse(chain)
 
 
-@app.get("/api/rag/getChat/{user_id}")
-async def get_user_chat(user_id: str, request: Request, authorization: str = Header()):
+@app.get("/api/rag/getChats/{user_id}")
+async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
     virtual_host = urlparse(str(request.base_url)).hostname
     # TODO remove line
     virtual_host = "test.openk9.io"
