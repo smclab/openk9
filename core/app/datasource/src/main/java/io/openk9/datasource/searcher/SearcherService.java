@@ -139,7 +139,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						responseBuilder.setApiKey(llm.getApiKey());
 					}
 
-					responseBuilder.setRetrieveType(bucket.getRetrieveType().name());
+					if ( bucket.getRetrieveType() != null ) {
+						responseBuilder.setRetrieveType(bucket.getRetrieveType().name());
+					}
 
 					return responseBuilder.build();
 				})
