@@ -27,6 +27,7 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -193,6 +194,13 @@ public class DatasourceGraphqlResource {
 		DatasourceConnectionDTO datasourceConnection) {
 
 		return datasourceService.createDatasourceConnection(datasourceConnection);
+	}
+
+	@Mutation
+	public Uni<Response<Datasource>> updateDatasourceConnection(
+		UpdateDatasourceConnectionDTO datasourceConnection) {
+
+		return datasourceService.updateDatasourceConnection(datasourceConnection);
 	}
 
 	@Subscription
