@@ -83,36 +83,6 @@ function SortResultList({
     </components.SingleValue>
   );
 
-  const CustomDropdownIndicator = (props: any) => {
-    return (
-      <components.DropdownIndicator {...props}>
-        <div className="openk9-menu-open">
-          {props.selectProps.menuIsOpen ? (
-            <span className="" aria-hidden="true">
-              <FontAwesomeIcon
-                className="icon-search icon-search-filters"
-                icon={faChevronUp}
-                style={{ cursor: "pointer" }}
-              />
-            </span>
-          ) : (
-            <span
-              className="fas fa-chevron-down down-icon"
-              aria-hidden="true"
-              style={{ cursor: "pointer" }}
-            >
-              <FontAwesomeIcon
-                className="icon-search icon-search-filters"
-                icon={faChevronDown}
-                style={{ cursor: "pointer" }}
-              />
-            </span>
-          )}
-        </div>
-      </components.DropdownIndicator>
-    );
-  };
-
   // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
     const eventValue = event?.value && JSON.parse(event.value);
@@ -177,7 +147,6 @@ function SortResultList({
         classNamePrefix="openk9-react-select"
         components={{
           SingleValue,
-          DropdownIndicator: CustomDropdownIndicator,
         }}
         options={sortOptions}
         onChange={handleChange}
