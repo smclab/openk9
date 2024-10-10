@@ -125,8 +125,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
 		return getTenant(request.getVirtualHost())
 			.flatMap(tenantResponse -> largeLanguageModelService
-				.fetchCurrent(tenantResponse.getSchemaName())
-				.map(llm -> {
+				.fetchCurrentLLMAndBucket(tenantResponse.getSchemaName())
+				.map(bucketLLM -> {
+
+					var llm = bucketLLM.largeLanguageModel();
+					var bucket = bucketLLM.bucket();
+
 					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
 						.setApiUrl(llm.getApiUrl())
 						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
@@ -134,6 +138,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					if (llm.getApiKey() != null) {
 						responseBuilder.setApiKey(llm.getApiKey());
 					}
+
+					responseBuilder.setRetrieveType(bucket.getRetrieveType().name());
 
 					return responseBuilder.build();
 				})

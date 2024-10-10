@@ -22,6 +22,7 @@ import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.LargeLanguageModel_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
+import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -57,6 +58,18 @@ public class LargeLanguageModelService
 	public Uni<LargeLanguageModel> fetchCurrent() {
 		return sessionFactory.withTransaction((s, t) -> s
 			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
+			.getSingleResult());
+	}
+
+	public Uni<BucketLargeLanguageModel> fetchCurrentLLMAndBucket(String tenantId) {
+
+		String queryString = "SELECT new io.openk9.datasource.model.projection.BucketLargeLanguageModel(b, llm) " +
+			"FROM TenantBinding tb " +
+			"JOIN FETCH tb.largeLanguageModel llm " +
+			"JOIN FETCH tb.bucket b ";
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createQuery(queryString, BucketLargeLanguageModel.class)
 			.getSingleResult());
 	}
 
