@@ -251,13 +251,12 @@ async def get_user_chats(user_id: str, request: Request, authorization: str = He
         "_source": {"includes": ["question", "timestamp"], "excludes": []},
     }
 
-    chats = []
-    result = {"result": chats}
+    result = {"result": []}
 
     if open_search_client.indices.exists(index=user_id):
         response = open_search_client.search(body=query, index=user_id)
 
         for chat in response["hits"]["hits"]:
-            chats.append(chat["_source"])
+            result["result"].append(chat["_source"])
 
     return result
