@@ -106,12 +106,15 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 				var pluginDriverId = updateConnectionDTO.getPluginDriverId();
 
+				var pluginDriver = updateConnectionDTO.getPluginDriver();
+
 				if (datasourceId == 0L) {
-					throw new ValidationException("datasourceId has to be defined");
+					throw new ValidationException("Request must defines datasourceId");
 				}
 
-				if (pluginDriverId == null || pluginDriverId == 0L) {
-					throw new ValidationException("pluginDriverId has to be defined");
+				if (pluginDriverId == null || pluginDriverId == 0L && pluginDriver == null) {
+					throw new ValidationException(
+						"Request must defines one of pluginDriverId or pluginDriver");
 				}
 
 				var constraintViolations = validator.validate(updateConnectionDTO);
