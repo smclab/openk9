@@ -139,6 +139,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.invoke(datasource::setEnrichPipeline)
 				.flatMap(__ -> updateOrCreateDataIndex(s, datasource, updateConnectionDTO))
 				.invoke(datasource::setDataIndex)
+				.map(__ -> mapper.update(datasource, updateConnectionDTO))
 				.flatMap(__ -> merge(s, datasource))
 			);
 	}
