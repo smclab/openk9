@@ -97,11 +97,36 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.subscribeAsCompletionStage();
 	}
 
-	public Uni<Datasource> updateDatasourceConnection(
+	public Uni<Response<Datasource>> updateDatasourceConnection(
 		UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
 		return sessionFactory.withTransaction((s, t) ->
-			updateDatasourceConnection(s, updateConnectionDTO));
+				updateDatasourceConnection(s, updateConnectionDTO))
+			.onItemOrFailure()
+			.transformToUni((datasource, throwable) -> {
+				if (throwable != null) {
+					if (throwable instanceof ConstraintViolationException constraintViolations) {
+						var fieldValidators =
+							constraintViolations.getConstraintViolations().stream()
+								.map(constraintViolation -> FieldValidator.of(constraintViolation
+									.getPropertyPath()
+									.toString(), constraintViolation.getMessage()))
+								.collect(Collectors.toList());
+						return Uni.createFrom().item(Response.of(null, fieldValidators));
+					}
+					if (throwable instanceof ValidationException validationException) {
+						return Uni.createFrom().item(Response.of(
+							null,
+							List.of(FieldValidator.of("error", validationException.getMessage()))
+						));
+					}
+					return Uni.createFrom().failure(new K9Error(throwable));
+				}
+				else {
+					return Uni.createFrom().item(Response.of(datasource, null));
+				}
+			});
+
 	}
 
 	public Uni<Datasource> updateDatasourceConnection(
