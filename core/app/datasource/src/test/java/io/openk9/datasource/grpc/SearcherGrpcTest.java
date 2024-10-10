@@ -45,13 +45,15 @@ import static org.mockito.Mockito.times;
 @QuarkusTest
 public class SearcherGrpcTest {
 
-	private static final String VIRTUAL_HOST = "";
-	private static final String LLM_API_KEY = "";
-	private static final String LLM_API_URL = "";
+	private static final String BLANK_STRING = "";
+	private static final String VIRTUAL_HOST = BLANK_STRING;
+	private static final String LLM_API_KEY = BLANK_STRING;
+	private static final String LLM_API_URL = BLANK_STRING;
 	private static final String LLM_JSON_CONFIG = "{testField: \"test\"}";
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(LLM_JSON_CONFIG);
-	private static final String SCHEMA_NAME = "";
+	private static final String SCHEMA_NAME = BLANK_STRING;
 	private static final Bucket BUCKET = new Bucket();
+	private static final Bucket BUCKET_RETRIEVE_TYPE_NULL = new Bucket();
 	private static final LargeLanguageModel LARGE_LANGUAGE_MODEL = new LargeLanguageModel();
 
 	static {
@@ -96,6 +98,35 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 				Assertions.assertEquals(
 					Bucket.RetrieveType.HYBRID.name(), response.getRetrieveType());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_llm_configurations_retrieve_type_null(UniAsserter asserter) {
+
+		BDDMockito.given(tenantManager.findTenant(notNull()))
+			.willReturn(Uni.createFrom().item(
+				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
+		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
+			.willReturn(Uni.createFrom().item(
+				new BucketLargeLanguageModel(BUCKET_RETRIEVE_TYPE_NULL, LARGE_LANGUAGE_MODEL)));
+
+		asserter.assertThat(
+			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
+				.setVirtualHost(VIRTUAL_HOST)
+				.build()
+			),
+			response -> {
+				BDDMockito.then(largeLanguageModelService)
+					.should(times(1))
+					.fetchCurrentLLMAndBucket(anyString());
+
+				Assertions.assertEquals(LLM_API_KEY, response.getApiKey());
+				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
+				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				Assertions.assertEquals(BLANK_STRING, response.getRetrieveType());
 			}
 		);
 	}
