@@ -100,32 +100,61 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Response<Datasource>> updateDatasourceConnection(
 		UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
-		return sessionFactory.withTransaction((s, t) ->
-				updateDatasourceConnection(s, updateConnectionDTO))
-			.onItemOrFailure()
-			.transformToUni((datasource, throwable) -> {
-				if (throwable != null) {
-					if (throwable instanceof ConstraintViolationException constraintViolations) {
-						var fieldValidators =
-							constraintViolations.getConstraintViolations().stream()
-								.map(constraintViolation -> FieldValidator.of(constraintViolation
-									.getPropertyPath()
-									.toString(), constraintViolation.getMessage()))
-								.collect(Collectors.toList());
-						return Uni.createFrom().item(Response.of(null, fieldValidators));
-					}
-					if (throwable instanceof ValidationException validationException) {
-						return Uni.createFrom().item(Response.of(
-							null,
-							List.of(FieldValidator.of("error", validationException.getMessage()))
-						));
-					}
-					return Uni.createFrom().failure(new K9Error(throwable));
+		return Uni.createFrom()
+			.item(() -> {
+				var datasourceId = updateConnectionDTO.getDatasourceId();
+
+				var pluginDriverId = updateConnectionDTO.getPluginDriverId();
+
+				if (datasourceId == 0L) {
+					throw new ValidationException("datasourceId has to be defined");
 				}
-				else {
-					return Uni.createFrom().item(Response.of(datasource, null));
+
+				if (pluginDriverId == null || pluginDriverId == 0L) {
+					throw new ValidationException("pluginDriverId has to be defined");
 				}
-			});
+
+				var constraintViolations = validator.validate(updateConnectionDTO);
+
+				if (!constraintViolations.isEmpty()) {
+					throw new ConstraintViolationException(constraintViolations);
+				}
+
+				return updateConnectionDTO;
+			})
+			.flatMap(__ -> sessionFactory.withTransaction((s, t) ->
+					updateDatasourceConnection(s, updateConnectionDTO))
+				.onItemOrFailure()
+				.transformToUni((datasource, throwable) -> {
+					if (throwable != null) {
+						if (throwable instanceof ConstraintViolationException constraintViolations) {
+							var fieldValidators =
+								constraintViolations.getConstraintViolations().stream()
+									.map(constraintViolation -> FieldValidator.of(
+										constraintViolation
+											.getPropertyPath()
+											.toString(),
+										constraintViolation.getMessage()
+									))
+									.collect(Collectors.toList());
+							return Uni.createFrom().item(Response.of(null, fieldValidators));
+						}
+						if (throwable instanceof ValidationException validationException) {
+							return Uni.createFrom().item(Response.of(
+								null,
+								List.of(FieldValidator.of(
+									"error",
+									validationException.getMessage()
+								))
+							));
+						}
+						return Uni.createFrom().failure(new K9Error(throwable));
+					}
+					else {
+						return Uni.createFrom().item(Response.of(datasource, null));
+					}
+				})
+			);
 
 	}
 
@@ -390,9 +419,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Response<Datasource>> createDatasourceConnection(
 		DatasourceConnectionDTO datasourceConnection) {
 
-		return Uni
-			.createFrom()
-			.item(() -> {
+		return Uni.createFrom().item(() -> {
 				checkExclusiveFields(datasourceConnection);
 
 				var constraintViolations = validator.validate(datasourceConnection);
