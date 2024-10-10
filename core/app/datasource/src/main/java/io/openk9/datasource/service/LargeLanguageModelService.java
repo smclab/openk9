@@ -63,14 +63,18 @@ public class LargeLanguageModelService
 
 	public Uni<BucketLargeLanguageModel> fetchCurrentLLMAndBucket(String tenantId) {
 
-		String queryString = "SELECT new io.openk9.datasource.model.projection.BucketLargeLanguageModel(b, llm) " +
+		String queryString = "SELECT tb " +
 			"FROM TenantBinding tb " +
 			"JOIN FETCH tb.largeLanguageModel llm " +
 			"JOIN FETCH tb.bucket b ";
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createQuery(queryString, BucketLargeLanguageModel.class)
-			.getSingleResult());
+			.createQuery(queryString, TenantBinding.class)
+			.getSingleResult()
+			.map(tenantBinding ->
+				new BucketLargeLanguageModel(
+					tenantBinding.getBucket(), tenantBinding.getLargeLanguageModel())
+			));
 	}
 
 	public Uni<LargeLanguageModel> enable(Mutiny.Session s, long id) {
