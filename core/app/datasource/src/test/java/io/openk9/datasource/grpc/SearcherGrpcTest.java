@@ -23,6 +23,7 @@ import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
+import io.openk9.datasource.searcher.MissingLLMException;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
@@ -146,18 +147,40 @@ public class SearcherGrpcTest {
 				.setVirtualHost(VIRTUAL_HOST)
 				.build()
 			),
-				SearcherGrpcTest::failureAssertions
+				throwable ->
+					failureAssertions(throwable, InternalServiceMockException.class)
 			);
 	}
 
-	private static void failureAssertions(Throwable throwable) {
+	@Test
+	@RunOnVertxContext
+	void should_fail_on_get_llm_configurations_llm_null(UniAsserter asserter) {
+
+		BDDMockito.given(tenantManager.findTenant(notNull()))
+			.willReturn(Uni.createFrom().item(
+				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
+		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
+			.willReturn(Uni.createFrom().item(
+				new BucketLargeLanguageModel(BUCKET, null)));
+
+		asserter.assertFailedWith(
+			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
+				.setVirtualHost(VIRTUAL_HOST)
+				.build()
+			),
+			throwable ->
+				failureAssertions(throwable, MissingLLMException.class)
+		);
+	}
+
+	private static <T> void failureAssertions(Throwable throwable, Class<T> classException) {
 		Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
 
 		var exception = (StatusRuntimeException) throwable;
 
 		Assertions.assertTrue(exception
 			.getMessage()
-			.contains(InternalServiceMockException.class.getName())
+			.contains(classException.getName())
 		);
 	}
 }
