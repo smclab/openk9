@@ -129,6 +129,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
+
+					if ( llm == null ) {
+						throw new MissingLLMException(
+							"Missing active Large language model for this tenant."
+						);
+					}
 					var bucket = bucketLLM.bucket();
 
 					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
