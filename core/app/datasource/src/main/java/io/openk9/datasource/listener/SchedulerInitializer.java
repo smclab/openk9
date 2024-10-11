@@ -170,7 +170,7 @@ public class SchedulerInitializer {
 		return sessionFactory.withTransaction(
 			schemaName,
 			(s, t) -> datasourceService
-				.findDatasourceByIdWithPluginDriver(datasourceId)
+				.findByIdWithPluginDriver(datasourceId)
 				.flatMap(d -> schedulerInitializerActor.triggerDataSource(
 					schemaName, d.getId(), startFromFirst))
 		);

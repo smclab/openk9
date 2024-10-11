@@ -166,6 +166,21 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			});
 	}
 
+	public Uni<Datasource> findByIdWithPluginDriver(long datasourceId) {
+		return sessionFactory.withTransaction((s) ->
+			findByIdWithPluginDriver(s, datasourceId));
+	}
+
+	public Uni<Datasource> findByIdWithPluginDriver(Mutiny.Session session, long datasourceId) {
+		return session.createQuery("""
+				from Datasource d
+				left join fetch d.pluginDriver
+				where d.id = :id
+				""", Datasource.class)
+			.setParameter("id", datasourceId)
+			.getSingleResult();
+	}
+
 	@Override
 	public Class<Datasource> getEntityClass() {
 		return Datasource.class;
@@ -180,13 +195,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			s,
 			datasourceId
 		).flatMap(datasource -> s.fetch(datasource.getDataIndex())));
-	}
-
-	public Uni<Datasource> findDatasourceByIdWithPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction((s) -> s.createQuery(
-			"select d " + "from Datasource d " + "left join fetch d.pluginDriver where d.id = :id",
-			Datasource.class
-		).setParameter("id", datasourceId).getSingleResult());
 	}
 
 	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
@@ -421,7 +429,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Datasource> updateDatasourceConnection(
 		Mutiny.Session s, UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
-		return findById(s, updateConnectionDTO.getDatasourceId())
+		return findByIdWithPluginDriver(s, updateConnectionDTO.getDatasourceId())
 			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 				.invoke(datasource::setEnrichPipeline)
 				.flatMap(enrichPipeline -> updateOrCreateDataIndex(
