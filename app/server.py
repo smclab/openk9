@@ -3,16 +3,17 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi import FastAPI, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from google.protobuf.json_format import ParseDict
+from opensearchpy import OpenSearch
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.rag.chain import get_chain, get_chat_chain
-from app.utils.keycloak import verify_token
+from app.utils.keycloak import unauthorized_response, verify_token
 
 app = FastAPI()
 
@@ -90,6 +91,8 @@ async def rag_generatey(
     search_text = search_query_request.searchText
     reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
+    # TODO remove line
+    virtual_host = "test.openk9.io"
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
     extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
@@ -109,11 +112,7 @@ async def rag_generatey(
     token = authorization.replace("Bearer ", "") if authorization else None
 
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        unauthorized_response()
 
     chain = get_chain(
         search_query_to_proto_list,
@@ -179,6 +178,8 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = urlparse(str(request.base_url)).hostname
+    # TODO remove line
+    virtual_host = "test.openk9.io"
 
     search_query_to_proto_list = []
     for query in search_query:
@@ -195,11 +196,7 @@ async def rag_chat(
     token = authorization.replace("Bearer ", "") if authorization else None
 
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        unauthorized_response()
 
     chain = get_chat_chain(
         search_query_to_proto_list,
@@ -223,3 +220,43 @@ async def rag_chat(
         GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
+
+
+@app.get("/api/rag/getChats/{user_id}")
+async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
+    virtual_host = urlparse(str(request.base_url)).hostname
+    # TODO remove line
+    virtual_host = "test.openk9.io"
+    token = authorization.replace("Bearer ", "")
+
+    if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
+        unauthorized_response()
+
+    open_search_client = OpenSearch(
+        hosts=[OPENSEARCH_HOST],
+    )
+
+    query = {
+        "from": 0,
+        "size": 10,
+        "query": {
+            "bool": {
+                "must": [
+                    {"match": {"user_id.keyword": user_id}},
+                    {"match": {"chat_sequence_number": "1"}},
+                ]
+            }
+        },
+        "sort": [{"timestamp": {"order": "desc"}}],
+        "_source": {"includes": ["question", "timestamp"], "excludes": []},
+    }
+
+    result = {"result": []}
+
+    if open_search_client.indices.exists(index=user_id):
+        response = open_search_client.search(body=query, index=user_id)
+
+        for chat in response["hits"]["hits"]:
+            result["result"].append(chat["_source"])
+
+    return result

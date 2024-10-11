@@ -1,5 +1,6 @@
 import os
 
+from fastapi import HTTPException, status
 from keycloak import KeycloakOpenID
 
 from app.external_services.grpc.grpc_client import get_tenant_manager_configuration
@@ -27,3 +28,11 @@ def verify_token(grpc_host, virtual_host, token) -> dict:
         return userinfo
     except Exception:
         return {}
+
+
+def unauthorized_response():
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid token.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

@@ -33,14 +33,22 @@ def save_chat_message(
 ):
     documents = []
 
-    for document in sources:
-        documents.append(document.dict())
+    for source in sources:
+        document_dict = source.dict()
+        document_title = document_dict["metadata"]["title"]
+        document_url = document_dict["metadata"]["url"]
+        document_source = document_dict["metadata"]["source"]
+        document = {
+            "title": document_title,
+            "url": document_url,
+            "source": document_source,
+        }
+        documents.append(document)
 
     message = {
         "question": question,
         "answer": answer,
-        # TODO: context length
-        "sources": documents[0:2],
+        "sources": documents,
         "chat_id": chat_id,
         "user_id": user_id,
         "timestamp": timestamp,
@@ -51,19 +59,19 @@ def save_chat_message(
         index_body = {
             "mappings": {
                 "properties": {
-                    "question": {"type": "text"},
-                    "answer": {"type": "text"},
-                    "sources": {"type": "text"},
-                    "chat_id": {
-                        "type": "text",
-                        "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
-                    },
-                    "user_id": {
-                        "type": "text",
-                        "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
-                    },
+                    # "question": {"type": "text"},
+                    # "answer": {"type": "text"},
+                    # "sources": {"type": "text"},
+                    # "chat_id": {
+                    #     "type": "text",
+                    #     "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                    # },
+                    # "user_id": {
+                    #     "type": "text",
+                    #     "fields": {"keyword": {"type": "keyword", "ignore_above": 256}},
+                    # },
                     "timestamp": {"type": "date"},
-                    "chat_sequence_number": {"type": "integer"},
+                    # "chat_sequence_number": {"type": "integer"},
                 }
             },
         }
@@ -75,5 +83,4 @@ def save_chat_message(
     open_search_client.index(
         index=user_id,
         body=message,
-        id=chat_sequence_number,
     )
