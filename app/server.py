@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, Request
+from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from google.protobuf.json_format import ParseDict
@@ -91,8 +91,6 @@ async def rag_generatey(
     search_text = search_query_request.searchText
     reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
     extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
@@ -178,8 +176,6 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
 
     search_query_to_proto_list = []
     for query in search_query:
@@ -225,8 +221,6 @@ async def rag_chat(
 @app.get("/api/rag/getChats/{user_id}")
 async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
     token = authorization.replace("Bearer ", "")
 
     if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
@@ -260,3 +254,54 @@ async def get_user_chats(user_id: str, request: Request, authorization: str = He
             result["result"].append(chat["_source"])
 
     return result
+
+
+@app.get("/api/rag/getChat/{user_id}/{chat_id}")
+async def get_chat(
+    user_id: str, chat_id: str, request: Request, authorization: str = Header()
+):
+    virtual_host = urlparse(str(request.base_url)).hostname
+    token = authorization.replace("Bearer ", "")
+
+    if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
+        unauthorized_response()
+
+    open_search_client = OpenSearch(
+        hosts=[OPENSEARCH_HOST],
+    )
+
+    query = {
+        "query": {"match": {"chat_id": chat_id}},
+        "sort": [{"chat_sequence_number": {"order": "asc"}}],
+        "_source": {
+            "includes": [],
+            "excludes": ["chat_id", "user_id", "sources.page_content"],
+        },
+    }
+
+    if (
+        open_search_client.indices.exists(index=user_id)
+        and (
+            open_search_response := open_search_client.search(body=query, index=user_id)
+        )["hits"]["hits"]
+    ):
+        result = {
+            "chat_id": chat_id,
+            "messages": [
+                {
+                    "question": chat["_source"]["question"],
+                    "answer": chat["_source"]["answer"],
+                    "timestamp": chat["_source"]["timestamp"],
+                    "chat_sequence_number": chat["_source"]["chat_sequence_number"],
+                    "sources": chat["_source"]["sources"],
+                }
+                for chat in open_search_response["hits"]["hits"]
+            ],
+        }
+
+        return result
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Item not found.",
+    )
