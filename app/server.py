@@ -225,8 +225,6 @@ async def rag_chat(
 @app.get("/api/rag/getChats/{user_id}")
 async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
     token = authorization.replace("Bearer ", "")
 
     if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
@@ -267,8 +265,6 @@ async def get_chat(
     user_id: str, chat_id: str, request: Request, authorization: str = Header()
 ):
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
     token = authorization.replace("Bearer ", "")
 
     if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
