@@ -91,8 +91,6 @@ async def rag_generatey(
     search_text = search_query_request.searchText
     reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
 
     openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
     extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
@@ -178,8 +176,6 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
 
     search_query_to_proto_list = []
     for query in search_query:
