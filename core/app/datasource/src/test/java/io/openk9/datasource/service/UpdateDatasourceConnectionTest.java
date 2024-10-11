@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.quarkus.test.junit.QuarkusTest;
@@ -49,36 +48,10 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 	@Test
 	@RunOnVertxContext
-	void should_unbind_pluginDriver_when_pluginId_is_null_and_pluginDto_is_null(
+	void should_have_no_interaction_with_pluginDriver_when_pluginDriverDto_is_not_null(
 		UniAsserter uniAsserter) {
 
 		var mockSession = mock(Mutiny.Session.class);
-
-		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
-				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(CreateConnection.DATASOURCE_ID)
-					.build()
-			),
-			datasource -> then(mockSession).should(times(1)).merge(argThat(
-				UpdateDatasourceConnectionTest::hasNotPluginDriver))
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_create_and_bind_pluginDriver_when_pluginId_is_null_and_pluginDto_is_not_null(
-		UniAsserter uniAsserter) {
-
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(pluginDriverService.create(
-				anySession(),
-				any(PluginDriverDTO.class)
-			)
-		).willReturn(Uni.createFrom().item(CreateConnection.PLUGIN_DRIVER));
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
@@ -88,25 +61,16 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO)
 					.build()
 			),
-			datasource -> {
-				then(pluginDriverService).should(times(1))
-					.create(anySession(), any(PluginDriverDTO.class));
-
-				then(mockSession).should(times(1)).merge(argThat(
-					UpdateDatasourceConnectionTest::hasPluginDriver));
-			}
+			datasource -> then(pluginDriverService).shouldHaveNoInteractions()
 		);
 	}
 
 	@Test
 	@RunOnVertxContext
-	void should_bind_existing_pluginDriver_when_pluginId_is_not_null_and_pluginDto_is_null(
+	void should_have_no_interaction_with_pluginDriver_when_pluginId_is_not_null(
 		UniAsserter uniAsserter) {
 
 		var mockSession = mock(Mutiny.Session.class);
-
-		given(pluginDriverService.findById(anySession(), anyLong()))
-			.willReturn(Uni.createFrom().item(CreateConnection.PLUGIN_DRIVER));
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
@@ -116,43 +80,8 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 					.pluginDriverId(CreateConnection.PLUGIN_DRIVER_ID)
 					.build()
 			),
-			datasource -> then(mockSession).should(times(1)).merge(argThat(
-				UpdateDatasourceConnectionTest::hasPluginDriver))
+			datasource -> then(pluginDriverService).shouldHaveNoInteractions()
 		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_update_existing_pluginDriver_when_pluginId_is_not_null_and_pluginDto_is_not_null(
-		UniAsserter uniAsserter) {
-
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(pluginDriverService.update(
-			anySession(), anyLong(), any(PluginDriverDTO.class))
-		).willReturn(Uni.createFrom().item(CreateConnection.PLUGIN_DRIVER));
-
-		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
-				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(CreateConnection.DATASOURCE_ID)
-					.pluginDriverId(CreateConnection.PLUGIN_DRIVER_ID)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO)
-					.build()
-			),
-			datasource -> {
-
-				then(pluginDriverService).should(times(1)).update(
-					anySession(), anyLong(), any(PluginDriverDTO.class));
-
-				then(mockSession).should(times(1)).merge(argThat(
-					UpdateDatasourceConnectionTest::hasPluginDriver));
-
-			}
-		);
-
 	}
 
 	// EnrichPipeline tests
@@ -489,14 +418,6 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 	private static Mutiny.Session anySession() {
 		return any(Mutiny.Session.class);
-	}
-
-	private static boolean hasPluginDriver(Datasource datasource) {
-		return datasource != null && datasource.getPluginDriver() != null;
-	}
-
-	private static boolean hasNotPluginDriver(Datasource datasource) {
-		return datasource != null && datasource.getPluginDriver() == null;
 	}
 
 	private static boolean hasEnrichPipeline(Datasource datasource) {
