@@ -100,7 +100,7 @@ public class DataIndexService
 	public Uni<DataIndex> findByIdWithVectorIndex(Mutiny.Session session, long dataIndexId) {
 
 		return session.createQuery(
-				"from DataIndex di join fetch di.vectorIndex where di.id = :dataIndexId",
+				"from DataIndex di left join fetch di.vectorIndex where di.id = :dataIndexId",
 				DataIndex.class
 			)
 			.setParameter("dataIndexId", dataIndexId)
