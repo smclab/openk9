@@ -191,7 +191,7 @@ public class Bucket extends K9Entity {
 	private Language defaultLanguage;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "retrieve_type")
+	@Column(name = "retrieve_type", nullable = false)
 	private RetrieveType retrieveType;
 
 	@Transient

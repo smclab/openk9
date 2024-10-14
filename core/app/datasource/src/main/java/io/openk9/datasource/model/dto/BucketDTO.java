@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto;
 
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -43,5 +44,8 @@ public class BucketDTO extends K9EntityDTO {
 
 	@NotNull
 	private Boolean refreshOnQuery = false;
+
+	@NotNull
+	private Bucket.RetrieveType retrieveType;
 
 }
