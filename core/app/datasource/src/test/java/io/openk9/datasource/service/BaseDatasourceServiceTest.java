@@ -64,6 +64,11 @@ abstract class BaseDatasourceServiceTest {
 			});
 		}
 
+		@Override
+		public Uni<Datasource> findByIdWithPluginDriver(Mutiny.Session session, long datasourceId) {
+			return this.findById(session, datasourceId);
+		}
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
