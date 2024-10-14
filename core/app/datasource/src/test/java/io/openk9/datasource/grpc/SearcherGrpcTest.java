@@ -39,6 +39,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
+import java.io.IOException;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.times;
@@ -48,8 +50,8 @@ public class SearcherGrpcTest {
 
 	private static final String BLANK_STRING = "";
 	private static final String VIRTUAL_HOST = BLANK_STRING;
-	private static final String LLM_API_KEY = BLANK_STRING;
-	private static final String LLM_API_URL = BLANK_STRING;
+	private static final String LLM_API_KEY = "api_key";
+	private static final String LLM_API_URL = "api_url";
 	private static final String LLM_JSON_CONFIG = "{testField: \"test\"}";
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(LLM_JSON_CONFIG);
 	private static final String SCHEMA_NAME = BLANK_STRING;
