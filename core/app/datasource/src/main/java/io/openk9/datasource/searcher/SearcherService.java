@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.searcher;
 
+import com.google.protobuf.ByteString;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -132,7 +133,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					if ( llm == null ) {
 						throw new MissingLLMException(
-							"Missing active Large language model for this tenant."
+							"Missing active large language model."
 						);
 					}
 					var bucket = bucketLLM.bucket();
