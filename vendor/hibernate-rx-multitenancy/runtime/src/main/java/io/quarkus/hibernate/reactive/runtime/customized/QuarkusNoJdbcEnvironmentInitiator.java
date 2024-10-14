@@ -40,8 +40,8 @@ public class QuarkusNoJdbcEnvironmentInitiator extends NoJdbcEnvironmentInitiato
 
     @Override
     public JdbcEnvironment initiateService(
-        Map configurationValues,
-        ServiceRegistryImplementor registry) {
+		Map configurationValues,
+		ServiceRegistryImplementor registry) {
         return new JdbcEnvironmentImpl(registry, dialect);
     }
 

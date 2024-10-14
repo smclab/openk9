@@ -32,11 +32,11 @@ public class SchemaValidateTest {
 
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
-        .withApplicationRoot((jar) -> jar
-            .addClass(Hero.class))
-        .withConfigurationResource("application.properties")
-        .assertException(SchemaValidateTest::isSchemaValidationException)
-        .overrideConfigKey("quarkus.hibernate-orm.database.generation", "validate");
+		.withApplicationRoot((jar) -> jar
+			.addClass(Hero.class))
+		.withConfigurationResource("application.properties")
+		.assertException(SchemaValidateTest::isSchemaValidationException)
+		.overrideConfigKey("quarkus.hibernate-orm.database.generation", "validate");
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -49,14 +49,14 @@ public class SchemaValidateTest {
     private static void isSchemaValidationException(Throwable t) {
         Throwable cause = t;
         while (cause != null &&
-               !cause.getClass().getName().equals(SchemaManagementException.class.getName())) {
+			   !cause.getClass().getName().equals(SchemaManagementException.class.getName())) {
             cause = cause.getCause();
         }
         String causeName = cause != null ? cause.getClass().getName() : null;
         Assertions.assertEquals(SchemaManagementException.class.getName(), causeName);
         Assertions.assertTrue(cause
-            .getMessage()
-            .contains("Schema-validation: missing table [" + Hero.TABLE + "]"));
+			.getMessage()
+			.contains("Schema-validation: missing table [" + Hero.TABLE + "]"));
     }
 
     @Entity(name = "Hero")

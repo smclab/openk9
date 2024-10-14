@@ -26,7 +26,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import java.util.Map;
 
 public final class QuarkusReactiveConnectionPoolInitiator
-    implements StandardServiceInitiator<ReactiveConnectionPool> {
+	implements StandardServiceInitiator<ReactiveConnectionPool> {
 
     private final Pool pool;
 
@@ -41,14 +41,14 @@ public final class QuarkusReactiveConnectionPoolInitiator
 
     @Override
     public ReactiveConnectionPool initiateService(
-        Map configurationValues,
-        ServiceRegistryImplementor registry) {
+		Map configurationValues,
+		ServiceRegistryImplementor registry) {
         final JdbcServices jdbcService = registry.getService(JdbcServices.class);
         return new MultiSchemaSqlClientPool(
-            pool,
-            jdbcService.getSqlStatementLogger(),
-            jdbcService.getSqlExceptionHelper()
-        );
+			pool,
+			jdbcService.getSqlStatementLogger(),
+			jdbcService.getSqlExceptionHelper()
+		);
     }
 
 }

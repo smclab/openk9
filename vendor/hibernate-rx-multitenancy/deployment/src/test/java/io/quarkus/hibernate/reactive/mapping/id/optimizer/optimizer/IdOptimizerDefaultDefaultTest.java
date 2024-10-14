@@ -26,14 +26,14 @@ public class IdOptimizerDefaultDefaultTest extends AbstractIdOptimizerDefaultTes
 
     @RegisterExtension
     static QuarkusUnitTest TEST = new QuarkusUnitTest()
-        .withApplicationRoot((jar) -> jar
-            .addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
-                EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
-                EntityWithGenericGeneratorAndPooledOptimizer.class,
-                EntityWithGenericGeneratorAndPooledLoOptimizer.class
-            )
-            .addClasses(SchemaUtil.class))
-        .withConfigurationResource("application.properties");
+		.withApplicationRoot((jar) -> jar
+			.addClasses(EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
+				EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
+				EntityWithGenericGeneratorAndPooledOptimizer.class,
+				EntityWithGenericGeneratorAndPooledLoOptimizer.class
+			)
+			.addClasses(SchemaUtil.class))
+		.withConfigurationResource("application.properties");
 
     @Override
     Class<?> defaultOptimizerType() {

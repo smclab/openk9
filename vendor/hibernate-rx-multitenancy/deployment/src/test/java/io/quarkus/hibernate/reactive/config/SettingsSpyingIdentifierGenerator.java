@@ -41,15 +41,15 @@ public class SettingsSpyingIdentifierGenerator implements IdentifierGenerator {
 
     @Override
     public void configure(Type type, Properties params, ServiceRegistry serviceRegistry)
-    throws MappingException {
+	throws MappingException {
         collectedSettings.add(new HashMap<>(serviceRegistry
-            .getService(ConfigurationService.class)
-            .getSettings()));
+			.getService(ConfigurationService.class)
+			.getSettings()));
     }
 
     @Override
     public Serializable generate(SharedSessionContractImplementor session, Object object)
-    throws HibernateException {
+	throws HibernateException {
         throw new IllegalStateException("This should not be called");
     }
 

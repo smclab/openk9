@@ -56,8 +56,8 @@ public class FruitMutinyResource {
     @GET
     public Uni<List<Fruit>> get() {
         return sf.withTransaction((s, t) -> s
-            .createNamedQuery("Fruits.findAll", Fruit.class)
-            .getResultList());
+			.createNamedQuery("Fruits.findAll", Fruit.class)
+			.getResultList());
     }
 
     @GET
@@ -73,7 +73,7 @@ public class FruitMutinyResource {
         }
 
         return sf.withTransaction((s, t) -> s.persist(fruit))
-            .replaceWith(() -> Response.ok(fruit).status(CREATED).build());
+			.replaceWith(() -> Response.ok(fruit).status(CREATED).build());
     }
 
     @PUT
@@ -84,24 +84,24 @@ public class FruitMutinyResource {
         }
 
         return sf.withTransaction((s, t) -> s.find(Fruit.class, id)
-            // If entity exists then update it
-            .onItem().ifNotNull().invoke(entity -> entity.setName(fruit.getName()))
-            .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
-            // If entity not found return the appropriate response
-            .onItem().ifNull()
-            .continueWith(() -> Response.ok().status(NOT_FOUND).build()));
+			// If entity exists then update it
+			.onItem().ifNotNull().invoke(entity -> entity.setName(fruit.getName()))
+			.onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
+			// If entity not found return the appropriate response
+			.onItem().ifNull()
+			.continueWith(() -> Response.ok().status(NOT_FOUND).build()));
     }
 
     @DELETE
     @Path("{id}")
     public Uni<Response> delete(@RestPath Integer id) {
         return sf.withTransaction((s, t) -> s.find(Fruit.class, id)
-            // If entity exists then delete it
-            .onItem().ifNotNull()
-            .transformToUni(entity -> s.remove(entity)
-                .replaceWith(() -> Response.ok().status(NO_CONTENT).build()))
-            // If entity not found return the appropriate response
-            .onItem().ifNull().continueWith(() -> Response.ok().status(NOT_FOUND).build()));
+			// If entity exists then delete it
+			.onItem().ifNotNull()
+			.transformToUni(entity -> s.remove(entity)
+				.replaceWith(() -> Response.ok().status(NO_CONTENT).build()))
+			// If entity not found return the appropriate response
+			.onItem().ifNull().continueWith(() -> Response.ok().status(NOT_FOUND).build()));
     }
 
     /**
@@ -145,8 +145,8 @@ public class FruitMutinyResource {
             }
 
             return Response.status(code)
-                .entity(exceptionJson)
-                .build();
+				.entity(exceptionJson)
+				.build();
         }
 
     }

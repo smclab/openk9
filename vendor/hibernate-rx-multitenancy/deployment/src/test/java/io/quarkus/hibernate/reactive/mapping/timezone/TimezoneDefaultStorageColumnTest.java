@@ -30,40 +30,40 @@ public class TimezoneDefaultStorageColumnTest extends AbstractTimezoneDefaultSto
 
     @RegisterExtension
     static QuarkusUnitTest TEST = new QuarkusUnitTest()
-        .withApplicationRoot((jar) -> jar
-            .addClasses(EntityWithTimezones.class)
-            .addClasses(SchemaUtil.class))
-        .withConfigurationResource("application.properties")
-        .overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "column");
+		.withApplicationRoot((jar) -> jar
+			.addClasses(EntityWithTimezones.class)
+			.addClasses(SchemaUtil.class))
+		.withConfigurationResource("application.properties")
+		.overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "column");
 
     @Test
     public void schema() {
         assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
-            .contains("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
+			.contains("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
         assertThat(SchemaUtil.getColumnTypeName(
-            ormSessionFactory,
-            EntityWithTimezones.class,
-            "zonedDateTime"
-        ))
-            .isEqualTo("TIMESTAMP_UTC");
+			ormSessionFactory,
+			EntityWithTimezones.class,
+			"zonedDateTime"
+		))
+			.isEqualTo("TIMESTAMP_UTC");
         assertThat(SchemaUtil.getColumnTypeName(
-            ormSessionFactory,
-            EntityWithTimezones.class,
-            "offsetDateTime"
-        ))
-            .isEqualTo("TIMESTAMP_UTC");
+			ormSessionFactory,
+			EntityWithTimezones.class,
+			"offsetDateTime"
+		))
+			.isEqualTo("TIMESTAMP_UTC");
     }
 
     @Test
     @RunOnVertxContext
     public void persistAndLoad(UniAsserter asserter) {
         assertPersistedThenLoadedValues(
-            asserter,
-            // Column storage preserves the offset, but not the zone ID: https://hibernate.atlassian.net/browse/HHH-16289
-            PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(PERSISTED_ZONED_DATE_TIME.getOffset()),
-            PERSISTED_OFFSET_DATE_TIME,
-            PERSISTED_OFFSET_TIME
-        );
+			asserter,
+			// Column storage preserves the offset, but not the zone ID: https://hibernate.atlassian.net/browse/HHH-16289
+			PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(PERSISTED_ZONED_DATE_TIME.getOffset()),
+			PERSISTED_OFFSET_DATE_TIME,
+			PERSISTED_OFFSET_TIME
+		);
     }
 
 }

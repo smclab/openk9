@@ -32,27 +32,27 @@ public class TimezoneDefaultStorageDefaultTest extends AbstractTimezoneDefaultSt
 
     @RegisterExtension
     static QuarkusUnitTest TEST = new QuarkusUnitTest()
-        .withApplicationRoot((jar) -> jar
-            .addClasses(EntityWithTimezones.class)
-            .addClasses(SchemaUtil.class))
-        .withConfigurationResource("application.properties");
+		.withApplicationRoot((jar) -> jar
+			.addClasses(EntityWithTimezones.class)
+			.addClasses(SchemaUtil.class))
+		.withConfigurationResource("application.properties");
 
     @Test
     public void schema() {
         assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
-            .doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
+			.doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
         assertThat(SchemaUtil.getColumnTypeName(
-            ormSessionFactory,
-            EntityWithTimezones.class,
-            "zonedDateTime"
-        ))
-            .isEqualTo("TIMESTAMP_UTC");
+			ormSessionFactory,
+			EntityWithTimezones.class,
+			"zonedDateTime"
+		))
+			.isEqualTo("TIMESTAMP_UTC");
         assertThat(SchemaUtil.getColumnTypeName(
-            ormSessionFactory,
-            EntityWithTimezones.class,
-            "offsetDateTime"
-        ))
-            .isEqualTo("TIMESTAMP_UTC");
+			ormSessionFactory,
+			EntityWithTimezones.class,
+			"offsetDateTime"
+		))
+			.isEqualTo("TIMESTAMP_UTC");
     }
 
     @Test
@@ -60,11 +60,11 @@ public class TimezoneDefaultStorageDefaultTest extends AbstractTimezoneDefaultSt
     public void persistAndLoad(UniAsserter asserter) {
         // Native storage is not supported with PostgreSQL, so we'll effectively use NORMALIZED_UTC.
         assertPersistedThenLoadedValues(
-            asserter,
-            PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneOffset.UTC),
-            PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(ZoneOffset.UTC),
-            PERSISTED_OFFSET_TIME.withOffsetSameInstant(ZoneOffset.UTC)
-        );
+			asserter,
+			PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneOffset.UTC),
+			PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(ZoneOffset.UTC),
+			PERSISTED_OFFSET_TIME.withOffsetSameInstant(ZoneOffset.UTC)
+		);
     }
 
 }

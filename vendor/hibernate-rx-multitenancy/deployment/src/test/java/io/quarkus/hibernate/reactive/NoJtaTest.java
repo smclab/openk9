@@ -40,9 +40,9 @@ public class NoJtaTest {
 
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
-        .withApplicationRoot((jar) -> jar
-            .addClass(MyEntity.class)
-            .addAsResource("application.properties"));
+		.withApplicationRoot((jar) -> jar
+			.addClass(MyEntity.class)
+			.addAsResource("application.properties"));
 
     @Inject
     SessionFactory sessionFactory;
@@ -54,31 +54,31 @@ public class NoJtaTest {
     @Test
     @RunOnVertxContext
     public void test(UniAsserter asserter) {
-        ServiceRegistryImplementor serviceRegistry =
-            sessionFactory.unwrap(SessionFactoryImplementor.class)
+		ServiceRegistryImplementor serviceRegistry =
+			sessionFactory.unwrap(SessionFactoryImplementor.class)
                 .getServiceRegistry();
 
         // Two assertions are necessary, because these values are influenced by separate configuration
         assertThat(serviceRegistry
-            .getService(JtaPlatform.class)
-            .retrieveTransactionManager()).isNull();
+			.getService(JtaPlatform.class)
+			.retrieveTransactionManager()).isNull();
         assertThat(serviceRegistry
-            .getService(TransactionCoordinatorBuilder.class)
-            .isJta()).isFalse();
+			.getService(TransactionCoordinatorBuilder.class)
+			.isJta()).isFalse();
 
         // Quick test to make sure HRX works
         MyEntity entity = new MyEntity("default");
 
         asserter.assertThat(
-            () -> factory.withTransaction((session, tx) -> session.persist(entity))
-                .chain(() -> factory.withTransaction((session, tx) -> session
-                    .clear()
-                    .find(MyEntity.class, entity.getId()))),
-            retrievedEntity -> assertThat(retrievedEntity).isNotSameAs(entity).returns(
-                entity.getName(),
-                MyEntity::getName
-            )
-        );
+			() -> factory.withTransaction((session, tx) -> session.persist(entity))
+				.chain(() -> factory.withTransaction((session, tx) -> session
+					.clear()
+					.find(MyEntity.class, entity.getId()))),
+			retrievedEntity -> assertThat(retrievedEntity).isNotSameAs(entity).returns(
+				entity.getName(),
+				MyEntity::getName
+			)
+		);
     }
 
     @Entity

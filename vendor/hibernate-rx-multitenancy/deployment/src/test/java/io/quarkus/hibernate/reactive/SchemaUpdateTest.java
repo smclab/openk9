@@ -46,10 +46,10 @@ public class SchemaUpdateTest {
     @RunOnVertxContext
     public void integerIdentifierWithStageAPI(UniAsserter asserter) {
         asserter.assertThat(
-            () -> sessionFactory.withSession(s -> s
-                .createQuery("from Hero h where h.name = :name")
-                .setParameter("name", "Galadriel")
-                .getResultList()),
+			() -> sessionFactory.withSession(s -> s
+				.createQuery("from Hero h where h.name = :name")
+				.setParameter("name", "Galadriel")
+				.getResultList()),
                 list -> {
                     assertThat(list).isEmpty();
                 });

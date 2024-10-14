@@ -31,16 +31,16 @@ import java.util.TreeMap;
 
 public class ServiceInitiatorsTest {
 
-    private static final Map<String, String> HR_SERVICES =
-        toServicesMap(ReactiveServiceInitiators.LIST);
-    private static final Map<String, String> ORM_SERVICES =
-        toServicesMap(StandardServiceInitiators.LIST);
+	private static final Map<String, String> HR_SERVICES =
+		toServicesMap(ReactiveServiceInitiators.LIST);
+	private static final Map<String, String> ORM_SERVICES =
+		toServicesMap(StandardServiceInitiators.LIST);
     private static final Map<String, String> QUARKUS_HR_SERVICES = toServicesMap(
-        ReactiveServiceInitiators.LIST);
+		ReactiveServiceInitiators.LIST);
 
     // These services are NOT provided by the Hibernate Reactive default initiators, and that should be fine:
     private static final Set<String> HR_INTENTIONALLY_OMITTED = Set
-        .of("org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver");
+		.of("org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver");
 
     @Test
     public void serviceInitiatorsAreUnique() {

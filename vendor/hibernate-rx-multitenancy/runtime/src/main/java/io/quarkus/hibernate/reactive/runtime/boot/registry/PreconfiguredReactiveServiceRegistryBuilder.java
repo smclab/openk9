@@ -91,13 +91,13 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         this.initiators = buildQuarkusServiceInitiatorList(puName, rs);
         this.integrators = rs.getIntegrators();
         this.destroyedRegistry = (StandardServiceRegistryImpl) rs.getMetadata()
-            .getMetadataBuildingOptions()
-            .getServiceRegistry();
+			.getMetadataBuildingOptions()
+			.getServiceRegistry();
     }
 
     public PreconfiguredReactiveServiceRegistryBuilder applySetting(
-        String settingName,
-        Object value) {
+		String settingName,
+		Object value) {
         configurationValues.put(settingName, value);
         return this;
     }
@@ -113,8 +113,8 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
     }
 
     public StandardServiceRegistryImpl buildNewServiceRegistry() {
-        final BootstrapServiceRegistry bootstrapServiceRegistry =
-            buildEmptyBootstrapServiceRegistry();
+		final BootstrapServiceRegistry bootstrapServiceRegistry =
+			buildEmptyBootstrapServiceRegistry();
 
         // Can skip, it's only deprecated stuff:
         // applyServiceContributingIntegrators( bootstrapServiceRegistry );
@@ -127,18 +127,18 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         settingsCopy.putAll(configurationValues);
 
         destroyedRegistry.resetAndReactivate(
-            bootstrapServiceRegistry,
-            initiators,
-            providedServices,
-            settingsCopy
-        );
+			bootstrapServiceRegistry,
+			initiators,
+			providedServices,
+			settingsCopy
+		);
         return destroyedRegistry;
     }
 
     private static void checkIsReactive(RecordedState rs) {
         if (rs.isReactive() == false) {
             throw new IllegalStateException(
-                "Booting an Hibernate Reactive serviceregistry on a non-reactive RecordedState!");
+				"Booting an Hibernate Reactive serviceregistry on a non-reactive RecordedState!");
         }
     }
 
@@ -152,14 +152,14 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
      * @return
      */
     private static List<StandardServiceInitiator<?>> buildQuarkusServiceInitiatorList(
-        String puName,
-        RecordedState rs) {
+		String puName,
+		RecordedState rs) {
         final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
 
         //References to this object need to be injected in both the initiator for BytecodeProvider and for
         //the registered ProxyFactoryFactoryInitiator
-        QuarkusRuntimeProxyFactoryFactory statefulProxyFactory =
-            new QuarkusRuntimeProxyFactoryFactory(
+		QuarkusRuntimeProxyFactoryFactory statefulProxyFactory =
+			new QuarkusRuntimeProxyFactoryFactory(
                 rs.getProxyClassDefinitions());
 
         // Definitely exclusive to Hibernate Reactive, as it marks the registry as Reactive:
@@ -216,8 +216,8 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
 
         // Custom one: Dialect is injected explicitly
         serviceInitiators.add(new QuarkusRuntimeInitDialectFactoryInitiator(puName, rs.getDialect(),
-            rs.getBuildTimeSettings().getSource()
-        ));
+			rs.getBuildTimeSettings().getSource()
+		));
 
         // Default implementation
         serviceInitiators.add(BatchBuilderInitiator.INSTANCE);
@@ -272,14 +272,14 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         // N.B. support for custom StrategySelector is not implemented yet
 
         final StrategySelectorImpl strategySelector = new StrategySelectorImpl(
-            FlatClassLoaderService.INSTANCE);
+			FlatClassLoaderService.INSTANCE);
 
         return new BootstrapServiceRegistryImpl(
-            true,
-            FlatClassLoaderService.INSTANCE,
-            strategySelector, // new MirroringStrategySelector(),
-            new MirroringIntegratorService(integrators)
-        );
+			true,
+			FlatClassLoaderService.INSTANCE,
+			strategySelector, // new MirroringStrategySelector(),
+			new MirroringIntegratorService(integrators)
+		);
     }
 
 }

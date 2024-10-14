@@ -39,9 +39,9 @@ public class EntityWithTimezones {
     }
 
     public EntityWithTimezones(
-        ZonedDateTime zonedDateTime,
-        OffsetDateTime offsetDateTime,
-        OffsetTime offsetTime) {
+		ZonedDateTime zonedDateTime,
+		OffsetDateTime offsetDateTime,
+		OffsetTime offsetTime) {
         this.zonedDateTime = zonedDateTime;
         this.offsetDateTime = offsetDateTime;
         this.offsetTime = offsetTime;
