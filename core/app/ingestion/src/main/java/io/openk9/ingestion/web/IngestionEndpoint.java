@@ -34,9 +34,7 @@ public class IngestionEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> ingestion(IngestionDTO dto) {
 
-		return Uni
-			.createFrom()
-			.completionStage(() -> _fileManagerEmitter.emit(dto))
+		return _fileManagerEmitter.emit(dto)
 			.replaceWith(() -> "{}");
 
 	}

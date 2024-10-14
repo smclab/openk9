@@ -166,7 +166,11 @@ public class IngestionEmitter {
 	private ResourcesPayload _dtoToPayload(
 		ResourcesDTO resources) {
 
-		List<BinaryDTO> binaries = resources.getBinaries();
+		List<BinaryDTO> binaries = null;
+
+		if (resources != null) {
+			binaries = resources.getBinaries();
+		}
 
 		List<BinaryPayload> binaryPayloadList;
 

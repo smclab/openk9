@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.client.filemanager;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -35,6 +36,7 @@ public interface FileManagerClient {
 	@Path("/upload/{datasourceId}/{fileId}/{schemaName}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.TEXT_PLAIN)
-	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-				  @PathParam("schemaName") String schemaName, InputStream inputStream);
+	Uni<String> upload(
+		@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+		@PathParam("schemaName") String schemaName, InputStream inputStream);
 }
