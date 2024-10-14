@@ -24,9 +24,8 @@ import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import javax.inject.Inject;
 
 @QuarkusTest
 abstract class BaseDatasourceServiceTest {
