@@ -64,36 +64,12 @@
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-panache-common</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.smallrye.reactive</groupId>
-			<artifactId>smallrye-mutiny-vertx-consul-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-vertx</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-hibernate-orm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-jdbc-postgresql</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-hibernate-validator</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-reactive-pg-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.minio</groupId>
 			<artifactId>quarkus-minio</artifactId>
-			<version>3.7.6</version>
+			<version>3.1.0.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
