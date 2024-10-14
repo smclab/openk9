@@ -242,7 +242,7 @@ async def get_user_chats(user_id: str, request: Request, authorization: str = He
             }
         },
         "sort": [{"timestamp": {"order": "desc"}}],
-        "_source": {"includes": ["question", "timestamp"], "excludes": []},
+        "_source": {"includes": ["question", "timestamp", "chat_id"], "excludes": []},
     }
 
     result = {"result": []}
