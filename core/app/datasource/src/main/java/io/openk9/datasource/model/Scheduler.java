@@ -24,6 +24,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
@@ -47,6 +48,7 @@ import java.time.OffsetDateTime;
 	@NamedEntityGraph(
 		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
 		attributeNodes = {
+			@NamedAttributeNode(value = "datasource"),
 			@NamedAttributeNode(
 				value = "oldDataIndex",
 				subgraph = "dataIndex-subgraph"
@@ -140,17 +142,20 @@ public class Scheduler extends K9Entity {
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private Datasource datasource;
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "old_data_index_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private DataIndex oldDataIndex;
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "new_data_index_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private DataIndex newDataIndex;
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
