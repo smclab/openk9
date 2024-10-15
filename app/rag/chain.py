@@ -124,6 +124,7 @@ def get_chat_chain(
     )
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     prompt_template = configuration["prompt"]
+    rephrase_prompt_template = configuration["rephrase_prompt"]
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -155,7 +156,7 @@ def get_chat_chain(
     elif model_type == "hugging-face-custom":
         llm = CustomChatHuggingFaceModel(base_url=api_url)
 
-    contextualize_q_system_prompt = prompt_template
+    contextualize_q_system_prompt = rephrase_prompt_template
 
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
@@ -169,19 +170,9 @@ def get_chat_chain(
         llm, retriever, contextualize_q_prompt
     )
 
-    system_prompt = (
-        "You are an assistant for question-answering tasks. "
-        "Use the following pieces of retrieved context to answer "
-        "the question. If you don't know the answer, say that you "
-        "don't know. Use three sentences maximum and keep the "
-        "answer concise."
-        "\n\n"
-        "{context}"
-    )
-
     qa_prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", system_prompt),
+            ("system", prompt_template),
             MessagesPlaceholder("chat_history"),
             ("human", "{input}"),
         ]
