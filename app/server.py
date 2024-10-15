@@ -271,7 +271,7 @@ async def get_chat(
     )
 
     query = {
-        "query": {"match": {"chat_id": chat_id}},
+        "query": {"match": {"chat_id.keyword": chat_id}},
         "sort": [{"chat_sequence_number": {"order": "asc"}}],
         "_source": {
             "includes": [],
