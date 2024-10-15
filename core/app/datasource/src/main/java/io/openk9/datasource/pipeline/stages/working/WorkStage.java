@@ -30,6 +30,7 @@ import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
+import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
@@ -251,6 +252,11 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				success.payload(),
 				heldMessage
 			));
+
+		}
+		else if (response instanceof EnrichPipeline.Skip) {
+
+			this.replyTo.tell(new Done(heldMessage));
 
 		}
 		else if (response instanceof Processor.Failure failure) {

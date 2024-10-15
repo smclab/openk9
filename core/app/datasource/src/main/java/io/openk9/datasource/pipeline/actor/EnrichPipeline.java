@@ -315,9 +315,7 @@ public class EnrichPipeline {
 						dataPayload.getContentId()
 					);
 
-					var buffer = Json.encodeToBuffer(dataPayload);
-
-					replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
+					replyTo.tell(new Skip(heldMessage));
 
 					return Behaviors.stopped();
 				}
@@ -399,5 +397,7 @@ public class EnrichPipeline {
 	private record InternalResponseWrapper(byte[] jsonObject) implements Processor.Command {}
 
 	private record InternalError(DataProcessException exception) implements Processor.Command {}
+
+	public record Skip(HeldMessage heldMessage) implements Processor.Response {}
 
 }
