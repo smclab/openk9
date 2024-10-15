@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import tiktoken
 from langchain.schema import Document
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
@@ -23,6 +24,7 @@ class OpenSearchRetriever(BaseRetriever):
     sort_after_key: Optional[str] = None
     language: Optional[str] = None
     vector_indices: Optional[bool] = True
+    context_window: int
     opensearch_host: str
     grpc_host: str
 
@@ -69,6 +71,10 @@ class OpenSearchRetriever(BaseRetriever):
                 hosts=[self.opensearch_host],
             )
 
+            model = "gpt-4"
+            string_to_token = tiktoken.encoding_for_model(model)
+            total_tokens = 0
+
             response = client.search(body=query, index=index_name)
 
             for row in response["hits"]["hits"]:
@@ -81,8 +87,18 @@ class OpenSearchRetriever(BaseRetriever):
                         page_content,
                         metadata={"source": source, "title": title, "url": url},
                     )
+                    document_tokens_number = len(
+                        string_to_token.encode(page_content + title + url + source)
+                    )
+                    total_tokens += document_tokens_number
                 else:
                     document = Document(row["_source"]["rawContent"], metadata={})
-                documents.append(document)
+                    document_tokens_number = len(
+                        string_to_token.encode(row["_source"]["rawContent"])
+                    )
+                    total_tokens += document_tokens_number
+
+                if total_tokens < self.context_window * 0.85:
+                    documents.append(document)
 
         return documents
