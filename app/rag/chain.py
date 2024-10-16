@@ -232,7 +232,6 @@ def get_chat_chain(
         if "context" in chunk.keys():
             for element in chunk["context"]:
                 documents.append(element)
-                yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
 
     save_chat_message(
         open_search_client,
@@ -244,5 +243,8 @@ def get_chat_chain(
         timestamp,
         chat_sequence_number,
     )
+
+    for document in documents:
+        yield json.dumps({"chunk": dict(document.metadata), "type": "DOCUMENT"})
 
     yield json.dumps({"chunk": "", "type": "END"})
