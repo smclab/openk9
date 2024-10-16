@@ -28,9 +28,6 @@ import java.time.ZonedDateTime;
 @Entity
 public class EntityWithTimezones {
 
-    public ZonedDateTime zonedDateTime;
-    public OffsetDateTime offsetDateTime;
-    public OffsetTime offsetTime;
     @Id
     @GeneratedValue
     Long id;
@@ -38,7 +35,11 @@ public class EntityWithTimezones {
     public EntityWithTimezones() {
     }
 
-    public EntityWithTimezones(
+	public ZonedDateTime zonedDateTime;
+	public OffsetDateTime offsetDateTime;
+	public OffsetTime offsetTime;
+
+	public EntityWithTimezones(
 		ZonedDateTime zonedDateTime,
 		OffsetDateTime offsetDateTime,
 		OffsetTime offsetTime) {

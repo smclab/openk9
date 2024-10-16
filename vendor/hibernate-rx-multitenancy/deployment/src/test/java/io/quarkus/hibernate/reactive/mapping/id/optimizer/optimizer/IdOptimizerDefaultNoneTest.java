@@ -22,6 +22,7 @@ import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.vertx.UniAsserter;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class IdOptimizerDefaultNoneTest extends AbstractIdOptimizerDefaultTest {
@@ -39,6 +40,7 @@ public class IdOptimizerDefaultNoneTest extends AbstractIdOptimizerDefaultTest {
 		.overrideConfigKey("quarkus.hibernate-orm.mapping.id.optimizer.default", "none");
 
     @Override
+	@Test
 	@Disabled(
 		"The 'none' optimizer will produce a different stream of IDs (1 then 51 then 101 then ...)"
 	)
@@ -50,5 +52,4 @@ public class IdOptimizerDefaultNoneTest extends AbstractIdOptimizerDefaultTest {
     Class<?> defaultOptimizerType() {
         return NoopOptimizer.class;
     }
-
 }

@@ -39,5 +39,4 @@ public class IdOptimizerDefaultDefaultTest extends AbstractIdOptimizerDefaultTes
     Class<?> defaultOptimizerType() {
         return PooledLoOptimizer.class;
     }
-
 }

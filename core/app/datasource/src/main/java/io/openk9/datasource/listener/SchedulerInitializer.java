@@ -148,7 +148,7 @@ public class SchedulerInitializer {
 			.combine()
 			.all()
 			.unis(triggers)
-			.combinedWith(Long.class, Function.identity());
+			.with(Long.class, Function.identity());
 
 	}
 

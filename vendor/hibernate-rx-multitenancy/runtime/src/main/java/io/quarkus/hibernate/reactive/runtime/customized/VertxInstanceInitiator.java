@@ -35,8 +35,8 @@ public class VertxInstanceInitiator implements StandardServiceInitiator<VertxIns
 
     @Override
     public VertxInstance initiateService(
-		Map map,
-		ServiceRegistryImplementor serviceRegistryImplementor) {
+        Map map,
+        ServiceRegistryImplementor serviceRegistryImplementor) {
         return new ProvidedVertxInstance(vertx);
     }
 
@@ -44,5 +44,4 @@ public class VertxInstanceInitiator implements StandardServiceInitiator<VertxIns
     public Class<VertxInstance> getServiceInitiated() {
         return VertxInstance.class;
     }
-
 }

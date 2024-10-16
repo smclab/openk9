@@ -66,7 +66,7 @@ public class SinglePersistenceUnitPackageAnnotationTest {
     @Test
     @RunOnVertxContext
     public void testIncluded(UniAsserter asserter) {
-        EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
+		EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
 			"default");
         asserter.assertThat(
 			() -> persist(entity).chain(() -> find(
@@ -93,5 +93,4 @@ public class SinglePersistenceUnitPackageAnnotationTest {
     private <T> Uni<T> find(Class<T> entityClass, Object id) {
         return sessionFactory.withSession(s -> s.find(entityClass, id));
     }
-
 }

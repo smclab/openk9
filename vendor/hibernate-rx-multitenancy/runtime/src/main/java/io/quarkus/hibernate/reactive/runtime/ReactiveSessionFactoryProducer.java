@@ -27,7 +27,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceUnit;
 import org.hibernate.reactive.common.spi.Implementor;
-import org.hibernate.reactive.common.spi.MutinyImplementor;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl;
 
@@ -44,7 +43,7 @@ public class ReactiveSessionFactoryProducer {
     @ApplicationScoped
     @DefaultBean
     @Unremovable
-	@Typed({Mutiny.SessionFactory.class, MutinyImplementor.class, Implementor.class})
+    @Typed({Mutiny.SessionFactory.class, Implementor.class})
     public MutinySessionFactoryImpl mutinySessionFactory() {
         if (jpaConfig.getDeactivatedPersistenceUnitNames()
                 .contains(HibernateReactive.DEFAULT_REACTIVE_PERSISTENCE_UNIT_NAME)) {
@@ -53,7 +52,6 @@ public class ReactiveSessionFactoryProducer {
                             + HibernateReactive.DEFAULT_REACTIVE_PERSISTENCE_UNIT_NAME
                             + ": Hibernate Reactive was deactivated through configuration properties");
         }
-        // TODO Remove this cast when we get rid of the dependency to MutinyImplementor
         return (MutinySessionFactoryImpl) emf.unwrap(Mutiny.SessionFactory.class);
     }
 

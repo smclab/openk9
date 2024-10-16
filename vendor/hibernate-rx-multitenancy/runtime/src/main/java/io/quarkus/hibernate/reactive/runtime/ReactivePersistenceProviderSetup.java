@@ -35,7 +35,7 @@ public final class ReactivePersistenceProviderSetup {
                 .setPersistenceProviderResolver(new StaticInitHibernateReactivePersistenceProviderResolver());
     }
 
-    public static void registerRuntimePersistenceProvider(
+	public static void registerRuntimePersistenceProvider(
 		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
             Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
         jakarta.persistence.spi.PersistenceProviderResolverHolder

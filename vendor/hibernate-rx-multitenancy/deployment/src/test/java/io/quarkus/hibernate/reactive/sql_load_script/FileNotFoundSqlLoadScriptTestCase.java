@@ -65,7 +65,5 @@ public class FileNotFoundSqlLoadScriptTestCase {
         public String toString() {
             return getClass().getSimpleName() + ":" + name;
         }
-
     }
-
 }

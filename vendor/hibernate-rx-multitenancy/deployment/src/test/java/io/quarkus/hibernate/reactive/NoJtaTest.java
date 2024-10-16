@@ -45,8 +45,8 @@ public class NoJtaTest {
 			.addAsResource("application.properties"));
 
     @Inject
-    SessionFactory sessionFactory;
-    // This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+	SessionFactory sessionFactory;
+		// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory factory;
@@ -59,17 +59,17 @@ public class NoJtaTest {
                 .getServiceRegistry();
 
         // Two assertions are necessary, because these values are influenced by separate configuration
-        assertThat(serviceRegistry
+		assertThat(serviceRegistry
 			.getService(JtaPlatform.class)
 			.retrieveTransactionManager()).isNull();
-        assertThat(serviceRegistry
+		assertThat(serviceRegistry
 			.getService(TransactionCoordinatorBuilder.class)
 			.isJta()).isFalse();
 
         // Quick test to make sure HRX works
         MyEntity entity = new MyEntity("default");
 
-        asserter.assertThat(
+		asserter.assertThat(
 			() -> factory.withTransaction((session, tx) -> session.persist(entity))
 				.chain(() -> factory.withTransaction((session, tx) -> session
 					.clear()
@@ -117,7 +117,5 @@ public class NoJtaTest {
         public void setName(String name) {
             this.name = name;
         }
-
     }
-
 }

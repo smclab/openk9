@@ -35,11 +35,11 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client-reactive</artifactId>
+      <artifactId>quarkus-resteasy-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client-reactive-jackson</artifactId>
+      <artifactId>quarkus-resteasy-client-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -47,7 +47,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+      <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
 
     <dependency>
@@ -87,7 +87,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-reactive-messaging-rabbitmq</artifactId>
+      <artifactId>quarkus-messaging-rabbitmq</artifactId>
     </dependency>
     <dependency>
       <groupId>com.cronutils</groupId>

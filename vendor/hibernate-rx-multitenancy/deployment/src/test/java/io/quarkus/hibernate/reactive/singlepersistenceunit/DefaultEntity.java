@@ -58,5 +58,4 @@ public class DefaultEntity {
     public void setName(String name) {
         this.name = name;
     }
-
 }

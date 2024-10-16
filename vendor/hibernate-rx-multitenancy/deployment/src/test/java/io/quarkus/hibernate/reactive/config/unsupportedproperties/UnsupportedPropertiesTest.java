@@ -92,8 +92,7 @@ public class UnsupportedPropertiesTest {
 					"Consider using a supported configuration property",
 					"make sure to file a feature request so that a supported configuration property can be added to Quarkus"
 				)
-				.contains(
-					AvailableSettings.ORDER_INSERTS,
+				.contains(AvailableSettings.ORDER_INSERTS,
 					AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
 					"hibernate.some.unknown.key.static-and-runtime",
 					"hibernate.some.unknown.key.runtime-only"
@@ -112,8 +111,8 @@ public class UnsupportedPropertiesTest {
 		});
 
     @Inject
-    SessionFactory ormSessionFactory;
-    // This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+	SessionFactory ormSessionFactory;
+		// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -158,7 +157,5 @@ public class UnsupportedPropertiesTest {
         public void setId(Long id) {
             this.id = id;
         }
-
     }
-
 }

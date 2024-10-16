@@ -156,7 +156,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				 .all()
 				 .unis(docTypeField)
 				 .collectFailures()
-				 .combinedWith(e -> (List<Set<DocTypeField>>) e)
+				 .with(e -> (List<Set<DocTypeField>>) e)
 				 .flatMap(sets -> loadAndExpandDocTypeFields(session, sets))
 				 .replaceWith(docTypes);
 		 }
@@ -218,7 +218,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					.all()
 					.unis(inner)
 					.collectFailures()
-					.combinedWith(e -> {
+					.with(e -> {
 						List<Set<DocTypeField>> expandInner = (List<Set<DocTypeField>>) e;
 						return expandInner.stream()
 							.flatMap(Collection::stream)
@@ -250,7 +250,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			.all()
 			.unis(subDocTypeFieldUnis)
 			.collectFailures()
-			.combinedWith(e -> (List<Set<DocTypeField>>)e)
+			.with(e -> (List<Set<DocTypeField>>) e)
 			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));
 	}
 

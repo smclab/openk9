@@ -20,8 +20,11 @@ package io.quarkus.hibernate.reactive.deployment;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.RecorderBeanInitializedBuildItem;
 import io.quarkus.datasource.common.runtime.DataSourceUtil;
+import io.quarkus.datasource.common.runtime.DatabaseKind;
 import io.quarkus.datasource.deployment.spi.DefaultDataSourceDbKindBuildItem;
+import io.quarkus.datasource.runtime.DataSourceBuildTimeConfig;
 import io.quarkus.datasource.runtime.DataSourcesBuildTimeConfig;
+import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
@@ -33,6 +36,7 @@ import io.quarkus.deployment.builditem.LaunchModeBuildItem;
 import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.hibernate.orm.deployment.HibernateConfigUtil;
@@ -47,7 +51,7 @@ import io.quarkus.hibernate.orm.deployment.PersistenceXmlDescriptorBuildItem;
 import io.quarkus.hibernate.orm.deployment.integration.HibernateOrmIntegrationRuntimeConfiguredBuildItem;
 import io.quarkus.hibernate.orm.deployment.spi.DatabaseKindDialectBuildItem;
 import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfig;
-import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
+import io.quarkus.hibernate.orm.runtime.boot.QuarkusPersistenceUnitDescriptor;
 import io.quarkus.hibernate.orm.runtime.recording.RecordedConfig;
 import io.quarkus.hibernate.reactive.runtime.FastBootHibernateReactivePersistenceProvider;
 import io.quarkus.hibernate.reactive.runtime.HibernateReactive;
@@ -59,7 +63,6 @@ import io.quarkus.runtime.configuration.ConfigurationException;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.loader.BatchFetchStyle;
 import org.jboss.logging.Logger;
 
@@ -68,6 +71,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -79,7 +83,10 @@ import java.util.stream.Collectors;
 import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
 import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
 import static io.quarkus.hibernate.orm.deployment.HibernateConfigUtil.firstPresent;
+import static io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.AvailableSettings.STORAGE_ENGINE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
@@ -87,6 +94,8 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 @BuildSteps(onlyIf = HibernateReactiveEnabled.class)
 public final class HibernateReactiveProcessor {
 
+	private static final String HIBERNATE_REACTIVE = "Hibernate Reactive";
+	private static final Logger LOG = Logger.getLogger(HibernateReactiveProcessor.class);
     static final String[] REFLECTIVE_CONSTRUCTORS_NEEDED = {
 		"org.hibernate.reactive.persister.entity.impl.ReactiveSingleTableEntityPersister",
 		"org.hibernate.reactive.persister.entity.impl.ReactiveJoinedSubclassEntityPersister",
@@ -94,12 +103,10 @@ public final class HibernateReactiveProcessor {
 		"org.hibernate.reactive.persister.collection.impl.ReactiveOneToManyPersister",
 		"org.hibernate.reactive.persister.collection.impl.ReactiveBasicCollectionPersister",
     };
-    private static final String HIBERNATE_REACTIVE = "Hibernate Reactive";
-    private static final Logger LOG = Logger.getLogger(HibernateReactiveProcessor.class);
 
     @BuildStep
     @Record(STATIC_INIT)
-    public void build(
+	public void build(
 		RecorderContext recorderContext,
 		HibernateReactiveRecorder recorder,
 		JpaModelBuildItem jpaModel) {
@@ -115,6 +122,7 @@ public final class HibernateReactiveProcessor {
 		ApplicationArchivesBuildItem applicationArchivesBuildItem,
 		LaunchModeBuildItem launchMode,
 		JpaModelBuildItem jpaModel,
+		Capabilities capabilities,
 		BuildProducer<SystemPropertyBuildItem> systemProperties,
 		BuildProducer<NativeImageResourceBuildItem> nativeImageResources,
 		BuildProducer<HotDeploymentWatchedFileBuildItem> hotDeploymentWatchedFiles,
@@ -143,23 +151,40 @@ public final class HibernateReactiveProcessor {
         }
 
         // we only support the default pool for now
+		DataSourceBuildTimeConfig defaultDataSourceBuildTimeConfig =
+			dataSourcesBuildTimeConfig.dataSources()
+				.get(DataSourceUtil.DEFAULT_DATASOURCE_NAME);
+
+		Optional<String> explicitDialect =
+			hibernateOrmConfig.defaultPersistenceUnit().dialect().dialect();
+		Optional<String> explicitDbMinVersion = defaultDataSourceBuildTimeConfig.dbVersion();
         Optional<String> dbKindOptional = DefaultDataSourceDbKindBuildItem.resolve(
-			dataSourcesBuildTimeConfig.defaultDataSource.dbKind,
+			defaultDataSourceBuildTimeConfig.dbKind(),
 			defaultDataSourceDbKindBuildItems,
-			dataSourcesBuildTimeConfig.defaultDataSource.devservices.enabled
-				.orElse(dataSourcesBuildTimeConfig.namedDataSources.isEmpty()),
+			defaultDataSourceBuildTimeConfig.devservices().enabled()
+				.orElse(!dataSourcesBuildTimeConfig.hasNamedDataSources()),
 			curateOutcomeBuildItem
 		);
-        if (dbKindOptional.isPresent()) {
-            final String dbKind = dbKindOptional.get();
+
+		if (dbKindOptional.isEmpty()) {
+			throw new ConfigurationException(
+				"The default datasource must be configured for Hibernate Reactive. Refer to https://quarkus.io/guides/datasource for guidance.",
+				Set.of("quarkus.datasource.db-kind", "quarkus.datasource.username",
+					"quarkus.datasource.password"
+				)
+			);
+		}
+		else {
 			HibernateOrmConfigPersistenceUnit persistenceUnitConfig =
-				hibernateOrmConfig.defaultPersistenceUnit;
-            ParsedPersistenceXmlDescriptor reactivePU = generateReactivePersistenceUnit(
+				hibernateOrmConfig.defaultPersistenceUnit();
+			QuarkusPersistenceUnitDescriptor reactivePU = generateReactivePersistenceUnit(
 				hibernateOrmConfig,
 				index,
 				persistenceUnitConfig,
 				jpaModel,
-				dbKind,
+				dbKindOptional,
+				explicitDialect,
+				explicitDbMinVersion,
 				applicationArchivesBuildItem,
 				launchMode.getLaunchMode(),
 				systemProperties,
@@ -173,57 +198,73 @@ public final class HibernateReactiveProcessor {
             // - we don't support starting Hibernate Reactive from a persistence.xml
             // - we don't support Hibernate Envers with Hibernate Reactive
             persistenceUnitDescriptors.produce(new PersistenceUnitDescriptorBuildItem(reactivePU,
-				PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME,
 				new RecordedConfig(Optional.of(DataSourceUtil.DEFAULT_DATASOURCE_NAME),
 					dbKindOptional, Optional.empty(),
 					io.quarkus.hibernate.orm.runtime.migration.MultiTenancyStrategy.NONE,
-					hibernateOrmConfig.database.ormCompatibilityVersion,
-					persistenceUnitConfig.unsupportedProperties
+					hibernateOrmConfig.database().ormCompatibilityVersion(),
+					persistenceUnitConfig.unsupportedProperties()
 				),
 				null,
 				jpaModel.getXmlMappings(reactivePU.getName()),
-				true, false
+				true, false, capabilities
 			));
         }
-
     }
 
-    @BuildStep
-    void registerBeans(
+	@BuildStep
+	void registerBeans(
 		BuildProducer<AdditionalBeanBuildItem> additionalBeans,
 		CombinedIndexBuildItem combinedIndex,
 		List<PersistenceUnitDescriptorBuildItem> descriptors,
 		JpaModelBuildItem jpaModel) {
-        if (descriptors.size() == 1) {
-            // Only register the bean if their EMF dependency is also available, so use the same guard as the ORM extension
-            additionalBeans.produce(new AdditionalBeanBuildItem(ReactiveSessionFactoryProducer.class));
-		}
-		else {
-            LOG.warnf(
-				"Skipping registration of %s bean because exactly one persistence unit is required for their registration",
+		if (!hasEntities(jpaModel)) {
+			LOG.warnf(
+				"Skip registration of the %s bean - no JPA entities were found",
 				ReactiveSessionFactoryProducer.class.getSimpleName()
 			);
-        }
-    }
+			return;
+		}
+		if (descriptors.size() == 1) {
+			// Only register the bean if their EMF dependency is also available, so use the same guard as the ORM extension
+			additionalBeans.produce(new AdditionalBeanBuildItem(ReactiveSessionFactoryProducer.class));
+		}
+		else {
+			throw new ConfigurationException(
+				"The Hibernate Reactive extension requires exactly one persistence unit configured: " +
+				descriptors
+					.stream()
+					.map(PersistenceUnitDescriptorBuildItem::getPersistenceUnitName)
+					.collect(Collectors.toList()));
+		}
+	}
 
-    @BuildStep
-    void reflections(BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
-        reflectiveClass.produce(new ReflectiveClassBuildItem(
+	@BuildStep
+	void reflections(BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
+		reflectiveClass.produce(new ReflectiveClassBuildItem(
 			false,
 			false,
 			REFLECTIVE_CONSTRUCTORS_NEEDED
 		));
-    }
+	}
+
+	@BuildStep
+	void services(BuildProducer<ServiceProviderBuildItem> producer) {
+		producer.produce(
+			new ServiceProviderBuildItem(
+				org.hibernate.service.spi.SessionFactoryServiceContributor.class.getName(),
+				org.hibernate.reactive.service.internal.ReactiveSessionFactoryServiceContributor.class.getName()
+			));
+	}
 
     @BuildStep
-    void waitForVertxPool(
+	void waitForVertxPool(
 		List<VertxPoolBuildItem> vertxPool,
 		List<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptorBuildItems,
 		BuildProducer<HibernateOrmIntegrationRuntimeConfiguredBuildItem> runtimeConfigured) {
         for (PersistenceUnitDescriptorBuildItem puDescriptor : persistenceUnitDescriptorBuildItems) {
             // Define a dependency on VertxPoolBuildItem to ensure that any Pool instances are available
             // when HibernateORM starts its persistence units
-            runtimeConfigured.produce(new HibernateOrmIntegrationRuntimeConfiguredBuildItem(
+			runtimeConfigured.produce(new HibernateOrmIntegrationRuntimeConfiguredBuildItem(
 				HIBERNATE_REACTIVE,
 				puDescriptor.getPersistenceUnitName()
 			));
@@ -232,12 +273,12 @@ public final class HibernateReactiveProcessor {
 
     @BuildStep
     @Record(RUNTIME_INIT)
-    PersistenceProviderSetUpBuildItem setUpPersistenceProviderAndWaitForVertxPool(
+	PersistenceProviderSetUpBuildItem setUpPersistenceProviderAndWaitForVertxPool(
 		HibernateReactiveRecorder recorder,
 		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
 		List<HibernateOrmIntegrationRuntimeConfiguredBuildItem> integrationBuildItems,
 		BuildProducer<RecorderBeanInitializedBuildItem> orderEnforcer) {
-        recorder.initializePersistenceProvider(
+		recorder.initializePersistenceProvider(
 			hibernateOrmRuntimeConfig,
 			HibernateOrmIntegrationRuntimeConfiguredBuildItem.collectDescriptors(
 				integrationBuildItems)
@@ -262,11 +303,13 @@ public final class HibernateReactiveProcessor {
     //  tend not to be added here.
     //  See https://github.com/quarkusio/quarkus/issues/28629.
     //see producePersistenceUnitDescriptorFromConfig in ORM
-    private static ParsedPersistenceXmlDescriptor generateReactivePersistenceUnit(
+	private static QuarkusPersistenceUnitDescriptor generateReactivePersistenceUnit(
 		HibernateOrmConfig hibernateOrmConfig, CombinedIndexBuildItem index,
 		HibernateOrmConfigPersistenceUnit persistenceUnitConfig,
 		JpaModelBuildItem jpaModel,
-		String dbKind,
+		Optional<String> dbKindOptional,
+		Optional<String> explicitDialect,
+		Optional<String> explicitDbMinVersion,
 		ApplicationArchivesBuildItem applicationArchivesBuildItem,
 		LaunchMode launchMode,
 		BuildProducer<SystemPropertyBuildItem> systemProperties,
@@ -274,27 +317,7 @@ public final class HibernateReactiveProcessor {
 		BuildProducer<HotDeploymentWatchedFileBuildItem> hotDeploymentWatchedFiles,
 		List<DatabaseKindDialectBuildItem> dbKindDialectBuildItems) {
         //we have no persistence.xml so we will create a default one
-        String persistenceUnitConfigName = PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME;
-
-        Optional<String> explicitDialect = persistenceUnitConfig.dialect.dialect;
-        String dialect;
-        if (explicitDialect.isPresent()) {
-            dialect = explicitDialect.get();
-		}
-		else {
-            dialect = Dialects.guessDialect(
-				persistenceUnitConfigName,
-				dbKind,
-				dbKindDialectBuildItems
-			);
-        }
-
-        // we found one
-        ParsedPersistenceXmlDescriptor desc = new ParsedPersistenceXmlDescriptor(null); //todo URL
-        desc.setName(HibernateReactive.DEFAULT_REACTIVE_PERSISTENCE_UNIT_NAME);
-        desc.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);
-        desc.getProperties().setProperty(AvailableSettings.DIALECT, dialect);
-        desc.setExcludeUnlistedClasses(true);
+		String persistenceUnitConfigName = DEFAULT_PERSISTENCE_UNIT_NAME;
 
         Map<String, Set<String>> modelClassesAndPackagesPerPersistencesUnits = HibernateOrmProcessor
 			.getModelClassesAndPackagesPerPersistenceUnits(
@@ -305,14 +328,13 @@ public final class HibernateReactiveProcessor {
 			);
 		Set<String> nonDefaultPUWithModelClassesOrPackages =
 			modelClassesAndPackagesPerPersistencesUnits.entrySet().stream()
-				.filter(e ->
-					!PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME.equals(e.getKey()) &&
-					!e.getValue().isEmpty())
+				.filter(e -> !DEFAULT_PERSISTENCE_UNIT_NAME.equals(e.getKey()) &&
+							 !e.getValue().isEmpty())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
         if (!nonDefaultPUWithModelClassesOrPackages.isEmpty()) {
             // Not supported yet; see https://github.com/quarkusio/quarkus/issues/21110
-            LOG.warnf(
+			LOG.warnf(
 				"Entities are affected to non-default Hibernate Reactive persistence units %s."
 				+
 				" Since Hibernate Reactive only works with the default persistence unit, those entities will be ignored.",
@@ -320,73 +342,77 @@ public final class HibernateReactiveProcessor {
 			);
         }
         Set<String> modelClassesAndPackages = modelClassesAndPackagesPerPersistencesUnits
-			.getOrDefault(
-				PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME,
-				Collections.emptySet()
-			);
+			.getOrDefault(DEFAULT_PERSISTENCE_UNIT_NAME, Collections.emptySet());
+
         if (modelClassesAndPackages.isEmpty()) {
-            LOG.warnf(
+			LOG.warnf(
 				"Could not find any entities affected to the Hibernate Reactive persistence unit.");
-		}
-		else {
-            desc.addClasses(new ArrayList<>(modelClassesAndPackages));
         }
 
-        // The storage engine has to be set as a system property.
-        if (persistenceUnitConfig.dialect.storageEngine.isPresent()) {
-            systemProperties.produce(new SystemPropertyBuildItem(
-				AvailableSettings.STORAGE_ENGINE,
-				persistenceUnitConfig.dialect.storageEngine.get()
-			));
-        }
+		QuarkusPersistenceUnitDescriptor desc = new QuarkusPersistenceUnitDescriptor(
+			HibernateReactive.DEFAULT_REACTIVE_PERSISTENCE_UNIT_NAME, persistenceUnitConfigName,
+			PersistenceUnitTransactionType.RESOURCE_LOCAL,
+			new ArrayList<>(modelClassesAndPackages),
+			new Properties()
+		);
+
+		setDialectAndStorageEngine(dbKindOptional,
+			explicitDialect,
+			explicitDbMinVersion,
+			dbKindDialectBuildItems,
+			persistenceUnitConfig.dialect().storageEngine(),
+			systemProperties,
+			desc
+		);
+
         // Physical Naming Strategy
-        persistenceUnitConfig.physicalNamingStrategy.ifPresent(
+		persistenceUnitConfig.physicalNamingStrategy().ifPresent(
 			namingStrategy -> desc.getProperties()
 				.setProperty(AvailableSettings.PHYSICAL_NAMING_STRATEGY, namingStrategy));
 
         // Implicit Naming Strategy
-        persistenceUnitConfig.implicitNamingStrategy.ifPresent(
+		persistenceUnitConfig.implicitNamingStrategy().ifPresent(
 			namingStrategy -> desc.getProperties()
 				.setProperty(AvailableSettings.IMPLICIT_NAMING_STRATEGY, namingStrategy));
 
         // Mapping
-        if (persistenceUnitConfig.mapping.timeZoneDefaultStorage.isPresent()) {
-            desc.getProperties().setProperty(
+		if (persistenceUnitConfig.mapping().timezone().timeZoneDefaultStorage().isPresent()) {
+			desc.getProperties().setProperty(
 				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
-				persistenceUnitConfig.mapping.timeZoneDefaultStorage.get().name()
+				persistenceUnitConfig.mapping().timezone().timeZoneDefaultStorage().get().name()
 			);
         }
-        desc.getProperties().setProperty(
+		desc.getProperties().setProperty(
 			AvailableSettings.PREFERRED_POOLED_OPTIMIZER,
-			persistenceUnitConfig.mapping.idOptimizerDefault
+			persistenceUnitConfig.mapping().id().optimizer().idOptimizerDefault()
 				.orElse(HibernateOrmConfigPersistenceUnit.IdOptimizerType.POOLED_LO).configName
 		);
 
         //charset
-        desc.getProperties().setProperty(
+		desc.getProperties().setProperty(
 			AvailableSettings.HBM2DDL_CHARSET_NAME,
-			persistenceUnitConfig.database.charset.name()
+			persistenceUnitConfig.database().charset().name()
 		);
 
         // Quoting strategy
-        if (persistenceUnitConfig.identifierQuotingStrategy == IdentifierQuotingStrategy.ALL
-			|| persistenceUnitConfig.identifierQuotingStrategy ==
-			   IdentifierQuotingStrategy.ALL_EXCEPT_COLUMN_DEFINITIONS
-			|| persistenceUnitConfig.database.globallyQuotedIdentifiers) {
+		if (persistenceUnitConfig.quoteIdentifiers().strategy() == IdentifierQuotingStrategy.ALL
+			|| persistenceUnitConfig.quoteIdentifiers()
+				   .strategy() == IdentifierQuotingStrategy.ALL_EXCEPT_COLUMN_DEFINITIONS
+			|| persistenceUnitConfig.database().globallyQuotedIdentifiers()) {
             desc.getProperties().setProperty(AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, "true");
         }
-		if (persistenceUnitConfig.identifierQuotingStrategy ==
+		if (persistenceUnitConfig.quoteIdentifiers().strategy() ==
 			IdentifierQuotingStrategy.ALL_EXCEPT_COLUMN_DEFINITIONS) {
-            desc
+			desc
 				.getProperties()
 				.setProperty(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
 					"true"
 				);
 		}
-		else if (persistenceUnitConfig.identifierQuotingStrategy ==
+		else if (persistenceUnitConfig.quoteIdentifiers().strategy() ==
 				 IdentifierQuotingStrategy.ONLY_KEYWORDS) {
-            desc.getProperties().setProperty(
+			desc.getProperties().setProperty(
 				AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED,
 				"true"
 			);
@@ -395,104 +421,105 @@ public final class HibernateReactiveProcessor {
         // Query
         // TODO ideally we should align on ORM and use 16 as a default, but that would break applications
         //   because of https://github.com/hibernate/hibernate-reactive/issues/742
-        int batchSize = firstPresent(
-			persistenceUnitConfig.fetch.batchSize,
-			persistenceUnitConfig.batchFetchSize
+		int batchSize = firstPresent(
+			persistenceUnitConfig.fetch().batchSize(),
+			persistenceUnitConfig.batchFetchSize()
 		)
 			.orElse(-1);
         if (batchSize > 0) {
-            desc.getProperties().setProperty(
+			desc.getProperties().setProperty(
 				AvailableSettings.DEFAULT_BATCH_FETCH_SIZE,
 				Integer.toString(batchSize)
 			);
-            desc.getProperties().setProperty(
+			desc.getProperties().setProperty(
 				AvailableSettings.BATCH_FETCH_STYLE,
 				BatchFetchStyle.PADDED.toString()
 			);
         }
 
-        if (persistenceUnitConfig.fetch.maxDepth.isPresent()) {
-            setMaxFetchDepth(desc, persistenceUnitConfig.fetch.maxDepth);
+		if (persistenceUnitConfig.fetch().maxDepth().isPresent()) {
+			setMaxFetchDepth(desc, persistenceUnitConfig.fetch().maxDepth());
 		}
-		else if (persistenceUnitConfig.maxFetchDepth.isPresent()) {
-            setMaxFetchDepth(desc, persistenceUnitConfig.maxFetchDepth);
+		else if (persistenceUnitConfig.maxFetchDepth().isPresent()) {
+			setMaxFetchDepth(desc, persistenceUnitConfig.maxFetchDepth());
         }
 
-        desc.getProperties().setProperty(
+		desc.getProperties().setProperty(
 			AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE,
 			Integer.toString(
-				persistenceUnitConfig.query.queryPlanCacheMaxSize)
+				persistenceUnitConfig.query().queryPlanCacheMaxSize())
 		);
 
-        desc.getProperties().setProperty(
+		desc.getProperties().setProperty(
 			AvailableSettings.DEFAULT_NULL_ORDERING,
-			persistenceUnitConfig.query.defaultNullOrdering.name().toLowerCase()
+			persistenceUnitConfig.query().defaultNullOrdering().name().toLowerCase()
 		);
 
-        desc.getProperties().setProperty(
+		desc.getProperties().setProperty(
 			AvailableSettings.IN_CLAUSE_PARAMETER_PADDING,
-			String.valueOf(persistenceUnitConfig.query.inClauseParameterPadding)
+			String.valueOf(persistenceUnitConfig.query().inClauseParameterPadding())
 		);
 
         // JDBC
-        persistenceUnitConfig.jdbc.timezone.ifPresent(
+		persistenceUnitConfig.jdbc().timezone().ifPresent(
 			timezone -> desc
 				.getProperties()
 				.setProperty(AvailableSettings.JDBC_TIME_ZONE, timezone));
 
-        persistenceUnitConfig.jdbc.statementFetchSize.ifPresent(
+		persistenceUnitConfig.jdbc().statementFetchSize().ifPresent(
 			fetchSize -> desc.getProperties().setProperty(
 				AvailableSettings.STATEMENT_FETCH_SIZE,
 				String.valueOf(fetchSize)
 			));
 
-        persistenceUnitConfig.jdbc.statementBatchSize.ifPresent(
+		persistenceUnitConfig.jdbc().statementBatchSize().ifPresent(
 			statementBatchSize -> desc.getProperties().setProperty(
 				AvailableSettings.STATEMENT_BATCH_SIZE,
 				String.valueOf(statementBatchSize)
 			));
 
         // Statistics
-        if (hibernateOrmConfig.metricsEnabled
-			|| (hibernateOrmConfig.statistics.isPresent() && hibernateOrmConfig.statistics.get())) {
+		if (hibernateOrmConfig.metrics().enabled()
+			|| (hibernateOrmConfig.statistics().isPresent() &&
+				hibernateOrmConfig.statistics().get())) {
             desc.getProperties().setProperty(AvailableSettings.GENERATE_STATISTICS, "true");
         }
 
         // sql-load-script
-        List<String> importFiles = getSqlLoadScript(
-			persistenceUnitConfig.sqlLoadScript,
+		List<String> importFiles = getSqlLoadScript(
+			persistenceUnitConfig.sqlLoadScript(),
 			launchMode
 		);
 
         if (!importFiles.isEmpty()) {
             for (String importFile : importFiles) {
-                Path loadScriptPath = applicationArchivesBuildItem.getRootArchive().getChildPath(
+				Path loadScriptPath = applicationArchivesBuildItem.getRootArchive().getChildPath(
 					importFile);
 
                 if (loadScriptPath != null && !Files.isDirectory(loadScriptPath)) {
                     // enlist resource if present
                     nativeImageResources.produce(new NativeImageResourceBuildItem(importFile));
-                    hotDeploymentWatchedFiles.produce(new HotDeploymentWatchedFileBuildItem(
+					hotDeploymentWatchedFiles.produce(new HotDeploymentWatchedFileBuildItem(
 						importFile));
 				}
-				else if (persistenceUnitConfig.sqlLoadScript.isPresent()) {
+				else if (persistenceUnitConfig.sqlLoadScript().isPresent()) {
                     //raise exception if explicit file is not present (i.e. not the default)
-                    String propertyName = HibernateOrmRuntimeConfig.puPropertyKey(
+					String propertyName = HibernateOrmRuntimeConfig.puPropertyKey(
 						persistenceUnitConfigName,
 						"sql-load-script"
 					);
                     throw new ConfigurationException(
 						"Unable to find file referenced in '"
 						+ propertyName + "="
-						+ String.join(",", persistenceUnitConfig.sqlLoadScript.get())
+						+ String.join(",", persistenceUnitConfig.sqlLoadScript().get())
 						+ "'. Remove property or add file to your path.",
 						Collections.singleton(propertyName)
 					);
                 }
             }
 
-            if (persistenceUnitConfig.sqlLoadScript.isPresent()) {
-                desc.getProperties().setProperty(
+			if (persistenceUnitConfig.sqlLoadScript().isPresent()) {
+				desc.getProperties().setProperty(
 					AvailableSettings.HBM2DDL_IMPORT_FILES,
 					String.join(",", importFiles)
 				);
@@ -504,14 +531,14 @@ public final class HibernateReactiveProcessor {
         }
 
         // Caching
-        if (persistenceUnitConfig.secondLevelCachingEnabled) {
+		if (persistenceUnitConfig.secondLevelCachingEnabled()) {
             Properties p = desc.getProperties();
             //Only set these if the user isn't making an explicit choice:
             p.putIfAbsent(USE_DIRECT_REFERENCE_CACHE_ENTRIES, Boolean.TRUE);
             p.putIfAbsent(USE_SECOND_LEVEL_CACHE, Boolean.TRUE);
             p.putIfAbsent(USE_QUERY_CACHE, Boolean.TRUE);
             p.putIfAbsent(JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE);
-            Map<String, String> cacheConfigEntries = HibernateConfigUtil.getCacheConfigEntries(
+			Map<String, String> cacheConfigEntries = HibernateConfigUtil.getCacheConfigEntries(
 				persistenceUnitConfig);
             for (Entry<String, String> entry : cacheConfigEntries.entrySet()) {
                 desc.getProperties().setProperty(entry.getKey(), entry.getValue());
@@ -529,16 +556,121 @@ public final class HibernateReactiveProcessor {
         return desc;
     }
 
-    private static void setMaxFetchDepth(
-		ParsedPersistenceXmlDescriptor descriptor,
+	private static void setDialectAndStorageEngine(
+		Optional<String> dbKind,
+		Optional<String> explicitDialect,
+		Optional<String> explicitDbMinVersion,
+		List<DatabaseKindDialectBuildItem> dbKindDialectBuildItems,
+		Optional<String> storageEngine,
+		BuildProducer<SystemPropertyBuildItem> systemProperties,
+		QuarkusPersistenceUnitDescriptor desc) {
+		final String persistenceUnitName = DEFAULT_PERSISTENCE_UNIT_NAME;
+		Optional<String> dialect = explicitDialect;
+		Optional<String> dbProductName = Optional.empty();
+		Optional<String> dbProductVersion = explicitDbMinVersion;
+		if (dbKind.isPresent() || explicitDialect.isPresent()) {
+			for (DatabaseKindDialectBuildItem item : dbKindDialectBuildItems) {
+				if (dbKind.isPresent() && DatabaseKind.is(dbKind.get(), item.getDbKind())
+					// Set the default version based on the dialect when we don't have a datasource
+					// (i.e. for database multi-tenancy)
+					|| explicitDialect.isPresent() && item.getMatchingDialects().contains(
+					explicitDialect.get())) {
+					dbProductName = item.getDatabaseProductName();
+					if (dbProductName.isEmpty() && explicitDialect.isEmpty()) {
+						// Use dialects only as a last resort, prefer product name or explicitly user-provided dialect
+						dialect = item.getDialectOptional();
+					}
+					if (explicitDbMinVersion.isEmpty()) {
+						dbProductVersion = item.getDefaultDatabaseProductVersion();
+					}
+					break;
+				}
+			}
+			if (dialect.isEmpty() && dbProductName.isEmpty()) {
+				throw new ConfigurationException(
+					"The Hibernate Reactive extension could not guess the dialect from the database kind '"
+					+ dbKind.get()
+					+ "'. Add an explicit '"
+					+ HibernateOrmRuntimeConfig.puPropertyKey(persistenceUnitName, "dialect")
+					+ "' property.");
+			}
+		}
+
+		if (dialect.isPresent()) {
+			desc.getProperties().setProperty(AvailableSettings.DIALECT, dialect.get());
+		}
+		else if (dbProductName.isPresent()) {
+			desc.getProperties().setProperty(
+				AvailableSettings.JAKARTA_HBM2DDL_DB_NAME,
+				dbProductName.get()
+			);
+		}
+		else {
+			// We only get here with the database multi-tenancy strategy; see the initial check, up top.
+			throw new ConfigurationException(String.format(
+				Locale.ROOT,
+				"The Hibernate Reactive extension could not infer the dialect for persistence unit '%s'."
+				+
+				" When using database multi-tenancy, you must either configure a datasource for that persistence unit"
+				+ " (refer to https://quarkus.io/guides/datasource for guidance),"
+				+ " or set the dialect explicitly through property '"
+				+ HibernateOrmRuntimeConfig.puPropertyKey(persistenceUnitName, "dialect") + "'.",
+				persistenceUnitName
+			));
+		}
+
+		// The storage engine has to be set as a system property.
+		if (storageEngine.isPresent()) {
+			systemProperties.produce(new SystemPropertyBuildItem(
+				STORAGE_ENGINE,
+				storageEngine.get()
+			));
+			// Only actually set the storage engines if MySQL or MariaDB
+			if (isMySQLOrMariaDB(dbKind, dialect)) {
+				systemProperties.produce(new SystemPropertyBuildItem(
+					STORAGE_ENGINE,
+					storageEngine.get()
+				));
+			}
+			else {
+				LOG.warnf(
+					"The storage engine set through configuration property '%1$s' is being ignored"
+					+ " because the database is neither MySQL nor MariaDB.",
+					HibernateOrmRuntimeConfig.puPropertyKey(
+						persistenceUnitName,
+						"dialect.storage-engine"
+					)
+				);
+			}
+		}
+
+		if (dbProductVersion.isPresent()) {
+			desc.getProperties().setProperty(JAKARTA_HBM2DDL_DB_VERSION, dbProductVersion.get());
+		}
+	}
+
+	private static boolean isMySQLOrMariaDB(Optional<String> dbKind, Optional<String> dialect) {
+		if (dbKind.isPresent() && (DatabaseKind.isMySQL(dbKind.get()) || DatabaseKind.isMariaDB(
+			dbKind.get()))) {
+			return true;
+		}
+		if (dialect.isPresent()) {
+			String lowercaseDialect = dialect.get().toLowerCase(Locale.ROOT);
+			return lowercaseDialect.contains("mysql") || lowercaseDialect.contains("mariadb");
+		}
+		return false;
+	}
+
+	private static void setMaxFetchDepth(
+		QuarkusPersistenceUnitDescriptor descriptor,
 		OptionalInt maxFetchDepth) {
-        descriptor.getProperties().setProperty(
+		descriptor.getProperties().setProperty(
 			AvailableSettings.MAX_FETCH_DEPTH,
 			String.valueOf(maxFetchDepth.getAsInt())
 		);
-    }
+	}
 
-    private static List<String> getSqlLoadScript(
+	private static List<String> getSqlLoadScript(
 		Optional<List<String>> sqlLoadScript,
 		LaunchMode launchMode) {
         // Explicit file or default Hibernate ORM file.
