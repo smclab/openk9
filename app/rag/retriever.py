@@ -1,12 +1,14 @@
 from typing import List, Optional
 
-import tiktoken
 from langchain.schema import Document
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
+
+TOKEN_SIZE = 3.5
+MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -71,8 +73,6 @@ class OpenSearchRetriever(BaseRetriever):
                 hosts=[self.opensearch_host],
             )
 
-            model = "gpt-4"
-            string_to_token = tiktoken.encoding_for_model(model)
             total_tokens = 0
 
             response = client.search(body=query, index=index_name)
@@ -87,18 +87,18 @@ class OpenSearchRetriever(BaseRetriever):
                         page_content,
                         metadata={"source": source, "title": title, "url": url},
                     )
-                    document_tokens_number = len(
-                        string_to_token.encode(page_content + title + url + source)
+                    document_tokens_number = (
+                        len(page_content + title + url + source) / TOKEN_SIZE
                     )
                     total_tokens += document_tokens_number
                 else:
                     document = Document(row["_source"]["rawContent"], metadata={})
-                    document_tokens_number = len(
-                        string_to_token.encode(row["_source"]["rawContent"])
+                    document_tokens_number = (
+                        len(row["_source"]["rawContent"]) / TOKEN_SIZE
                     )
                     total_tokens += document_tokens_number
 
-                if total_tokens < self.context_window * 0.85:
+                if total_tokens < self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE:
                     documents.append(document)
 
         return documents
