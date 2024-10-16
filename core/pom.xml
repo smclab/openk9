@@ -108,12 +108,12 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.0.4.Final</quarkus-plugin.version>
+		<quarkus-plugin.version>3.1.3.Final</quarkus-plugin.version>
 		<quarkus.package.type>fast-jar</quarkus.package.type>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.0.4.Final</quarkus.platform.version>
-		<quarkus.version>3.0.4.Final</quarkus.version>
+		<quarkus.platform.version>3.1.3.Final</quarkus.platform.version>
+		<quarkus.version>3.1.3.Final</quarkus.version>
 		<hibernate.version>6.2.31.Final</hibernate.version>
 		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
