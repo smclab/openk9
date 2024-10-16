@@ -45,12 +45,12 @@ class SearchToken(BaseModel):
     """SearchToken class model."""
 
     tokenType: str
-    keywordKey: str
+    keywordKey: Optional[str] = ""
     values: list[str]
-    filter: bool
-    entityType: str
-    entityName: str
-    extra: dict[str, str]
+    filter: Optional[bool] = False
+    entityType: Optional[str] = ""
+    entityName: Optional[str] = ""
+    extra: Optional[dict[str, str]] = []
 
 
 class SearchQuery(BaseModel):
