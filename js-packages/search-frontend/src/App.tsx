@@ -613,7 +613,7 @@ export function App() {
               )}
             </button>
           </div>
-          {/* <div
+          <div
             ref={(element) =>
               openk9.updateConfiguration({
                 generateResponse: element,
@@ -623,7 +623,7 @@ export function App() {
               color: black;
               display: ${isPanelVisible ? "block" : "none"};
             `}
-          ></div> */}
+          ></div>
         </div>
       )}
 
