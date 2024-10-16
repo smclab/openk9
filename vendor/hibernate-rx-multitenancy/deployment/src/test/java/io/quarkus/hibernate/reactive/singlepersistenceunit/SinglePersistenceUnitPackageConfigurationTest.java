@@ -95,5 +95,4 @@ public class SinglePersistenceUnitPackageConfigurationTest {
     private <T> Uni<T> find(Class<T> entityClass, Object id) {
         return sessionFactory.withSession(s -> s.find(entityClass, id));
     }
-
 }

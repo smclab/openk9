@@ -35,7 +35,7 @@ public class ServiceInitiatorsTest {
 		toServicesMap(ReactiveServiceInitiators.LIST);
 	private static final Map<String, String> ORM_SERVICES =
 		toServicesMap(StandardServiceInitiators.LIST);
-    private static final Map<String, String> QUARKUS_HR_SERVICES = toServicesMap(
+	private static final Map<String, String> QUARKUS_HR_SERVICES = toServicesMap(
 		ReactiveServiceInitiators.LIST);
 
     // These services are NOT provided by the Hibernate Reactive default initiators, and that should be fine:
@@ -57,5 +57,4 @@ public class ServiceInitiatorsTest {
         }
         return Collections.unmodifiableMap(rolesToImplMap);
     }
-
 }

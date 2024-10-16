@@ -46,13 +46,13 @@ public class TimezoneDefaultStorageNormalizeTest extends AbstractTimezoneDefault
     public void schema() {
         assertThat(SchemaUtil.getColumnNames(ormSessionFactory, EntityWithTimezones.class))
 			.doesNotContain("zonedDateTime_tz", "offsetDateTime_tz", "offsetTime_tz");
-        assertThat(SchemaUtil.getColumnTypeName(
+		assertThat(SchemaUtil.getColumnTypeName(
 			ormSessionFactory,
 			EntityWithTimezones.class,
 			"zonedDateTime"
 		))
 			.isEqualTo("TIMESTAMP");
-        assertThat(SchemaUtil.getColumnTypeName(
+		assertThat(SchemaUtil.getColumnTypeName(
 			ormSessionFactory,
 			EntityWithTimezones.class,
 			"offsetDateTime"
@@ -63,7 +63,7 @@ public class TimezoneDefaultStorageNormalizeTest extends AbstractTimezoneDefault
     @Test
     @RunOnVertxContext
     public void persistAndLoad(UniAsserter asserter) {
-        assertPersistedThenLoadedValues(
+		assertPersistedThenLoadedValues(
 			asserter,
 			PERSISTED_ZONED_DATE_TIME.withZoneSameInstant(ZoneId.systemDefault()),
 			PERSISTED_OFFSET_DATE_TIME.withOffsetSameInstant(
@@ -75,5 +75,4 @@ public class TimezoneDefaultStorageNormalizeTest extends AbstractTimezoneDefault
 				ZoneId.systemDefault().getRules().getOffset(Instant.now()))
 		);
     }
-
 }

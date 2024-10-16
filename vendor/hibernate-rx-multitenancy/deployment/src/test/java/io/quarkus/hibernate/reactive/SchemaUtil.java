@@ -35,7 +35,7 @@ public final class SchemaUtil {
     private SchemaUtil() {
     }
 
-    public static Set<String> getColumnNames(
+	public static Set<String> getColumnNames(
 		EntityManagerFactory entityManagerFactory,
 		Class<?> entityType) {
         Set<String> result = new HashSet<>();
@@ -51,7 +51,7 @@ public final class SchemaUtil {
         return result;
     }
 
-    public static String getColumnTypeName(
+	public static String getColumnTypeName(
 		EntityManagerFactory entityManagerFactory, Class<?> entityType,
 		String columnName) {
         MappingMetamodel domainModel = entityManagerFactory
@@ -71,7 +71,7 @@ public final class SchemaUtil {
         return columnFinder.found.getJdbcMapping().getJdbcType().getFriendlyName();
     }
 
-    public static Generator getGenerator(
+	public static Generator getGenerator(
 		EntityManagerFactory entityManagerFactory,
 		Class<?> entityType) {
         MappingMetamodel domainModel = entityManagerFactory
@@ -79,5 +79,4 @@ public final class SchemaUtil {
         EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
         return entityDescriptor.getGenerator();
     }
-
 }

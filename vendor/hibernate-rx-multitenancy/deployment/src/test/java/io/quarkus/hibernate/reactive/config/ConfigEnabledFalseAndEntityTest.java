@@ -65,5 +65,4 @@ public class ConfigEnabledFalseAndEntityTest {
         assertThat(Arc.container().instance(Mutiny.Session.class).get())
 			.isNull();
     }
-
 }

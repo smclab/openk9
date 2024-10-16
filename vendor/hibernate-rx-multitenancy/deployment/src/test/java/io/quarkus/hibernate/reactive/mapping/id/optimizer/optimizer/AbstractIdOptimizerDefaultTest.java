@@ -39,11 +39,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 public abstract class AbstractIdOptimizerDefaultTest {
 
     @Inject
-    SessionFactory ormSessionFactory;
-    // This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+	SessionFactory ormSessionFactory;
+		// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
+
+    @Test
+    @RunOnVertxContext
+    public void ids(UniAsserter asserter) {
+        for (long i = 1; i <= 51; i++) {
+            long expectedId = i;
+            // Apparently, we can rely on assertions being executed in order.
+			asserter.assertThat(
+				() -> sessionFactory.withTransaction(s -> {
+					var entity = new EntityWithSequenceGenerator();
+					return s.persist(entity).replaceWith(() -> entity.id);
+				}),
+				id -> assertThat(id).isEqualTo(expectedId)
+			);
+        }
+    }
 
     @Test
     public void defaults() {
@@ -64,23 +80,7 @@ public abstract class AbstractIdOptimizerDefaultTest {
 			.isInstanceOf(PooledLoOptimizer.class);
     }
 
-    @Test
-    @RunOnVertxContext
-    public void ids(UniAsserter asserter) {
-        for (long i = 1; i <= 51; i++) {
-            long expectedId = i;
-            // Apparently, we can rely on assertions being executed in order.
-            asserter.assertThat(
-				() -> sessionFactory.withTransaction(s -> {
-					var entity = new EntityWithSequenceGenerator();
-					return s.persist(entity).replaceWith(() -> entity.id);
-				}),
-				id -> assertThat(id).isEqualTo(expectedId)
-			);
-        }
-    }
-
-    abstract Class<?> defaultOptimizerType();
+	abstract Class<?> defaultOptimizerType();
 
     AbstractObjectAssert<?, Optimizer> assertOptimizer(Class<?> entityType) {
         return assertThat(SchemaUtil.getGenerator(ormSessionFactory, entityType))
@@ -92,5 +92,4 @@ public abstract class AbstractIdOptimizerDefaultTest {
 			.extracting(OptimizableGenerator::getOptimizer)
 			.as("ID optimizer for entity type " + entityType.getSimpleName());
     }
-
 }

@@ -61,5 +61,4 @@ public class ContextValidationTest {
 			.contentType("application/json")
 			.extract().response();
     }
-
 }

@@ -60,11 +60,11 @@ public class PublicFieldAccessInheritanceTest {
         }
     }
 
-    private void doTestFieldAccess(
+	private void doTestFieldAccess(
 		final FieldAccessEnhancedDelegate delegate,
 		final UniAsserter asserter) {
         //First verify we don't pass the assertion when not modifying the entity:
-        asserter.assertThat(
+		asserter.assertThat(
 			() -> sessionFactory
 				.withTransaction(session -> {
 					MyConcreteEntity entity = new MyConcreteEntity();
@@ -78,11 +78,11 @@ public class PublicFieldAccessInheritanceTest {
 		);
 
         // Now again, but modify the entity and assert dirtiness was detected:
-        asserter.assertThat(
+		asserter.assertThat(
 			() -> sessionFactory.withTransaction(session -> {
-                    MyConcreteEntity entity = new MyConcreteEntity();
-                    return session.persist(entity).replaceWith(() -> entity.id);
-                })
+					MyConcreteEntity entity = new MyConcreteEntity();
+					return session.persist(entity).replaceWith(() -> entity.id);
+				})
 				.chain(id -> sessionFactory.withTransaction(session -> session
 					.find(MyConcreteEntity.class, id)
 					.invoke(delegate::setValue)
@@ -97,7 +97,7 @@ public class PublicFieldAccessInheritanceTest {
 
     // Self-test: initially the assertion doesn't pass: the value was not set yet.
     // Verify that we would fail the test in such case.
-    private void notPassingAssertion(
+	private void notPassingAssertion(
 		final MyConcreteEntity entity,
 		final FieldAccessEnhancedDelegate delegate) {
         AssertionError expected = null;
@@ -108,9 +108,34 @@ public class PublicFieldAccessInheritanceTest {
             expected = e;
         }
         if (expected == null) {
-            throw new IllegalStateException(
+			throw new IllegalStateException(
 				"This test is buggy: assertions should not pass at this point.");
-        }
+		}
+	}
+
+	@MappedSuperclass
+	public static class MyMappedSuperclass {
+
+		public Long mappedSuperclassField;
+
+	}
+
+	@Entity(name = "abstract")
+	public static abstract class MyAbstractEntity extends MyMappedSuperclass {
+
+		@Id
+		@GeneratedValue
+		public long id;
+
+		public Long abstractEntityField;
+
+	}
+
+	@Entity(name = "concrete")
+	public static class MyConcreteEntity extends MyAbstractEntity {
+
+		public Long concreteEntityField;
+
     }
 
     private enum FieldAccessEnhancedDelegate {
@@ -154,30 +179,4 @@ public class PublicFieldAccessInheritanceTest {
         public abstract void assertValue(MyConcreteEntity entity);
 
     }
-
-    @MappedSuperclass
-    public static class MyMappedSuperclass {
-
-        public Long mappedSuperclassField;
-
-    }
-
-    @Entity(name = "abstract")
-    public static abstract class MyAbstractEntity extends MyMappedSuperclass {
-
-        @Id
-        @GeneratedValue
-        public long id;
-
-        public Long abstractEntityField;
-
-    }
-
-    @Entity(name = "concrete")
-    public static class MyConcreteEntity extends MyAbstractEntity {
-
-        public Long concreteEntityField;
-
-    }
-
 }

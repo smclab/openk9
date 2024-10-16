@@ -35,15 +35,15 @@ public class MultiSchemaSqlClientPool extends SqlClientPool {
     private final String dbKind;
 
     public MultiSchemaSqlClientPool(
-		Pool pool,
-		SqlStatementLogger sqlStatementLogger,
-		SqlExceptionHelper sqlExceptionHelper) {
+        Pool pool,
+        SqlStatementLogger sqlStatementLogger,
+        SqlExceptionHelper sqlExceptionHelper) {
         this.pool = pool;
         this.sqlStatementLogger = sqlStatementLogger;
         this.sqlExceptionHelper = sqlExceptionHelper;
         this.dbKind = ConfigProvider
-			.getConfig()
-			.getValue("quarkus.datasource.db-kind", String.class);
+            .getConfig()
+            .getValue("quarkus.datasource.db-kind", String.class);
     }
 
     @Override
@@ -54,9 +54,9 @@ public class MultiSchemaSqlClientPool extends SqlClientPool {
     @Override
     public CompletionStage<ReactiveConnection> getConnection(String tenantId) {
         return super.getConnection(tenantId)
-			.thenCompose(c -> c
-				.execute(alterSessionSchema(dbKind, tenantId))
-				.thenApply(unused -> c));
+            .thenCompose(c -> c
+                .execute(alterSessionSchema(dbKind, tenantId))
+                .thenApply(unused -> c));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class MultiSchemaSqlClientPool extends SqlClientPool {
                 return "ALTER SESSION SET CURRENT_SCHEMA = " + tenantId;
             default:
                 throw new IllegalArgumentException(
-					"dbKind not supported: " + dbKind);
+                    "dbKind not supported: " + dbKind);
         }
     }
 

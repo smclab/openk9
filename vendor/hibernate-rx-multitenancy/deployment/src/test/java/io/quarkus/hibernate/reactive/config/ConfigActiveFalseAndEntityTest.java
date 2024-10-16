@@ -48,7 +48,7 @@ public class ConfigActiveFalseAndEntityTest {
         // So the bean cannot be null.
         assertThat(entityManagerFactory).isNotNull();
         // However, any attempt to use it at runtime will fail.
-        CreationException e = assertThrows(
+		CreationException e = assertThrows(
 			CreationException.class,
 			() -> entityManagerFactory.getMetamodel()
 		);
@@ -69,7 +69,7 @@ public class ConfigActiveFalseAndEntityTest {
         // So the bean cannot be null.
         assertThat(sessionFactory).isNotNull();
         // However, any attempt to use it at runtime will fail.
-        CreationException e = assertThrows(
+		CreationException e = assertThrows(
 			CreationException.class,
 			() -> sessionFactory.getMetamodel()
 		);

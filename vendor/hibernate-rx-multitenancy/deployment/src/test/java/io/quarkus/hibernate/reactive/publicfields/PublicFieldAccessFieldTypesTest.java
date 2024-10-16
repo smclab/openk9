@@ -58,15 +58,15 @@ public class PublicFieldAccessFieldTypesTest {
         }
     }
 
-    private void doTestFieldAccess(
+	private void doTestFieldAccess(
 		final FieldAccessEnhancedDelegate delegate,
 		final UniAsserter asserter) {
         //First verify we don't pass the assertion when not modifying the entity:
-        asserter.assertThat(
+		asserter.assertThat(
 			() -> sessionFactory.withTransaction((session, tx) -> {
-                    MyEntity entity = new MyEntity();
-                    return session.persist(entity).replaceWith(() -> entity.id);
-                })
+					MyEntity entity = new MyEntity();
+					return session.persist(entity).replaceWith(() -> entity.id);
+				})
 				.chain(id -> sessionFactory.withTransaction((session, tx) -> session.find(
 					MyEntity.class,
 					id
@@ -75,11 +75,11 @@ public class PublicFieldAccessFieldTypesTest {
 		);
 
         // Now again, but modify the entity and assert dirtiness was detected:
-        asserter.assertThat(
+		asserter.assertThat(
 			() -> sessionFactory.withTransaction((session, tx) -> {
-                    MyEntity entity = new MyEntity();
-                    return session.persist(entity).replaceWith(() -> entity.id);
-                })
+					MyEntity entity = new MyEntity();
+					return session.persist(entity).replaceWith(() -> entity.id);
+				})
 				.chain(id -> sessionFactory
 					.withTransaction((session, tx) -> session
 						.find(MyEntity.class, id)
@@ -104,10 +104,30 @@ public class PublicFieldAccessFieldTypesTest {
             expected = e;
         }
         if (expected == null) {
-            throw new IllegalStateException(
+			throw new IllegalStateException(
 				"This test is buggy: assertions should not pass at this point.");
         }
     }
+
+	@Entity
+	public static class MyEntity {
+
+		@Id
+		@GeneratedValue
+		public long id;
+
+		public LocalDate object;
+		public boolean boolean_;
+		public int int_;
+		public long long_;
+		public float float_;
+		public double double_;
+		public short short_;
+		public char char_ = '\n';
+			// The Reactive postgresql driver doesn't like the zero char, for some reason
+		public byte byte_;
+
+	}
 
     private enum FieldAccessEnhancedDelegate {
 
@@ -216,25 +236,4 @@ public class PublicFieldAccessFieldTypesTest {
         public abstract void assertValue(MyEntity entity);
 
     }
-
-    @Entity
-    public static class MyEntity {
-
-        @Id
-        @GeneratedValue
-        public long id;
-
-        public LocalDate object;
-        public boolean boolean_;
-        public int int_;
-        public long long_;
-        public float float_;
-        public double double_;
-        public short short_;
-        public char char_ = '\n';
-        // The Reactive postgresql driver doesn't like the zero char, for some reason
-        public byte byte_;
-
-    }
-
 }

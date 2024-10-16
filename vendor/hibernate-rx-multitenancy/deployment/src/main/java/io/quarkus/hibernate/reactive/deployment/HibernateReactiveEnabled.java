@@ -41,7 +41,7 @@ public class HibernateReactiveEnabled implements BooleanSupplier {
 
     @Override
     public boolean getAsBoolean() {
-        return config.enabled;
+		return config.enabled();
     }
 
 }

@@ -48,13 +48,13 @@ public class SchemaValidateTest {
 
     private static void isSchemaValidationException(Throwable t) {
         Throwable cause = t;
-        while (cause != null &&
+		while (cause != null &&
 			   !cause.getClass().getName().equals(SchemaManagementException.class.getName())) {
             cause = cause.getCause();
         }
         String causeName = cause != null ? cause.getClass().getName() : null;
         Assertions.assertEquals(SchemaManagementException.class.getName(), causeName);
-        Assertions.assertTrue(cause
+		Assertions.assertTrue(cause
 			.getMessage()
 			.contains("Schema-validation: missing table [" + Hero.TABLE + "]"));
     }
@@ -82,5 +82,4 @@ public class SchemaValidateTest {
         public String powers;
 
     }
-
 }

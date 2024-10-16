@@ -17,23 +17,22 @@
   -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xmlns="http://maven.apache.org/POM/4.0.0"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<parent>
-		<artifactId>quarkus-extensions-parent</artifactId>
-		<groupId>io.quarkus</groupId>
-		<version>3.0.4.Final</version>
-	</parent>
-	<modelVersion>4.0.0</modelVersion>
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>quarkus-extensions-parent</artifactId>
+        <groupId>io.quarkus</groupId>
+        <version>3.15.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.openk9</groupId>
-	<artifactId>hibernate-rx-multitenancy-parent</artifactId>
-	<name>OpenK9 :: Quarkus - Hibernate Reactive</name>
-	<packaging>pom</packaging>
-	<version>3.0.4.Final</version>
-	<modules>
-		<module>deployment</module>
-		<module>runtime</module>
-	</modules>
+    <groupId>io.openk9</groupId>
+    <artifactId>hibernate-rx-multitenancy-parent</artifactId>
+    <name>Quarkus - Hibernate Reactive</name>
+    <packaging>pom</packaging>
+    <modules>
+        <module>deployment</module>
+        <module>runtime</module>
+    </modules>
 
 </project>

@@ -101,25 +101,25 @@
 		<surefire.argLine />
 		<!-- General Settings -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<compiler-plugin.version>3.10.1</compiler-plugin.version>
+		<compiler-plugin.version>3.12.1</compiler-plugin.version>
 		<dependency.version.lombok>1.18.22</dependency.version.lombok>
 		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.1.3.Final</quarkus-plugin.version>
-		<quarkus.package.type>fast-jar</quarkus.package.type>
+		<quarkus-plugin.version>3.15.1</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.1.3.Final</quarkus.platform.version>
-		<quarkus.version>3.1.3.Final</quarkus.version>
+		<quarkus.platform.version>3.15.1</quarkus.platform.version>
+		<quarkus.version>3.15.1</quarkus.version>
 		<hibernate.version>6.2.31.Final</hibernate.version>
-		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+		<surefire-plugin.version>3.2.3</surefire-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
 		<akka.version>2.6.20</akka.version>
 		<scala.version>2.13</scala.version>
+		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
 	</properties>
 
 	<dependencyManagement>
@@ -250,7 +250,7 @@
 			<plugins>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>${compiler-plugin.version}</version>
+					<version>3.12.1</version>
 					<configuration>
 						<forceJavacCompilerUse>true</forceJavacCompilerUse>
 						<annotationProcessorPaths>
@@ -267,7 +267,7 @@
 							<path>
 								<groupId>org.hibernate.orm</groupId>
 								<artifactId>hibernate-jpamodelgen</artifactId>
-								<version>${hibernate.version}</version>
+								<version>6.6.0.Final</version>
 							</path>
 							<path>
 								<groupId>no.entur.mapstruct.spi</groupId>
@@ -317,7 +317,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>${surefire-plugin.version}</version>
+					<version>3.2.3</version>
 					<configuration>
 						<systemProperties>
 							<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -358,7 +358,7 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-compiler-plugin</artifactId>
-						<version>${compiler-plugin.version}</version>
+						<version>3.12.1</version>
 					</plugin>
 					<plugin>
 						<groupId>org.projectlombok</groupId>
@@ -366,7 +366,7 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${surefire-plugin.version}</version>
+						<version>3.2.3</version>
 						<configuration>
 							<systemPropertyVariables>
 								<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
@@ -377,7 +377,8 @@
 				</plugins>
 			</build>
 			<properties>
-				<quarkus.package.type>native</quarkus.package.type>
+				<quarkus.native.enabled>true</quarkus.native.enabled>
+				<quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
 			</properties>
 		</profile>
 		<profile>

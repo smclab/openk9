@@ -29,5 +29,4 @@ public class ResteasyReactiveServerIntegrationProcessor {
     public UnwrappedExceptionBuildItem unwrappedExceptions() {
         return new UnwrappedExceptionBuildItem(PersistenceException.class);
     }
-
 }

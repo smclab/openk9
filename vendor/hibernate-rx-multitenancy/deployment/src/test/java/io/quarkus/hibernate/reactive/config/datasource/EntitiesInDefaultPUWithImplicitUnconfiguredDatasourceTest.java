@@ -15,8 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.quarkus.hibernate.reactive.config;
+package io.quarkus.hibernate.reactive.config.datasource;
 
+import io.quarkus.hibernate.reactive.config.MyEntity;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Test;
@@ -24,24 +25,22 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ConfigEnabledFalseAndActiveTrueTest {
+public class EntitiesInDefaultPUWithImplicitUnconfiguredDatasourceTest {
 
-    @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
-		.withApplicationRoot(jar -> jar.addClass(MyEntity.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.enabled", "false")
-		.overrideConfigKey("quarkus.hibernate-orm.active", "true")
-		.assertException(throwable -> assertThat(throwable)
+	@RegisterExtension
+	static QuarkusUnitTest runner = new QuarkusUnitTest()
+		.withApplicationRoot((jar) -> jar
+			.addClass(MyEntity.class))
+		// The datasource won't be truly "unconfigured" if dev services are enabled
+		.overrideConfigKey("quarkus.devservices.enabled", "false")
+		.assertException(t -> assertThat(t)
 			.isInstanceOf(ConfigurationException.class)
 			.hasMessageContaining(
-				"Hibernate ORM activated explicitly for persistence unit '<default>', but the Hibernate ORM extension was disabled at build time",
-				"If you want Hibernate ORM to be active for this persistence unit, you must set 'quarkus.hibernate-orm.enabled' to 'true' at build time",
-				"If you don't want Hibernate ORM to be active for this persistence unit, you must leave 'quarkus.hibernate-orm.active' unset or set it to 'false'"
-			));
+				"The default datasource must be configured for Hibernate Reactive. Refer to https://quarkus.io/guides/datasource for guidance."));
 
-    @Test
-    public void test() {
-        // Startup will fail
-    }
+	@Test
+	public void testInvalidConfiguration() {
+		// bootstrap will succeed and ignore the fact that a datasource is unconfigured...
+	}
+
 }

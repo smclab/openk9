@@ -68,11 +68,11 @@
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-rest-client-reactive</artifactId>
+			<artifactId>quarkus-resteasy-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+			<artifactId>quarkus-rest-jackson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -88,7 +88,7 @@
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-reactive</artifactId>
+			<artifactId>quarkus-rest</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.opensearch</groupId>

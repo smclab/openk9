@@ -367,7 +367,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					.combine()
 					.all()
 					.unis(enrichItemList)
-					.combinedWith(EnrichItem.class, Function.identity())
+					.with(EnrichItem.class, Function.identity())
 					.flatMap(l -> s
 						.fetch(enrichPipeline.getEnrichPipelineItems())
 						.flatMap(epi -> {

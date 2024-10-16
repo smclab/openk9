@@ -106,7 +106,7 @@ public class FruitMutinyResource {
 
     /**
      * Create a HTTP response from an exception.
-     * <p>
+	 *
      * Response Example:
      *
      * <pre>
@@ -150,5 +150,4 @@ public class FruitMutinyResource {
         }
 
     }
-
 }
