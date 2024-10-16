@@ -158,6 +158,7 @@ async def rag_chat(
     search_query_chat: SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(None),
+    openk9_acl: Optional[list[str]] = Header(None),
 ):
     """Definition of /api/rag/chat api."""
     chat_id = search_query_chat.chatId
@@ -176,6 +177,9 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = urlparse(str(request.base_url)).hostname
+
+    openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
+    extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
 
     search_query_to_proto_list = []
     for query in search_query:
