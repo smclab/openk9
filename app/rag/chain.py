@@ -147,8 +147,6 @@ def get_chat_chain(
         grpc_host=grpc_host,
     )
 
-    documents = retriever.invoke(search_text)
-
     if model_type == "openai":
         llm = ChatOpenAI(model=model, openai_api_key=api_key)
     elif model_type == "ollama":
@@ -225,11 +223,15 @@ def get_chat_chain(
     )
 
     result_answer = ""
+    documents = []
 
     for chunk in result:
         if "answer" in chunk.keys():
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
+        if "context" in chunk.keys():
+            for element in chunk["context"]:
+                documents.append(element)
 
     save_chat_message(
         open_search_client,
@@ -242,7 +244,7 @@ def get_chat_chain(
         chat_sequence_number,
     )
 
-    for element in documents:
-        yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
+    for document in documents:
+        yield json.dumps({"chunk": dict(document.metadata), "type": "DOCUMENT"})
 
     yield json.dumps({"chunk": "", "type": "END"})
