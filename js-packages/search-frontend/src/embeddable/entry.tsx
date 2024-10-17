@@ -216,7 +216,7 @@ type DataRangePickerVerticalProps = {
   internationalLabel?: {
     labelStart?: string;
     labelEnd?: string;
-    placeholderStar?: string;
+    placeholderStart?: string;
     placeholderEnd?: string;
   };
 };

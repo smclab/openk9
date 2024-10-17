@@ -32,7 +32,7 @@ export function DataRangePickerVertical({
     | {
         labelStart?: string;
         labelEnd?: string;
-        placeholderStar?: string;
+        placeholderStart?: string;
         placeholderEnd?: string;
       }
     | undefined;
@@ -176,7 +176,7 @@ export function DataRangePickerVertical({
           <input
             type="text"
             id={"input-start-date"}
-            placeholder="Data Inizio"
+            placeholder={translationLabel?.placeholderStart || "Data Inizio"}
             className="input-start-calendar"
             value={dataStart}
             onChange={(event) => {
@@ -224,7 +224,7 @@ export function DataRangePickerVertical({
                 );
               }}
               placeholder={
-                translationLabel?.placeholderStar ||
+                translationLabel?.placeholderStart ||
                 t("start-day") ||
                 "Start day"
               }
