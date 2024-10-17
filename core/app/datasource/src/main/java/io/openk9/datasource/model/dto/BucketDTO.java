@@ -46,6 +46,6 @@ public class BucketDTO extends K9EntityDTO {
 	private Boolean refreshOnQuery = false;
 
 	@NotNull
-	private Bucket.RetrieveType retrieveType;
+	private Bucket.RetrieveType retrieveType = Bucket.RetrieveType.MATCH;
 
 }
