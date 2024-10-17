@@ -63,6 +63,7 @@ def get_llm_configuration(grpc_host, virtual_host):
     model = json_config["model"]
     prompt = json_config["prompt"]
     rephrase_prompt = json_config["rephrase_prompt"]
+    context_window = json_config["context_window"]
 
     configuration = {
         "api_url": api_url,
@@ -71,6 +72,7 @@ def get_llm_configuration(grpc_host, virtual_host):
         "model": model,
         "prompt": prompt,
         "rephrase_prompt": rephrase_prompt,
+        "context_window": context_window,
     }
 
     return configuration

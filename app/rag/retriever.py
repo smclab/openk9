@@ -7,6 +7,9 @@ from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
 
+TOKEN_SIZE = 3.5
+MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
+
 
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
@@ -23,6 +26,7 @@ class OpenSearchRetriever(BaseRetriever):
     sort_after_key: Optional[str] = None
     language: Optional[str] = None
     vector_indices: Optional[bool] = True
+    context_window: int
     opensearch_host: str
     grpc_host: str
 
@@ -69,6 +73,8 @@ class OpenSearchRetriever(BaseRetriever):
                 hosts=[self.opensearch_host],
             )
 
+            total_tokens = 0
+
             response = client.search(body=query, index=index_name)
 
             for row in response["hits"]["hits"]:
@@ -81,8 +87,18 @@ class OpenSearchRetriever(BaseRetriever):
                         page_content,
                         metadata={"source": source, "title": title, "url": url},
                     )
+                    document_tokens_number = (
+                        len(page_content + title + url + source) / TOKEN_SIZE
+                    )
+                    total_tokens += document_tokens_number
                 else:
                     document = Document(row["_source"]["rawContent"], metadata={})
-                documents.append(document)
+                    document_tokens_number = (
+                        len(row["_source"]["rawContent"]) / TOKEN_SIZE
+                    )
+                    total_tokens += document_tokens_number
+
+                if total_tokens < self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE:
+                    documents.append(document)
 
         return documents
