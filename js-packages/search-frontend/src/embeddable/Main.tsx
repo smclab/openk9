@@ -853,6 +853,9 @@ export function Main({
             end={configuration.dataRangePickerVertical?.end}
             classTab={tabs[selectedTabIndex]?.label}
             readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
+            translationLabel={
+              configuration.dataRangePickerVertical?.internationalLabel
+            }
           />
         </I18nextProvider>,
         configuration.dataRangePickerVertical?.element !== undefined

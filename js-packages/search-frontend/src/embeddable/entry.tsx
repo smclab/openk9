@@ -213,6 +213,12 @@ type DataRangePickerVerticalProps = {
   start?: any;
   end?: any;
   readOnly?: boolean;
+  internationalLabel?: {
+    labelStart?: string;
+    labelEnd?: string;
+    placeholderStar?: string;
+    placeholderEnd?: string;
+  };
 };
 
 type ResultListProps = {

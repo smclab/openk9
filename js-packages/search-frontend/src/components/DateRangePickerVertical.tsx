@@ -19,6 +19,7 @@ export function DataRangePickerVertical({
   end,
   classTab,
   readOnly = false,
+  translationLabel,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -27,6 +28,14 @@ export function DataRangePickerVertical({
   end?: any;
   classTab?: string;
   readOnly?: boolean;
+  translationLabel:
+    | {
+        labelStart?: string;
+        labelEnd?: string;
+        placeholderStar?: string;
+        placeholderEnd?: string;
+      }
+    | undefined;
 }) {
   const languageCalendar = mappingNameLanguage(language);
   moment.locale(languageCalendar);
@@ -129,7 +138,9 @@ export function DataRangePickerVertical({
     >
       <div className="DateRangePickerVertical-startDate-container">
         <p className="DateRangePickerVertical-date-title">
-          Dal ({t("gg/mm/aaaa")}):
+          {translationLabel?.labelStart
+            ? translationLabel?.labelStart
+            : `Dal ${t("gg/mm/aaaa")}`}
         </p>
         <div
           css={css`
@@ -160,7 +171,7 @@ export function DataRangePickerVertical({
             `}
             htmlFor={"input-start-date"}
           >
-            input per data inizio
+            {translationLabel?.labelStart || "input data inizio"}
           </label>
           <input
             type="text"
@@ -212,7 +223,11 @@ export function DataRangePickerVertical({
                   (endDate && day.isAfter(endDate))
                 );
               }}
-              placeholder={t("start-day") || "Start day"}
+              placeholder={
+                translationLabel?.placeholderStar ||
+                t("start-day") ||
+                "Start day"
+              }
               openDirection="up"
               phrases={customPhrasesStart}
             />
@@ -237,7 +252,7 @@ export function DataRangePickerVertical({
       )}
       <div className="DateRangePickerVertical-endDate-container">
         <p className="DateRangePickerVertical-date-title">
-          Al ({t("gg/mm/aaaa")}):
+          {translationLabel?.labelEnd || `Al ${t("gg/mm/aaaa")}`}
         </p>
         <div
           css={css`
@@ -268,12 +283,12 @@ export function DataRangePickerVertical({
               white-space: nowrap;
             `}
           >
-            input per data fine
+            {translationLabel?.labelEnd}
           </label>
           <input
             id={"input-end-date"}
             type="text"
-            placeholder="Data Fine"
+            placeholder={translationLabel?.placeholderEnd || "Data Fine"}
             className="input-end-calendar"
             value={dataEnd}
             onChange={(event) => {
@@ -328,7 +343,9 @@ export function DataRangePickerVertical({
                   (startDate && startDate.isAfter(day))
                 );
               }}
-              placeholder={t("end-day") || "End day"}
+              placeholder={
+                translationLabel?.placeholderEnd || t("end-day") || "End day"
+              }
               openDirection="up"
               phrases={customPhrasesEndDate}
             />
