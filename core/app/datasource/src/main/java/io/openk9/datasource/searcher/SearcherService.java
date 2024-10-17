@@ -1216,6 +1216,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@NoArgsConstructor
 	@AllArgsConstructor(staticName = "of")
 	public static class SemanticsPos implements Comparable<SemanticsPos> {
+
+		public static final Comparator<SemanticsPos>
+			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
+		public static final Comparator<SemanticsPos>
+			SCORE_COMPARATOR = new ScoreComparator();
+
 		private Tuple<Integer> pos;
 		private Map<String, Object> semantics;
 
@@ -1223,12 +1229,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		public int compareTo(SemanticsPos o) {
 			return SCORE_COMPARATOR.compare(this, o);
 		}
-
-		public static final Comparator<SemanticsPos>
-			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
-
-		public static final Comparator<SemanticsPos>
-			SCORE_COMPARATOR = new ScoreComparator();
 
 	}
 
