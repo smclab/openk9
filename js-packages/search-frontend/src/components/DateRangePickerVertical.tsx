@@ -34,6 +34,8 @@ export function DataRangePickerVertical({
         labelEnd?: string;
         placeholderStart?: string;
         placeholderEnd?: string;
+        errorFormatData?: string;
+        errorSelectData?: string;
       }
     | undefined;
 }) {
@@ -116,10 +118,13 @@ export function DataRangePickerVertical({
       setDataStart("");
       if (inputValue !== "") {
         if (!dateObject.isValid()) {
-          setValidationStart("Formato data non valido");
+          setValidationStart(
+            translationLabel?.errorFormatData || "Formato data non valido",
+          );
         } else {
           setValidationStart(
-            "La data di inizio non può essere inferiore alla data di fine",
+            translationLabel?.errorSelectData ||
+              "La data di inizio non può essere inferiore alla data di fine",
           );
         }
       }

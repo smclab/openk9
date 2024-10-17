@@ -218,6 +218,8 @@ type DataRangePickerVerticalProps = {
     labelEnd?: string;
     placeholderStart?: string;
     placeholderEnd?: string;
+    errorFormatData?: string;
+    errorSelectData?: string;
   };
 };
 
