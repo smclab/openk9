@@ -1,7 +1,9 @@
 import grpc
 from google.protobuf import json_format
+from google.protobuf.json_format import ParseDict
 
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
+from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.external_services.grpc.tenant_manager import (
     tenant_manager_pb2,
     tenant_manager_pb2_grpc,
@@ -24,11 +26,27 @@ def query_parser(
     grpc_host,
 ):
     """Get opensearch query and index from grpc."""
+
+    search_query_to_proto_list = []
+    for query in search_query:
+        search_query_to_proto = SearchTokenRequest()
+        search_query_to_proto.tokenType = query.tokenType
+        search_query_to_proto.keywordKey = query.keywordKey
+        search_query_to_proto.values.extend(query.values)
+        search_query_to_proto.filter = query.filter
+        search_query_to_proto.entityType = query.entityType
+        search_query_to_proto.entityName = query.entityName
+        search_query_to_proto.extra.update(query.extra)
+        search_query_to_proto_list.append(search_query_to_proto)
+
+    for option in extra:
+        extra[option] = ParseDict({"value": extra[option]}, Value())
+
     with grpc.insecure_channel(grpc_host) as channel:
         stub = searcher_pb2_grpc.SearcherStub(channel)
         response = stub.QueryParser(
             searcher_pb2.QueryParserRequest(
-                searchQuery=search_query,
+                searchQuery=search_query_to_proto_list,
                 range=range_values,
                 afterKey=after_key,
                 suggestKeyword=suggest_keyword,

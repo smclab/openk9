@@ -6,12 +6,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from google.protobuf.json_format import ParseDict
 from opensearchpy import OpenSearch
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.rag.chain import get_chain, get_chat_chain
 from app.utils.keycloak import unauthorized_response, verify_token
 
@@ -50,7 +48,7 @@ class SearchToken(BaseModel):
     filter: Optional[bool] = False
     entityType: Optional[str] = ""
     entityName: Optional[str] = ""
-    extra: Optional[dict[str, str]] = []
+    extra: Optional[dict[str, str]] = {}
 
 
 class SearchQuery(BaseModel):
@@ -61,7 +59,7 @@ class SearchQuery(BaseModel):
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
-    extra: Optional[dict] = None
+    extra: Optional[dict[str, list]] = {}
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
@@ -92,28 +90,15 @@ async def rag_generatey(
     reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
 
-    openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
-    extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
-
-    search_query_to_proto_list = []
-    for query in search_query:
-        search_query_to_proto = SearchTokenRequest()
-        search_query_to_proto.tokenType = query.tokenType
-        search_query_to_proto.keywordKey = query.keywordKey
-        search_query_to_proto.values.extend(query.values)
-        search_query_to_proto.filter = query.filter
-        search_query_to_proto.entityType = query.entityType
-        search_query_to_proto.entityName = query.entityName
-        search_query_to_proto.extra.update(query.extra)
-        search_query_to_proto_list.append(search_query_to_proto)
+    if openk9_acl:
+        extra[OPENK9_ACL_HEADER] = openk9_acl
 
     token = authorization.replace("Bearer ", "") if authorization else None
-
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
 
     chain = get_chain(
-        search_query_to_proto_list,
+        search_query,
         range_values,
         after_key,
         suggest_keyword,
@@ -142,7 +127,7 @@ class SearchQueryChat(BaseModel):
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
-    extra: Optional[dict] = None
+    extra: Optional[dict[str, list]] = {}
     sort: Optional[list] = None
     sortAfterKey: Optional[str] = None
     language: Optional[str] = None
@@ -178,28 +163,15 @@ async def rag_chat(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = urlparse(str(request.base_url)).hostname
 
-    openk9_acl_header_values = ParseDict({"value": openk9_acl}, Value())
-    extra = {OPENK9_ACL_HEADER: openk9_acl_header_values} if openk9_acl else extra
-
-    search_query_to_proto_list = []
-    for query in search_query:
-        search_query_to_proto = SearchTokenRequest()
-        search_query_to_proto.tokenType = query.tokenType
-        search_query_to_proto.keywordKey = query.keywordKey
-        search_query_to_proto.values.extend(query.values)
-        search_query_to_proto.filter = query.filter
-        search_query_to_proto.entityType = query.entityType
-        search_query_to_proto.entityName = query.entityName
-        search_query_to_proto.extra.update(query.extra)
-        search_query_to_proto_list.append(search_query_to_proto)
+    if openk9_acl:
+        extra[OPENK9_ACL_HEADER] = openk9_acl
 
     token = authorization.replace("Bearer ", "") if authorization else None
-
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
 
     chain = get_chat_chain(
-        search_query_to_proto_list,
+        search_query,
         range_values,
         after_key,
         suggest_keyword,
