@@ -39,42 +39,8 @@ public class LargeLanguageModelService
 		this.mapper = mapper;
 	}
 
-	@Override
-	public Class<LargeLanguageModel> getEntityClass() {
-		return LargeLanguageModel.class;
-	}
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[]{LargeLanguageModel_.NAME, LargeLanguageModel_.DESCRIPTION};
-	}
-
-	public Uni<LargeLanguageModel> fetchCurrent(String tenantId) {
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
-			.getSingleResult());
-	}
-
-	public Uni<LargeLanguageModel> fetchCurrent() {
-		return sessionFactory.withTransaction((s, t) -> s
-			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
-			.getSingleResult());
-	}
-
-	public Uni<BucketLargeLanguageModel> fetchCurrentLLMAndBucket(String tenantId) {
-
-		String queryString = "SELECT tb " +
-			"FROM TenantBinding tb " +
-			"LEFT JOIN FETCH tb.largeLanguageModel llm " +
-			"LEFT JOIN FETCH tb.bucket b ";
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s
-			.createQuery(queryString, TenantBinding.class)
-			.getSingleResult()
-			.map(tenantBinding ->
-				new BucketLargeLanguageModel(
-					tenantBinding.getBucket(), tenantBinding.getLargeLanguageModel())
-			));
+	public Uni<LargeLanguageModel> enable(long id) {
+		return sessionFactory.withTransaction((s, t) -> enable(s, id));
 	}
 
 	public Uni<LargeLanguageModel> enable(Mutiny.Session s, long id) {
@@ -127,8 +93,42 @@ public class LargeLanguageModelService
 			});
 	}
 
-	public Uni<LargeLanguageModel> enable(long id) {
-		return sessionFactory.withTransaction((s, t) -> enable(s, id));
+	public Uni<LargeLanguageModel> fetchCurrent() {
+		return sessionFactory.withTransaction((s, t) -> s
+			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
+			.getSingleResult());
+	}
+
+	public Uni<LargeLanguageModel> fetchCurrent(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(LargeLanguageModel.FETCH_CURRENT, LargeLanguageModel.class)
+			.getSingleResult());
+	}
+
+	public Uni<BucketLargeLanguageModel> fetchCurrentLLMAndBucket(String tenantId) {
+
+		String queryString = "SELECT tb " +
+			"FROM TenantBinding tb " +
+			"LEFT JOIN FETCH tb.largeLanguageModel llm " +
+			"LEFT JOIN FETCH tb.bucket b ";
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createQuery(queryString, TenantBinding.class)
+			.getSingleResult()
+			.map(tenantBinding ->
+				new BucketLargeLanguageModel(
+					tenantBinding.getBucket(), tenantBinding.getLargeLanguageModel())
+			));
+	}
+
+	@Override
+	public Class<LargeLanguageModel> getEntityClass() {
+		return LargeLanguageModel.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[]{LargeLanguageModel_.NAME, LargeLanguageModel_.DESCRIPTION};
 	}
 
 }
