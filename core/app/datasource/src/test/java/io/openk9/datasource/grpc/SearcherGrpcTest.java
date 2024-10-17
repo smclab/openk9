@@ -18,12 +18,12 @@
 package io.openk9.datasource.grpc;
 
 import com.google.protobuf.Struct;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
-import io.openk9.datasource.searcher.MissingLLMException;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
@@ -38,8 +38,6 @@ import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-
-import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -149,8 +147,7 @@ public class SearcherGrpcTest {
 				.setVirtualHost(VIRTUAL_HOST)
 				.build()
 			),
-				throwable ->
-					failureAssertions(throwable, InternalServiceMockException.class)
+				throwable -> failureAssertions(throwable)
 			);
 	}
 
@@ -170,19 +167,25 @@ public class SearcherGrpcTest {
 				.setVirtualHost(VIRTUAL_HOST)
 				.build()
 			),
-			throwable ->
-				failureAssertions(throwable, MissingLLMException.class)
-		);
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.NOT_FOUND, exception.getStatus().getCode());
+			});
 	}
 
-	private static <T> void failureAssertions(Throwable throwable, Class<T> classException) {
+	private static <T> void failureAssertions(Throwable throwable) {
+
 		Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
 
 		var exception = (StatusRuntimeException) throwable;
 
 		Assertions.assertTrue(exception
 			.getMessage()
-			.contains(classException.getName())
+			.contains(InternalServiceMockException.class.getName())
 		);
 	}
 }
