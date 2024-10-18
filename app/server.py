@@ -123,7 +123,7 @@ class SearchQueryChat(BaseModel):
 
     chatId: Optional[str] = None
     searchQuery: list[SearchToken]
-    range: list
+    range: Optional[list] = [0, 5]
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
     suggestionCategoryId: Optional[int] = None
