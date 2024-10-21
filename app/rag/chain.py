@@ -83,8 +83,8 @@ def get_chain(
 
     if reformulate:
         rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
-        chain = rephrase_prompt | llm | parser
-        question = chain.invoke({"question": question})
+        rephrase_chain = rephrase_prompt | llm | parser
+        question = rephrase_chain.invoke({"question": question})
 
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
