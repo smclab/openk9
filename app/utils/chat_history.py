@@ -8,7 +8,7 @@ def get_chat_history(
     chat_history = ChatMessageHistory()
 
     if open_search_client.indices.exists(index=user_id):
-        query = {"query": {"term": {"chat_id": chat_id}}}
+        query = {"query": {"term": {"chat_id.keyword": chat_id}}}
         response = open_search_client.search(body=query, index=user_id)
         memory = response["hits"]["hits"]
 
