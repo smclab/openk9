@@ -60,33 +60,31 @@ import java.util.Set;
 		name = Bucket.FETCH_ANNOTATORS_NAMED_QUERY,
 		query =
 			"from Bucket b " +
-				"join fetch b." + Bucket_.TENANT_BINDING  + " tb " +
-				"join fetch b." + Bucket_.DATASOURCES + " ds " +
-				"join fetch ds." + Datasource_.DATA_INDEX + " di " +
-				"left join fetch ds." + Datasource_.PLUGIN_DRIVER + " pr " +
-				"left join fetch pr." + PluginDriver_.ACL_MAPPINGS + " am " +
-				"left join fetch am." + AclMapping_.DOC_TYPE_FIELD + " amdtf " +
-				"join fetch b." + Bucket_.QUERY_ANALYSIS + " qa " +
-				"join fetch qa." + QueryAnalysis_.RULES + " qar " +
-				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa " +
-				"left join fetch qaa." + Annotator_.EXTRA_PARAMS + " extra " +
-				"join fetch qaa." + Annotator_.DOC_TYPE_FIELD + " dtf " +
-				"left join fetch dtf." + DocTypeField_.PARENT_DOC_TYPE_FIELD + " pdtf " +
-				"left join fetch dtf." + DocTypeField_.SUB_DOC_TYPE_FIELDS + " sdtf " +
-				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa2 " +
-			"left join fetch qaa2." + Annotator_.EXTRA_PARAMS + " extra2 " +
-			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost " +
+			"join fetch b.tenantBinding tb " +
+			"join fetch b.datasources ds " +
+			"join fetch ds.dataIndex di " +
+			"left join fetch ds.pluginDriver pr " +
+			"left join fetch pr.aclMappings am " +
+			"left join fetch am.docTypeField amdtf " +
+			"join fetch b.queryAnalysis qa " +
+			"join fetch qa.rules qar " +
+			"join fetch qa.annotators qaa " +
+			"left join fetch qaa.extraParams extra " +
+			"left join fetch qaa.docTypeField dtf " +
+			"left join fetch dtf.parentDocTypeField pdtf " +
+			"left join fetch dtf.subDocTypeFields sdtf " +
+			"where tb.virtualHost = :virtualHost " +
 			"and (" +
-				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
-				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET +
-				" )"
+			"(dtf is not null and qaa.type in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
+			"or (dtf is null and qaa.type not in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
+			" )"
 	),
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
 		query =
 			"select b " +
-			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tb " +
-			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
+			"from Bucket b join b.tenantBinding tb " +
+			"where tb.virtualHost = :virtualHost "
 	)
 })
 public class Bucket extends K9Entity {

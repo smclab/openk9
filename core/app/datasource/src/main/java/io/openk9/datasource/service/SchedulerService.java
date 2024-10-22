@@ -167,14 +167,17 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	public Uni<List<DatasourceJobStatus>> getStatusByDatasources(List<Long> datasourceIds) {
 		return sessionFactory.withStatelessTransaction((session, transaction) -> session
 			.createQuery(
-				"select d.id " +
 					"from Scheduler s " +
-					"join s.datasource d " +
+					"join fetch s.datasource d " +
 				"where d.id in :datasourceIds and s.status in " + Scheduler.RUNNING_STATES,
-				Long.class
+				Scheduler.class
 			)
 			.setParameter("datasourceIds", datasourceIds)
 			.getResultList()
+			.map(schedulers -> schedulers.stream()
+				.map(Scheduler::getDatasource)
+				.map(Datasource::getId)
+				.collect(Collectors.toSet()))
 			.map(ids -> datasourceIds
 				.stream()
 				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULING))
