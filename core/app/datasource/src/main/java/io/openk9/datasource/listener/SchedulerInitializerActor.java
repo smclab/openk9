@@ -73,9 +73,6 @@ public class SchedulerInitializerActor {
 						.init(
 							SingletonActor.of(
 								JobScheduler.create(
-									httpPluginDriverClient,
-									sessionFactory,
-									restHighLevelClient,
 									schedulatedJobs
 								),
 								"job-scheduler"
