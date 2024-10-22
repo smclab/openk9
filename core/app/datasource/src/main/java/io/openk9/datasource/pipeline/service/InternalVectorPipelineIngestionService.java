@@ -84,7 +84,7 @@ public class InternalVectorPipelineIngestionService {
 		return QuarkusCacheUtil.getAsync(
 				cache,
 				new CompositeCacheKey(scheduleId),
-				sessionFactory.withStatelessSession(tenantId, s -> s
+				sessionFactory.withSession(tenantId, s -> s
 						.createNamedQuery(
 							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
 						.setParameter("scheduleId", scheduleId)
