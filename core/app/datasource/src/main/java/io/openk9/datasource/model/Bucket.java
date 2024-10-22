@@ -40,6 +40,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.eclipse.microprofile.graphql.Ignore;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -138,6 +139,7 @@ public class Bucket extends K9Entity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "query_analysis_id")
 	@ToString.Exclude
+	@Ignore
 	private QueryAnalysis queryAnalysis;
 
 	@ManyToOne(fetch = FetchType.LAZY)
