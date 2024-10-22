@@ -35,11 +35,11 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-client</artifactId>
+      <artifactId>quarkus-rest-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-client-jackson</artifactId>
+      <artifactId>quarkus-rest-client-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -83,7 +83,7 @@
     <dependency>
       <groupId>io.quarkiverse.rabbitmqclient</groupId>
       <artifactId>quarkus-rabbitmq-client</artifactId>
-      <version>3.0.0</version>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -125,12 +125,12 @@
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-      <version>1.0.0</version>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-java-client</artifactId>
-      <version>1.0.0</version>
+      <version>1.10.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.opensearch.client</groupId>
@@ -157,11 +157,6 @@
       <version>0.10.4</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.12.0</version>
-    </dependency>
-    <dependency>
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
     </dependency>
@@ -181,24 +176,24 @@
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-suggest</artifactId>
-      <version>9.5.0</version>
+      <version>9.11.1</version>
     </dependency>
 
     <!-- dependencies needed for dynamic mapping -->
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-sandbox</artifactId>
-      <version>9.5.0</version>
+      <version>9.11.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-misc</artifactId>
-      <version>9.5.0</version>
+      <version>9.11.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-analyzers-common</artifactId>
-      <version>8.11.3</version>
+      <version>8.11.4</version>
     </dependency>
     <!--  end dynamic mapping -->
 
@@ -306,23 +301,12 @@
       <artifactId>akka-serialization-jackson_${scala.version}</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.quarkiverse.file-vault</groupId>
-      <artifactId>quarkus-file-vault</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.file-vault</groupId>
-      <artifactId>quarkus-file-vault-config-source</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
       <scope>test</scope>
-      <version>3.3.1</version>
+      <version>3.9.1</version>
     </dependency>
 
   </dependencies>

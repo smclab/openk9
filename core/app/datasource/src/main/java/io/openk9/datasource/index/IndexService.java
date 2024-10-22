@@ -38,13 +38,15 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
-import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.core.xcontent.MediaType;
+import org.opensearch.core.xcontent.MediaTypeRegistry;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @ApplicationScoped
@@ -128,9 +130,18 @@ public class IndexService {
 			throw new IllegalStateException(
 				"Opensearch didn't return the [Content-Type] header, unable to parse response body");
 		}
-		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
-		if (xContentType == null) {
-			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
+
+		var mediaTypeValue = entity.getContentType().getValue();
+		if (mediaTypeValue != null &&
+			(mediaTypeValue = mediaTypeValue.toLowerCase(Locale.ROOT)).contains("vnd.opensearch")) {
+			mediaTypeValue = mediaTypeValue.replaceAll("vnd.opensearch\\+", "").replaceAll(
+				"\\s*;\\s*compatible-with=\\d+",
+				""
+			);
+		}
+		MediaType mediaType = MediaTypeRegistry.fromMediaType(mediaTypeValue);
+		if (mediaType == null) {
+			throw new IllegalStateException("Unsupported Content-Type: " + mediaTypeValue);
 		}
 
 		try (InputStream inputStream = entity.getContent()) {

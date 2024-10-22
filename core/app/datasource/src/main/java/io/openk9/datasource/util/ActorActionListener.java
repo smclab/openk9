@@ -18,7 +18,7 @@
 package io.openk9.datasource.util;
 
 import akka.actor.typed.ActorRef;
-import org.opensearch.action.ActionListener;
+import org.opensearch.core.action.ActionListener;
 
 import java.util.function.BiFunction;
 

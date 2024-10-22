@@ -19,7 +19,7 @@ package io.openk9.datasource.util;
 
 import io.smallrye.mutiny.subscription.UniEmitter;
 import lombok.RequiredArgsConstructor;
-import org.opensearch.action.ActionListener;
+import org.opensearch.core.action.ActionListener;
 
 @RequiredArgsConstructor
 public class UniActionListener<Response> implements ActionListener<Response> {
