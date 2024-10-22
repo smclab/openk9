@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.openk9.app</groupId>
     <artifactId>app</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
   </parent>
   <name>OpenK9 :: App :: Ingestion</name>
   <artifactId>ingestion</artifactId>
