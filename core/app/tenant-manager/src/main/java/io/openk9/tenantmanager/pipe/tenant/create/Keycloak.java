@@ -140,20 +140,20 @@ public class Keycloak {
 
 		KeycloakAdminClientConfigUtil.validate(config);
 
-		if (config.serverUrl.isEmpty()) {
+		if (config.serverUrl().isEmpty()) {
 			throw new IllegalStateException("keycloak serverUrl is empty");
 		}
 
 		KeycloakBuilder keycloakBuilder = KeycloakBuilder
 			.builder()
-			.clientId(config.clientId)
-			.clientSecret(config.clientSecret.orElse(null))
-			.grantType(config.grantType.asString())
-			.username(config.username.orElse(null))
-			.password(config.password.orElse(null))
-			.realm(config.realm)
-			.serverUrl(config.serverUrl.get())
-			.scope(config.scope.orElse(null));
+			.clientId(config.clientId())
+			.clientSecret(config.clientSecret().orElse(null))
+			.grantType(config.grantType().asString())
+			.username(config.username().orElse(null))
+			.password(config.password().orElse(null))
+			.realm(config.realm())
+			.serverUrl(config.serverUrl().get())
+			.scope(config.scope().orElse(null));
 
 		return keycloakBuilder.build();
 
