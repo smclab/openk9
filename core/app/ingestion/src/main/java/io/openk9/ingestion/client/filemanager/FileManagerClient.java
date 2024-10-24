@@ -18,6 +18,7 @@
 package io.openk9.ingestion.client.filemanager;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -29,6 +30,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.io.InputStream;
 
 @Path("/api/file-manager/v1")
+@ApplicationScoped
 @RegisterRestClient(configKey = "file-manager")
 public interface FileManagerClient {
 
