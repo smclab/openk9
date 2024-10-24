@@ -3,7 +3,7 @@
 # Template generico di build che viene utilizzato da ogni componente (datasource,ingestion etc...)
 
 .build_template:
-  image: eclipse-temurin:17-jdk
+  image: eclipse-temurin:21-jdk
   services:
     - docker:19.03.13-dind
   variables:
