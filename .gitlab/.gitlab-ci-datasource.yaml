@@ -25,6 +25,7 @@ Build Datasource image:
     COMPONENT: "datasource"
   stage: build-image
   script:
+    - mvn --version
     - cd core
     - |
       VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
