@@ -26,7 +26,6 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 
@@ -43,12 +42,9 @@ import static org.mockito.Mockito.times;
 @TestHTTPEndpoint(IngestionEndpoint.class)
 class IngestionEndpointTest {
 
-	@InjectMock(convertScopes = true)
+	@InjectMock
 	@RestClient
 	FileManagerClient fileManagerClient;
-
-	@Inject
-	FileManagerEmitter fileManagerEmitter;
 
 	@InjectSpy
 	IngestionEmitter ingestionEmitter;
