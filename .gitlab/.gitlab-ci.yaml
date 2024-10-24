@@ -227,7 +227,7 @@ Trigger Tika no-ocr:
 
 Maven Install Hibernate:
   stage: maven_build
-  image: maven:3.9.9-openjdk-21
+  image: maven:3.9.9-eclipse-temurin-21
   script:
     - cd vendor/hibernate-rx-multitenancy
     - mvn install
@@ -261,7 +261,7 @@ Maven Install Hibernate:
 
 Maven Install Core:
   stage: maven_build
-  image: maven:3.9.9-openjdk-21
+  image: maven:3.9.9-eclipse-temurin-21
   needs:
     - job: "Maven Install Hibernate"
       artifacts: true
@@ -299,7 +299,7 @@ Maven Install Core:
 
 Maven Dependency Check:
   stage: maven_dependency_check
-  image: maven:3.9.9-openjdk-21
+  image: maven:3.9.9-eclipse-temurin-21
   needs:
     - job: "Maven Install Core"
       artifacts: true
