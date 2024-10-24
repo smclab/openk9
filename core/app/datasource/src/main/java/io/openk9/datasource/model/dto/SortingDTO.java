@@ -20,6 +20,7 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,7 @@ public class SortingDTO extends K9EntityDTO {
     @NotNull
     private Float priority;
     @NotNull
+    @Builder.Default
     private Boolean defaultSort = false;
     @NotNull
     private Sorting.SortingType type;

@@ -27,10 +27,14 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.CDI)
+@Mapper(
+	componentModel = MappingConstants.ComponentModel.CDI,
+	unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface EnrichItemMapper {
 
 	EnrichItemDTO map(CreateEnrichItemRequest source);
