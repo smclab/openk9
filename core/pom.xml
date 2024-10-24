@@ -102,7 +102,7 @@
 		<!-- General Settings -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<compiler-plugin.version>3.12.1</compiler-plugin.version>
-		<dependency.version.lombok>1.18.22</dependency.version.lombok>
+		<dependency.version.lombok>1.18.34</dependency.version.lombok>
 		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
