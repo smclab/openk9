@@ -22,6 +22,7 @@ import com.cronutils.validation.Cron;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,7 @@ public class DatasourceDTO extends K9EntityDTO {
 
 	@NotNull
 	@Description("If true datasource is scheduled based on defined scheduling expression")
+	@Builder.Default
 	private Boolean schedulable = false;
 
 	@Json
@@ -51,6 +53,6 @@ public class DatasourceDTO extends K9EntityDTO {
 
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@NotNull
-	private int reindexRate = 0;
+	private int reindexRate;
 
 }

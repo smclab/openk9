@@ -20,6 +20,7 @@ package io.openk9.datasource.model.dto;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,18 +35,23 @@ import lombok.experimental.SuperBuilder;
 public class BucketDTO extends K9EntityDTO {
 
 	@NotNull
+	@Builder.Default
 	private Boolean refreshOnSuggestionCategory = false;
 
 	@NotNull
+	@Builder.Default
 	private Boolean refreshOnTab = false;
 
 	@NotNull
+	@Builder.Default
 	private Boolean refreshOnDate = false;
 
 	@NotNull
+	@Builder.Default
 	private Boolean refreshOnQuery = false;
 
 	@NotNull
+	@Builder.Default
 	private Bucket.RetrieveType retrieveType = Bucket.RetrieveType.MATCH;
 
 }

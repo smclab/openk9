@@ -22,6 +22,7 @@ import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.KeyName;
 import io.openk9.datasource.validation.json.Json;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,13 +39,16 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 
 	@NotNull
 	@Description("If true field is used for matches during search")
+	@Builder.Default
 	private Boolean searchable = false;
 
 	@NotNull
 	@Description("If true field is used for sorting during search")
+	@Builder.Default
 	private Boolean sortable = false;
 
 	@Description("Value to define boost on score in case of matches on current field")
+	@Builder.Default
 	private Double boost = 1.0;
 
 	@Description("Define type used to map field in index")

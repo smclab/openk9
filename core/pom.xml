@@ -250,9 +250,9 @@
 			<plugins>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.12.1</version>
+					<version>${compiler-plugin.version}</version>
 					<configuration>
-						<forceJavacCompilerUse>true</forceJavacCompilerUse>
+						<forceLegacyJavacApi>true</forceLegacyJavacApi>
 						<annotationProcessorPaths>
 							<path>
 								<groupId>org.projectlombok</groupId>

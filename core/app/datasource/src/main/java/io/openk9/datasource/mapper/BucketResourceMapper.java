@@ -31,13 +31,16 @@ import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Mapper(
-	componentModel = "cdi"
+	componentModel = MappingConstants.ComponentModel.CDI,
+	unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface BucketResourceMapper {
 

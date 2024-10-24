@@ -23,12 +23,17 @@ import io.openk9.datasource.processor.payload.IngestionPayload;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.Mappings;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.Arrays;
 import java.util.List;
 
-@Mapper(componentModel = "cdi")
+@Mapper(
+	componentModel = MappingConstants.ComponentModel.CDI,
+	unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface IngestionPayloadMapper {
 
 	static List<String> getDocumentTypes(IngestionPayload ingestionPayload) {
@@ -55,6 +60,10 @@ public interface IngestionPayloadMapper {
 			@Mapping(
 				target = "documentTypes",
 				source = "documentTypes"
+			),
+			@Mapping(
+				target = "last",
+				source = "ingestionPayload.last"
 			)
 		}
 	)

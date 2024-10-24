@@ -43,7 +43,7 @@ public class IngestionPayload {
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
-	private boolean last = false;
+	private boolean last;
 	private String scheduleId;
 	private PayloadType type;
 }

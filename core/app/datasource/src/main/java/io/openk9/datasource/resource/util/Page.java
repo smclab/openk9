@@ -33,8 +33,8 @@ import java.util.List;
 public class Page<ENTITY> implements Iterable<ENTITY> {
 	private int limit;
 	private long count;
-	private long afterId = 0;
-	private long beforeId = 0;
+	private long afterId;
+	private long beforeId;
 	private List<ENTITY> content;
 
 	public static <T> Page<T> emptyPage() {

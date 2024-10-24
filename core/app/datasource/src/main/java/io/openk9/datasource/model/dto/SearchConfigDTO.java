@@ -32,7 +32,7 @@ public class SearchConfigDTO extends K9EntityDTO {
 	@NotNull
 	private Float minScore;
 	@NotNull
-	private boolean minScoreSuggestions = false;
+	private boolean minScoreSuggestions;
 	@NotNull
-	private boolean minScoreSearch = false;
+	private boolean minScoreSearch;
 }

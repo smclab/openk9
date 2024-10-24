@@ -43,7 +43,7 @@ public class FilterField {
    protected String fieldName;
    protected String value;
    @org.eclipse.microprofile.graphql.DefaultValue("false")
-   protected boolean not = false;
+   protected boolean not;
 
    public Predicate generateCriteria(CriteriaBuilder builder, Path field) {
       return generateCriteria(builder, fieldName -> field);

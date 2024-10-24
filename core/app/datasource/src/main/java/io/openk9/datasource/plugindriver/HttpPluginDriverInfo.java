@@ -32,7 +32,7 @@ import java.util.Map;
 @With
 @Builder
 public class HttpPluginDriverInfo {
-	private boolean secure = false;
+	private boolean secure;
 	private String host;
 	private Integer port;
 	private String path;

@@ -21,12 +21,10 @@ import io.openk9.datasource.model.FileResource;
 import io.openk9.datasource.model.dto.FileResourceDTO;
 import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.grpc.FileResourceResponse;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
-import org.mapstruct.NullValueCheckStrategy;
 
 @Mapper(
-	componentModel = "cdi"
+	config = K9EntityMapper.class
 )
 public interface FileResourceMapper extends K9EntityMapper<FileResource, FileResourceDTO> {
 
