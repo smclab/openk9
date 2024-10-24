@@ -46,7 +46,6 @@ import static org.mockito.Mockito.times;
 @TestSecurity(user = "k9-admin", roles = {"admin"})
 public class ProvisioningResourceTest {
 
-
 	@InjectMock
 	@GrpcClient("appmanager")
 	AppManager appManager;
