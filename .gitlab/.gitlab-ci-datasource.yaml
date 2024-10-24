@@ -24,8 +24,6 @@ Build Datasource image:
   variables:
     COMPONENT: "datasource"
   stage: build-image
-  before_script:
-    - apt-get update && apt-get install -y maven
   script:
     - cd core
     - |
