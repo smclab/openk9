@@ -60,11 +60,11 @@ import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.common.CheckedFunction;
-import org.opensearch.common.text.Text;
-import org.opensearch.common.xcontent.DeprecationHandler;
-import org.opensearch.common.xcontent.NamedXContentRegistry;
-import org.opensearch.common.xcontent.XContentParser;
-import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.core.common.text.Text;
+import org.opensearch.core.xcontent.DeprecationHandler;
+import org.opensearch.core.xcontent.MediaTypeRegistry;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.SearchHits;
 import org.opensearch.search.fetch.subphase.highlight.HighlightField;
@@ -80,6 +80,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -560,15 +561,34 @@ public class SearchResource {
 		if (entity == null) {
 			throw new IllegalStateException("Response body expected but not returned");
 		}
+
 		if (entity.getContentType() == null) {
 			throw new IllegalStateException(
 				"Opensearch didn't return the [Content-Type] header, unable to parse response body");
 		}
-		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
-		if (xContentType == null) {
-			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
+
+		var mediaTypeValue = entity.getContentType().getValue();
+		if (mediaTypeValue != null &&
+			(mediaTypeValue = mediaTypeValue.toLowerCase(Locale.ROOT)).contains("vnd.opensearch")) {
+			mediaTypeValue = mediaTypeValue.replaceAll("vnd.opensearch\\+", "").replaceAll(
+				"\\s*;\\s*compatible-with=\\d+",
+				""
+			);
 		}
-		try (XContentParser parser = xContentType.xContent().createParser(getNamedXContentRegistry(), DeprecationHandler.THROW_UNSUPPORTED_OPERATION, entity.getContent())) {
+
+		org.opensearch.core.xcontent.MediaType mediaType = MediaTypeRegistry.fromMediaType(
+			mediaTypeValue);
+		if (mediaType == null) {
+			throw new IllegalStateException("Unsupported Content-Type: " + mediaTypeValue);
+		}
+
+		try (XContentParser parser = mediaType.xContent().createParser(
+			getNamedXContentRegistry(),
+			DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
+			entity.getContent()
+		)
+		) {
+
 			return entityParser.apply(parser);
 		}
 	}
