@@ -28,14 +28,6 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-resteasy-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-resteasy-client-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
 		<artifactId>quarkus-rest</artifactId>
     </dependency>
     <dependency>
@@ -71,10 +63,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-cache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-graphql</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
