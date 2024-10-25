@@ -38,37 +38,20 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor-typed_2.13</artifactId>
-      <version>2.6.20</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-typed_2.13</artifactId>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-rest-jackson</artifactId>
+      <artifactId>quarkus-rest</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mutiny</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-rest</artifactId>
+      <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -92,24 +75,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-stork</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.smallrye.stork</groupId>
-      <artifactId>stork-service-discovery-eureka</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-keycloak-admin-rest-client</artifactId>
+      <artifactId>quarkus-keycloak-admin-rest-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -150,6 +116,30 @@
       <artifactId>quarkus-qute</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-jib</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-stork</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.smallrye.stork</groupId>
+      <artifactId>stork-service-discovery-eureka</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>graphql-util</artifactId>
     </dependency>
@@ -173,6 +163,16 @@
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>app-manager</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor-typed_2.13</artifactId>
+      <version>2.6.20</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-cluster-typed_2.13</artifactId>
     </dependency>
 
     <dependency>
