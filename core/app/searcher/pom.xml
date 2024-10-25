@@ -28,6 +28,10 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
 		<artifactId>quarkus-rest</artifactId>
     </dependency>
     <dependency>
@@ -36,16 +40,22 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-cache</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-container-image-jib</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -57,53 +67,33 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-cache</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
       <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-      <version>1.10.0</version>
     </dependency>
+
     <dependency>
-      <groupId>io.projectreactor</groupId>
-      <artifactId>reactor-core</artifactId>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>resources-common</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.vavr</groupId>
-      <artifactId>vavr</artifactId>
-      <version>0.10.4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.12.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
+      <groupId>io.openk9.client.common</groupId>
+      <artifactId>tenant-manager-bridge</artifactId>
     </dependency>
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>searcher-client-grpc</artifactId>
-      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>io.openk9.service</groupId>
       <artifactId>auth-service</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.openk9.client.common</groupId>
-      <artifactId>tenant-manager-bridge</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-stork</artifactId>
@@ -113,6 +103,8 @@
       <artifactId>stork-service-discovery-eureka</artifactId>
     </dependency>
   </dependencies>
+
+
   <build>
     <plugins>
       <plugin>
