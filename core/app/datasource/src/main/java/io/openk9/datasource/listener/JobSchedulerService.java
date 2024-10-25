@@ -145,9 +145,9 @@ public class JobSchedulerService {
 	}
 
 	public static CompletableFuture<TriggerType> getTriggerType(
-		Datasource datasource, boolean startFromFirst) {
+		Datasource datasource, boolean reindex) {
 
-		var request = new TriggerDatasourceRequest(datasource, startFromFirst);
+		var request = new TriggerDatasourceRequest(datasource, reindex);
 
 		return EventBusInstanceHolder.getEventBus()
 			.<TriggerType>request(TRIGGER_DATASOURCE, request)
@@ -316,7 +316,7 @@ public class JobSchedulerService {
 
 		var datasource = request.datasource();
 		var tenantId = datasource.getTenant();
-		var startFromFirst = request.startFromFirst();
+		var reindex = request.reindex();
 
 		return sessionFactory.withTransaction(
 			tenantId,
@@ -343,8 +343,8 @@ public class JobSchedulerService {
 						return Uni.createFrom().item(TriggerType.IGNORE);
 					}
 
-					if (startFromFirst != null) {
-						return Uni.createFrom().item(startFromFirst
+					if (reindex != null) {
+						return Uni.createFrom().item(reindex
 							? TriggerType.REINDEX
 							: TriggerType.TRIGGER);
 					}
@@ -404,7 +404,7 @@ public class JobSchedulerService {
 
 	private record CopyIndexTemplateRequest(Scheduler scheduler) {}
 
-	private record TriggerDatasourceRequest(Datasource datasource, Boolean startFromFirst) {}
+	private record TriggerDatasourceRequest(Datasource datasource, Boolean reindex) {}
 
 	private record CallHttpPluginDriverRequest(
 		Scheduler scheduler, OffsetDateTime lastIngestionDate

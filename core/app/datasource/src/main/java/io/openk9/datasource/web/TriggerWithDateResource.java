@@ -19,48 +19,39 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.service.SchedulerService;
-import io.openk9.datasource.web.dto.TriggerResourceDTO;
 import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
-@CircuitBreaker
-@Path("/v1/index")
-@ApplicationScoped
-@ActivateRequestContext
+@Path("/v2/trigger")
 @RolesAllowed("k9-admin")
-public class ReindexResource {
+public class TriggerWithDateResource {
 
 	@POST
-	@Path("/reindex")
-	public Uni<List<SchedulerService.DatasourceJobStatus>> reindex(TriggerResourceDTO dto) {
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ActivateRequestContext
+	public Uni<List<SchedulerService.DatasourceJobStatus>> trigger(TriggerWithDateResourceDTO dto) {
 
 		List<Long> datasourceIds = dto.getDatasourceIds();
 		String tenantId = routingContext.get("_tenantId");
-
-		var triggerWithDateResourceDTO =
-			TriggerWithDateResourceDTO.builder()
-				.datasourceIds(datasourceIds)
-				.reindex(true)
-				.startIngestionDate(null)
-				.build();
 
 		return schedulerService
 			.getStatusByDatasources(datasourceIds)
 			.call(() -> schedulerInitializer
 				.get()
-				.triggerJobs(tenantId, triggerWithDateResourceDTO)
+				.triggerJobs(tenantId, dto)
 			);
+
 	}
 
 	@Inject

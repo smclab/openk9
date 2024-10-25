@@ -24,6 +24,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
@@ -37,6 +38,7 @@ import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -129,17 +131,17 @@ public class SchedulerInitializer {
 		);
 	}
 
-	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds) {
-		return triggerJobs(tenantName, datasourceIds, false);
-	}
+	public Uni<List<Long>> triggerJobs(String tenantName, TriggerWithDateResourceDTO dto) {
 
-	public Uni<List<Long>> triggerJobs(String tenantName, List<Long> datasourceIds, Boolean startFromFirst) {
-
+		var datasourceIds = dto.getDatasourceIds();
+		var reindex = dto.isReindex();
+		var startIngestionDate = dto.getStartIngestionDate();
 		List<Uni<Long>> triggers = new ArrayList<>(datasourceIds.size());
 
 		for (long datasourceId : datasourceIds) {
 			triggers.add(
-				triggerJob(tenantName, datasourceId, String.valueOf(datasourceId), startFromFirst)
+				triggerJob(tenantName, datasourceId, String.valueOf(datasourceId), reindex,
+						startIngestionDate)
 					.map(unused -> datasourceId)
 			);
 		}
@@ -154,25 +156,27 @@ public class SchedulerInitializer {
 
 	
 	public Uni<Void> triggerJob(
-		String tenantName, long datasourceId, String name, Boolean startFromFirst) {
+			String tenantName, long datasourceId, String name, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
 
 		return Uni.createFrom().deferred(() -> {
-			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " startFromFirst: " + startFromFirst);
+			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " reindex: " + reindex);
 			return performTask(
-				tenantName, datasourceId, startFromFirst);
+				tenantName, datasourceId, reindex, startIngestionDate);
 		});
 
 	}
 
 	public Uni<Void> performTask(
-		String schemaName, Long datasourceId, Boolean startFromFirst) {
+			String schemaName, Long datasourceId, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
 
 		return sessionFactory.withTransaction(
 			schemaName,
 			(s, t) -> datasourceService
 				.findByIdWithPluginDriver(datasourceId)
 				.flatMap(d -> schedulerInitializerActor.triggerDataSource(
-					schemaName, d.getId(), startFromFirst))
+					schemaName, d.getId(), reindex, startIngestionDate))
 		);
 
 	}

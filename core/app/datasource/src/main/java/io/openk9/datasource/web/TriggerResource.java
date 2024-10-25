@@ -20,6 +20,7 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.service.SchedulerService;
 import io.openk9.datasource.web.dto.TriggerResourceDTO;
+import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.security.RolesAllowed;
@@ -44,11 +45,18 @@ public class TriggerResource {
 		List<Long> datasourceIds = dto.getDatasourceIds();
 		String tenantId = routingContext.get("_tenantId");
 
+		var triggerWithDateResourceDTO =
+			TriggerWithDateResourceDTO.builder()
+				.datasourceIds(datasourceIds)
+				.reindex(false)
+				.startIngestionDate(null)
+				.build();
+
 		return schedulerService
 			.getStatusByDatasources(datasourceIds)
 			.call(() -> schedulerInitializer
 				.get()
-				.triggerJobs(tenantId, dto.getDatasourceIds())
+				.triggerJobs(tenantId, triggerWithDateResourceDTO)
 			);
 
 	}

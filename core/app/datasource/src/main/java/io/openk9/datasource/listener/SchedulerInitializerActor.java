@@ -27,6 +27,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -53,9 +54,12 @@ public class SchedulerInitializerActor {
 	}
 
 	public Uni<Void> triggerDataSource(
-		String tenantName, long datasourceId, Boolean startFromFirst) {
+			String tenantName, long datasourceId, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
+
 		return getScheduleRef(() ->
-			new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
+			new JobScheduler.TriggerDatasource(
+				tenantName, datasourceId, reindex, startIngestionDate));
 	}
 
 	private Uni<Void> getScheduleRef(Supplier<JobScheduler.Command> commandSupplier) {
