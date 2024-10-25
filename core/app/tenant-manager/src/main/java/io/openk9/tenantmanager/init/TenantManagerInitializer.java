@@ -22,32 +22,27 @@ import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSy
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
-import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.util.LinkedList;
 
-@ApplicationScoped
-@Startup
+@Singleton
 public class TenantManagerInitializer {
 
 	public static final String INITIALIZED = "TenantManagerInitializer#INITIALIZED";
 	public static final String ERROR = "TenantManagerInitializer#ERROR";
 
-	@ConfigProperty(name = "quarkus.datasource.reactive.url")
-	String openk9DatasourceUrl;
 	@ConfigProperty(name = "quarkus.datasource.username")
 	String datasourceUsername;
 	@ConfigProperty(name = "quarkus.datasource.password")
 	String datasourcePassword;
-	@ConfigProperty(name = "openk9.tenant-manager.liquibase.change-log")
-	String changeLogLocation;
 	@Inject
 	DatasourceLiquibaseService liquibaseService;
 	@Inject
@@ -59,46 +54,32 @@ public class TenantManagerInitializer {
 	@Inject
 	EventBus eventBus;
 
-	@PostConstruct
-	public void onStart() {
+	public void onStart(@Observes Startup startup) {
 
-		LinkedList<Params> paramsList = new LinkedList<>();
+		tenantService.findAllSchemaNameAndLiquibaseSchemaName()
+			.flatMap((schemas) -> Uni.createFrom()
+				.deferred(() -> {
 
-		paramsList.add(
-			new Params(null, null, changeLogLocation, null, null,
-				liquibaseService.toJdbcUrl(openk9DatasourceUrl),
-				datasourceUsername, datasourcePassword
+					LinkedList<Params> schemaParamList = new LinkedList<>();
+
+					for (SchemaTuple schema : schemas) {
+						schemaParamList.add(
+							new Params(
+								schema.schemaName(),
+								schema.liquibaseSchemaName(),
+								liquibaseService.getChangeLogLocation(),
+								liquibaseService.getChangeLogLockTableName(),
+								liquibaseService.getChangeLogTableName(),
+								liquibaseService.getDatasourceJdbcUrl(),
+								datasourceUsername,
+								datasourcePassword
+							)
+						);
+					}
+
+					return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
+				})
 			)
-		);
-
-		liquibaseValidatorActorSystem
-			.validateSchemas(paramsList)
-			.call(() -> tenantService
-				.findAllSchemaNameAndLiquibaseSchemaName()
-				.flatMap((schemas) -> Uni
-					.createFrom()
-					.deferred(() -> {
-
-						LinkedList<Params> schemaParamList = new LinkedList<>();
-
-						for (SchemaTuple schema : schemas) {
-							schemaParamList.add(
-								new Params(
-									schema.schemaName(),
-									schema.liquibaseSchemaName(),
-									liquibaseService.getChangeLogLocation(),
-									liquibaseService.getChangeLogLockTableName(),
-									liquibaseService.getChangeLogTableName(),
-									liquibaseService.getDatasourceJdbcUrl(),
-									datasourceUsername,
-									datasourcePassword
-								)
-							);
-						}
-
-						return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
-
-					})))
 			.subscribe()
 			.with(
 				nothing -> {

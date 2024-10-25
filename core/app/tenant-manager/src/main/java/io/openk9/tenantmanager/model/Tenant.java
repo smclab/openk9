@@ -24,6 +24,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -49,6 +50,10 @@ public class Tenant implements GraphqlId {
 	@GeneratedValue(
 		strategy = GenerationType.SEQUENCE,
 		generator = "hibernate_sequence"
+	)
+	@SequenceGenerator(
+		name = "hibernate_sequence",
+		allocationSize = 1
 	)
 	@Column(name = "id", nullable = false)
 	@Setter(AccessLevel.NONE)

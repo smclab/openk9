@@ -26,7 +26,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -39,8 +39,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -62,6 +62,10 @@ public class BackgroundProcess implements GraphqlId {
 		strategy = GenerationType.SEQUENCE,
 		generator = "hibernate_sequence"
 	)
+	@SequenceGenerator(
+		name = "hibernate_sequence",
+		allocationSize = 1
+	)
 	@Column(name = "id", nullable = false)
 	private Long id;
 
@@ -79,9 +83,8 @@ public class BackgroundProcess implements GraphqlId {
 	@Column(name = "status", nullable = false)
 	private Status status;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
 	@Column(name = "message")
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String message;
 
 	@Column(name = "process_id", nullable = false)
