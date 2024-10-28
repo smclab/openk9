@@ -34,6 +34,7 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 
 import java.util.List;
 
+@Deprecated
 @CircuitBreaker
 @Path("/v1/index")
 @ApplicationScoped

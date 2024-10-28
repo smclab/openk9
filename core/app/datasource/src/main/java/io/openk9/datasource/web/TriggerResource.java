@@ -34,6 +34,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
+@Deprecated
 @Path("/v1/trigger")
 @RolesAllowed("k9-admin")
 public class TriggerResource {
