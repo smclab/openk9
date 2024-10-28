@@ -20,8 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.ArgumentMatchers.nullable;
 
 @QuarkusTest
 @TestHTTPEndpoint(TriggerWithDateResource.class)
@@ -29,6 +35,7 @@ public class TriggerWithDateResourceTest {
 
 	public static final String SCHEMA_NAME = "bellossom";
 	public static final String REALM_NAME = "bellossom";
+	public static final String TESTING_DATE = "2022-03-10T14:32:06.247Z";
 	@InjectMock
 	TenantRegistry tenantRegistry;
 
@@ -42,15 +49,6 @@ public class TriggerWithDateResourceTest {
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void should_ingest_date_payload() {
 
-		BDDMockito.given(tenantRegistry.getTenantByVirtualHost(anyString()))
-				.willReturn(Uni.createFrom().item(
-					new TenantManager.Tenant(
-						"test",
-						SCHEMA_NAME,
-						"test",
-						"test",
-						REALM_NAME)));
-
 		BDDMockito.given(schedulerService.getStatusByDatasources(notNull()))
 				.willReturn( Uni.createFrom().item(() -> {
 					var datasourceJobStatuses =
@@ -63,9 +61,7 @@ public class TriggerWithDateResourceTest {
 					return datasourceJobStatuses;
 				}));
 
-		BDDMockito.given(schedulerInitializer.performTask(
-			SCHEMA_NAME, 0L, false, OffsetDateTime.now()))
-				.willReturn(Uni.createFrom().voidItem());
+		var date = OffsetDateTime.parse(TESTING_DATE);
 
 		given()
 			.accept(ContentType.JSON)
@@ -75,10 +71,14 @@ public class TriggerWithDateResourceTest {
 				"    0\n" +
 				"  ],\n" +
 				"  \"reindex\": true,\n" +
-				"  \"startIngestionDate\": \"2022-03-10T12:15:50-04:00\"\n" +
+				"  \"startIngestionDate\": \"" + TESTING_DATE + "\"\n" +
 				"}")
 			.post()
 			.then()
 			.statusCode(200);
+
+		BDDMockito.then(schedulerInitializer).should()
+			.triggerJobs(nullable(String.class), argThat(dto ->
+				dto.getStartIngestionDate().equals(date)));
 	}
 }
