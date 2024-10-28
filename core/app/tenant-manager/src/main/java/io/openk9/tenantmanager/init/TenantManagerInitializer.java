@@ -22,7 +22,6 @@ import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSy
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.event.Observes;
@@ -58,9 +57,7 @@ public class TenantManagerInitializer {
 	public void onStart(@Observes Startup startup) {
 
 		tenantService.findAllSchemaNameAndLiquibaseSchemaName()
-			.flatMap((schemas) -> Uni.createFrom()
-				.deferred(() -> {
-
+			.flatMap((schemas) -> {
 					LinkedList<Params> schemaParamList = new LinkedList<>();
 
 					for (SchemaTuple schema : schemas) {
@@ -79,7 +76,7 @@ public class TenantManagerInitializer {
 					}
 
 					return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
-				})
+				}
 			)
 			.emitOn(Infrastructure.getDefaultWorkerPool())
 			.subscribe()
