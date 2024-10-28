@@ -30,7 +30,11 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Path("/v2/trigger")
@@ -40,16 +44,23 @@ public class TriggerWithDateResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ActivateRequestContext
-	public Uni<List<SchedulerService.DatasourceJobStatus>> trigger(TriggerWithDateResourceDTO dto) {
+	public Uni<List<SchedulerService.DatasourceJobStatus>> trigger(TriggerV2ResourceDTO dto) {
 
-		List<Long> datasourceIds = dto.getDatasourceIds();
+		TriggerWithDateResourceDTO withDateResourceDTO =
+			TriggerWithDateResourceDTO.builder()
+				.datasourceIds(List.of(dto.getDatasourceId()))
+				.reindex(dto.isReindex())
+				.startIngestionDate(dto.getStartIngestionDate())
+				.build();
+
+		List<Long> datasourceIds = withDateResourceDTO.getDatasourceIds();
 		String tenantId = routingContext.get("_tenantId");
 
 		return schedulerService
 			.getStatusByDatasources(datasourceIds)
 			.call(() -> schedulerInitializer
 				.get()
-				.triggerJobs(tenantId, dto)
+				.triggerJobs(tenantId, withDateResourceDTO)
 			);
 
 	}
@@ -63,4 +74,12 @@ public class TriggerWithDateResource {
 	@Inject
 	SchedulerService schedulerService;
 
+	@Data
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static class TriggerV2ResourceDTO {
+		private long datasourceId;
+		private boolean reindex;
+		private OffsetDateTime startIngestionDate;
+	}
 }
