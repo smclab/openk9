@@ -57,6 +57,7 @@ public class TenantManagerInitializer {
 	public void onStart(@Observes Startup startup) {
 
 		tenantService.findAllSchemaNameAndLiquibaseSchemaName()
+			.emitOn(Infrastructure.getDefaultWorkerPool())
 			.flatMap((schemas) -> {
 					LinkedList<Params> schemaParamList = new LinkedList<>();
 
@@ -78,7 +79,6 @@ public class TenantManagerInitializer {
 					return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
 				}
 			)
-			.emitOn(Infrastructure.getDefaultWorkerPool())
 			.subscribe()
 			.with(
 				nothing -> {
