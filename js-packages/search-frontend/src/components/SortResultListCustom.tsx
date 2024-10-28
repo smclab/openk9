@@ -1,11 +1,8 @@
 import React from "react";
-import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
 import { setSortResultsType } from "./SortResults";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 
 function SortResultList({
   classTab,
@@ -40,6 +37,14 @@ function SortResultList({
   });
   const myValueMemo = React.useMemo(() => myValue, [myValue]);
   const { t } = useTranslation();
+
+  React.useEffect(() => {
+    const findTabDefault = selectOptions.find((s) => s.isDefault);
+    setSortResult({
+      field: findTabDefault?.label || "",
+      type: findTabDefault?.sort as "asc" | "desc",
+    });
+  }, []);
 
   const sortOptions = React.useMemo(() => {
     return selectOptions.flatMap((option) => {
@@ -86,10 +91,11 @@ function SortResultList({
   // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
     const eventValue = event?.value && JSON.parse(event.value);
+
     if (eventValue) {
       setSortResult({
         field: eventValue.label.value,
-        type: eventValue,
+        type: eventValue.label.sort,
       });
       setMyValue(event);
     }
