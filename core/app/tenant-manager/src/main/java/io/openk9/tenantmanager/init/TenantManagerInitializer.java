@@ -23,6 +23,7 @@ import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -80,6 +81,7 @@ public class TenantManagerInitializer {
 					return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
 				})
 			)
+			.emitOn(Infrastructure.getDefaultWorkerPool())
 			.subscribe()
 			.with(
 				nothing -> {
