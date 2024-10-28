@@ -36,6 +36,7 @@ public class TriggerWithDateResourceTest {
 	public static final String SCHEMA_NAME = "bellossom";
 	public static final String REALM_NAME = "bellossom";
 	public static final String TESTING_DATE = "2022-03-10T14:32:06.247Z";
+	private static final String TESTING_DATASOURCE_ID = "5";
 	@InjectMock
 	TenantRegistry tenantRegistry;
 
@@ -67,9 +68,7 @@ public class TriggerWithDateResourceTest {
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.body("{\n" +
-				"  \"datasourceIds\": [\n" +
-				"    0\n" +
-				"  ],\n" +
+				"  \"datasourceId\": " + TESTING_DATASOURCE_ID + ",\n" +
 				"  \"reindex\": true,\n" +
 				"  \"startIngestionDate\": \"" + TESTING_DATE + "\"\n" +
 				"}")
@@ -79,6 +78,7 @@ public class TriggerWithDateResourceTest {
 
 		BDDMockito.then(schedulerInitializer).should()
 			.triggerJobs(nullable(String.class), argThat(dto ->
-				dto.getStartIngestionDate().equals(date)));
+				dto.getStartIngestionDate().equals(date) && dto.getDatasourceIds().size() == 1
+					&& dto.getDatasourceIds().getFirst().equals(Long.parseLong(TESTING_DATASOURCE_ID))));
 	}
 }
