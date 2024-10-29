@@ -397,7 +397,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
             skeletonCustom.results ? (
-              isActiveSkeleton && skeletonCustom.results
+              isActiveSkeleton && skeletonCustom.filters
             ) : (
               isActiveSkeleton && <SkeletonFilters />
             )
