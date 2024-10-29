@@ -44,7 +44,7 @@ function SortResultList({
       field: findTabDefault?.label || "",
       type: findTabDefault?.sort as "asc" | "desc",
     });
-  }, []);
+  }, [selectOptions]);
 
   const sortOptions = React.useMemo(() => {
     return selectOptions.flatMap((option) => {
@@ -79,14 +79,6 @@ function SortResultList({
       }
     });
   }, [selectOptions, t]);
-
-  const SingleValue = (props: any) => (
-    <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        {props.children}
-      </div>
-    </components.SingleValue>
-  );
 
   // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
@@ -151,9 +143,6 @@ function SortResultList({
         ariaLiveMessages={{ onFocus }}
         className={`openk9-react-select-container SortResultListCustom-container`}
         classNamePrefix="openk9-react-select"
-        components={{
-          SingleValue,
-        }}
         options={sortOptions}
         onChange={handleChange}
         value={myValueMemo}
