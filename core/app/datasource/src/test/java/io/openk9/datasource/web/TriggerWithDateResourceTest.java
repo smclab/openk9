@@ -1,10 +1,8 @@
 package io.openk9.datasource.web;
 
-import io.openk9.api.tenantmanager.TenantManager;
 import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.service.SchedulerService;
-import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -12,20 +10,13 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.BDDMockito;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.ArgumentMatchers.nullable;
 
