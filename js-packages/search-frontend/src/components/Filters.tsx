@@ -91,9 +91,7 @@ function Filters({
         <React.Suspense
           key={index}
           fallback={
-            skeletonCategoryCustom
-              ? isActiveSkeleton && skeletonCategoryCustom
-              : isActiveSkeleton && <SkeletonCategory />
+            skeletonCategoryCustom && isActiveSkeleton && skeletonCategoryCustom
           }
         >
           <FilterCategoryDynamicMemo

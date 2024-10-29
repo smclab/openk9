@@ -71,7 +71,7 @@ function ResultsPagination<E>({
     case "virtual":
     case "infinite":
       return (
-        <React.Suspense fallback={<SkeletonResult />}>
+        <React.Suspense>
           <InfiniteResults
             setTotalResult={setTotalResult}
             renderers={renderers}

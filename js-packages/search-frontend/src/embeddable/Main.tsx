@@ -310,10 +310,8 @@ export function Main({
               resetSort={resetSort}
               selectionsDispatch={selectionsDispatch}
             />
-          ) : skeletonCustom.tabs ? (
-            isActiveSkeleton && skeletonCustom.tabs
           ) : (
-            isActiveSkeleton && <TabsSkeleton />
+            skeletonCustom.tabs && isActiveSkeleton && skeletonCustom.tabs
           )}
         </I18nextProvider>,
         configuration.tabs,
@@ -371,9 +369,7 @@ export function Main({
           {isSearchLoading ? (
             skeletonCustom.filters ? (
               isActiveSkeleton && skeletonCustom.filters
-            ) : (
-              isActiveSkeleton && <SkeletonFilters />
-            )
+            ) : null
           ) : (
             <FiltersMemo
               searchQuery={searchQuery}
@@ -384,7 +380,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               language={languageSelect}
               isDynamicElement={dynamicData}
-              isActiveSkeleton={isActiveSkeleton?.filters ?? true}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               iconCustom={iconCustom}
