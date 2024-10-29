@@ -65,6 +65,11 @@ public class VectorIndexDTO extends K9EntityDTO {
 		@Json
 		@Description("The configurations needed by the embedding model")
 		private String jsonConfig;
+		@Description("The size of array chunks before and after the actual chunk, sent to embedding model")
+		private Integer chunkWindowSize;
+		@JsonPath
+		@Description("The JsonPath to retrieve index metadata and apply it to the vector index")
+		private String metadataMapping;
 
 	}
 
