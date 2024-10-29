@@ -81,7 +81,7 @@ export function Main({
   const useKeycloak = configuration.useKeycloak;
   const iconCustom = configuration.icons;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
-  const isActiveSkeleton = configuration?.isActiveSkeleton || false;
+  const isActiveSkeleton = configuration?.isActiveSkeleton || null;
   const viewButton = configuration?.viewButton;
   const queryStringValues = configuration?.queryStringValues || [
     "text",
@@ -384,7 +384,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               language={languageSelect}
               isDynamicElement={dynamicData}
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? true}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               iconCustom={iconCustom}
@@ -415,7 +415,7 @@ export function Main({
               noResultMessage={
                 configuration.filtersConfigurable?.noResultMessage
               }
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               placeholder={configuration.filtersConfigurable?.placeholder}
@@ -796,7 +796,7 @@ export function Main({
               filtersSelect={configuration.filterTokens}
               sort={completelySort}
               skeletonCategoryCustom={skeletonCustom.suggestion}
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               dynamicFilters={
                 dynamicFilters.data?.handleDynamicFilters || false
               }

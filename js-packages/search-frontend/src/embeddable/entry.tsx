@@ -354,7 +354,11 @@ export type Configuration = {
   filterTokens: Array<SearchToken>;
   icons: IconsCustom;
   isQueryAnalysis: boolean | null;
-  isActiveSkeleton: boolean | null;
+  isActiveSkeleton: {
+    results?: boolean | null;
+    filters?: boolean | null;
+    tabs?: boolean | null;
+  } | null;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
   memoryResults: boolean | null | undefined;
@@ -446,7 +450,7 @@ const defaultConfiguration: Configuration = {
   filterTokens: [],
   generateResponse: null,
   icons: null,
-  isActiveSkeleton: null,
+  isActiveSkeleton: { results: null, filters: null, tabs: null },
   isQueryAnalysis: true,
   login: null,
   memoryResults: null,
