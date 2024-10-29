@@ -75,7 +75,8 @@ public class TenantManagerInitializer {
 						);
 					}
 
-					return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
+				return liquibaseValidatorActorSystem.validateSchemas(schemaParamList)
+					.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 				}
 			)
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
