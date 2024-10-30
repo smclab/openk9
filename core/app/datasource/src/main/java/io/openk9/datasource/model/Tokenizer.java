@@ -20,15 +20,13 @@ package io.openk9.datasource.model;
 import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
-
-import java.sql.Types;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "tokenizer")
@@ -44,8 +42,7 @@ public class Tokenizer extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name="json_config")
 	private String jsonConfig;
 

@@ -23,15 +23,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
-
-import java.sql.Types;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "vector_index")
@@ -68,8 +66,7 @@ public class VectorIndex extends K9Entity {
 	@Column(name = "chunk_type")
 	private ChunkType chunkType;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

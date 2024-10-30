@@ -21,14 +21,11 @@ import akka.actor.typed.ActorRef;
 import akka.cluster.typed.ClusterSingleton;
 import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-import org.opensearch.client.RestHighLevelClient;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -73,7 +70,9 @@ public class SchedulerInitializerActor {
 						.init(
 							SingletonActor.of(
 								JobScheduler.create(
-									schedulatedJobs
+									schedulatedJobs != null
+										? schedulatedJobs
+										: List.of()
 								),
 								"job-scheduler"
 							)
@@ -96,18 +95,9 @@ public class SchedulerInitializerActor {
 
 	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
 	
-	@Inject
-	HttpPluginDriverClient httpPluginDriverClient;
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	ActorSystemProvider actorSystemProvider;
-
-	@Inject
-	RestHighLevelClient restHighLevelClient;
-
 	@Inject
 	Vertx vertx;
 }

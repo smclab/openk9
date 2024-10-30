@@ -24,7 +24,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -32,8 +31,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Types;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -54,8 +53,7 @@ public class QueryAnalysis extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 	@Column(name = "stopWords")
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String stopWords;
 
 	@ManyToMany(cascade = {

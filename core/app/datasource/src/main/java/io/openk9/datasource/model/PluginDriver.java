@@ -23,7 +23,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -31,8 +30,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Types;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -56,8 +55,7 @@ public class PluginDriver extends K9Entity {
 	@Column(name = "type", nullable = false)
 	private PluginDriverType type;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

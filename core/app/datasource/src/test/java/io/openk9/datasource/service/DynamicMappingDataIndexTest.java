@@ -17,24 +17,24 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.Mock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
@@ -52,17 +52,21 @@ class DynamicMappingDataIndexTest {
 	@Inject
 	DataIndexService dataIndexService;
 
+	@Inject
+	DatasourceService datasourceService;
+
 	@InjectMock
 	IndexerEvents indexerEvents;
 
 	@InjectSpy
 	HttpPluginDriverClient httpPluginDriverClient;
 
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
 	@Test
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
-
-		var useless = Mockito.mock(Mutiny.Session.class);
 
 		given(indexerEvents.generateDocTypeFields(
 			any(Mutiny.Session.class),
@@ -72,7 +76,33 @@ class DynamicMappingDataIndexTest {
 		)).willReturn(Uni.createFrom().voidItem());
 
 		asserter.assertThat(
-			() -> dataIndexService.createByDatasource(useless, CreateConnection.DATASOURCE),
+			() -> sessionFactory.withTransaction((s, t) -> datasourceService
+				.create(s, DatasourceDTO.builder()
+					.name(DynamicMappingDataIndexTest.class.getName())
+					.description("test")
+					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
+					.scheduling(CreateConnection.SCHEDULING)
+					.schedulable(false)
+					.reindexRate(0)
+					.build()
+				)
+				.map(datasource -> {
+					var pluginDriver = new PluginDriver();
+					pluginDriver.setName("aaaa");
+					pluginDriver.setJsonConfig(Json.encode(
+						HttpPluginDriverInfo.builder()
+							.host(WireMockPluginDriver.HOST)
+							.port(WireMockPluginDriver.PORT)
+							.secure(false)
+							.build())
+					);
+					pluginDriver.setType(PluginDriver.PluginDriverType.HTTP);
+					datasource.setPluginDriver(pluginDriver);
+					return datasource;
+				})
+				.flatMap(datasource -> dataIndexService
+					.createByDatasource(s, datasource))
+			),
 			dataIndex -> {
 
 				then(httpPluginDriverClient)
@@ -91,31 +121,6 @@ class DynamicMappingDataIndexTest {
 			}
 		);
 
-
-	}
-
-	@Mock
-	public static class MockDataIndexService extends DataIndexService {
-
-		MockDataIndexService() {
-			super(null);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
-			return Uni.createFrom().item((T) CreateConnection.DATAINDEX);
-		}
-
-		@Override
-		public Uni<DataIndex> findById(Mutiny.Session s, long id) {
-			return Uni.createFrom().item(CreateConnection.DATAINDEX);
-		}
-
-		@Inject
-		void setDataIndexMapper(DataIndexMapper mapper) {
-			this.mapper = mapper;
-		}
 
 	}
 

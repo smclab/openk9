@@ -30,8 +30,8 @@ import io.openk9.searcher.grpc.Searcher;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
@@ -69,6 +69,7 @@ public class SearcherGrpcTest {
 
 	@InjectMock
 	LargeLanguageModelService largeLanguageModelService;
+
 	@InjectMock
 	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;

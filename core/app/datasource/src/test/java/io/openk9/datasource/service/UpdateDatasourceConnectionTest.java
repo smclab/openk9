@@ -18,16 +18,21 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.util.Set;
 
@@ -42,7 +47,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
-class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
+class UpdateDatasourceConnectionTest {
+
+	private static final DatasourceMapper mapper = Mappers.getMapper(DatasourceMapper.class);
+	@Inject
+	DatasourceService datasourceService;
+	@InjectMock
+	PluginDriverService pluginDriverService;
+	@InjectMock
+	EnrichPipelineService enrichPipelineService;
+	@InjectMock
+	DataIndexService dataIndexService;
+	@InjectMock
+	VectorIndexService vectorIndexService;
 
 	// PluginDriver Tests
 
@@ -57,6 +74,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
+					.name(
+						"should_have_no_interaction_with_pluginDriver_when_pluginDriverDto_is_not_null")
+					.scheduling(CreateConnection.SCHEDULING)
 					.datasourceId(CreateConnection.DATASOURCE_ID)
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO)
 					.build()
@@ -76,8 +96,10 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
+					.name("should_have_no_interaction_with_pluginDriver_when_pluginId_is_not_null")
 					.datasourceId(CreateConnection.DATASOURCE_ID)
 					.pluginDriverId(CreateConnection.PLUGIN_DRIVER_ID)
+					.scheduling(CreateConnection.SCHEDULING)
 					.build()
 			),
 			datasource -> then(pluginDriverService).shouldHaveNoInteractions()
@@ -302,6 +324,9 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 			() -> datasourceService.updateDatasourceConnection(
 				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
+					.name(
+						"should_bind_an_existing_dataIndex_and_update_vectorIndex_when_dataIndexId_is_not_null_and_vectorIndex_exist_and_vectorIndexDto_is_not_null")
+					.scheduling(CreateConnection.SCHEDULING)
 					.datasourceId(CreateConnection.DATASOURCE_ID)
 					.dataIndexId(CreateConnection.DATA_INDEX_ID)
 					.vectorIndexConfigurations(
@@ -434,5 +459,24 @@ class UpdateDatasourceConnectionTest extends BaseDatasourceServiceTest {
 
 	private static boolean hasNotDataIndex(Datasource datasource) {
 		return datasource != null && datasource.getDataIndex() == null;
+	}
+
+	@Mock
+	public static class MockDatasourceService extends DatasourceService {
+
+		MockDatasourceService() {
+			super(Mappers.getMapper(DatasourceMapper.class));
+		}
+
+		@Override
+		public Uni<Datasource> findByIdWithPluginDriver(Mutiny.Session session, long datasourceId) {
+			if (datasourceId == CreateConnection.DATASOURCE_ID) {
+				return Uni.createFrom().item(CreateConnection.DATASOURCE);
+			}
+			else {
+				return super.findByIdWithPluginDriver(session, datasourceId);
+			}
+		}
+
 	}
 }

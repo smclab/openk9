@@ -21,6 +21,7 @@ import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.exception.K9Error;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
@@ -38,7 +39,22 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
-class DatasourceCreateConnectionTest extends BaseDatasourceServiceTest {
+class DatasourceCreateConnectionTest {
+
+	@Inject
+	DatasourceService datasourceService;
+
+	@InjectMock
+	PluginDriverService pluginDriverService;
+
+	@InjectMock
+	EnrichPipelineService enrichPipelineService;
+
+	@InjectMock
+	DataIndexService dataIndexService;
+
+	@InjectMock
+	VectorIndexService vectorIndexService;
 
 	@Test
 	@RunOnVertxContext

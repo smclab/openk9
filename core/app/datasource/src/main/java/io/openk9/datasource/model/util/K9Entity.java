@@ -23,6 +23,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,10 @@ public abstract class K9Entity implements GraphqlId {
 	@GeneratedValue(
 		strategy = GenerationType.SEQUENCE,
 		generator = "hibernate_sequence"
+	)
+	@SequenceGenerator(
+		name = "hibernate_sequence",
+		allocationSize = 1
 	)
 	@org.eclipse.microprofile.graphql.Id
 	public Long id;

@@ -54,7 +54,7 @@ class EnrichPipelineServiceTest {
 			response -> then(session).should(atLeastOnce())
 				.persist(argThat((EnrichPipeline pipeline) -> {
 						Assertions.assertEquals(
-							CreateConnection.PIPELINE_NAME,
+							CreateConnection.PIPELINE_WITH_ITEMS_DTO.getName(),
 							pipeline.getName()
 						);
 

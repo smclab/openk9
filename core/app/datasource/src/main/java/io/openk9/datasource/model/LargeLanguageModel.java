@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
@@ -30,8 +29,7 @@ import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
-
-import java.sql.Types;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "large_language_model")
@@ -57,8 +55,7 @@ public class LargeLanguageModel extends K9Entity {
 	@Column(name = "api_key")
 	private String apiKey;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

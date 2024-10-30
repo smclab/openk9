@@ -23,15 +23,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
-
-import java.sql.Types;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "doc_type_template")
@@ -49,11 +47,10 @@ public class DocTypeTemplate extends K9Entity {
 	@Column(name = "template_type", nullable = false)
 	private TemplateType templateType;
 	@Column(name = "source")
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String source;
 	@Column(name = "compiled")
-	@Lob
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String compiled;
 
 }

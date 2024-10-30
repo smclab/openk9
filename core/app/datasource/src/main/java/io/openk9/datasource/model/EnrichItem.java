@@ -22,15 +22,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
-
-import java.sql.Types;
+import org.hibernate.type.SqlTypes;
 
 @Entity(name = EnrichItem.ENTITY_NAME)
 @Table(name = EnrichItem.TABLE_NAME)
@@ -55,13 +53,11 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "service_name", nullable = false)
 	private String serviceName;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "script")
 	private String script;
 
-	@Lob
-	@JdbcTypeCode(Types.LONGNVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

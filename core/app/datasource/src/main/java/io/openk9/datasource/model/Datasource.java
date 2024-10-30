@@ -40,8 +40,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -132,7 +132,7 @@ public class Datasource extends K9Entity {
 	@JsonIgnore
 	private Set<Scheduler> schedulers = new LinkedHashSet<>();
 
-	@JdbcTypeCode(Types.LONGVARCHAR)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

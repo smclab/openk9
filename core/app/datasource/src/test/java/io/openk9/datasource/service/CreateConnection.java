@@ -46,7 +46,7 @@ public class CreateConnection {
 	public static final long SECOND_ITEM_ID = 65L;
 	public static final PipelineWithItemsDTO PIPELINE_WITH_ITEMS_DTO =
 		PipelineWithItemsDTO.builder()
-			.name(PIPELINE_NAME)
+			.name(PIPELINE_NAME + " with items")
 			.item(PipelineWithItemsDTO.ItemDTO.builder()
 				.enrichItemId(FIRST_ITEM_ID)
 				.weight(13)
@@ -66,7 +66,7 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO NEW_ENTITIES_VECTOR_DTO =
 		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + " new entities vector dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
 			.schedulable(SCHEDULABLE)
@@ -86,7 +86,7 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO NEW_ENTITIES_BASE_DTO =
 		DatasourceConnectionDTO.builder()
-		.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + "new entities base dto")
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
 		.schedulable(SCHEDULABLE)
@@ -98,7 +98,7 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + "pre exist plugin new pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
 			.schedulable(SCHEDULABLE)
@@ -109,7 +109,7 @@ public class CreateConnection {
 			.build();
 
 	public static final DatasourceConnectionDTO AMBIGUOUS_DTO = DatasourceConnectionDTO.builder()
-		.name(DATASOURCE_NAME)
+		.name(DATASOURCE_NAME + " ambiguous dto")
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
 		.schedulable(SCHEDULABLE)
@@ -123,7 +123,7 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + "new plugin preexist pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
 			.schedulable(SCHEDULABLE)
@@ -135,7 +135,7 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + "new plugin no pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
 			.schedulable(SCHEDULABLE)
@@ -146,13 +146,14 @@ public class CreateConnection {
 
 	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME)
+			.name(DATASOURCE_NAME + "no plugin no pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
 			.build();
+
 	public static PluginDriver PLUGIN_DRIVER;
 	public static EnrichPipeline PIPELINE;
 	public static Datasource DATASOURCE;

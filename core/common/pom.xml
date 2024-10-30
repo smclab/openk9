@@ -38,5 +38,6 @@
 		<module>model</module>
 		<module>util</module>
 		<module>k8s-manifest</module>
+		<module>datasource-model</module>
 	</modules>
 </project>
