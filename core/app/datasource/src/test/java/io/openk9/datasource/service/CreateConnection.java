@@ -60,7 +60,7 @@ public class CreateConnection {
 			.build();
 	public static final long PLUGIN_DRIVER_ID = 100L;
 	public static final long PIPELINE_ID = 10L;
-	public static final long DATASOURCE_ID = 12312L;
+	public static final long DATASOURCE_ID = Long.MAX_VALUE;
 	public static final long DATA_INDEX_ID = 1111L;
 	public static final long VECTOR_INDEX_ID = 2199L;
 
