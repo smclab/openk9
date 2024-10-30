@@ -30,6 +30,8 @@
   <properties>
     <cron-utils.version>9.2.0</cron-utils.version>
     <zstd-jni.version>1.5.2-3</zstd-jni.version>
+    <cron-utils.version>9.2.1</cron-utils.version>
+    <zstd-jni.version>1.5.6-3</zstd-jni.version>
     <akka.management.version>1.1.4</akka.management.version>
   </properties>
   <dependencies>
@@ -83,7 +85,6 @@
     <dependency>
       <groupId>io.quarkiverse.rabbitmqclient</groupId>
       <artifactId>quarkus-rabbitmq-client</artifactId>
-      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

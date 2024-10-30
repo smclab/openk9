@@ -144,6 +144,11 @@
 				<version>1.10.0</version>
 			</dependency>
 			<dependency>
+				<groupId>io.quarkiverse.rabbitmqclient</groupId>
+				<artifactId>quarkus-rabbitmq-client</artifactId>
+				<version>3.2.0</version>
+			</dependency>
+			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-bom</artifactId>
 				<version>2022.0.1</version>
