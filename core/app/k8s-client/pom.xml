@@ -26,23 +26,17 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <name>OpenK9 :: Quarkus :: K8sClient</name>
+  <name>OpenK9 :: App :: K8sClient</name>
 
   <artifactId>k8s-client</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client-jackson</artifactId>
-    </dependency>
+
+    <!-- // authentication -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-oidc</artifactId>
@@ -55,18 +49,27 @@
       <groupId>io.openk9.service</groupId>
       <artifactId>auth-service</artifactId>
     </dependency>
+    <!-- authentication // -->
+
+    <!-- consumes grpc client -->
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>tenant-manager-client-grpc</artifactId>
     </dependency>
+
+    <!-- implements grpc server -->
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>app-manager</artifactId>
     </dependency>
+
+    <!-- k8s models -->
     <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>k8s-manifest</artifactId>
     </dependency>
+
+    <!-- // cluster client -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-kubernetes-client</artifactId>
@@ -75,10 +78,8 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-openshift-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
-    </dependency>
+    <!-- cluster client // -->
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
