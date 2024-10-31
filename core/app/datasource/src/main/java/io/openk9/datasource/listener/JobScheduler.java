@@ -488,7 +488,7 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null, null),
+					new TriggerDatasource(tenantName, datasourceId, false, null),
 					Option.empty(),
 					cron,
 					Option.empty(),
@@ -514,7 +514,7 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null, null),
+					new TriggerDatasource(tenantName, datasourceId, false, null),
 					Option.empty(),
 					cron,
 					Option.empty(),
