@@ -28,11 +28,11 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-resteasy-client</artifactId>
+      <artifactId>quarkus-rest-client</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-resteasy-client-jackson</artifactId>
+      <artifactId>quarkus-rest-client-jackson</artifactId>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
