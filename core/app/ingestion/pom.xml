@@ -26,10 +26,20 @@
   <name>OpenK9 :: App :: Ingestion</name>
   <artifactId>ingestion</artifactId>
   <dependencies>
+
+    <!-- // API -->
     <dependency>
       <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-messaging-rabbitmq</artifactId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-grpc</artifactId>
+    </dependency>
+    <!-- API // -->
+
+    <!-- file manager client -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client</artifactId>
@@ -38,24 +48,21 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-jackson</artifactId>
     </dependency>
+
+    <!-- ingestion queue -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
+      <artifactId>quarkus-messaging-rabbitmq</artifactId>
     </dependency>
+
+    <!-- queue key -->
     <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>util</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
-    </dependency>
+
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
