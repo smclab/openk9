@@ -60,8 +60,94 @@ public class JobScheduler {
 		String tenantName, long datasourceId, boolean schedulable, String cron
 	) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	public record TriggerDatasource(
-		String tenantName, long datasourceId, Boolean startFromFirst) implements Command {}
+	private static Behavior<Command> onScheduleDatasourceInternal(
+		ScheduleDatasourceInternal scheduleDatasourceInternal,
+		ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
+
+		String tenantName = scheduleDatasourceInternal.tenantName();
+		long datasourceId = scheduleDatasourceInternal.datasourceId();
+		String cron = scheduleDatasourceInternal.cron();
+		boolean schedulable = scheduleDatasourceInternal.schedulable();
+
+		String jobName = tenantName + "-" + datasourceId;
+
+		if (schedulable) {
+
+			if (jobNames.contains(jobName)) {
+
+				quartzSchedulerTypedExtension.updateTypedJobSchedule(
+					jobName,
+					ctx.getSelf(),
+					new TriggerDatasource(tenantName, datasourceId, false),
+					Option.empty(),
+					cron,
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
+				quartzSchedulerTypedExtension.updateTypedJobSchedule(
+					jobName + "-purge",
+					ctx.getSelf(),
+					new TriggerDatasourcePurge(tenantName, datasourceId),
+					Option.empty(),
+					getPurgeCron(ctx),
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
+				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
+
+				return Behaviors.same();
+			}
+			else {
+
+				quartzSchedulerTypedExtension.createTypedJobSchedule(
+					jobName,
+					ctx.getSelf(),
+					new TriggerDatasource(tenantName, datasourceId, false),
+					Option.empty(),
+					cron,
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
+				quartzSchedulerTypedExtension.createTypedJobSchedule(
+					jobName + "-purge",
+					ctx.getSelf(),
+					new TriggerDatasourcePurge(tenantName, datasourceId),
+					Option.empty(),
+					getPurgeCron(ctx),
+					Option.empty(),
+					quartzSchedulerTypedExtension.defaultTimezone()
+				);
+
+
+				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
+
+				List<String> newJobNames = new ArrayList<>(jobNames);
+
+				newJobNames.add(jobName);
+
+				return initial(
+					ctx, quartzSchedulerTypedExtension,
+					messageGatewayService, newJobNames
+				);
+
+			}
+		}
+		else if (jobNames.contains(jobName)) {
+			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
+			log.infof("job is not schedulable, removing job: %s", jobName);
+			return Behaviors.same();
+		}
+
+		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
+
+		return Behaviors.same();
+
+	}
 	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
 	private record ScheduleDatasourceInternal(
 		String tenantName, long datasourceId, boolean schedulable, String cron
@@ -445,93 +531,74 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onScheduleDatasourceInternal(
-		ScheduleDatasourceInternal scheduleDatasourceInternal,
+	private static Behavior<Command> onStartScheduler(
 		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
+		StartSchedulerInternal startSchedulerInternal) {
 
-		String tenantName = scheduleDatasourceInternal.tenantName();
-		long datasourceId = scheduleDatasourceInternal.datasourceId();
-		String cron = scheduleDatasourceInternal.cron();
-		boolean schedulable = scheduleDatasourceInternal.schedulable();
+		Datasource datasource = startSchedulerInternal.datasource;
+		var tenantName = datasource.getTenant();
 
-		String jobName = tenantName + "-" + datasourceId;
+		var throwable1 = startSchedulerInternal.throwable();
 
-		if (schedulable) {
+		if (throwable1 != null) {
+			log.warnf(throwable1, "Cannot start a Scheduler.");
 
-			if (jobNames.contains(jobName)) {
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName + "-purge",
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
-
-				return Behaviors.same();
-			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName + "-purge",
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension,
-					messageGatewayService, newJobNames
-				);
-
-			}
-		}
-		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
-			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
 
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
+		var triggerType = startSchedulerInternal.triggerType();
+
+		if (triggerType == TriggerType.IGNORE) {
+			log.infof(
+				"A Scheduler for datasource with id %s is already running",
+				datasource.getId()
+			);
+
+			return Behaviors.same();
+		}
+
+		var startFromFirst = triggerType == TriggerType.REINDEX;
+
+		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
+
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
+
+		if (oldDataIndex == null || startFromFirst) {
+
+			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
+
+			DataIndex newDataIndex = new DataIndex();
+			newDataIndex.setName(newDataIndexName);
+			newDataIndex.setDatasource(datasource);
+			scheduler.setNewDataIndex(newDataIndex);
+
+			if (oldDataIndex != null) {
+				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+
+				if (docTypes != null && !docTypes.isEmpty()) {
+					ctx.getSelf().tell(
+						new CopyIndexTemplate(scheduler));
+
+					return Behaviors.same();
+				}
+			}
+		}
+		else {
+
+			ctx.pipeToSelf(
+				JobSchedulerService.persistScheduler(tenantName, scheduler),
+				(response, throwable) -> new StartSchedulingWork(scheduler, throwable)
+			);
+
+		}
 
 		return Behaviors.same();
-
 	}
 
 	private static Behavior<Command> onSetupMessageGatewaySubscription(
@@ -581,70 +648,9 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onStartScheduler(
-		ActorContext<Command> ctx,
-		StartSchedulerInternal startSchedulerInternal) {
-
-		Datasource datasource = startSchedulerInternal.datasource;
-		var tenantName = datasource.getTenant();
-
-		var throwable1 = startSchedulerInternal.throwable();
-
-		if (throwable1 != null) {
-			log.warnf("aaaa");
-			return Behaviors.same();
-		}
-
-		var triggerType = startSchedulerInternal.triggerType();
-
-		if (triggerType == TriggerType.IGNORE) {
-			log.warnf("adsafasdf");
-			return Behaviors.same();
-		}
-
-		var startFromFirst = triggerType == TriggerType.REINDEX;
-
-		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
-		scheduler.setScheduleId(UUID.randomUUID().toString());
-		scheduler.setDatasource(datasource);
-		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
-
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-
-		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
-
-		if (oldDataIndex == null || startFromFirst) {
-
-			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
-
-			DataIndex newDataIndex = new DataIndex();
-			newDataIndex.setName(newDataIndexName);
-			newDataIndex.setDatasource(datasource);
-			scheduler.setNewDataIndex(newDataIndex);
-
-			if (oldDataIndex != null) {
-				Set<DocType> docTypes = oldDataIndex.getDocTypes();
-
-				if (docTypes != null && !docTypes.isEmpty()) {
-					ctx.getSelf().tell(
-						new CopyIndexTemplate(scheduler));
-
-					return Behaviors.same();
-				}
-			}
-		}
-		else {
-
-			ctx.pipeToSelf(
-				JobSchedulerService.persistScheduler(tenantName, scheduler),
-				(response, throwable) -> new StartSchedulingWork(scheduler, throwable)
-			);
-
-		}
-
-		return Behaviors.same();
-	}
+	public record TriggerDatasource(
+		String tenantName, long datasourceId, boolean startFromFirst
+	) implements Command {}
 
 	private static Behavior<Command> onPersistSchedulerInternal(
 		ActorContext<Command> ctx, PersistSchedulerInternal pndi) {
