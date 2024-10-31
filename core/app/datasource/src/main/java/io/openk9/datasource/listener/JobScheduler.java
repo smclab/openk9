@@ -60,9 +60,46 @@ public class JobScheduler {
 		String tenantName, long datasourceId, boolean schedulable, String cron
 	) implements Command {}
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	public record TriggerDatasource(
-		String tenantName, long datasourceId, Boolean reindex, OffsetDateTime startIngestionDate
-	) implements Command {}
+	private static Behavior<Command> onTriggerDatasourceInternal(
+		TriggerDatasourceInternal triggerDatasourceInternal,
+		ActorContext<Command> ctx) {
+
+		var throwable = triggerDatasourceInternal.throwable();
+		String tenantId = triggerDatasourceInternal.tenantName();
+
+		if (throwable != null) {
+			log.errorf(
+				throwable,
+				"error occurred when fetching datasource on tenant %s",
+				tenantId
+			);
+
+			return Behaviors.same();
+		}
+
+		Datasource datasource = triggerDatasourceInternal.datasource();
+		boolean reindex = triggerDatasourceInternal.reindex();
+		OffsetDateTime offsetDateTime = triggerDatasourceInternal.startIngestionDate();
+
+		PluginDriver pluginDriver = datasource.getPluginDriver();
+
+		log.infof("Job executed: %s", datasource.getName());
+
+		if (pluginDriver == null) {
+			log.warnf(
+				"datasource with id: %s has no pluginDriver", datasource.getId());
+
+			return Behaviors.same();
+		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.getTriggerType(datasource, reindex),
+			(triggerType, t) ->
+				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
+		);
+
+		return Behaviors.same();
+	}
 	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
 	private record ScheduleDatasourceInternal(
 		String tenantName, long datasourceId, boolean schedulable, String cron
@@ -320,45 +357,23 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onTriggerDatasourceInternal(
-		TriggerDatasourceInternal triggerDatasourceInternal,
-		ActorContext<Command> ctx) {
+	private static Behavior<Command> onTriggerDatasource(
+		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
 
-		var throwable = triggerDatasourceInternal.throwable();
-		String tenantId = triggerDatasourceInternal.tenantName();
-
-		if (throwable != null) {
-			log.errorf(
-				throwable,
-				"error occurred when fetching datasource on tenant %s",
-				tenantId
-			);
-
-			return Behaviors.same();
-		}
-
-		Datasource datasource = triggerDatasourceInternal.datasource();
-		Boolean reindex = triggerDatasourceInternal.reindex();
-		OffsetDateTime offsetDateTime = triggerDatasourceInternal.startIngestionDate();
-
-		PluginDriver pluginDriver = datasource.getPluginDriver();
-
-		log.infof("Job executed: %s", datasource.getName());
-
-		if (pluginDriver == null) {
-			log.warnf(
-				"datasource with id: %s has no pluginDriver", datasource.getId());
-
-			return Behaviors.same();
-		}
+		long datasourceId = jobMessage.datasourceId;
+		String tenandId = jobMessage.tenantName;
+		boolean reindex = jobMessage.reindex;
+		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
 
 		ctx.pipeToSelf(
-			JobSchedulerService.getTriggerType(datasource, reindex),
-			(triggerType, t) ->
-				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
+			JobSchedulerService.fetchDatasourceConnection(
+				tenandId, datasourceId),
+			(datasource, throwable) -> new TriggerDatasourceInternal(
+				tenandId, datasource, reindex, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
+
 	}
 
 	public static Behavior<Command> create(
@@ -560,36 +575,6 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onTriggerDatasource(
-		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
-
-		long datasourceId = jobMessage.datasourceId;
-		String tenandId = jobMessage.tenantName;
-		Boolean reindex = jobMessage.reindex;
-		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
-
-		ctx.pipeToSelf(
-			JobSchedulerService.fetchDatasourceConnection(
-				tenandId, datasourceId),
-			(datasource, throwable) -> new TriggerDatasourceInternal(
-				tenandId, datasource, reindex, startIngestionDate, throwable)
-		);
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onTriggerDatasourcePurge(
-		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
-
-		String tenantName = tdp.tenantName();
-		long datasourceId = tdp.datasourceId;
-
-		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
-
-		return Behaviors.same();
-	}
-
 	private static Behavior<Command> onStartScheduler(
 		ActorContext<Command> ctx,
 		StartSchedulerInternal startSchedulerInternal) {
@@ -618,7 +603,7 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		var reindex = triggerType == TriggerType.REINDEX;
+		boolean reindex = triggerType == TriggerType.REINDEX;
 
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
 		scheduler.setScheduleId(UUID.randomUUID().toString());
@@ -662,6 +647,21 @@ public class JobScheduler {
 
 		return Behaviors.same();
 	}
+
+	private static Behavior<Command> onTriggerDatasourcePurge(
+		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
+
+		String tenantName = tdp.tenantName();
+		long datasourceId = tdp.datasourceId;
+
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
+
+		return Behaviors.same();
+	}
+
+	public record TriggerDatasource(
+		String tenantName, long datasourceId, boolean reindex, OffsetDateTime startIngestionDate
+	) implements Command {}
 
 	private static Behavior<Command> onPersistSchedulerInternal(
 		ActorContext<Command> ctx, PersistSchedulerInternal pndi) {
