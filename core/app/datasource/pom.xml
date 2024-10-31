@@ -165,11 +165,6 @@
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
-
     <!-- // hibernate reactive -->
 
     <dependency>
@@ -273,10 +268,6 @@
     <dependency>
       <groupId>io.openk9.service</groupId>
       <artifactId>auth-service</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
     </dependency>
     <dependency>
       <groupId>io.openk9.common</groupId>

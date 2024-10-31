@@ -45,6 +45,16 @@
 	</modules>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-container-image-jib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.openk9.common</groupId>
+			<artifactId>resources-common</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-junit5</artifactId>

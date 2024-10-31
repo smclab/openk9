@@ -115,10 +115,6 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-qute</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -142,11 +138,6 @@
     <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>graphql-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>io.openk9.common</groupId>
