@@ -37,6 +37,7 @@
       <artifactId>quarkus-cache</artifactId>
     </dependency>
 
+    <!-- // authentication -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-oidc</artifactId>
@@ -47,9 +48,10 @@
     </dependency>
 
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
+      <groupId>io.openk9.service</groupId>
+      <artifactId>auth-service</artifactId>
     </dependency>
+    <!-- authentication // -->
 
     <!-- // Web API -->
 
@@ -71,6 +73,11 @@
       <version>${cron-utils.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>graphql-util</artifactId>
+    </dependency>
+
     <!-- Web API // -->
 
     <!-- // ingest -->
@@ -84,7 +91,7 @@
       <artifactId>quarkus-messaging-rabbitmq</artifactId>
     </dependency>
 
-    <!-- ingest -->
+    <!-- ingest // -->
 
     <!-- // data processing -->
 
@@ -105,7 +112,7 @@
 
     <!-- data processing // -->
 
-    <!-- // searcher queryparser -->
+    <!-- // searcher, queryparser -->
 
     <dependency>
       <groupId>io.quarkiverse.opensearch</groupId>
@@ -121,7 +128,7 @@
       <version>9.11.1</version>
     </dependency>
 
-    <!-- searcher queryparser // -->
+    <!-- searcher, queryparser // -->
 
     <!-- // opensearch index dynamic mapping -->
 
@@ -172,9 +179,14 @@
       <artifactId>quarkus-reactive-oracle-client</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>model</artifactId>
+    </dependency>
+
     <!-- hibernate reactive // -->
 
-    <!-- // gRPC servers -->
+    <!-- // gRPC implements -->
 
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
@@ -189,9 +201,9 @@
       <artifactId>datasource-client-grpc</artifactId>
     </dependency>
 
-    <!-- gRPC servers // -->
+    <!-- gRPC implements // -->
 
-    <!-- // gRPC clients -->
+    <!-- // gRPC consumes -->
 
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
@@ -202,7 +214,7 @@
       <artifactId>tenant-manager-client-grpc</artifactId>
     </dependency>
 
-    <!-- gRPC clients // -->
+    <!-- gRPC consumes // -->
 
     <!-- // akka framework -->
 
@@ -254,23 +266,6 @@
 
     <!-- akka framework // -->
 
-    <!-- // internals -->
-
-    <dependency>
-      <groupId>io.openk9.service</groupId>
-      <artifactId>auth-service</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>graphql-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>model</artifactId>
-    </dependency>
-
-    <!-- internals // -->
-
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -314,7 +309,6 @@
     <dependency>
       <groupId>io.openk9.common</groupId>
       <artifactId>datasource-model</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -37,10 +37,8 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
-    </dependency>
+
+    <!-- // jpa -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-reactive</artifactId>
@@ -53,6 +51,13 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-reactive-oracle-client</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>model</artifactId>
+    </dependency>
+    <!-- jpa // -->
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-scheduler</artifactId>
@@ -61,18 +66,39 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-cache</artifactId>
     </dependency>
+
+    <!-- realm management -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-keycloak-admin-rest-client</artifactId>
     </dependency>
+
+    <!-- authetication -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-oidc</artifactId>
     </dependency>
+
+    <!-- // API -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-graphql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>graphql-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+    </dependency>
+    <!-- API // -->
+
+    <!-- // schema migrations -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-liquibase</artifactId>
@@ -87,23 +113,21 @@
         </exclusion>
       </exclusions>
     </dependency>
+
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-graphql</artifactId>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>datasource-model</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-validator</artifactId>
-    </dependency>
+
+    <!-- schema migrations // -->
+
+    <!-- realm template -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-qute</artifactId>
     </dependency>
 
+    <!-- // standalone -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-stork</artifactId>
@@ -112,6 +136,40 @@
       <groupId>io.smallrye.stork</groupId>
       <artifactId>stork-service-discovery-eureka</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+    </dependency>
+    <!-- standalone // k-->
+
+    <!-- implements -->
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>tenant-manager-client-grpc</artifactId>
+    </dependency>
+
+    <!-- // consumes -->
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>datasource-client-grpc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.client.grpc</groupId>
+      <artifactId>app-manager</artifactId>
+    </dependency>
+    <!-- consumes // -->
+
+    <!-- // akka framework -->
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor-typed_2.13</artifactId>
+      <version>2.6.20</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-cluster-typed_2.13</artifactId>
+    </dependency>
+    <!-- akka framework // -->
 
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -121,42 +179,6 @@
       <groupId>org.mapstruct</groupId>
       <artifactId>mapstruct</artifactId>
       <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>graphql-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>datasource-model</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>tenant-manager-client-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>datasource-client-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>app-manager</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor-typed_2.13</artifactId>
-      <version>2.6.20</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-typed_2.13</artifactId>
     </dependency>
 
     <dependency>
