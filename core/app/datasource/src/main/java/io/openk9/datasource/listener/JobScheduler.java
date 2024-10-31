@@ -332,7 +332,7 @@ public class JobScheduler {
 		}
 
 		Datasource datasource = triggerDatasourceInternal.datasource();
-		Boolean startFromFirst = triggerDatasourceInternal.startFromFirst();
+		boolean startFromFirst = triggerDatasourceInternal.startFromFirst();
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
@@ -557,7 +557,7 @@ public class JobScheduler {
 
 		long datasourceId = jobMessage.datasourceId;
 		String tenandId = jobMessage.tenantName;
-		Boolean startFromFirst = jobMessage.startFromFirst;
+		boolean startFromFirst = jobMessage.startFromFirst;
 
 		ctx.pipeToSelf(
 			JobSchedulerService.fetchDatasourceConnection(
