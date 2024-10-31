@@ -76,14 +76,6 @@
       <artifactId>quarkus-openshift-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-rest-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-		<artifactId>quarkus-rest</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
     </dependency>
