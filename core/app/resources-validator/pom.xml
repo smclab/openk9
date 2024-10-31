@@ -26,6 +26,8 @@
   <name>OpenK9 :: App :: Resources Validator</name>
   <artifactId>resources-validator</artifactId>
   <dependencies>
+
+    <!-- // file-manager client -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client</artifactId>
@@ -34,21 +36,24 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-jackson</artifactId>
     </dependency>
+    <!-- file-manager client // -->
+
+    <dependency>
+      <groupId>io.quarkiverse.opensearch</groupId>
+      <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>io.quarkiverse.opensearch</groupId>
-      <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-      <version>1.10.0</version>
-    </dependency>
-    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
