@@ -351,7 +351,7 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
 
             StandardServiceRegistry standardServiceRegistry =
                 rewireMetadataAndExtractServiceRegistry(
-                    runtimeSettings, recordedState, persistenceUnitName);
+                    persistenceUnitName, recordedState, runtimeSettings, puConfig);
 
             final Object cdiBeanManager = Arc.container().beanManager();
             final Object validatorFactory = Arc.container().instance(
@@ -371,12 +371,13 @@ public final class FastBootHibernateReactivePersistenceProvider implements Persi
     }
 
     private StandardServiceRegistry rewireMetadataAndExtractServiceRegistry(
-        RuntimeSettings runtimeSettings,
+        String persistenceUnitName,
         RecordedState rs,
-        String persistenceUnitName) {
+        RuntimeSettings runtimeSettings,
+        HibernateOrmRuntimeConfigPersistenceUnit puConfig) {
         PreconfiguredReactiveServiceRegistryBuilder serviceRegistryBuilder =
             new PreconfiguredReactiveServiceRegistryBuilder(
-                persistenceUnitName, rs);
+                persistenceUnitName, rs, puConfig);
 
         registerVertxAndPool(persistenceUnitName, runtimeSettings, serviceRegistryBuilder);
 
