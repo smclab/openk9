@@ -24,8 +24,6 @@ import static org.mockito.ArgumentMatchers.nullable;
 @TestHTTPEndpoint(TriggerWithDateResource.class)
 public class TriggerWithDateResourceTest {
 
-	public static final String SCHEMA_NAME = "bellossom";
-	public static final String REALM_NAME = "bellossom";
 	public static final String TESTING_DATE = "2022-03-10T14:32:06.247Z";
 	private static final String TESTING_DATASOURCE_ID = "5";
 	@InjectMock
