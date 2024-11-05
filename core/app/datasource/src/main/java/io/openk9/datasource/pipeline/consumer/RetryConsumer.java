@@ -17,15 +17,15 @@
 
 package io.openk9.datasource.pipeline.consumer;
 
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.AskPattern;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
-import io.openk9.datasource.actor.AkkaUtils;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -112,7 +112,7 @@ public class RetryConsumer extends BaseConsumer {
 	}
 
 	private static int getMaxRetries(Config config) {
-		return AkkaUtils.getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
+		return PekkoUtils.getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
 	}
 
 }

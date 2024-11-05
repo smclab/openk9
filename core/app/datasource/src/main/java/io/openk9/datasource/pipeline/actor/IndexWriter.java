@@ -17,10 +17,6 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
@@ -31,6 +27,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.inject.spi.CDI;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.opensearch.action.DocWriteRequest;
 import org.opensearch.action.DocWriteResponse;
 import org.opensearch.action.bulk.BulkItemResponse;

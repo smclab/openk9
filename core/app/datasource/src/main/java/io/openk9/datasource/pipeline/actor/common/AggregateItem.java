@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor.common;
 
-import akka.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorRef;
 
 public interface AggregateItem {
 

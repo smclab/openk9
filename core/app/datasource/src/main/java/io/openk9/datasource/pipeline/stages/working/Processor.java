@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
-import akka.actor.typed.ActorRef;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.util.CborSerializable;
+import org.apache.pekko.actor.typed.ActorRef;
 
 public interface Processor {
 

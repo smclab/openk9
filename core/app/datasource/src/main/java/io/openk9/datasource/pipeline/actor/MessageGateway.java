@@ -17,36 +17,36 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
-import akka.actor.typed.PreRestart;
-import akka.actor.typed.Signal;
-import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.internal.receptionist.ReceptionistMessages;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.AskPattern;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.ReceiveBuilder;
-import akka.actor.typed.receptionist.Receptionist;
-import akka.actor.typed.receptionist.ServiceKey;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
 import com.rabbitmq.client.Channel;
 import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
-import io.openk9.datasource.actor.AkkaUtils;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;
 import io.openk9.datasource.pipeline.consumer.MainConsumer;
 import io.openk9.datasource.pipeline.consumer.RetryConsumer;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.PostStop;
+import org.apache.pekko.actor.typed.PreRestart;
+import org.apache.pekko.actor.typed.Signal;
+import org.apache.pekko.actor.typed.SupervisorStrategy;
+import org.apache.pekko.actor.typed.internal.receptionist.ReceptionistMessages;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.AskPattern;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.actor.typed.javadsl.ReceiveBuilder;
+import org.apache.pekko.actor.typed.receptionist.Receptionist;
+import org.apache.pekko.actor.typed.receptionist.ServiceKey;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
+import org.apache.pekko.cluster.typed.ClusterSingleton;
+import org.apache.pekko.cluster.typed.SingletonActor;
 import org.jboss.logging.Logger;
 import scala.Option;
 
@@ -375,7 +375,7 @@ public class MessageGateway
 	private int getWorkersPerNode(ActorContext<Command> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getInteger(
+		return PekkoUtils.getInteger(
 			config,
 			Scheduling.WORKERS_PER_NODE,
 			Scheduling.WORKERS_PER_NODE_DEFAULT

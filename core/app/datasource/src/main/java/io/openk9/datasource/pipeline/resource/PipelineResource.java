@@ -17,9 +17,6 @@
 
 package io.openk9.datasource.pipeline.resource;
 
-import akka.actor.typed.ActorSystem;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
@@ -31,6 +28,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 
 @Path("/pipeline")
 public class PipelineResource {

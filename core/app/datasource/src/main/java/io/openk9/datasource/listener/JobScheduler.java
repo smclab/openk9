@@ -17,14 +17,6 @@
 
 package io.openk9.datasource.listener;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.receptionist.Receptionist;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
-import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
 import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
@@ -37,6 +29,14 @@ import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.util.CborSerializable;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.receptionist.Receptionist;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
+import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
 import org.jboss.logging.Logger;
 import scala.Option;
 
@@ -314,9 +314,12 @@ public class JobScheduler {
 
 		String jobName = msg.jobName;
 
+		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension);
+
 		if (jobNames.contains(jobName)) {
-			quartzSchedulerTypedExtension.deleteJobSchedule(jobName);
-			quartzSchedulerTypedExtension.deleteJobSchedule(jobName + "-purge");
+			scheduler.deleteJobSchedule(jobName);
+			scheduler.deleteJobSchedule(jobName + "-purge");
 
 			List<String> newJobNames = new ArrayList<>(jobNames);
 			newJobNames.remove(jobName);
@@ -479,6 +482,9 @@ public class JobScheduler {
 		String cron = scheduleDatasourceInternal.cron();
 		boolean schedulable = scheduleDatasourceInternal.schedulable();
 
+		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension).defaultTimezone();
+
 		String jobName = tenantName + "-" + datasourceId;
 
 		if (schedulable) {
@@ -492,7 +498,7 @@ public class JobScheduler {
 					Option.empty(),
 					cron,
 					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
+					defaultTimezone
 				);
 
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
@@ -502,7 +508,7 @@ public class JobScheduler {
 					Option.empty(),
 					getPurgeCron(ctx),
 					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
+					defaultTimezone
 				);
 
 				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
@@ -518,7 +524,7 @@ public class JobScheduler {
 					Option.empty(),
 					cron,
 					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
+					defaultTimezone
 				);
 
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
@@ -528,7 +534,7 @@ public class JobScheduler {
 					Option.empty(),
 					getPurgeCron(ctx),
 					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
+					defaultTimezone
 				);
 
 

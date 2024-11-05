@@ -17,23 +17,9 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.PostStop;
-import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.ReceiveBuilder;
-import akka.actor.typed.javadsl.TimerScheduler;
-import akka.cluster.typed.Cluster;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
-import akka.cluster.typed.Subscribe;
 import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
-import io.openk9.datasource.actor.AkkaUtils;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.service.SchedulingService;
@@ -44,6 +30,20 @@ import io.openk9.datasource.pipeline.stages.working.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
 import io.quarkus.runtime.util.ExceptionUtil;
 import lombok.Getter;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.PostStop;
+import org.apache.pekko.actor.typed.SupervisorStrategy;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.actor.typed.javadsl.ReceiveBuilder;
+import org.apache.pekko.actor.typed.javadsl.TimerScheduler;
+import org.apache.pekko.cluster.typed.Cluster;
+import org.apache.pekko.cluster.typed.ClusterSingleton;
+import org.apache.pekko.cluster.typed.SingletonActor;
+import org.apache.pekko.cluster.typed.Subscribe;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
@@ -105,13 +105,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		var cluster = Cluster.get(getContext().getSystem());
 		var subscriber = getContext().messageAdapter(
-			akka.cluster.ClusterEvent.MemberEvent.class,
+			org.apache.pekko.cluster.ClusterEvent.MemberEvent.class,
 			ClusterEvent::new
 		);
 
 		cluster.subscriptions().tell(Subscribe.create(
 			subscriber,
-			akka.cluster.ClusterEvent.MemberEvent.class
+			org.apache.pekko.cluster.ClusterEvent.MemberEvent.class
 		));
 
 		getContext().getSelf().tell(Setup.INSTANCE);
@@ -180,13 +180,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static Duration getTimeout(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getDuration(config, SCHEDULING_TIMEOUT, Duration.ofHours(6));
+		return PekkoUtils.getDuration(config, SCHEDULING_TIMEOUT, Duration.ofHours(6));
 	}
 
 	private static int getWorkersPerNode(ActorContext<Command> context) {
 		Config config = context.getSystem().settings().config();
 
-		return AkkaUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
+		return PekkoUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
 	}
 
 	private ReceiveBuilder<Command> afterSetup() {
@@ -348,10 +348,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		var memberEvent = clusterEvent.event();
 
-		if (memberEvent instanceof akka.cluster.ClusterEvent.MemberUp) {
+		if (memberEvent instanceof org.apache.pekko.cluster.ClusterEvent.MemberUp) {
 			nodes++;
 		}
-		else if (memberEvent instanceof akka.cluster.ClusterEvent.MemberDowned) {
+		else if (memberEvent instanceof org.apache.pekko.cluster.ClusterEvent.MemberDowned) {
 			nodes--;
 		}
 
@@ -824,7 +824,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 	private record CloseStageResponse(CloseStage.Response response) implements Command {}
 
-	private record ClusterEvent(akka.cluster.ClusterEvent.MemberEvent event) implements Command {}
+	private record ClusterEvent(org.apache.pekko.cluster.ClusterEvent.MemberEvent event)
+		implements Command {}
 
 	private record PersistException(WorkStageException exception) implements Command {}
 

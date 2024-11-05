@@ -17,14 +17,14 @@
 
 package io.openk9.tenantmanager.pipe.liquibase.validate;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.javadsl.AskPattern;
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;

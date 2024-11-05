@@ -17,12 +17,12 @@
 
 package io.openk9.datasource.hibernate.interceptor;
 
-import akka.actor.typed.ActorSystem;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.cache.P2PCache;
 import io.quarkus.hibernate.orm.PersistenceUnitExtension;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorSystem;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;

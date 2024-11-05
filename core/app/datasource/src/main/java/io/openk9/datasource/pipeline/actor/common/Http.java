@@ -17,17 +17,17 @@
 
 package io.openk9.datasource.pipeline.actor.common;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import io.openk9.datasource.actor.AkkaUtils;
+import io.openk9.datasource.actor.PekkoUtils;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 
 import java.time.Duration;
 
@@ -55,7 +55,7 @@ public class Http {
 
 	private static Behavior<Command> initial(WebClient webClient, ActorContext<Command> ctx) {
 
-		Duration httpRequestTimeout = AkkaUtils.getDuration(
+		Duration httpRequestTimeout = PekkoUtils.getDuration(
 			ctx.getSystem().settings().config(),
 			HTTP_REQUEST_TIMEOUT,
 			Duration.ofSeconds(10)

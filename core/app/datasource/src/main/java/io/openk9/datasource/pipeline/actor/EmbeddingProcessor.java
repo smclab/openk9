@@ -17,17 +17,17 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {

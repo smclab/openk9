@@ -17,12 +17,6 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
@@ -30,6 +24,12 @@ import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.vertx.core.json.Json;
 import jakarta.enterprise.inject.spi.CDI;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;

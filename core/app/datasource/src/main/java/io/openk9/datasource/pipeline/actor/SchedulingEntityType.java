@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 
 public class SchedulingEntityType {
 

@@ -17,11 +17,6 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
@@ -36,6 +31,11 @@ import io.openk9.datasource.util.JsonMerge;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;

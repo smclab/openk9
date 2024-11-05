@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.actor;
 
-import akka.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
 
 import java.util.function.Consumer;
 

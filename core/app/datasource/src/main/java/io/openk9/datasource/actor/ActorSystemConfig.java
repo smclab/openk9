@@ -17,11 +17,6 @@
 
 package io.openk9.datasource.actor;
 
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.Entity;
-import akka.cluster.typed.Cluster;
-import akka.management.cluster.bootstrap.ClusterBootstrap;
-import akka.management.javadsl.AkkaManagement;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.cache.P2PCache;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
@@ -41,6 +36,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.Entity;
+import org.apache.pekko.cluster.typed.Cluster;
+import org.apache.pekko.management.cluster.bootstrap.ClusterBootstrap;
+import org.apache.pekko.management.javadsl.PekkoManagement;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -49,29 +49,29 @@ import java.util.Set;
 @Dependent
 public class ActorSystemConfig {
 
-	private static final String AKKA_CLUSTER_MODE = "akka.cluster.file";
+	private static final String PEKKO_CLUSTER_FILE = "pekko.cluster.file";
 
 	@Produces
 	@ApplicationScoped
 	@Priority(Integer.MAX_VALUE)
-	@IfBuildProperty(name = AKKA_CLUSTER_MODE, stringValue = "local", enableIfMissing = true)
-	@IfBuildProperty(name = AKKA_CLUSTER_MODE, stringValue = "test")
+	@IfBuildProperty(name = PEKKO_CLUSTER_FILE, stringValue = "local", enableIfMissing = true)
+	@IfBuildProperty(name = PEKKO_CLUSTER_FILE, stringValue = "test")
 	public ActorSystemInitializer local() {
 		logger.info("create local cluster actor system");
 		return actorSystem -> {
 			Cluster.get(actorSystem);
-			AkkaManagement.get(actorSystem).start();
+			PekkoManagement.get(actorSystem).start();
 		};
 	}
 
 	@Produces
 	@ApplicationScoped
 	@Priority(Integer.MAX_VALUE)
-	@IfBuildProperty(name = AKKA_CLUSTER_MODE, stringValue = "cluster")
+	@IfBuildProperty(name = PEKKO_CLUSTER_FILE, stringValue = "cluster")
 	public ActorSystemInitializer cluster() {
 		logger.info("create remote cluster actor system");
 		return actorSystem -> {
-			AkkaManagement.get(actorSystem).start();
+			PekkoManagement.get(actorSystem).start();
 			ClusterBootstrap.get(actorSystem).start();
 		};
 	}

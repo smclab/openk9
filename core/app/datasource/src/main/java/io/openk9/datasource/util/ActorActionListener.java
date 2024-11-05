@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.util;
 
-import akka.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorRef;
 import org.opensearch.core.action.ActionListener;
 
 import java.util.function.BiFunction;

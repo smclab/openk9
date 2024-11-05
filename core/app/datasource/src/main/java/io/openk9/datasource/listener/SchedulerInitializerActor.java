@@ -17,14 +17,14 @@
 
 package io.openk9.datasource.listener;
 
-import akka.actor.typed.ActorRef;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.cluster.typed.ClusterSingleton;
+import org.apache.pekko.cluster.typed.SingletonActor;
 import org.jboss.logging.Logger;
 
 import java.time.OffsetDateTime;

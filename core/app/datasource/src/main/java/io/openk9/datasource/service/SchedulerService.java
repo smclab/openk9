@@ -17,9 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import akka.actor.typed.ActorSystem;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.DataIndex;
@@ -35,6 +32,9 @@ import io.openk9.datasource.util.UniActionListener;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
