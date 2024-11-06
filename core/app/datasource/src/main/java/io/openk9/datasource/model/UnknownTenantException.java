@@ -17,9 +17,7 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.service.exception.K9Error;
-
-public class UnknownTenantException extends K9Error {
+public class UnknownTenantException extends RuntimeException {
 
 	public UnknownTenantException(String message) {
 		super(message);
