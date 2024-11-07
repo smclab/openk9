@@ -239,7 +239,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					});
 				}
 
-				return s.persist(newStatePipeline)
+				return s.merge(newStatePipeline)
 					.map(v -> newStatePipeline)
 					.call(s::flush);
 			});
