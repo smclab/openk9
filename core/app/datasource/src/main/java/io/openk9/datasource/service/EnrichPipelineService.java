@@ -51,13 +51,12 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -350,52 +349,35 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<EnrichPipeline> sortEnrichItems(
 		long enrichPipelineId, List<Long> enrichItemIdList) {
 
+		return sessionFactory.withTransaction(s -> {
 
-		return sessionFactory.withTransaction(s -> findById(s, enrichPipelineId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(enrichPipeline -> {
+			float weight = 0.0f;
 
-				List<Uni<EnrichItem>> enrichItemList = new ArrayList<>();
+			Set<PipelineWithItemsDTO.ItemDTO> items = new TreeSet<>();
 
-				for (Long enrichItemId : enrichItemIdList) {
-					enrichItemList.add(
-						enrichItemService.findById(enrichItemId));
-				}
+			for (Long enrichItemId : enrichItemIdList) {
 
-				return Uni
-					.combine()
-					.all()
-					.unis(enrichItemList)
-					.with(EnrichItem.class, Function.identity())
-					.flatMap(l -> s
-						.fetch(enrichPipeline.getEnrichPipelineItems())
-						.flatMap(epi -> {
+				PipelineWithItemsDTO.ItemDTO itemDto =
+					PipelineWithItemsDTO.ItemDTO
+						.builder()
+						.enrichItemId(enrichItemId)
+						.weight(weight)
+						.build();
 
-							float weight = 0.0f;
+				items.add(itemDto);
 
-							for (Long enrichItemId : enrichItemIdList) {
+				weight += 1.0f;
 
-								for (EnrichPipelineItem enrichPipelineItem : epi) {
-									if (
-										Objects.equals(
-											enrichPipelineItem.getEnrichItem().getId(),
-											enrichItemId
-										)
-									) {
-										enrichPipelineItem.setWeight(weight);
-										weight += 1.0f;
-										break;
-									}
-								}
+			}
 
-							}
+			PipelineWithItemsDTO pipelineDto = PipelineWithItemsDTO.builder()
+				.items(items)
+				.build();
 
-							return merge(s, enrichPipeline);
-						})
-					);
+			return patchOrUpdateWithItems(s, enrichPipelineId, pipelineDto, true);
+		});
 
-			}));
+
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
