@@ -75,7 +75,12 @@ public class AppManagerService implements AppManager {
 			.build();
 
 		return Uni.createFrom()
-			.item(() -> k8sClient.resource(manifest.asResource()).createOrReplace())
+			.item(() -> k8sClient
+				.resource(manifest.asResource())
+				.createOr(ignore -> k8sClient
+					.resource(manifest.asResource())
+					.update())
+			)
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
 			.map(hasMetadata -> ApplyResponse.newBuilder()
 				.setStatus(hasMetadata

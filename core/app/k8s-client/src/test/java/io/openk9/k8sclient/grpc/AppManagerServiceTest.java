@@ -29,6 +29,7 @@ import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,12 @@ import java.util.List;
 @WithKubernetesTestServer
 @QuarkusTest
 class AppManagerServiceTest {
+
+	@ConfigProperty(
+		name = "quarkus.kubernetes-client.request-retry-backoff-limit",
+		defaultValue = "0"
+	)
+	int maxRetry;
 
 	private static final String NAMESPACE = "k9-unit-test";
 
@@ -81,14 +88,7 @@ class AppManagerServiceTest {
 			.post()
 			.withPath(APPLICATIONS_PATH)
 			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
-
-		mockServer.expect()
-			.put()
-			.withPath(
-				APPLICATION_INSTANCE_PATH)
-			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
+			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
 			() -> appManager.applyResource(goodRequest),
@@ -140,7 +140,7 @@ class AppManagerServiceTest {
 			.delete()
 			.withPath(APPLICATION_INSTANCE_PATH)
 			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
+			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
 			() -> appManager.deleteResource(goodRequest),
