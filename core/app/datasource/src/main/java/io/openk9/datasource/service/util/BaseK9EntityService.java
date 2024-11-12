@@ -613,7 +613,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	private static <T extends K9Entity>
 	Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
-		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery, Mutiny.Session s) {
+		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery,
+		Mutiny.Session s) {
 
 		Uni<List<T>> resultList = (limit >= 0
 			? s.createQuery(criteriaQuery).setMaxResults(limit)
@@ -630,10 +631,9 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
-
-		String tenantId, int limit, String sortBy, long afterId, long beforeId, Filter filter,
-		CriteriaBuilder builder, Path<T> root, CriteriaQuery<T> criteriaQuery,
-		CriteriaQuery countQuery) {
+		String tenantId, int limit, String sortBy, long afterId, long beforeId,
+		Filter filter, CriteriaBuilder builder, Path<T> root,
+		CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery) {
 
 		filter = filter == null ? Filter.DEFAULT : filter;
 
@@ -648,28 +648,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			filterFields = new ArrayList<>(filterFields);
 		}
 
-		if (afterId > 0 && beforeId > 0) {
-
-			filterFields.add(
-				FilterField
-					.builder()
-					.fieldName(getEntityIdField())
-					.value(Long.toString(afterId))
-					.operator(FilterField.Operator.greaterThan)
-					.build()
-			);
-
-			filterFields.add(
-				FilterField
-					.builder()
-					.fieldName(getEntityIdField())
-					.value(Long.toString(beforeId))
-					.operator(FilterField.Operator.lessThan)
-					.build()
-			);
-
-		}
-		else if (afterId > 0) {
+		if (afterId > 0) {
 			filterFields.add(
 				FilterField
 					.builder()
@@ -679,7 +658,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					.build()
 			);
 		}
-		else if (beforeId > 0) {
+
+		if (beforeId > 0) {
 			filterFields.add(
 				FilterField
 					.builder()
@@ -690,29 +670,28 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			);
 		}
 
-		Optional<Predicate> reducePredicate =
-			filterFields
-				.stream()
-				.flatMap(ff -> {
+		Optional<Predicate> reducePredicate = filterFields
+			.stream()
+			.flatMap(ff -> {
 
-					Predicate predicate =
-						ff.generateCriteria(builder, root::get);
+				Predicate predicate =
+					ff.generateCriteria(builder, root::get);
 
-					if (predicate != null) {
-						return Stream.of(predicate);
-					}
+				if (predicate != null) {
+					return Stream.of(predicate);
+				}
 
-					logger.warn(
-						"FilterField generated null predicate for fieldName: " + ff.getFieldName());
+				logger.warn(
+					"FilterField generated null predicate for fieldName: "
+					+ ff.getFieldName());
 
-					return Stream.empty();
+				return Stream.empty();
 
-
-				})
-				.reduce((p1, p2) -> andOperator
-					? builder.and(p1, p2)
-					: builder.or(p1, p2)
-				);
+			})
+			.reduce((p1, p2) -> andOperator
+				? builder.and(p1, p2)
+				: builder.or(p1, p2)
+			);
 
 
 		if (sortBy != null && !sortBy.isBlank()) {
@@ -737,19 +716,22 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		if (tenantId != null) {
 			tuple2Results = sessionFactory.withTransaction(
 				tenantId,
-				(s, t) -> _executePagedQuery(limit, criteriaQuery, countQuery, s)
+				(s, t) ->
+					_executePagedQuery(limit, criteriaQuery, countQuery, s)
 			);
 		}
 		else {
-			tuple2Results = sessionFactory.withTransaction((s) -> _executePagedQuery(
-				limit,
-				criteriaQuery,
-				countQuery,
-				s
-			));
+			tuple2Results = sessionFactory.withTransaction((s) ->
+				_executePagedQuery(
+					limit,
+					criteriaQuery,
+					countQuery,
+					s
+				));
 		}
 
-		return tuple2Results.map(t -> Page.of(limit, t.getItem1(), t.getItem2()));
+		return tuple2Results.map(t ->
+			Page.of(limit, t.getItem1(), t.getItem2()));
 
 	}
 
