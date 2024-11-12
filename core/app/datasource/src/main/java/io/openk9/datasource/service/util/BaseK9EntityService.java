@@ -674,23 +674,24 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		Predicate countQueryPredicate = builder.conjunction();
 
 		for (FilterField ff : filterFields) {
-			var filterFieldPredicate = ff.generateCriteria(builder, root::get);
+			var ffQueryPredicate = ff.generateCriteria(builder, root::get);
+			var ffCountQueryPredicate = ff.generateCriteria(builder, countRoot::get);
 
-			if (filterFieldPredicate != null) {
+			if (ffQueryPredicate != null) {
 
 				if (andOperator) {
 					queryPredicate =
-						builder.and(queryPredicate, filterFieldPredicate);
+						builder.and(queryPredicate, ffQueryPredicate);
 
 					countQueryPredicate =
-						builder.and(countQueryPredicate, filterFieldPredicate);
+						builder.and(countQueryPredicate, ffCountQueryPredicate);
 				}
 				else {
 					queryPredicate =
-						builder.or(queryPredicate, filterFieldPredicate);
+						builder.or(queryPredicate, ffQueryPredicate);
 
 					countQueryPredicate =
-						builder.or(countQueryPredicate, filterFieldPredicate);
+						builder.or(countQueryPredicate, ffCountQueryPredicate);
 
 				}
 			}
