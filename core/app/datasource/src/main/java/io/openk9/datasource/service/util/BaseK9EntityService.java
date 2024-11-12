@@ -621,11 +621,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		Uni<Long> count = s.createQuery(countQuery).getSingleResult();
 
-		return Uni
-			.combine()
-			.all()
-			.unis(count, resultList)
-			.asTuple();
+		return count.flatMap(counted -> resultList
+			.map(results -> Tuple2.of(counted, results)));
 
 	}
 
