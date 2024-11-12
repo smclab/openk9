@@ -104,6 +104,7 @@ public class SchedulerInitializer {
 
 				return Uni.join()
 					.all(registrations)
+					.usingConcurrencyOf(1)
 					.andCollectFailures()
 					.replaceWithVoid();
 			});
@@ -207,6 +208,7 @@ public class SchedulerInitializer {
 				.map(datasourceService::findAll)
 				.collect(Collectors.toList())
 			)
+			.usingConcurrencyOf(1)
 			.andCollectFailures()
 			.map(resultSets -> resultSets
 				.stream()

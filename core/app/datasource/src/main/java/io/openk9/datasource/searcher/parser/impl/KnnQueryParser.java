@@ -72,6 +72,7 @@ public class KnnQueryParser implements QueryParser {
 		}
 
 		return Uni.join().all(knnQueryUnis)
+			.usingConcurrencyOf(1)
 			.andCollectFailures()
 			.invoke(knnQueries -> {
 

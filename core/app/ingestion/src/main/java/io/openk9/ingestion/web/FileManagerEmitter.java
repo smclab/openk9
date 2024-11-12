@@ -145,6 +145,7 @@ public class FileManagerEmitter {
                     }
 
                     return Uni.join().all(uploadUnis)
+                        .usingConcurrencyOf(1)
                         .andCollectFailures()
                         .map(binaryDTOS -> {
                             ResourcesDTO resourcesDTO = new ResourcesDTO();

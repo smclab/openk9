@@ -262,7 +262,10 @@ public abstract class BaseSearchService {
 			}
 		}
 
-		return Uni.join().all(queryParserUnis).andCollectFailures().map(voids -> boolQueryBuilder);
+		return Uni.join().all(queryParserUnis)
+			.usingConcurrencyOf(1)
+			.andCollectFailures()
+			.map(voids -> boolQueryBuilder);
 	}
 
 	protected Map<String, List<ParserSearchToken>> createTokenGroup(

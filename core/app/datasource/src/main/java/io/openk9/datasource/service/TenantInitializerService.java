@@ -134,7 +134,9 @@ public class TenantInitializerService {
 			upserts.add(annotatorService.upsert(s, annotatorDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<Language>> defaultLanguages(Mutiny.Session s) {
@@ -144,7 +146,9 @@ public class TenantInitializerService {
 			upserts.add(languageService.upsert(s, languageDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<Rule>> defaultRules(Mutiny.Session s) {
@@ -154,7 +158,9 @@ public class TenantInitializerService {
 			upserts.add(ruleService.upsert(s, ruleDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<QueryParserConfig>> defaultQueryParserConfigs(Mutiny.Session s) {
@@ -164,7 +170,9 @@ public class TenantInitializerService {
 			upserts.add(queryParserConfigService.upsert(s, queryParserConfigDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Set<Language> onlyBucketAvailableLanguages(Collection<Language> languages) {

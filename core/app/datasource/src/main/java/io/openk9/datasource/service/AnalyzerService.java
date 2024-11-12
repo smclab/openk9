@@ -277,7 +277,12 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			unis.add(s.fetch(analyzer.getCharFilters()));
 			unis.add(s.fetch(analyzer.getTokenFilters()));
 
-			return Uni.combine().all().unis(unis).collectFailures().discardItems();
+			return Uni.combine()
+				.all()
+				.unis(unis)
+				.usingConcurrencyOf(1)
+				.collectFailures()
+				.discardItems();
 
 		});
 	}

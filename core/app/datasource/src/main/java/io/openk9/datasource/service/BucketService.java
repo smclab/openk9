@@ -44,6 +44,7 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -51,7 +52,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.ws.rs.NotFoundException;
-import io.smallrye.mutiny.groups.UniJoin;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -144,6 +144,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						return builder.joinAll()
+							.usingConcurrencyOf(1)
 							.andCollectFailures()
 							.onFailure()
 							.invoke(throwable -> logger.error(throwable))
@@ -266,6 +267,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						return builder.joinAll()
+							.usingConcurrencyOf(1)
 							.andCollectFailures()
 							.onFailure()
 							.invoke(throwable -> logger.error(throwable))
@@ -390,6 +392,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						return builder.joinAll()
+							.usingConcurrencyOf(1)
 							.andCollectFailures()
 							.onFailure()
 							.invoke(throwable -> logger.error(throwable))

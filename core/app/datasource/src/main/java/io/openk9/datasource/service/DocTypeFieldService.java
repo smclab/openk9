@@ -275,7 +275,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			return Uni.createFrom().voidItem();
 		}
 
-		return Uni.combine().all().unis(unis).collectFailures().discardItems();
+		return Uni.combine()
+			.all()
+			.unis(unis)
+			.usingConcurrencyOf(1)
+			.collectFailures()
+			.discardItems();
 	}
 
 

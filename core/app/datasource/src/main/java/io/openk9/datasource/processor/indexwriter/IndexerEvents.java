@@ -74,13 +74,10 @@ public class IndexerEvents {
 		return indexService
 			.getMappings(dataIndex.getIndexName())
 			.map(IndexerEvents::toDocTypeFields)
-			.plug(docTypeFields -> Uni.combine().all()
-				.unis(
-					docTypeFields,
-					_getDocumentTypes(dataIndex.getIndexName())
-				)
-				.asTuple()
-			)
+			.plug(docTypeFieldsUni -> docTypeFieldsUni.flatMap(
+				docTypeFields -> _getDocumentTypes(dataIndex.getIndexName())
+					.map(docTypes -> Tuple2.of(docTypeFields, docTypes))
+			))
 			.map(IndexerEvents::toDocTypeAndFieldsGroup)
 			.call(map -> _persistDocType(map, dataIndex, session))
 			.replaceWithVoid();
