@@ -48,11 +48,9 @@ import org.jboss.logging.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends GraphQLService<ENTITY>
@@ -209,7 +207,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 			return _pageCriteriaQuery(
 				tenantId, limit, sortBy, afterId, beforeId, filter, builder, join,
-				criteriaQuery, countQuery
+				criteriaQuery, countRoot, countQuery
 			);
 
 		});
@@ -237,13 +235,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			Root<ENTITY> root = criteriaQuery.from(getEntityClass());
 
 			CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+			var countRoot = countQuery.from(getEntityClass());
 
-			countQuery.select(builder.count(countQuery.from(getEntityClass())));
+			countQuery.select(builder.count(countRoot));
 
 			return _pageCriteriaQuery(
 				tenantId, limit, sortBy, afterId, beforeId,
 				filter == null ? Filter.DEFAULT : filter, builder, root,
-				criteriaQuery, countQuery
+				criteriaQuery, countRoot, countQuery
 			);
 		});
 
@@ -613,7 +612,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	private static <T extends K9Entity>
 	Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
-		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery,
+		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery<Long> countQuery,
 		Mutiny.Session s) {
 
 		Uni<List<T>> resultList = (limit >= 0
@@ -633,7 +632,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
 		String tenantId, int limit, String sortBy, long afterId, long beforeId,
 		Filter filter, CriteriaBuilder builder, Path<T> root,
-		CriteriaQuery<T> criteriaQuery, CriteriaQuery countQuery) {
+		CriteriaQuery<T> criteriaQuery, Path<T> countRoot,
+		CriteriaQuery<Long> countQuery) {
 
 		filter = filter == null ? Filter.DEFAULT : filter;
 
@@ -670,29 +670,39 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			);
 		}
 
-		Optional<Predicate> reducePredicate = filterFields
-			.stream()
-			.flatMap(ff -> {
+		Predicate queryPredicate = builder.conjunction();
+		Predicate countQueryPredicate = builder.conjunction();
 
-				Predicate predicate =
-					ff.generateCriteria(builder, root::get);
+		for (FilterField ff : filterFields) {
+			var filterFieldPredicate = ff.generateCriteria(builder, root::get);
 
-				if (predicate != null) {
-					return Stream.of(predicate);
+			if (filterFieldPredicate != null) {
+
+				if (andOperator) {
+					queryPredicate =
+						builder.and(queryPredicate, filterFieldPredicate);
+
+					countQueryPredicate =
+						builder.and(countQueryPredicate, filterFieldPredicate);
 				}
+				else {
+					queryPredicate =
+						builder.or(queryPredicate, filterFieldPredicate);
+
+					countQueryPredicate =
+						builder.or(countQueryPredicate, filterFieldPredicate);
+
+				}
+			}
+			else {
 
 				logger.warn(
 					"FilterField generated null predicate for fieldName: "
 					+ ff.getFieldName());
 
-				return Stream.empty();
+			}
 
-			})
-			.reduce((p1, p2) -> andOperator
-				? builder.and(p1, p2)
-				: builder.or(p1, p2)
-			);
-
+		}
 
 		if (sortBy != null && !sortBy.isBlank()) {
 			criteriaQuery
@@ -705,11 +715,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			criteriaQuery.orderBy(builder.asc(root.get(getEntityIdField())));
 		}
 
-		reducePredicate.ifPresent(p -> {
-			criteriaQuery.where(p);
-			countQuery.where(p);
-		});
-
+		criteriaQuery.where(queryPredicate);
+		countQuery.where(countQueryPredicate);
 
 		Uni<Tuple2<Long, List<T>>> tuple2Results;
 
