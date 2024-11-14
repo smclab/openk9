@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.util.OpenSearchUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -90,6 +91,9 @@ public class VectorIndex extends K9Entity {
 	}
 
 	public String getIndexName() {
-		return getTenant() + "-" + name;
+		return OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", getTenant(), getName())
+		);
 	}
+
 }
