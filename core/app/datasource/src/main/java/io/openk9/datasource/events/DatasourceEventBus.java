@@ -51,11 +51,11 @@ public class DatasourceEventBus {
 
 	@Inject
 	@Channel("datasource-events-requests")
-	Emitter<DatasourceMessage> quoteRequestEmitter;
+	Emitter<DatasourceMessage> emitter;
 
 	@ConsumeEvent(SEND_EVENT)
 	public void sendEvent(DatasourceMessage datasourceMessage) {
-		quoteRequestEmitter.send(
+		emitter.send(
 			Message.of(
 				datasourceMessage,
 				Metadata.of(OutgoingRabbitMQMetadata
