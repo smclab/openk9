@@ -204,8 +204,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						.map(v -> pipeline);
 				}
 			})
-			.call(s::flush)
-			.call(Mutiny::fetch)
 			.onItem().ifNotNull()
 			.transformToUni(pipeline -> {
 
@@ -239,9 +237,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 					});
 				}
 
-				return s.merge(newStatePipeline)
-					.map(v -> newStatePipeline)
-					.call(s::flush);
+				return s.merge(newStatePipeline).call(s::flush);
 			});
 	}
 
