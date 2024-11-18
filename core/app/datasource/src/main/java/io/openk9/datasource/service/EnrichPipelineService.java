@@ -24,7 +24,6 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.EnrichPipelineItemKey;
@@ -158,83 +157,80 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<EnrichPipeline> patchOrUpdateWithItems(
 			Mutiny.Session s, long id, PipelineWithItemsDTO pipelineWithItemsDTO, boolean patch) {
 
-		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-		CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
-			cb.createCriteriaDelete(EnrichPipelineItem.class);
-		Root<EnrichPipelineItem> deleteFrom =
-			deletePipelineItem.from(EnrichPipelineItem.class);
-
 		var itemDTOSet = pipelineWithItemsDTO.getItems();
 
 		return findById(s, id)
-			.call(pipeline -> Mutiny.fetch(pipeline.getEnrichPipelineItems()))
+			.onItem().ifNotNull()
 			.call(pipeline -> {
+
+				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+				CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
+					cb.createCriteriaDelete(EnrichPipelineItem.class);
+				Root<EnrichPipelineItem> deleteFrom =
+					deletePipelineItem.from(EnrichPipelineItem.class);
 
 				var pipelineIdPath =
 					deleteFrom.get(EnrichPipelineItem_.enrichPipeline).get(EnrichPipeline_.id);
-				var itemIdPath =
-					deleteFrom.get(EnrichPipelineItem_.enrichItem).get(EnrichItem_.id);
 
-				if (itemDTOSet == null || itemDTOSet.isEmpty() ) {
-					if ( patch ) {
-						return Uni.createFrom().item(pipeline);
-					}
-					else {
-						deletePipelineItem.where(pipelineIdPath.in(id));
+				if (patch && (itemDTOSet == null || itemDTOSet.isEmpty())) {
 
-						//removes pipeline-item old list
-						return s.createQuery(deletePipelineItem).executeUpdate()
-							.map(v -> pipeline);
-					}
+					return Uni.createFrom().voidItem();
+
 				}
 				else {
-					//retrieves item ids to keep
-					var itemIdsToKeep = itemDTOSet.stream()
-						.map(PipelineWithItemsDTO.ItemDTO::getEnrichItemId)
-						.collect(Collectors.toSet());
 
-					deletePipelineItem.where(
-						cb.and(
-							pipelineIdPath.in(id),
-							cb.not(itemIdPath.in(itemIdsToKeep))
-						));
+					deletePipelineItem.where(pipelineIdPath.in(id));
 
-					//removes pipeline-item old list
-					return s.createQuery(deletePipelineItem).executeUpdate()
-						.map(v -> pipeline);
+					return s.createQuery(deletePipelineItem)
+						.executeUpdate();
+
 				}
 			})
-			.onItem().ifNotNull()
-			.transformToUni(pipeline -> {
+			.call(pipeline -> {
 
-				EnrichPipeline newStatePipeline;
-				var newHashSet = new HashSet<EnrichPipelineItem>();
-
-				if ( patch ) {
-					newStatePipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
-				}
-				else {
-					newStatePipeline = mapper.update(pipeline, pipelineWithItemsDTO);
-					newStatePipeline.setEnrichPipelineItems(newHashSet);
-				}
+				Set<EnrichPipelineItem> items = new HashSet<>();
 
 				//set new pipeline-item Set
 				if (itemDTOSet != null) {
-					newStatePipeline.setEnrichPipelineItems(newHashSet);
 
-					itemDTOSet.forEach(itemDTO -> {
+					for (PipelineWithItemsDTO.ItemDTO itemDTO : itemDTOSet) {
+
 						var itemId = itemDTO.getEnrichItemId();
 						var key = EnrichPipelineItemKey.of(id, itemId);
 						var itemReference = s.getReference(EnrichItem.class, itemId);
 
 						var enrichPipelineItem = new EnrichPipelineItem();
-						enrichPipelineItem.setEnrichPipeline(newStatePipeline);
+						enrichPipelineItem.setEnrichPipeline(pipeline);
 						enrichPipelineItem.setEnrichItem(itemReference);
 						enrichPipelineItem.setKey(key);
 						enrichPipelineItem.setWeight(itemDTO.getWeight());
 
-						newStatePipeline.getEnrichPipelineItems().add(enrichPipelineItem);
-					});
+						items.add(enrichPipelineItem);
+					}
+
+				}
+
+				if (items.isEmpty()) {
+
+					return Uni.createFrom().voidItem();
+
+				}
+				else {
+
+					return s.persistAll(items.toArray());
+
+				}
+
+			})
+			.flatMap(pipeline -> {
+
+				EnrichPipeline newStatePipeline;
+
+				if (patch) {
+					newStatePipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
+				}
+				else {
+					newStatePipeline = mapper.update(pipeline, pipelineWithItemsDTO);
 				}
 
 				return s.merge(newStatePipeline).call(s::flush);
