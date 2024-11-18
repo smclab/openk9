@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.EnrichPipeline;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -37,57 +38,94 @@ public class EnrichPipelineSortTest {
 	@Test
 	void should_sort_with_different_order() {
 
-		var enrichPipeline = sessionFactory.withTransaction((s, t) ->
-				enrichPipelineService
-					.findByName(s, CreateConnection.PIPELINE_NAME)
-					.call(pipeline -> Mutiny.fetch(
-						pipeline.getEnrichPipelineItems()))
-			)
-			.await()
-			.indefinitely();
+		patchPipelineWithThreeItems();
 
-		enrichPipelineService.patchOrUpdateWithItems(
-				enrichPipeline.getId(),
-				PipelineWithItemsDTO.builder()
-					.name(CreateConnection.PIPELINE_NAME)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(2L)
-						.weight(4L)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(3L)
-						.weight(3L)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(4L)
-						.weight(5L)
-						.build()
-					).build(),
-				true
-			)
-			.await()
-			.indefinitely();
-
-		var enrichPipelineUpdated = sessionFactory.withTransaction((s, t) ->
-			enrichPipelineService
-				.findByName(s, CreateConnection.PIPELINE_NAME)
-				.call(pipeline -> Mutiny.fetch(
-					pipeline.getEnrichPipelineItems()))
-		).await().indefinitely();
-
-		var firstItemUpdated = enrichPipelineUpdated.getEnrichPipelineItems().iterator().next();
-
-		assertEquals(3L, firstItemUpdated.getEnrichItem().getId());
-		assertEquals(3.0f, firstItemUpdated.getWeight());
+		changeItemsOrderWithPatch();
 
 	}
 
 	@Test
-	void should_removes_an_item() {
+	void should_removes_an_item_from_the_pipeline() {
 
-		var enrichPipeline = sessionFactory.withTransaction((s, t) ->
+		patchPipelineWithThreeItems();
+
+		patchPipelineWithTwoItems();
+
+	}
+
+	@Test
+	void should_update_enrich_items_in_pipeline() {
+
+		patchPipelineWithThreeItems();
+
+		updateEnrichPipelineWithOneItem();
+
+	}
+
+	@Test
+	void should_not_change_items_with_patch() {
+
+		patchPipelineWithThreeItems();
+
+		patchWithoutPipeline();
+
+		var enrichPipeline = getEnrichPipeline();
+
+		assertEquals(3, enrichPipeline.getEnrichPipelineItems().size());
+
+	}
+
+	@Test
+	void should_remove_items_with_update() {
+
+		patchPipelineWithThreeItems();
+
+		updateWithoutPipeline();
+
+		var enrichPipeline = getEnrichPipeline();
+
+		assertEquals(0, enrichPipeline.getEnrichPipelineItems().size());
+
+	}
+
+	private void changeItemsOrderWithPatch() {
+
+		var enrichPipeline = getEnrichPipeline();
+
+		enrichPipelineService.patchOrUpdateWithItems(
+				enrichPipeline.getId(),
+				PipelineWithItemsDTO.builder()
+					.name(CreateConnection.PIPELINE_NAME)
+					.item(PipelineWithItemsDTO.ItemDTO.builder()
+						.enrichItemId(2L)
+						.weight(2.0f)
+						.build()
+					)
+					.item(PipelineWithItemsDTO.ItemDTO.builder()
+						.enrichItemId(3L)
+						.weight(1.0f)
+						.build()
+					)
+					.item(PipelineWithItemsDTO.ItemDTO.builder()
+						.enrichItemId(4L)
+						.weight(3.0f)
+						.build()
+					).build(),
+				true
+			)
+			.await()
+			.indefinitely();
+
+		var enrichPipelineUpdated = getEnrichPipeline();
+
+		var firstItemUpdated = enrichPipelineUpdated.getEnrichPipelineItems().iterator().next();
+
+		assertEquals(3L, firstItemUpdated.getEnrichItem().getId());
+		assertEquals(1.0f, firstItemUpdated.getWeight());
+	}
+
+	private EnrichPipeline getEnrichPipeline() {
+		return sessionFactory.withTransaction((s, t) ->
 				enrichPipelineService
 					.findByName(s, CreateConnection.PIPELINE_NAME)
 					.call(pipeline -> Mutiny.fetch(
@@ -95,6 +133,10 @@ public class EnrichPipelineSortTest {
 			)
 			.await()
 			.indefinitely();
+	}
+
+	private void patchPipelineWithThreeItems() {
+		var enrichPipeline = getEnrichPipeline();
 
 		enrichPipelineService.patchOrUpdateWithItems(
 				enrichPipeline.getId(),
@@ -102,17 +144,17 @@ public class EnrichPipelineSortTest {
 					.name(CreateConnection.PIPELINE_NAME)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
 						.enrichItemId(2L)
-						.weight(4L)
+						.weight(1.0f)
 						.build()
 					)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
 						.enrichItemId(3L)
-						.weight(3L)
+						.weight(2.0f)
 						.build()
 					)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
 						.enrichItemId(4L)
-						.weight(5L)
+						.weight(3.0f)
 						.build()
 					).build(),
 				true
@@ -120,16 +162,29 @@ public class EnrichPipelineSortTest {
 			.await()
 			.indefinitely();
 
-		var pipelineWithThreeElements = sessionFactory.withTransaction((s, t) ->
-			enrichPipelineService
-				.findByName(s, CreateConnection.PIPELINE_NAME)
-				.call(pipeline -> Mutiny.fetch(
-					pipeline.getEnrichPipelineItems()))
-		).await().indefinitely();
+		var enrichPipelineUpdated = getEnrichPipeline();
+		var items = enrichPipelineUpdated.getEnrichPipelineItems();
+		var iterator = items.iterator();
 
-		var threeItems = pipelineWithThreeElements.getEnrichPipelineItems();
+		assertEquals(3, items.size());
 
-		assertEquals(3, threeItems.size());
+		var first = iterator.next();
+		assertEquals(2L, first.getKey().getEnrichItemId());
+		assertEquals(1.0f, first.getWeight());
+
+		var second = iterator.next();
+		assertEquals(3L, second.getKey().getEnrichItemId());
+		assertEquals(2.0f, second.getWeight());
+
+		var third = iterator.next();
+		assertEquals(4L, third.getKey().getEnrichItemId());
+		assertEquals(3.0f, third.getWeight());
+
+	}
+
+	private void patchPipelineWithTwoItems() {
+
+		var enrichPipeline = getEnrichPipeline();
 
 		enrichPipelineService.patchOrUpdateWithItems(
 				enrichPipeline.getId(),
@@ -137,12 +192,12 @@ public class EnrichPipelineSortTest {
 					.name(CreateConnection.PIPELINE_NAME)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
 						.enrichItemId(2L)
-						.weight(4L)
+						.weight(4.0f)
 						.build()
 					)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
 						.enrichItemId(4L)
-						.weight(5L)
+						.weight(5.0f)
 						.build()
 					).build(),
 				true
@@ -150,18 +205,83 @@ public class EnrichPipelineSortTest {
 			.await()
 			.indefinitely();
 
-		var pipelineWithTwoElements = sessionFactory.withTransaction((s, t) ->
-			enrichPipelineService
-				.findByName(s, CreateConnection.PIPELINE_NAME)
-				.call(pipeline -> Mutiny.fetch(
-					pipeline.getEnrichPipelineItems()))
-		).await().indefinitely();
+		var enrichPipelineUpdated = getEnrichPipeline();
 
-		var twoItems = pipelineWithTwoElements.getEnrichPipelineItems();
+		var items = enrichPipelineUpdated.getEnrichPipelineItems();
+		var iterator = items.iterator();
 
-		assertEquals(2, twoItems.size());
+		assertEquals(2, items.size());
+
+		var first = iterator.next();
+		assertEquals(2L, first.getKey().getEnrichItemId());
+		assertEquals(4.0f, first.getWeight());
+
+		var second = iterator.next();
+		assertEquals(4L, second.getKey().getEnrichItemId());
+		assertEquals(5.0f, second.getWeight());
 
 	}
 
+	private void patchWithoutPipeline() {
+
+		var enrichPipeline = getEnrichPipeline();
+
+		enrichPipelineService.patchOrUpdateWithItems(
+				enrichPipeline.getId(),
+				PipelineWithItemsDTO.builder()
+					.name(CreateConnection.PIPELINE_NAME)
+					.build(),
+				true
+			)
+			.await()
+			.indefinitely();
+
+	}
+
+	private void updateWithoutPipeline() {
+
+		var enrichPipeline = getEnrichPipeline();
+
+		enrichPipelineService.patchOrUpdateWithItems(
+				enrichPipeline.getId(),
+				PipelineWithItemsDTO.builder()
+					.name(CreateConnection.PIPELINE_NAME)
+					.build(),
+				false
+			)
+			.await()
+			.indefinitely();
+
+	}
+
+	private void updateEnrichPipelineWithOneItem() {
+
+		var enrichPipeline = getEnrichPipeline();
+
+		enrichPipelineService.patchOrUpdateWithItems(
+				enrichPipeline.getId(),
+				PipelineWithItemsDTO.builder()
+					.name(CreateConnection.PIPELINE_NAME)
+					.item(PipelineWithItemsDTO.ItemDTO.builder()
+						.enrichItemId(4L)
+						.weight(5.0f)
+						.build()
+					).build(),
+				false
+			)
+			.await()
+			.indefinitely();
+
+		var enrichPipelineUpdated = getEnrichPipeline();
+
+		var items = enrichPipelineUpdated.getEnrichPipelineItems();
+		var iterator = items.iterator();
+
+		assertEquals(1, items.size());
+
+		var first = iterator.next();
+		assertEquals(4L, first.getKey().getEnrichItemId());
+		assertEquals(5.0f, first.getWeight());
+	}
 
 }
