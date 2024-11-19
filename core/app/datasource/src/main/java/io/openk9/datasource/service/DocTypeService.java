@@ -38,6 +38,7 @@ import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -53,6 +54,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import org.hibernate.FlushMode;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Collection;
@@ -356,7 +358,14 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			)
 			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
 			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
-			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate())
+			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate()
+				.onFailure()
+				.transform(throwable -> switch (throwable) {
+					case ConstraintViolationException c -> new K9Error(
+						"There are some DocTypeFields referenced by other entities");
+					default -> throwable;
+				})
+			)
 			.call(docType -> s.createQuery(updateDocType).executeUpdate())
 			.call(docType -> remove(s, docType))
 		);
