@@ -143,6 +143,7 @@ public class Bucket extends K9Entity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "search_config_id")
 	@ToString.Exclude
+	@Ignore
 	private SearchConfig searchConfig;
 
 	@ManyToMany(cascade = {
