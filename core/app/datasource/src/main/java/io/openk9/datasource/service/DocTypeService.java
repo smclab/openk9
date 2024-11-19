@@ -279,19 +279,35 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		Subquery<Long> fieldSubquery = updateAclMapping.subquery(Long.class);
 		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
 		fieldSubquery.select(fieldSubqueryFrom.get(DocTypeField_.id));
-		fieldSubquery.where(cb.equal(fieldSubqueryFrom.get(DocTypeField_.docType), entityId));
+		fieldSubquery.where(cb.equal(
+			fieldSubqueryFrom.get(DocTypeField_.docType).get(DocType_.id),
+			entityId
+		));
 
 		updateAclMapping.where(
-			updateAclMappingFrom.get(AclMapping_.docTypeField).in(fieldSubquery));
+			updateAclMappingFrom
+				.get(AclMapping_.docTypeField)
+				.get(DocTypeField_.id)
+				.in(fieldSubquery)
+		);
+
 		updateAclMapping.set(
-			updateAclMappingFrom.get(AclMapping_.docTypeField), cb.nullLiteral(DocTypeField.class));
+			updateAclMappingFrom.get(AclMapping_.docTypeField),
+			cb.nullLiteral(DocTypeField.class)
+		);
 
 		// dereference parents and analyzer
 		CriteriaUpdate<DocTypeField> updateDocTypeField =
 			cb.createCriteriaUpdate(DocTypeField.class);
 		Root<DocTypeField> updateDocTypeFieldFrom = updateDocTypeField.from(DocTypeField.class);
+
 		updateDocTypeField.where(
-			cb.equal(updateDocTypeFieldFrom.get(DocTypeField_.docType), entityId));
+			cb.equal(
+				updateDocTypeFieldFrom.get(DocTypeField_.docType).get(DocType_.id),
+				entityId
+			)
+		);
+
 		updateDocTypeField.set(
 			updateDocTypeFieldFrom.get(DocTypeField_.analyzer), cb.nullLiteral(Analyzer.class));
 		updateDocTypeField.set(
@@ -302,7 +318,13 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		CriteriaDelete<DocTypeField> deleteDocTypeFields =
 			cb.createCriteriaDelete(DocTypeField.class);
 		Root<DocTypeField> deleteFrom = deleteDocTypeFields.from(DocTypeField.class);
-		deleteDocTypeFields.where(cb.equal(deleteFrom.get(DocTypeField_.docType), entityId));
+
+		deleteDocTypeFields.where(
+			cb.equal(
+				deleteFrom.get(DocTypeField_.docType).get(DocType_.id),
+				entityId
+			)
+		);
 
 		// dereference docTypeTemplate
 		CriteriaUpdate<DocType> updateDocType = cb.createCriteriaUpdate(DocType.class);
