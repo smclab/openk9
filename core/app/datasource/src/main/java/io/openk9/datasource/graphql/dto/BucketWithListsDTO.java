@@ -18,4 +18,7 @@ public class BucketWithListsDTO extends BucketDTO {
 	private Set<Long> datasourceIds;
 	private Set<Long> suggestionCategoryIds;
 	private Set<Long> tabIds;
+	private Long queryAnalysisId;
+	private Long searchConfigId;
+	private Long defaultLanguageId;
 }

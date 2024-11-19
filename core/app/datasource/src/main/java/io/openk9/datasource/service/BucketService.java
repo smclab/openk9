@@ -143,6 +143,33 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//QueryAnalysis
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							var queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+
+							bucket.setQueryAnalysis(queryAnalysis);
+							builder.add(s.persist(bucket));
+						}
+
+						//SearchConfig
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							var searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+
+							bucket.setSearchConfig(searchConfig);
+							builder.add(s.persist(bucket));
+						}
+
+						//DefaultLanguage
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							var defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+
+							bucket.setDefaultLanguage(defaultLanguage);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -264,6 +291,33 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							newStateBucket.setTabs(tabs);
 
 							builder.add(s.persist(newStateBucket));
+						}
+
+						//QueryAnalysis
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							var queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+
+							bucket.setQueryAnalysis(queryAnalysis);
+							builder.add(s.persist(bucket));
+						}
+
+						//SearchConfig
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							var searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+
+							bucket.setSearchConfig(searchConfig);
+							builder.add(s.persist(bucket));
+						}
+
+						//DefaultLanguage
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							var defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+
+							bucket.setDefaultLanguage(defaultLanguage);
+							builder.add(s.persist(bucket));
 						}
 
 						return builder.joinAll()
@@ -389,6 +443,33 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							newStateBucket.setTabs(tabs);
 
 							builder.add(s.persist(newStateBucket));
+						}
+
+						//QueryAnalysis
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							var queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+
+							bucket.setQueryAnalysis(queryAnalysis);
+							builder.add(s.persist(bucket));
+						}
+
+						//SearchConfig
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							var searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+
+							bucket.setSearchConfig(searchConfig);
+							builder.add(s.persist(bucket));
+						}
+
+						//DefaultLanguage
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							var defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+
+							bucket.setDefaultLanguage(defaultLanguage);
+							builder.add(s.persist(bucket));
 						}
 
 						return builder.joinAll()
