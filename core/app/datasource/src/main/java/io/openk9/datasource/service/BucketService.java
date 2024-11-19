@@ -529,6 +529,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
 	}
 
+	public Uni<SearchConfig> getSearchConfig(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));
+	}
+
 	public Uni<Connection<Datasource>> getDatasourcesConnection(
 		long bucketId, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {

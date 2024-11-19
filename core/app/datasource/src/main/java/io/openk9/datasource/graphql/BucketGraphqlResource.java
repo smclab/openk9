@@ -163,6 +163,10 @@ public class BucketGraphqlResource {
 		return bucketService.getQueryAnalysis(bucket.getId());
 	}
 
+	public Uni<SearchConfig> searchConfig(@Source Bucket bucket) {
+		return bucketService.getSearchConfig(bucket.getId());
+	}
+
 	public Uni<Long> getDocCount(@Source Bucket bucket){
 		return bucketService.getDocCountFromBucket(bucket.getId());
 	}
