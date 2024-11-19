@@ -272,7 +272,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<List<ENTITY>> findByIds(Set<Long> ids) {
 
-		return sessionFactory.withTransaction((s) -> findByIds(ids));
+		return sessionFactory.withTransaction((s) -> findByIds(s, ids));
 
 	}
 

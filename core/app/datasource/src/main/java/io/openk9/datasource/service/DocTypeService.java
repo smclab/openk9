@@ -303,13 +303,17 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 		updateDocTypeField.where(
 			cb.equal(
-				updateDocTypeFieldFrom.get(DocTypeField_.docType).get(DocType_.id),
+				updateDocTypeFieldFrom
+					.get(DocTypeField_.docType)
+					.get(DocType_.id),
 				entityId
 			)
 		);
 
 		updateDocTypeField.set(
-			updateDocTypeFieldFrom.get(DocTypeField_.analyzer), cb.nullLiteral(Analyzer.class));
+			updateDocTypeFieldFrom.get(DocTypeField_.analyzer),
+			cb.nullLiteral(Analyzer.class)
+		);
 		updateDocTypeField.set(
 			updateDocTypeFieldFrom.get(DocTypeField_.parentDocTypeField),
 			cb.nullLiteral(DocTypeField.class));

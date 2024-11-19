@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
 import io.openk9.datasource.model.dto.DocTypeDTO;
@@ -24,6 +25,11 @@ import io.openk9.datasource.model.dto.DocTypeFieldDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @QuarkusTest
 public class DocTypeServiceTest {
@@ -87,6 +93,28 @@ public class DocTypeServiceTest {
 
 		docTypeService.deleteById(toBeDeleted.getId()).await().indefinitely();
 
+		analyzerService.deleteById(analyzer.getId()).await().indefinitely();
+
+		var deletedDocType = docTypeService.findById(toBeDeleted.getId()).await().indefinitely();
+
+		var deletedAnalyzer = analyzerService.findById(analyzer.getId()).await().indefinitely();
+
+		var deletedFields = docTypeFieldService.findByIds(Set.of(
+			first.getId(),
+			second.getId(),
+			subfield.getId()
+		)).await().indefinitely();
+
+		assertNull(deletedDocType);
+		assertNull(deletedAnalyzer);
+
+		assertEquals(3, deletedFields.size());
+
+		for (DocTypeField deleted : deletedFields) {
+
+			assertNull(deleted);
+
+		}
 
 	}
 
