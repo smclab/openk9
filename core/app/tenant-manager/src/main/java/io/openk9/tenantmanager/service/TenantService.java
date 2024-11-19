@@ -102,20 +102,13 @@ public class TenantService
 
 	public Uni<Void> deleteTenant(long tenantId) {
 
-		return sf.withTransaction(
-			session ->
-				session
-				.createQuery("delete from BackgroundProcess where tenant.id = :tenantId")
-				.setParameter("tenantId", tenantId)
-				.executeUpdate()
-				.chain(() ->
-					session
-						.createQuery("delete from Tenant where id = :tenantId")
-						.setParameter("tenantId", tenantId)
-						.executeUpdate()
-				)
-				.replaceWithVoid()
+		return sf.withTransaction(s -> s.createQuery(
+				"delete from Tenant where id = :tenantId")
+			.setParameter("tenantId", tenantId)
+			.executeUpdate()
+			.replaceWithVoid()
 		);
+
 	}
 
 	public Uni<List<Tenant>> findAllTenant() {
