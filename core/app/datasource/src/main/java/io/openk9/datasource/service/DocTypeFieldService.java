@@ -151,10 +151,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				 docTypeField.add(session.fetch(docType.getDocTypeFields()));
 			 }
 
-			 return Uni
-				 .combine()
+			 return Uni.combine()
 				 .all()
 				 .unis(docTypeField)
+				 .usingConcurrencyOf(1)
 				 .collectFailures()
 				 .with(e -> (List<Set<DocTypeField>>) e)
 				 .flatMap(sets -> loadAndExpandDocTypeFields(session, sets))
@@ -199,10 +199,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			loadedDTFs.add(loadDocTypeField(s, typeFields));
 		}
 
-		return Uni
-			.combine()
+		return Uni.combine()
 			.all()
 			.unis(loadedDTFs)
+			.usingConcurrencyOf(1)
 			.collectFailures()
 			.discardItems()
 			.chain(() -> {
@@ -213,10 +213,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					inner.add(expandDocTypeFields(s, typeFields));
 				}
 
-				return Uni
-					.combine()
+				return Uni.combine()
 					.all()
 					.unis(inner)
+					.usingConcurrencyOf(1)
 					.collectFailures()
 					.with(e -> {
 						List<Set<DocTypeField>> expandInner = (List<Set<DocTypeField>>) e;
@@ -245,10 +245,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 		}
 
-		return Uni
-			.combine()
+		return Uni.combine()
 			.all()
 			.unis(subDocTypeFieldUnis)
+			.usingConcurrencyOf(1)
 			.collectFailures()
 			.with(e -> (List<Set<DocTypeField>>) e)
 			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));

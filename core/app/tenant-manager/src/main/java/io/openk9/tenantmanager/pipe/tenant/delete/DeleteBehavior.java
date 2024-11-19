@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
 import io.openk9.common.util.UniUtil;
@@ -64,30 +81,29 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 								() -> keycloak.realm(tenant.getRealmName()).remove())
 								.invoke(() -> LOGGER.info("keycloak deleted: " + tenant.getRealmName()));
 
-							Uni<Void> deleteTenant =
-								Uni
-									.createFrom()
-									.emitter(sink ->
-										VertxUtil.runOnContext(() ->
-											tenantService
-												.deleteTenant(tenant.getId())
-												.onItemOrFailure()
-												.invoke((v, t) -> {
-													if (t != null) {
-														sink.fail(t);
-													}
-													else {
-														sink.complete(null);
-													}
-												})
-										)
+							Uni<Void> deleteTenant = Uni.createFrom()
+								.emitter(sink ->
+									VertxUtil.runOnContext(() ->
+										tenantService
+											.deleteTenant(tenant.getId())
+											.onItemOrFailure()
+											.invoke((v, t) -> {
+												if (t != null) {
+													sink.fail(t);
+												}
+												else {
+													sink.complete(null);
+												}
+											})
 									)
-									.invoke(() -> LOGGER.info("tenant deleted: " + tenant.getId()))
-									.replaceWithVoid();
+								)
+								.invoke(() -> LOGGER.info("tenant deleted: " + tenant.getId()))
+								.replaceWithVoid();
 
 							return Uni
 								.join()
 								.all(deleteSchema, deleteKeycloak, deleteTenant)
+								.usingConcurrencyOf(1)
 								.andCollectFailures()
 								.onItemOrFailure()
 								.invoke((__, t) -> {

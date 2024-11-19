@@ -238,9 +238,10 @@ public class IndexService {
 					.map(exist -> Tuple2.of(exist, indexName));
 			existIndexNames.add(existIndexName);
 		}
-		return Uni
-			.join()
+
+		return Uni.join()
 			.all(existIndexNames)
+			.usingConcurrencyOf(1)
 			.andCollectFailures();
 
 	}
@@ -266,8 +267,7 @@ public class IndexService {
 	}
 
 	public Uni<Boolean> indexExist(String name) {
-		return Uni
-			.createFrom()
+		return Uni.createFrom()
 			.<Boolean>emitter(
 				emitter -> restHighLevelClient
 					.indices()

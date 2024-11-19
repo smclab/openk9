@@ -83,6 +83,8 @@ public interface K9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDT
 
 	Uni<List<ENTITY>> findByIds(String tenantId, Set<Long> ids);
 
+	Uni<List<ENTITY>> findByIds(Mutiny.Session session, Set<Long> ids);
+
 	Uni<ENTITY> patch(String tenantId, long id, DTO dto);
 
 	Uni<ENTITY> update(String tenantId, long id, DTO dto);

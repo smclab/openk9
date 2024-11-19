@@ -255,8 +255,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(
 		Mutiny.Session session, Collection<Long> ids) {
-		return findByIds(Set.copyOf(ids)).chain(
-			dts -> docTypeFieldService.expandDocTypes(
+		return findByIds(session, Set.copyOf(ids))
+			.chain(dts -> docTypeFieldService.expandDocTypes(
 				session, dts));
 	}
 

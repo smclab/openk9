@@ -147,10 +147,10 @@ public class SchedulerInitializer {
 			);
 		}
 
-		return Uni
-			.combine()
+		return Uni.combine()
 			.all()
 			.unis(triggers)
+			.usingConcurrencyOf(1)
 			.with(Long.class, Function.identity());
 
 	}

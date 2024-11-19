@@ -272,8 +272,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Override
 	public Uni<List<ENTITY>> findByIds(Set<Long> ids) {
 
-		return sessionFactory.withTransaction(
-			(s) -> s.find(getEntityClass(), ids.toArray(new Object[0])));
+		return sessionFactory.withTransaction((s) -> findByIds(ids));
 
 	}
 
@@ -281,9 +280,14 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<List<ENTITY>> findByIds(String tenantId, Set<Long> ids) {
 
 		return sessionFactory.withTransaction(
-			tenantId,
-			(s, t) -> s.find(getEntityClass(), ids.toArray(new Object[0]))
-		);
+			tenantId, (s, t) -> findByIds(s, ids));
+
+	}
+
+	@Override
+	public Uni<List<ENTITY>> findByIds(Mutiny.Session session, Set<Long> ids) {
+
+		return session.find(getEntityClass(), ids.toArray(new Object[0]));
 
 	}
 
