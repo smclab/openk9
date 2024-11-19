@@ -446,31 +446,36 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//QueryAnalysis
-						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
-							var queryAnalysis =
-								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+						QueryAnalysis queryAnalysis = null;
 
-							bucket.setQueryAnalysis(queryAnalysis);
-							builder.add(s.persist(bucket));
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
 						}
+
+						bucket.setQueryAnalysis(queryAnalysis);
 
 						//SearchConfig
-						if (bucketWithListsDTO.getSearchConfigId() != null) {
-							var searchConfig =
-								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+						SearchConfig searchConfig = null;
 
-							bucket.setSearchConfig(searchConfig);
-							builder.add(s.persist(bucket));
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
 						}
+
+						bucket.setSearchConfig(searchConfig);
 
 						//DefaultLanguage
-						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
-							var defaultLanguage =
-								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+						Language defaultLanguage = null;
 
-							bucket.setDefaultLanguage(defaultLanguage);
-							builder.add(s.persist(bucket));
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
 						}
+
+						bucket.setDefaultLanguage(defaultLanguage);
+
+						builder.add(s.persist(bucket));
 
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
