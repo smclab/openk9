@@ -378,7 +378,15 @@ public class EmbeddingService {
 						embeddingModel.getApiKey()
 					))
 					.onFailure()
-					.recoverWithNull()
+					.transform(throwable -> {
+						log.warnf(
+							throwable,
+							"Cannot fetch current embedding model for tenantId %s",
+							tenantId
+						);
+
+						return null;
+					})
 			)
 		);
 
