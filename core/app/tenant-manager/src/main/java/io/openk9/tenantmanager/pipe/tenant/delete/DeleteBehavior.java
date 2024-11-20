@@ -68,7 +68,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 		else if (timeoutMessage instanceof DeleteMessage.Delete delete) {
 
 			if (this.token.equals(delete.token())) {
-				LOGGER.info("Start Delete tenant: " + this.virtualHost);
+				LOGGER.infof("Start Delete tenant for virtualHost %s ", virtualHost);
 
 				eventBus.<Tenant>request(
 						DeleteService.FIND_TENANT_BY_VIRTUAL_HOST, virtualHost)
@@ -76,25 +76,44 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 						var tenant = message.body();
 
-						Uni<Message<Void>> deleteSchema = eventBus.request(
+						LOGGER.infof(
+							"Tenant with id %s found for virtualHost %s",
+							tenant.getId(),
+							virtualHost
+						);
+
+						Uni<Void> deleteSchema = eventBus.request(
 							DeleteService.DELETE_SCHEMA,
 							tenant.getSchemaName()
-						);
+						).invoke(() -> LOGGER.infof(
+								"Schema %s for virtualHost %s deleted.",
+								tenant.getSchemaName(),
+								virtualHost
+							)
+						).replaceWithVoid();
 
-						Uni<Message<Void>> deleteRealm = eventBus.request(
+						Uni<Void> deleteRealm = eventBus.request(
 							DeleteService.DELETE_REALM,
 							tenant.getRealmName()
-						);
+						).invoke(() -> LOGGER.infof(
+								"Realm for %s virtualHost %s deleted.",
+								tenant.getRealmName(),
+								virtualHost
+							)
+						).replaceWithVoid();
 
-						Uni<Message<Void>> deleteTenant = eventBus.request(
+						Uni<Void> deleteTenant = eventBus.request(
 							DeleteService.DELETE_TENANT,
 							tenant.getId()
-						);
+						).invoke(() -> LOGGER.infof(
+								"Tenant with id %s for virtualHost %s deleted.",
+								tenant.getId(),
+								virtualHost
+							)
+						).replaceWithVoid();
 
-						return Uni
-							.join()
+						return Uni.join()
 							.all(deleteSchema, deleteRealm, deleteTenant)
-							.usingConcurrencyOf(1)
 							.andCollectFailures()
 							.onItemOrFailure()
 							.invoke((__, t) -> {

@@ -51,18 +51,20 @@ public class DeleteService {
 	@ActivateRequestContext
 	@ConsumeEvent(DELETE_REALM)
 	@Blocking
-	public void deleteRealm(String realmName) {
+	public int deleteRealm(String realmName) {
 
 		keycloakAdmin.realm(realmName).remove();
 
+		return 0;
 	}
 
 	@ConsumeEvent(DELETE_SCHEMA)
 	@Blocking
-	public void deleteSchema(String schemaName) {
+	public int deleteSchema(String schemaName) {
 
 		datasourceLiquibaseService.rollbackRunLiquibaseMigration(schemaName);
 
+		return 0;
 	}
 
 	@ConsumeEvent(DELETE_TENANT)
