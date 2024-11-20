@@ -16,9 +16,9 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class BucketWithListsDTO extends BucketDTO {
 	private Set<Long> datasourceIds;
-	private Set<Long> suggestionCategoryIds;
-	private Set<Long> tabIds;
+	private Long defaultLanguageId;
 	private Long queryAnalysisId;
 	private Long searchConfigId;
-	private Long defaultLanguageId;
+	private Set<Long> suggestionCategoryIds;
+	private Set<Long> tabIds;
 }
