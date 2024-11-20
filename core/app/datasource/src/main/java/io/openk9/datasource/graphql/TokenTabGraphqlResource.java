@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.TokenTabWithDocTypeFieldDTO;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TokenTabDTO;
@@ -96,6 +97,21 @@ public class TokenTabGraphqlResource {
 			return patch
 				? tokenTab(id, tokenTabDTO)
 				: updateTokenTab(id, tokenTabDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<TokenTab>> tokenTabWithDocTypeField(
+		@Id Long id, TokenTabWithDocTypeFieldDTO tokenTabWithDocTypeFieldDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createTokenTab(tokenTabWithDocTypeFieldDTO);
+		} else {
+			return patch
+				? tokenTab(id, tokenTabWithDocTypeFieldDTO)
+				: updateTokenTab(id, tokenTabWithDocTypeFieldDTO);
 		}
 
 	}

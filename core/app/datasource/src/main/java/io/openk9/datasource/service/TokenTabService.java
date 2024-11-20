@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.TokenTabWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.TokenTab;
@@ -38,6 +39,88 @@ import java.util.Set;
 @ApplicationScoped
 public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {
 	TokenTabService(TokenTabMapper mapper) {this.mapper = mapper;}
+
+	@Override
+	public Uni<TokenTab> create(TokenTabDTO dto) {
+		if ( dto instanceof TokenTabWithDocTypeFieldDTO withDocTypeFieldDTO) {
+			var transientTokenTab = mapper.create(withDocTypeFieldDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, transientTokenTab)
+					.flatMap(tokenTab -> {
+
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						if (docTypeFieldId != null) {
+							var docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+
+							tokenTab.setDocTypeField(docTypeField);
+						}
+
+						return s.persist(tokenTab)
+							.flatMap(__ -> s.merge(tokenTab));
+					})
+			);
+		}
+		return super.create(dto);
+	}
+
+	@Override
+	public Uni<TokenTab> patch(long id, TokenTabDTO dto) {
+		if (dto instanceof TokenTabWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, id)
+					.flatMap(tokenTab -> {
+
+						var newStateTokenTab =
+							mapper.patch(tokenTab, withDocTypeFieldDTO);
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						if (docTypeFieldId != null) {
+							var docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+
+							newStateTokenTab.setDocTypeField(docTypeField);
+						}
+
+						return s.merge(newStateTokenTab)
+							.map(__ -> newStateTokenTab);
+					})
+			);
+		}
+		return super.patch(id, dto);
+	}
+
+	@Override
+	public Uni<TokenTab> update(long id, TokenTabDTO dto) {
+		if (dto instanceof TokenTabWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, id)
+					.flatMap(tokenTab -> {
+
+						var newStateTokenTab =
+							mapper.update(tokenTab, withDocTypeFieldDTO);
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						DocTypeField docTypeField = null;
+
+						if (docTypeFieldId != null) {
+							docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+						}
+
+						newStateTokenTab.setDocTypeField(docTypeField);
+
+						return s.merge(newStateTokenTab)
+							.map(__ -> newStateTokenTab);
+					})
+			);
+		}
+		return super.update(id, dto);
+	}
 
 	@Override
 	public Class<TokenTab> getEntityClass(){
