@@ -35,7 +35,7 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "large_language_model")
 @NamedQuery(
 	name = LargeLanguageModel.FETCH_CURRENT,
-	query = "select llm from LargeLanguageModel llm join llm.tenantBinding t where t is not null"
+	query = "from LargeLanguageModel llm where llm.tenantBinding is not null"
 )
 @Getter
 @Setter
