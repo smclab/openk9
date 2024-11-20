@@ -385,7 +385,8 @@ public class EmbeddingService {
 							tenantId
 						)
 					)
-					.replaceWithNull()
+					.onFailure()
+					.recoverWithNull()
 			)
 		);
 
