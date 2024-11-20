@@ -195,6 +195,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						//UniBuilder to prevent empty unis
 						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
 
 						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
