@@ -21,7 +21,6 @@ import io.openk9.tenantmanager.model.Tenant;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.Vertx;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
@@ -41,13 +40,10 @@ public class DeleteService {
 	DatasourceLiquibaseService datasourceLiquibaseService;
 	@Inject
 	TenantService tenantService;
-	@Inject
-	Vertx vertx;
 
 	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
 	public Uni<Tenant> findTenant(String virtualHost) {
-		return vertx.executeBlocking(
-			tenantService.findTenantByVirtualHost(virtualHost));
+		return tenantService.findTenantByVirtualHost(virtualHost);
 	}
 
 	@ActivateRequestContext
@@ -72,7 +68,7 @@ public class DeleteService {
 	@ConsumeEvent(DELETE_TENANT)
 	public Uni<Void> deleteTenant(long tenantId) {
 
-		return vertx.executeBlocking(tenantService.deleteTenant(tenantId));
+		return tenantService.deleteTenant(tenantId);
 
 	}
 
