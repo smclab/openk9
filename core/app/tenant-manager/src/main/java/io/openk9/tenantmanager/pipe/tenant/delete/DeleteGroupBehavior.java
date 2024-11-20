@@ -1,13 +1,28 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.TimeoutMessage;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
-import io.openk9.tenantmanager.service.TenantService;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.jboss.logging.Logger;
-import org.keycloak.admin.client.Keycloak;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -17,17 +32,23 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 
 public class DeleteGroupBehavior implements TypedActor.Behavior<DeleteGroupMessage> {
 
+	private final EventBus eventBus;
+
 	public DeleteGroupBehavior(
 		TypedActor.Address<DeleteGroupMessage> self,
 		TypedActor.System system,
-		DatasourceLiquibaseService datasourceLiquibaseService,
-		TenantService tenantService, Keycloak keycloak) {
+		EventBus eventBus) {
+
 		this.self = self;
 		this.system = system;
-		this.datasourceLiquibaseService = datasourceLiquibaseService;
-		this.tenantService = tenantService;
-		this.keycloak = keycloak;
+		this.eventBus = eventBus;
 	}
+
+	private final Map<String, TypedActor.Address<DeleteMessage>> deleteActorMap =
+		new LinkedHashMap<>();
+
+	private final TypedActor.Address<DeleteGroupMessage> self;
+	private final TypedActor.System system;
 
 	@Override
 	public TypedActor.Effect<DeleteGroupMessage> apply(DeleteGroupMessage timeoutMessage) {
@@ -49,9 +70,7 @@ public class DeleteGroupBehavior implements TypedActor.Behavior<DeleteGroupMessa
 					system.actorOf(TimeoutStopDeleteBehavior::new);
 
 				TypedActor.Address<DeleteMessage> deleteActor =
-					system.actorOf(self -> new DeleteBehavior(
-						datasourceLiquibaseService, tenantService, keycloak,
-						self));
+					system.actorOf(self -> new DeleteBehavior(eventBus, self));
 
 				deleteActor.tell(new DeleteMessage.Start(self, virtualHost));
 
@@ -88,15 +107,6 @@ public class DeleteGroupBehavior implements TypedActor.Behavior<DeleteGroupMessa
 		return Stay();
 
 	}
-
-	private final Map<String, TypedActor.Address<DeleteMessage>> deleteActorMap =
-		new LinkedHashMap<>();
-
-	private final TypedActor.Address<DeleteGroupMessage> self;
-	private final TypedActor.System system;
-	private final DatasourceLiquibaseService datasourceLiquibaseService;
-	private final TenantService tenantService;
-	private final Keycloak keycloak;
 
 	private static final Logger LOGGER = Logger.getLogger(DeleteGroupBehavior.class);
 	

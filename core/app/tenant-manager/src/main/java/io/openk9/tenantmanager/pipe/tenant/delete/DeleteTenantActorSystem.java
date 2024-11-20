@@ -19,32 +19,29 @@ package io.openk9.tenantmanager.pipe.tenant.delete;
 
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
-import io.openk9.tenantmanager.service.TenantService;
 import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.context.api.NamedInstance;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.keycloak.admin.client.Keycloak;
 
 @ApplicationScoped
 public class DeleteTenantActorSystem {
 
+	@Inject
+	EventBus eventBus;
+
 	@PostConstruct
 	public void init() {
-		system = new TypedActor.System(sharedConfiguredExecutor);
-		deleteGroupActor = system.actorOf(self ->
-			new DeleteGroupBehavior(
-				self, system, datasourceLiquibaseService, tenantService,
-				keycloak
-			)
-		);
-	}
 
-	public void runDelete(String virtualHost, String token) {
-		deleteGroupActor.tell(new DeleteGroupMessage.TellDelete(virtualHost, token));
+		system = new TypedActor.System(sharedConfiguredExecutor);
+
+		deleteGroupActor = system.actorOf(self ->
+			new DeleteGroupBehavior(self, system, eventBus)
+		);
+
 	}
 
 	public void startDeleteTenant(String virtualHost) {
@@ -59,12 +56,12 @@ public class DeleteTenantActorSystem {
 	@NamedInstance("delete-tenant-actor-executor")
 	ManagedExecutor sharedConfiguredExecutor;
 
-	@Inject
-	DatasourceLiquibaseService datasourceLiquibaseService;
-	@Inject
-	TenantService tenantService;
-	@Inject
-	Keycloak keycloak;
+	public void runDelete(String virtualHost, String token) {
+
+		deleteGroupActor.tell(
+			new DeleteGroupMessage.TellDelete(virtualHost, token));
+
+	}
 
 	private TypedActor.System system;
 	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;

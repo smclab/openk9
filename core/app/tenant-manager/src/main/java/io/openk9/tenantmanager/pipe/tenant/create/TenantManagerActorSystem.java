@@ -123,13 +123,13 @@ public class TenantManagerActorSystem {
 	@Inject
 	DatasourceLiquibaseService liquibaseService;
 
+	@Inject
+	KeycloakContext config;
+
 	@ConfigProperty(
 		name = "openk9.tenant-manager.create-tenant-timeout",
 		defaultValue = "45s"
 	)
 	Duration requestTimeout;
-
-	@Inject
-	KeycloakContext config;
 
 }
