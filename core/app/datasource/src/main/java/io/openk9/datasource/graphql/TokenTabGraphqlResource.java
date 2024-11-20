@@ -139,7 +139,7 @@ public class TokenTabGraphqlResource {
 	}
 
 	@Mutation
-	@Description("API to create, patch or update tokenTab with the possibility to link a docTFieldType ")
+	@Description("API to create, patch or update tokenTab with the possibility to link a docTypeField ")
 	public Uni<Response<TokenTab>> tokenTabWithDocTypeField(
 		@Id Long id, TokenTabWithDocTypeFieldDTO tokenTabWithDocTypeFieldDTO,
 		@DefaultValue("false") boolean patch) {
