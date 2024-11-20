@@ -20,7 +20,6 @@ package io.openk9.tenantmanager.service;
 import io.openk9.tenantmanager.model.Tenant;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.common.annotation.Blocking;
-import io.smallrye.common.annotation.NonBlocking;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -43,7 +42,6 @@ public class DeleteService {
 	TenantService tenantService;
 
 	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
-	@NonBlocking
 	public Uni<Tenant> findTenant(String virtualHost) {
 		return tenantService.findTenantByVirtualHost(virtualHost);
 	}
@@ -68,7 +66,6 @@ public class DeleteService {
 	}
 
 	@ConsumeEvent(DELETE_TENANT)
-	@NonBlocking
 	public Uni<Void> deleteTenant(long tenantId) {
 
 		return tenantService.deleteTenant(tenantId);
