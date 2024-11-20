@@ -20,6 +20,10 @@ package io.openk9.datasource.pipeline.service;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.EmbeddingModel;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,9 +31,26 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@QuarkusTest
 class EmbeddingServiceTest {
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	@Test
+	void should_fetch_current_embedding_model() {
+
+		var current = sessionFactory.withTransaction(session -> session
+				.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+				.getSingleResultOrNull()
+			)
+			.await().indefinitely();
+
+		assertNotNull(current);
+	}
 
 	@Test
 	void getMetadataMap() {

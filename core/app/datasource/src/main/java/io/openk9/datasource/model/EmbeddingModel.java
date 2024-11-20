@@ -33,7 +33,7 @@ import lombok.Setter;
 @Table(name = "embedding_model")
 @NamedQuery(
 	name = EmbeddingModel.FETCH_CURRENT,
-	query = "select em from EmbeddingModel em join em.tenantBinding t where t is not null"
+	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
 @Getter
 @Setter

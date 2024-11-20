@@ -19,10 +19,13 @@ package io.openk9.datasource;
 
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.service.EnrichItemService;
+import io.openk9.datasource.service.EmbeddingModelService;
+import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -43,7 +46,10 @@ public class Initializer {
 	DatasourceService datasourceService;
 
 	@Inject
-	EnrichItemService enrichItemService;
+	EmbeddingModelService embeddingModelService;
+
+	@Inject
+	LargeLanguageModelService largeLanguageModelService;
 
 	public void initDb(@Observes Startup startup) {
 
@@ -87,8 +93,51 @@ public class Initializer {
 						.build())
 					.build()
 				)
-				.build()
-		).await().indefinitely();
+				.build())
+			.await()
+			.indefinitely();
+
+		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model")
+				.apiUrl("embedding-model.local")
+				.apiKey("secret-key")
+				.build())
+			.await()
+			.indefinitely();
+
+		embeddingModelService.enable(testEmbeddingModel.getId())
+			.await()
+			.indefinitely();
+
+		embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model disabled")
+				.apiUrl("embedding-model.disabled.local")
+				.apiKey("secret")
+				.build())
+			.await()
+			.indefinitely();
+
+		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM")
+				.apiUrl("llm.local")
+				.apiKey("secret-key")
+				.jsonConfig("{}")
+				.build())
+			.await()
+			.indefinitely();
+
+		largeLanguageModelService.enable(testLLM.getId())
+			.await()
+			.indefinitely();
+
+		largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM Disabled")
+				.apiUrl("llm.disabled.local")
+				.apiKey("secret")
+				.jsonConfig("{}")
+				.build())
+			.await()
+			.indefinitely();
 
 	}
 
