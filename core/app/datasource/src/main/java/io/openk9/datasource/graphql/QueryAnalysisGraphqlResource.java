@@ -24,6 +24,7 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.QueryAnalysisWithListsDTO;
 import io.openk9.datasource.service.QueryAnalysisService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -129,8 +130,6 @@ public class QueryAnalysisGraphqlResource {
 		return queryAnalysisService.removeAnnotatorToQueryAnalysis(id, annotatorId);
 	}
 
-
-
 	@Mutation
 	public Uni<Response<QueryAnalysis>> queryAnalysis(
 		@Id Long id, QueryAnalysisDTO queryAnalysisDTO,
@@ -147,10 +146,24 @@ public class QueryAnalysisGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Response<QueryAnalysis>> queryAnalysisWithLists(
+		@Id Long id, QueryAnalysisWithListsDTO queryAnalysisWithListsDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createQueryAnalysis(queryAnalysisWithListsDTO);
+		} else {
+			return patch
+				? patchQueryAnalysis(id, queryAnalysisWithListsDTO)
+				: updateQueryAnalysis(id, queryAnalysisWithListsDTO);
+		}
+
+	}
+
+	@Mutation
 	public Uni<QueryAnalysis> deleteQueryAnalysis(@Id long queryAnalysisId) {
 		return queryAnalysisService.deleteById(queryAnalysisId);
 	}
-
 
 	@Subscription
 	public Multi<QueryAnalysis> queryAnalysisCreated() {

@@ -25,6 +25,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.QueryAnalysisWithListsDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
@@ -32,6 +33,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 ;
 
@@ -39,6 +41,136 @@ import java.util.Set;
 public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, QueryAnalysisDTO> {
 	 QueryAnalysisService(QueryAnalysisMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	@Override
+	public Uni<QueryAnalysis> create(QueryAnalysisDTO dto) {
+		if (dto instanceof QueryAnalysisWithListsDTO withListsDTO) {
+
+			var transientQueryAnalysis = mapper.create(withListsDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, transientQueryAnalysis)
+					.flatMap(queryAnalysis -> {
+
+						//annotators
+						var annotatorsIds = withListsDTO.getAnnotatorsIds();
+
+						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
+
+							var annotators = annotatorsIds.stream()
+								.map(id -> s.getReference(Annotator.class, id))
+								.collect(Collectors.toSet());
+
+							queryAnalysis.setAnnotators(annotators);
+						}
+
+						//rules
+						var rulesIds = withListsDTO.getRulesIds();
+
+						if (rulesIds != null && !rulesIds.isEmpty()) {
+
+							var rules = rulesIds.stream()
+								.map(id -> s.getReference(Rule.class, id))
+								.collect(Collectors.toSet());
+
+							queryAnalysis.setRules(rules);
+						}
+
+						return s.persist(queryAnalysis)
+							.flatMap(__ -> s.merge(queryAnalysis));
+					})
+			);
+		}
+		return super.create(dto);
+	}
+
+	@Override
+	public Uni<QueryAnalysis> patch(long queryAnalysisId, QueryAnalysisDTO dto) {
+		if (dto instanceof QueryAnalysisWithListsDTO withListsDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, queryAnalysisId)
+					.flatMap(queryAnalysis -> {
+						var newStateQueryAnalysis =
+							mapper.patch(queryAnalysis, withListsDTO);
+
+						//annotators
+						var annotatorsIds = withListsDTO.getAnnotatorsIds();
+
+						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
+
+							var annotators = annotatorsIds.stream()
+								.map(id -> s.getReference(Annotator.class, id))
+								.collect(Collectors.toSet());
+
+							newStateQueryAnalysis.getAnnotators().clear();
+							newStateQueryAnalysis.setAnnotators(annotators);
+						}
+
+						//rules
+						var rulesIds = withListsDTO.getRulesIds();
+
+						if (rulesIds != null && !rulesIds.isEmpty()) {
+
+							var rules = rulesIds.stream()
+								.map(id -> s.getReference(Rule.class, id))
+								.collect(Collectors.toSet());
+
+							newStateQueryAnalysis.getRules().clear();
+							newStateQueryAnalysis.setRules(rules);
+						}
+
+						return s.persist(newStateQueryAnalysis)
+							.flatMap(__ -> s.merge(newStateQueryAnalysis));
+					})
+			);
+		}
+		return super.patch(queryAnalysisId, dto);
+	}
+
+	@Override
+	public Uni<QueryAnalysis> update(long queryAnalysisId, QueryAnalysisDTO dto) {
+		if (dto instanceof QueryAnalysisWithListsDTO withListsDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, queryAnalysisId)
+					.flatMap(queryAnalysis -> {
+						var newStateQueryAnalysis =
+							mapper.update(queryAnalysis, withListsDTO);
+
+						//annotators
+						var annotatorsIds = withListsDTO.getAnnotatorsIds();
+						newStateQueryAnalysis.getRules().clear();
+
+						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
+
+							var annotators = annotatorsIds.stream()
+								.map(id -> s.getReference(Annotator.class, id))
+								.collect(Collectors.toSet());
+
+							newStateQueryAnalysis.setAnnotators(annotators);
+						}
+
+						//rules
+						var rulesIds = withListsDTO.getRulesIds();
+						newStateQueryAnalysis.getRules().clear();
+
+						if (rulesIds != null && !rulesIds.isEmpty()) {
+
+							var rules = rulesIds.stream()
+								.map(id -> s.getReference(Rule.class, id))
+								.collect(Collectors.toSet());
+
+							newStateQueryAnalysis.setRules(rules);
+						}
+
+						return s.persist(newStateQueryAnalysis)
+							.flatMap(__ -> s.merge(newStateQueryAnalysis));
+					})
+			);
+		}
+		return super.update(queryAnalysisId, dto);
 	}
 
 	@Override
