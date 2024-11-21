@@ -183,8 +183,6 @@ public abstract class BaseSearchService {
 
 		criteriaQuery.where(disjunction);
 
-		criteriaQuery.distinct(true);
-
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
