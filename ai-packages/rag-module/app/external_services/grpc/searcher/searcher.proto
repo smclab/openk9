@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+option java_multiple_files = true;
+option java_package = "io.openk9.searcher.grpc";
+option java_outer_classname = "SearcherProto";
+
+package grpc;
+
+service Searcher {
+  rpc QueryParser(QueryParserRequest) returns (QueryParserResponse) {}
+  rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
+  rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
+  rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
+}
+
+message QueryParserResponse {
+  bytes query = 1;
+  repeated string indexName = 2;
+  map<string, string> queryParameters = 3;
+}
+
+message SuggestionsResponse {
+  repeated Suggestions result = 1;
+  string afterKey = 2;
+}
+
+message Suggestions {
+  TokenType tokenType = 1;
+  string value = 2;
+  optional int64 suggestionCategoryId = 3;
+  string keywordKey = 4;
+  optional string entityType = 5;
+  optional string entityValue = 6;
+  int64 count = 7;
+}
+
+enum TokenType {
+    ENTITY = 0;
+    TEXT = 1;
+    DOCTYPE = 2;
+    AUTOCORRECT = 3;
+    AUTOCOMPLETE = 4;
+    KEYWORD_AUTOCOMPLETE = 5;
+    FILTER = 6;
+  KNN = 7;
+}
+
+message QueryParserRequest {
+  repeated SearchTokenRequest searchQuery = 1;
+  repeated int32 range = 2;
+  string afterKey = 3;
+  string suggestKeyword = 4;
+  int64 suggestionCategoryId = 5;
+  string virtualHost = 6;
+  optional string jwt = 7;
+  map<string, Value> extra = 8;
+  repeated Sort sort = 9;
+  optional string sortAfterKey = 10;
+  optional string language = 11;
+  optional bool vectorIndices = 12;
+}
+
+message Sort {
+  string field = 1;
+  map<string, string> extras = 2;
+}
+
+message Value {
+  repeated string value = 1;
+}
+
+message SearchTokenRequest {
+  string entityType = 1;
+  string entityName = 2;
+  string tokenType = 3;
+  string keywordKey = 4;
+  repeated string values = 5;
+  map<string, string> extra = 6;
+  bool filter = 7;
+}
+
+
+message QueryAnalysisRequest {
+  string searchText = 1;
+  repeated QueryAnalysisToken tokens = 2;
+  string virtualHost = 3;
+  optional string jwt = 4;
+  string mode = 5;
+}
+
+message GetLLMConfigurationsRequest {
+  string virtualHost = 1;
+}
+
+message QueryAnalysisToken {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  QueryAnalysisSearchToken token = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisTokens {
+  string text = 1;
+  int32 start = 2;
+  int32 end = 3;
+  repeated QueryAnalysisSearchToken tokens = 4;
+  repeated int32 pos = 5;
+}
+
+message QueryAnalysisSearchToken {
+  TokenType tokenType = 1;
+  string value = 2;
+  float score = 3;
+  optional string keywordKey = 4;
+  optional string keywordName = 5;
+  optional string entityType = 6;
+  optional string entityName = 7;
+  optional string tenantId = 8;
+  optional string label = 9;
+  map<string, string> extra = 10;
+}
+
+message QueryAnalysisResponse {
+  string searchText = 1;
+  repeated QueryAnalysisTokens analysis = 2;
+}
+
+message GetLLMConfigurationsResponse {
+  string apiUrl = 1;
+  optional string apiKey = 2;
+  .google.protobuf.Struct jsonConfig = 3;
+}
+

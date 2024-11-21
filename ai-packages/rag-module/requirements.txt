@@ -1,0 +1,12 @@
+langchain-core 
+langchain-cli 
+langchain-community 
+langchain-openai 
+langchain-ollama
+opensearch-py 
+fastapi 
+uvicorn 
+grpcio 
+grpcio-tools
+python-keycloak
+python-dotenv
