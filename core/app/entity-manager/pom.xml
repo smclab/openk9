@@ -77,12 +77,11 @@
 		<dependency>
 			<groupId>io.quarkiverse.opensearch</groupId>
 			<artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-			<version>1.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.neo4j</groupId>
 			<artifactId>quarkus-neo4j</artifactId>
-			<version>1.0.4</version>
+			<version>5.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkiverse.config</groupId>
@@ -91,7 +90,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>5.1.2</version>
+			<version>5.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.neo4j</groupId>
