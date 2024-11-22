@@ -27,6 +27,7 @@ class OpenSearchRetriever(BaseRetriever):
     language: Optional[str] = None
     vector_indices: Optional[bool] = True
     context_window: int
+    retrieve_type = str
     opensearch_host: str
     grpc_host: str
 
@@ -40,7 +41,7 @@ class OpenSearchRetriever(BaseRetriever):
                 {
                     "entityType": "",
                     "entityName": "",
-                    "tokenType": "KNN",
+                    "tokenType": self.retrieve_type,
                     "keywordKey": None,
                     "values": [query],
                     "extra": {},
