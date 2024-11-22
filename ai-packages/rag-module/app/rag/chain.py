@@ -49,6 +49,7 @@ def get_chain(
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
+    retrieve_type = configuration["retrieve_type"]
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
@@ -64,6 +65,7 @@ def get_chain(
         language=language,
         vector_indices=vector_indices,
         context_window=context_window,
+        retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
         grpc_host=grpc_host,
     )
@@ -128,6 +130,7 @@ def get_chat_chain(
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
+    retrieve_type = configuration["retrieve_type"]
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -147,6 +150,7 @@ def get_chat_chain(
         language=language,
         vector_indices=vector_indices,
         context_window=context_window,
+        retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
         grpc_host=grpc_host,
     )
