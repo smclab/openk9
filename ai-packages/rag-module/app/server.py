@@ -23,6 +23,7 @@ OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
+TOKEN_PREFIX = "Bearer "
 
 
 app.add_middleware(
@@ -93,7 +94,7 @@ async def rag_generatey(
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
 
-    token = authorization.replace("Bearer ", "") if authorization else None
+    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
 
@@ -166,7 +167,7 @@ async def rag_chat(
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
 
-    token = authorization.replace("Bearer ", "") if authorization else None
+    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
 
@@ -197,7 +198,7 @@ async def rag_chat(
 @app.get("/api/rag/getChats/{user_id}")
 async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
     virtual_host = urlparse(str(request.base_url)).hostname
-    token = authorization.replace("Bearer ", "")
+    token = authorization.replace(TOKEN_PREFIX, "")
 
     if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
@@ -237,7 +238,7 @@ async def get_chat(
     user_id: str, chat_id: str, request: Request, authorization: str = Header()
 ):
     virtual_host = urlparse(str(request.base_url)).hostname
-    token = authorization.replace("Bearer ", "")
+    token = authorization.replace(TOKEN_PREFIX, "")
 
     if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
