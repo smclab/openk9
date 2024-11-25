@@ -216,7 +216,8 @@ public class JobScheduler {
 		StartVectorPipeline msg) {
 
 		var scheduler = msg.scheduler();
-		var tenantId = scheduler.getTenant();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
 
 		var oldDataIndex = scheduler.getOldDataIndex();
 
@@ -246,7 +247,7 @@ public class JobScheduler {
 		var vScheduler = new Scheduler();
 		vScheduler.setScheduleId(vScheduleId);
 		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		vScheduler.setDatasource(scheduler.getDatasource());
+		vScheduler.setDatasource(datasource);
 		vScheduler.setOldDataIndex(oldDataIndex);
 
 		ctx.pipeToSelf(
