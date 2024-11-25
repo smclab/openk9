@@ -364,15 +364,15 @@ public class JobScheduler {
 		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
 
 		long datasourceId = jobMessage.datasourceId;
-		String tenandId = jobMessage.tenantName;
+		String tenantId = jobMessage.tenantName;
 		boolean reindex = jobMessage.reindex;
 		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
 
 		ctx.pipeToSelf(
 			JobSchedulerService.fetchDatasourceConnection(
-				tenandId, datasourceId),
+				tenantId, datasourceId),
 			(datasource, throwable) -> new TriggerDatasourceInternal(
-				tenandId, datasource, reindex, startIngestionDate, throwable)
+				tenantId, datasource, reindex, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
