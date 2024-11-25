@@ -9,6 +9,7 @@ from app.external_services.grpc.grpc_client import query_parser
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
+HYBRID_RETRIEVE_TYPE = "HYBRID"
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -67,7 +68,7 @@ class OpenSearchRetriever(BaseRetriever):
         query = query_data.query
         index_name = list(query_data.indexName)
         query_parameters = query_data.queryParameters
-        params = query_parameters if self.retrieve_type == "HYBRID" else None
+        params = query_parameters if self.retrieve_type == HYBRID_RETRIEVE_TYPE else None
 
         documents = []
 
