@@ -66,6 +66,8 @@ class OpenSearchRetriever(BaseRetriever):
         )
         query = query_data.query
         index_name = list(query_data.indexName)
+        query_parameters = query_data.queryParameters
+        params = query_parameters if self.retrieve_type == "HYBRID" else None
 
         documents = []
 
@@ -76,7 +78,7 @@ class OpenSearchRetriever(BaseRetriever):
 
             total_tokens = 0
 
-            response = client.search(body=query, index=index_name)
+            response = client.search(body=query, index=index_name, params=params)
 
             for row in response["hits"]["hits"]:
                 if self.vector_indices:
