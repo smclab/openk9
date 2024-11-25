@@ -680,7 +680,13 @@ public class JobScheduler {
 		Throwable exception = pndi.throwable();
 
 		if (exception != null) {
-			log.error("cannot create index-template", exception);
+			log.errorf(
+				exception,
+				"Cannot persist the Scheduler for tenant: %s and datasource: %s",
+				tenantName,
+				datasource
+			);
+
 			return Behaviors.same();
 		}
 
