@@ -174,42 +174,65 @@ public class JobScheduler {
 				rq -> onStartSchedulingWork(ctx, messageGateway, rq)
 			)
 			.onMessage(StartVectorPipeline.class, msg -> onStartVectorPipeline(ctx, msg))
+			.onMessage(
+				PersistVectorSchedulerInternal.class,
+				msg -> onPersistVectorSchedulerInternal(ctx, msg)
+			)
+			.onMessage(
+				RegisterVectorQueue.class,
+				msg -> onRegisterVectorQueue(ctx, messageGateway, msg)
+			)
 			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs))
 			.build();
 
 	}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 
-	private static Behavior<Command> onStartSchedulingWork(
+	private static Behavior<Command> onPersistVectorSchedulerInternal(
 		ActorContext<Command> ctx,
-		ActorRef<MessageGateway.Command> messageGateway,
-		StartSchedulingWork rq) {
+		PersistVectorSchedulerInternal msg) {
 
-		var scheduler = rq.scheduler();
+		Scheduler scheduler = msg.scheduler;
 		var datasource = scheduler.getDatasource();
 		var tenantId = datasource.getTenant();
-		var startIngestionDate = rq.startIngestionDate;
 
-		var throwable = rq.throwable();
+		Throwable exception = msg.throwable();
 
-		if (throwable != null) {
-
-			log.error("Scheduler cannot be persisted.", throwable);
+		if (exception != null) {
+			log.errorf(
+				exception,
+				"Cannot persist the Vector Scheduler for tenant: %s and datasource: %s",
+				tenantId,
+				datasource
+			);
 
 			return Behaviors.same();
-
 		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantId, scheduler),
+			RegisterVectorQueue::new
+		);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onRegisterVectorQueue(
+		ActorContext<Command> ctx,
+		ActorRef<MessageGateway.Command> messageGateway,
+		RegisterVectorQueue msg) {
+
+		var scheduler = msg.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
 
 		messageGateway.tell(new MessageGateway.Register(
 			ShardingKey.asString(
 				tenantId, scheduler.getScheduleId())));
 
-		ctx.getSelf()
-			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
-
 		return Behaviors.same();
 	}
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 
 	private static Behavior<Command> onStartVectorPipeline(
 		ActorContext<Command> ctx,
@@ -253,11 +276,44 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.fetchEmbeddingModel(tenantId),
 			(ignore, throwable) ->
-				new PersistSchedulerInternal(vScheduler, throwable)
+				new PersistVectorSchedulerInternal(vScheduler, throwable)
 		);
 
 		return Behaviors.same();
 	}
+
+	private static Behavior<Command> onStartSchedulingWork(
+		ActorContext<Command> ctx,
+		ActorRef<MessageGateway.Command> messageGateway,
+		StartSchedulingWork rq) {
+
+		var scheduler = rq.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+		var startIngestionDate = rq.startIngestionDate;
+
+		var throwable = rq.throwable();
+
+		if (throwable != null) {
+
+			log.error("Scheduler cannot be persisted.", throwable);
+
+			return Behaviors.same();
+
+		}
+
+		messageGateway.tell(new MessageGateway.Register(
+			ShardingKey.asString(
+				tenantId, scheduler.getScheduleId())));
+
+		ctx.getSelf()
+			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
+
+		return Behaviors.same();
+	}
+
+	private record RegisterVectorQueue(Scheduler scheduler, Throwable throwable)
+		implements Command {}
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
 		InvokePluginDriverInternal ipdi, ActorContext<Command> ctx) {
@@ -780,9 +836,13 @@ public class JobScheduler {
 
 	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
 
-
 	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
 		Throwable throwable
 	) implements Command {}
+
+	private record PersistVectorSchedulerInternal(
+		Scheduler scheduler, Throwable throwable
+	)
+		implements Command {}
 
 }
