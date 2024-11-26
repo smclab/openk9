@@ -19,12 +19,15 @@ package io.openk9.datasource;
 
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.EmbeddingModelService;
+import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.vertx.core.json.JsonObject;
@@ -51,6 +54,9 @@ public class Initializer {
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
+	@Inject
+	EnrichItemService enrichItemService;
+
 	public void initDb(@Observes Startup startup) {
 
 		log.info("Init public tenant with default data.");
@@ -59,6 +65,125 @@ public class Initializer {
 			.await().indefinitely();
 
 		log.infof("New tenant initialized with id %s.", bucketId);
+
+		createDatasourceConnection();
+
+		createPrimaryEmbeddingModel();
+
+		createSecondaryEmbeddingModel();
+
+		createPrimaryLLM();
+
+		createSecondaryLLM();
+
+	}
+
+	private void createSecondaryLLM() {
+
+		log.info("Create secondary LLM");
+
+		largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM Disabled")
+				.apiUrl("llm.disabled.local")
+				.apiKey("secret")
+				.jsonConfig("{}")
+				.build())
+			.await()
+			.indefinitely();
+
+	}
+
+	private void createSecondaryEmbeddingModel() {
+
+		log.info("Create secondary EmbeddingModel");
+
+		embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model disabled")
+				.apiUrl("embedding-model.disabled.local")
+				.apiKey("secret")
+				.build())
+			.await()
+			.indefinitely();
+
+	}
+
+	private void createPrimaryLLM() {
+
+		log.info("Create primary LLM.");
+
+		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM")
+				.apiUrl("llm.local")
+				.apiKey("secret-key")
+				.jsonConfig("{}")
+				.build())
+			.await()
+			.indefinitely();
+
+		log.info("Enable primary LLM.");
+
+		largeLanguageModelService.enable(testLLM.getId())
+			.await()
+			.indefinitely();
+	}
+
+	private void createPrimaryEmbeddingModel() {
+
+		log.info("Create primary EmbeddingModel.");
+
+		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model")
+				.apiUrl("embedding-model.local")
+				.apiKey("secret-key")
+				.build())
+			.await()
+			.indefinitely();
+
+		log.info("Enable primary Embedding Model");
+
+		embeddingModelService.enable(testEmbeddingModel.getId())
+			.await()
+			.indefinitely();
+
+	}
+
+	private void createDatasourceConnection() {
+
+		var enrich1 = enrichItemService.create(EnrichItemDTO.builder()
+			.name("Http Async Enrich 1")
+			.type(EnrichItem.EnrichItemType.HTTP_ASYNC)
+			.serviceName("http-service-1")
+			.jsonPath("$")
+			.jsonConfig("{}")
+			.requestTimeout(60000L)
+			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
+			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
+			.build()
+		).await().indefinitely();
+
+		var enrich2 = enrichItemService.create(EnrichItemDTO.builder()
+			.name("Http Sync Enrich 2")
+			.type(EnrichItem.EnrichItemType.HTTP_SYNC)
+			.serviceName("http-service-2")
+			.jsonPath("$")
+			.jsonConfig("{}")
+			.requestTimeout(60000L)
+			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
+			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
+			.build()
+		).await().indefinitely();
+
+		var enrich3 = enrichItemService.create(EnrichItemDTO.builder()
+			.name("Groovy Enrich 1")
+			.type(EnrichItem.EnrichItemType.GROOVY_SCRIPT)
+			.serviceName("ignore")
+			.jsonPath("$")
+			.jsonConfig("{}")
+			.requestTimeout(60000L)
+			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
+			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
+			.build()
+		).await().indefinitely();
 
 		log.info("Create a new Connection.");
 
@@ -80,61 +205,22 @@ public class Initializer {
 				.pipeline(PipelineWithItemsDTO.builder()
 					.name(CreateConnection.PIPELINE_NAME)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(2L)
+						.enrichItemId(enrich1.getId())
 						.weight(1)
-						.build())
+						.build()
+					)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(3L)
+						.enrichItemId(enrich2.getId())
 						.weight(2)
-						.build())
+						.build()
+					)
 					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(4L)
+						.enrichItemId(enrich3.getId())
 						.weight(3)
-						.build())
+						.build()
+					)
 					.build()
 				)
-				.build())
-			.await()
-			.indefinitely();
-
-		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
-				.name("Test embedding model")
-				.apiUrl("embedding-model.local")
-				.apiKey("secret-key")
-				.build())
-			.await()
-			.indefinitely();
-
-		embeddingModelService.enable(testEmbeddingModel.getId())
-			.await()
-			.indefinitely();
-
-		embeddingModelService.create(EmbeddingModelDTO.builder()
-				.name("Test embedding model disabled")
-				.apiUrl("embedding-model.disabled.local")
-				.apiKey("secret")
-				.build())
-			.await()
-			.indefinitely();
-
-		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
-				.name("Test LLM")
-				.apiUrl("llm.local")
-				.apiKey("secret-key")
-				.jsonConfig("{}")
-				.build())
-			.await()
-			.indefinitely();
-
-		largeLanguageModelService.enable(testLLM.getId())
-			.await()
-			.indefinitely();
-
-		largeLanguageModelService.create(LargeLanguageModelDTO.builder()
-				.name("Test LLM Disabled")
-				.apiUrl("llm.disabled.local")
-				.apiKey("secret")
-				.jsonConfig("{}")
 				.build())
 			.await()
 			.indefinitely();
