@@ -275,7 +275,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 							var datasourceUni =
 								s.createQuery(
-									"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
+										"SELECT d " +
+										"FROM Datasource d " +
+										"LEFT JOIN FETCH d.buckets " +
+										"WHERE d.id in (:datasourceIds)",
 									Datasource.class)
 									.setParameter("datasourceIds", datasourceIds)
 									.getResultList()
