@@ -137,7 +137,7 @@ class SearchQueryChat(BaseModel):
     userId: str
     timestamp: str
     chatSequenceNumber: int
-    citations: Optional[bool] = False
+    retrieve_citations: Optional[bool] = False
 
 
 @app.post("/api/rag/chat")
@@ -163,7 +163,7 @@ async def rag_chat(
     user_id = search_query_chat.userId
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    citations = search_query_chat.citations
+    retrieve_citations = search_query_chat.retrieve_citations
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -191,7 +191,7 @@ async def rag_chat(
         user_id,
         timestamp,
         chat_sequence_number,
-        citations,
+        retrieve_citations,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
