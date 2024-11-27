@@ -68,7 +68,9 @@ class OpenSearchRetriever(BaseRetriever):
         query = query_data.query
         index_name = list(query_data.indexName)
         query_parameters = query_data.queryParameters
-        params = query_parameters if self.retrieve_type == HYBRID_RETRIEVE_TYPE else None
+        params = (
+            query_parameters if self.retrieve_type == HYBRID_RETRIEVE_TYPE else None
+        )
 
         documents = []
 
@@ -83,13 +85,19 @@ class OpenSearchRetriever(BaseRetriever):
 
             for row in response["hits"]["hits"]:
                 if self.vector_indices:
+                    document_id = row["_source"]["contentId"]
                     page_content = row["_source"]["chunkText"]
                     title = row["_source"]["title"]
                     url = row["_source"]["url"]
                     source = "local"
                     document = Document(
                         page_content,
-                        metadata={"source": source, "title": title, "url": url},
+                        metadata={
+                            "source": source,
+                            "title": title,
+                            "url": url,
+                            "document_id": document_id,
+                        },
                     )
                     document_tokens_number = (
                         len(page_content + title + url + source) / TOKEN_SIZE
