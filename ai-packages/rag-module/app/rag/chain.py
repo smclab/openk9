@@ -115,6 +115,7 @@ def get_chat_chain(
     user_id,
     timestamp,
     chat_sequence_number,
+    citations,
     opensearch_host,
     grpc_host,
 ):
