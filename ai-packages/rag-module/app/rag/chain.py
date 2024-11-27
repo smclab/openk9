@@ -153,7 +153,7 @@ def get_chat_chain(
     user_id,
     timestamp,
     chat_sequence_number,
-    citations,
+    retrieve_citations,
     opensearch_host,
     grpc_host,
 ):
@@ -230,36 +230,69 @@ def get_chat_chain(
 
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
-    conversational_rag_chain = RunnableWithMessageHistory(
-        rag_chain,
-        get_chat_history,
-        input_messages_key="input",
-        history_messages_key="chat_history",
-        output_messages_key="answer",
-        history_factory_config=[
-            ConfigurableFieldSpec(
-                id="open_search_client",
-                annotation=str,
-                name="Opensearch client",
-                description="Opensearch client.",
-                default="",
-            ),
-            ConfigurableFieldSpec(
-                id="user_id",
-                annotation=str,
-                name="User ID",
-                description="Unique identifier for the user.",
-                default="",
-            ),
-            ConfigurableFieldSpec(
-                id="chat_id",
-                annotation=str,
-                name="Chat ID",
-                description="Unique identifier for the chat.",
-                default="",
-            ),
-        ],
-    )
+    if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value:
+        citations_chain = qa_prompt | llm.with_structured_output(Citations)
+        conversational_rag_chain = RunnableWithMessageHistory(
+            rag_chain,
+            get_chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+            history_factory_config=[
+                ConfigurableFieldSpec(
+                    id="open_search_client",
+                    annotation=str,
+                    name="Opensearch client",
+                    description="Opensearch client.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="user_id",
+                    annotation=str,
+                    name="User ID",
+                    description="Unique identifier for the user.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="chat_id",
+                    annotation=str,
+                    name="Chat ID",
+                    description="Unique identifier for the chat.",
+                    default="",
+                ),
+            ],
+        ).assign(annotations=citations_chain)
+    else:
+        conversational_rag_chain = RunnableWithMessageHistory(
+            rag_chain,
+            get_chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+            history_factory_config=[
+                ConfigurableFieldSpec(
+                    id="open_search_client",
+                    annotation=str,
+                    name="Opensearch client",
+                    description="Opensearch client.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="user_id",
+                    annotation=str,
+                    name="User ID",
+                    description="Unique identifier for the user.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="chat_id",
+                    annotation=str,
+                    name="Chat ID",
+                    description="Unique identifier for the chat.",
+                    default="",
+                ),
+            ],
+        )
 
     result = conversational_rag_chain.stream(
         {"input": search_text},
@@ -274,6 +307,7 @@ def get_chat_chain(
 
     result_answer = ""
     documents = []
+    citations = []
 
     for chunk in result:
         if "answer" in chunk.keys():
@@ -281,7 +315,40 @@ def get_chat_chain(
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
         if "context" in chunk.keys():
             for element in chunk["context"]:
-                documents.append(element)
+                documents.append(element.dict())
+        if (
+            retrieve_citations
+            and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+            and "annotations" in chunk.keys()
+        ):
+            citations = chunk
+
+    all_citations = (
+        citations["annotations"]["citations"]
+        if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        else []
+    )
+    all_citations_dict = (
+        {citation["document_id"]: citation["citations"] for citation in all_citations}
+        if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        else {}
+    )
+
+    for document in documents:
+        document_id = document["metadata"]["document_id"]
+        document_chunk = document["metadata"]
+        del document_chunk["document_id"]
+
+        document_citations = all_citations_dict.get(document_id, [])
+        document["citations"] = document_citations
+
+        yield json.dumps(
+            {
+                "chunk": document_chunk,
+                "citations": document_citations,
+                "type": "DOCUMENT",
+            }
+        )
 
     save_chat_message(
         open_search_client,
@@ -293,8 +360,5 @@ def get_chat_chain(
         timestamp,
         chat_sequence_number,
     )
-
-    for document in documents:
-        yield json.dumps({"chunk": dict(document.metadata), "type": "DOCUMENT"})
 
     yield json.dumps({"chunk": "", "type": "END"})
