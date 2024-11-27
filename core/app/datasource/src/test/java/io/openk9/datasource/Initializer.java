@@ -23,12 +23,16 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.init.Bucket;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.LargeLanguageModelService;
+import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -57,6 +61,12 @@ public class Initializer {
 	@Inject
 	EnrichItemService enrichItemService;
 
+	@Inject
+	BucketService bucketService;
+
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
+
 	public void initDb(@Observes Startup startup) {
 
 		log.info("Init public tenant with default data.");
@@ -75,6 +85,10 @@ public class Initializer {
 		createPrimaryLLM();
 
 		createSecondaryLLM();
+
+		bindDatasourceToBucket();
+
+		addsSuggestionCategoriesToBucket();
 
 	}
 
@@ -224,6 +238,62 @@ public class Initializer {
 				.build())
 			.await()
 			.indefinitely();
+
+	}
+
+	void addsSuggestionCategoriesToBucket() {
+
+		var category1 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 1")
+			.multiSelect(false)
+			.priority(1.0f)
+			.build()
+		).await().indefinitely();
+
+		var category2 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 2")
+			.multiSelect(false)
+			.priority(2.0f)
+			.build()
+		).await().indefinitely();
+
+		var category3 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 3")
+			.multiSelect(false)
+			.priority(3.0f)
+			.build()
+		).await().indefinitely();
+
+
+		var bucket = bucketService
+			.findByName("public", Bucket.INSTANCE.getName())
+			.await()
+			.indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category1.getId())
+			.await().indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category2.getId())
+			.await().indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category3.getId())
+			.await().indefinitely();
+
+	}
+
+	private void bindDatasourceToBucket() {
+
+		var datasource = datasourceService
+			.findByName("public", CreateConnection.DATASOURCE_NAME)
+			.await()
+			.indefinitely();
+
+		var bucket = bucketService
+			.findByName("public", Bucket.INSTANCE.getName())
+			.await()
+			.indefinitely();
+
+		bucketService.addDatasource(bucket.getId(), datasource.getId());
 
 	}
 
