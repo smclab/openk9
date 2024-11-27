@@ -283,11 +283,13 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 									.setParameter("datasourceIds", datasourceIds)
 									.getResultList()
 									.flatMap(datasources -> {
+										bucket.setDatasources(new HashSet<>(datasources));
+
 										datasources.forEach(datasource ->
 											datasource.getBuckets().add(bucket)
 										);
 
-										return s.persistAll(datasources.toArray());
+										return s.mergeAll(datasources.toArray());
 									});
 
 							builder.add(datasourceUni);
@@ -303,21 +305,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							var suggestionCategoryUni = s.find(
 								SuggestionCategory.class, suggestionCategoryIds.toArray())
 								.flatMap(suggestionCategories -> {
+									bucket.setSuggestionCategories(
+										new HashSet<>(suggestionCategories));
+
 										suggestionCategories.forEach(suggestionCategory ->
 											suggestionCategory.setBucket(bucket));
-										return s.persistAll(suggestionCategories.toArray());
+									return s.mergeAll(suggestionCategories.toArray());
 									}
 								);
 
 							builder.add(suggestionCategoryUni);
 
-							var suggestionCategories =
-								suggestionCategoryIds.stream()
-									.map(suggestionId ->
-										s.getReference(SuggestionCategory.class, suggestionId))
-									.collect(Collectors.toSet());
-
-							bucket.setSuggestionCategories(suggestionCategories);
 						}
 
 						//Tab
@@ -325,22 +323,26 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (tabIds != null && !tabIds.isEmpty()) {
 
-							var tabs = tabIds.stream()
-								.map(tabId -> s.getReference(Tab.class, tabId))
-								.collect(Collectors.toList());
+							var tabsUni = s.find(Tab.class, tabIds.toArray())
+								.flatMap(tabs -> {
+										bucket.setTabs(tabs);
+										return s.merge(bucket);
+									}
+								)
+								.replaceWithVoid();
 
-							bucket.setTabs(tabs);
+							builder.add(tabsUni);
 
-							builder.add(s.persist(bucket));
 						}
 
 						//QueryAnalysis
 						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+
 							var queryAnalysis =
 								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
 
 							bucket.setQueryAnalysis(queryAnalysis);
-							builder.add(s.persist(bucket));
+
 						}
 
 						//SearchConfig
@@ -349,7 +351,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
 
 							bucket.setSearchConfig(searchConfig);
-							builder.add(s.persist(bucket));
 						}
 
 						//DefaultLanguage
@@ -358,7 +359,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
 
 							bucket.setDefaultLanguage(defaultLanguage);
-							builder.add(s.persist(bucket));
 						}
 
 						return builder.joinAll()
@@ -667,7 +667,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Datasource
 						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
 
-						if (datasourceIds != null && !datasourceIds.isEmpty()) {
+						if (datasourceIds != null) {
 
 							//Iterate over the old datasources to remove the bucket from their list of buckets
 							var oldDatasources = newStateBucket.getDatasources();
@@ -691,7 +691,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 							var datasourceUni =
 								s.createQuery(
-										"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
+										"SELECT d " +
+										"FROM Datasource d " +
+										"INNER JOIN FETCH d.buckets " +
+										"WHERE d.id in (:datasourceIds)",
 										Datasource.class)
 									.setParameter("datasourceIds", datasourceIds)
 									.getResultList()
@@ -712,7 +715,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						var suggestionCategoryIds =
 							bucketWithListsDTO.getSuggestionCategoryIds();
 
-						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
+						if (suggestionCategoryIds != null) {
 
 							//Iterate over the old suggestionCategory to remove the bucket associated with them
 							var oldSuggestionCategories =
@@ -750,7 +753,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
 
-						if (tabIds != null && !tabIds.isEmpty()) {
+						if (tabIds != null) {
 							var tabs = tabIds.stream()
 								.map(tabId -> s.getReference(Tab.class, tabId))
 								.collect(Collectors.toList());
@@ -969,7 +972,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						if (datasourceIds != null) {
 							var datasourceUni =
 								s.createQuery(
-										"SELECT d FROM Datasource d JOIN FETCH d.buckets WHERE d.id in (:datasourceIds)",
+										"SELECT d FROM Datasource d " +
+										"INNER JOIN FETCH d.buckets " +
+										"WHERE d.id in (:datasourceIds)",
 										Datasource.class)
 									.setParameter("datasourceIds", datasourceIds)
 									.getResultList()

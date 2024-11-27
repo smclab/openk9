@@ -24,6 +24,7 @@ import io.openk9.datasource.model.dto.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.init.Bucket;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.service.BucketService;
@@ -33,6 +34,7 @@ import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.SuggestionCategoryService;
+import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -67,6 +69,9 @@ public class Initializer {
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
 
+	@Inject
+	TabService tabService;
+
 	public void initDb(@Observes Startup startup) {
 
 		log.info("Init public tenant with default data.");
@@ -89,6 +94,8 @@ public class Initializer {
 		bindDatasourceToBucket();
 
 		addsSuggestionCategoriesToBucket();
+
+		addsTabsToBucket();
 
 	}
 
@@ -278,6 +285,23 @@ public class Initializer {
 
 		bucketService.addSuggestionCategory(bucket.getId(), category3.getId())
 			.await().indefinitely();
+
+	}
+
+	private void addsTabsToBucket() {
+
+		var tabOne = tabService.create(TabDTO.builder()
+			.name("Tab One")
+			.priority(1)
+			.build()
+		).await().indefinitely();
+
+		var bucket = bucketService.findByName("public", Bucket.INSTANCE.getName())
+			.await().indefinitely();
+
+		bucketService.addTabToBucket(bucket.getId(), tabOne.getId())
+			.await().indefinitely();
+
 
 	}
 
