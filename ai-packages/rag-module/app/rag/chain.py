@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -17,6 +18,12 @@ from app.utils.chat_history import get_chat_history, save_chat_message
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
+
+
+class ModelType(Enum):
+    OPENAI = "openai"
+    OLLAMA = "ollama"
+    HUGGING_FACE_CUSTOM = "hugging-face-custom"
 
 
 def get_chain(
@@ -72,12 +79,15 @@ def get_chain(
 
     documents = retriever.invoke(question)
 
-    if model_type == "openai":
-        llm = ChatOpenAI(model=model, openai_api_key=api_key)
-    elif model_type == "ollama":
-        llm = ChatOllama(model=model, base_url=api_url)
-    elif model_type == "hugging-face-custom":
-        llm = CustomChatHuggingFaceModel(base_url=api_url)
+    match model_type:
+        case ModelType.OPENAI.value:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+        case ModelType.OLLAMA.value:
+            llm = ChatOllama(model=model, base_url=api_url)
+        case ModelType.HUGGING_FACE_CUSTOM.value:
+            llm = CustomChatHuggingFaceModel(base_url=api_url)
+        case _:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
     prompt = ChatPromptTemplate.from_template(prompt_template)
     parser = StrOutputParser()
@@ -156,12 +166,15 @@ def get_chat_chain(
         grpc_host=grpc_host,
     )
 
-    if model_type == "openai":
-        llm = ChatOpenAI(model=model, openai_api_key=api_key)
-    elif model_type == "ollama":
-        llm = ChatOllama(model=model, base_url=api_url)
-    elif model_type == "hugging-face-custom":
-        llm = CustomChatHuggingFaceModel(base_url=api_url)
+    match model_type:
+        case ModelType.OPENAI.value:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+        case ModelType.OLLAMA.value:
+            llm = ChatOllama(model=model, base_url=api_url)
+        case ModelType.HUGGING_FACE_CUSTOM.value:
+            llm = CustomChatHuggingFaceModel(base_url=api_url)
+        case _:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
     contextualize_q_system_prompt = rephrase_prompt_template
 
