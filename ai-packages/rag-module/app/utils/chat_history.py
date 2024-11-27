@@ -34,14 +34,15 @@ def save_chat_message(
     documents = []
 
     for source in sources:
-        document_dict = source.dict()
-        document_title = document_dict["metadata"]["title"]
-        document_url = document_dict["metadata"]["url"]
-        document_source = document_dict["metadata"]["source"]
+        document_title = source["metadata"]["title"]
+        document_url = source["metadata"]["url"]
+        document_source = source["metadata"]["source"]
+        document_citations = source["citations"]
         document = {
             "title": document_title,
             "url": document_url,
             "source": document_source,
+            "citations": document_citations,
         }
         documents.append(document)
 
