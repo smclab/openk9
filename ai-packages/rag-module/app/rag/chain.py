@@ -1,5 +1,6 @@
 import json
 from enum import Enum
+from typing import List
 
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -10,6 +11,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from opensearchpy import OpenSearch
+from pydantic import BaseModel, Field
 
 from app.external_services.grpc.grpc_client import get_llm_configuration
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
@@ -105,6 +107,32 @@ def get_chain(
         yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
 
     yield json.dumps({"chunk": "", "type": "END"})
+
+
+class Citation(BaseModel):
+    quote: str = Field(
+        ...,
+        description="The VERBATIM quote from the specified source that justifies the answer.",
+    )
+
+
+class DocumentCitations(BaseModel):
+    """Annotate the answer to the user question with quote citations that justify the answer."""
+
+    document_id: str = Field(
+        ...,
+        description="The document_id of the SPECIFIC source which justifies the answer.",
+    )
+
+    citations: List[Citation] = Field(
+        ..., description="Citations from the given sources that justify the answer."
+    )
+
+
+class Citations(BaseModel):
+    citations: List[DocumentCitations] = Field(
+        ..., description="Citations from the given sources that justify the answer."
+    )
 
 
 def get_chat_chain(
