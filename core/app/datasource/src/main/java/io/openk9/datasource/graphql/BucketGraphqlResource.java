@@ -18,6 +18,7 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
@@ -252,7 +253,17 @@ public class BucketGraphqlResource {
 	}
 
 	public Uni<Response<Bucket>> patchBucket(@Id long id, BucketDTO bucketDTO) {
-		return bucketService.getValidator().patch(id, bucketDTO);
+		return bucketService.patch(id, bucketDTO)
+			.onItemOrFailure()
+			.transform((e, t) -> {
+				if (t != null) {
+					return Response.of(
+						null,
+						List.of(FieldValidator.of("error", t.getMessage()))
+					);
+				}
+				return Response.of(e, null);
+			});
 	}
 
 	public Uni<QueryAnalysis> queryAnalysis(@Source Bucket bucket) {

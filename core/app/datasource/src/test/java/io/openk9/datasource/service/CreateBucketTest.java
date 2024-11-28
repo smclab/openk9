@@ -17,10 +17,16 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.K9Entity;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
@@ -28,9 +34,18 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static io.smallrye.graphql.client.core.Argument.arg;
+import static io.smallrye.graphql.client.core.Argument.args;
+import static io.smallrye.graphql.client.core.Document.document;
+import static io.smallrye.graphql.client.core.Enum.gqlEnum;
+import static io.smallrye.graphql.client.core.Field.field;
+import static io.smallrye.graphql.client.core.InputObject.inputObject;
+import static io.smallrye.graphql.client.core.InputObjectField.prop;
+import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,6 +70,13 @@ public class CreateBucketTest {
 
 	@Inject
 	TabService tabService;
+
+	@Inject
+	@GraphQLClient("openk9-dynamic")
+	DynamicGraphQLClient graphQLClient;
+
+	@InjectMock
+	TenantRegistry tenantRegistry;
 
 	@Test
 	@Order(1)
@@ -151,12 +173,20 @@ public class CreateBucketTest {
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 		).await().indefinitely();
 
+		var suggestionCategoryIds = suggestionCategoryService
+			.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
 		bucketService.update(bucket.getId(), BucketWithListsDTO.builder()
 			.name(CREATE_BUCKET_TEST_NAME)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
 			.refreshOnTab(false)
 			.refreshOnSuggestionCategory(true)
+			.suggestionCategoryIds(suggestionCategoryIds)
 			.retrieveType(Bucket.RetrieveType.KNN)
 			.build()
 		).await().indefinitely();
@@ -169,10 +199,181 @@ public class CreateBucketTest {
 		).await().indefinitely();
 
 		assertTrue(updated.getTabs().isEmpty());
-		assertTrue(updated.getSuggestionCategories().isEmpty());
+		assertEquals(suggestionCategoryIds.size(), updated.getSuggestionCategories().size());
 		assertTrue(updated.getDatasources().isEmpty());
 		assertFalse(updated.getRefreshOnDate());
 		assertEquals(Bucket.RetrieveType.KNN, updated.getRetrieveType());
+
+	}
+
+	@Test
+	@Order(4)
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void should_patch_bucket_with_lists_via_graphql() {
+
+		var bucket = sessionFactory.withTransaction((s, t) ->
+			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+				.call(entity -> Mutiny.fetch(entity.getTabs()))
+				.call(entity -> Mutiny.fetch(entity.getSuggestionCategories()))
+				.call(entity -> Mutiny.fetch(entity.getDatasources()))
+		).await().indefinitely();
+
+		var datasourceIds = datasourceService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var suggestionCategorieIds = suggestionCategoryService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var query = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					"bucketWithLists",
+					args(
+						arg("id", bucket.getId()),
+						arg("patch", true),
+						arg(
+							"bucketWithListsDTO",
+							inputObject(
+								prop("name", CREATE_BUCKET_TEST_NAME),
+								prop("refreshOnDate", true),
+								prop("refreshOnQuery", true),
+								prop("refreshOnTab", true),
+								prop("refreshOnSuggestionCategory", true),
+								prop("retrieveType", gqlEnum("MATCH")),
+								prop("suggestionCategoryIds", suggestionCategorieIds
+									.stream()
+									.limit(1)
+									.collect(Collectors.toSet())
+								),
+								prop("datasourceIds", datasourceIds),
+								prop("tabIds", List.of())
+							)
+						)
+					),
+					field(
+						"entity",
+						field("id"),
+						field("name"),
+						field(
+							"suggestionCategories",
+							field(
+								"edges",
+								field(
+									"node",
+									field("id")
+								)
+							)
+						)
+					),
+					field(
+						"fieldValidators",
+						field("field"),
+						field("message")
+					)
+				)
+			)
+		);
+
+		try {
+
+			var response = graphQLClient.executeSync(query);
+
+			System.out.println(response);
+
+			var jsonObject = response.getData().getJsonObject("bucketWithLists");
+
+			assertFalse(jsonObject.isNull("entity"));
+			assertTrue(jsonObject.isNull("fieldValidators"));
+
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void should_create_bucket_with_lists_via_graphql() {
+
+		var datasourceIds = datasourceService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var suggestionCategorieIds = suggestionCategoryService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var tabIds = tabService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var query = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					"bucketWithLists",
+					args(
+						arg(
+							"bucketWithListsDTO",
+							inputObject(
+								prop("name", "Create Bucket Test via gql"),
+								prop("refreshOnDate", true),
+								prop("refreshOnQuery", true),
+								prop("refreshOnTab", true),
+								prop("refreshOnSuggestionCategory", true),
+								prop("retrieveType", gqlEnum("MATCH"))
+								,
+								prop("datasourceIds", datasourceIds)
+								,
+								prop("tabIds", tabIds)
+								,
+								prop("suggestionCategoryIds", suggestionCategorieIds)
+							)
+						)
+					),
+					field(
+						"entity",
+						field("id"),
+						field("name")
+					),
+					field(
+						"fieldValidators",
+						field("field"),
+						field("message")
+					)
+				)
+			)
+		);
+
+		try {
+
+			var response = graphQLClient.executeSync(query);
+
+			System.out.println(response);
+
+			var jsonObject = response.getData().getJsonObject("bucketWithLists");
+
+			assertFalse(jsonObject.isNull("entity"));
+			assertTrue(jsonObject.isNull("fieldValidators"));
+
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 
 	}
 }

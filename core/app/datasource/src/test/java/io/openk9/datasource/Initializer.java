@@ -246,6 +246,45 @@ public class Initializer {
 			.await()
 			.indefinitely();
 
+		datasourceService.createDatasourceConnection(
+				DatasourceConnectionDTO.builder()
+					.name("createDatasourceConnection1")
+					.description(CreateConnection.DATASOURCE_DESCRIPTION)
+					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
+					.scheduling(CreateConnection.SCHEDULING)
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
+						.toBuilder()
+						.name("pluginDriverConnection1")
+						.jsonConfig(JsonObject.of(
+							"host", WireMockPluginDriver.HOST,
+							"port", WireMockPluginDriver.PORT,
+							"secure", false
+						).encode())
+						.build()
+					)
+					.build())
+			.await()
+			.indefinitely();
+
+		datasourceService.createDatasourceConnection(
+				DatasourceConnectionDTO.builder()
+					.name("createDatasourceConnection2")
+					.description(CreateConnection.DATASOURCE_DESCRIPTION)
+					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
+					.scheduling(CreateConnection.SCHEDULING)
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
+						.toBuilder()
+						.name("pluginDriverConnection2")
+						.jsonConfig(JsonObject.of(
+							"host", WireMockPluginDriver.HOST,
+							"port", WireMockPluginDriver.PORT,
+							"secure", false
+						).encode())
+						.build()
+					)
+					.build())
+			.await()
+			.indefinitely();
 	}
 
 	void addsSuggestionCategoriesToBucket() {

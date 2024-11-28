@@ -952,16 +952,13 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Iterate over the old datasources to remove the bucket from their list of buckets
 						var oldDatasources = newStateBucket.getDatasources();
 
-						oldDatasources.forEach(oldDatasource -> {
-							var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
-								.flatMap(buckets -> {
-									buckets.remove(bucket);
-									return Uni.createFrom().item(buckets);
-								})
-								.replaceWithVoid();
+						for (Datasource oldDatasource : oldDatasources) {
 
-							builder.add(bucketsSetUni);
-						});
+							builder.add(removeDatasource(
+								bucketId, oldDatasource.getId())
+								.replaceWithVoid());
+
+						}
 
 						var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
 
