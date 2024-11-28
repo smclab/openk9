@@ -267,7 +267,7 @@ Maven Install Core:
       artifacts: true
   script:
     - cd core
-    - mvn install -P 'exclude-quarkus-test'
+    - mvn install -P '!dependency-check, exclude-quarkus-test'
   artifacts:
     paths:
       - core/target
