@@ -21,7 +21,6 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
 import io.openk9.datasource.mapper.TabMapper;
-import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
@@ -35,6 +34,7 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -45,7 +45,6 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
@@ -61,15 +60,24 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			return sessionFactory.withTransaction(
 				(s, transaction) -> super.create(s, transientTab)
 					.flatMap(tab -> {
-						var tokenTabs =
-							tabWithTokenTabsDTO.getTokenTabIds().stream()
-								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
-								.collect(Collectors.toSet());
+						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-						tab.setTokenTabs(tokenTabs);
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
 
-						return s.persist(tab)
-							.flatMap(__ -> s.merge(tab));
+						if (tokenTabIds != null) {
+							for (long tokenTabId : tokenTabIds) {
+								builder.add(addTokenTabToTab(
+									tab.getId(), tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.map(voids -> tab);
 					})
 			);
 		}
@@ -87,17 +95,28 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 						var newStateTab = mapper.patch(tab, tabWithTokenTabsDTO);
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
+						UniJoin.Builder<Void> builder = Uni.join().builder();
 						if (tokenTabIds != null) {
-							var tokenTabs = tokenTabIds.stream()
-								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
-								.collect(Collectors.toSet());
+							var oldTokenTabs = newStateTab.getTokenTabs();
 
-							newStateTab.getTokenTabs().clear();
-							newStateTab.setTokenTabs(tokenTabs);
+							for (TokenTab oldTokenTab : oldTokenTabs) {
+								builder.add(removeTokenTabToTab(
+									tabId, oldTokenTab.getId())
+									.replaceWithVoid()
+								);
+							}
+
+							for (long tokenTabId : tokenTabIds) {
+								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
 						}
 
-						return s.merge(newStateTab)
-							.map(__ -> newStateTab);
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.map(voids -> tab);
 					}));
 		}
 
@@ -111,21 +130,31 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 				(s, transaction) -> findById(s, tabId)
 					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
 					.flatMap(tab -> {
-						var newStateTab = mapper.update(tab, tabWithTokenTabsDTO);
+						var oldTokenTabs = tab.getTokenTabs();
+
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-						newStateTab.getTokenTabs().clear();
+						UniJoin.Builder<Void> builder = Uni.join().builder();
 
-						if (tokenTabIds != null) {
-							var tokenTabs = tokenTabIds.stream()
-								.map(tokenTabId -> s.getReference(TokenTab.class, tokenTabId))
-								.collect(Collectors.toSet());
-
-							newStateTab.setTokenTabs(tokenTabs);
+						for (TokenTab oldTokenTab : oldTokenTabs) {
+							builder.add(removeTokenTabToTab(
+								tabId, oldTokenTab.getId())
+								.replaceWithVoid()
+							);
 						}
 
-						return s.merge(newStateTab)
-							.map(__ -> newStateTab);
+						if (tokenTabIds != null) {
+							for (long tokenTabId : tokenTabIds) {
+								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.map(voids -> tab);
 					}));
 		}
 
