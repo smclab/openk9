@@ -29,11 +29,14 @@ import io.openk9.datasource.model.dto.QueryAnalysisWithListsDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 ;
 
@@ -53,16 +56,23 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 				(s, transaction) -> super.create(s, transientQueryAnalysis)
 					.flatMap(queryAnalysis -> {
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<QueryAnalysis> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().item(queryAnalysis));
+
 						//annotators
 						var annotatorsIds = withListsDTO.getAnnotatorsIds();
 
 						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
 
-							var annotators = annotatorsIds.stream()
-								.map(id -> s.getReference(Annotator.class, id))
-								.collect(Collectors.toSet());
+							var annotatorUni = s.find(Annotator.class, annotatorsIds.toArray())
+								.flatMap(annotators -> {
+									queryAnalysis.setAnnotators(new HashSet<>(annotators));
+									return Uni.createFrom().item(queryAnalysis);
+								});
 
-							queryAnalysis.setAnnotators(annotators);
+							builder.add(annotatorUni);
+
 						}
 
 						//rules
@@ -70,14 +80,20 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 						if (rulesIds != null && !rulesIds.isEmpty()) {
 
-							var rules = rulesIds.stream()
-								.map(id -> s.getReference(Rule.class, id))
-								.collect(Collectors.toSet());
+							var ruleUni = s.find(Rule.class, rulesIds.toArray())
+								.flatMap(rules -> {
+									queryAnalysis.setRules(new HashSet<>(rules));
+									return Uni.createFrom().item(queryAnalysis);
+								});
 
-							queryAnalysis.setRules(rules);
+							builder.add(ruleUni);
 						}
 
-						return s.persist(queryAnalysis)
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
 							.flatMap(__ -> s.merge(queryAnalysis));
 					})
 			);
@@ -91,37 +107,55 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, queryAnalysisId)
+					.call(queryAnalysis ->
+						Mutiny.fetch(queryAnalysis.getAnnotators()))
+					.call(queryAnalysis ->
+						Mutiny.fetch(queryAnalysis.getRules()))
 					.flatMap(queryAnalysis -> {
 						var newStateQueryAnalysis =
 							mapper.patch(queryAnalysis, withListsDTO);
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<QueryAnalysis> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().item(newStateQueryAnalysis));
+
 						//annotators
 						var annotatorsIds = withListsDTO.getAnnotatorsIds();
 
-						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
+						if (annotatorsIds != null) {
 
-							var annotators = annotatorsIds.stream()
-								.map(id -> s.getReference(Annotator.class, id))
-								.collect(Collectors.toSet());
+							var annotatorUni =
+								s.find(Annotator.class, annotatorsIds.toArray())
+									.flatMap(annotators -> {
+										newStateQueryAnalysis.getAnnotators().clear();
+										newStateQueryAnalysis.setAnnotators(
+											new HashSet<>(annotators));
+										return Uni.createFrom().item(newStateQueryAnalysis);
+									});
 
-							newStateQueryAnalysis.getAnnotators().clear();
-							newStateQueryAnalysis.setAnnotators(annotators);
+							builder.add(annotatorUni);
 						}
 
 						//rules
 						var rulesIds = withListsDTO.getRulesIds();
 
-						if (rulesIds != null && !rulesIds.isEmpty()) {
+						if (rulesIds != null) {
 
-							var rules = rulesIds.stream()
-								.map(id -> s.getReference(Rule.class, id))
-								.collect(Collectors.toSet());
+							var ruleUni = s.find(Rule.class, rulesIds.toArray())
+								.flatMap(rules -> {
+									newStateQueryAnalysis.getRules().clear();
+									newStateQueryAnalysis.setRules(new HashSet<>(rules));
+									return Uni.createFrom().item(newStateQueryAnalysis);
+								});
 
-							newStateQueryAnalysis.getRules().clear();
-							newStateQueryAnalysis.setRules(rules);
+							builder.add(ruleUni);
 						}
 
-						return s.persist(newStateQueryAnalysis)
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
 							.flatMap(__ -> s.merge(newStateQueryAnalysis));
 					})
 			);
@@ -135,37 +169,55 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, queryAnalysisId)
+					.call(queryAnalysis ->
+						Mutiny.fetch(queryAnalysis.getAnnotators()))
+					.call(queryAnalysis ->
+						Mutiny.fetch(queryAnalysis.getRules()))
 					.flatMap(queryAnalysis -> {
 						var newStateQueryAnalysis =
 							mapper.update(queryAnalysis, withListsDTO);
 
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<QueryAnalysis> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().item(queryAnalysis));
+
 						//annotators
 						var annotatorsIds = withListsDTO.getAnnotatorsIds();
-						newStateQueryAnalysis.getRules().clear();
+						newStateQueryAnalysis.getAnnotators().clear();
 
-						if (annotatorsIds != null && !annotatorsIds.isEmpty()) {
+						if (annotatorsIds != null) {
 
-							var annotators = annotatorsIds.stream()
-								.map(id -> s.getReference(Annotator.class, id))
-								.collect(Collectors.toSet());
+							var annotatorUni =
+								s.find(Annotator.class, annotatorsIds.toArray())
+									.flatMap(annotators -> {
+										newStateQueryAnalysis.setAnnotators(
+											new HashSet<>(annotators));
+										return Uni.createFrom().item(newStateQueryAnalysis);
+									});
 
-							newStateQueryAnalysis.setAnnotators(annotators);
+							builder.add(annotatorUni);
 						}
 
 						//rules
 						var rulesIds = withListsDTO.getRulesIds();
 						newStateQueryAnalysis.getRules().clear();
 
-						if (rulesIds != null && !rulesIds.isEmpty()) {
+						if (rulesIds != null) {
 
-							var rules = rulesIds.stream()
-								.map(id -> s.getReference(Rule.class, id))
-								.collect(Collectors.toSet());
+							var ruleUni = s.find(Rule.class, rulesIds.toArray())
+								.flatMap(rules -> {
+									newStateQueryAnalysis.setRules(new HashSet<>(rules));
+									return Uni.createFrom().item(newStateQueryAnalysis);
+								});
 
-							newStateQueryAnalysis.setRules(rules);
+							builder.add(ruleUni);
 						}
 
-						return s.persist(newStateQueryAnalysis)
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
 							.flatMap(__ -> s.merge(newStateQueryAnalysis));
 					})
 			);
@@ -305,6 +357,9 @@ public class QueryAnalysisService extends BaseK9EntityService<QueryAnalysis, Que
 
 	@Inject
 	AnnotatorService annotatorService;
+
+	@Inject
+	Logger logger;
 
 	@Inject
 	RuleService ruleService;
