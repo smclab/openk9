@@ -56,11 +56,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -273,26 +271,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (datasourceIds != null && !datasourceIds.isEmpty()) {
 
-							var datasourceUni =
-								s.createQuery(
-										"SELECT d " +
-										"FROM Datasource d " +
-										"LEFT JOIN FETCH d.buckets " +
-										"WHERE d.id in (:datasourceIds)",
-									Datasource.class)
-									.setParameter("datasourceIds", datasourceIds)
-									.getResultList()
-									.flatMap(datasources -> {
-										bucket.setDatasources(new HashSet<>(datasources));
+							for (long datasourceId : datasourceIds) {
 
-										datasources.forEach(datasource ->
-											datasource.getBuckets().add(bucket)
-										);
+								builder.add(addDatasource(
+									bucket.getId(), datasourceId)
+									.replaceWithVoid()
+								);
 
-										return s.mergeAll(datasources.toArray());
-									});
+							}
 
-							builder.add(datasourceUni);
 						}
 
 						//Suggestion Category
@@ -302,19 +289,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
 
-							var suggestionCategoryUni = s.find(
-								SuggestionCategory.class, suggestionCategoryIds.toArray())
-								.flatMap(suggestionCategories -> {
-									bucket.setSuggestionCategories(
-										new HashSet<>(suggestionCategories));
+							for (long suggestionCategoryId : suggestionCategoryIds) {
 
-										suggestionCategories.forEach(suggestionCategory ->
-											suggestionCategory.setBucket(bucket));
-									return s.mergeAll(suggestionCategories.toArray());
-									}
+								builder.add(addSuggestionCategory(
+										bucket.getId(), suggestionCategoryId
+									).replaceWithVoid()
 								);
 
-							builder.add(suggestionCategoryUni);
+							}
+
 
 						}
 
@@ -323,15 +306,13 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						if (tabIds != null && !tabIds.isEmpty()) {
 
-							var tabsUni = s.find(Tab.class, tabIds.toArray())
-								.flatMap(tabs -> {
-										bucket.setTabs(tabs);
-										return s.merge(bucket);
-									}
-								)
-								.replaceWithVoid();
+							for (long tabId : tabIds) {
 
-							builder.add(tabsUni);
+								builder.add(addTabToBucket(
+									bucket.getId(), tabId)
+									.replaceWithVoid()
+								);
+							}
 
 						}
 
@@ -672,43 +653,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							//Iterate over the old datasources to remove the bucket from their list of buckets
 							var oldDatasources = newStateBucket.getDatasources();
 
-							oldDatasources.forEach(oldDatasource -> {
-								var bucketsSetUni = Mutiny.fetch(oldDatasource.getBuckets())
-									.flatMap(buckets -> {
-										buckets.remove(bucket);
-										return Uni.createFrom().item(buckets);
-									})
-									.replaceWithVoid();
+							for (Datasource oldDatasource : oldDatasources) {
+								builder.add(removeDatasource(
+									bucketId, oldDatasource.getId())
+									.replaceWithVoid());
+							}
 
-								builder.add(bucketsSetUni);
-							});
+							for (long datasourceId : datasourceIds) {
 
-							var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
+								builder.add(addDatasource(
+									bucketId, datasourceId)
+									.replaceWithVoid());
+							}
 
-							builder.add(oldDatasourceUni);
-
-							newStateBucket.getDatasources().clear();
-
-							var datasourceUni =
-								s.createQuery(
-										"SELECT d " +
-										"FROM Datasource d " +
-										"INNER JOIN FETCH d.buckets " +
-										"WHERE d.id in (:datasourceIds)",
-										Datasource.class)
-									.setParameter("datasourceIds", datasourceIds)
-									.getResultList()
-									.flatMap(datasources -> {
-										datasources.forEach(datasource ->
-											datasource.getBuckets().add(newStateBucket)
-										);
-
-										newStateBucket.setDatasources(new HashSet<>(datasources));
-
-										return s.persistAll(datasources.toArray());
-									});
-
-							builder.add(datasourceUni);
 						}
 
 						//Suggestion Category
@@ -721,47 +678,48 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							var oldSuggestionCategories =
 								newStateBucket.getSuggestionCategories();
 
-							oldSuggestionCategories.forEach(oldCategory ->
-								oldCategory.setBucket(null));
+							for (SuggestionCategory oldSuggestionCategory : oldSuggestionCategories) {
 
-							var oldSuggestionCategoryUni =
-								s.persistAll(oldSuggestionCategories.toArray());
-
-							builder.add(oldSuggestionCategoryUni);
-
-							var suggestionCategoryUni = s.find(
-									SuggestionCategory.class, suggestionCategoryIds.toArray())
-								.flatMap(suggestionCategories -> {
-										suggestionCategories.forEach(suggestionCategory ->
-											suggestionCategory.setBucket(newStateBucket));
-										return s.persistAll(suggestionCategories.toArray());
-									}
+								builder.add(removeSuggestionCategory(
+									bucketId, oldSuggestionCategory.getId())
+									.replaceWithVoid()
 								);
 
-							builder.add(suggestionCategoryUni);
+							}
 
-							var suggestionCategories =
-								suggestionCategoryIds.stream()
-									.map(suggestionId ->
-										s.getReference(SuggestionCategory.class, suggestionId))
-									.collect(Collectors.toSet());
+							for (long suggestionCategoryId : suggestionCategoryIds) {
 
-							newStateBucket.getSuggestionCategories().clear();
-							newStateBucket.setSuggestionCategories(suggestionCategories);
+								builder.add(addSuggestionCategory(
+									bucketId, suggestionCategoryId)
+									.replaceWithVoid()
+								);
+							}
+
+
 						}
 
 						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
 
 						if (tabIds != null) {
-							var tabs = tabIds.stream()
-								.map(tabId -> s.getReference(Tab.class, tabId))
-								.collect(Collectors.toList());
+							var oldTabs = bucket.getTabs();
 
-							newStateBucket.getTabs().clear();
-							newStateBucket.setTabs(tabs);
+							for (Tab oldTab : oldTabs) {
+								builder.add(removeTabFromBucket(
+									bucketId, oldTab.getId())
+									.replaceWithVoid()
+								);
+							}
 
-							builder.add(s.persist(newStateBucket));
+							for (long tabId : tabIds) {
+
+								builder.add(addTabToBucket(
+									bucketId, tabId)
+									.replaceWithVoid()
+								);
+
+							}
+
 						}
 
 						//QueryAnalysis
@@ -953,39 +911,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						var oldDatasources = newStateBucket.getDatasources();
 
 						for (Datasource oldDatasource : oldDatasources) {
-
 							builder.add(removeDatasource(
 								bucketId, oldDatasource.getId())
 								.replaceWithVoid());
-
 						}
 
-						var oldDatasourceUni = s.persistAll(oldDatasources.toArray());
-
-						builder.add(oldDatasourceUni);
-
-						newStateBucket.getDatasources().clear();
-
 						if (datasourceIds != null) {
-							var datasourceUni =
-								s.createQuery(
-										"SELECT d FROM Datasource d " +
-										"INNER JOIN FETCH d.buckets " +
-										"WHERE d.id in (:datasourceIds)",
-										Datasource.class)
-									.setParameter("datasourceIds", datasourceIds)
-									.getResultList()
-									.flatMap(datasources -> {
-										datasources.forEach(datasource ->
-											datasource.getBuckets().add(newStateBucket)
-										);
+							for (long datasourceId : datasourceIds) {
 
-										newStateBucket.setDatasources(new HashSet<>(datasources));
-
-										return s.persistAll(datasources.toArray());
-									});
-
-							builder.add(datasourceUni);
+								builder.add(addDatasource(
+									bucketId, datasourceId)
+									.replaceWithVoid());
+							}
 						}
 
 						//Suggestion Category
@@ -996,51 +933,46 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						var oldSuggestionCategories =
 							newStateBucket.getSuggestionCategories();
 
-						oldSuggestionCategories.forEach(oldCategory ->
-							oldCategory.setBucket(null));
+						for (SuggestionCategory oldSuggestionCategory : oldSuggestionCategories) {
 
-						var oldSuggestionCategoryUni =
-							s.persistAll(oldSuggestionCategories.toArray());
+							builder.add(removeSuggestionCategory(
+								bucketId, oldSuggestionCategory.getId())
+								.replaceWithVoid()
+							);
 
-						builder.add(oldSuggestionCategoryUni);
-
-						newStateBucket.getSuggestionCategories().clear();
+						}
 
 						if (suggestionCategoryIds != null) {
-							var suggestionCategoryUni = s.find(
-									SuggestionCategory.class, suggestionCategoryIds.toArray())
-								.flatMap(suggestionCategories -> {
-										suggestionCategories.forEach(suggestionCategory ->
-											suggestionCategory.setBucket(newStateBucket));
-										return s.persistAll(suggestionCategories.toArray());
-									}
+							for (long suggestionCategoryId : suggestionCategoryIds) {
+
+								builder.add(addSuggestionCategory(
+									bucketId, suggestionCategoryId)
+									.replaceWithVoid()
 								);
-
-							builder.add(suggestionCategoryUni);
-
-							var suggestionCategories =
-								suggestionCategoryIds.stream()
-									.map(suggestionId ->
-										s.getReference(SuggestionCategory.class, suggestionId))
-									.collect(Collectors.toSet());
-
-							newStateBucket.getSuggestionCategories().clear();
-							newStateBucket.setSuggestionCategories(suggestionCategories);
+							}
 						}
 
 						//Tab
 						var tabIds = bucketWithListsDTO.getTabIds();
-						newStateBucket.getTabs().clear();
+
+						var oldTabs = bucket.getTabs();
+
+						for (Tab oldTab : oldTabs) {
+							builder.add(removeTabFromBucket(
+								bucketId, oldTab.getId())
+								.replaceWithVoid()
+							);
+						}
 
 						if (tabIds != null) {
-							var tabs = tabIds.stream()
-								.map(tabId -> s.getReference(Tab.class, tabId))
-								.collect(Collectors.toList());
+							for (long tabId : tabIds) {
 
-							newStateBucket.getTabs().clear();
-							newStateBucket.setTabs(tabs);
+								builder.add(addTabToBucket(
+									bucketId, tabId)
+									.replaceWithVoid()
+								);
 
-							builder.add(s.persist(newStateBucket));
+							}
 						}
 
 						//QueryAnalysis

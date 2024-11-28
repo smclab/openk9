@@ -23,7 +23,6 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.security.TestSecurity;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
@@ -208,7 +207,6 @@ public class CreateBucketTest {
 
 	@Test
 	@Order(4)
-	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void should_patch_bucket_with_lists_via_graphql() {
 
 		var bucket = sessionFactory.withTransaction((s, t) ->
@@ -300,7 +298,6 @@ public class CreateBucketTest {
 	}
 
 	@Test
-	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void should_create_bucket_with_lists_via_graphql() {
 
 		var datasourceIds = datasourceService.findAll()
