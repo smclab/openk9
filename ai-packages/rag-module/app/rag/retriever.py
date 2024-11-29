@@ -28,7 +28,7 @@ class OpenSearchRetriever(BaseRetriever):
     language: Optional[str] = None
     vector_indices: Optional[bool] = True
     context_window: int
-    retrieve_type = str
+    retrieve_type: str
     opensearch_host: str
     grpc_host: str
 
