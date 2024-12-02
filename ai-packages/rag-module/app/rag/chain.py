@@ -324,7 +324,7 @@ def get_chat_chain(
             citations = chunk
 
     all_citations = (
-        citations["annotations"]["citations"]
+        citations.get("annotations").dict()["citations"]
         if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         else []
     )
