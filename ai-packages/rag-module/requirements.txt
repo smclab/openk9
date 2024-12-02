@@ -7,7 +7,6 @@ langchain-community==0.3.8
 langchain-core==0.3.21
 langchain-ollama==0.2.0
 langchain-openai==0.2.10
-langchain-text-splitters==0.3.2
 opensearch-py==2.8.0
 python-dotenv==1.0.1
 python-keycloak==4.7.3
