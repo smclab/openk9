@@ -37,8 +37,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 ;
 
@@ -59,18 +59,13 @@ public class SuggestionCategoryService extends
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> super.create(s, transientSuggestion)
-					.flatMap(suggestion -> {
-						var docTypeFields =
-							withDocTypeFieldDTO.getDocTypeFieldIds().stream()
-								.map(docTypeFieldId ->
-									s.getReference(DocTypeField.class, docTypeFieldId))
-								.collect(Collectors.toSet());
-
-						suggestion.setDocTypeFields(docTypeFields);
-
-						return s.persist(suggestion)
-							.flatMap(__ -> s.merge(suggestion));
-					})
+					.flatMap(suggestion -> docTypeFieldService
+						.findByIds(withDocTypeFieldDTO.getDocTypeFieldIds())
+						.flatMap(docTypeFields -> {
+							suggestion.setDocTypeFields(new HashSet<>(docTypeFields));
+							return s.merge(suggestion);
+						})
+					)
 			);
 		}
 
@@ -89,20 +84,21 @@ public class SuggestionCategoryService extends
 					.flatMap(suggestion -> {
 						var newStateSuggestion =
 							mapper.patch(suggestion, withDocTypeFieldDTO);
+
 						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
 
 						if (docTypeFieldIds != null) {
-							var docTypeFields = docTypeFieldIds.stream()
-								.map(docTypeFieldId ->
-									s.getReference(DocTypeField.class, docTypeFieldId))
-								.collect(Collectors.toSet());
 
-							newStateSuggestion.getDocTypeFields().clear();
-							newStateSuggestion.setDocTypeFields(docTypeFields);
+							return docTypeFieldService.findByIds(s, docTypeFieldIds)
+								.flatMap(docTypeFields -> {
+									newStateSuggestion.setDocTypeFields(
+										new HashSet<>(docTypeFields));
+									return s.merge(newStateSuggestion);
+								});
 						}
 
-						return s.merge(newStateSuggestion)
-							.map(__ -> newStateSuggestion);
+						return s.merge(newStateSuggestion);
+
 					}));
 		}
 
@@ -126,16 +122,16 @@ public class SuggestionCategoryService extends
 						newStateSuggestion.getDocTypeFields().clear();
 
 						if (docTypeFieldIds != null) {
-							var docTypeFields = docTypeFieldIds.stream()
-								.map(docTypeFieldId ->
-									s.getReference(DocTypeField.class, docTypeFieldId))
-								.collect(Collectors.toSet());
-
-							newStateSuggestion.setDocTypeFields(docTypeFields);
+							return docTypeFieldService.findByIds(s, docTypeFieldIds)
+								.flatMap(docTypeFields -> {
+									newStateSuggestion.setDocTypeFields(
+										new HashSet<>(docTypeFields));
+									return s.merge(newStateSuggestion);
+								});
 						}
 
-						return s.merge(newStateSuggestion)
-							.map(__ -> newStateSuggestion);
+						return s.merge(newStateSuggestion);
+
 					}));
 		}
 
