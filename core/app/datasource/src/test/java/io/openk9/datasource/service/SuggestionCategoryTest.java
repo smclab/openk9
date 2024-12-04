@@ -26,9 +26,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.AfterAll;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -52,6 +51,7 @@ public class SuggestionCategoryTest {
 	private static final String SGCTESTFIELD_1 = "sgctestfield1";
 	private static final String SGCTESTFIELD_2 = "sgctestfield2";
 	private static final String SGCTESTFIELD_3 = "sgctestfield3";
+	private static final Logger log = Logger.getLogger(SuggestionCategoryTest.class);
 
 	private final List<Long> docTypeFieldIds = new LinkedList<>();
 	private SuggestionCategory suggestionCategory;
@@ -65,8 +65,11 @@ public class SuggestionCategoryTest {
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 
-	@BeforeAll
+	@Test
+	@Order(1)
 	void setup() {
+
+		log.info("Trying to setup SuggestionCategoryTest");
 
 		var field1 = docTypeFieldService.create(DocTypeFieldDTO.builder()
 				.name(SGCTESTFIELD_1)
@@ -96,31 +99,12 @@ public class SuggestionCategoryTest {
 		docTypeFieldIds.add(field2);
 		docTypeFieldIds.add(field3);
 
-	}
-
-	@AfterAll
-	void tearDown() {
-
-		sessionFactory.withTransaction((s, t) -> {
-			List<Uni<DocTypeField>> deleteUnis = new ArrayList<>();
-
-			for (Long docTypeFieldId : docTypeFieldIds) {
-
-				deleteUnis.add(
-					docTypeFieldService.deleteById(s, docTypeFieldId));
-
-			}
-
-			return Uni.join().all(deleteUnis)
-				.usingConcurrencyOf(1)
-				.andFailFast();
-
-		}).await().indefinitely();
+		log.info("SuggestionCategoryTest ready");
 
 	}
 
 	@Test
-	@Order(1)
+	@Order(2)
 	void should_create_suggestionCategory_with_first_docTypeField() {
 
 		var created = suggestionCategoryService.create(
@@ -141,7 +125,7 @@ public class SuggestionCategoryTest {
 	}
 
 	@Test
-	@Order(2)
+	@Order(3)
 	void should_update_suggestionCategory_with_all_docTypeFields() {
 
 		var updated = suggestionCategoryService.update(
@@ -165,7 +149,7 @@ public class SuggestionCategoryTest {
 	}
 
 	@Test
-	@Order(3)
+	@Order(4)
 	void should_patch_suggestionCategory_with_last_docTypeField() {
 
 		var updated = suggestionCategoryService.patch(
@@ -185,7 +169,7 @@ public class SuggestionCategoryTest {
 	}
 
 	@Test
-	@Order(4)
+	@Order(5)
 	void should_delete_suggestionCategory() {
 		suggestionCategoryService.deleteById(suggestionCategory.getId())
 			.await().indefinitely();
@@ -194,6 +178,32 @@ public class SuggestionCategoryTest {
 			.await().indefinitely();
 
 		Assertions.assertNull(fetched);
+	}
+
+	@Test
+	@Order(6)
+	void tearDown() {
+
+		log.info("Trying to teardown SuggestionCategoryTest");
+
+		sessionFactory.withTransaction((s, t) -> {
+			List<Uni<DocTypeField>> deleteUnis = new ArrayList<>();
+
+			for (Long docTypeFieldId : docTypeFieldIds) {
+
+				deleteUnis.add(
+					docTypeFieldService.deleteById(s, docTypeFieldId));
+
+			}
+
+			return Uni.join().all(deleteUnis)
+				.usingConcurrencyOf(1)
+				.andFailFast();
+
+		}).await().indefinitely();
+
+		log.info("SuggestionCategoryTest passed");
+
 	}
 
 	private SuggestionCategory getSuggestionCategory(long id) {
