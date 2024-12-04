@@ -17,11 +17,9 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.K9Entity;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
@@ -73,9 +71,6 @@ public class CreateBucketTest {
 	@Inject
 	@GraphQLClient("openk9-dynamic")
 	DynamicGraphQLClient graphQLClient;
-
-	@InjectMock
-	TenantRegistry tenantRegistry;
 
 	@Test
 	@Order(1)
