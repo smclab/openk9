@@ -24,8 +24,10 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
+import io.openk9.datasource.service.VectorIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
@@ -83,6 +85,9 @@ public class DataIndexGraphqlResource {
 	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
 		return indexService.get_catIndicesFirst(dataIndex.getIndexName());
 	}
+
+	@Inject
+	VectorIndexService vectorIndexService;
 
 	@Query
 	public Uni<DataIndex> getDataIndex(@Id long id) {
@@ -179,6 +184,10 @@ public class DataIndexGraphqlResource {
 
 	@Inject
 	DataIndexService dataIndexService;
+
+	public Uni<VectorIndex> vectorIndex(@Source DataIndex dataIndex) {
+		return vectorIndexService.findByDataIndexId(dataIndex.getId());
+	}
 
 	@Inject
 	IndexService indexService;

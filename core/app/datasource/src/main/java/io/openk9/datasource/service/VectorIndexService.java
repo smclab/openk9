@@ -22,6 +22,7 @@ import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.VectorIndex_;
 import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -41,4 +42,13 @@ public class VectorIndexService extends BaseK9EntityService<VectorIndex, VectorI
 		return new String[]{VectorIndex_.NAME, VectorIndex_.DESCRIPTION};
 	}
 
+	public Uni<VectorIndex> findByDataIndexId(long dataIndexId) {
+
+		return sessionFactory.withTransaction((s, t) -> s.createQuery(
+				"from VectorIndex vi join vi.dataIndex di where di.id = :dataIndexId",
+				VectorIndex.class
+			)
+			.setParameter("dataIndexId", dataIndexId)
+			.getSingleResultOrNull());
+	}
 }
