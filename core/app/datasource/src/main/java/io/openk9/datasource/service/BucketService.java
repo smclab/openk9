@@ -35,6 +35,7 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.dto.BucketDTO;
@@ -50,6 +51,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -409,14 +411,27 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<List<Bucket>> findUnboundBucketsByDatasource(long datasourceId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT bucket.* from bucket " +
-				"WHERE bucket.id not in ( " +
-				"SELECT datasource_buckets.buckets_id FROM datasource_buckets " +
-				"WHERE datasource_buckets.datasource_id = (:datasourceId))";
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			return s.createNativeQuery(queryString, Bucket.class)
-				.setParameter("datasourceId", datasourceId)
-				.getResultList();
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			criteriaQuery.select(bucketRoot);
+
+			var idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Bucket> bucketRootToExclude = idsToExcludeQuery.from(Bucket.class);
+
+			Join<Bucket, Datasource> tabJoinToExclude =
+				bucketRootToExclude.join(Bucket_.datasources, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(bucketRootToExclude.get(Bucket_.id))
+				.where(cb.equal(tabJoinToExclude.get(Datasource_.id), datasourceId));
+
+			criteriaQuery.where(
+				cb.not(bucketRoot.get(Bucket_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 
@@ -433,16 +448,29 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		});
 	}
 
-	public Uni<List<Bucket>> findUnboundBucketsByTab(long tabId) {
-		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT bucket.* from bucket " +
-				"WHERE bucket.id not in ( " +
-				"SELECT buckets_tabs.buckets_id FROM buckets_tabs " +
-				"WHERE buckets_tabs.tabs_id = (:tabId))";
+			public Uni<List<Bucket>> findUnboundBucketsByTab(long tabId) {
+				return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			return s.createNativeQuery(queryString, Bucket.class)
-				.setParameter("tabId", tabId)
-				.getResultList();
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			criteriaQuery.select(bucketRoot);
+
+			var idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Bucket> bucketRootToExclude = idsToExcludeQuery.from(Bucket.class);
+
+			Join<Bucket, Tab> tabJoinToExclude =
+				bucketRootToExclude.join(Bucket_.tabs, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(bucketRootToExclude.get(Bucket_.id))
+				.where(cb.equal(tabJoinToExclude.get(Tab_.id), tabId));
+
+			criteriaQuery.where(
+				cb.not(bucketRoot.get(Bucket_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 
