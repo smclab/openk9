@@ -278,8 +278,6 @@ public class CreateBucketTest {
 
 			var response = graphQLClient.executeSync(query);
 
-			System.out.println(response);
-
 			var jsonObject = response.getData().getJsonObject("bucketWithLists");
 
 			assertFalse(jsonObject.isNull("entity"));

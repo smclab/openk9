@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.ArrayList;
@@ -42,7 +41,6 @@ import java.util.Set;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SuggestionCategoryTest {
 
 	private static final String PUBLIC_TENANT = "public";
