@@ -11,9 +11,10 @@ import io.openk9.datasource.model.dto.TabDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
 
@@ -22,22 +23,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UnboundBucketTest {
 
-	public static final String BUCKET_DEFAULT_NAME = "Default Bucket";
-	public static final String BUCKET_ONE_NAME =
+	private static final String BUCKET_DEFAULT_NAME = "Default Bucket";
+	private static final String BUCKET_ONE_NAME =
 		"Bucket with Datasource 1";
-	public static final String BUCKET_UNBOUND_NAME = "Unbound Bucket";
-	public static final String DATASOURCE_ONE_NAME = "Datasource 1";
-	public static final String DATASOURCE_TWO_NAME = "Datasource 2";
-	public static final String DATASOURCE_THREE_NAME = "Datasource 3";
-	public static final String SUGGESTION_CATEGORY_ONE_NAME = "Suggestion category 1";
-	public static final String SUGGESTION_CATEGORY_TWO_NAME = "Suggestion category 2";
-	public static final String SUGGESTION_CATEGORY_THREE_NAME = "Suggestion category 3";
-	public static final String TAB_ONE_NAME = "Tab 1";
-	public static final String TAB_TWO_NAME = "Tab 2";
-	public static final String TAB_THREE_NAME = "Tab 3";
+	private static final String BUCKET_UNBOUND_NAME = "Unbound Bucket";
+	private static final String DATASOURCE_ONE_NAME = "Datasource 1";
+	private static final String DATASOURCE_TWO_NAME = "Datasource 2";
+	private static final String DATASOURCE_THREE_NAME = "Datasource 3";
+	private static final String SUGGESTION_CATEGORY_ONE_NAME = "Suggestion category 1";
+	private static final String SUGGESTION_CATEGORY_TWO_NAME = "Suggestion category 2";
+	private static final String SUGGESTION_CATEGORY_THREE_NAME = "Suggestion category 3";
+	private static final String TAB_ONE_NAME = "Tab 1";
+	private static final String TAB_TWO_NAME = "Tab 2";
+	private static final String TAB_THREE_NAME = "Tab 3";
 
 	@Inject
 	BucketService bucketService;
@@ -54,8 +55,9 @@ public class UnboundBucketTest {
 	@Inject
 	TabService tabService;
 
-	@BeforeAll
-	void initDatasource() {
+	@Test
+	@Order(1)
+	void should_init_test_environment() {
 		createBucketUnbound();
 		createBucketWithTestOneDatasource();
 
@@ -76,6 +78,11 @@ public class UnboundBucketTest {
 		bindBucketOneToSuggestionCategoryOne();
 		bindBucketOneToTabOne();
 
+		var bucketOne = getBucketOne();
+		assertEquals(1, bucketOne.getDatasources().size());
+		assertEquals(1, bucketOne.getSuggestionCategories().size());
+		assertEquals(1, bucketOne.getTabs().size());
+
 		//bind bucket default
 		bindBucketDefaultToDatasourceTwo();
 		bindBucketDefaultToSuggestionCategoryTwo();
@@ -84,9 +91,16 @@ public class UnboundBucketTest {
 		bindBucketDefaultToDatasourceThree();
 		bindBucketDefaultToSuggestionCategoryThree();
 		bindBucketDefaultToTabThree();
+
+		var bucketDefault = getBucketDefault();
+		assertEquals(2, bucketDefault.getDatasources().size());
+		//the default bucket already has a tab and three suggestion categories bound by Initializer
+		assertEquals(5, bucketDefault.getSuggestionCategories().size());
+		assertEquals(3, bucketDefault.getTabs().size());
 	}
 
 	@Test
+	@Order(2)
 	void should_retrieve_unbound_bucket_from_datasource_two() {
 
 		var unboundBuckets = getUnboundBucketByDatasourceTwo();
@@ -108,6 +122,7 @@ public class UnboundBucketTest {
 	}
 
 	@Test
+	@Order(3)
 	void should_retrieve_all_bucket_from_missing_datasource() {
 		var unboundBuckets = getUnboundBucketByMissingDatasource();
 
@@ -125,6 +140,7 @@ public class UnboundBucketTest {
 	}
 
 	@Test
+	@Order(4)
 	void should_retrieve_unbound_bucket_from_suggestion_category_two() {
 
 		var unboundBuckets = getUnboundBucketBySuggestionCategoryTwo();
@@ -146,6 +162,7 @@ public class UnboundBucketTest {
 	}
 
 	@Test
+	@Order(5)
 	void should_retrieve_all_bucket_from_missing_suggestion_category() {
 		var unboundBuckets = getUnboundBucketByMissingSuggestionCategory();
 
@@ -163,6 +180,7 @@ public class UnboundBucketTest {
 	}
 
 	@Test
+	@Order(6)
 	void should_retrieve_unbound_bucket_from_tab_two() {
 		var bucketDefault = getBucketDefault();
 		assertFalse(bucketDefault.getTabs().isEmpty());
@@ -185,6 +203,7 @@ public class UnboundBucketTest {
 	}
 
 	@Test
+	@Order(7)
 	void should_retrieve_all_bucket_from_missing_tab() {
 		var unboundBuckets = getUnboundBucketByMissingTab();
 
