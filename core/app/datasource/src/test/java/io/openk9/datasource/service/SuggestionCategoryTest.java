@@ -46,20 +46,24 @@ import java.util.Set;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SuggestionCategoryTest {
 
-	public static final String PUBLIC_TENANT = "public";
-	public static final String SGCWITHFIELD_1 = "sgcwithfield1";
+	private static final String PUBLIC_TENANT = "public";
+	private static final String SGCWITHFIELD_1 = "sgcwithfield1";
 	private static final String EMTPY_JSON_CONFIG = "{}";
 	private static final String SGCTESTFIELD_1 = "sgctestfield1";
 	private static final String SGCTESTFIELD_2 = "sgctestfield2";
 	private static final String SGCTESTFIELD_3 = "sgctestfield3";
+
 	private final List<Long> docTypeFieldIds = new LinkedList<>();
+	private SuggestionCategory suggestionCategory;
+
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
+
 	@Inject
 	DocTypeFieldService docTypeFieldService;
-	private SuggestionCategory suggestionCategory;
 
 	@BeforeAll
 	void setup() {
