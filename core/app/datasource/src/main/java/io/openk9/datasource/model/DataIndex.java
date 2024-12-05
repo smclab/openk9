@@ -97,7 +97,7 @@ public class DataIndex extends K9Entity {
 
 	public String getIndexName() throws UnknownTenantException {
 		if (indexName == null) {
-			setupIndexName();
+			initIndexName();
 		}
 
 		return indexName;
@@ -105,7 +105,7 @@ public class DataIndex extends K9Entity {
 
 	@PostLoad
 	@PostUpdate
-	protected void setupIndexName() throws UnknownTenantException {
+	protected void initIndexName() throws UnknownTenantException {
 		String tenantId = getTenant();
 
 		// This is a workaround needed when a new DataIndex is being created.
