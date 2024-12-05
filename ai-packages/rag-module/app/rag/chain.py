@@ -43,6 +43,7 @@ def get_chain(
     virtual_host,
     question,
     reformulate,
+    rerank,
     opensearch_host,
     grpc_host,
 ):
@@ -62,6 +63,8 @@ def get_chain(
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
+        search_text=question,
+        rerank=rerank,
         range_values=range_values,
         after_key=after_key,
         suggest_keyword=suggest_keyword,
@@ -154,6 +157,7 @@ def get_chat_chain(
     timestamp,
     chat_sequence_number,
     retrieve_citations,
+    rerank,
     opensearch_host,
     grpc_host,
 ):
@@ -177,6 +181,8 @@ def get_chat_chain(
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
+        search_text=search_text,
+        rerank=rerank,
         range_values=range_values,
         after_key=after_key,
         suggest_keyword=suggest_keyword,
