@@ -50,7 +50,7 @@ public class AbstractTimezoneDefaultStorageTest {
 
     @Inject
 	SessionFactory ormSessionFactory;
-		// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+	// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -60,7 +60,8 @@ public class AbstractTimezoneDefaultStorageTest {
 		OffsetDateTime expectedOffsetDateTime, OffsetTime expectedOffsetTime) {
         asserter.assertThat(
 			() -> sessionFactory.withTransaction(session -> {
-					var entity = new EntityWithTimezones(PERSISTED_ZONED_DATE_TIME,
+					var entity = new EntityWithTimezones(
+						PERSISTED_ZONED_DATE_TIME,
 						PERSISTED_OFFSET_DATE_TIME,
 						PERSISTED_OFFSET_TIME
 					);

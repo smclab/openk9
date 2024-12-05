@@ -357,7 +357,8 @@ public final class HibernateReactiveProcessor {
 			new Properties()
 		);
 
-		setDialectAndStorageEngine(dbKindOptional,
+		setDialectAndStorageEngine(
+			dbKindOptional,
 			explicitDialect,
 			explicitDbMinVersion,
 			dbKindDialectBuildItems,

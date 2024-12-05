@@ -46,7 +46,7 @@ public class NoJtaTest {
 
     @Inject
 	SessionFactory sessionFactory;
-		// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+	// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory factory;

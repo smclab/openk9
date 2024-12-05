@@ -39,10 +39,13 @@ public class HibernateReactiveDevModeTest {
 		.withApplicationRoot((jar) -> jar
 			.addClasses(Fruit.class, FruitMutinyResource.class)
 			.addAsResource("application.properties")
-			.addAsResource(new StringAsset(
-				"INSERT INTO known_fruits(id, name) VALUES (1, 'Cherry');\n" +
-				"INSERT INTO known_fruits(id, name) VALUES (2, 'Apple');\n" +
-				"INSERT INTO known_fruits(id, name) VALUES (3, 'Banana');\n"), "import.sql"));
+			.addAsResource(
+				new StringAsset(
+					"INSERT INTO known_fruits(id, name) VALUES (1, 'Cherry');\n" +
+					"INSERT INTO known_fruits(id, name) VALUES (2, 'Apple');\n" +
+					"INSERT INTO known_fruits(id, name) VALUES (3, 'Banana');\n"),
+				"import.sql"
+			));
 
     @Test
     public void testListAllFruits() {

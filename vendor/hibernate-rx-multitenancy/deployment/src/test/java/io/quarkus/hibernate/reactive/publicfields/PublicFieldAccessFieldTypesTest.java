@@ -124,7 +124,7 @@ public class PublicFieldAccessFieldTypesTest {
 		public double double_;
 		public short short_;
 		public char char_ = '\n';
-			// The Reactive postgresql driver doesn't like the zero char, for some reason
+		// The Reactive postgresql driver doesn't like the zero char, for some reason
 		public byte byte_;
 
 	}

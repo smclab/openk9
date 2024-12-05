@@ -29,8 +29,8 @@ import java.util.Map;
  */
 public class CheckingVertxContextInitiator implements StandardServiceInitiator<Context> {
 
-    public static final CheckingVertxContextInitiator INSTANCE =
-        new CheckingVertxContextInitiator();
+	public static final CheckingVertxContextInitiator INSTANCE =
+		new CheckingVertxContextInitiator();
 
     @Override
     public Context initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
