@@ -7,15 +7,20 @@ from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
 
+import requests
+
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
+RERANKER_API_URL = "http://34.141.124.131:9999/api/rerank"
 
 
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
     search_query: list
+    search_text: str
+    rerank: Optional[bool] = False
     range_values: list
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
@@ -112,5 +117,36 @@ class OpenSearchRetriever(BaseRetriever):
 
                 if total_tokens < self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE:
                     documents.append(document)
+
+        if self.rerank:
+            documents_to_rerank = [
+                {
+                    "document_id": doc.metadata["document_id"],
+                    "content": doc.page_content,
+                }
+                for doc in documents
+            ]
+
+            response = requests.get(
+                RERANKER_API_URL,
+                json={
+                    "query": self.search_text,
+                    "context": documents_to_rerank,
+                    "limit": len(documents_to_rerank),
+                    "threshold": 0,
+                    "max_length": 512,
+                },
+            )
+
+            reranked_documents_dict = response.json()["context"]
+            reranked_documents_ids = [
+                doc["document_id"] for doc in reranked_documents_dict
+            ]
+            reranked_documents = sorted(
+                documents,
+                key=lambda x: reranked_documents_ids.index(x.metadata["document_id"]),
+            )
+
+            return reranked_documents
 
         return documents
