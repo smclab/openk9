@@ -76,7 +76,9 @@ public class SchedulerInitializerActor {
 									httpPluginDriverClient,
 									sessionFactory,
 									restHighLevelClient,
-									schedulatedJobs
+									schedulatedJobs == null
+										? List.of()
+										: schedulatedJobs
 								),
 								"job-scheduler"
 							)
