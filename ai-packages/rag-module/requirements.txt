@@ -10,3 +10,4 @@ langchain-openai==0.2.10
 opensearch-py==2.8.0
 python-dotenv==1.0.1
 python-keycloak==4.7.3
+requests==2.32.3
