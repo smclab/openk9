@@ -12,7 +12,6 @@ import requests
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
-RERANKER_API_URL = "http://34.141.124.131:9999/api/rerank"
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -21,6 +20,7 @@ class OpenSearchRetriever(BaseRetriever):
     search_query: list
     search_text: str
     rerank: Optional[bool] = False
+    reranker_api_url: Optional[str] = ""
     range_values: list
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
@@ -128,7 +128,7 @@ class OpenSearchRetriever(BaseRetriever):
             ]
 
             response = requests.get(
-                RERANKER_API_URL,
+                self.reranker_api_url,
                 json={
                     "query": self.search_text,
                     "context": documents_to_rerank,

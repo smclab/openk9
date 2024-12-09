@@ -44,6 +44,7 @@ def get_chain(
     question,
     reformulate,
     rerank,
+    reranker_api_url,
     opensearch_host,
     grpc_host,
 ):
@@ -65,6 +66,7 @@ def get_chain(
         search_query=search_query,
         search_text=question,
         rerank=rerank,
+        reranker_api_url=reranker_api_url,
         range_values=range_values,
         after_key=after_key,
         suggest_keyword=suggest_keyword,
@@ -158,6 +160,7 @@ def get_chat_chain(
     chat_sequence_number,
     retrieve_citations,
     rerank,
+    reranker_api_url,
     opensearch_host,
     grpc_host,
 ):
@@ -183,6 +186,7 @@ def get_chat_chain(
         search_query=search_query,
         search_text=search_text,
         rerank=rerank,
+        reranker_api_url=reranker_api_url,
         range_values=range_values,
         after_key=after_key,
         suggest_keyword=suggest_keyword,

@@ -22,6 +22,7 @@ ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
+RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 
@@ -116,6 +117,7 @@ async def rag_generatey(
         search_text,
         reformulate,
         rerank,
+        RERANKER_API_URL,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
@@ -198,6 +200,7 @@ async def rag_chat(
         chat_sequence_number,
         retrieve_citations,
         rerank,
+        RERANKER_API_URL,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
