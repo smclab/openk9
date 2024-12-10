@@ -217,22 +217,16 @@ public class SearchResource {
 						}))
 					.map(this::toSearchResponse);
 			})
-			.onItemOrFailure()
-			.transform((response, throwable) -> {
-
-				if (throwable != null) {
-					log.error("Search request failed", throwable);
-
-					throw new WebApplicationException(jakarta.ws.rs.core.Response
+			.onFailure()
+			.transform(throwable -> {
+				log.error("Search request failed", throwable);
+				return new WebApplicationException(jakarta.ws.rs.core.Response
 						.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
 						.entity(JsonObject.of(
 							"details", "Unable to serve search request"))
-						.build()
-					);
+					.build());
 				}
-
-				return response;
-			});
+			);
 
 	}
 
