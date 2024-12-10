@@ -270,19 +270,18 @@ public class SearchResource {
 
 					Map<String, Object> i18nMap =
 						(Map<String, Object>) objectMap.get("i18n");
-
+					var item = i18nMap.values().iterator().next();
 					if (!i18nMap.isEmpty()) {
-						if (i18nMap.values().iterator().next() instanceof String) {
-							String i18nString =
-								(String) i18nMap.values().iterator().next();
+						if (item instanceof String i18nString) {
 							entry.setValue(i18nString);
 						}
-						else if (i18nMap.values().iterator().next() instanceof List<?>) {
-							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
+						else if (item instanceof List<?> i18nList) {
+							var i18nListString = i18nList
 								.stream()
-								.map(object -> String.valueOf(object))
+								.map(String::valueOf)
 								.toList();
-							entry.setValue(i18nList);
+
+							entry.setValue(i18nListString);
 						}
 						else {
 							log.warn("The object i18nList is not a String or a List<String>");
