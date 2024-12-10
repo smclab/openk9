@@ -24,6 +24,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.EnrichPipelineItemKey;
@@ -437,36 +438,44 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(
-		long enrichPipelineId,
-		long enrichItemId) {
-		return sessionFactory.withTransaction((s) -> findById(s, enrichPipelineId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(enrichPipeline ->
-				enrichItemService.findById(s, enrichItemId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(enrichItem -> s
-						.fetch(enrichPipeline.getEnrichPipelineItems())
-						.flatMap(enrichPipelineItems -> {
+		long enrichPipelineId, long enrichItemId) {
 
-							boolean removed = enrichPipelineItems.removeIf(
-								epi -> epi.getKey().getEnrichItemId() == enrichItemId
-									   && epi.getKey().getEnrichPipelineId() == enrichPipelineId);
+		return sessionFactory.withTransaction((s, t) -> s
+			.find(EnrichPipeline.class, enrichPipelineId)
+			.flatMap(enrichPipeline -> s
+				.find(EnrichItem.class, enrichItemId)
+				.flatMap(enrichItem -> {
 
-							if (removed) {
-								return s.find(
-										EnrichPipelineItem.class,
-										EnrichPipelineItemKey.of(enrichPipelineId, enrichItemId)
-									)
-									.call(s::remove)
-									.map(ep -> Tuple2.of(enrichPipeline, enrichItem));
+					CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+					CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
+						cb.createCriteriaDelete(EnrichPipelineItem.class);
+					Root<EnrichPipelineItem> deleteFrom =
+						deletePipelineItem.from(EnrichPipelineItem.class);
+
+					var pipelineIdPath =
+						deleteFrom.get(EnrichPipelineItem_.enrichPipeline).get(EnrichPipeline_.id);
+
+					var itemIdPath =
+						deleteFrom.get(EnrichPipelineItem_.enrichItem).get(EnrichItem_.id);
+
+					deletePipelineItem.where(cb.and(
+						cb.equal(pipelineIdPath, enrichPipelineId),
+						cb.equal(itemIdPath, enrichItemId)
+					));
+
+					return s.createQuery(deletePipelineItem)
+						.executeUpdate()
+						.map(rows -> {
+							if (rows > 0) {
+								return Tuple2.of(enrichPipeline, enrichItem);
 							}
-							else {
-								return Uni.createFrom().nullItem();
-							}
 
-						}))));
+							return null;
+						});
+
+				})
+			)
+		);
 	}
 
 	public Uni<EnrichItem> findFirstEnrichItem(
