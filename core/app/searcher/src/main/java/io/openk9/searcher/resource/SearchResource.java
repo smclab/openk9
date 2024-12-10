@@ -40,11 +40,13 @@ import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -205,18 +207,31 @@ public class SearchResource {
 								}
 								catch (IOException e) {
 									sink.fail(e);
-									log.warn("Search request failed", e);
 								}
 							}
 
 							@Override
 							public void onFailure(Exception e) {
 								sink.fail(e);
-								log.warn("Search request failed", e);
 							}
 						}))
 					.map(this::toSearchResponse);
+			})
+			.onItemOrFailure()
+			.transform((response, throwable) -> {
 
+				if (throwable != null) {
+					log.error("Search request failed", throwable);
+
+					throw new WebApplicationException(jakarta.ws.rs.core.Response
+						.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(JsonObject.of(
+							"details", "Unable to serve search request"))
+						.build()
+					);
+				}
+
+				return response;
 			});
 
 	}
