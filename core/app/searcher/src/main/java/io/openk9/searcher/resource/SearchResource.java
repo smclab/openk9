@@ -90,7 +90,7 @@ import java.util.regex.Pattern;
 @RequestScoped
 public class SearchResource {
 
-	private static final Logger logger = Logger.getLogger(SearchResource.class);
+	private static final Logger log = Logger.getLogger(SearchResource.class);
 	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
@@ -205,12 +205,14 @@ public class SearchResource {
 								}
 								catch (IOException e) {
 									sink.fail(e);
+									log.warn("Search request failed", e);
 								}
 							}
 
 							@Override
 							public void onFailure(Exception e) {
 								sink.fail(e);
+								log.warn("Search request failed", e);
 							}
 						}))
 					.map(this::toSearchResponse);
@@ -274,7 +276,7 @@ public class SearchResource {
 							entry.setValue(i18nList);
 						}
 						else {
-							logger.warn("The object i18nList is not a String or a List<String>");
+							log.warn("The object i18nList is not a String or a List<String>");
 						}
 					}
 
@@ -658,7 +660,7 @@ public class SearchResource {
 	private void printShardFailures(SearchResponse searchResponse) {
 		if (searchResponse.getShardFailures() != null) {
 			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
-				logger.warn(failure.reason());
+				log.warn(failure.reason());
 			}
 		}
 	}
