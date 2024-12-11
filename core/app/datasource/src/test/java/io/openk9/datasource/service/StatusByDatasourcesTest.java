@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,7 +25,6 @@ public class StatusByDatasourcesTest {
 	private static final String ENTITY_NAME_PREFIX = "StatusByDatasourcesTest - ";
 	private static final String ENRICH_PIPELINE_ONE_NAME = ENTITY_NAME_PREFIX + "Enrich pipeline 1";
 	private static final String DATASOURCE_ONE_NAME = ENTITY_NAME_PREFIX + "Datasource 1";
-	private static final List<String> RUNNING_STATE_LIST = Arrays.asList("RUNNING", "ERROR", "STALE");
 
 	@Inject
 	DatasourceService datasourceService;

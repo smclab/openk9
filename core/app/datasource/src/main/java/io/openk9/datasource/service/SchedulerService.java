@@ -55,54 +55,25 @@ import java.util.stream.Collectors;
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
 	SchedulerService() {}
 
-	@Override
-	public Class<Scheduler> getEntityClass() {
-		return Scheduler.class;
-	}
+	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
+		return findById(schedulerId)
+			.chain(scheduler -> switch (scheduler.getStatus()) {
+				case RUNNING, STALE, ERROR -> {
+					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
 
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {Scheduler_.STATUS};
-	}
+					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-	public Uni<Datasource> getDatasource(Scheduler scheduler) {
-		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
-			.flatMap(found -> s.fetch(found.getDatasource()))
-		);
-	}
+					var shardingKey = ShardingKey.fromStrings(tenantId, scheduler.getScheduleId());
+					var typeKey = SchedulingEntityType.getTypeKey(shardingKey);
 
-	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
-		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
-			.flatMap(found -> s.fetch(found.getOldDataIndex()))
-		);
-	}
+					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+						typeKey, shardingKey.asString());
 
-	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
-		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
-			.flatMap(found -> s.fetch(found.getNewDataIndex()))
-		);
-	}
-
-	public Uni<List<String>> getDeletedContentIds(String tenant, String scheduleId) {
-		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s
-				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-				.setParameter("scheduleId", scheduleId)
-				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
-				.getSingleResultOrNull())
-			.flatMap(this::indexesDiff);
-	}
-
-	public Uni<List<String>> getDeletedContentIds(String schedulerId) {
-		return getDeletedContentIds(null, schedulerId);
-	}
-
-	public Uni<List<String>> getDeletedContentIds(long id) {
-		return sessionFactory.withStatelessTransaction(s -> s
-				.createNamedQuery(Scheduler.FETCH_BY_ID, Scheduler.class)
-				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
-				.setParameter("schedulerId", id)
-				.getSingleResultOrNull())
-			.flatMap(this::indexesDiff);
+					schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
+					yield Uni.createFrom().voidItem();
+				}
+				default -> Uni.createFrom().voidItem();
+			});
 	}
 
 	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
@@ -126,50 +97,62 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			});
 	}
 
-
-	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
-		return findById(schedulerId)
-			.chain(scheduler -> switch (scheduler.getStatus()) {
-				case RUNNING, STALE, ERROR -> {
-					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
-
-					ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
-
-					var shardingKey = ShardingKey.fromStrings(tenantId, scheduler.getScheduleId());
-					var typeKey = SchedulingEntityType.getTypeKey(shardingKey);
-
-					EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-						typeKey, shardingKey.asString());
-
-					schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.CANCELLED));
-					yield Uni.createFrom().voidItem();
-				}
-				default -> Uni.createFrom().voidItem();
-			});
+	public Uni<Datasource> getDatasource(Scheduler scheduler) {
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getDatasource()))
+		);
 	}
 
-	public Uni<Void> rereouteScheduling(String tenantId, long schedulerId) {
-		return findById(schedulerId)
-			.chain(scheduler -> {
-				if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
+	public Uni<List<String>> getDeletedContentIds(long id) {
+		return sessionFactory.withStatelessTransaction(s -> s
+				.createNamedQuery(Scheduler.FETCH_BY_ID, Scheduler.class)
+				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
+				.setParameter("schedulerId", id)
+				.getSingleResultOrNull())
+			.flatMap(this::indexesDiff);
+	}
 
-					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+	public Uni<List<String>> getDeletedContentIds(String schedulerId) {
+		return getDeletedContentIds(null, schedulerId);
+	}
 
-					MessageGateway.askReroute(
-						actorSystem,
-						ShardingKey.fromStrings(tenantId, scheduler.getScheduleId())
-					);
-				}
-				return Uni.createFrom().voidItem();
-			});
+	public Uni<List<String>> getDeletedContentIds(String tenant, String scheduleId) {
+		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s
+				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+				.setParameter("scheduleId", scheduleId)
+				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
+				.getSingleResultOrNull())
+			.flatMap(this::indexesDiff);
+	}
+
+	@Override
+	public Class<Scheduler> getEntityClass() {
+		return Scheduler.class;
+	}
+
+	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getNewDataIndex()))
+		);
+	}
+
+	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getOldDataIndex()))
+		);
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Scheduler_.STATUS};
 	}
 
 	public Uni<List<DatasourceJobStatus>> getStatusByDatasources(List<Long> datasourceIds) {
 		return sessionFactory.withTransaction((session, transaction) -> session
 			.createQuery(
-					"from Scheduler s " +
+				"from Scheduler s " +
 					"join fetch s.datasource d " +
-				"where d.id in :datasourceIds and s.status in " + Scheduler.RUNNING_STATES,
+					"where d.id in :datasourceIds and s.status in " + Scheduler.RUNNING_STATES,
 				Scheduler.class
 			)
 			.setParameter("datasourceIds", datasourceIds)
@@ -193,17 +176,20 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		);
 	}
 
-	@Inject
-	RestHighLevelClient restHighLevelClient;
+	public Uni<Void> rereouteScheduling(String tenantId, long schedulerId) {
+		return findById(schedulerId)
+			.chain(scheduler -> {
+				if (scheduler.getStatus() == Scheduler.SchedulerStatus.ERROR) {
 
-	private List<String> mapToList(SearchResponse searchResponse) {
-		return searchResponse
-			.getAggregations()
-			.<Terms>get("contentId_agg")
-			.getBuckets()
-			.stream()
-			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-			.toList();
+					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
+
+					MessageGateway.askReroute(
+						actorSystem,
+						ShardingKey.fromStrings(tenantId, scheduler.getScheduleId())
+					);
+				}
+				return Uni.createFrom().voidItem();
+			});
 	}
 
 	private Uni<List<String>> indexesDiff(Scheduler scheduler) {
@@ -248,8 +234,16 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			)
 			.map(this::mapToList);
 	}
-	@Inject
-	ActorSystemProvider actorSystemProvider;
+
+	private List<String> mapToList(SearchResponse searchResponse) {
+		return searchResponse
+			.getAggregations()
+			.<Terms>get("contentId_agg")
+			.getBuckets()
+			.stream()
+			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+			.toList();
+	}
 
 	public enum JobStatus {
 		ALREADY_RUNNING,
@@ -257,5 +251,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public record DatasourceJobStatus(long id, JobStatus status) {}
+
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 
 }
