@@ -26,10 +26,12 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.util.CborSerializable;
 import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
@@ -668,13 +670,17 @@ public class JobScheduler {
 
 		boolean reindex = triggerType == TriggerType.REINDEX;
 
+		var scheduleId = UUID.randomUUID().toString();
+
 		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
-		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setScheduleId(scheduleId);
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		startSchedulingActor(ctx, tenantName, scheduleId);
 
 		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
 
@@ -709,6 +715,21 @@ public class JobScheduler {
 		}
 
 		return Behaviors.same();
+	}
+
+	private static void startSchedulingActor(
+			ActorContext<Command> ctx, String tenantName, String scheduleId) {
+
+		var shardingKey = ShardingKey.fromStrings(tenantName, scheduleId);
+
+		ActorSystem<?> actorSystem = ctx.getSystem();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+
+		clusterSharding.entityRefFor(
+			SchedulingEntityType.getTypeKey(shardingKey),
+			shardingKey.toString()
+		);
 	}
 
 	private static Behavior<Command> onTriggerDatasourcePurge(
