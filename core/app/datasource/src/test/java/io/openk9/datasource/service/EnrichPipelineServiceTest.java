@@ -17,70 +17,130 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EnrichPipelineItem;
-import io.openk9.datasource.model.EnrichPipelineItemKey;
+import io.openk9.datasource.service.util.Tuple2;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-
 @QuarkusTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EnrichPipelineServiceTest {
+
+	public static final String ENRICH_PIPELINE_SERVICE_TEST_NAME = "enrich_pipeline_service_test";
 
 	@Inject
 	EnrichPipelineService enrichPipelineService;
 
+	@Inject
+	EnrichItemService enrichItemService;
+
+	private List<EnrichItem> enrichItems;
 
 	@Test
-	@RunOnVertxContext
-	void should_adds_enrich_items_and_create_pipeline(UniAsserter asserter) {
+	@Order(1)
+	void should_adds_enrich_items_and_create_pipeline() {
 
-		var session = mock(Mutiny.Session.class);
+		var enrichItems = enrichItemService.findAll()
+			.await().indefinitely();
 
-		asserter.assertThat(
-			() -> enrichPipelineService.createWithItems(
-				session, CreateConnection.PIPELINE_WITH_ITEMS_DTO),
-			response -> then(session).should(atLeastOnce())
-				.persist(argThat((EnrichPipeline pipeline) -> {
-						Assertions.assertEquals(
-							CreateConnection.PIPELINE_WITH_ITEMS_DTO.getName(),
-							pipeline.getName()
-						);
+		this.enrichItems = enrichItems;
 
-						var items = pipeline.getEnrichPipelineItems();
+		float weight = 1.0f;
 
-						Assertions.assertEquals(2, items.size());
+		List<PipelineWithItemsDTO.ItemDTO> itemDTOS = new ArrayList<>();
 
-						var orderedItemIds = items
-							.stream()
-							.map(EnrichPipelineItem::getKey)
-							.map(EnrichPipelineItemKey::getEnrichItemId)
-							.toList();
+		for (EnrichItem item : this.enrichItems) {
 
-						Assertions.assertEquals(
-							orderedItemIds,
-							List.of(
-								CreateConnection.FIRST_ITEM_ID,
-								CreateConnection.SECOND_ITEM_ID
-							)
-						);
+			PipelineWithItemsDTO.ItemDTO itemDTO =
+				PipelineWithItemsDTO.ItemDTO.builder()
+					.enrichItemId(item.getId())
+					.weight(weight)
+					.build();
 
-						return true;
-					})
-				)
-		);
+			itemDTOS.add(itemDTO);
+			weight += 1;
+
+		}
+
+		enrichPipelineService.createWithItems(PipelineWithItemsDTO.builder()
+			.name(ENRICH_PIPELINE_SERVICE_TEST_NAME)
+			.items(itemDTOS)
+			.build()
+		).await().indefinitely();
 
 	}
 
+	@Test
+	@Order(2)
+	void should_remove_item_from_pipeline() {
+
+		var enrichPipeline = enrichPipelineService.findByName(
+				"public",
+				ENRICH_PIPELINE_SERVICE_TEST_NAME
+			)
+			.await().indefinitely();
+
+		UniJoin.Builder<Tuple2<EnrichPipeline, EnrichItem>> uniJoin =
+			Uni.join().builder();
+
+		for (EnrichItem enrichItem : this.enrichItems) {
+
+			var removeUni = enrichPipelineService.removeEnrichItem(
+				enrichPipeline.getId(), enrichItem.getId());
+
+			uniJoin.add(removeUni);
+
+		}
+
+		var removedItems = uniJoin.joinAll()
+			.andFailFast()
+			.await()
+			.indefinitely();
+
+		for (Tuple2<EnrichPipeline, EnrichItem> tuple2 : removedItems) {
+
+			Assertions.assertNotNull(tuple2);
+
+		}
+
+		var enrichItems = enrichPipelineService.getEnrichItemsInEnrichPipeline(
+			enrichPipeline.getId()).await().indefinitely();
+
+		Assertions.assertEquals(0, enrichItems.size());
+
+	}
+
+	@Test
+	@Order(3)
+	void should_remove_enrich_pipeline() {
+
+		var enrichPipeline = enrichPipelineService.findByName(
+				"public",
+				ENRICH_PIPELINE_SERVICE_TEST_NAME
+			)
+			.await().indefinitely();
+
+		enrichPipelineService.deleteById(enrichPipeline.getId())
+			.await().indefinitely();
+
+		var removed = enrichPipelineService.findById(enrichPipeline.getId())
+			.await().indefinitely();
+
+		Assertions.assertNull(removed);
+
+	}
 }
