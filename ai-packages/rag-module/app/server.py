@@ -220,7 +220,6 @@ class UserChats(BaseModel):
 async def get_user_chats(
     user_chats: UserChats, request: Request, authorization: str = Header()
 ):
-    print(user_chats)
     user_id = user_chats.userId
     chat_sequence_number = user_chats.chatSequenceNumber
     chats_range = user_chats.range
