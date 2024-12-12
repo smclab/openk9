@@ -192,6 +192,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private ReceiveBuilder<Command> afterSetup() {
 
 		return newReceiveBuilder()
+			.onMessageEquals(WakeUp.INSTANCE, this::onWakeUp)
 			.onMessageEquals(Tick.INSTANCE, this::onTick)
 			.onMessage(WorkStageResponse.class, this::onWorkStageResponse)
 			.onMessage(
@@ -450,6 +451,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onEnqueue(Command command) {
 		this.lag.add(command);
 		log.infof("There are %s commands waiting", lag.size());
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onWakeUp() {
 		return Behaviors.same();
 	}
 
@@ -780,6 +785,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public record GracefulEnd(Scheduler.SchedulerStatus status) implements Command {}
 
 	public record Halt(Exception exception) implements Command {}
+
+	public enum WakeUp implements Command {
+		INSTANCE
+	}
 
 	private enum Setup implements Command {
 		INSTANCE

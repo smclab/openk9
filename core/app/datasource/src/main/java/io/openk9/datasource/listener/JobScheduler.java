@@ -731,7 +731,7 @@ public class JobScheduler {
 			shardingKey.asString()
 		);
 
-		entityRef.tell(new Scheduling.Ingest(new byte[]{}, ctx.getSystem().ignoreRef()));
+		entityRef.tell(Scheduling.WakeUp.INSTANCE);
 	}
 
 	private static Behavior<Command> onTriggerDatasourcePurge(
