@@ -59,7 +59,7 @@ class SearchQuery(BaseModel):
 
 
 @app.post("/api/rag/generate")
-async def rag_generatey(
+async def rag_generate(
     search_query_request: SearchQuery,
     request: Request,
     authorization: Optional[str] = Header(None),
