@@ -207,8 +207,24 @@ async def rag_chat(
     return EventSourceResponse(chain)
 
 
-@app.get("/api/rag/getChats/{user_id}")
-async def get_user_chats(user_id: str, request: Request, authorization: str = Header()):
+class UserChats(BaseModel):
+    """UserChats class model."""
+
+    userId: str
+    chatSequenceNumber: int = 1
+    range: int = 0
+    size: int = 10
+
+
+@app.post("/api/rag/user_chats")
+async def get_user_chats(
+    user_chats: UserChats, request: Request, authorization: str = Header()
+):
+    print(user_chats)
+    user_id = user_chats.userId
+    chat_sequence_number = user_chats.chatSequenceNumber
+    chats_range = user_chats.range
+    chats_size = user_chats.size
     virtual_host = urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
@@ -220,13 +236,13 @@ async def get_user_chats(user_id: str, request: Request, authorization: str = He
     )
 
     query = {
-        "from": 0,
-        "size": 10,
+        "from": chats_range,
+        "size": chats_size,
         "query": {
             "bool": {
                 "must": [
                     {"match": {"user_id.keyword": user_id}},
-                    {"match": {"chat_sequence_number": "1"}},
+                    {"match": {"chat_sequence_number": chat_sequence_number}},
                 ]
             }
         },
