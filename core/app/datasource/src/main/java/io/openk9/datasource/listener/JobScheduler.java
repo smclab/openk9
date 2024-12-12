@@ -728,7 +728,7 @@ public class JobScheduler {
 
 		clusterSharding.entityRefFor(
 			SchedulingEntityType.getTypeKey(shardingKey),
-			shardingKey.toString()
+			shardingKey.asString()
 		);
 	}
 
