@@ -280,8 +280,6 @@ public class EnrichPipeline {
 			})
 			.onMessage(InternalResponseWrapper.class, srw -> {
 
-				JsonObject result = new JsonObject(new String(srw.jsonObject()));
-
 				if (log.isDebugEnabled()) {
 					log.debugf(
 						"[schedulerId: %s, messageNumber: %s] enrichItem %s response is OK.",
@@ -299,10 +297,21 @@ public class EnrichPipeline {
 					}
 				}
 
-				JsonObject newJsonPayload = result.getJsonObject("payload");
+				JsonObject newJsonPayload = null;
 
-				if (newJsonPayload == null) {
-					newJsonPayload = result;
+				try {
+
+					JsonObject result = new JsonObject(new String(srw.jsonObject()));
+					newJsonPayload = result.getJsonObject("payload", result);
+
+				}
+				catch (Exception e) {
+
+					ctx.getSelf().tell(
+						new InternalError(new DataProcessException(e)));
+
+					return Behaviors.same();
+
 				}
 
 				if (newJsonPayload.getBoolean("_openk9SkipDocument", false)) {
@@ -320,11 +329,25 @@ public class EnrichPipeline {
 					return Behaviors.stopped();
 				}
 
-				DataPayload newDataPayload =
-					mergeResponse(
-						jsonPath, behaviorMergeType, dataPayload,
-						newJsonPayload.mapTo(DataPayload.class)
-					);
+				DataPayload newDataPayload = null;
+
+				try {
+
+					newDataPayload =
+						mergeResponse(
+							jsonPath, behaviorMergeType, dataPayload,
+							newJsonPayload.mapTo(DataPayload.class)
+						);
+
+				}
+				catch (Exception e) {
+
+					ctx.getSelf().tell(
+						new InternalError(new DataProcessException(e)));
+
+					return Behaviors.same();
+
+				}
 
 				return initPipeline(
 					ctx,
