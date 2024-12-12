@@ -308,7 +308,7 @@ public class EnrichPipeline {
 				catch (Exception e) {
 
 					ctx.getSelf().tell(
-						new InternalError(new DataProcessException(e)));
+						new EnrichItemError(new DataProcessException(e)));
 
 					return Behaviors.same();
 
@@ -343,7 +343,7 @@ public class EnrichPipeline {
 				catch (Exception e) {
 
 					ctx.getSelf().tell(
-						new InternalError(new DataProcessException(e)));
+						new EnrichItemError(new DataProcessException(e)));
 
 					return Behaviors.same();
 
