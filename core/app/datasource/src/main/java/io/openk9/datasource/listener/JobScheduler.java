@@ -726,10 +726,12 @@ public class JobScheduler {
 
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
-		clusterSharding.entityRefFor(
+		var entityRef = clusterSharding.entityRefFor(
 			SchedulingEntityType.getTypeKey(shardingKey),
 			shardingKey.asString()
 		);
+
+		entityRef.tell(new Scheduling.Ingest(new byte[]{}, ctx.getSystem().ignoreRef()));
 	}
 
 	private static Behavior<Command> onTriggerDatasourcePurge(
