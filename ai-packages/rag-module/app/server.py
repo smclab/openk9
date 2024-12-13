@@ -212,8 +212,8 @@ class UserChats(BaseModel):
 
     userId: str
     chatSequenceNumber: int = 1
-    range: int = 0
-    size: int = 10
+    paginationFrom: int = 0
+    paginationSize: int = 10
 
 
 @app.post("/api/rag/user_chats")
@@ -222,8 +222,8 @@ async def get_user_chats(
 ):
     user_id = user_chats.userId
     chat_sequence_number = user_chats.chatSequenceNumber
-    chats_range = user_chats.range
-    chats_size = user_chats.size
+    pagination_from = user_chats.paginationFrom
+    pagination_size = user_chats.paginationSize
     virtual_host = urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
@@ -235,8 +235,8 @@ async def get_user_chats(
     )
 
     query = {
-        "from": chats_range,
-        "size": chats_size,
+        "from": pagination_from,
+        "size": pagination_size,
         "query": {
             "bool": {
                 "must": [
