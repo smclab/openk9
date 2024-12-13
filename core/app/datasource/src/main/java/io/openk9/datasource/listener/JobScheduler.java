@@ -55,69 +55,55 @@ import java.util.UUID;
 
 public class JobScheduler {
 
+	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
-	public sealed interface Command extends CborSerializable {}
-	public record ScheduleDatasource(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
-	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	private static Behavior<Command> onTriggerDatasourceInternal(
-		TriggerDatasourceInternal triggerDatasourceInternal,
-		ActorContext<Command> ctx) {
+	public static Behavior<Command> create(
+		List<ScheduleDatasource> schedulatedJobs) {
 
-		var throwable = triggerDatasourceInternal.throwable();
-		String tenantId = triggerDatasourceInternal.tenantName();
+		return Behaviors.setup(ctx -> {
 
-		if (throwable != null) {
-			log.errorf(
-				throwable,
-				"error occurred when fetching datasource on tenant %s",
-				tenantId
+			log.info("setup job-scheduler");
+
+			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
+				QuartzSchedulerTypedExtension.get(ctx.getSystem());
+
+			ActorRef<Receptionist.Listing> listingActorRef =
+				ctx.messageAdapter(
+					Receptionist.Listing.class,
+					MessageGatewaySubscription::new
+				);
+
+			ctx
+				.getSystem()
+				.receptionist()
+				.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
+
+			return setup(
+				ctx,
+				quartzSchedulerTypedExtension,
+				new ArrayDeque<>(schedulatedJobs)
 			);
 
-			return Behaviors.same();
-		}
 
-		Datasource datasource = triggerDatasourceInternal.datasource();
-		boolean reindex = triggerDatasourceInternal.reindex();
-		OffsetDateTime offsetDateTime = triggerDatasourceInternal.startIngestionDate();
-
-		PluginDriver pluginDriver = datasource.getPluginDriver();
-
-		log.infof("Job executed: %s", datasource.getName());
-
-		if (pluginDriver == null) {
-			log.warnf(
-				"datasource with id: %s has no pluginDriver", datasource.getId());
-
-			return Behaviors.same();
-		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.getTriggerType(datasource, reindex),
-			(triggerType, t) ->
-				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
-		);
-
-		return Behaviors.same();
+		});
 	}
-	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
-	private record ScheduleDatasourceInternal(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
-	private record UnScheduleJobInternal(String jobName) implements Command {}
-	private static Behavior<Command> onCopyIndexTemplate(
-		ActorContext<Command> ctx, CopyIndexTemplate cit) {
 
-		var scheduler = cit.scheduler();
+	private static String getPurgeCron(ActorContext<?> context) {
+		Config config = context.getSystem().settings().config();
 
-		ctx.pipeToSelf(
-			JobSchedulerService.copyIndexTemplate(scheduler),
-			(ignore, throwable) -> new PersistSchedulerInternal(scheduler, throwable)
-		);
+		String configPath = "io.openk9.scheduling.purge.cron";
 
-		return Behaviors.same();
+		if (config.hasPathOrNull(configPath)) {
+			if (config.getIsNull(configPath)) {
+				return EVERY_DAY_AT_1_AM;
+			} else {
+				return config.getString(configPath);
+			}
+		} else {
+			return EVERY_DAY_AT_1_AM;
+		}
+
 	}
 
 	private static Behavior<Command> initial(
@@ -189,133 +175,81 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onPersistVectorSchedulerInternal(
-		ActorContext<Command> ctx,
-		PersistVectorSchedulerInternal msg) {
+	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
+		return actorRef.path().address().port().isEmpty();
+	}
 
-		Scheduler scheduler = msg.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
+	private static Behavior<Command> onAddDatasource(
+		ScheduleDatasource addDatasource, ActorContext<Command> ctx) {
 
-		Throwable exception = msg.throwable();
+		long datasourceId = addDatasource.datasourceId;
+		String tenantName = addDatasource.tenantName;
 
-		if (exception != null) {
-			log.errorf(
-				exception,
-				"Cannot persist the Vector Scheduler for tenant: %s and datasource: %s",
-				tenantId,
-				datasource
-			);
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId, addDatasource.schedulable,
+				addDatasource.cron
+			)
+		);
 
-			return Behaviors.same();
-		}
+		return Behaviors.same();
+
+	}
+
+	private static Behavior<Command> onCopyIndexTemplate(
+		ActorContext<Command> ctx, CopyIndexTemplate cit) {
+
+		var scheduler = cit.scheduler();
 
 		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantId, scheduler),
-			RegisterVectorQueue::new
+			JobSchedulerService.copyIndexTemplate(scheduler),
+			(ignore, throwable) -> new PersistSchedulerInternal(scheduler, throwable)
 		);
 
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onRegisterVectorQueue(
-		ActorContext<Command> ctx,
-		ActorRef<MessageGateway.Command> messageGateway,
-		RegisterVectorQueue msg) {
+	private static Behavior<Command> onHaltScheduling(
+		ActorContext<Command> ctx, HaltScheduling cs) {
 
-		var scheduler = msg.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
+		Scheduler scheduler = cs.scheduler;
+		var tenantId = scheduler.getTenant();
 
-		messageGateway.tell(new MessageGateway.Register(
-			ShardingKey.asString(
-				tenantId, scheduler.getScheduleId())));
+		var exception = cs.exception;
+
+		String scheduleId = scheduler.getScheduleId();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
+
+		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
+
+		schedulingRef.tell(new Scheduling.Halt(exception));
 
 		return Behaviors.same();
 	}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 
-	private static Behavior<Command> onStartVectorPipeline(
-		ActorContext<Command> ctx,
-		StartVectorPipeline msg) {
+	private static Behavior<Command> onInitialMessageGatewaySubscription(
+		ActorContext<Command> ctx, MessageGatewaySubscription mgs,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		List<String> jobNames) {
 
-		var scheduler = msg.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
+		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.filter(JobScheduler::isLocalActorRef)
+			.findFirst();
 
-		var oldDataIndex = scheduler.getOldDataIndex();
-
-		if (oldDataIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
-				scheduler.getScheduleId()
+		if (actorRefOptional.isPresent()) {
+			return initial(
+				ctx, quartzSchedulerTypedExtension,
+				actorRefOptional.get(), jobNames
 			);
-
-			return Behaviors.same();
 		}
-
-		var vectorIndex = oldDataIndex.getVectorIndex();
-
-		if (vectorIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var scheduleId = scheduler.getScheduleId();
-		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
-
-		var vScheduler = new Scheduler();
-		vScheduler.setScheduleId(vScheduleId);
-		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		vScheduler.setDatasource(datasource);
-		vScheduler.setOldDataIndex(oldDataIndex);
-
-		ctx.pipeToSelf(
-			JobSchedulerService.fetchEmbeddingModel(tenantId),
-			(ignore, throwable) ->
-				new PersistVectorSchedulerInternal(vScheduler, throwable)
-		);
 
 		return Behaviors.same();
+
 	}
-
-	private static Behavior<Command> onStartSchedulingWork(
-		ActorContext<Command> ctx,
-		ActorRef<MessageGateway.Command> messageGateway,
-		StartSchedulingWork rq) {
-
-		var scheduler = rq.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-		var startIngestionDate = rq.startIngestionDate;
-
-		var throwable = rq.throwable();
-
-		if (throwable != null) {
-
-			log.error("Scheduler cannot be persisted.", throwable);
-
-			return Behaviors.same();
-
-		}
-
-		messageGateway.tell(new MessageGateway.Register(
-			ShardingKey.asString(
-				tenantId, scheduler.getScheduleId())));
-
-		ctx.getSelf()
-			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
-
-		return Behaviors.same();
-	}
-
-	private record RegisterVectorQueue(Scheduler scheduler, Throwable throwable)
-		implements Command {}
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
 		InvokePluginDriverInternal ipdi, ActorContext<Command> ctx) {
@@ -365,169 +299,92 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onUnscheduleJobInternal(
-		UnScheduleJobInternal msg, ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGateway,
-		List<String> jobNames) {
+	private static Behavior<Command> onPersistSchedulerInternal(
+		ActorContext<Command> ctx, PersistSchedulerInternal pndi) {
 
-		String jobName = msg.jobName;
+		Scheduler scheduler = pndi.scheduler;
+		var datasource = scheduler.getDatasource();
+		var tenantName = datasource.getTenant();
 
-		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
-			quartzSchedulerTypedExtension);
+		Throwable exception = pndi.throwable();
 
-		if (jobNames.contains(jobName)) {
-			scheduler.deleteJobSchedule(jobName);
-			scheduler.deleteJobSchedule(jobName + "-purge");
-
-			List<String> newJobNames = new ArrayList<>(jobNames);
-			newJobNames.remove(jobName);
-			log.infof("Job removed: %s", jobName);
-
-			return initial(
-				ctx,
-				quartzSchedulerTypedExtension,
-				messageGateway,
-				newJobNames
+		if (exception != null) {
+			log.errorf(
+				exception,
+				"Cannot persist the Scheduler for tenant: %s and datasource: %s",
+				tenantName,
+				datasource
 			);
+
+			return Behaviors.same();
 		}
-
-		log.infof("Job not found: %s", jobName);
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onInitialMessageGatewaySubscription(
-		ActorContext<Command> ctx, MessageGatewaySubscription mgs,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		List<String> jobNames) {
-
-		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
-			.getServiceInstances(MessageGateway.SERVICE_KEY)
-			.stream()
-			.filter(JobScheduler::isLocalActorRef)
-			.findFirst();
-
-		if (actorRefOptional.isPresent()) {
-			return initial(
-				ctx, quartzSchedulerTypedExtension,
-				actorRefOptional.get(), jobNames
-			);
-		}
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onTriggerDatasource(
-		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
-
-		long datasourceId = jobMessage.datasourceId;
-		String tenantId = jobMessage.tenantName;
-		boolean reindex = jobMessage.reindex;
-		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
 
 		ctx.pipeToSelf(
-			JobSchedulerService.fetchDatasourceConnection(
-				tenantId, datasourceId),
-			(datasource, throwable) -> new TriggerDatasourceInternal(
-				tenantId, datasource, reindex, startIngestionDate, throwable)
+			JobSchedulerService.persistScheduler(tenantName, scheduler),
+			(s, throwable) ->
+				new StartSchedulingWork(s,null, throwable)
 		);
 
 		return Behaviors.same();
-
 	}
 
-	public static Behavior<Command> create(
-		List<ScheduleDatasource> schedulatedJobs) {
+	private static Behavior<Command> onPersistVectorSchedulerInternal(
+		ActorContext<Command> ctx,
+		PersistVectorSchedulerInternal msg) {
 
-		return Behaviors.setup(ctx -> {
+		Scheduler scheduler = msg.scheduler;
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
 
-			log.info("setup job-scheduler");
+		Throwable exception = msg.throwable();
 
-			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
-				QuartzSchedulerTypedExtension.get(ctx.getSystem());
-
-			ActorRef<Receptionist.Listing> listingActorRef =
-				ctx.messageAdapter(
-					Receptionist.Listing.class,
-					MessageGatewaySubscription::new
-				);
-
-			ctx
-				.getSystem()
-				.receptionist()
-				.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
-
-			return setup(
-				ctx,
-				quartzSchedulerTypedExtension,
-				new ArrayDeque<>(schedulatedJobs)
+		if (exception != null) {
+			log.errorf(
+				exception,
+				"Cannot persist the Vector Scheduler for tenant: %s and datasource: %s",
+				tenantId,
+				datasource
 			);
 
+			return Behaviors.same();
+		}
 
-		});
-	}
-
-	private static Behavior<Command> setup(
-		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		Queue<Command> lag) {
-
-		return Behaviors
-			.receive(Command.class)
-			.onMessage(MessageGatewaySubscription.class,
-				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
-			.onMessage(Start.class, start -> {
-				Command command = lag.poll();
-
-				while (command != null) {
-					ctx.getSelf().tell(command);
-					command = lag.poll();
-				}
-
-				return initial(
-					ctx,
-					quartzSchedulerTypedExtension,
-					start.channelManagerRef,
-					new ArrayList<>()
-				);
-			})
-			.onAnyMessage(command -> {
-				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
-				newLag.add(command);
-
-				if (log.isDebugEnabled()) {
-					log.debugf("there are %d commands waiting...", newLag.size());
-				}
-
-				return setup(
-					ctx,
-					quartzSchedulerTypedExtension,
-					newLag
-				);
-			})
-			.build();
-	}
-
-	private static Behavior<Command> onHaltScheduling(
-		ActorContext<Command> ctx, HaltScheduling cs) {
-
-		Scheduler scheduler = cs.scheduler;
-		var tenantId = scheduler.getTenant();
-
-		var exception = cs.exception;
-
-		String scheduleId = scheduler.getScheduleId();
-
-		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
-
-		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
-
-		schedulingRef.tell(new Scheduling.Halt(exception));
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantId, scheduler),
+			RegisterVectorQueue::new
+		);
 
 		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onRegisterVectorQueue(
+		ActorContext<Command> ctx,
+		ActorRef<MessageGateway.Command> messageGateway,
+		RegisterVectorQueue msg) {
+
+		var scheduler = msg.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+
+		messageGateway.tell(new MessageGateway.Register(
+			ShardingKey.asString(
+				tenantId, scheduler.getScheduleId())));
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onRemoveDatasource(
+		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx) {
+
+		long datasourceId = removeDatasource.datasourceId;
+		String tenantName = removeDatasource.tenantName;
+
+		String jobName = tenantName + "-" + datasourceId;
+
+		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
+
+		return Behaviors.same();
+
 	}
 
 	private static Behavior<Command> onScheduleDatasourceInternal(
@@ -717,6 +574,228 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
+	private static Behavior<Command> onStartSchedulingWork(
+		ActorContext<Command> ctx,
+		ActorRef<MessageGateway.Command> messageGateway,
+		StartSchedulingWork rq) {
+
+		var scheduler = rq.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+		var startIngestionDate = rq.startIngestionDate;
+
+		var throwable = rq.throwable();
+
+		if (throwable != null) {
+
+			log.error("Scheduler cannot be persisted.", throwable);
+
+			return Behaviors.same();
+
+		}
+
+		messageGateway.tell(new MessageGateway.Register(
+			ShardingKey.asString(
+				tenantId, scheduler.getScheduleId())));
+
+		ctx.getSelf()
+			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onStartVectorPipeline(
+		ActorContext<Command> ctx,
+		StartVectorPipeline msg) {
+
+		var scheduler = msg.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+
+		var oldDataIndex = scheduler.getOldDataIndex();
+
+		if (oldDataIndex == null) {
+			log.infof(
+				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
+				scheduler.getScheduleId()
+			);
+
+			return Behaviors.same();
+		}
+
+		var vectorIndex = oldDataIndex.getVectorIndex();
+
+		if (vectorIndex == null) {
+			log.infof(
+				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
+				scheduler.getScheduleId()
+			);
+
+			return Behaviors.same();
+		}
+
+		var scheduleId = scheduler.getScheduleId();
+		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
+
+		var vScheduler = new Scheduler();
+		vScheduler.setScheduleId(vScheduleId);
+		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+		vScheduler.setDatasource(datasource);
+		vScheduler.setOldDataIndex(oldDataIndex);
+
+		ctx.pipeToSelf(
+			JobSchedulerService.fetchEmbeddingModel(tenantId),
+			(ignore, throwable) ->
+				new PersistVectorSchedulerInternal(vScheduler, throwable)
+		);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onTriggerDatasource(
+		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
+
+		long datasourceId = jobMessage.datasourceId;
+		String tenantId = jobMessage.tenantName;
+		boolean reindex = jobMessage.reindex;
+		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
+
+		ctx.pipeToSelf(
+			JobSchedulerService.fetchDatasourceConnection(
+				tenantId, datasourceId),
+			(datasource, throwable) -> new TriggerDatasourceInternal(
+				tenantId, datasource, reindex, startIngestionDate, throwable)
+		);
+
+		return Behaviors.same();
+
+	}
+
+	private static Behavior<Command> onTriggerDatasourceInternal(
+		TriggerDatasourceInternal triggerDatasourceInternal,
+		ActorContext<Command> ctx) {
+
+		var throwable = triggerDatasourceInternal.throwable();
+		String tenantId = triggerDatasourceInternal.tenantName();
+
+		if (throwable != null) {
+			log.errorf(
+				throwable,
+				"error occurred when fetching datasource on tenant %s",
+				tenantId
+			);
+
+			return Behaviors.same();
+		}
+
+		Datasource datasource = triggerDatasourceInternal.datasource();
+		boolean reindex = triggerDatasourceInternal.reindex();
+		OffsetDateTime offsetDateTime = triggerDatasourceInternal.startIngestionDate();
+
+		PluginDriver pluginDriver = datasource.getPluginDriver();
+
+		log.infof("Job executed: %s", datasource.getName());
+
+		if (pluginDriver == null) {
+			log.warnf(
+				"datasource with id: %s has no pluginDriver", datasource.getId());
+
+			return Behaviors.same();
+		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.getTriggerType(datasource, reindex),
+			(triggerType, t) ->
+				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
+		);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onTriggerDatasourcePurge(
+		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
+
+		String tenantName = tdp.tenantName();
+		long datasourceId = tdp.datasourceId;
+
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onUnscheduleJobInternal(
+		UnScheduleJobInternal msg, ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		String jobName = msg.jobName;
+
+		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension);
+
+		if (jobNames.contains(jobName)) {
+			scheduler.deleteJobSchedule(jobName);
+			scheduler.deleteJobSchedule(jobName + "-purge");
+
+			List<String> newJobNames = new ArrayList<>(jobNames);
+			newJobNames.remove(jobName);
+			log.infof("Job removed: %s", jobName);
+
+			return initial(
+				ctx,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				newJobNames
+			);
+		}
+
+		log.infof("Job not found: %s", jobName);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> setup(
+		ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		Queue<Command> lag) {
+
+		return Behaviors
+			.receive(Command.class)
+			.onMessage(MessageGatewaySubscription.class,
+				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
+			.onMessage(Start.class, start -> {
+				Command command = lag.poll();
+
+				while (command != null) {
+					ctx.getSelf().tell(command);
+					command = lag.poll();
+				}
+
+				return initial(
+					ctx,
+					quartzSchedulerTypedExtension,
+					start.channelManagerRef,
+					new ArrayList<>()
+				);
+			})
+			.onAnyMessage(command -> {
+				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
+				newLag.add(command);
+
+				if (log.isDebugEnabled()) {
+					log.debugf("there are %d commands waiting...", newLag.size());
+				}
+
+				return setup(
+					ctx,
+					quartzSchedulerTypedExtension,
+					newLag
+				);
+			})
+			.build();
+	}
+
 	private static void startSchedulingActor(
 			ActorContext<Command> ctx, String tenantName, String scheduleId) {
 
@@ -734,138 +813,67 @@ public class JobScheduler {
 		entityRef.tell(Scheduling.WakeUp.INSTANCE);
 	}
 
-	private static Behavior<Command> onTriggerDatasourcePurge(
-		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
+	public sealed interface Command extends CborSerializable {}
 
-		String tenantName = tdp.tenantName();
-		long datasourceId = tdp.datasourceId;
-
-		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
-
-		return Behaviors.same();
-	}
+	public record ScheduleDatasource(
+		String tenantName, long datasourceId, boolean schedulable, String cron
+	) implements Command {}
 
 	public record TriggerDatasource(
 		String tenantName, long datasourceId, boolean reindex, OffsetDateTime startIngestionDate
 	) implements Command {}
 
-	private static Behavior<Command> onPersistSchedulerInternal(
-		ActorContext<Command> ctx, PersistSchedulerInternal pndi) {
+	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
 
-		Scheduler scheduler = pndi.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantName = datasource.getTenant();
-
-		Throwable exception = pndi.throwable();
-
-		if (exception != null) {
-			log.errorf(
-				exception,
-				"Cannot persist the Scheduler for tenant: %s and datasource: %s",
-				tenantName,
-				datasource
-			);
-
-			return Behaviors.same();
-		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantName, scheduler),
-			(s, throwable) ->
-				new StartSchedulingWork(s,null, throwable)
-		);
-
-		return Behaviors.same();
-	}
-
-	private record TriggerDatasourceInternal(
-		String tenantName, Datasource datasource, Boolean reindex,
-		OffsetDateTime startIngestionDate, Throwable throwable
-	) implements Command {}
-
-	private record InvokePluginDriverInternal(
-		Scheduler scheduler, OffsetDateTime startIngestionDate
-	) implements Command {}
-
-	private static Behavior<Command> onRemoveDatasource(
-		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx) {
-
-		long datasourceId = removeDatasource.datasourceId;
-		String tenantName = removeDatasource.tenantName;
-
-		String jobName = tenantName + "-" + datasourceId;
-
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onAddDatasource(
-		ScheduleDatasource addDatasource, ActorContext<Command> ctx) {
-
-		long datasourceId = addDatasource.datasourceId;
-		String tenantName = addDatasource.tenantName;
-
-		ctx.getSelf().tell(
-			new ScheduleDatasourceInternal(
-				tenantName, datasourceId, addDatasource.schedulable,
-				addDatasource.cron
-			)
-		);
-
-		return Behaviors.same();
-
-	}
-
-	private record StartSchedulerInternal(
-		Datasource datasource, OffsetDateTime startIngestionDate, TriggerType triggerType,
-		Throwable throwable
-	) implements Command {}
+	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
 	private record CopyIndexTemplate(Scheduler scheduler) implements Command {}
-
-	private record PersistSchedulerInternal(
-		Scheduler scheduler, Throwable throwable
-	) implements Command {}
-
-	private record StartVectorPipeline(Scheduler scheduler) implements Command {}
 
 	private record HaltScheduling(
 		Scheduler scheduler,
 		InvokePluginDriverException exception
 	) implements Command {}
 
-	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
-		return actorRef.path().address().port().isEmpty();
-	}
+	private record InvokePluginDriverInternal(
+		Scheduler scheduler, OffsetDateTime startIngestionDate
+	) implements Command {}
 
-	private static String getPurgeCron(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
-		String configPath = "io.openk9.scheduling.purge.cron";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return EVERY_DAY_AT_1_AM;
-			} else {
-				return config.getString(configPath);
-			}
-		} else {
-			return EVERY_DAY_AT_1_AM;
-		}
-
-	}
-
-	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
-
-	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
-		Throwable throwable
+	private record PersistSchedulerInternal(
+		Scheduler scheduler, Throwable throwable
 	) implements Command {}
 
 	private record PersistVectorSchedulerInternal(
 		Scheduler scheduler, Throwable throwable
 	)
 		implements Command {}
+
+	private record RegisterVectorQueue(Scheduler scheduler, Throwable throwable)
+		implements Command {}
+
+	private record ScheduleDatasourceInternal(
+		String tenantName, long datasourceId, boolean schedulable, String cron
+	) implements Command {}
+
+	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
+
+	private record StartSchedulerInternal(
+		Datasource datasource, OffsetDateTime startIngestionDate, TriggerType triggerType,
+		Throwable throwable
+	) implements Command {}
+
+	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
+		Throwable throwable
+	) implements Command {}
+
+	private record StartVectorPipeline(Scheduler scheduler) implements Command {}
+
+	private record TriggerDatasourceInternal(
+		String tenantName, Datasource datasource, Boolean reindex,
+		OffsetDateTime startIngestionDate, Throwable throwable
+	) implements Command {}
+
+	private record UnScheduleJobInternal(String jobName) implements Command {}
 
 }
