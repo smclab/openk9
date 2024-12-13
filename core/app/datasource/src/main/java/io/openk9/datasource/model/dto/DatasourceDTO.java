@@ -51,6 +51,7 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
 
+	@Deprecated
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@NotNull
 	private int reindexRate;

@@ -349,10 +349,7 @@ public class JobSchedulerService {
 							: TriggerType.TRIGGER);
 					}
 					else {
-						return isReindexRequest(s, datasource.getId())
-							.map(isReindex -> isReindex
-								? TriggerType.REINDEX
-								: TriggerType.TRIGGER);
+						return Uni.createFrom().item(TriggerType.TRIGGER);
 					}
 
 				})
@@ -375,21 +372,6 @@ public class JobSchedulerService {
 				newDataIndex.setDocTypes(refreshed);
 			}
 		}
-	}
-
-	private static Uni<Boolean> isReindexRequest(Mutiny.Session s, long datasourceId) {
-		return s.createQuery(
-				"select case " +
-				"	when d.reindexRate > 0 then mod(count(s.id), d.reindexRate) " +
-				"	else -1 " +
-				"end " +
-				"from Scheduler s " +
-				"join s.datasource d " +
-				"where d.id = :datasourceId " +
-				"group by d.id, d.reindexRate", Integer.class)
-			.setParameter("datasourceId", datasourceId)
-			.getSingleResult()
-			.map(integer -> integer.equals(0));
 	}
 
 	private record FetchDatasourceConnectionRequest(

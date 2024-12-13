@@ -136,6 +136,7 @@ public class Datasource extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Deprecated
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@Column(name = "reindex_rate")
 	private int reindexRate = 0;
