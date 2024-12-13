@@ -317,6 +317,7 @@ def get_chat_chain(
 
     result_answer = ""
     documents = []
+    documents_id = set()
     citations = []
 
     for chunk in result:
@@ -325,7 +326,11 @@ def get_chat_chain(
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
         if "context" in chunk.keys():
             for element in chunk["context"]:
-                documents.append(element.dict())
+                document = element.dict()
+                document_id = document["metadata"]["document_id"]
+                if document_id not in documents_id:
+                    documents_id.add(document_id)
+                    documents.append(document)
         if (
             retrieve_citations
             and model_type != ModelType.HUGGING_FACE_CUSTOM.value
