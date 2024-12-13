@@ -105,6 +105,8 @@ def get_chain(
         rephrase_chain = rephrase_prompt | llm | parser
         question = rephrase_chain.invoke({"question": question})
 
+    yield json.dumps({"chunk": "", "type": "START"})
+
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
@@ -319,6 +321,8 @@ def get_chat_chain(
     documents = []
     documents_id = set()
     citations = []
+
+    yield json.dumps({"chunk": "", "type": "START"})
 
     for chunk in result:
         if "answer" in chunk.keys():
