@@ -136,6 +136,15 @@ public class Datasource extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Description("If true set datasource as reindexable")
+	@Column(name = "reindexable", nullable = false)
+	private Boolean reindexable = false;
+
+	@Description("Chron quartz expression to define reindexing of datasource")
+	@Column(name = "reindexing", nullable = false)
+	@Cron(type = CronType.QUARTZ)
+	private String reindexing;
+
 	@Deprecated
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@Column(name = "reindex_rate")
