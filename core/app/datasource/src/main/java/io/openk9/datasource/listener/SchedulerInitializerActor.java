@@ -42,10 +42,12 @@ public class SchedulerInitializerActor {
 	}
 
 	public Uni<Void> scheduleDataSource(
-		String tenantName, long datasourceId, boolean schedulable, String cron) {
+		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
+		boolean reindexable, String reindexingCron) {
 
 		return getScheduleRef(() ->
-			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
+			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable,
+				schedulingCron, reindexable, reindexingCron));
 	}
 
 	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {

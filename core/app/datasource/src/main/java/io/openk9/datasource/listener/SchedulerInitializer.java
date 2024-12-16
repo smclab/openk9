@@ -118,7 +118,9 @@ public class SchedulerInitializer {
 			datasource.getTenant(),
 			datasource.getId(),
 			datasource.getSchedulable(),
-			datasource.getScheduling()
+			datasource.getScheduling(),
+			datasource.getReindexable(),
+			datasource.getReindexing()
 		);
 
 	}
@@ -193,7 +195,9 @@ public class SchedulerInitializer {
 			datasource.getTenant(),
 			datasource.getId(),
 			datasource.getSchedulable(),
-			datasource.getScheduling());
+			datasource.getScheduling(),
+			datasource.getReindexable(),
+			datasource.getReindexing());
 	}
 
 	private Uni<? extends List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(

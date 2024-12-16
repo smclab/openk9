@@ -135,6 +135,15 @@ public class JobScheduler {
 				)
 			)
 			.onMessage(
+				ScheduleReindexDatasourceInternal.class,
+				srdi -> onScheduleReindexDatasourceInternal(srdi,
+					ctx,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
 				UnScheduleJobInternal.class,
 				rd -> onUnscheduleJobInternal(rd,
 					ctx,
@@ -187,8 +196,17 @@ public class JobScheduler {
 
 		ctx.getSelf().tell(
 			new ScheduleDatasourceInternal(
-				tenantName, datasourceId, addDatasource.schedulable,
-				addDatasource.cron
+				tenantName, datasourceId,
+				addDatasource.schedulable,
+				addDatasource.schedulingCron
+			)
+		);
+
+		ctx.getSelf().tell(
+			new ScheduleReindexDatasourceInternal(
+				tenantName, datasourceId,
+				addDatasource.reindexable,
+				addDatasource.reindexingCron
 			)
 		);
 
@@ -479,6 +497,77 @@ public class JobScheduler {
 
 	}
 
+	private static Behavior<Command> onScheduleReindexDatasourceInternal(
+		ScheduleReindexDatasourceInternal scheduleReindexDatasourceInternal,
+		ActorContext<Command> ctx,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
+
+		String tenantName = scheduleReindexDatasourceInternal.tenantName();
+		long datasourceId = scheduleReindexDatasourceInternal.datasourceId();
+		String cron = scheduleReindexDatasourceInternal.cron();
+		boolean reindexable = scheduleReindexDatasourceInternal.reindexable();
+
+		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension).defaultTimezone();
+
+		String jobName = tenantName + "-" + datasourceId + "-reindex";
+
+		if (reindexable) {
+
+			if (jobNames.contains(jobName)) {
+
+				quartzSchedulerTypedExtension.updateTypedJobSchedule(
+					jobName,
+					ctx.getSelf(),
+					new TriggerDatasource(tenantName, datasourceId, true, null),
+					Option.empty(),
+					cron,
+					Option.empty(),
+					defaultTimezone
+				);
+
+				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
+
+				return Behaviors.same();
+			}
+			else {
+
+				quartzSchedulerTypedExtension.createTypedJobSchedule(
+					jobName,
+					ctx.getSelf(),
+					new TriggerDatasource(tenantName, datasourceId, true, null),
+					Option.empty(),
+					cron,
+					Option.empty(),
+					defaultTimezone
+				);
+
+				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
+
+				List<String> newJobNames = new ArrayList<>(jobNames);
+
+				newJobNames.add(jobName);
+
+				return initial(
+					ctx, quartzSchedulerTypedExtension,
+					messageGatewayService, newJobNames
+				);
+
+			}
+		}
+		else if (jobNames.contains(jobName)) {
+			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
+			log.infof("job is not schedulable, removing job: %s", jobName);
+			return Behaviors.same();
+		}
+
+		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
+
+		return Behaviors.same();
+
+	}
+
 	private static Behavior<Command> onSetupMessageGatewaySubscription(
 		ActorContext<Command> ctx, MessageGatewaySubscription mgs) {
 
@@ -730,17 +819,37 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		String jobName = msg.jobName;
+		String reindexJobName = jobName + "-reindex";
 
 		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension);
 
-		if (jobNames.contains(jobName)) {
-			scheduler.deleteJobSchedule(jobName);
-			scheduler.deleteJobSchedule(jobName + "-purge");
+		if (jobNames.contains(jobName) || jobNames.contains(reindexJobName)) {
 
 			List<String> newJobNames = new ArrayList<>(jobNames);
-			newJobNames.remove(jobName);
-			log.infof("Job removed: %s", jobName);
+
+			//Removes trigger and purge schedule job
+			if (jobNames.contains(jobName)) {
+				scheduler.deleteJobSchedule(jobName);
+				scheduler.deleteJobSchedule(jobName + "-purge");
+
+				newJobNames.remove(jobName);
+				log.infof("Job removed: %s", jobName);
+			}
+			else {
+				log.infof("Job not found: %s", jobName);
+			}
+
+			//Removes reindex schedule job
+			if (jobNames.contains(reindexJobName)) {
+				scheduler.deleteJobSchedule(reindexJobName);
+
+				newJobNames.remove(jobName);
+				log.infof("Job removed: %s", reindexJobName);
+			}
+			else {
+				log.infof("Job not found: %s", reindexJobName);
+			}
 
 			return initial(
 				ctx,
@@ -750,7 +859,7 @@ public class JobScheduler {
 			);
 		}
 
-		log.infof("Job not found: %s", jobName);
+		log.infof("Job not found: %s, %s", jobName, reindexJobName);
 
 		return Behaviors.same();
 	}
@@ -816,7 +925,8 @@ public class JobScheduler {
 	public sealed interface Command extends CborSerializable {}
 
 	public record ScheduleDatasource(
-		String tenantName, long datasourceId, boolean schedulable, String cron
+		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
+		boolean reindexable, String reindexingCron
 	) implements Command {}
 
 	public record TriggerDatasource(
@@ -854,6 +964,10 @@ public class JobScheduler {
 
 	private record ScheduleDatasourceInternal(
 		String tenantName, long datasourceId, boolean schedulable, String cron
+	) implements Command {}
+
+	private record ScheduleReindexDatasourceInternal(
+		String tenantName, long datasourceId, boolean reindexable, String cron
 	) implements Command {}
 
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
