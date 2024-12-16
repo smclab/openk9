@@ -324,8 +324,8 @@ def get_chat_chain(
 
     for chunk in result:
         if "answer" in chunk.keys() and result_answer == "":
-            yield json.dumps({"chunk": "", "type": "START"})
             result_answer += chunk
+            yield json.dumps({"chunk": "", "type": "START"})
         elif "answer" in chunk.keys():
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
