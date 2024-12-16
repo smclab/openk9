@@ -323,20 +323,20 @@ def get_chat_chain(
     citations = []
 
     for chunk in result:
-        if "answer" in chunk.keys():
-            if result_answer == "":
-                yield json.dumps({"chunk": "", "type": "START"})
-
+        if "answer" in chunk.keys() and result_answer == "":
+            yield json.dumps({"chunk": "", "type": "START"})
+            result_answer += chunk
+        elif "answer" in chunk.keys():
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
-        if "context" in chunk.keys():
+        elif "context" in chunk.keys():
             for element in chunk["context"]:
                 document = element.dict()
                 document_id = document["metadata"]["document_id"]
                 if document_id not in documents_id:
                     documents_id.add(document_id)
                     documents.append(document)
-        if (
+        elif (
             retrieve_citations
             and model_type != ModelType.HUGGING_FACE_CUSTOM.value
             and "annotations" in chunk.keys()
