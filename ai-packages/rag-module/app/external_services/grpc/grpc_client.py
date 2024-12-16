@@ -77,11 +77,11 @@ def get_llm_configuration(grpc_host, virtual_host):
     api_url = response.apiUrl
     api_key = response.apiKey
     json_config = json_format.MessageToDict(response.jsonConfig)
-    model_type = json_config["type"]
-    model = json_config["model"]
-    prompt = json_config["prompt"]
-    rephrase_prompt = json_config["rephrase_prompt"]
-    context_window = json_config["context_window"]
+    model_type = json_config.get("type")
+    model = json_config.get("model")
+    prompt = json_config.get("prompt")
+    rephrase_prompt = json_config.get("rephrase_prompt")
+    context_window = json_config.get("context_window")
     retrieve_type = response.retrieveType
 
     configuration = {
