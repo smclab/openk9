@@ -322,10 +322,11 @@ def get_chat_chain(
     documents_id = set()
     citations = []
 
-    yield json.dumps({"chunk": "", "type": "START"})
-
     for chunk in result:
         if "answer" in chunk.keys():
+            if result_answer == "":
+                yield json.dumps({"chunk": "", "type": "START"})
+
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
         if "context" in chunk.keys():
