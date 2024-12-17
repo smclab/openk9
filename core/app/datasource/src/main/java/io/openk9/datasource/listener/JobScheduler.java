@@ -563,11 +563,11 @@ public class JobScheduler {
 		}
 		else if (jobNames.contains(jobName)) {
 			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-			log.infof("job is not schedulable, removing job: %s", jobName);
+			log.infof("Reindex job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
 
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
+		log.infof("Reindex job not created: datasourceId: %s, the datasource is not reindexable", datasourceId);
 
 		return Behaviors.same();
 
@@ -631,8 +631,6 @@ public class JobScheduler {
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
-		startSchedulingActor(ctx, tenantName, scheduleId);
-
 		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
 
 		if (oldDataIndex == null || reindex) {
@@ -687,6 +685,8 @@ public class JobScheduler {
 			return Behaviors.same();
 
 		}
+
+		startSchedulingActor(ctx, tenantId, scheduler.getScheduleId());
 
 		messageGateway.tell(new MessageGateway.Register(
 			ShardingKey.asString(
