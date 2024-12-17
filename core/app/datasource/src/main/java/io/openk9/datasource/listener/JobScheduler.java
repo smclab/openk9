@@ -56,6 +56,8 @@ import java.util.UUID;
 public class JobScheduler {
 
 	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
+	private static final String PURGE_SUFFIX = "-purge";
+	private static final String REINDEX_SUFFIX = "-reindex";
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
 	public static Behavior<Command> create(
@@ -400,6 +402,8 @@ public class JobScheduler {
 		String jobName = tenantName + "-" + datasourceId;
 
 		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
+		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
+		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + REINDEX_SUFFIX));
 
 		return Behaviors.same();
 
@@ -436,7 +440,7 @@ public class JobScheduler {
 				);
 
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName + "-purge",
+					jobName + PURGE_SUFFIX,
 					ctx.getSelf(),
 					new TriggerDatasourcePurge(tenantName, datasourceId),
 					Option.empty(),
@@ -462,7 +466,7 @@ public class JobScheduler {
 				);
 
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName + "-purge",
+					jobName + PURGE_SUFFIX,
 					ctx.getSelf(),
 					new TriggerDatasourcePurge(tenantName, datasourceId),
 					Option.empty(),
@@ -486,7 +490,8 @@ public class JobScheduler {
 			}
 		}
 		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
+			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
+			ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
 			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
@@ -511,7 +516,7 @@ public class JobScheduler {
 		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension).defaultTimezone();
 
-		String jobName = tenantName + "-" + datasourceId + "-reindex";
+		String jobName = tenantName + "-" + datasourceId + REINDEX_SUFFIX;
 
 		if (reindexable) {
 
@@ -557,7 +562,7 @@ public class JobScheduler {
 			}
 		}
 		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
+			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
 			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
@@ -819,37 +824,16 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		String jobName = msg.jobName;
-		String reindexJobName = jobName + "-reindex";
 
 		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension);
 
-		if (jobNames.contains(jobName) || jobNames.contains(reindexJobName)) {
+		if (jobNames.contains(jobName)) {
+			scheduler.deleteJobSchedule(jobName);
 
 			List<String> newJobNames = new ArrayList<>(jobNames);
-
-			//Removes trigger and purge schedule job
-			if (jobNames.contains(jobName)) {
-				scheduler.deleteJobSchedule(jobName);
-				scheduler.deleteJobSchedule(jobName + "-purge");
-
-				newJobNames.remove(jobName);
-				log.infof("Job removed: %s", jobName);
-			}
-			else {
-				log.infof("Job not found: %s", jobName);
-			}
-
-			//Removes reindex schedule job
-			if (jobNames.contains(reindexJobName)) {
-				scheduler.deleteJobSchedule(reindexJobName);
-
-				newJobNames.remove(jobName);
-				log.infof("Job removed: %s", reindexJobName);
-			}
-			else {
-				log.infof("Job not found: %s", reindexJobName);
-			}
+			newJobNames.remove(jobName);
+			log.infof("Job removed: %s", jobName);
 
 			return initial(
 				ctx,
@@ -859,7 +843,7 @@ public class JobScheduler {
 			);
 		}
 
-		log.infof("Job not found: %s, %s", jobName, reindexJobName);
+		log.infof("Job not found: %s", jobName);
 
 		return Behaviors.same();
 	}
