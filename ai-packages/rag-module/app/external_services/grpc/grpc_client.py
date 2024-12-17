@@ -29,14 +29,7 @@ def query_parser(
 
     search_query_to_proto_list = []
     for query in search_query:
-        search_query_to_proto = SearchTokenRequest()
-        search_query_to_proto.tokenType = query.tokenType
-        search_query_to_proto.keywordKey = query.keywordKey
-        search_query_to_proto.values.extend(query.values)
-        search_query_to_proto.filter = query.filter
-        search_query_to_proto.entityType = query.entityType
-        search_query_to_proto.entityName = query.entityName
-        search_query_to_proto.extra.update(query.extra)
+        search_query_to_proto = ParseDict(query, SearchTokenRequest())
         search_query_to_proto_list.append(search_query_to_proto)
 
     for option in extra:
