@@ -17,7 +17,6 @@ HYBRID_RETRIEVE_TYPE = "HYBRID"
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
-    search_query: list
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
@@ -40,21 +39,17 @@ class OpenSearchRetriever(BaseRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
-        search_query = (
-            self.search_query
-            if self.search_query
-            else [
-                {
-                    "entityType": "",
-                    "entityName": "",
-                    "tokenType": self.retrieve_type,
-                    "keywordKey": None,
-                    "values": [query],
-                    "extra": {},
-                    "filter": True,
-                }
-            ]
-        )
+        search_query = [
+            {
+                "entityType": "",
+                "entityName": "",
+                "tokenType": self.retrieve_type,
+                "keywordKey": "",
+                "values": [query],
+                "extra": {},
+                "filter": True,
+            }
+        ]
         query_data = query_parser(
             search_query=search_query,
             range_values=self.range_values,
@@ -72,9 +67,10 @@ class OpenSearchRetriever(BaseRetriever):
         )
         query = query_data.query
         index_name = list(query_data.indexName)
-        query_parameters = query_data.queryParameters
         params = (
-            query_parameters if self.retrieve_type == HYBRID_RETRIEVE_TYPE else None
+            dict(query_data.queryParameters)
+            if self.retrieve_type == HYBRID_RETRIEVE_TYPE
+            else None
         )
 
         documents = []
@@ -86,7 +82,11 @@ class OpenSearchRetriever(BaseRetriever):
 
             total_tokens = 0
 
-            response = client.search(body=query, index=index_name, params=params)
+            response = client.search(
+                body=query,
+                index=index_name,
+                params=params,
+            )
 
             for row in response["hits"]["hits"]:
                 if self.vector_indices:
