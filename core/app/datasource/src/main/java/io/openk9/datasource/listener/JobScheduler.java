@@ -653,15 +653,12 @@ public class JobScheduler {
 				}
 			}
 		}
-		else {
 
-			ctx.pipeToSelf(
-				JobSchedulerService.persistScheduler(tenantName, scheduler),
-				(response, throwable) ->
-					new StartSchedulingWork(scheduler, startIngestionDate, throwable)
-			);
-
-		}
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantName, scheduler),
+			(response, throwable) ->
+				new StartSchedulingWork(scheduler, startIngestionDate, throwable)
+		);
 
 		return Behaviors.same();
 	}
