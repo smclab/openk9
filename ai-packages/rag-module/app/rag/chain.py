@@ -29,7 +29,6 @@ class ModelType(Enum):
 
 
 def get_chain(
-    search_query,
     range_values,
     after_key,
     suggest_keyword,
@@ -63,7 +62,6 @@ def get_chain(
     retrieve_type = configuration["retrieve_type"]
 
     retriever = OpenSearchRetriever(
-        search_query=search_query,
         search_text=question,
         rerank=rerank,
         reranker_api_url=reranker_api_url,
@@ -143,7 +141,6 @@ class Citations(BaseModel):
 
 
 def get_chat_chain(
-    search_query,
     range_values,
     after_key,
     suggest_keyword,
@@ -185,7 +182,6 @@ def get_chat_chain(
     )
 
     retriever = OpenSearchRetriever(
-        search_query=search_query,
         search_text=search_text,
         rerank=rerank,
         reranker_api_url=reranker_api_url,

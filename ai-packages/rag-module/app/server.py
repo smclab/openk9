@@ -41,22 +41,9 @@ async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 
-class SearchToken(BaseModel):
-    """SearchToken class model."""
-
-    tokenType: str
-    keywordKey: Optional[str] = ""
-    values: list[str]
-    filter: Optional[bool] = False
-    entityType: Optional[str] = ""
-    entityName: Optional[str] = ""
-    extra: Optional[dict[str, str]] = {}
-
-
 class SearchQuery(BaseModel):
     """SearchQuery class model."""
 
-    searchQuery: list[SearchToken]
     range: list
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
@@ -79,7 +66,6 @@ async def rag_generatey(
     openk9_acl: Optional[list[str]] = Header(None),
 ):
     """Definition of /api/rag/generate api."""
-    search_query = search_query_request.searchQuery
     range_values = search_query_request.range
     after_key = search_query_request.afterKey
     suggest_keyword = search_query_request.suggestKeyword
@@ -102,7 +88,6 @@ async def rag_generatey(
         unauthorized_response()
 
     chain = get_chain(
-        search_query,
         range_values,
         after_key,
         suggest_keyword,
@@ -128,7 +113,6 @@ class SearchQueryChat(BaseModel):
     """SearchQueryChat class model."""
 
     chatId: Optional[str] = None
-    searchQuery: list[SearchToken]
     range: Optional[list] = [0, 5]
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
@@ -155,7 +139,6 @@ async def rag_chat(
 ):
     """Definition of /api/rag/chat api."""
     chat_id = search_query_chat.chatId
-    search_query = search_query_chat.searchQuery
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
@@ -181,7 +164,6 @@ async def rag_chat(
         unauthorized_response()
 
     chain = get_chat_chain(
-        search_query,
         range_values,
         after_key,
         suggest_keyword,
