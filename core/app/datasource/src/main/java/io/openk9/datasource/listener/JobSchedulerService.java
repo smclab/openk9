@@ -26,6 +26,7 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.openk9.datasource.service.SchedulerService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -81,6 +82,9 @@ public class JobSchedulerService {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+
+	@Inject
+	SchedulerService schedulerService;
 
 	public static CompletableFuture<Void> callHttpPluginDriverClient(
 		Scheduler scheduler,
@@ -333,14 +337,29 @@ public class JobSchedulerService {
 
 					if (scheduler != null) {
 
-						log.warnf(
-							"A Scheduler with id %s for datasource %s is %s",
-							scheduler.getId(),
-							datasource.getId(),
-							scheduler.getStatus()
-						);
+						if (reindex) {
+							schedulerService.cancelScheduling(tenantId, scheduler.getId());
 
-						return Uni.createFrom().item(TriggerType.IGNORE);
+							log.warnf(
+								"Trying to cancel the Scheduler with id %s for datasource %s" +
+									" in %s state to start Reindex",
+								scheduler.getId(),
+								datasource.getId(),
+								scheduler.getStatus()
+							);
+
+							return Uni.createFrom().item(TriggerType.REINDEX);
+						}
+						else {
+							log.warnf(
+								"A Scheduler with id %s for datasource %s is %s",
+								scheduler.getId(),
+								datasource.getId(),
+								scheduler.getStatus()
+							);
+
+							return Uni.createFrom().item(TriggerType.IGNORE);
+						}
 					}
 
 					if (reindex != null) {
