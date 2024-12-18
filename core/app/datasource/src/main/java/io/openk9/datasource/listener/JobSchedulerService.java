@@ -338,7 +338,8 @@ public class JobSchedulerService {
 					if (scheduler != null) {
 
 						if (reindex) {
-							schedulerService.cancelScheduling(tenantId, scheduler.getId());
+							var cancelSchedulingUni =
+								schedulerService.cancelScheduling(tenantId, scheduler.getId());
 
 							log.warnf(
 								"Trying to cancel the Scheduler with id %s for datasource %s" +
@@ -348,7 +349,8 @@ public class JobSchedulerService {
 								scheduler.getStatus()
 							);
 
-							return Uni.createFrom().item(TriggerType.REINDEX);
+							return cancelSchedulingUni.map(
+								unused -> TriggerType.REINDEX);
 						}
 						else {
 							log.warnf(
