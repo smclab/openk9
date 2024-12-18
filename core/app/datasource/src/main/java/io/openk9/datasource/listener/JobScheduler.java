@@ -481,6 +481,7 @@ public class JobScheduler {
 				List<String> newJobNames = new ArrayList<>(jobNames);
 
 				newJobNames.add(jobName);
+				newJobNames.add(jobName + PURGE_SUFFIX);
 
 				return initial(
 					ctx, quartzSchedulerTypedExtension,
