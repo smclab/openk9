@@ -1,0 +1,54 @@
+stages:
+  - quality
+  - build
+  - container-scanning
+  - restart
+  - build-verifier
+
+
+# Build Docker Image
+Build Rag Module:
+  stage: build
+  image: docker:24.0.2
+  variables:
+    DOCKER_BUILDKIT: 1  # Abilita BuildKit per una build più veloce
+  before_script:
+    - apk add --no-cache docker  # Installa Docker CLI
+    - dockerd &  # Avvia temporaneamente il daemon Docker
+    - while(! docker info > /dev/null 2>&1); do echo "Waiting for Docker to start..."; sleep 1; done
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USERNAME" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY/rag-module:latest -f js-packages/rag-module/Dockerfile .
+    - docker push $CI_REGISTRY/rag-module:latest
+  after_script:
+    - kill $(cat /var/run/docker.pid)  # Arresta il daemon Docker
+  rules:
+    - changes:
+        - ai-packages/rag-module/**/*
+
+# Container Scanning
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  variables:
+    SCAN_IMAGE: "$CI_REGISTRY/rag-module:latest"
+  script:
+    - container-scanning scan --image $SCAN_IMAGE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+# Trigger Restart
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for Rag Module"
+    - curl -X POST -F token=$RESTART_TRIGGER_TOKEN \
+      -F "variables[TRIGGER_JOB]=restart-rag-module" \
+      -F ref=main \
+      $RESTART_TRIGGER_URL
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
