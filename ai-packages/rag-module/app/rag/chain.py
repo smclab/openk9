@@ -317,6 +317,7 @@ def get_chat_chain(
     documents = []
     documents_id = set()
     citations = []
+    conversation_title = ""
 
     for chunk in result:
         if "answer" in chunk.keys() and result_answer == "":
@@ -338,6 +339,18 @@ def get_chat_chain(
             and "annotations" in chunk.keys()
         ):
             citations = chunk
+
+    if chat_sequence_number == 1:
+        title_prompt = PromptTemplate(
+            input_variables=["question", "answer"],
+            template="""Generate a title for a conversation where the user asks:
+            '{question}' and the AI responds: '{answer}'.""",
+        )
+        title_chain = title_prompt | llm | StrOutputParser()
+        conversation_title = title_chain.invoke(
+            {"question": search_text, "answer": result_answer["answer"]},
+        )
+        yield json.dumps({"chunk": conversation_title, "type": "TITLE"})
 
     all_citations = (
         citations.get("annotations").dict()["citations"]
@@ -370,6 +383,7 @@ def get_chat_chain(
         open_search_client,
         search_text,
         result_answer["answer"],
+        conversation_title,
         documents,
         chat_id,
         user_id,
