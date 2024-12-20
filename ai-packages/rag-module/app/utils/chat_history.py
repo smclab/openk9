@@ -25,6 +25,7 @@ def save_chat_message(
     open_search_client,
     question: str,
     answer: str,
+    title: str,
     sources: list,
     chat_id: str,
     user_id: str,
@@ -49,6 +50,7 @@ def save_chat_message(
     message = {
         "question": question,
         "answer": answer,
+        "title": title,
         "sources": documents,
         "chat_id": chat_id,
         "user_id": user_id,
