@@ -228,7 +228,10 @@ async def get_user_chats(
             }
         },
         "sort": [{"timestamp": {"order": "desc"}}],
-        "_source": {"includes": ["question", "timestamp", "chat_id"], "excludes": []},
+        "_source": {
+            "includes": ["title", "question", "timestamp", "chat_id"],
+            "excludes": [],
+        },
     }
 
     result = {"result": []}
