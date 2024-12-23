@@ -56,7 +56,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	SchedulerService() {}
 
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
-		return findById(schedulerId)
+		return findById(tenantId, schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
 				case RUNNING, STALE, ERROR -> {
 					ActorSystem<?> actorSystem = actorSystemProvider.getActorSystem();
