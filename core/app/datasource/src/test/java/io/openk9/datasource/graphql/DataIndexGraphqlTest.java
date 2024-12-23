@@ -78,6 +78,8 @@ public class DataIndexGraphqlTest {
 			.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
 			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
+			.reindexing(CreateConnection.REINDEXING)
+			.reindexable(false)
 			.build()
 		).await().indefinitely();
 

@@ -85,8 +85,10 @@ public class StatusByDatasourcesTest {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
 			.reindexRate(0)
+			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
-			.scheduling("0 0 * ? * * *")
+			.reindexing(CreateConnection.REINDEXING)
+			.reindexable(false)
 			.build();
 
 		sessionFactory.withTransaction(

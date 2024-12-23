@@ -36,6 +36,8 @@ public class CreateConnection {
 	public static final String DATASOURCE_NAME = "My New Connection";
 	public static final String DATASOURCE_DESCRIPTION = "A new datasource connection";
 	public static final int REINDEX_RATE = 1;
+	public static final boolean REINDEXABLE = false;
+	public static final String REINDEXING = "0 0 * ? * * *";
 	public static final boolean SCHEDULABLE = true;
 	public static final String DATASOURCE_JSON_CONFIG = "{}";
 	public static final String SCHEDULING = "0 0 * ? * * *";
@@ -69,6 +71,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + " new entities vector dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
@@ -89,6 +93,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + "new entities base dto")
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
+		.reindexing(REINDEXING)
+		.reindexable(REINDEXABLE)
 		.schedulable(SCHEDULABLE)
 		.jsonConfig(DATASOURCE_JSON_CONFIG)
 		.scheduling(SCHEDULING)
@@ -101,6 +107,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + "pre exist plugin new pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
@@ -112,6 +120,8 @@ public class CreateConnection {
 		.name(DATASOURCE_NAME + " ambiguous dto")
 		.description(DATASOURCE_DESCRIPTION)
 		.reindexRate(REINDEX_RATE)
+		.reindexing(REINDEXING)
+		.reindexable(REINDEXABLE)
 		.schedulable(SCHEDULABLE)
 		.jsonConfig(DATASOURCE_JSON_CONFIG)
 		.scheduling(SCHEDULING)
@@ -126,6 +136,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + "new plugin preexist pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
@@ -138,6 +150,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + "new plugin no pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)
@@ -149,6 +163,8 @@ public class CreateConnection {
 			.name(DATASOURCE_NAME + "no plugin no pipeline dto")
 			.description(DATASOURCE_DESCRIPTION)
 			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
 			.schedulable(SCHEDULABLE)
 			.jsonConfig(DATASOURCE_JSON_CONFIG)
 			.scheduling(SCHEDULING)

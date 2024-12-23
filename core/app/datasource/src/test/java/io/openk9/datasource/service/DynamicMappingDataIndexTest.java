@@ -84,6 +84,8 @@ class DynamicMappingDataIndexTest {
 					.scheduling(CreateConnection.SCHEDULING)
 					.schedulable(false)
 					.reindexRate(0)
+					.reindexing(CreateConnection.REINDEXING)
+					.reindexable(false)
 					.build()
 				)
 				.map(datasource -> {

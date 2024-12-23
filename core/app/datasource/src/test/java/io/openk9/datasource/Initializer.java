@@ -214,6 +214,8 @@ public class Initializer {
 				.description(CreateConnection.DATASOURCE_DESCRIPTION)
 				.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
 				.scheduling(CreateConnection.SCHEDULING)
+				.reindexing(CreateConnection.REINDEXING)
+				.reindexable(false)
 				.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
 					.toBuilder()
 					.jsonConfig(JsonObject.of(
@@ -252,6 +254,8 @@ public class Initializer {
 					.description(CreateConnection.DATASOURCE_DESCRIPTION)
 					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
 					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.reindexable(false)
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
 						.toBuilder()
 						.name("pluginDriverConnection1")
@@ -272,6 +276,8 @@ public class Initializer {
 					.description(CreateConnection.DATASOURCE_DESCRIPTION)
 					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
 					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.reindexable(false)
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
 						.toBuilder()
 						.name("pluginDriverConnection2")
