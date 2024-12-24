@@ -12,6 +12,7 @@ import requests
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
+SCORE_THRESHOLD = 0.5
 
 
 class OpenSearchRetriever(BaseRetriever):
@@ -89,6 +90,9 @@ class OpenSearchRetriever(BaseRetriever):
             )
 
             for row in response["hits"]["hits"]:
+                score = row["_score"]
+                if score < SCORE_THRESHOLD:
+                    continue
                 if self.vector_indices:
                     document_id = row["_source"]["contentId"]
                     page_content = row["_source"]["chunkText"]
@@ -102,6 +106,7 @@ class OpenSearchRetriever(BaseRetriever):
                             "title": title,
                             "url": url,
                             "document_id": document_id,
+                            "score": score,
                         },
                     )
                     document_tokens_number = (
@@ -136,6 +141,7 @@ class OpenSearchRetriever(BaseRetriever):
                     "threshold": 0,
                     "max_length": 512,
                 },
+                timeout=None,
             )
 
             reranked_documents_dict = response.json()["context"]
