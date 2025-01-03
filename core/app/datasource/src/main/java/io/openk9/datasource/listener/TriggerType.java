@@ -17,10 +17,16 @@
 
 package io.openk9.datasource.listener;
 
-public enum TriggerType {
+import io.openk9.datasource.model.Scheduler;
 
-	TRIGGER,
-	REINDEX,
-	IGNORE
+public interface TriggerType {
 
+	enum SimpleTriggerType implements TriggerType{
+		TRIGGER,
+		REINDEX,
+		IGNORE
+	}
+
+	record TriggerTypeReindex(SimpleTriggerType triggerType, Scheduler scheduler)
+		implements TriggerType {}
 }

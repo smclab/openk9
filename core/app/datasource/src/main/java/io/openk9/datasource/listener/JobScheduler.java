@@ -583,7 +583,7 @@ public class JobScheduler {
 			.stream()
 			.filter(JobScheduler::isLocalActorRef)
 			.findFirst()
-			.map(JobScheduler.Start::new)
+			.map(Start::new)
 			.ifPresentOrElse(
 				cmd -> ctx.getSelf().tell(cmd),
 				() -> log.error("ChannelManager not found"));
@@ -598,6 +598,7 @@ public class JobScheduler {
 
 		Datasource datasource = startSchedulerInternal.datasource;
 		var tenantName = datasource.getTenant();
+		Scheduler schedulerToCancel = null;
 
 		var startIngestionDate = startSchedulerInternal.startIngestionDate;
 
@@ -611,7 +612,15 @@ public class JobScheduler {
 
 		var triggerType = startSchedulerInternal.triggerType();
 
-		if (triggerType == TriggerType.IGNORE) {
+		if ( triggerType instanceof TriggerType.TriggerTypeReindex) {
+
+			schedulerToCancel =
+				((TriggerType.TriggerTypeReindex) triggerType).scheduler();
+
+			triggerType = ((TriggerType.TriggerTypeReindex) triggerType).triggerType();
+		}
+
+		if (triggerType == TriggerType.SimpleTriggerType.IGNORE) {
 			log.infof(
 				"A Scheduler for datasource with id %s is already running",
 				datasource.getId()
@@ -620,15 +629,15 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		boolean reindex = triggerType == TriggerType.REINDEX;
+		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
 
 		var scheduleId = UUID.randomUUID().toString();
 
-		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
+		Scheduler scheduler = new Scheduler();
 		scheduler.setScheduleId(scheduleId);
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
+		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
@@ -647,8 +656,19 @@ public class JobScheduler {
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
 
 				if (docTypes != null && !docTypes.isEmpty()) {
-					ctx.getSelf().tell(
-						new CopyIndexTemplate(scheduler));
+
+					if (schedulerToCancel != null) {
+						ctx.pipeToSelf(
+							JobSchedulerService.cancelScheduler(
+								tenantName, schedulerToCancel.getId()),
+							(ignore, throwable) ->
+								new CopyIndexTemplate(scheduler)
+						);
+					}
+					else {
+						ctx.getSelf().tell(
+							new CopyIndexTemplate(scheduler));
+					}
 
 					return Behaviors.same();
 				}

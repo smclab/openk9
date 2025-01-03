@@ -63,6 +63,8 @@ public class JobSchedulerService {
 
 	private static final String CALL_PLUGIN_DRIVER =
 		"JobSchedulerService#callPluginDriver";
+	private static final String CANCEL_SCHEDULER =
+		"JobSchedulerService#cancelScheduler";
 	private static final String COPY_INDEX_TEMPLATE =
 		"JobSchedulerService#copyIndexTemplate";
 	private static final String FETCH_DATASOURCE_CONNECTION =
@@ -78,13 +80,13 @@ public class JobSchedulerService {
 	HttpPluginDriverClient httpPluginDriverClient;
 
 	@Inject
+	static SchedulerService schedulerService;
+
+	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
-
-	@Inject
-	SchedulerService schedulerService;
 
 	public static CompletableFuture<Void> callHttpPluginDriverClient(
 		Scheduler scheduler,
@@ -133,6 +135,17 @@ public class JobSchedulerService {
 
 		return EventBusInstanceHolder.getEventBus()
 			.<EmbeddingModel>request(FETCH_EMBEDDING_MODEL, request)
+			.map(Message::body)
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletableFuture<Void> cancelScheduler(
+		String tenantId, long schedulerId) {
+
+		var request = new CancelSchedulerRequest(tenantId, schedulerId);
+
+		return EventBusInstanceHolder.getEventBus()
+			.<Void>request(CANCEL_SCHEDULER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -302,6 +315,19 @@ public class JobSchedulerService {
 		);
 	}
 
+	@ConsumeEvent(CANCEL_SCHEDULER)
+	Uni<Void> cancelScheduler(CancelSchedulerRequest request) {
+
+		var tenantId = request.tenantId();
+		var schedulerId = request.schedulerId();
+
+		log.warnf(
+			"Trying to cancel the Scheduler with id %s to start Reindex",
+			schedulerId);
+
+		return schedulerService.cancelScheduling(tenantId, schedulerId);
+	}
+
 	@ConsumeEvent(PERSIST_SCHEDULER)
 	Uni<Scheduler> persistScheduler(PersistSchedulerRequest request) {
 
@@ -338,19 +364,10 @@ public class JobSchedulerService {
 					if (scheduler != null) {
 
 						if (reindex) {
-							var cancelSchedulingUni =
-								schedulerService.cancelScheduling(tenantId, scheduler.getId());
 
-							log.warnf(
-								"Trying to cancel the Scheduler with id %s for datasource %s" +
-									" in %s state to start Reindex",
-								scheduler.getId(),
-								datasource.getId(),
-								scheduler.getStatus()
-							);
-
-							return cancelSchedulingUni.map(
-								unused -> TriggerType.REINDEX);
+							return Uni.createFrom().item(
+								new TriggerType.TriggerTypeReindex(
+									TriggerType.SimpleTriggerType.REINDEX, scheduler));
 						}
 						else {
 							log.warnf(
@@ -360,17 +377,17 @@ public class JobSchedulerService {
 								scheduler.getStatus()
 							);
 
-							return Uni.createFrom().item(TriggerType.IGNORE);
+							return Uni.createFrom().item(TriggerType.SimpleTriggerType.IGNORE);
 						}
 					}
 
 					if (reindex != null) {
 						return Uni.createFrom().item(reindex
-							? TriggerType.REINDEX
-							: TriggerType.TRIGGER);
+							? TriggerType.SimpleTriggerType.REINDEX
+							: TriggerType.SimpleTriggerType.TRIGGER);
 					}
 					else {
-						return Uni.createFrom().item(TriggerType.TRIGGER);
+						return Uni.createFrom().item(TriggerType.SimpleTriggerType.TRIGGER);
 					}
 
 				})
@@ -400,6 +417,8 @@ public class JobSchedulerService {
 	) {}
 
 	private record FetchEmbeddingModelRequest(String tenantId) {}
+
+	private record CancelSchedulerRequest(String tenantId, long schedulerId) {}
 
 	private record PersistSchedulerRequest(
 		String tenantId, Scheduler scheduler
