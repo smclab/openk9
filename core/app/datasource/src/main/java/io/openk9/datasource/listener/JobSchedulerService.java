@@ -80,7 +80,7 @@ public class JobSchedulerService {
 	HttpPluginDriverClient httpPluginDriverClient;
 
 	@Inject
-	static SchedulerService schedulerService;
+	SchedulerService schedulerService;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
