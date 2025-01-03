@@ -123,6 +123,9 @@ public class JobScheduler {
 					jobNames
 				)
 			)
+			.onMessage(
+				CreateNewScheduler.class,
+				cns -> onCreateNewScheduler(cns, ctx) )
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
 			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx))
@@ -224,6 +227,67 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.copyIndexTemplate(scheduler),
 			(ignore, throwable) -> new PersistSchedulerInternal(scheduler, throwable)
+		);
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onCreateNewScheduler(
+		CreateNewScheduler createNewScheduler, ActorContext<Command> ctx) {
+
+		var triggerType = createNewScheduler.triggerType;
+		var datasource = createNewScheduler.datasource;
+		var tenantName = createNewScheduler.tenantName;
+		var startIngestionDate = createNewScheduler.startIngestionDate;
+		var throwable1 = createNewScheduler.throwable;
+
+		if (throwable1 != null) {
+
+			log.error("Scheduler cannot be created.", throwable1);
+
+			return Behaviors.same();
+
+		}
+
+		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
+
+		var scheduleId = UUID.randomUUID().toString();
+
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(scheduleId);
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
+
+		if (oldDataIndex == null || reindex) {
+
+			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
+
+			DataIndex newDataIndex = new DataIndex();
+			newDataIndex.setName(newDataIndexName);
+			newDataIndex.setDatasource(datasource);
+			scheduler.setNewDataIndex(newDataIndex);
+
+			if (oldDataIndex != null) {
+				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+
+				if (docTypes != null && !docTypes.isEmpty()) {
+					ctx.getSelf().tell(
+						new CopyIndexTemplate(scheduler));
+
+					return Behaviors.same();
+				}
+			}
+		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantName, scheduler),
+			(response, throwable) ->
+				new StartSchedulingWork(scheduler, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
@@ -629,57 +693,19 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
-
-		var scheduleId = UUID.randomUUID().toString();
-
-		Scheduler scheduler = new Scheduler();
-		scheduler.setScheduleId(scheduleId);
-		scheduler.setDatasource(datasource);
-		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-
-		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
-
-		if (oldDataIndex == null || reindex) {
-
-			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
-
-			DataIndex newDataIndex = new DataIndex();
-			newDataIndex.setName(newDataIndexName);
-			newDataIndex.setDatasource(datasource);
-			scheduler.setNewDataIndex(newDataIndex);
-
-			if (oldDataIndex != null) {
-				Set<DocType> docTypes = oldDataIndex.getDocTypes();
-
-				if (docTypes != null && !docTypes.isEmpty()) {
-
-					if (schedulerToCancel != null) {
-						ctx.pipeToSelf(
-							JobSchedulerService.cancelScheduler(
-								tenantName, schedulerToCancel.getId()),
-							(ignore, throwable) ->
-								new CopyIndexTemplate(scheduler)
-						);
-					}
-					else {
-						ctx.getSelf().tell(
-							new CopyIndexTemplate(scheduler));
-					}
-
-					return Behaviors.same();
-				}
-			}
+		if (schedulerToCancel != null) {
+			ctx.pipeToSelf(
+				JobSchedulerService.cancelScheduler(tenantName, schedulerToCancel.getId()),
+				(ignore, throwable) ->
+					new CreateNewScheduler(
+						ctx, TriggerType.SimpleTriggerType.REINDEX, datasource, tenantName,
+						startIngestionDate, throwable)
+			);
 		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantName, scheduler),
-			(response, throwable) ->
-				new StartSchedulingWork(scheduler, startIngestionDate, throwable)
-		);
+		else {
+			new CreateNewScheduler(
+				ctx, triggerType, datasource, tenantName, startIngestionDate, null);
+		}
 
 		return Behaviors.same();
 	}
@@ -940,6 +966,11 @@ public class JobScheduler {
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
 	private record CopyIndexTemplate(Scheduler scheduler) implements Command {}
+
+	private record CreateNewScheduler(
+		ActorContext<Command> ctx, TriggerType triggerType, Datasource datasource,
+		String tenantName, OffsetDateTime startIngestionDate, Throwable throwable
+	) implements Command {}
 
 	private record HaltScheduling(
 		Scheduler scheduler,
