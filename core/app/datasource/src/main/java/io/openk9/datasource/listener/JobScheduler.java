@@ -703,8 +703,9 @@ public class JobScheduler {
 			);
 		}
 		else {
-			new CreateNewScheduler(
-				ctx, triggerType, datasource, tenantName, startIngestionDate, null);
+			ctx.getSelf().tell(
+				new CreateNewScheduler(
+					ctx, triggerType, datasource, tenantName, startIngestionDate, null));
 		}
 
 		return Behaviors.same();
