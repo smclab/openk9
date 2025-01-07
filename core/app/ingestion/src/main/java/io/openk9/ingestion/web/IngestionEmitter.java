@@ -30,6 +30,7 @@ import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
+import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -41,6 +42,7 @@ import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,9 @@ public class IngestionEmitter {
 	@Inject
 	Logger logger;
 
+	@Inject
+	RabbitMQClient rabbitMQClient;
+
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
 		_emitter.send(createMessage(_of(ingestionRequest)));
@@ -68,9 +73,25 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		_emitter.send(createMessage(_of(ingestionDTO)));
+		var queueName = ShardingKey.asString(
+			ingestionDTO.getTenantId(),
+			ingestionDTO.getScheduleId());
 
-		return CompletableFuture.completedStage(null);
+		try {
+			var channel = rabbitMQClient.connect().createChannel();
+
+			channel.queueDeclarePassive(queueName);
+
+			_emitter.send(createMessage(_of(ingestionDTO)));
+
+			return CompletableFuture.completedStage(null);
+
+		}
+		catch (IOException e) {
+			logger.warnf(e, String.format("Queue \"%s\" is not available.", queueName));
+
+			return CompletableFuture.failedStage(e);
+		}
 	}
 
 	private IngestionPayloadWrapper _of(IngestionRequest dto) {

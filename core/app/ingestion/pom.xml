@@ -51,6 +51,10 @@
 
     <!-- ingestion queue -->
     <dependency>
+      <groupId>io.quarkiverse.rabbitmqclient</groupId>
+      <artifactId>quarkus-rabbitmq-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-messaging-rabbitmq</artifactId>
     </dependency>

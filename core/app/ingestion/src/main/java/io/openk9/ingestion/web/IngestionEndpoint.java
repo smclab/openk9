@@ -29,13 +29,22 @@ import jakarta.ws.rs.core.MediaType;
 @Path("/v1/ingestion/")
 public class IngestionEndpoint {
 
+	private static final String EMPTY_JSON = "{}";
+	private static final String ERROR_JSON =
+		"{\n" +
+		"\t\"errorCode\": 01,\n" +
+		"\t\"status\": \"The queue for this schedule is no longer available.\"\n" +
+		"}";
+
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> ingestion(IngestionDTO dto) {
 
 		return _fileManagerEmitter.emit(dto)
-			.replaceWith(() -> "{}");
+			.replaceWith(() -> EMPTY_JSON)
+			.onFailure()
+			.recoverWithItem(ERROR_JSON);
 
 	}
 
