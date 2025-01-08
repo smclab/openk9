@@ -350,7 +350,7 @@ def get_chat_chain(
         conversation_title = title_chain.invoke(
             {"question": search_text, "answer": result_answer["answer"]},
         )
-        yield json.dumps({"chunk": conversation_title, "type": "TITLE"})
+        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
     all_citations = (
         citations.get("annotations").dict()["citations"]
