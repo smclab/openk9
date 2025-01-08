@@ -215,7 +215,7 @@ public class IngestionEmitter {
 			return true;
 		}
 		catch (IOException e) {
-			logger.warnf(e, String.format("No such queue with name: \"%s\".", queueName));
+			logger.warnf(String.format("No such queue with name: \"%s\".", queueName));
 
 			return false;
 		}
