@@ -18,6 +18,7 @@
 package io.openk9.ingestion.web;
 
 import io.openk9.ingestion.dto.IngestionDTO;
+import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -30,10 +31,10 @@ import jakarta.ws.rs.core.MediaType;
 public class IngestionEndpoint {
 
 	private static final String EMPTY_JSON = "{}";
-	private static final String ERROR_JSON =
+	private static final String NO_SUCH_QUEUE_ERROR =
 		"{\n" +
 		"\t\"errorCode\": 01,\n" +
-		"\t\"status\": \"The queue for this schedule is no longer available.\"\n" +
+		"\t\"status\": \"No such queue for this schedule.\"\n" +
 		"}";
 
 	@POST
@@ -43,8 +44,8 @@ public class IngestionEndpoint {
 
 		return _fileManagerEmitter.emit(dto)
 			.replaceWith(() -> EMPTY_JSON)
-			.onFailure()
-			.recoverWithItem(ERROR_JSON);
+			.onFailure(NoSuchQueueException.class)
+			.recoverWithItem(NO_SUCH_QUEUE_ERROR);
 
 	}
 

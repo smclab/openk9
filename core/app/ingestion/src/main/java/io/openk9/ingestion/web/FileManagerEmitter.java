@@ -21,6 +21,7 @@ import io.openk9.ingestion.client.filemanager.FileManagerClient;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.ResourcesDTO;
+import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -138,6 +139,9 @@ public class FileManagerEmitter {
                                 uploadUnis.add(uploadUni);
                             }
                         }
+						catch (NoSuchQueueException e) {
+							throw e;
+						}
                         catch (Exception e) {
                             logger.error(e.getMessage(), e);
                         }

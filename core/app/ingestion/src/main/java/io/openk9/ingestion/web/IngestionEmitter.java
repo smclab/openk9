@@ -27,6 +27,7 @@ import io.openk9.ingestion.dto.IngestionPayload;
 import io.openk9.ingestion.dto.IngestionPayloadWrapper;
 import io.openk9.ingestion.dto.ResourcesDTO;
 import io.openk9.ingestion.dto.ResourcesPayload;
+import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.openk9.ingestion.grpc.Binary;
 import io.openk9.ingestion.grpc.IngestionRequest;
 import io.openk9.ingestion.grpc.Resources;
@@ -71,26 +72,20 @@ public class IngestionEmitter {
 
 	}
 
-	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
+	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) throws NoSuchQueueException{
 
 		var queueName = ShardingKey.asString(
 			ingestionDTO.getTenantId(),
 			ingestionDTO.getScheduleId());
 
-		try {
-			var channel = rabbitMQClient.connect().createChannel();
-
-			channel.queueDeclarePassive(queueName);
-
+		if (checkQueueExistence(queueName)) {
 			_emitter.send(createMessage(_of(ingestionDTO)));
 
 			return CompletableFuture.completedStage(null);
-
 		}
-		catch (IOException e) {
-			logger.warnf(e, String.format("Queue \"%s\" is not available.", queueName));
-
-			return CompletableFuture.failedStage(e);
+		else {
+			throw new NoSuchQueueException(
+				String.format("No such queue with name: \"%s\".", queueName));
 		}
 	}
 
@@ -210,6 +205,20 @@ public class IngestionEmitter {
 		}
 
 		return ResourcesPayload.of(binaryPayloadList);
+	}
+
+	private boolean checkQueueExistence(String queueName) {
+		try {
+			var channel = rabbitMQClient.connect().createChannel();
+			channel.queueDeclarePassive(queueName);
+
+			return true;
+		}
+		catch (IOException e) {
+			logger.warnf(e, String.format("No such queue with name: \"%s\".", queueName));
+
+			return false;
+		}
 	}
 
 	private Message<IngestionPayloadWrapper> createMessage(IngestionPayloadWrapper ingestionPayloadWrapper) {
