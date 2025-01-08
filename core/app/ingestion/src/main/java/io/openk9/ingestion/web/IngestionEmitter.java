@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.web;
 
+import com.rabbitmq.client.Connection;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.common.util.ingestion.PayloadType;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -208,17 +210,24 @@ public class IngestionEmitter {
 	}
 
 	private boolean checkQueueExistence(String queueName) {
-		try {
-			var channel = rabbitMQClient.connect().createChannel();
-			channel.queueDeclarePassive(queueName);
+		boolean exist = false;
+		try (var connection = rabbitMQClient.connect();
+			 var channel = connection.createChannel()) {
 
-			return true;
+			channel.queueDeclarePassive(queueName);
+			exist = true;
+
 		}
 		catch (IOException e) {
 			logger.warnf(String.format("No such queue with name: \"%s\".", queueName));
+			exist = false;
 
-			return false;
 		}
+		catch (TimeoutException e) {
+			logger.errorf(e, String.format("Error closing channel."));
+		}
+
+		return exist;
 	}
 
 	private Message<IngestionPayloadWrapper> createMessage(IngestionPayloadWrapper ingestionPayloadWrapper) {
