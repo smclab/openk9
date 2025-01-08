@@ -415,6 +415,7 @@ export function Main({
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               placeholder={configuration.filtersConfigurable?.placeholder}
+              haveSearch={configuration.filtersConfigurable?.haveSearch}
               iconCustom={iconCustom}
             />
           )}
@@ -818,6 +819,7 @@ export function Main({
               numberOfResults={numberOfResults}
               selectionsDispatch={selectionsDispatch}
               memoryResults={memoryResults}
+              haveSearch={configuration.filtersConfigurable?.haveSearch}
             />
           )}
         </I18nextProvider>,

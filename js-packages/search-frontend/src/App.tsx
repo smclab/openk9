@@ -19,7 +19,6 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: true,
-  isActiveSkeleton: true,
   memoryResults: false,
   useGenerativeApi: true,
 });

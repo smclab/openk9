@@ -50,6 +50,7 @@ export type FiltersMobileProps<E> = {
   isActiveSkeleton: boolean;
   skeletonCategoryCustom: React.ReactNode | null;
   memoryResults: boolean;
+  haveSearch: boolean | null | undefined;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -75,6 +76,7 @@ function FiltersMobileLiveChange<E>({
   skeletonCategoryCustom,
   selectionsDispatch,
   memoryResults,
+  haveSearch,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -180,6 +182,7 @@ function FiltersMobileLiveChange<E>({
           numberItems={numberItems}
           skeletonCategoryCustom={skeletonCategoryCustom}
           isActiveSkeleton={isActiveSkeleton}
+          haveSearch={haveSearch}
           preFilters={
             viewTabs ? (
               <ViewAllTabs

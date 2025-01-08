@@ -270,6 +270,7 @@ type FilterProps = {
   numberItems?: number | null | undefined;
   noResultMessage?: string | null | undefined;
   placeholder?: string | null | undefined;
+  haveSearch?: boolean | null | undefined;
 };
 
 type ResulListPaginationProps = {

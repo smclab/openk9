@@ -25,6 +25,7 @@ type FilterCategoryDynamicallyProps = {
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   language: string;
+  haveSearch?: boolean | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   placeholder?: string | undefined | null;
   noResultMessage?: string | null | undefined;
@@ -51,6 +52,7 @@ function FilterCategoryDynamic({
   noResultMessage,
   placeholder,
   iconCustom,
+  haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -165,7 +167,7 @@ function FilterCategoryDynamic({
       </div>
       {isOpen && (
         <React.Fragment>
-          {!isUniqueLoadMore && (
+          {!isUniqueLoadMore && haveSearch && (
             <>
               <label
                 htmlFor={"search-category-" + suggestionCategoryId}

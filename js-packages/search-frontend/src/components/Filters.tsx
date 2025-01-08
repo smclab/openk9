@@ -31,6 +31,7 @@ type FiltersProps = {
   memoryResults: boolean;
   placeholder?: string | null | undefined;
   iconCustom: IconsCustom;
+  haveSearch?: boolean | null | undefined;
 };
 function Filters({
   searchQuery,
@@ -49,6 +50,7 @@ function Filters({
   memoryResults,
   placeholder,
   iconCustom,
+  haveSearch = true,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
@@ -113,6 +115,7 @@ function Filters({
             noResultMessage={noResultMessage}
             placeholder={placeholder}
             iconCustom={iconCustom}
+            haveSearch={haveSearch}
           />
         </React.Suspense>
       ))}
