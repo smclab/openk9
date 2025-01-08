@@ -22,6 +22,7 @@ import { Tab, translationTab } from "./Tabs";
 import { capitalize } from "lodash";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
 import { SelectionsAction } from "./useSelections";
+import { useFocusTrap } from "./useFocusTrap";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -87,6 +88,7 @@ function FiltersMobileLiveChange<E>({
     memoryResults,
   );
   const { t } = useTranslation();
+  const [trapFocus] = useFocusTrap(true);
   const componet = (
     <React.Fragment>
       <div
@@ -316,7 +318,11 @@ function FiltersMobileLiveChange<E>({
   );
   if (!isVisibleFilters) return null;
 
-  return <ModalDetail padding="0px" background="white" content={componet} />;
+  return (
+    <div className="modal-detail-container-external" ref={trapFocus}>
+      <ModalDetail padding="0px" background="white" content={componet} />
+    </div>
+  );
 }
 
 function ViewAllTabs({
