@@ -217,6 +217,7 @@ function Detail<E>(props: DetailProps<E>) {
         {setDetailMobile && (
           <button
             aria-label={t("close") || "close"}
+            className="openk9-close-modal openk9-close-modal-detail"
             ref={refFocus}
             css={css`
               cursor: pointer;
