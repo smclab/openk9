@@ -179,6 +179,7 @@ type FiltersLiveMobileConfiguration = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   viewTabs?: boolean | null;
   isCollapsable?: boolean | null;
+  haveSearch?: boolean | null;
 };
 
 type SearchMobileConfiguration = {

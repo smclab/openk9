@@ -819,7 +819,7 @@ export function Main({
               numberOfResults={numberOfResults}
               selectionsDispatch={selectionsDispatch}
               memoryResults={memoryResults}
-              haveSearch={configuration.filtersConfigurable?.haveSearch}
+              haveSearch={configuration.filtersMobileLiveChange?.haveSearch}
             />
           )}
         </I18nextProvider>,

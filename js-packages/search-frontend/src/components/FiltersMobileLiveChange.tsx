@@ -370,6 +370,11 @@ function ViewAllTabs({
         </div>
         {isCollapsable && (
           <button
+            className={`openk9-mobile-collapsable-filters openk9-collapsable-filters openk9-tabs-in-filters ${
+              isOpen
+                ? "openk9-dropdown-filters-open"
+                : "openk9-dropdown-filters-close"
+            }`}
             aria-label={
               t("openk9-collapsable-filter") || "openk9 collapsable filter"
             }

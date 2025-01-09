@@ -148,6 +148,11 @@ function FilterCategoryDynamic({
           </strong>
         </legend>
         <button
+          className={`openk9-mobile-collapsable-filters openk9-collapsable-filters ${
+            isOpen
+              ? "openk9-dropdown-filters-open"
+              : "openk9-dropdown-filters-close"
+          }`}
           aria-label={
             t("openk9-collapsable-filter") || "openk9 collapsable filter"
           }
