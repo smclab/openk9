@@ -77,32 +77,42 @@ public class IngestionEmitter {
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
-		_emitter.send(createMessage(_of(ingestionRequest)));
+		var queueName = ShardingKey.asString(
+			ingestionRequest.getTenantId(),
+			ingestionRequest.getScheduleId());
+
+		emit(createMessage(_of(ingestionRequest)), queueName);
 
 		return CompletableFuture.completedStage(null);
 
 	}
 
-	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) throws NoSuchQueueException{
+	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
 		var queueName = ShardingKey.asString(
 			ingestionDTO.getTenantId(),
 			ingestionDTO.getScheduleId());
 
-		if (checkQueueExistence(queueName)) {
-			_emitter.send(createMessage(_of(ingestionDTO)));
+		emit(createMessage(_of(ingestionDTO)), queueName);
 
-			return CompletableFuture.completedStage(null);
-		}
-		else {
-			throw new NoSuchQueueException(
-				String.format("No such queue with name: \"%s\".", queueName));
-		}
+		return CompletableFuture.completedStage(null);
 	}
 
 	@PostConstruct
 	public void init() {
 		this.connect = rabbitMQClient.connect();
+	}
+
+	private void emit(Message<IngestionPayloadWrapper> message, String queueName)
+		throws NoSuchQueueException {
+
+		if (checkQueueExistence(queueName)) {
+			_emitter.send(message);
+		}
+		else {
+			throw new NoSuchQueueException(
+				String.format("No such queue with name: \"%s\".", queueName));
+		}
 	}
 
 	private ResourcesPayload _dtoToPayload(

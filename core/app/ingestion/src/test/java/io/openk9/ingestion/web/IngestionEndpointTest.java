@@ -52,7 +52,6 @@ class IngestionEndpointTest {
 	@Test
 	void should_ingest_a_payload() {
 
-
 		given()
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
@@ -61,7 +60,8 @@ class IngestionEndpointTest {
 				.build())
 			.post()
 			.then()
-			.statusCode(200);
+			//a 406 is expected because no queue exists with name "null#null"
+			.statusCode(406);
 
 		then(fileManagerClient).shouldHaveNoInteractions();
 
@@ -107,7 +107,8 @@ class IngestionEndpointTest {
 			)
 			.post()
 			.then()
-			.statusCode(200);
+			//a 406 is expected because no queue exists with name "mew#null"
+			.statusCode(406);
 
 		then(fileManagerClient).should(times(1))
 			.upload(any(), any(), any(), any());
