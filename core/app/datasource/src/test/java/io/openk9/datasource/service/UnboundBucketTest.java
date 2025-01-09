@@ -430,7 +430,6 @@ public class UnboundBucketTest {
 	private void createDatasourceOne() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
-			.reindexRate(0)
 			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
 			.reindexing(CreateConnection.REINDEXING)
@@ -448,7 +447,6 @@ public class UnboundBucketTest {
 	private void createDatasourceTwo() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_TWO_NAME)
-			.reindexRate(0)
 			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
 			.reindexing(CreateConnection.REINDEXING)
@@ -466,7 +464,6 @@ public class UnboundBucketTest {
 	private void createDatasourceThree() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_THREE_NAME)
-			.reindexRate(0)
 			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
 			.reindexing(CreateConnection.REINDEXING)

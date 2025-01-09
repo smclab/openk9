@@ -84,7 +84,6 @@ public class StatusByDatasourcesTest {
 	private void createDatasourceOne() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
-			.reindexRate(0)
 			.scheduling(CreateConnection.SCHEDULING)
 			.schedulable(false)
 			.reindexing(CreateConnection.REINDEXING)

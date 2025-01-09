@@ -83,7 +83,6 @@ class DynamicMappingDataIndexTest {
 					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
 					.scheduling(CreateConnection.SCHEDULING)
 					.schedulable(false)
-					.reindexRate(0)
 					.reindexing(CreateConnection.REINDEXING)
 					.reindexable(false)
 					.build()

@@ -113,10 +113,6 @@ public class Datasource extends K9Entity {
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;
-	@Deprecated
-	@Description("Reindex on datasource every {reindexRate} times, never if 0")
-	@Column(name = "reindex_rate")
-	private int reindexRate = 0;
 	@Description("If true set datasource as reindexable")
 	@Column(name = "reindexable", nullable = false)
 	private Boolean reindexable = false;
