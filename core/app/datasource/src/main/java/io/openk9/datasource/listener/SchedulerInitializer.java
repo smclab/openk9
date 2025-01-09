@@ -48,15 +48,46 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class SchedulerInitializer {
 
+	public static final String DELETE_SCHEDULER = "delete_scheduler";
+	public static final String UPDATE_SCHEDULER = "update_scheduler";
 	private static final String INITIALIZE_SCHEDULER = "initialize_scheduler";
 	private static final String SPAWN_CONSUMERS = "spawn_consumers";
-	public static final String UPDATE_SCHEDULER = "update_scheduler";
-	public static final String DELETE_SCHEDULER = "delete_scheduler";
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+	@Inject
+	DatasourceService datasourceService;
+	@Inject
+	EventBus eventBus;
+	@Inject
+	Logger logger;
+	@Inject
+	SchedulerInitializerActor schedulerInitializerActor;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+	@GrpcClient("tenantmanager")
+	TenantManager tenantManager;
 
-	@ConsumeEvent(value = ActorSystemProvider.INITIALIZED)
-	public void startUp(String ignore) {
-		eventBus.send(INITIALIZE_SCHEDULER, INITIALIZE_SCHEDULER);
-		eventBus.send(SPAWN_CONSUMERS, SPAWN_CONSUMERS);
+	@ConsumeEvent(UPDATE_SCHEDULER)
+	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
+
+		return schedulerInitializerActor.scheduleDataSource(
+			datasource.getTenant(),
+			datasource.getId(),
+			datasource.getSchedulable(),
+			datasource.getScheduling(),
+			datasource.getReindexable(),
+			datasource.getReindexing()
+		);
+
+	}
+
+	@ConsumeEvent(DELETE_SCHEDULER)
+	public Uni<Void> deleteScheduler(Datasource datasource) {
+
+		return schedulerInitializerActor.unScheduleDataSource(
+			datasource.getTenant(),
+			datasource.getId()
+		);
 	}
 
 	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
@@ -66,6 +97,20 @@ public class SchedulerInitializer {
 		return getTenantList()
 			.flatMap(this::getScheduleDatasourceCommands)
 			.flatMap(schedulerInitializerActor::initJobScheduler);
+
+	}
+
+	public Uni<Void> performTask(
+			String schemaName, Long datasourceId, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
+
+		return sessionFactory.withTransaction(
+			schemaName,
+			(s, t) -> datasourceService
+				.findByIdWithPluginDriver(datasourceId)
+				.flatMap(d -> schedulerInitializerActor.triggerDataSource(
+					schemaName, d.getId(), reindex, startIngestionDate))
+		);
 
 	}
 
@@ -110,28 +155,22 @@ public class SchedulerInitializer {
 			});
 	}
 
-
-	@ConsumeEvent(UPDATE_SCHEDULER)
-	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
-
-		return schedulerInitializerActor.scheduleDataSource(
-			datasource.getTenant(),
-			datasource.getId(),
-			datasource.getSchedulable(),
-			datasource.getScheduling(),
-			datasource.getReindexable(),
-			datasource.getReindexing()
-		);
-
+	@ConsumeEvent(value = ActorSystemProvider.INITIALIZED)
+	public void startUp(String ignore) {
+		eventBus.send(INITIALIZE_SCHEDULER, INITIALIZE_SCHEDULER);
+		eventBus.send(SPAWN_CONSUMERS, SPAWN_CONSUMERS);
 	}
 
-	@ConsumeEvent(DELETE_SCHEDULER)
-	public Uni<Void> deleteScheduler(Datasource datasource) {
+	public Uni<Void> triggerJob(
+			String tenantName, long datasourceId, String name, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
 
-		return schedulerInitializerActor.unScheduleDataSource(
-			datasource.getTenant(),
-			datasource.getId()
-		);
+		return Uni.createFrom().deferred(() -> {
+			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " reindex: " + reindex);
+			return performTask(
+				tenantName, datasourceId, reindex, startIngestionDate);
+		});
+
 	}
 
 	public Uni<List<Long>> triggerJobs(String tenantName, TriggerWithDateResourceDTO dto) {
@@ -157,49 +196,6 @@ public class SchedulerInitializer {
 
 	}
 
-	
-	public Uni<Void> triggerJob(
-			String tenantName, long datasourceId, String name, Boolean reindex,
-			OffsetDateTime startIngestionDate) {
-
-		return Uni.createFrom().deferred(() -> {
-			logger.info("datasourceId: " + datasourceId + " trigger: " + name + " reindex: " + reindex);
-			return performTask(
-				tenantName, datasourceId, reindex, startIngestionDate);
-		});
-
-	}
-
-	public Uni<Void> performTask(
-			String schemaName, Long datasourceId, Boolean reindex,
-			OffsetDateTime startIngestionDate) {
-
-		return sessionFactory.withTransaction(
-			schemaName,
-			(s, t) -> datasourceService
-				.findByIdWithPluginDriver(datasourceId)
-				.flatMap(d -> schedulerInitializerActor.triggerDataSource(
-					schemaName, d.getId(), reindex, startIngestionDate))
-		);
-
-	}
-
-	private Uni<List<TenantResponse>> getTenantList() {
-		return tenantManager
-			.findTenantList(Empty.getDefaultInstance())
-			.map(TenantListResponse::getTenantResponseList);
-	}
-
-	private JobScheduler.ScheduleDatasource mapScheduleDatasource(Datasource datasource) {
-		return new JobScheduler.ScheduleDatasource(
-			datasource.getTenant(),
-			datasource.getId(),
-			datasource.getSchedulable(),
-			datasource.getScheduling(),
-			datasource.getReindexable(),
-			datasource.getReindexing());
-	}
-
 	private Uni<? extends List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
 		List<TenantResponse> tenantResponses) {
 
@@ -222,25 +218,20 @@ public class SchedulerInitializer {
 			);
 	}
 
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
+	private Uni<List<TenantResponse>> getTenantList() {
+		return tenantManager
+			.findTenantList(Empty.getDefaultInstance())
+			.map(TenantListResponse::getTenantResponseList);
+	}
 
-	@Inject
-	Logger logger;
-
-	@Inject
-	DatasourceService datasourceService;
-
-	@Inject
-	EventBus eventBus;
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	SchedulerInitializerActor schedulerInitializerActor;
-
-	@Inject
-	ActorSystemProvider actorSystemProvider;
+	private JobScheduler.ScheduleDatasource mapScheduleDatasource(Datasource datasource) {
+		return new JobScheduler.ScheduleDatasource(
+			datasource.getTenant(),
+			datasource.getId(),
+			datasource.getSchedulable(),
+			datasource.getScheduling(),
+			datasource.getReindexable(),
+			datasource.getReindexing());
+	}
 
 }

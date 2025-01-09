@@ -33,18 +33,58 @@ import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import java.util.Set;
 
 public class CreateConnection {
-	public static final String DATASOURCE_NAME = "My New Connection";
 	public static final String DATASOURCE_DESCRIPTION = "A new datasource connection";
-	public static final int REINDEX_RATE = 1;
-	public static final boolean REINDEXABLE = false;
-	public static final String REINDEXING = "0 0 * ? * * *";
-	public static final boolean SCHEDULABLE = true;
+	public static final long DATASOURCE_ID = Long.MAX_VALUE;
 	public static final String DATASOURCE_JSON_CONFIG = "{}";
-	public static final String SCHEDULING = "0 0 * ? * * *";
+	public static final String DATASOURCE_NAME = "My New Connection";
+	public static final long DATA_INDEX_ID = 1111L;
+	public static final long FIRST_ITEM_ID = 34L;
+	public static final long PIPELINE_ID = 10L;
+	public static final String PIPELINE_NAME = "Connection Pipeline";
 	public static final PluginDriverDTO PLUGIN_DRIVER_DTO =
 		PluginDrivers.getPluginDriverDTO(Preset.CRAWLER);
-	public static final String PIPELINE_NAME = "Connection Pipeline";
-	public static final long FIRST_ITEM_ID = 34L;
+	public static final long PLUGIN_DRIVER_ID = 100L;
+	public static final boolean REINDEXABLE = false;
+	public static final String REINDEXING = "0 0 * ? * * *";
+	public static final int REINDEX_RATE = 1;
+	public static final boolean SCHEDULABLE = true;
+	public static final String SCHEDULING = "0 0 * ? * * *";
+	public static final DatasourceConnectionDTO NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO =
+		DatasourceConnectionDTO.builder()
+			.name(DATASOURCE_NAME + "new plugin preexist pipeline dto")
+			.description(DATASOURCE_DESCRIPTION)
+			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
+			.schedulable(SCHEDULABLE)
+			.jsonConfig(DATASOURCE_JSON_CONFIG)
+			.scheduling(SCHEDULING)
+			.pluginDriver(PLUGIN_DRIVER_DTO)
+			.pipelineId(PIPELINE_ID)
+			.build();
+	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
+		DatasourceConnectionDTO.builder()
+			.name(DATASOURCE_NAME + "new plugin no pipeline dto")
+			.description(DATASOURCE_DESCRIPTION)
+			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
+			.schedulable(SCHEDULABLE)
+			.jsonConfig(DATASOURCE_JSON_CONFIG)
+			.scheduling(SCHEDULING)
+			.pluginDriver(PLUGIN_DRIVER_DTO)
+			.build();
+	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
+		DatasourceConnectionDTO.builder()
+			.name(DATASOURCE_NAME + "no plugin no pipeline dto")
+			.description(DATASOURCE_DESCRIPTION)
+			.reindexRate(REINDEX_RATE)
+			.reindexing(REINDEXING)
+			.reindexable(REINDEXABLE)
+			.schedulable(SCHEDULABLE)
+			.jsonConfig(DATASOURCE_JSON_CONFIG)
+			.scheduling(SCHEDULING)
+			.build();
 	public static final long SECOND_ITEM_ID = 65L;
 	public static final PipelineWithItemsDTO PIPELINE_WITH_ITEMS_DTO =
 		PipelineWithItemsDTO.builder()
@@ -60,12 +100,6 @@ public class CreateConnection {
 				.build()
 			)
 			.build();
-	public static final long PLUGIN_DRIVER_ID = 100L;
-	public static final long PIPELINE_ID = 10L;
-	public static final long DATASOURCE_ID = Long.MAX_VALUE;
-	public static final long DATA_INDEX_ID = 1111L;
-	public static final long VECTOR_INDEX_ID = 2199L;
-
 	public static final DatasourceConnectionDTO NEW_ENTITIES_VECTOR_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME + " new entities vector dto")
@@ -87,7 +121,6 @@ public class CreateConnection {
 				.build()
 			)
 			.build();
-
 	public static final DatasourceConnectionDTO NEW_ENTITIES_BASE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME + "new entities base dto")
@@ -101,7 +134,6 @@ public class CreateConnection {
 		.pluginDriver(PLUGIN_DRIVER_DTO)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
-
 	public static final DatasourceConnectionDTO PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO =
 		DatasourceConnectionDTO.builder()
 			.name(DATASOURCE_NAME + "pre exist plugin new pipeline dto")
@@ -115,7 +147,6 @@ public class CreateConnection {
 			.pluginDriverId(PLUGIN_DRIVER_ID)
 			.pipeline(PIPELINE_WITH_ITEMS_DTO)
 			.build();
-
 	public static final DatasourceConnectionDTO AMBIGUOUS_DTO = DatasourceConnectionDTO.builder()
 		.name(DATASOURCE_NAME + " ambiguous dto")
 		.description(DATASOURCE_DESCRIPTION)
@@ -130,50 +161,11 @@ public class CreateConnection {
 		.pipelineId(PIPELINE_ID)
 		.pipeline(PIPELINE_WITH_ITEMS_DTO)
 		.build();
-
-	public static final DatasourceConnectionDTO NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO =
-		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME + "new plugin preexist pipeline dto")
-			.description(DATASOURCE_DESCRIPTION)
-			.reindexRate(REINDEX_RATE)
-			.reindexing(REINDEXING)
-			.reindexable(REINDEXABLE)
-			.schedulable(SCHEDULABLE)
-			.jsonConfig(DATASOURCE_JSON_CONFIG)
-			.scheduling(SCHEDULING)
-			.pluginDriver(PLUGIN_DRIVER_DTO)
-			.pipelineId(PIPELINE_ID)
-			.build();
-
-	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
-		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME + "new plugin no pipeline dto")
-			.description(DATASOURCE_DESCRIPTION)
-			.reindexRate(REINDEX_RATE)
-			.reindexing(REINDEXING)
-			.reindexable(REINDEXABLE)
-			.schedulable(SCHEDULABLE)
-			.jsonConfig(DATASOURCE_JSON_CONFIG)
-			.scheduling(SCHEDULING)
-			.pluginDriver(PLUGIN_DRIVER_DTO)
-			.build();
-
-	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
-		DatasourceConnectionDTO.builder()
-			.name(DATASOURCE_NAME + "no plugin no pipeline dto")
-			.description(DATASOURCE_DESCRIPTION)
-			.reindexRate(REINDEX_RATE)
-			.reindexing(REINDEXING)
-			.reindexable(REINDEXABLE)
-			.schedulable(SCHEDULABLE)
-			.jsonConfig(DATASOURCE_JSON_CONFIG)
-			.scheduling(SCHEDULING)
-			.build();
-
-	public static PluginDriver PLUGIN_DRIVER;
-	public static EnrichPipeline PIPELINE;
-	public static Datasource DATASOURCE;
+	public static final long VECTOR_INDEX_ID = 2199L;
 	public static DataIndex DATAINDEX;
+	public static Datasource DATASOURCE;
+	public static EnrichPipeline PIPELINE;
+	public static PluginDriver PLUGIN_DRIVER;
 	public static VectorIndex VECTORINDEX;
 
 	static {

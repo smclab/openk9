@@ -47,25 +47,19 @@ import org.jboss.logging.Logger;
 public class Initializer {
 
 	private static final Logger log = Logger.getLogger(Initializer.class);
-
 	@Inject
-	TenantInitializerService initializerService;
-
+	BucketService bucketService;
 	@Inject
 	DatasourceService datasourceService;
 
 	@Inject
 	EmbeddingModelService embeddingModelService;
-
-	@Inject
-	LargeLanguageModelService largeLanguageModelService;
-
 	@Inject
 	EnrichItemService enrichItemService;
-
 	@Inject
-	BucketService bucketService;
-
+	TenantInitializerService initializerService;
+	@Inject
+	LargeLanguageModelService largeLanguageModelService;
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
 
@@ -99,72 +93,76 @@ public class Initializer {
 
 	}
 
-	private void createSecondaryLLM() {
+	void addsSuggestionCategoriesToBucket() {
 
-		log.info("Create secondary LLM");
+		var category1 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 1")
+			.multiSelect(false)
+			.priority(1.0f)
+			.build()
+		).await().indefinitely();
 
-		largeLanguageModelService.create(LargeLanguageModelDTO.builder()
-				.name("Test LLM Disabled")
-				.apiUrl("llm.disabled.local")
-				.apiKey("secret")
-				.jsonConfig("{}")
-				.build())
+		var category2 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 2")
+			.multiSelect(false)
+			.priority(2.0f)
+			.build()
+		).await().indefinitely();
+
+		var category3 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
+			.name("Category 3")
+			.multiSelect(false)
+			.priority(3.0f)
+			.build()
+		).await().indefinitely();
+
+
+		var bucket = bucketService
+			.findByName("public", Bucket.INSTANCE.getName())
 			.await()
 			.indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category1.getId())
+			.await().indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category2.getId())
+			.await().indefinitely();
+
+		bucketService.addSuggestionCategory(bucket.getId(), category3.getId())
+			.await().indefinitely();
 
 	}
 
-	private void createSecondaryEmbeddingModel() {
+	private void addsTabsToBucket() {
 
-		log.info("Create secondary EmbeddingModel");
+		var tabOne = tabService.create(TabDTO.builder()
+			.name("Tab One")
+			.priority(1)
+			.build()
+		).await().indefinitely();
 
-		embeddingModelService.create(EmbeddingModelDTO.builder()
-				.name("Test embedding model disabled")
-				.apiUrl("embedding-model.disabled.local")
-				.apiKey("secret")
-				.build())
-			.await()
-			.indefinitely();
+		var bucket = bucketService.findByName("public", Bucket.INSTANCE.getName())
+			.await().indefinitely();
+
+		bucketService.addTabToBucket(bucket.getId(), tabOne.getId())
+			.await().indefinitely();
+
 
 	}
 
-	private void createPrimaryLLM() {
+	private void bindDatasourceToBucket() {
 
-		log.info("Create primary LLM.");
-
-		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
-				.name("Test LLM")
-				.apiUrl("llm.local")
-				.apiKey("secret-key")
-				.jsonConfig("{}")
-				.build())
+		var datasource = datasourceService
+			.findByName("public", CreateConnection.DATASOURCE_NAME)
 			.await()
 			.indefinitely();
 
-		log.info("Enable primary LLM.");
-
-		largeLanguageModelService.enable(testLLM.getId())
-			.await()
-			.indefinitely();
-	}
-
-	private void createPrimaryEmbeddingModel() {
-
-		log.info("Create primary EmbeddingModel.");
-
-		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
-				.name("Test embedding model")
-				.apiUrl("embedding-model.local")
-				.apiKey("secret-key")
-				.build())
+		var bucket = bucketService
+			.findByName("public", Bucket.INSTANCE.getName())
 			.await()
 			.indefinitely();
 
-		log.info("Enable primary Embedding Model");
-
-		embeddingModelService.enable(testEmbeddingModel.getId())
-			.await()
-			.indefinitely();
+		bucketService.addDatasource(bucket.getId(), datasource.getId());
 
 	}
 
@@ -293,76 +291,72 @@ public class Initializer {
 			.indefinitely();
 	}
 
-	void addsSuggestionCategoriesToBucket() {
+	private void createPrimaryEmbeddingModel() {
 
-		var category1 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
-			.name("Category 1")
-			.multiSelect(false)
-			.priority(1.0f)
-			.build()
-		).await().indefinitely();
+		log.info("Create primary EmbeddingModel.");
 
-		var category2 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
-			.name("Category 2")
-			.multiSelect(false)
-			.priority(2.0f)
-			.build()
-		).await().indefinitely();
-
-		var category3 = suggestionCategoryService.create(SuggestionCategoryDTO.builder()
-			.name("Category 3")
-			.multiSelect(false)
-			.priority(3.0f)
-			.build()
-		).await().indefinitely();
-
-
-		var bucket = bucketService
-			.findByName("public", Bucket.INSTANCE.getName())
+		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model")
+				.apiUrl("embedding-model.local")
+				.apiKey("secret-key")
+				.build())
 			.await()
 			.indefinitely();
 
-		bucketService.addSuggestionCategory(bucket.getId(), category1.getId())
-			.await().indefinitely();
+		log.info("Enable primary Embedding Model");
 
-		bucketService.addSuggestionCategory(bucket.getId(), category2.getId())
-			.await().indefinitely();
-
-		bucketService.addSuggestionCategory(bucket.getId(), category3.getId())
-			.await().indefinitely();
+		embeddingModelService.enable(testEmbeddingModel.getId())
+			.await()
+			.indefinitely();
 
 	}
 
-	private void addsTabsToBucket() {
+	private void createPrimaryLLM() {
 
-		var tabOne = tabService.create(TabDTO.builder()
-			.name("Tab One")
-			.priority(1)
-			.build()
-		).await().indefinitely();
+		log.info("Create primary LLM.");
 
-		var bucket = bucketService.findByName("public", Bucket.INSTANCE.getName())
-			.await().indefinitely();
+		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM")
+				.apiUrl("llm.local")
+				.apiKey("secret-key")
+				.jsonConfig("{}")
+				.build())
+			.await()
+			.indefinitely();
 
-		bucketService.addTabToBucket(bucket.getId(), tabOne.getId())
-			.await().indefinitely();
+		log.info("Enable primary LLM.");
 
+		largeLanguageModelService.enable(testLLM.getId())
+			.await()
+			.indefinitely();
+	}
+
+	private void createSecondaryEmbeddingModel() {
+
+		log.info("Create secondary EmbeddingModel");
+
+		embeddingModelService.create(EmbeddingModelDTO.builder()
+				.name("Test embedding model disabled")
+				.apiUrl("embedding-model.disabled.local")
+				.apiKey("secret")
+				.build())
+			.await()
+			.indefinitely();
 
 	}
 
-	private void bindDatasourceToBucket() {
+	private void createSecondaryLLM() {
 
-		var datasource = datasourceService
-			.findByName("public", CreateConnection.DATASOURCE_NAME)
+		log.info("Create secondary LLM");
+
+		largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+				.name("Test LLM Disabled")
+				.apiUrl("llm.disabled.local")
+				.apiKey("secret")
+				.jsonConfig("{}")
+				.build())
 			.await()
 			.indefinitely();
-
-		var bucket = bucketService
-			.findByName("public", Bucket.INSTANCE.getName())
-			.await()
-			.indefinitely();
-
-		bucketService.addDatasource(bucket.getId(), datasource.getId());
 
 	}
 

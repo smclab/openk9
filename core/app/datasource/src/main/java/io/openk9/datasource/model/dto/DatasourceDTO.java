@@ -37,33 +37,28 @@ import org.eclipse.microprofile.graphql.Description;
 @EqualsAndHashCode(callSuper = true)
 public class DatasourceDTO extends K9EntityDTO {
 
-	@NotNull
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define scheduling of datasource")
-	private String scheduling;
-
-	@NotNull
-	@Description("If true datasource is scheduled based on defined scheduling expression")
-	@Builder.Default
-	private Boolean schedulable = false;
-
 	@Json
 	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
-
-	@NotNull
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define reindexing of datasource")
-	private String reindexing;
-
-	@NotNull
-	@Description("If true datasource is reindexed based on defined scheduling expression")
-	@Builder.Default
-	private Boolean reindexable = false;
-
 	@Deprecated
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@NotNull
 	private int reindexRate;
+	@NotNull
+	@Description("If true datasource is reindexed based on defined scheduling expression")
+	@Builder.Default
+	private Boolean reindexable = false;
+	@NotNull
+	@Cron(type = CronType.QUARTZ)
+	@Description("Chron quartz expression to define reindexing of datasource")
+	private String reindexing;
+	@NotNull
+	@Description("If true datasource is scheduled based on defined scheduling expression")
+	@Builder.Default
+	private Boolean schedulable = false;
+	@NotNull
+	@Cron(type = CronType.QUARTZ)
+	@Description("Chron quartz expression to define scheduling of datasource")
+	private String scheduling;
 
 }

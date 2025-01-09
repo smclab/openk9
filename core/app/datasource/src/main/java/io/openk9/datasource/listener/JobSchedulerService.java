@@ -58,9 +58,6 @@ import java.util.concurrent.CompletableFuture;
 @ApplicationScoped
 public class JobSchedulerService {
 
-	private static final Logger log =
-		Logger.getLogger(JobSchedulerService.class);
-
 	private static final String CALL_PLUGIN_DRIVER =
 		"JobSchedulerService#callPluginDriver";
 	private static final String CANCEL_SCHEDULER =
@@ -69,24 +66,22 @@ public class JobSchedulerService {
 		"JobSchedulerService#copyIndexTemplate";
 	private static final String FETCH_DATASOURCE_CONNECTION =
 		"JobSchedulerService#fetchDatasourceConnection";
-	private static final String PERSIST_SCHEDULER =
-		"JobSchedulerService#persistScheduler";
 	private static final String FETCH_EMBEDDING_MODEL =
 		"JobScheduler#fetchEmbeddingModel";
+	private static final String PERSIST_SCHEDULER =
+		"JobSchedulerService#persistScheduler";
 	private static final String TRIGGER_DATASOURCE =
 		"JobScheduler#triggerDatasource";
-
+	private static final Logger log =
+		Logger.getLogger(JobSchedulerService.class);
 	@Inject
 	HttpPluginDriverClient httpPluginDriverClient;
-
-	@Inject
-	SchedulerService schedulerService;
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	SchedulerService schedulerService;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	public static CompletableFuture<Void> callHttpPluginDriverClient(
 		Scheduler scheduler,
@@ -99,6 +94,17 @@ public class JobSchedulerService {
 
 		return EventBusInstanceHolder.getEventBus()
 			.<Void>request(CALL_PLUGIN_DRIVER, request)
+			.map(Message::body)
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletableFuture<Void> cancelScheduler(
+		String tenantId, long schedulerId) {
+
+		var request = new CancelSchedulerRequest(tenantId, schedulerId);
+
+		return EventBusInstanceHolder.getEventBus()
+			.<Void>request(CANCEL_SCHEDULER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -139,13 +145,13 @@ public class JobSchedulerService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<Void> cancelScheduler(
-		String tenantId, long schedulerId) {
+	public static CompletableFuture<TriggerType> getTriggerType(
+		Datasource datasource, boolean reindex) {
 
-		var request = new CancelSchedulerRequest(tenantId, schedulerId);
+		var request = new TriggerDatasourceRequest(datasource, reindex);
 
 		return EventBusInstanceHolder.getEventBus()
-			.<Void>request(CANCEL_SCHEDULER, request)
+			.<TriggerType>request(TRIGGER_DATASOURCE, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -161,15 +167,21 @@ public class JobSchedulerService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<TriggerType> getTriggerType(
-		Datasource datasource, boolean reindex) {
+	private static void copyDocTypes(Mutiny.Session s, Scheduler scheduler) {
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+		DataIndex newDataIndex = scheduler.getNewDataIndex();
 
-		var request = new TriggerDatasourceRequest(datasource, reindex);
+		if (oldDataIndex != null && newDataIndex != null) {
+			Set<DocType> docTypes = oldDataIndex.getDocTypes();
+			if (docTypes != null && !docTypes.isEmpty()) {
+				Set<DocType> refreshed = new LinkedHashSet<>();
 
-		return EventBusInstanceHolder.getEventBus()
-			.<TriggerType>request(TRIGGER_DATASOURCE, request)
-			.map(Message::body)
-			.subscribeAsCompletionStage();
+				for (DocType docType : docTypes) {
+					refreshed.add(s.getReference(docType));
+				}
+				newDataIndex.setDocTypes(refreshed);
+			}
+		}
 	}
 
 	@ConsumeEvent(CALL_PLUGIN_DRIVER)
@@ -199,6 +211,19 @@ public class JobSchedulerService {
 
 	}
 
+	@ConsumeEvent(CANCEL_SCHEDULER)
+	Uni<Void> cancelScheduler(CancelSchedulerRequest request) {
+
+		var tenantId = request.tenantId();
+		var schedulerId = request.schedulerId();
+
+		log.warnf(
+			"Trying to cancel the Scheduler with id %s to start Reindex",
+			schedulerId);
+
+		return schedulerService.cancelScheduling(tenantId, schedulerId);
+	}
+
 	@ConsumeEvent(COPY_INDEX_TEMPLATE)
 	Uni<Void> copyIndexTemplate(CopyIndexTemplateRequest request) {
 
@@ -218,6 +243,20 @@ public class JobSchedulerService {
 					getIndexTemplateRequest,
 					RequestOptions.DEFAULT,
 					new ActionListener<>() {
+
+						@Override
+						public void onFailure(Exception e) {
+							if (e instanceof OpenSearchStatusException
+								&& ((OpenSearchStatusException) e).status() == RestStatus.NOT_FOUND) {
+
+								log.warn("Cannot Copy Index Template", e);
+
+								emitter.complete(null);
+							}
+							else {
+								emitter.fail(e);
+							}
+						}
 
 						@Override
 						public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {
@@ -254,30 +293,16 @@ public class JobSchedulerService {
 									RequestOptions.DEFAULT,
 									new ActionListener<>() {
 										@Override
-										public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-											emitter.complete(null);
-										}
-
-										@Override
 										public void onFailure(Exception e) {
 											emitter.fail(e);
 										}
+
+										@Override
+										public void onResponse(AcknowledgedResponse acknowledgedResponse) {
+											emitter.complete(null);
+										}
 									}
 								);
-							}
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							if (e instanceof OpenSearchStatusException
-								&& ((OpenSearchStatusException) e).status() == RestStatus.NOT_FOUND) {
-
-								log.warn("Cannot Copy Index Template", e);
-
-								emitter.complete(null);
-							}
-							else {
-								emitter.fail(e);
 							}
 						}
 					}
@@ -313,19 +338,6 @@ public class JobSchedulerService {
 			.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
 			.getSingleResult()
 		);
-	}
-
-	@ConsumeEvent(CANCEL_SCHEDULER)
-	Uni<Void> cancelScheduler(CancelSchedulerRequest request) {
-
-		var tenantId = request.tenantId();
-		var schedulerId = request.schedulerId();
-
-		log.warnf(
-			"Trying to cancel the Scheduler with id %s to start Reindex",
-			schedulerId);
-
-		return schedulerService.cancelScheduling(tenantId, schedulerId);
 	}
 
 	@ConsumeEvent(PERSIST_SCHEDULER)
@@ -395,22 +407,13 @@ public class JobSchedulerService {
 
 	}
 
-	private static void copyDocTypes(Mutiny.Session s, Scheduler scheduler) {
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
+	private record CallHttpPluginDriverRequest(
+		Scheduler scheduler, OffsetDateTime lastIngestionDate
+	) {}
 
-		if (oldDataIndex != null && newDataIndex != null) {
-			Set<DocType> docTypes = oldDataIndex.getDocTypes();
-			if (docTypes != null && !docTypes.isEmpty()) {
-				Set<DocType> refreshed = new LinkedHashSet<>();
+	private record CancelSchedulerRequest(String tenantId, long schedulerId) {}
 
-				for (DocType docType : docTypes) {
-					refreshed.add(s.getReference(docType));
-				}
-				newDataIndex.setDocTypes(refreshed);
-			}
-		}
-	}
+	private record CopyIndexTemplateRequest(Scheduler scheduler) {}
 
 	private record FetchDatasourceConnectionRequest(
 		String tenantId, long datasourceId
@@ -418,18 +421,10 @@ public class JobSchedulerService {
 
 	private record FetchEmbeddingModelRequest(String tenantId) {}
 
-	private record CancelSchedulerRequest(String tenantId, long schedulerId) {}
-
 	private record PersistSchedulerRequest(
 		String tenantId, Scheduler scheduler
 	) {}
 
-	private record CopyIndexTemplateRequest(Scheduler scheduler) {}
-
 	private record TriggerDatasourceRequest(Datasource datasource, Boolean reindex) {}
-
-	private record CallHttpPluginDriverRequest(
-		Scheduler scheduler, OffsetDateTime lastIngestionDate
-	) {}
 
 }

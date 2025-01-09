@@ -70,11 +70,6 @@ public class IngestionEmitter {
 
 	private Connection connect;
 
-	@PostConstruct
-	public void init() {
-		this.connect = rabbitMQClient.connect();
-	}
-
 	@PreDestroy
 	public void destroy() throws IOException {
 		connect.close();
@@ -105,70 +100,9 @@ public class IngestionEmitter {
 		}
 	}
 
-	private IngestionPayloadWrapper _of(IngestionRequest dto) {
-
-		Map<String, Object> datasourcePayload =
-			new JsonObject(dto.getDatasourcePayload())
-				.getMap();
-
-		Map<String, List<String>> mappingAcl =
-			dto
-				.getAclMap()
-				.entrySet()
-				.stream()
-				.collect(
-					Collectors.toMap(
-						Map.Entry::getKey,
-						e -> new ArrayList<>(e.getValue().getValueList())
-					)
-				);
-
-		return IngestionPayloadWrapper.of(
-			IngestionPayload.of(
-				UUID.randomUUID().toString(),
-				dto.getDatasourceId(),
-				dto.getContentId(),
-				dto.getParsingDate(),
-				dto.getRawContent(),
-				datasourcePayload,
-				dto.getTenantId(),
-				IngestionUtils.getDocumentTypes(datasourcePayload),
-				_dtoToPayload(dto.getResources()),
-				mappingAcl,
-				dto.getScheduleId(),
-				dto.getLast(),
-				_mapType(dto.getType())
-			)
-		);
-	}
-
-	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
-		return switch (type) {
-			case DOCUMENT -> PayloadType.DOCUMENT;
-			case LAST -> PayloadType.LAST;
-			case HALT -> PayloadType.HALT;
-			case UNRECOGNIZED -> null;
-		};
-	}
-
-	private IngestionPayloadWrapper _of(IngestionDTO dto) {
-		return IngestionPayloadWrapper.of(
-			IngestionPayload.of(
-				UUID.randomUUID().toString(),
-				dto.getDatasourceId(),
-				dto.getContentId(),
-				dto.getParsingDate(),
-				dto.getRawContent(),
-				dto.getDatasourcePayload(),
-				dto.getTenantId(),
-				IngestionUtils.getDocumentTypes(dto.getDatasourcePayload()),
-				_dtoToPayload(dto.getResources()),
-				dto.getAcl(),
-				dto.getScheduleId(),
-				dto.isLast(),
-				dto.getType()
-			)
-		);
+	@PostConstruct
+	public void init() {
+		this.connect = rabbitMQClient.connect();
 	}
 
 	private ResourcesPayload _dtoToPayload(
@@ -223,6 +157,81 @@ public class IngestionEmitter {
 		return ResourcesPayload.of(binaryPayloadList);
 	}
 
+	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
+		return switch (type) {
+			case DOCUMENT -> PayloadType.DOCUMENT;
+			case LAST -> PayloadType.LAST;
+			case HALT -> PayloadType.HALT;
+			case UNRECOGNIZED -> null;
+		};
+	}
+
+	private IngestionPayloadWrapper _of(IngestionRequest dto) {
+
+		Map<String, Object> datasourcePayload =
+			new JsonObject(dto.getDatasourcePayload())
+				.getMap();
+
+		Map<String, List<String>> mappingAcl =
+			dto
+				.getAclMap()
+				.entrySet()
+				.stream()
+				.collect(
+					Collectors.toMap(
+						Map.Entry::getKey,
+						e -> new ArrayList<>(e.getValue().getValueList())
+					)
+				);
+
+		return IngestionPayloadWrapper.of(
+			IngestionPayload.of(
+				UUID.randomUUID().toString(),
+				dto.getDatasourceId(),
+				dto.getContentId(),
+				dto.getParsingDate(),
+				dto.getRawContent(),
+				datasourcePayload,
+				dto.getTenantId(),
+				IngestionUtils.getDocumentTypes(datasourcePayload),
+				_dtoToPayload(dto.getResources()),
+				mappingAcl,
+				dto.getScheduleId(),
+				dto.getLast(),
+				_mapType(dto.getType())
+			)
+		);
+	}
+
+	private IngestionPayloadWrapper _of(IngestionDTO dto) {
+		return IngestionPayloadWrapper.of(
+			IngestionPayload.of(
+				UUID.randomUUID().toString(),
+				dto.getDatasourceId(),
+				dto.getContentId(),
+				dto.getParsingDate(),
+				dto.getRawContent(),
+				dto.getDatasourcePayload(),
+				dto.getTenantId(),
+				IngestionUtils.getDocumentTypes(dto.getDatasourcePayload()),
+				_dtoToPayload(dto.getResources()),
+				dto.getAcl(),
+				dto.getScheduleId(),
+				dto.isLast(),
+				dto.getType()
+			)
+		);
+	}
+
+	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
+		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
+
+		return ShardingKey.asString(
+			ingestionPayload.getTenantId(),
+			ingestionPayload.getScheduleId()
+		);
+	}
+
 	private boolean checkQueueExistence(String queueName) {
 		boolean exist = false;
 		try (var channel = connect.createChannel()) {
@@ -252,15 +261,6 @@ public class IngestionEmitter {
 					.withDeliveryMode(2)
 					.build()
 			)
-		);
-	}
-
-	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
-		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
-
-		return ShardingKey.asString(
-			ingestionPayload.getTenantId(),
-			ingestionPayload.getScheduleId()
 		);
 	}
 

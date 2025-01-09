@@ -53,6 +53,11 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+	@Inject
+	RestHighLevelClient restHighLevelClient;
+
 	SchedulerService() {}
 
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
@@ -251,11 +256,5 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public record DatasourceJobStatus(long id, JobStatus status) {}
-
-	@Inject
-	ActorSystemProvider actorSystemProvider;
-
-	@Inject
-	RestHighLevelClient restHighLevelClient;
 
 }

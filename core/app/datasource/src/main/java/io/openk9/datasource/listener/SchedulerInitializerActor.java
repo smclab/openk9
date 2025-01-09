@@ -34,6 +34,11 @@ import java.util.function.Supplier;
 @ApplicationScoped
 public class SchedulerInitializerActor {
 
+	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+	@Inject
+	Vertx vertx;
 	private List<JobScheduler.ScheduleDatasource> schedulatedJobs;
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
@@ -50,11 +55,6 @@ public class SchedulerInitializerActor {
 				schedulingCron, reindexable, reindexingCron));
 	}
 
-	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
-		return getScheduleRef(() ->
-			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
-	}
-
 	public Uni<Void> triggerDataSource(
 			String tenantName, long datasourceId, Boolean reindex,
 			OffsetDateTime startIngestionDate) {
@@ -62,6 +62,11 @@ public class SchedulerInitializerActor {
 		return getScheduleRef(() ->
 			new JobScheduler.TriggerDatasource(
 				tenantName, datasourceId, reindex, startIngestionDate));
+	}
+	
+	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
+		return getScheduleRef(() ->
+			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	private Uni<Void> getScheduleRef(Supplier<JobScheduler.Command> commandSupplier) {
@@ -98,12 +103,4 @@ public class SchedulerInitializerActor {
 		);
 
 	}
-
-	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
-	
-
-	@Inject
-	ActorSystemProvider actorSystemProvider;
-	@Inject
-	Vertx vertx;
 }

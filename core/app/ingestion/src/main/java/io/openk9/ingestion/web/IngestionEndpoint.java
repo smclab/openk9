@@ -36,11 +36,8 @@ public class IngestionEndpoint {
 
 	private static final String DETAILS_FIELD = "details";
 	private static final String EMPTY_JSON = "{}";
-	private static final String NO_SUCH_QUEUE_ERROR =
-		"{\n" +
-		"\t\"errorCode\": 01,\n" +
-		"\t\"status\": \"No such queue for this schedule.\"\n" +
-		"}";
+	@Inject
+	FileManagerEmitter _fileManagerEmitter;
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -60,8 +57,5 @@ public class IngestionEndpoint {
 				"No such queue for this schedule."
 			));
 	}
-
-	@Inject
-	FileManagerEmitter _fileManagerEmitter;
 
 }

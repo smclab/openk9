@@ -55,64 +55,6 @@ import java.util.Set;
 @EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
-	@Column(name = "name", nullable = false, unique = true)
-	private String name;
-
-	@Column(name = "description", length = 4096)
-	private String description;
-
-	@Description("Chron quartz expression to define scheduling of datasource")
-	@Column(name = "scheduling", nullable = false)
-	@Cron(type = CronType.QUARTZ)
-	private String scheduling;
-
-	@Description("Last ingestion date of data for current datasource")
-	@Column(name = "last_ingestion_date")
-	private OffsetDateTime lastIngestionDate;
-
-	@Description("If true set datasource as schedulable")
-	@Column(name = "schedulable", nullable = false)
-	private Boolean schedulable = false;
-
-	@ToString.Exclude
-	@OneToOne(
-		fetch = jakarta.persistence.FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL
-	)
-	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
-	@JsonIgnore
-	private DataIndex dataIndex;
-
-	@ToString.Exclude
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "datasource")
-	@JsonIgnore
-	private Set<DataIndex> dataIndexes;
-
-	@ToString.Exclude
-	@ManyToOne(cascade = {
-		jakarta.persistence.CascadeType.PERSIST,
-		jakarta.persistence.CascadeType.MERGE,
-		jakarta.persistence.CascadeType.REFRESH,
-		jakarta.persistence.CascadeType.DETACH
-	}
-	)
-	@JoinColumn(name = "enrich_pipeline_id")
-	@JsonIgnore
-	private EnrichPipeline enrichPipeline;
-
-	@ToString.Exclude
-	@ManyToOne(
-		fetch = FetchType.LAZY,
-		cascade = {
-			jakarta.persistence.CascadeType.PERSIST,
-			jakarta.persistence.CascadeType.MERGE,
-			jakarta.persistence.CascadeType.REFRESH,
-			jakarta.persistence.CascadeType.DETACH
-		}
-	)
-	@JoinColumn(name = "plugin_driver_id")
-	@JsonIgnore
-	private PluginDriver pluginDriver;
-
 	@ManyToMany(cascade = {
 		jakarta.persistence.CascadeType.PERSIST,
 		jakarta.persistence.CascadeType.MERGE,
@@ -126,28 +68,72 @@ public class Datasource extends K9Entity {
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Bucket> buckets = new LinkedHashSet<>();
-
-	@OneToMany(mappedBy = "datasource")
 	@ToString.Exclude
+	@OneToOne(
+		fetch = jakarta.persistence.FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL
+	)
+	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
 	@JsonIgnore
-	private Set<Scheduler> schedulers = new LinkedHashSet<>();
-
+	private DataIndex dataIndex;
+	@ToString.Exclude
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "datasource")
+	@JsonIgnore
+	private Set<DataIndex> dataIndexes;
+	@Column(name = "description", length = 4096)
+	private String description;
+	@ToString.Exclude
+	@ManyToOne(cascade = {
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
+	@JoinColumn(name = "enrich_pipeline_id")
+	@JsonIgnore
+	private EnrichPipeline enrichPipeline;
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
-
-	@Description("If true set datasource as reindexable")
-	@Column(name = "reindexable", nullable = false)
-	private Boolean reindexable = false;
-
-	@Description("Chron quartz expression to define reindexing of datasource")
-	@Column(name = "reindexing", nullable = false)
-	@Cron(type = CronType.QUARTZ)
-	private String reindexing;
-
+	@Description("Last ingestion date of data for current datasource")
+	@Column(name = "last_ingestion_date")
+	private OffsetDateTime lastIngestionDate;
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@ToString.Exclude
+	@ManyToOne(
+		fetch = FetchType.LAZY,
+		cascade = {
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
+		}
+	)
+	@JoinColumn(name = "plugin_driver_id")
+	@JsonIgnore
+	private PluginDriver pluginDriver;
 	@Deprecated
 	@Description("Reindex on datasource every {reindexRate} times, never if 0")
 	@Column(name = "reindex_rate")
 	private int reindexRate = 0;
+	@Description("If true set datasource as reindexable")
+	@Column(name = "reindexable", nullable = false)
+	private Boolean reindexable = false;
+	@Description("Chron quartz expression to define reindexing of datasource")
+	@Column(name = "reindexing", nullable = false)
+	@Cron(type = CronType.QUARTZ)
+	private String reindexing;
+	@Description("If true set datasource as schedulable")
+	@Column(name = "schedulable", nullable = false)
+	private Boolean schedulable = false;
+	@OneToMany(mappedBy = "datasource")
+	@ToString.Exclude
+	@JsonIgnore
+	private Set<Scheduler> schedulers = new LinkedHashSet<>();
+	@Description("Chron quartz expression to define scheduling of datasource")
+	@Column(name = "scheduling", nullable = false)
+	@Cron(type = CronType.QUARTZ)
+	private String scheduling;
 
 }
