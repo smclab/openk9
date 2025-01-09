@@ -35,6 +35,8 @@ import io.openk9.ingestion.grpc.Resources;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
@@ -65,6 +67,18 @@ public class IngestionEmitter {
 
 	@Inject
 	RabbitMQClient rabbitMQClient;
+
+	private Connection connect;
+
+	@PostConstruct
+	public void init() {
+		this.connect = rabbitMQClient.connect();
+	}
+
+	@PreDestroy
+	public void destroy() throws IOException {
+		connect.close();
+	}
 
 	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
 
@@ -211,9 +225,7 @@ public class IngestionEmitter {
 
 	private boolean checkQueueExistence(String queueName) {
 		boolean exist = false;
-		try (var connection = rabbitMQClient.connect();
-			 var channel = connection.createChannel()) {
-
+		try (var channel = connect.createChannel()) {
 			channel.queueDeclarePassive(queueName);
 			exist = true;
 

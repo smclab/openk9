@@ -20,16 +20,21 @@ package io.openk9.ingestion.web;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 @Path("/v1/ingestion/")
 public class IngestionEndpoint {
 
+	private static final String DETAILS_FIELD = "details";
 	private static final String EMPTY_JSON = "{}";
 	private static final String NO_SUCH_QUEUE_ERROR =
 		"{\n" +
@@ -43,10 +48,17 @@ public class IngestionEndpoint {
 	public Uni<String> ingestion(IngestionDTO dto) {
 
 		return _fileManagerEmitter.emit(dto)
-			.replaceWith(() -> EMPTY_JSON)
-			.onFailure(NoSuchQueueException.class)
-			.recoverWithItem(NO_SUCH_QUEUE_ERROR);
+			.replaceWith(() -> EMPTY_JSON);
 
+	}
+
+	@ServerExceptionMapper
+	public RestResponse<JsonObject> mapException(NoSuchQueueException exception) {
+		return RestResponse.status(Response.Status.NOT_ACCEPTABLE,
+			JsonObject.of(
+				DETAILS_FIELD,
+				"No such queue for this schedule."
+			));
 	}
 
 	@Inject
