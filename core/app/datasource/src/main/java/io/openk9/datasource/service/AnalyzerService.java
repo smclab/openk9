@@ -44,98 +44,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-;
-
 @ApplicationScoped
 public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> {
+	@Inject
+	CharFilterService _charFilterService;
+	@Inject
+	TokenFilterService _tokenFilterService;
+	@Inject
+	TokenizerService _tokenizerService;
+
 	AnalyzerService(AnalyzerMapper mapper) {
 		this.mapper = mapper;
 	}
 
-	public Uni<List<Analyzer>> findUnboundAnalyzersByTokenFilter(long tokenFilterId) {
-		return sessionFactory.withTransaction(s -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(long id, long charFilterId) {
 
-			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
-			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(analyzer -> _charFilterService.findById(s, charFilterId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(charFilter ->
+					s.fetch(analyzer.getCharFilters())
+						.onItem()
+						.ifNotNull()
+						.transformToUni(charFilters -> {
 
-			criteriaQuery.select(rootAnalyzer);
+							if (charFilters.add(charFilter)) {
 
-			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
-			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
+								analyzer.setCharFilters(charFilters);
 
-			Join<Analyzer, TokenFilter> tokenFilterJoinToExclude =
-				rootAnalyzerToExclude.join(Analyzer_.tokenFilters, JoinType.INNER);
+								return persist(s, analyzer)
+									.map(newSC -> Tuple2.of(newSC, charFilter));
+							}
 
-			idsToExcludeQuery
-				.select(rootAnalyzerToExclude.get(Analyzer_.id))
-				.where(cb.equal(tokenFilterJoinToExclude.get(TokenFilter_.id), tokenFilterId));
+							return Uni.createFrom().nullItem();
 
-			criteriaQuery.where(
-				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
-
-			return s.createQuery(criteriaQuery).getResultList();
-		});
-	}
-
-	public Uni<List<Analyzer>> findUnboundAnalyzersByCharFilter(long charFilterId) {
-		return sessionFactory.withTransaction(s -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
-			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
-
-			criteriaQuery.select(rootAnalyzer);
-
-			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
-			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
-
-			Join<Analyzer, CharFilter> charFilterJoinToExclude =
-				rootAnalyzerToExclude.join(Analyzer_.charFilters, JoinType.INNER);
-
-			idsToExcludeQuery
-				.select(rootAnalyzerToExclude.get(Analyzer_.id))
-				.where(cb.equal(charFilterJoinToExclude.get(CharFilter_.id), charFilterId));
-
-			criteriaQuery.where(
-				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
-
-			return s.createQuery(criteriaQuery).getResultList();
-		});
-	}
-
-	@Override
-	public Class<Analyzer> getEntityClass() {return Analyzer.class;} ;
-
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {Analyzer_.NAME, Analyzer_.DESCRIPTION, Analyzer_.TYPE};
-	}
-
-	public Uni<Connection<TokenFilter>> getTokenFilters(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			id, Analyzer_.TOKEN_FILTERS, TokenFilter.class,
-			_tokenFilterService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
-
-	public Uni<Connection<CharFilter>> getCharFilters(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			id, Analyzer_.CHAR_FILTERS, CharFilter.class,
-			_charFilterService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
-
-	public Uni<Tokenizer> getTokenizer(long analyzerId) {
-		return sessionFactory.withTransaction(s -> findById(s, analyzerId)
-				.flatMap(analyzer -> s.fetch(analyzer.getTokenizer())));
+						})
+				)
+			));
 	}
 
 	public Uni<Tuple2<Analyzer, TokenFilter>> addTokenFilterToAnalyzer(
@@ -168,22 +116,157 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			));
 	}
 
-	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterToAnalyzer(
-		long id, long tokenFilterId) {
+	public Uni<Tuple2<Analyzer, Tokenizer>> bindTokenizer(long analyzerId, long tokenizerId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(analyzer -> _tokenizerService.findById(s, tokenizerId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tokenizer -> {
+					analyzer.setTokenizer(tokenizer);
+					return persist(s, analyzer).map(t -> Tuple2.of(t, tokenizer));
+				})));
+	}
 
+	public Uni<List<Analyzer>> findUnboundAnalyzersByCharFilter(long charFilterId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
+			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
+
+			criteriaQuery.select(rootAnalyzer);
+
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
+
+			Join<Analyzer, CharFilter> charFilterJoinToExclude =
+				rootAnalyzerToExclude.join(Analyzer_.charFilters, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(rootAnalyzerToExclude.get(Analyzer_.id))
+				.where(cb.equal(charFilterJoinToExclude.get(CharFilter_.id), charFilterId));
+
+			criteriaQuery.where(
+				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
+	}
+
+	public Uni<List<Analyzer>> findUnboundAnalyzersByTokenFilter(long tokenFilterId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
+			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
+
+			criteriaQuery.select(rootAnalyzer);
+
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
+
+			Join<Analyzer, TokenFilter> tokenFilterJoinToExclude =
+				rootAnalyzerToExclude.join(Analyzer_.tokenFilters, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(rootAnalyzerToExclude.get(Analyzer_.id))
+				.where(cb.equal(tokenFilterJoinToExclude.get(TokenFilter_.id), tokenFilterId));
+
+			criteriaQuery.where(
+				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
+	}
+
+	public Uni<Connection<CharFilter>> getCharFilters(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Analyzer_.CHAR_FILTERS, CharFilter.class,
+			_charFilterService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+@Override
+	public Class<Analyzer> getEntityClass() {return Analyzer.class;}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Analyzer_.NAME, Analyzer_.DESCRIPTION, Analyzer_.TYPE};
+	}
+
+	public Uni<Connection<TokenFilter>> getTokenFilters(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Analyzer_.TOKEN_FILTERS, TokenFilter.class,
+			_tokenFilterService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Tokenizer> getTokenizer(long analyzerId) {
+		return sessionFactory.withTransaction(s -> findById(s, analyzerId)
+				.flatMap(analyzer -> s.fetch(analyzer.getTokenizer())));
+	}
+
+	public Uni<Void> load(Analyzer analyzer) {
+		return sessionFactory.withTransaction(s -> {
+
+			List<Uni<?>> unis = new ArrayList<>();
+
+			unis.add(s.fetch(analyzer.getTokenizer()));
+			unis.add(s.fetch(analyzer.getCharFilters()));
+			unis.add(s.fetch(analyzer.getTokenFilters()));
+
+			return Uni.combine()
+				.all()
+				.unis(unis)
+				.usingConcurrencyOf(1)
+				.collectFailures()
+				.discardItems();
+
+		});
+	}
+
+	public Uni<Tuple2<Analyzer, CharFilter>> removeCharFilterFromAnalyzer(
+		long id, long charFilterId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
+			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenFilters -> {
+				.transformToUni(charFilters -> {
 
-					if (analyzer.removeTokenFilter(tokenFilters, tokenFilterId)) {
+					if (analyzer.removeCharFilter(charFilters, charFilterId)) {
 
 						return persist(s, analyzer)
 							.map(newSC -> Tuple2.of(newSC, null));
 					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Analyzer> removeCharFilterListFromAnalyzer(long analyzerId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(charFilters -> {
+
+					if(!charFilters.isEmpty()){
+						charFilters.clear();
+						return persist(s, analyzer);
+					};
 
 					return Uni.createFrom().nullItem();
 
@@ -210,65 +293,18 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
-	public Uni<Analyzer> removeCharFilterListFromAnalyzer(long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(charFilters -> {
-
-					if(!charFilters.isEmpty()){
-						charFilters.clear();
-						return persist(s, analyzer);
-					};
-
-					return Uni.createFrom().nullItem();
-
-				})));
-	}
-
-	public Uni<Tuple2<Analyzer, CharFilter>> addCharFilterToAnalyzer(long id, long charFilterId) {
+	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterToAnalyzer(
+		long id, long tokenFilterId) {
 
 		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(analyzer -> _charFilterService.findById(s, charFilterId)
+			.transformToUni(analyzer -> s.fetch(analyzer.getTokenFilters())
 				.onItem()
 				.ifNotNull()
-				.transformToUni(charFilter ->
-					s.fetch(analyzer.getCharFilters())
-						.onItem()
-						.ifNotNull()
-						.transformToUni(charFilters -> {
+				.transformToUni(tokenFilters -> {
 
-							if (charFilters.add(charFilter)) {
-
-								analyzer.setCharFilters(charFilters);
-
-								return persist(s, analyzer)
-									.map(newSC -> Tuple2.of(newSC, charFilter));
-							}
-
-							return Uni.createFrom().nullItem();
-
-						})
-				)
-			));
-	}
-
-	public Uni<Tuple2<Analyzer, CharFilter>> removeCharFilterFromAnalyzer(
-		long id, long charFilterId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(analyzer -> s.fetch(analyzer.getCharFilters())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(charFilters -> {
-
-					if (analyzer.removeCharFilter(charFilters, charFilterId)) {
+					if (analyzer.removeTokenFilter(tokenFilters, tokenFilterId)) {
 
 						return persist(s, analyzer)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -276,19 +312,6 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 					return Uni.createFrom().nullItem();
 
-				})));
-	}
-
-	public Uni<Tuple2<Analyzer, Tokenizer>> bindTokenizer(long analyzerId, long tokenizerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, analyzerId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(analyzer -> _tokenizerService.findById(s, tokenizerId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(tokenizer -> {
-					analyzer.setTokenizer(tokenizer);
-					return persist(s, analyzer).map(t -> Tuple2.of(t, tokenizer));
 				})));
 	}
 
@@ -301,33 +324,5 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				return persist(s, analyzer).map(t -> Tuple2.of(t, null));
 			}));
 	}
-
-	public Uni<Void> load(Analyzer analyzer) {
-		return sessionFactory.withTransaction(s -> {
-
-			List<Uni<?>> unis = new ArrayList<>();
-
-			unis.add(s.fetch(analyzer.getTokenizer()));
-			unis.add(s.fetch(analyzer.getCharFilters()));
-			unis.add(s.fetch(analyzer.getTokenFilters()));
-
-			return Uni.combine()
-				.all()
-				.unis(unis)
-				.usingConcurrencyOf(1)
-				.collectFailures()
-				.discardItems();
-
-		});
-	}
-
-
-	@Inject
-	TokenFilterService _tokenFilterService;
-	@Inject
-	TokenizerService _tokenizerService;
-	@Inject
-	CharFilterService _charFilterService;
-
 
 }
