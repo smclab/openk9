@@ -448,8 +448,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		});
 	}
 
-			public Uni<List<Bucket>> findUnboundBucketsByTab(long tabId) {
-				return sessionFactory.withTransaction(s -> {
+	public Uni<List<Bucket>> findUnboundBucketsByTab(long tabId) {
+		return sessionFactory.withTransaction(s -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
 			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);

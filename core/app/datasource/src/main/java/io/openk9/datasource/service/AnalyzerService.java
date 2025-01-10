@@ -23,7 +23,9 @@ import io.openk9.datasource.mapper.AnalyzerMapper;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.Analyzer_;
 import io.openk9.datasource.model.CharFilter;
+import io.openk9.datasource.model.CharFilter_;
 import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.TokenFilter_;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
@@ -31,6 +33,12 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,27 +54,53 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 
 	public Uni<List<Analyzer>> findUnboundAnalyzersByTokenFilter(long tokenFilterId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT analyzer.* from analyzer " +
-				"WHERE analyzer.id not in (" +
-				"SELECT analyzer_token_filter.analyzer FROM analyzer_token_filter " +
-				"WHERE analyzer_token_filter.token_filter = (:tokenFilterId))";
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			return s.createNativeQuery(queryString, Analyzer.class)
-				.setParameter("tokenFilterId", tokenFilterId)
-				.getResultList();
+			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
+			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
+
+			criteriaQuery.select(rootAnalyzer);
+
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
+
+			Join<Analyzer, TokenFilter> tokenFilterJoinToExclude =
+				rootAnalyzerToExclude.join(Analyzer_.tokenFilters, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(rootAnalyzerToExclude.get(Analyzer_.id))
+				.where(cb.equal(tokenFilterJoinToExclude.get(TokenFilter_.id), tokenFilterId));
+
+			criteriaQuery.where(
+				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 
 	public Uni<List<Analyzer>> findUnboundAnalyzersByCharFilter(long charFilterId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT analyzer.* from analyzer " +
-				"WHERE analyzer.id not in (" +
-				"SELECT analyzer_char_filter.analyzer FROM analyzer_char_filter " +
-				"WHERE analyzer_char_filter.char_filter = (:charFilterId))";
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-			return s.createNativeQuery(queryString, Analyzer.class)
-				.setParameter("charFilterId", charFilterId)
-				.getResultList();
+			CriteriaQuery<Analyzer> criteriaQuery = cb.createQuery(Analyzer.class);
+			Root<Analyzer> rootAnalyzer = criteriaQuery.from(Analyzer.class);
+
+			criteriaQuery.select(rootAnalyzer);
+
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Analyzer> rootAnalyzerToExclude = idsToExcludeQuery.from(Analyzer.class);
+
+			Join<Analyzer, CharFilter> charFilterJoinToExclude =
+				rootAnalyzerToExclude.join(Analyzer_.charFilters, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(rootAnalyzerToExclude.get(Analyzer_.id))
+				.where(cb.equal(charFilterJoinToExclude.get(CharFilter_.id), charFilterId));
+
+			criteriaQuery.where(
+				cb.not(rootAnalyzer.get(Analyzer_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 
