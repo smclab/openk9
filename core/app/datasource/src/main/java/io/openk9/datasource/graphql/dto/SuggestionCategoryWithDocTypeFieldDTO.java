@@ -7,13 +7,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Set;
-
 @NoArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class SuggestionCategoryWithDocTypeFieldDTO extends SuggestionCategoryDTO {
-	private Set<Long> docTypeFieldIds;
+	private Long docTypeFieldId;
 }

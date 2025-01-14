@@ -113,39 +113,40 @@ public class SuggestionCategoryTest {
 					.name(SGCWITHFIELD_1)
 					.priority(100f)
 					.multiSelect(false)
-					.docTypeFieldIds(Set.of(docTypeFieldIds.getFirst()))
+					.docTypeFieldId(docTypeFieldIds.getFirst())
 					.build()
 			)
 			.await().indefinitely();
 
 		this.suggestionCategory = getSuggestionCategory(created.getId());
+		var docTypeField = suggestionCategory.getDocTypeField();
 
 		Assertions.assertEquals(SGCWITHFIELD_1, suggestionCategory.getName());
-		Assertions.assertEquals(1, suggestionCategory.getDocTypeFields().size());
+		Assertions.assertNotNull(docTypeField);
+		Assertions.assertEquals(docTypeFieldIds.getFirst(), docTypeField.getId());
 
 	}
 
 	@Test
 	@Order(3)
-	void should_update_suggestionCategory_with_all_docTypeFields() {
+	void should_update_suggestionCategory_with_second_docTypeField() {
 
 		var updated = suggestionCategoryService.update(
 			suggestionCategory.getId(),
 			SuggestionCategoryWithDocTypeFieldDTO.builder()
 				.name(suggestionCategory.getName())
 				.priority(200f)
-				.docTypeFieldIds(new HashSet<>(docTypeFieldIds))
+				.docTypeFieldId(docTypeFieldIds.get(1))
 				.build()
 		).await().indefinitely();
 
 		this.suggestionCategory = getSuggestionCategory(updated.getId());
+		var docTypeField = suggestionCategory.getDocTypeField();
 
 		Assertions.assertEquals(SGCWITHFIELD_1, suggestionCategory.getName());
 		Assertions.assertEquals(200f, suggestionCategory.getPriority());
-		Assertions.assertEquals(
-			docTypeFieldIds.size(),
-			suggestionCategory.getDocTypeFields().size()
-		);
+		Assertions.assertNotNull(docTypeField);
+		Assertions.assertEquals(docTypeFieldIds.get(1), docTypeField.getId());
 
 	}
 
@@ -157,15 +158,17 @@ public class SuggestionCategoryTest {
 			suggestionCategory.getId(),
 			SuggestionCategoryWithDocTypeFieldDTO.builder()
 				.name(suggestionCategory.getName())
-				.docTypeFieldIds(Set.of(docTypeFieldIds.getLast()))
+				.docTypeFieldId(docTypeFieldIds.getLast())
 				.build()
 		).await().indefinitely();
 
 		this.suggestionCategory = getSuggestionCategory(updated.getId());
+		var docTypeField = suggestionCategory.getDocTypeField();
 
 		Assertions.assertEquals(SGCWITHFIELD_1, suggestionCategory.getName());
 		Assertions.assertEquals(200f, suggestionCategory.getPriority());
-		Assertions.assertEquals(1, suggestionCategory.getDocTypeFields().size());
+		Assertions.assertNotNull(docTypeField);
+		Assertions.assertEquals(docTypeFieldIds.getLast(), docTypeField.getId());
 
 	}
 
@@ -242,7 +245,7 @@ public class SuggestionCategoryTest {
 	private SuggestionCategory getSuggestionCategory(long id) {
 		return sessionFactory.withTransaction(PUBLIC_TENANT, (s, t) ->
 			suggestionCategoryService.findById(s, id)
-				.call(sc -> Mutiny.fetch(sc.getDocTypeFields()))
+				.call(sc -> Mutiny.fetch(sc.getDocTypeField()))
 		).await().indefinitely();
 	}
 

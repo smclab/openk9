@@ -850,24 +850,22 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								new ArrayList<>();
 
 							for (SuggestionCategory suggestionCategory : suggestionCategories) {
-								Set<DocTypeField> docTypeFields =
-									suggestionCategory.getDocTypeFields();
-								for (DocTypeField docTypeField : docTypeFields) {
-									if (docTypeField.isI18N()) {
-										DocTypeField field = getI18nDocTypeField(
-											docTypeField,
-											language,
-											docTypeFieldList
-										);
-										if (field != null) {
-											suggestionDocTypeFields.add(
-												Tuple2.of(suggestionCategory.getId(), field));
-										}
-									}
-									else if (docTypeField.isKeyword()) {
+								DocTypeField docTypeField =
+									suggestionCategory.getDocTypeField();
+								if (docTypeField.isI18N()) {
+									DocTypeField field = getI18nDocTypeField(
+										docTypeField,
+										language,
+										docTypeFieldList
+									);
+									if (field != null) {
 										suggestionDocTypeFields.add(
-											Tuple2.of(suggestionCategory.getId(), docTypeField));
+											Tuple2.of(suggestionCategory.getId(), field));
 									}
+								}
+								else if (docTypeField.isKeyword()) {
+									suggestionDocTypeFields.add(
+										Tuple2.of(suggestionCategory.getId(), docTypeField));
 								}
 							}
 

@@ -66,10 +66,19 @@ public class SuggestionCategoryResource extends
 
 	@DELETE
 	@Path("/{id}/doc-type-fields/{docTypeFieldId}")
+	@Deprecated
 	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
 		@PathParam("id")long suggestionCategoryId,
 		@PathParam("docTypeFieldId")long docTypeFieldId) {
-		return service.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
+		return service.unsetDocTypeField(suggestionCategoryId)
+			.map(sc -> Tuple2.of(sc, null));
+	}
+
+	@DELETE
+	@Path("/{id}/doc-type-field")
+	public Uni<SuggestionCategory> unsetDocTypeField(
+			@PathParam("id")long suggestionCategoryId) {
+		return service.unsetDocTypeField(suggestionCategoryId);
 	}
 
 }

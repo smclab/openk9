@@ -140,9 +140,47 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
+	/**
+	 * This GraphQL mutation has been deprecated and replaced by the {@code unbindDocTypeFieldFromSuggestionCategory} method,
+	 * which no longer requires the {@code docTypeFieldId} parameter.
+	 *
+	 * <p>
+	 * Deprecation introduced in version 3.0.0. While there are no significant impacts from using this method,
+	 * it is recommended to transition to the new method for improved functionality and future compatibility.
+	 * </p>
+	 *
+	 * @deprecated Use {@link #unbindDocTypeFieldFromSuggestionCategory(long suggestionCategoryId)} instead.
+	 */
 	@Mutation
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldFromSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
-		return suggestionCategoryService.removeDocTypeField(suggestionCategoryId, docTypeFieldId);
+	@Description("This mutation is deprecated. Use `unbindDocTypeFieldFromSuggestionCategory` instead. " +
+		"Deprecation introduced in version 3.0.0. No significant impacts from usage, " +
+		"but transitioning to the new method is recommended.")
+	@Deprecated
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldFromSuggestionCategory(
+			@Id long suggestionCategoryId, @Id long docTypeFieldId) {
+		return suggestionCategoryService.unsetDocTypeField(suggestionCategoryId)
+			.map(sc -> Tuple2.of(sc, null));
+	}
+
+	/**
+	 * Unbinds a {@link DocTypeField} from a {@link SuggestionCategory}.
+	 *
+	 * <p>
+	 * This method replaces the deprecated {@code removeDocTypeFieldFromSuggestionCategory(long suggestionCategoryId, long docTypeFieldId)}.
+	 * The new implementation improves usability by eliminating the need to provide the {@code docTypeFieldId}.
+	 * </p>
+	 *
+	 * @param suggestionCategoryId The ID of the {@link SuggestionCategory} from which to unbind the {@link DocTypeField}.
+	 * @return A {@link Uni} containing the updated {@link SuggestionCategory} and the unbound {@link DocTypeField}.
+	 *
+	 * @see #removeDocTypeFieldFromSuggestionCategory(long, long)
+	 */
+	@Mutation
+	@Description("This mutation replaces `removeDocTypeFieldFromSuggestionCategory`. It does not require the `docTypeFieldId` parameter " +
+		"and provides a more efficient implementation.")
+	public Uni<SuggestionCategory> unbindDocTypeFieldFromSuggestionCategory(
+			@Id long suggestionCategoryId) {
+		return suggestionCategoryService.unsetDocTypeField(suggestionCategoryId);
 	}
 
 	@Mutation

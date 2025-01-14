@@ -37,7 +37,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.HashSet;
 import java.util.Set;
 
 ;
@@ -60,9 +59,9 @@ public class SuggestionCategoryService extends
 			return sessionFactory.withTransaction(
 				(s, transaction) -> super.create(s, transientSuggestion)
 					.flatMap(suggestion -> docTypeFieldService
-						.findByIds(withDocTypeFieldDTO.getDocTypeFieldIds())
-						.flatMap(docTypeFields -> {
-							suggestion.setDocTypeFields(new HashSet<>(docTypeFields));
+						.findById(withDocTypeFieldDTO.getDocTypeFieldId())
+						.flatMap(docTypeField -> {
+							suggestion.setDocTypeField(docTypeField);
 							return s.merge(suggestion);
 						})
 					)
@@ -80,19 +79,18 @@ public class SuggestionCategoryService extends
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, suggestionId)
-					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
 					.flatMap(suggestion -> {
 						var newStateSuggestion =
 							mapper.patch(suggestion, withDocTypeFieldDTO);
 
-						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
 
-						if (docTypeFieldIds != null) {
+						if (docTypeFieldId != null) {
 
-							return docTypeFieldService.findByIds(s, docTypeFieldIds)
-								.flatMap(docTypeFields -> {
-									newStateSuggestion.setDocTypeFields(
-										new HashSet<>(docTypeFields));
+							return docTypeFieldService.findById(s, docTypeFieldId)
+								.flatMap(docTypeField -> {
+									newStateSuggestion.setDocTypeField(docTypeField);
 									return s.merge(newStateSuggestion);
 								});
 						}
@@ -113,19 +111,18 @@ public class SuggestionCategoryService extends
 
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, suggestionId)
-					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeFields()))
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
 					.flatMap(suggestion -> {
 						var newStateSuggestion =
 							mapper.update(suggestion, withDocTypeFieldDTO);
-						var docTypeFieldIds = withDocTypeFieldDTO.getDocTypeFieldIds();
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
 
-						newStateSuggestion.getDocTypeFields().clear();
+						newStateSuggestion.setDocTypeField(null);
 
-						if (docTypeFieldIds != null) {
-							return docTypeFieldService.findByIds(s, docTypeFieldIds)
-								.flatMap(docTypeFields -> {
-									newStateSuggestion.setDocTypeFields(
-										new HashSet<>(docTypeFields));
+						if (docTypeFieldId != null) {
+							return docTypeFieldService.findById(s, docTypeFieldId)
+								.flatMap(docTypeField -> {
+									newStateSuggestion.setDocTypeField(docTypeField);
 									return s.merge(newStateSuggestion);
 								});
 						}
@@ -153,7 +150,7 @@ public class SuggestionCategoryService extends
 
 		Uni<Connection<DocTypeField>> joinConnection =
 			findJoinConnection(
-				id, SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
+				id, SuggestionCategory_.DOC_TYPE_FIELD, DocTypeField.class,
 				docTypeFieldService.getSearchFields(),
 				after, before, first, last, searchText, sortByList, notEqual
 			);
@@ -178,7 +175,7 @@ public class SuggestionCategoryService extends
 
 		return findAllPaginatedJoin(
 			new Long[] { suggestionCategoryId },
-			SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
+			SuggestionCategory_.DOC_TYPE_FIELD, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(), searchText
 		);
@@ -189,7 +186,7 @@ public class SuggestionCategoryService extends
 
 		return findAllPaginatedJoin(
 			new Long[] { suggestionCategoryId },
-			SuggestionCategory_.DOC_TYPE_FIELDS, DocTypeField.class,
+			SuggestionCategory_.DOC_TYPE_FIELD, DocTypeField.class,
 			pageable.getLimit(), pageable.getSortBy().name(),
 			pageable.getAfterId(), pageable.getBeforeId(), filter
 		);
@@ -220,32 +217,21 @@ public class SuggestionCategoryService extends
 				)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
-					if (docTypeFields.add(docTypeField)) {
-						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
-					}
-					return Uni.createFrom().nullItem();
-
-				}))));
+				.transformToUni(docTypeField -> {
+					suggestionCategory.setDocTypeField(docTypeField);
+					return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+				})));
 	}
 
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeField(
-		long suggestionCategoryId, long docTypeFieldId) {
+	public Uni<SuggestionCategory> unsetDocTypeField(
+		long suggestionCategoryId) {
 		return sessionFactory.withTransaction((s) -> findById(s, suggestionCategoryId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(suggestionCategory -> docTypeFieldService.findById(s, docTypeFieldId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(docTypeField -> s.fetch(suggestionCategory.getDocTypeFields()).flatMap(docTypeFields ->{
-					if (docTypeFields.remove(docTypeField)) {
-						suggestionCategory.setDocTypeFields(docTypeFields);
-						return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
-					}
-					return Uni.createFrom().nullItem();
-
-				}))));
+			.transformToUni(suggestionCategory -> {
+				suggestionCategory.setDocTypeField(null);
+				return persist(s, suggestionCategory);
+			}));
 	}
 
 	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {

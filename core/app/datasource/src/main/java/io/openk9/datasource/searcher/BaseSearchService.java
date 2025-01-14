@@ -138,7 +138,7 @@ public abstract class BaseSearchService {
 
 			Fetch<SuggestionCategory, DocTypeField> categoryDocTypeFieldFetch =
 				suggestionCategoryFetch
-					.fetch(SuggestionCategory_.docTypeFields);
+					.fetch(SuggestionCategory_.docTypeField);
 
 			categoryDocTypeFieldFetch
 				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);

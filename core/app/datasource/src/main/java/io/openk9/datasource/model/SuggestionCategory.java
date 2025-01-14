@@ -54,20 +54,17 @@ public class SuggestionCategory extends K9Entity {
 	@Column(name = "multi_select", nullable = false)
 	private boolean multiSelect = false;
 
-
-	@ManyToMany(cascade = {
-		jakarta.persistence.CascadeType.REFRESH,
-		jakarta.persistence.CascadeType.PERSIST,
-		jakarta.persistence.CascadeType.MERGE,
-		jakarta.persistence.CascadeType.DETACH
-	}
+	@ManyToOne(cascade = {
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.DETACH
+		}
 	)
-	@JoinTable(name = "suggestion_category_doc_type_fields",
-		joinColumns = @JoinColumn(name = "suggestion_category_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+	@JoinColumn(name = "doc_type_field_id")
+	private DocTypeField docTypeField;
 
 	@ToString.Exclude
 	@ManyToOne(
@@ -81,13 +78,5 @@ public class SuggestionCategory extends K9Entity {
 	@JsonIgnore
 	@JoinColumn(name = "bucket_id")
 	private Bucket bucket;
-
-	public void addDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.add(docTypeField);
-	}
-
-	public void removeDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.remove(docTypeField);
-	}
 
 }
