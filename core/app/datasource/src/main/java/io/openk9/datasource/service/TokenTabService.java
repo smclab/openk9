@@ -17,25 +17,16 @@
 
 package io.openk9.datasource.service;
 
-import java.util.List;
 import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TokenTabWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TokenTabDTO;
@@ -152,34 +143,6 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {TokenTab_.NAME, TokenTab_.TOKEN_TYPE};
-	}
-
-	public Uni<List<Tab>> getUnboundTabByTokenTab(long tokenTabId) {
-
-		return sessionFactory.withTransaction(s -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<Tab> criteriaQuery = cb.createQuery(Tab.class);
-			Root<Tab> rootTab = criteriaQuery.from(Tab.class);
-
-			criteriaQuery.select(rootTab);
-
-			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
-			Root<Tab> rootTabToExclude = idsToExcludeQuery.from(Tab.class);
-
-			Join<Tab, TokenTab> tokenTabJoinToExclude =
-					rootTabToExclude.join(Tab_.tokenTabs, JoinType.INNER);
-
-			idsToExcludeQuery
-					.select(rootTabToExclude.get(Tab_.id))
-					.where(cb.equal(tokenTabJoinToExclude.get(TokenTab_.id), tokenTabId));
-
-			criteriaQuery.where(
-					cb.not(rootTab.get(Tab_.id).in(idsToExcludeQuery)));
-
-			return s.createQuery(criteriaQuery).getResultList();
-		});
-
 	}
 
 	@Override

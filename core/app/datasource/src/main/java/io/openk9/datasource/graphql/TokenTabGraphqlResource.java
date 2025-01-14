@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import java.util.List;
 import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,7 +27,6 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TokenTabWithDocTypeFieldDTO;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.dto.TokenTabDTO;
 import io.openk9.datasource.service.TokenTabService;
@@ -116,11 +114,6 @@ public class TokenTabGraphqlResource {
 		String searchText, Set<SortBy> sortByList) {
 		return tokenTabService.findConnection(
 			after, before, first, last, searchText, sortByList);
-	}
-
-	@Query
-	public Uni<List<Tab>> getUnboundTabByTokenTab(long tokenTabId) {
-		return tokenTabService.getUnboundTabByTokenTab(tokenTabId);
 	}
 
 	@Mutation

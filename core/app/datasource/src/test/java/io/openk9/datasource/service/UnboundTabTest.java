@@ -36,7 +36,7 @@ public class UnboundTabTest {
 	TabService tabService;
 
 	@Test
-	void should_get_unbound_tab_by_tokeTab() {
+	void should_get_unbound_tab_by_tokenTab() {
 
 		var boundTab = tabService.create(TabDTO.builder()
 				.name("UnboundTabTest_Bound_tab")
@@ -61,7 +61,7 @@ public class UnboundTabTest {
 		tabService.addTokenTabToTab(boundTab.getId(), tokenTab.getId())
 				.await().indefinitely();
 
-		var tabs = tokenTabService.getUnboundTabByTokenTab(tokenTab.getId())
+		var tabs = tabService.findUnboundTabsByTokenTab(tokenTab.getId())
 				.await().indefinitely();
 
 		Assertions.assertTrue(tabs.contains(unboundTab));

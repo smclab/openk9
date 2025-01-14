@@ -17,6 +17,18 @@
 
 package io.openk9.datasource.service;
 
+import java.util.List;
+import java.util.Set;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
@@ -25,6 +37,7 @@ import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.dto.TranslationDTO;
 import io.openk9.datasource.model.dto.TranslationKeyDTO;
@@ -33,18 +46,11 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.FlushMode;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
@@ -162,16 +168,31 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	public Uni<List<Tab>> findUnboundTabsByTokenTab(long tokenTabId) {
-		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT tab.* FROM tab " +
-				"WHERE tab.id not in (" +
-				"SELECT tab_token_tab.tab_id FROM tab_token_tab " +
-				"WHERE tab_token_tab.token_tab_id = (:tokenTabId))";
 
-			return s.createNativeQuery(queryString, Tab.class)
-				.setParameter("tokenTabId", tokenTabId)
-				.getResultList();
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Tab> criteriaQuery = cb.createQuery(Tab.class);
+			Root<Tab> rootTab = criteriaQuery.from(Tab.class);
+
+			criteriaQuery.select(rootTab);
+
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Tab> rootTabToExclude = idsToExcludeQuery.from(Tab.class);
+
+			Join<Tab, TokenTab> tokenTabJoinToExclude =
+					rootTabToExclude.join(Tab_.tokenTabs, JoinType.INNER);
+
+			idsToExcludeQuery
+					.select(rootTabToExclude.get(Tab_.id))
+					.where(cb.equal(tokenTabJoinToExclude.get(TokenTab_.id), tokenTabId));
+
+			criteriaQuery.where(
+					cb.not(rootTab.get(Tab_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
+
 	}
 
 	@Override
