@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
-RUN mkdir -p /sentence_transformer_embedding_module
-RUN mkdir -p /var/log/openk9
+RUN mkdir -p /sentence_transformer_embedding_module  && \
+mkdir -p /var/log/openk9
 WORKDIR /sentence_transformer_embedding_module/
 COPY ./requirements.sentence_transformer.txt ./
 COPY ./embedding.proto ./
@@ -9,8 +9,8 @@ COPY ./derived_text_splitter.py ./
 COPY ./server.sentence_transformer.py ./server.py
 COPY ./client.sentence_transformer.py ./client.py
 
-RUN pip install -r requirements.sentence_transformer.txt
-RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
+RUN pip install -r requirements.sentence_transformer.txt  && \
+python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
 
 EXPOSE 5000
 
