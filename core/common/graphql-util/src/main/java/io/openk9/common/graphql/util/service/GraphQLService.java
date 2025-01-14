@@ -17,6 +17,24 @@
 
 package io.openk9.common.graphql.util.service;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.SingularAttribute;
+
 import io.openk9.common.graphql.util.exception.InvalidPageSizeException;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.graphql.util.relay.DefaultConnection;
@@ -26,31 +44,29 @@ import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.openk9.common.graphql.util.relay.PageInfo;
 import io.openk9.common.graphql.util.relay.RelayUtil;
 import io.openk9.common.util.SortBy;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import static java.lang.String.format;
 
 public abstract class GraphQLService<ENTITY extends GraphqlId> {
+
+	private static final Logger log = Logger.getLogger(GraphQLService.class);
+
+	private static final Set<Class<?>> NUMERIC_TYPES = Set.of(
+			Byte.class, Short.class, Integer.class, Long.class,
+			Float.class, Double.class, byte.class, short.class,
+			int.class, long.class, float.class, double.class,
+			BigDecimal.class, BigInteger.class
+	);
+
+	private static boolean isNumeric(Class<?> clazz) {
+		return NUMERIC_TYPES.contains(clazz);
+	}
 
 	public Uni<Connection<ENTITY>> findConnection(
 		String after, String before, Integer first, Integer last) {
@@ -409,32 +425,6 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 					"%" + searchText.toLowerCase() + "%")
 			);
 		}
-		else if (StringUtils.isNumeric(searchText)) {
-
-			Number number;
-
-			if (ClassUtils.isAssignable(javaType, Integer.class)) {
-				number = Integer.parseInt(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Long.class)) {
-				number = Long.parseLong(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Float.class)) {
-				number = Float.parseFloat(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Double.class)) {
-				number = Double.parseDouble(searchText);
-			}
-			else {
-				number = new BigDecimal(searchText);
-			}
-
-			searchConditions = criteriaBuilder.or(
-				searchConditions, criteriaBuilder.equal(
-					searchPath, number)
-			);
-
-		}
 		else if (javaType == Boolean.class) {
 			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
@@ -452,8 +442,29 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				);
 			}
 			catch (IllegalArgumentException e) {
-				// ignore
+				log.debug("Error while trying to parse searchText to UUID", e);
 			}
+
+		} else if (GraphQLService.isNumeric(javaType)) {
+
+			Number number;
+
+			if (ClassUtils.isAssignable(javaType, Integer.class)) {
+				number = Integer.parseInt(searchText);
+			} else if (ClassUtils.isAssignable(javaType, Long.class)) {
+				number = Long.parseLong(searchText);
+			} else if (ClassUtils.isAssignable(javaType, Float.class)) {
+				number = Float.parseFloat(searchText);
+			} else if (ClassUtils.isAssignable(javaType, Double.class)) {
+				number = Double.parseDouble(searchText);
+			} else {
+				number = new BigDecimal(searchText);
+			}
+
+			searchConditions = criteriaBuilder.or(
+					searchConditions, criteriaBuilder.equal(
+							searchPath, number)
+			);
 
 		}
 		else {
@@ -476,7 +487,5 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 	protected abstract <T> SingularAttribute<T, Long> getIdAttribute();
 
 	protected abstract Mutiny.SessionFactory getSessionFactory();
-
-	private static final Logger LOGGER = Logger.getLogger(GraphQLService.class);
 
 }
