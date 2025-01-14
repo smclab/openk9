@@ -447,24 +447,30 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 		} else if (GraphQLService.isNumeric(javaType)) {
 
-			Number number;
+			if (StringUtils.isNumeric(searchText)) {
+				Number number;
 
-			if (ClassUtils.isAssignable(javaType, Integer.class)) {
-				number = Integer.parseInt(searchText);
-			} else if (ClassUtils.isAssignable(javaType, Long.class)) {
-				number = Long.parseLong(searchText);
-			} else if (ClassUtils.isAssignable(javaType, Float.class)) {
-				number = Float.parseFloat(searchText);
-			} else if (ClassUtils.isAssignable(javaType, Double.class)) {
-				number = Double.parseDouble(searchText);
+				if (ClassUtils.isAssignable(javaType, Integer.class)) {
+					number = Integer.parseInt(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Long.class)) {
+					number = Long.parseLong(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Float.class)) {
+					number = Float.parseFloat(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Double.class)) {
+					number = Double.parseDouble(searchText);
+				} else {
+					number = new BigDecimal(searchText);
+				}
+
+				searchConditions = criteriaBuilder.or(
+						searchConditions, criteriaBuilder.equal(
+								searchPath, number)
+				);
 			} else {
-				number = new BigDecimal(searchText);
+				log.debug(
+						"cannot parse searchtext as numeric type." +
+						" The numeric condition will be ignored.");
 			}
-
-			searchConditions = criteriaBuilder.or(
-					searchConditions, criteriaBuilder.equal(
-							searchPath, number)
-			);
 
 		}
 		else {

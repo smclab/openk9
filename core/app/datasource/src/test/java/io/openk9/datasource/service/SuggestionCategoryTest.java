@@ -17,14 +17,22 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -33,12 +41,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 @QuarkusTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -169,7 +171,7 @@ public class SuggestionCategoryTest {
 	}
 
 	@Test
-	@Order(5)
+	@Order(6)
 	void should_delete_suggestionCategory() {
 		suggestionCategoryService.deleteById(suggestionCategory.getId())
 			.await().indefinitely();
@@ -181,7 +183,19 @@ public class SuggestionCategoryTest {
 	}
 
 	@Test
-	@Order(6)
+	@Order(5)
+	void should_find_by_searchText_suggestionCategory_connection() {
+
+		var connection = suggestionCategoryService.findConnection(
+						null, null, null, null, "unit test", null
+				)
+				.await()
+				.indefinitely();
+
+	}
+
+	@Test
+	@Order(7)
 	void tearDown() {
 
 		log.info("Trying to teardown SuggestionCategoryTest");
