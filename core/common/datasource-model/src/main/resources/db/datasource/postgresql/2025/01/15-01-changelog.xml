@@ -36,7 +36,7 @@
 			SET doc_type_field_id = (SELECT scdtf.doc_type_fields_id
 				FROM suggestion_category_doc_type_fields scdtf
 				WHERE scdtf.suggestion_category_id = sc.id
-				LIMIT = 1)
+				LIMIT 1)
 			WHERE EXISTS (SELECT scdtf.doc_type_fields_id
 				FROM suggestion_category_doc_type_fields scdtf
 				WHERE scdtf.suggestion_category_id = sc.id);
