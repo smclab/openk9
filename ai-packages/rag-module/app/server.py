@@ -59,7 +59,7 @@ class SearchQuery(BaseModel):
 
 
 @app.post("/api/rag/generate")
-async def rag_generate(
+async def rag_generatey(
     search_query_request: SearchQuery,
     request: Request,
     authorization: Optional[str] = Header(None),
@@ -128,7 +128,6 @@ class SearchQueryChat(BaseModel):
     chatSequenceNumber: int
     retrieveCitations: Optional[bool] = False
     rerank: Optional[bool] = False
-    chunk_window: Optional[bool] = False
 
 
 @app.post("/api/rag/chat")
@@ -155,7 +154,6 @@ async def rag_chat(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     retrieve_citations = search_query_chat.retrieveCitations
     rerank = search_query_chat.rerank
-    chunk_window = search_query_chat.chunk_window
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -185,7 +183,6 @@ async def rag_chat(
         retrieve_citations,
         rerank,
         RERANKER_API_URL,
-        chunk_window,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
