@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2025/01/15-01-changelog.xml">
+
+	<changeSet id="1736949476865-1" author="openk9">
+		<addColumn tableName="suggestion_category">
+			<column name="doc_type_field_id" type="NUMBER(38)"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="1736949476865-2" author="openk9">
+		<sql>
+			UPDATE suggestion_category sc
+			SET doc_type_field_id = (SELECT scdtf.doc_type_fields_id
+				FROM suggestion_category_doc_type_fields scdtf
+				WHERE scdtf.suggestion_category_id = sc.id
+				AND ROWNUM = 1)
+			WHERE EXISTS (SELECT scdtf.doc_type_fields_id
+				FROM suggestion_category_doc_type_fields scdtf
+				WHERE scdtf.suggestion_category_id = sc.id);
+		</sql>
+	</changeSet>
+
+</databaseChangeLog>
