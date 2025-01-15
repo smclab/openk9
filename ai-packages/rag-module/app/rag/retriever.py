@@ -101,6 +101,14 @@ class OpenSearchRetriever(BaseRetriever):
                     title = row["_source"]["title"]
                     url = row["_source"]["url"]
                     source = "local"
+                    chunk_idx = row["_source"]["number"]
+                    prev_chunk = [
+                        element["chunkText"] for element in row["_source"]["previous"]
+                    ]
+                    next_chunk = [
+                        element["chunkText"] for element in row["_source"]["next"]
+                    ]
+
                     document = Document(
                         page_content,
                         metadata={
@@ -109,6 +117,9 @@ class OpenSearchRetriever(BaseRetriever):
                             "url": url,
                             "document_id": document_id,
                             "score": score,
+                            "chunk_idx": chunk_idx,
+                            "prev": prev_chunk,
+                            "next": next_chunk,
                         },
                     )
                     document_tokens_number = (
@@ -154,10 +165,48 @@ class OpenSearchRetriever(BaseRetriever):
                 documents,
                 key=lambda x: reranked_documents_ids.index(x.metadata["document_id"]),
             )
-
             documents = reranked_documents
 
         if self.chunk_window:
-            documents = get_context_window_merged(documents, window_size=4)
+            documents_to_merge = [
+                {
+                    "document_id": doc.metadata["document_id"],
+                    "chunk_idx": doc.metadata["chunk_idx"],
+                    "prev": doc.metadata["prev"],
+                    "next": doc.metadata["next"],
+                    "title": doc.metadata["title"],
+                    "url": doc.metadata["url"],
+                    "source": doc.metadata["source"],
+                    "score": doc.metadata["score"],
+                    "content": doc.page_content,
+                }
+                for doc in documents
+            ]
+            merged_documents = get_context_window_merged(
+                documents_to_merge, window_size=4
+            )
+
+            for merged_document in merged_documents:
+                page_content = merged_document["content"]
+                source = merged_document["content"]
+                title = merged_document["title"]
+                url = merged_document["url"]
+                document_id = merged_document["document_id"]
+                score = merged_document["score"]
+
+                documents = []
+
+                document = Document(
+                    page_content,
+                    metadata={
+                        "source": source,
+                        "title": title,
+                        "url": url,
+                        "document_id": document_id,
+                        "score": score,
+                    },
+                )
+
+                documents.append(document)
 
         return documents
