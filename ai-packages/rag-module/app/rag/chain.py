@@ -160,6 +160,7 @@ def get_chat_chain(
     retrieve_citations,
     rerank,
     reranker_api_url,
+    chunk_window,
     opensearch_host,
     grpc_host,
 ):
@@ -185,6 +186,7 @@ def get_chat_chain(
         search_text=search_text,
         rerank=rerank,
         reranker_api_url=reranker_api_url,
+        chunk_window=chunk_window,
         range_values=range_values,
         after_key=after_key,
         suggest_keyword=suggest_keyword,

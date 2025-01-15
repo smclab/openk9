@@ -6,6 +6,7 @@ from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
+from app.rag.chunk_window import get_context_window_merged
 
 import requests
 
@@ -21,6 +22,7 @@ class OpenSearchRetriever(BaseRetriever):
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
+    chunk_window: Optional[bool] = True
     range_values: list
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
@@ -153,6 +155,9 @@ class OpenSearchRetriever(BaseRetriever):
                 key=lambda x: reranked_documents_ids.index(x.metadata["document_id"]),
             )
 
-            return reranked_documents
+            documents = reranked_documents
+
+        if self.chunk_window:
+            documents = get_context_window_merged(documents, window_size=4)
 
         return documents
