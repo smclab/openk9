@@ -368,7 +368,10 @@ def get_chat_chain(
     for document in documents:
         document_id = document["metadata"]["document_id"]
         document_chunk = document["metadata"]
-        del document_chunk["document_id"]
+        document_chunk.pop("document_id", None)
+        document_chunk.pop("chunk_idx", None)
+        document_chunk.pop("prev", None)
+        document_chunk.pop("next", None)
 
         document_citations = all_citations_dict.get(document_id, [])
         document["citations"] = document_citations
