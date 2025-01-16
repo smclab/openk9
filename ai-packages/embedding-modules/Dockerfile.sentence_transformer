@@ -6,12 +6,14 @@ WORKDIR /sentence_transformer_embedding_module/
 
 COPY app/sentence_transformer/requirements.sentence_transformer.txt ./requirements.txt
 COPY app/external_services/grpc/embedding/embedding.proto ./
+
+RUN pip install -r requirements.txt  && \
+python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
+
 COPY app/text_splitters/derived_text_splitter.py ./
 COPY app/sentence_transformer/server.sentence_transformer.py ./server.py
 COPY app/sentence_transformer/client.sentence_transformer.py ./client.py
 
-RUN pip install -r requirements.txt  && \
-python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
 
 EXPOSE 5000
 
