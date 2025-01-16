@@ -17,6 +17,19 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.AnalyzerMapper;
@@ -28,24 +41,20 @@ import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.TokenFilter_;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.AnalyzerDTO;
+import io.openk9.datasource.model.dto.AnalyzerWithListsDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> {
+
+	private static final Logger log = Logger.getLogger(AnalyzerService.class);
+
 	@Inject
 	CharFilterService _charFilterService;
 	@Inject
@@ -129,6 +138,56 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
+	public Uni<Analyzer> create(AnalyzerDTO analyzerDTO) {
+		if (analyzerDTO instanceof AnalyzerWithListsDTO analyzerWithListsDTO) {
+			var transientAnalyzer = mapper.create(analyzerWithListsDTO);
+
+			return sessionFactory.withTransaction((s, transaction) ->
+					super.create(s, transientAnalyzer)
+							.flatMap(analyzer -> {
+
+								UniJoin.Builder<Void> builder = Uni.join().builder();
+								builder.add(Uni.createFrom().voidItem());
+
+								if (analyzerWithListsDTO.getTokenizerId() != null) {
+									var tokenizer = s.getReference(
+											Tokenizer.class,
+											analyzerWithListsDTO.getTokenizerId()
+									);
+									analyzer.setTokenizer(tokenizer);
+									builder.add(s.persist(analyzer));
+								}
+
+								var charFilterIds = analyzerWithListsDTO.getCharFilterIds();
+								if (charFilterIds != null && !charFilterIds.isEmpty()) {
+									for (Long charFilterId : charFilterIds) {
+										builder.add(addCharFilterToAnalyzer(analyzer.getId(), charFilterId)
+												.replaceWithVoid()
+										);
+									}
+								}
+
+								var tokenFilterIds = analyzerWithListsDTO.getTokenFilterIds();
+								if (tokenFilterIds != null && !tokenFilterIds.isEmpty()) {
+									for (Long tokenFilterId : tokenFilterIds) {
+										builder.add(addTokenFilterToAnalyzer(analyzer.getId(), tokenFilterId)
+												.replaceWithVoid());
+									}
+								}
+
+								return builder.joinAll()
+										.usingConcurrencyOf(1)
+										.andCollectFailures()
+										.onFailure()
+										.invoke(log::error)
+										.flatMap(__ -> s.merge(analyzer));
+							})
+			);
+		}
+
+		return super.create(analyzerDTO);
+	}
+
 	public Uni<List<Analyzer>> findUnboundAnalyzersByCharFilter(long charFilterId) {
 		return sessionFactory.withTransaction(s -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -191,7 +250,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			last, searchText, sortByList, notEqual);
 	}
 
-@Override
+	@Override
 	public Class<Analyzer> getEntityClass() {return Analyzer.class;}
 
 	@Override
@@ -231,6 +290,68 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				.discardItems();
 
 		});
+	}
+
+	public Uni<Analyzer> patch(long analyzerId, AnalyzerDTO analyzerDTO) {
+		if (analyzerDTO instanceof AnalyzerWithListsDTO analyzerWithListsDTO) {
+			return sessionFactory.withTransaction((s, transaction) ->
+					findById(s, analyzerId)
+							.call(analyzer -> Mutiny.fetch(analyzer.getCharFilters()))
+							.call(analyzer -> Mutiny.fetch(analyzer.getTokenFilters()))
+							.flatMap(analyzer -> {
+								var newStateAnalyzer = mapper.patch(analyzer, analyzerWithListsDTO);
+
+								UniJoin.Builder<Void> builder = Uni.join().builder();
+								builder.add(Uni.createFrom().voidItem());
+
+								if (analyzerWithListsDTO.getTokenizerId() != null) {
+									var tokenizer = s.getReference(
+											Tokenizer.class,
+											analyzerWithListsDTO.getTokenizerId()
+									);
+									analyzer.setTokenizer(tokenizer);
+									builder.add(s.persist(analyzer));
+								}
+
+								var charFilterIds = analyzerWithListsDTO.getCharFilterIds();
+								if (charFilterIds != null) {
+									var oldCharFilters = newStateAnalyzer.getCharFilters();
+									for (CharFilter oldCharFilter : oldCharFilters) {
+										builder.add(removeCharFilterFromAnalyzer(analyzerId, oldCharFilter.getId())
+												.replaceWithVoid());
+									}
+
+									for (Long charFilterId : charFilterIds) {
+										builder.add(addCharFilterToAnalyzer(analyzerId, charFilterId)
+												.replaceWithVoid());
+									}
+								}
+
+								var tokenFilterIds = analyzerWithListsDTO.getTokenFilterIds();
+								if (tokenFilterIds != null) {
+									var oldTokenFilters = newStateAnalyzer.getTokenFilters();
+									for (TokenFilter oldTokenFilter : oldTokenFilters) {
+										builder.add(removeTokenFilterFromAnalyzer(analyzerId, oldTokenFilter.getId())
+												.replaceWithVoid());
+									}
+
+									for (Long tokenFilterId : tokenFilterIds) {
+										builder.add(addTokenFilterToAnalyzer(analyzerId, tokenFilterId)
+												.replaceWithVoid());
+									}
+								}
+
+								return builder.joinAll()
+										.usingConcurrencyOf(1)
+										.andCollectFailures()
+										.onFailure()
+										.invoke(log::error)
+										.flatMap(__ -> s.merge(newStateAnalyzer));
+							})
+			);
+		}
+
+		return super.patch(analyzerId, analyzerDTO);
 	}
 
 	public Uni<Tuple2<Analyzer, CharFilter>> removeCharFilterFromAnalyzer(
@@ -293,7 +414,7 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 				})));
 	}
 
-	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterToAnalyzer(
+	public Uni<Tuple2<Analyzer, TokenFilter>> removeTokenFilterFromAnalyzer(
 		long id, long tokenFilterId) {
 
 		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
@@ -325,4 +446,68 @@ public class AnalyzerService extends BaseK9EntityService<Analyzer, AnalyzerDTO> 
 			}));
 	}
 
+	public Uni<Analyzer> update(long analyzerId, AnalyzerDTO analyzerDTO) {
+
+		if (analyzerDTO instanceof AnalyzerWithListsDTO analyzerWithListsDTO) {
+			return sessionFactory.withTransaction((s, transaction) ->
+					findById(s, analyzerId)
+							.call(analyzer -> Mutiny.fetch(analyzer.getCharFilters()))
+							.call(analyzer -> Mutiny.fetch(analyzer.getTokenFilters()))
+							.flatMap(analyzer -> {
+								var newStateAnalyzer = mapper.update(analyzer, analyzerWithListsDTO);
+
+								UniJoin.Builder<Void> builder = Uni.join().builder();
+								builder.add(Uni.createFrom().voidItem());
+
+								Tokenizer tokenizer = null;
+								if (analyzerWithListsDTO.getTokenizerId() != null) {
+									tokenizer = s.getReference(
+											Tokenizer.class,
+											analyzerWithListsDTO.getTokenizerId()
+									);
+								}
+								analyzer.setTokenizer(tokenizer);
+								builder.add(s.persist(analyzer));
+
+								var oldCharFilters = newStateAnalyzer.getCharFilters();
+								for (CharFilter oldCharFilter : oldCharFilters) {
+									builder.add(removeCharFilterFromAnalyzer(analyzerId, oldCharFilter.getId())
+											.replaceWithVoid());
+								}
+
+								var charFilterIds = analyzerWithListsDTO.getCharFilterIds();
+								if (charFilterIds != null) {
+									for (Long charFilterId : charFilterIds) {
+										builder.add(addCharFilterToAnalyzer(analyzerId, charFilterId)
+												.replaceWithVoid());
+									}
+								}
+
+								var oldTokenFilters = analyzer.getTokenFilters();
+								for (TokenFilter oldTokenFilter : oldTokenFilters) {
+									builder.add(removeTokenFilterFromAnalyzer(analyzerId, oldTokenFilter.getId())
+											.replaceWithVoid());
+								}
+
+								var tokenFilterIds = analyzerWithListsDTO.getTokenFilterIds();
+								if (tokenFilterIds != null) {
+									for (Long tokenFilterId : tokenFilterIds) {
+										builder.add(addTokenFilterToAnalyzer(analyzerId, tokenFilterId)
+												.replaceWithVoid()
+										);
+									}
+								}
+
+								return builder.joinAll()
+										.usingConcurrencyOf(1)
+										.andCollectFailures()
+										.onFailure()
+										.invoke(log::error)
+										.flatMap(__ -> s.merge(newStateAnalyzer));
+							})
+			);
+		}
+
+		return super.update(analyzerId, analyzerDTO);
+	}
 }
