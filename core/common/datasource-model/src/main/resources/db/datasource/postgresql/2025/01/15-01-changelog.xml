@@ -43,4 +43,17 @@
 		</sql>
 	</changeSet>
 
+	<changeSet id="1736949476865-3" author="openk9">
+		<addForeignKeyConstraint baseTableName="suggestion_category" baseColumnNames="doc_type_field_id"
+								 constraintName="FK_suggestion_category_doc_type_field"
+								 referencedTableName="doc_type_field" referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1736949476865-4" author="openk9">
+		<preConditions onFail="MARK_RAN">
+			<tableExists tableName="suggestion_category_doc_type_fields"/>
+		</preConditions>
+		<dropTable tableName="suggestion_category_doc_type_fields"/>
+	</changeSet>
+
 </databaseChangeLog>
