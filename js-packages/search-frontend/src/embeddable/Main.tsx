@@ -849,7 +849,9 @@ export function Main({
             language={languageSelect}
             start={configuration.dataRangePickerVertical?.start}
             end={configuration.dataRangePickerVertical?.end}
-            classTab={tabs[selectedTabIndex]?.label}
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
             readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
             translationLabel={
               configuration.dataRangePickerVertical?.internationalLabel

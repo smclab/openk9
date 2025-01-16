@@ -54,6 +54,7 @@ export class OpenK9 {
       tenant: this.configuration.tenant ?? "",
       useKeycloak: this.configuration.useKeycloak,
       waitKeycloackForToken: this.configuration.waitKeycloackForToken,
+      callback: this.configuration.callbackClient,
     });
     this.render();
   }
@@ -353,6 +354,7 @@ export type Configuration = {
   defaultString: string | null | undefined;
   languageSelect: string | null | undefined;
   enabled: boolean;
+  callbackClient(): void | null | undefined;
   filterTokens: Array<SearchToken>;
   icons: IconsCustom;
   isQueryAnalysis: boolean | null;
@@ -432,6 +434,7 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   activeFilters: null,
   activeFiltersConfigurable: null,
+  callbackClient: () => null,
   calendar: null,
   calendarMobile: null,
   changeLanguage: null,
