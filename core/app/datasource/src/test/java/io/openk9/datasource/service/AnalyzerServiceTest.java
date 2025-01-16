@@ -155,7 +155,6 @@ public class AnalyzerServiceTest {
 		analyzer = analyzerService.patch(analyzer.getId(), AnalyzerWithListsDTO.builder()
 				.charFilterIds(Set.of())
 				.tokenFilterIds(Set.of(tokenFilter1.getId()))
-				.tokenizerId(tokenizer1.getId())
 				.name(ANALYZER_SERVICE_CREATE_WITH_LIST)
 				.type(ATYPE)
 				.build()
@@ -179,11 +178,16 @@ public class AnalyzerServiceTest {
 	@Order(4)
 	void should_update_with_list() {
 
+		var charFilter1 = charFilterService.findByName(
+						PUBLIC, ANALYZER_SERVICE_TEST_CHAR_FILTER_1)
+				.await().indefinitely();
+		
 		var analyzer = analyzerService.findByName(PUBLIC, ANALYZER_SERVICE_CREATE_WITH_LIST)
 				.await().indefinitely();
 
 		analyzer = analyzerService.update(analyzer.getId(), AnalyzerWithListsDTO.builder()
 				.name(ANALYZER_SERVICE_CREATE_WITH_LIST)
+				.charFilterIds(Set.of(charFilter1.getId()))
 				.type(ATYPE)
 				.build()
 		).await().indefinitely();
@@ -196,10 +200,16 @@ public class AnalyzerServiceTest {
 						.call(i -> s.fetch(i.getTokenFilters()))
 		).await().indefinitely();
 
-		Assertions.assertEquals(0, analyzer.getCharFilters().size());
+		var charFilters = analyzer.getCharFilters();
+		var firstCharFilter = charFilters.iterator().next();
+
+		Assertions.assertEquals(1, charFilters.size());
+		Assertions.assertEquals(charFilter1.getId(), firstCharFilter.getId());
 		Assertions.assertEquals(0, analyzer.getTokenFilters().size());
 		Assertions.assertNull(analyzer.getTokenizer());
 
+		analyzerService.removeCharFilterFromAnalyzer(analyzerId, firstCharFilter.getId())
+				.await().indefinitely();
 	}
 
 	@Test
