@@ -655,7 +655,9 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListCustomMemo
-            classTab={tabs[selectedTabIndex]?.label}
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
             setSortResult={setSort}
             selectOptions={
               configuration.sortResultListCustom?.selectOptions ?? []
