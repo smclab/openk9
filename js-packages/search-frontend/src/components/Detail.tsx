@@ -170,7 +170,7 @@ function Detail<E>(props: DetailProps<E>) {
             gap: 5px;
           `}
         >
-          <div>
+          <div className="openk9-preview-icon-wrapper">
             <PreviewSvg />
           </div>
           <h2
