@@ -188,7 +188,7 @@ class OpenSearchRetriever(BaseRetriever):
 
             for merged_document in merged_documents:
                 page_content = merged_document["content"]
-                source = merged_document["content"]
+                source = merged_document["source"]
                 title = merged_document["title"]
                 url = merged_document["url"]
                 document_id = merged_document["document_id"]
