@@ -38,15 +38,16 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AnalyzerServiceTest {
 
-	public static final String ANALYZER_SERVICE_TOKEN_FILTER_1 = "AnalyserService.tokenFilter1";
-	public static final String ANALYZER_SERVICE_TOKEN_FILTER_2 = "AnalyserService.tokenFilter2";
-	public static final String ANALYZER_SERVICE_TOKENIZER_1 = "AnalyzerService.tokenizer1";
-	public static final String PUBLIC = "public";
-	public static final String ANALYZER_SERVICE_CREATE_WITH_LIST = "AnalyzerService.createWithList";
+	private static final String ANALYZER_SERVICE_TOKEN_FILTER_1 = "AnalyserService.tokenFilter1";
+	private static final String ANALYZER_SERVICE_TOKEN_FILTER_2 = "AnalyserService.tokenFilter2";
+	private static final String ANALYZER_SERVICE_TOKENIZER_1 = "AnalyzerService.tokenizer1";
+	private static final String ANALYZER_SERVICE_CREATE_WITH_LIST = "AnalyzerService.createWithList";
 	private static final String ANALYZER_SERVICE_TEST_CHAR_FILTER_1 = "AnalyzerServiceTest.charFilter1";
 	private static final String ANALYZER_SERVICE_TEST_CHAR_FILTER_2 = "AnalyzerServiceTest.charFilter2";
 	private static final String ATYPE = "atype";
 	private static final String JSON_CONFIG = "{}";
+	private static final String PUBLIC = "public";
+
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
