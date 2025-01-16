@@ -151,6 +151,7 @@ export function DataRangePickerVertical({
             : `Dal ${t("gg/mm/aaaa")}`}
         </p>
         <div
+          className="openk9-container-input-start-date"
           css={css`
             display: flex;
           `}
@@ -263,6 +264,7 @@ export function DataRangePickerVertical({
           {translationLabel?.labelEnd || `Al ${t("gg/mm/aaaa")}`}
         </p>
         <div
+          className="openk9-container-input-end-date"
           css={css`
             display: flex;
           `}
