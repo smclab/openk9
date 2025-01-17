@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
@@ -60,6 +61,13 @@ public class SuggestionCategoryGraphqlResource {
 		String searchText, Set<SortBy> sortByList) {
 		return suggestionCategoryService.findConnection(
 			after, before, first, last, searchText, sortByList);
+	}
+
+	public Uni<Bucket> bucket(
+		@Source SuggestionCategory suggestionCategory) {
+
+		return suggestionCategoryService.getBucket(
+			suggestionCategory.getId());
 	}
 
 	public Uni<DocTypeField> docTypeField(

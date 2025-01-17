@@ -1,10 +1,13 @@
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.quarkus.test.junit.QuarkusTest;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import static io.smallrye.graphql.client.core.Argument.arg;
@@ -37,11 +41,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SuggestionCategoryGraphqlTest {
 
+	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
+
+	private static final String BUCKET = "bucket";
+	private static final String BUCKET_NAME_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
 	private static final String DOC_TYPE_FIELD = "docTypeField";
 	private static final String DOC_TYPE_FIELD_ID = "docTypeFieldId";
 	private static final String EDGES = "edges";
 	private static final String ENTITY = "entity";
-	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
 	private static final String DOC_TYPE_FIELD_ONE_NAME = ENTITY_NAME_PREFIX + "Doc type field 1";
 	private static final String DOC_TYPE_FIELD_TWO_NAME = ENTITY_NAME_PREFIX + "Doc type field 2";
 	private static final String ID = "id";
@@ -54,6 +61,9 @@ public class SuggestionCategoryGraphqlTest {
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD_DTO = "suggestionCategoryWithDocTypeFieldDTO";
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD = "suggestionCategoryWithDocTypeField";
 	private static final String SUGGESTION_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
+
+	@Inject
+	BucketService bucketService;
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
@@ -73,9 +83,14 @@ public class SuggestionCategoryGraphqlTest {
 	void setup() {
 		Long suggestionCategoriesCount = allSuggestionCategoryCount();
 
+		//create
 		createDocTypeFieldOne();
 		createDocTypeFieldTwo();
 		createSuggestionCategoryOneWithDocTypeFieldOne();
+		createBucketOne();
+
+		//bind
+		bindBucketOneToSuggestionCategoryOne();
 
 		assertEquals(
 			suggestionCategoriesCount + 1,
@@ -132,6 +147,56 @@ public class SuggestionCategoryGraphqlTest {
 
 	@Test
 	@Order(3)
+	void should_return_bucket_when_queried_from_suggestion_category()
+		throws ExecutionException, InterruptedException {
+
+		var suggestionCategoryOne = getSuggestionCategoryOne();
+		var bucketOne = getBucketOne();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					SUGGESTION_CATEGORY,
+					args(
+						arg(ID, suggestionCategoryOne.getId())
+					),
+					field(ID),
+					field(NAME),
+					field(
+						BUCKET,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		System.out.println("Response: " + response);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var suggestionCategoryR = response.getData().getJsonObject(SUGGESTION_CATEGORY);
+
+		assertNotNull(suggestionCategoryR);
+		assertEquals(
+			suggestionCategoryOne.getId(),
+			Long.parseLong(suggestionCategoryR.getString(ID)));
+
+		var bucketR = suggestionCategoryR.getJsonObject(BUCKET);
+
+		assertNotNull(bucketR);
+		assertEquals(
+			bucketOne.getId(),
+			Long.parseLong(bucketR.getString(ID)));
+
+	}
+
+	@Test
+	@Order(4)
 	void should_patch_suggestion_category_with_doc_type_field() throws ExecutionException, InterruptedException {
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeFieldTwoId = getDocTypeFieldTwo().getId();
@@ -183,7 +248,7 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(4)
+	@Order(5)
 	void should_return_doc_type_field_when_queried_from_all_suggestion_categories()
 		throws ExecutionException, InterruptedException {
 
@@ -211,7 +276,7 @@ public class SuggestionCategoryGraphqlTest {
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println(response);
+		System.out.println("Response: " + response);
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -242,7 +307,7 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(5)
+	@Order(6)
 	void tearDown() {
 		var docTypeFieldOne = getDocTypeFieldOne();
 		var docTypeFieldTwo = getDocTypeFieldTwo();
@@ -268,6 +333,32 @@ public class SuggestionCategoryGraphqlTest {
 		)
 		.await()
 		.indefinitely();
+	}
+
+	private void bindBucketOneToSuggestionCategoryOne() {
+		var suggestionCategoryOne = getSuggestionCategoryOne();
+		var bucketOne = getBucketOne();
+
+		sessionFactory.withTransaction(
+			(s, transaction) ->
+				bucketService.addSuggestionCategory(bucketOne.getId(), suggestionCategoryOne.getId())
+		);
+	}
+
+	private void createBucketOne() {
+		var suggestionCategoryOneId = getSuggestionCategoryOne().getId();
+		var dto = BucketWithListsDTO.builder()
+			.name(BUCKET_NAME_ONE)
+			.refreshOnDate(true)
+			.refreshOnQuery(true)
+			.refreshOnTab(true)
+			.refreshOnSuggestionCategory(true)
+			.retrieveType(Bucket.RetrieveType.MATCH)
+			.suggestionCategoryIds(Set.of(suggestionCategoryOneId))
+			.build();
+
+		bucketService.create(dto)
+			.await().indefinitely();
 	}
 
 	private void createDocTypeFieldOne() {
@@ -308,6 +399,15 @@ public class SuggestionCategoryGraphqlTest {
 			.build();
 
 		suggestionCategoryService.create(dto)
+			.await()
+			.indefinitely();
+	}
+
+	private Bucket getBucketOne() {
+		return sessionFactory.withTransaction(
+				(s, transaction) ->
+					bucketService.findByName(s, BUCKET_NAME_ONE)
+			)
 			.await()
 			.indefinitely();
 	}

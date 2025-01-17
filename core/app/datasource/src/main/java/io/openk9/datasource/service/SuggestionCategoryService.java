@@ -17,10 +17,9 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
+import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
@@ -36,8 +35,6 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.Set;
 
 ;
 
@@ -142,6 +139,14 @@ public class SuggestionCategoryService extends
 			SuggestionCategory_.DESCRIPTION,
 			SuggestionCategory_.PRIORITY
 		};
+	}
+
+	public Uni<Bucket> getBucket(long suggestionCategoryId) {
+		return sessionFactory.withTransaction(s ->
+			findById(s, suggestionCategoryId)
+				.flatMap(suggestionCategory ->
+					s.fetch(suggestionCategory.getBucket()))
+		);
 	}
 
 	public Uni<DocTypeField> getDocTypeField(long suggestionCategoryId) {
