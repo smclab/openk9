@@ -24,32 +24,30 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class QueryAnalysisWithListsTest {
 
-	private static final QueryAnalysisDTO queryAnalysisDTO =
-		io.openk9.datasource.model.init.QueryAnalysis.INSTANCE;
-	public static final List<String> ANNOTATOR_NAME_TWO_ITEM_LIST =
+	private static final List<String> ANNOTATOR_NAME_TWO_ITEM_LIST =
 		Arrays.asList(
 			"token annotator",
 			"keyword annotator");
-	public static final List<String> ANNOTATOR_NAME_THREE_ITEM_LIST =
+	private static final List<String> ANNOTATOR_NAME_THREE_ITEM_LIST =
 		Arrays.asList(
 			"token annotator",
 			"keyword annotator",
 			"stopword annotator");
-	public static final String PATCHED = "_PATCHED";
-	public static final String QUERY_ANALYSIS_TEST_NAME_1 = "Query Analysis test 1";
-	public static final String QUERY_ANALYSIS_TEST_NAME_2 = "Query Analysis test 2";
-	public static final String QUERY_ANALYSIS_WITH_LISTS = "QueryAnalysis with lists";
-	public static final String QUERY_ANALYSIS_WITH_ONLY_NAME = "QueryAnalysis with only name";
-	public static final List<String> RULE_NAME_TWO_ITEM_LIST =
+	private static final String PATCHED = "_PATCHED";
+	private static final String QUERY_ANALYSIS_TEST_NAME_1 = "Query Analysis test 1";
+	private static final String QUERY_ANALYSIS_TEST_NAME_2 = "Query Analysis test 2";
+	private static final String QUERY_ANALYSIS_WITH_LISTS = "QueryAnalysis with lists";
+	private static final String QUERY_ANALYSIS_WITH_ONLY_NAME = "QueryAnalysis with only name";
+	private static final List<String> RULE_NAME_TWO_ITEM_LIST =
 		Arrays.asList(
 			"$ROOT_$Query",
 			"$Query_$Collection");
-	public static final List<String> RULE_NAME_THREE_ITEM_LIST =
+	private static final List<String> RULE_NAME_THREE_ITEM_LIST =
 		Arrays.asList(
 			"$ROOT_$Query",
 			"$Query_$Collection",
 			"$Part_$Intent");
-	public static final String UPDATED = "_UPDATED";
+	private static final String UPDATED = "_UPDATED";
 
 	@Inject
 	AnnotatorService annotatorService;

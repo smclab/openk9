@@ -11,8 +11,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -39,15 +39,17 @@ public class SuggestionCategoryGraphqlTest {
 
 	private static final String DOC_TYPE_FIELD = "docTypeField";
 	private static final String DOC_TYPE_FIELD_ID = "docTypeFieldId";
+	private static final String EDGES = "edges";
 	private static final String ENTITY = "entity";
 	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
 	private static final String DOC_TYPE_FIELD_ONE_NAME = ENTITY_NAME_PREFIX + "Doc type field 1";
 	private static final String DOC_TYPE_FIELD_TWO_NAME = ENTITY_NAME_PREFIX + "Doc type field 2";
 	private static final String ID = "id";
 	private static final String NAME = "name";
+	private static final String NODE = "node";
 	private static final String PATCH = "patch";
 	private static final String PRIORITY = "priority";
-	private static final String PUBLIC = "public";
+	private static final String SUGGESTION_CATEGORIES = "suggestionCategories";
 	private static final String SUGGESTION_CATEGORY = "suggestionCategory";
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD_DTO = "suggestionCategoryWithDocTypeFieldDTO";
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD = "suggestionCategoryWithDocTypeField";
@@ -69,9 +71,15 @@ public class SuggestionCategoryGraphqlTest {
 	@Test
 	@Order(1)
 	void setup() {
+		Long suggestionCategoriesCount = allSuggestionCategoryCount();
+
 		createDocTypeFieldOne();
 		createDocTypeFieldTwo();
 		createSuggestionCategoryOneWithDocTypeFieldOne();
+
+		assertEquals(
+			suggestionCategoriesCount + 1,
+			allSuggestionCategoryCount());
 	}
 
 	@Test
@@ -176,6 +184,65 @@ public class SuggestionCategoryGraphqlTest {
 
 	@Test
 	@Order(4)
+	void should_return_doc_type_field_when_queried_from_all_suggestion_categories()
+		throws ExecutionException, InterruptedException {
+
+		var docTypeFieldTwo = getDocTypeFieldTwo();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					SUGGESTION_CATEGORIES,
+					field(EDGES,
+						field(NODE,
+							field(ID),
+							field(NAME),
+							field(
+								DOC_TYPE_FIELD,
+								field(ID),
+								field(NAME)
+							)
+						)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		System.out.println(response);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var suggestionCategoriesR = response.getData()
+			.getJsonObject(SUGGESTION_CATEGORIES)
+			.getJsonArray(EDGES);
+
+		assertNotNull(suggestionCategoriesR);
+		assertEquals(allSuggestionCategoryCount(), suggestionCategoriesR.size());
+
+		System.out.println(suggestionCategoriesR);
+
+		suggestionCategoriesR.getValuesAs(JsonObject.class)
+			.forEach(node ->{
+				var nodeJsonObject = node.getJsonObject(NODE);
+				var name = nodeJsonObject.getString(NAME);
+
+				if (SUGGESTION_ONE_NAME.equalsIgnoreCase(name)) {
+					var docTypeField = nodeJsonObject.getJsonObject(DOC_TYPE_FIELD);
+
+					assertNotNull(docTypeField);
+					assertEquals(
+						docTypeFieldTwo.getId(),
+						Long.parseLong(docTypeField.getString(ID)));
+				}
+			});
+	}
+
+	@Test
+	@Order(5)
 	void tearDown() {
 		var docTypeFieldOne = getDocTypeFieldOne();
 		var docTypeFieldTwo = getDocTypeFieldTwo();
@@ -192,6 +259,15 @@ public class SuggestionCategoryGraphqlTest {
 
 		docTypeFieldService.deleteById(docTypeFieldTwo.getId())
 			.await().indefinitely();
+	}
+
+	private Long allSuggestionCategoryCount() {
+		return sessionFactory.withTransaction(
+			(s, transaction) ->
+				suggestionCategoryService.count()
+		)
+		.await()
+		.indefinitely();
 	}
 
 	private void createDocTypeFieldOne() {

@@ -146,7 +146,7 @@ public class SuggestionCategoryService extends
 
 	public Uni<DocTypeField> getDocTypeField(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s ->
-			findById(suggestionCategoryId)
+			findById(s, suggestionCategoryId)
 				.flatMap(suggestionCategory ->
 					s.fetch(suggestionCategory.getDocTypeField()))
 		);
