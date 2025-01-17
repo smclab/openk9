@@ -144,24 +144,12 @@ public class SuggestionCategoryService extends
 		};
 	}
 
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		Uni<Connection<DocTypeField>> joinConnection =
-			findJoinConnection(
-				id, SuggestionCategory_.DOC_TYPE_FIELD, DocTypeField.class,
-				docTypeFieldService.getSearchFields(),
-				after, before, first, last, searchText, sortByList, notEqual
-			);
-
-		if (notEqual) {
-			return joinConnection
-				.map(connection -> connection.filter(dtf -> dtf.isKeyword() || dtf.isI18N()));
-		}
-
-		return joinConnection;
-
+	public Uni<DocTypeField> getDocTypeField(long suggestionCategoryId) {
+		return sessionFactory.withTransaction(s ->
+			findById(suggestionCategoryId)
+				.flatMap(suggestionCategory ->
+					s.fetch(suggestionCategory.getDocTypeField()))
+		);
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
