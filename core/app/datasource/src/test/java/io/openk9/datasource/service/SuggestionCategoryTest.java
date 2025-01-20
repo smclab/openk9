@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
@@ -186,12 +185,32 @@ public class SuggestionCategoryTest {
 	@Order(5)
 	void should_find_by_searchText_suggestionCategory_connection() {
 
-		var connection = suggestionCategoryService.findConnection(
-						null, null, null, null, "unit test", null
+		var emptyByName = suggestionCategoryService.findConnection(
+				null, null, null, null, "a string that is not contained", null
 				)
 				.await()
 				.indefinitely();
 
+		var emptyByPriority = suggestionCategoryService.findConnection(
+				null, null, null, null, "140", null
+			)
+			.await()
+			.indefinitely();
+
+		var byName = suggestionCategoryService.findConnection(
+				null, null, null, null, SGCWITHFIELD_1, null)
+			.await().indefinitely();
+
+
+		var byPriority = suggestionCategoryService.findConnection(
+				null, null, null, null, "200", null)
+			.await().indefinitely();
+
+		Assertions.assertTrue(emptyByName.getEdges().isEmpty());
+		Assertions.assertTrue(emptyByPriority.getEdges().isEmpty());
+
+		Assertions.assertEquals(1, byName.getEdges().size());
+		Assertions.assertEquals(1, byPriority.getEdges().size());
 	}
 
 	@Test
