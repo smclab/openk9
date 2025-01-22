@@ -17,17 +17,19 @@
 
 package io.openk9.datasource.events;
 
-import io.smallrye.mutiny.Multi;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+
+import io.smallrye.mutiny.Multi;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 
 @Path("/datasource-event")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class DatasourceEventResource {
 
 	@GET

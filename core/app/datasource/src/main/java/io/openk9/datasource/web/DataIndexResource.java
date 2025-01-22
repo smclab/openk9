@@ -17,14 +17,8 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.index.mappings.MappingsKey;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.Datasource_;
-import io.openk9.datasource.processor.indexwriter.IndexerEvents;
-import io.openk9.datasource.service.DataIndexService;
-import io.openk9.datasource.service.DocTypeService;
-import io.smallrye.mutiny.Uni;
+import java.util.List;
+import java.util.Map;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -33,23 +27,27 @@ import jakarta.persistence.criteria.Root;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+
+import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Datasource_;
+import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+import io.openk9.datasource.service.DataIndexService;
+import io.openk9.datasource.service.DocTypeService;
+
+import io.smallrye.mutiny.Uni;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.opensearch.client.RestHighLevelClient;
-
-import java.util.List;
-import java.util.Map;
 
 @CircuitBreaker
 @Path("/v1/data-index")
 @RolesAllowed("k9-admin")
 public class DataIndexResource {
 
-	@Inject
-	RestHighLevelClient restHighLevelClient;
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject

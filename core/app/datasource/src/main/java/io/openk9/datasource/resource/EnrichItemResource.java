@@ -17,15 +17,17 @@
 
 package io.openk9.datasource.resource;
 
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ws.rs.Path;
+
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.EnrichItemService;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.ws.rs.Path;
 
 @Path("/enrich-items")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class EnrichItemResource extends
 	BaseK9EntityResource<EnrichItemService, EnrichItem, EnrichItemDTO> {
 

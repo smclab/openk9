@@ -17,17 +17,19 @@
 
 package io.openk9.datasource.pipeline.resource;
 
-import io.openk9.common.util.ShardingKey;
-import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.pipeline.actor.enrichitem.Token;
-import io.openk9.datasource.pipeline.actor.enrichitem.TokenUtils;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+
+import io.openk9.common.util.ShardingKey;
+import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.pipeline.actor.enrichitem.Token;
+import io.openk9.datasource.pipeline.actor.enrichitem.TokenUtils;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
@@ -59,6 +61,7 @@ public class PipelineResource {
 	@POST
 	@RolesAllowed("k9-admin")
 	@Path("/enrich-item/{enrich-item-id}")
+	@Deprecated
 	public Uni<JsonObject> callEnrichItem(
 		@PathParam("enrich-item-id") long enrichItemId,
 		JsonObject datasourcePayload) {

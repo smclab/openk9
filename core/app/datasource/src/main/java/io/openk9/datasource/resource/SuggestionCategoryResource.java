@@ -17,15 +17,6 @@
 
 package io.openk9.datasource.resource;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.SuggestionCategoryService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DELETE;
@@ -35,8 +26,20 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.SuggestionCategoryService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+
 @Path("/suggestion-categories")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class SuggestionCategoryResource extends
 	BaseK9EntityResource<SuggestionCategoryService, SuggestionCategory, SuggestionCategoryDTO> {
 

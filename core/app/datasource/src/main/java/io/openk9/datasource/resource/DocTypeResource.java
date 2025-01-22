@@ -17,16 +17,6 @@
 
 package io.openk9.datasource.resource;
 
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeDTO;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.DocTypeService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DELETE;
@@ -36,8 +26,21 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.dto.DocTypeDTO;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+
 @Path("/doc-types")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class DocTypeResource extends
 	BaseK9EntityResource<DocTypeService, DocType, DocTypeDTO> {
 

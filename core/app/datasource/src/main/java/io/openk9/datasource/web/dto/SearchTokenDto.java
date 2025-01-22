@@ -15,24 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.resource;
+package io.openk9.datasource.web.dto;
 
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.ws.rs.Path;
+import java.util.List;
 
-import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.PluginDriverService;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
-@Path("/plugin-drivers")
-@RolesAllowed("k9-admin")
-@Deprecated
-public class PluginDriverFieldResource extends
-	BaseK9EntityResource<PluginDriverService, PluginDriver, PluginDriverDTO> {
-
-	protected PluginDriverFieldResource(PluginDriverService service) {
-		super(service);
-	}
-
+@NoArgsConstructor
+@SuperBuilder
+@Getter
+@Setter
+public class SearchTokenDto {
+	private String tokenType;
+	private String keywordKey;
+	private List<String> values;
+	private Boolean filter;
 }
