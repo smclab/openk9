@@ -17,9 +17,11 @@
 
 package io.openk9.datasource.model.dto;
 
+import io.openk9.datasource.model.PipelineType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.ValidQuartzCron;
 import io.openk9.datasource.validation.json.Json;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,5 +56,16 @@ public class DatasourceDTO extends K9EntityDTO {
 	@ValidQuartzCron
 	@Description("Cron quartz expression to define scheduling of datasource")
 	private String scheduling;
+	@Description("""
+		Defines what kind of pipeline you want to run during the ingestion.
+		Possible kind are:
+			- Enrich: running the enrichPipeline defined in the Datasource;
+			- Embedding: create an embedding vector using the active EmbeddingModel
+			in the tenant. You have to define the field from what you want to
+			embed information.
+			- Enrich and Embedding: you want to run first the enrichPipeline and
+			then you want to create an embedding from a field.
+		""")
+	private PipelineType pipelineType;
 
 }

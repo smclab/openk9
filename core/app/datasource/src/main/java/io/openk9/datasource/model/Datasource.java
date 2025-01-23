@@ -17,14 +17,12 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.listener.K9EntityListener;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.validation.ValidQuartzCron;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -33,6 +31,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.listener.K9EntityListener;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidQuartzCron;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -149,6 +153,10 @@ public class Datasource extends K9Entity {
 	@Column(name = "scheduling", nullable = false)
 	@ValidQuartzCron
 	private String scheduling = DEFAULT_SCHEDULING;
+	@Column(name = "pipeline_type")
+	@Enumerated(EnumType.STRING)
+	private PipelineType pipelineType;
+
 
 	public void setPurgeable(Boolean purgeable) {
 		this.purgeable = Objects.requireNonNullElse(purgeable, DEFAULT_PURGEABLE);
