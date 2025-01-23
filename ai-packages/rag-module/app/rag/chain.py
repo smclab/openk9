@@ -8,6 +8,7 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTem
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import ConfigurableFieldSpec
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_ibm import ChatWatsonx
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from opensearchpy import OpenSearch
@@ -26,6 +27,7 @@ class ModelType(Enum):
     OPENAI = "openai"
     OLLAMA = "ollama"
     HUGGING_FACE_CUSTOM = "hugging-face-custom"
+    IBM_WATSONX = "watsonx"
 
 
 def get_chain(
@@ -91,6 +93,23 @@ def get_chain(
             llm = ChatOllama(model=model, base_url=api_url)
         case ModelType.HUGGING_FACE_CUSTOM.value:
             llm = CustomChatHuggingFaceModel(base_url=api_url)
+        case ModelType.IBM_WATSONX.value:
+            watsonx_project_id = configuration["watsonx_project_id"]
+            parameters = {
+                "decoding_method": "sample",
+                "max_new_tokens": 100,
+                "min_new_tokens": 1,
+                "temperature": 0.5,
+                "top_k": 50,
+                "top_p": 1,
+            }
+            llm = ChatWatsonx(
+                model_id=model,
+                url=api_url,
+                apikey=api_key,
+                project_id=watsonx_project_id,
+                params=parameters,
+            )
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
@@ -211,6 +230,23 @@ def get_chat_chain(
             llm = ChatOllama(model=model, base_url=api_url)
         case ModelType.HUGGING_FACE_CUSTOM.value:
             llm = CustomChatHuggingFaceModel(base_url=api_url)
+        case ModelType.IBM_WATSONX.value:
+            watsonx_project_id = configuration["watsonx_project_id"]
+            parameters = {
+                "decoding_method": "sample",
+                "max_new_tokens": 100,
+                "min_new_tokens": 1,
+                "temperature": 0.5,
+                "top_k": 50,
+                "top_p": 1,
+            }
+            llm = ChatWatsonx(
+                model_id=model,
+                url=api_url,
+                apikey=api_key,
+                project_id=watsonx_project_id,
+                params=parameters,
+            )
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
@@ -384,16 +420,16 @@ def get_chat_chain(
             }
         )
 
-    save_chat_message(
-        open_search_client,
-        search_text,
-        result_answer["answer"],
-        conversation_title,
-        documents,
-        chat_id,
-        user_id,
-        timestamp,
-        chat_sequence_number,
-    )
+    # save_chat_message(
+    #     open_search_client,
+    #     search_text,
+    #     result_answer["answer"],
+    #     conversation_title,
+    #     documents,
+    #     chat_id,
+    #     user_id,
+    #     timestamp,
+    #     chat_sequence_number,
+    # )
 
     yield json.dumps({"chunk": "", "type": "END"})
