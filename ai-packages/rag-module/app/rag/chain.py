@@ -475,3 +475,321 @@ def get_chat_chain(
     )
 
     yield json.dumps({"chunk": "", "type": "END"})
+
+
+@tool
+def rag_tool(
+    search_text,
+    rerank,
+    reranker_api_url,
+    chunk_window,
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    virtual_host,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    vector_indices,
+    context_window,
+    retrieve_type,
+    opensearch_host,
+    grpc_host,
+    prompt_template,
+    rephrase_prompt_template,
+    llm,
+    chat_id,
+    user_id,
+    retrieve_citations,
+    model_type,
+    chat_sequence_number,
+):
+    """Risponde a domande relative a polizze assicurative e strumenti finanziari offerti dal gruppo AXA. AXA è una società che fornisce polizze assicurative a protezione di beni come case e auto che a protezione di persone come polizze vita e assicurazioni sanitarie. Inoltre AXA fornisce servizi finanziari come fondi pensione e piani di investimento."""
+
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
+    )
+
+    retriever = OpenSearchRetriever(
+        search_text=search_text,
+        rerank=rerank,
+        reranker_api_url=reranker_api_url,
+        chunk_window=chunk_window,
+        range_values=range_values,
+        after_key=after_key,
+        suggest_keyword=suggest_keyword,
+        suggestion_category_id=suggestion_category_id,
+        virtual_host=virtual_host,
+        jwt=jwt,
+        extra=extra,
+        sort=sort,
+        sort_after_key=sort_after_key,
+        language=language,
+        vector_indices=vector_indices,
+        context_window=context_window,
+        retrieve_type=retrieve_type,
+        opensearch_host=opensearch_host,
+        grpc_host=grpc_host,
+    )
+
+    contextualize_q_system_prompt = rephrase_prompt_template
+
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+
+    history_aware_retriever = create_history_aware_retriever(
+        llm, retriever, contextualize_q_prompt
+    )
+
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", prompt_template),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+
+    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
+
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+
+    if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value:
+        citations_chain = qa_prompt | llm.with_structured_output(Citations)
+        conversational_rag_chain = RunnableWithMessageHistory(
+            rag_chain,
+            get_chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+            history_factory_config=[
+                ConfigurableFieldSpec(
+                    id="open_search_client",
+                    annotation=str,
+                    name="Opensearch client",
+                    description="Opensearch client.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="user_id",
+                    annotation=str,
+                    name="User ID",
+                    description="Unique identifier for the user.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="chat_id",
+                    annotation=str,
+                    name="Chat ID",
+                    description="Unique identifier for the chat.",
+                    default="",
+                ),
+            ],
+        ).assign(annotations=citations_chain)
+    else:
+        conversational_rag_chain = RunnableWithMessageHistory(
+            rag_chain,
+            get_chat_history,
+            input_messages_key="input",
+            history_messages_key="chat_history",
+            output_messages_key="answer",
+            history_factory_config=[
+                ConfigurableFieldSpec(
+                    id="open_search_client",
+                    annotation=str,
+                    name="Opensearch client",
+                    description="Opensearch client.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="user_id",
+                    annotation=str,
+                    name="User ID",
+                    description="Unique identifier for the user.",
+                    default="",
+                ),
+                ConfigurableFieldSpec(
+                    id="chat_id",
+                    annotation=str,
+                    name="Chat ID",
+                    description="Unique identifier for the chat.",
+                    default="",
+                ),
+            ],
+        )
+
+    result = conversational_rag_chain.stream(
+        {"input": search_text},
+        config={
+            "configurable": {
+                "open_search_client": open_search_client,
+                "user_id": user_id,
+                "chat_id": chat_id,
+            }
+        },
+    )
+
+    events = []
+    for chunk in result:
+        events.append(chunk)
+
+    return events
+    # result_answer = ""
+    # documents = []
+    # documents_id = set()
+    # citations = []
+    # conversation_title = ""
+    #
+    # for chunk in result:
+    #     return chunk
+    #
+    # if chat_sequence_number == 1:
+    #     title_prompt = PromptTemplate(
+    #         input_variables=["question", "answer"],
+    #         template="""Generate a title for a conversation where the user asks:
+    #             '{question}' and the AI responds: '{answer}'.""",
+    #     )
+    #     title_chain = title_prompt | llm | StrOutputParser()
+    #     conversation_title = title_chain.invoke(
+    #         {"question": search_text, "answer": result_answer["answer"]},
+    #     )
+    #     yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+    #
+    # all_citations = (
+    #     citations.get("annotations").dict()["citations"]
+    #     if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+    #     else []
+    # )
+    # all_citations_dict = (
+    #     {citation["document_id"]: citation["citations"] for citation in all_citations}
+    #     if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+    #     else {}
+    # )
+    #
+    # for document in documents:
+    #     document_id = document["metadata"]["document_id"]
+    #     document_chunk = document["metadata"]
+    #     document_chunk.pop("document_id", None)
+    #     document_chunk.pop("chunk_idx", None)
+    #     document_chunk.pop("prev", None)
+    #     document_chunk.pop("next", None)
+    #
+    #     document_citations = all_citations_dict.get(document_id, [])
+    #     document["citations"] = document_citations
+    #
+    #     yield json.dumps(
+    #         {
+    #             "chunk": document_chunk,
+    #             "citations": document_citations,
+    #             "type": "DOCUMENT",
+    #         }
+    #     )
+
+    # save_chat_message(
+    #     open_search_client,
+    #     search_text,
+    #     result_answer["answer"],
+    #     conversation_title,
+    #     documents,
+    #     chat_id,
+    #     user_id,
+    #     timestamp,
+    #     chat_sequence_number,
+    # )
+
+    # yield json.dumps({"chunk": "", "type": "END"})
+
+
+def get_chat_chain_tool(
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    vector_indices,
+    virtual_host,
+    search_text,
+    chat_id,
+    user_id,
+    timestamp,
+    chat_sequence_number,
+    retrieve_citations,
+    rerank,
+    reranker_api_url,
+    chunk_window,
+    opensearch_host,
+    grpc_host,
+):
+    configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = configuration["api_url"]
+    api_key = configuration["api_key"]
+    model_type = (
+        configuration["model_type"]
+        if configuration["model_type"]
+        else DEFAULT_MODEL_TYPE
+    )
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    prompt_template = configuration["prompt"]
+    rephrase_prompt_template = configuration["rephrase_prompt"]
+    context_window = configuration["context_window"]
+    retrieve_type = configuration["retrieve_type"]
+
+    match model_type:
+        case ModelType.OPENAI.value:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+        case ModelType.OLLAMA.value:
+            llm = ChatOllama(model=model, base_url=api_url)
+        case ModelType.HUGGING_FACE_CUSTOM.value:
+            llm = CustomChatHuggingFaceModel(base_url=api_url)
+        case _:
+            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+
+    tools = [rag_tool]
+    llm_with_tools = llm.bind_tools(tools)
+
+    llm_with_tools_response = llm_with_tools.invoke(search_text)
+
+    for tool_call in llm_with_tools_response.tool_calls:
+        tool_call["args"]["search_text"] = search_text
+        tool_call["args"]["rerank"] = rerank
+        tool_call["args"]["reranker_api_url"] = reranker_api_url
+        tool_call["args"]["chunk_window"] = chunk_window
+        tool_call["args"]["range_values"] = range_values
+        tool_call["args"]["after_key"] = after_key
+        tool_call["args"]["suggest_keyword"] = suggest_keyword
+        tool_call["args"]["suggestion_category_id"] = suggestion_category_id
+        tool_call["args"]["virtual_host"] = virtual_host
+        tool_call["args"]["jwt"] = jwt
+        tool_call["args"]["extra"] = extra
+        tool_call["args"]["sort"] = sort
+        tool_call["args"]["sort_after_key"] = sort_after_key
+        tool_call["args"]["language"] = language
+        tool_call["args"]["vector_indices"] = vector_indices
+        tool_call["args"]["context_window"] = context_window
+        tool_call["args"]["retrieve_type"] = retrieve_type
+        tool_call["args"]["opensearch_host"] = opensearch_host
+        tool_call["args"]["grpc_host"] = grpc_host
+        tool_call["args"]["prompt_template"] = prompt_template
+        tool_call["args"]["rephrase_prompt_template"] = rephrase_prompt_template
+        tool_call["args"]["llm"] = llm
+        tool_call["args"]["chat_id"] = chat_id
+        tool_call["args"]["user_id"] = user_id
+        tool_call["args"]["retrieve_citations"] = retrieve_citations
+        tool_call["args"]["model_type"] = model_type
+        tool_call["args"]["chat_sequence_number"] = chat_sequence_number
+        selected_tool = {"rag_tool": rag_tool}[tool_call["name"].lower()]
+        stream = selected_tool.invoke(tool_call)
+
+        for event in stream:
+            print(event)
