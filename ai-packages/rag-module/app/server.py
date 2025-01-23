@@ -10,7 +10,7 @@ from opensearchpy import OpenSearch
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from app.rag.chain import get_chain, get_chat_chain
+from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils.keycloak import unauthorized_response, verify_token
 
 app = FastAPI()
@@ -166,6 +166,69 @@ async def rag_chat(
         unauthorized_response()
 
     chain = get_chat_chain(
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
+        token,
+        extra,
+        sort,
+        sort_after_key,
+        language,
+        vector_indices,
+        virtual_host,
+        search_text,
+        chat_id,
+        user_id,
+        timestamp,
+        chat_sequence_number,
+        retrieve_citations,
+        rerank,
+        RERANKER_API_URL,
+        chunk_window,
+        OPENSEARCH_HOST,
+        GRPC_DATASOURCE_HOST,
+    )
+    return EventSourceResponse(chain)
+
+
+@app.post("/api/rag/chat_tool")
+async def rag_chat(
+    search_query_chat: SearchQueryChat,
+    request: Request,
+    authorization: Optional[str] = Header(None),
+    openk9_acl: Optional[list[str]] = Header(None),
+):
+    """Definition of /api/rag/chat api."""
+    chat_id = search_query_chat.chatId
+    range_values = search_query_chat.range
+    after_key = search_query_chat.afterKey
+    suggest_keyword = search_query_chat.suggestKeyword
+    suggestion_category_id = search_query_chat.suggestionCategoryId
+    extra = search_query_chat.extra
+    sort = search_query_chat.sort
+    sort_after_key = search_query_chat.sortAfterKey
+    language = search_query_chat.language
+    vector_indices = search_query_chat.vectorIndices
+    search_text = search_query_chat.searchText
+    user_id = search_query_chat.userId
+    timestamp = search_query_chat.timestamp
+    chat_sequence_number = search_query_chat.chatSequenceNumber
+    retrieve_citations = search_query_chat.retrieveCitations
+    rerank = search_query_chat.rerank
+    chunk_window = search_query_chat.chunk_window
+    virtual_host = urlparse(str(request.base_url)).hostname
+    # TODO remove line
+    virtual_host = "test.openk9.io"
+
+    if openk9_acl:
+        extra[OPENK9_ACL_HEADER] = openk9_acl
+
+    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
+    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
+        unauthorized_response()
+
+    chain = get_chat_chain_tool(
         range_values,
         after_key,
         suggest_keyword,
