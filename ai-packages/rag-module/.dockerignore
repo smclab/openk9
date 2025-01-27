@@ -99,3 +99,5 @@ app/grpc/datasource/datasource_pb2_grpc.py
 app/grpc/datasource/datasource_pb2.py
 app/grpc/searcher/searcher_pb2_grpc.py
 app/grpc/searcher/searcher_pb2.py
+
+application_default_credentials.json

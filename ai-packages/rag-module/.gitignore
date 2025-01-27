@@ -166,3 +166,4 @@ cython_debug/
 
 # Other
 .directory
+application_default_credentials.json
