@@ -1,4 +1,5 @@
 import json
+import os
 from enum import Enum
 from typing import List
 
@@ -11,6 +12,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_ibm import ChatWatsonx
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+from langchain_google_vertexai import ChatVertexAI
 from opensearchpy import OpenSearch
 from pydantic import BaseModel, Field
 
@@ -28,6 +30,7 @@ class ModelType(Enum):
     OLLAMA = "ollama"
     HUGGING_FACE_CUSTOM = "hugging-face-custom"
     IBM_WATSONX = "watsonx"
+    CHAT_VERTEX_AI = "chat_vertex_ai"
 
 
 def get_chain(
@@ -109,6 +112,24 @@ def get_chain(
                 apikey=api_key,
                 project_id=watsonx_project_id,
                 params=parameters,
+            )
+        case ModelType.CHAT_VERTEX_AI.value:
+            credentials = configuration["chat_vertex_ai_credentials"]
+            project_id = credentials["quota_project_id"]
+            json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
+            credential_file_path = "application_default_credentials.json"
+            with open(credential_file_path, "w", encoding="utf-8") as outfile:
+                outfile.write(json_credentials)
+
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
+
+            llm = ChatVertexAI(
+                model=model,
+                project=project_id,
+                temperature=0,
+                max_tokens=None,
+                max_retries=6,
+                stop=None,
             )
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
@@ -246,6 +267,24 @@ def get_chat_chain(
                 apikey=api_key,
                 project_id=watsonx_project_id,
                 params=parameters,
+            )
+        case ModelType.CHAT_VERTEX_AI.value:
+            credentials = configuration["chat_vertex_ai_credentials"]
+            project_id = credentials["quota_project_id"]
+            json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
+            credential_file_path = "application_default_credentials.json"
+            with open(credential_file_path, "w", encoding="utf-8") as outfile:
+                outfile.write(json_credentials)
+
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
+
+            llm = ChatVertexAI(
+                model=model,
+                project=project_id,
+                temperature=0,
+                max_tokens=None,
+                max_retries=6,
+                stop=None,
             )
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
@@ -420,16 +459,16 @@ def get_chat_chain(
             }
         )
 
-    save_chat_message(
-        open_search_client,
-        search_text,
-        result_answer["answer"],
-        conversation_title,
-        documents,
-        chat_id,
-        user_id,
-        timestamp,
-        chat_sequence_number,
-    )
+    # save_chat_message(
+    #     open_search_client,
+    #     search_text,
+    #     result_answer["answer"],
+    #     conversation_title,
+    #     documents,
+    #     chat_id,
+    #     user_id,
+    #     timestamp,
+    #     chat_sequence_number,
+    # )
 
     yield json.dumps({"chunk": "", "type": "END"})
