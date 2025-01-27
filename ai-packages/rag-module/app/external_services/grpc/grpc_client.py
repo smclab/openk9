@@ -76,6 +76,7 @@ def get_llm_configuration(grpc_host, virtual_host):
     rephrase_prompt = json_config.get("rephrase_prompt")
     context_window = json_config.get("context_window")
     watsonx_project_id = json_config.get("watsonx_project_id")
+    chat_vertex_ai_credentials = json_config.get("credentials")
     retrieve_type = response.retrieveType
 
     configuration = {
@@ -88,6 +89,7 @@ def get_llm_configuration(grpc_host, virtual_host):
         "context_window": context_window,
         "retrieve_type": retrieve_type,
         "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
     }
 
     return configuration
