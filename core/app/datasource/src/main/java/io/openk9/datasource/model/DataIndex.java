@@ -17,9 +17,8 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.util.OpenSearchUtils;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,18 +28,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.util.OpenSearchUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "data_index")
@@ -104,7 +104,6 @@ public class DataIndex extends K9Entity {
 	}
 
 	@PostLoad
-	@PostUpdate
 	protected void initIndexName() throws UnknownTenantException {
 		String tenantId = getTenant();
 
