@@ -52,6 +52,7 @@ Trigger Datasource:
         - core/client/common/**/*
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
+        - core/common/datasource-model/**/*
   trigger:
     include: '/.gitlab/.gitlab-ci-datasource.yaml'
 
@@ -191,6 +192,7 @@ Trigger Tenant-Manager:
         - core/client/common/**/*
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
+        - core/common/datasource-model/**/*
   trigger:
     include: '/.gitlab/.gitlab-ci-tenant-manager.yaml'
 
