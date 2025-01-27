@@ -459,16 +459,16 @@ def get_chat_chain(
             }
         )
 
-    # save_chat_message(
-    #     open_search_client,
-    #     search_text,
-    #     result_answer["answer"],
-    #     conversation_title,
-    #     documents,
-    #     chat_id,
-    #     user_id,
-    #     timestamp,
-    #     chat_sequence_number,
-    # )
+    save_chat_message(
+        open_search_client,
+        search_text,
+        result_answer["answer"],
+        conversation_title,
+        documents,
+        chat_id,
+        user_id,
+        timestamp,
+        chat_sequence_number,
+    )
 
     yield json.dumps({"chunk": "", "type": "END"})
