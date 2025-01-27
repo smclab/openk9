@@ -33,62 +33,56 @@ class ModelType(Enum):
     CHAT_VERTEX_AI = "chat_vertex_ai"
 
 
-def get_chain(
-    range_values,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    jwt,
-    extra,
-    sort,
-    sort_after_key,
-    language,
-    vector_indices,
-    virtual_host,
-    question,
-    reformulate,
-    rerank,
-    reranker_api_url,
-    opensearch_host,
-    grpc_host,
-):
-    configuration = get_llm_configuration(grpc_host, virtual_host)
-    api_url = configuration["api_url"]
-    api_key = configuration["api_key"]
+def initialize_language_model(configuration):
+    """
+    Initialize and return a language model based on the specified model type
+    and configuration settings.
+
+    Parameters:
+    ----------
+
+    configuration : dict
+        A dictionary containing configuration settings required for model initialization.
+        Expected keys include:
+            - "api_url": str
+                URL for the API endpoint.
+            - "api_key": str
+                API key for authentication.
+            - "model_type": str
+                The type of model to instantiate. Should match one of the values defined
+                in the ModelType enumeration (e.g., 'OPENAI', 'OLLAMA', 'HUGGING_FACE_CUSTOM',
+                'IBM_WATSONX', 'CHAT_VERTEX_AI').
+            - "model": str
+                Name of the model to use; defaults to DEFAULT_MODEL if not provided.
+            - "prompt": str
+                The initial prompt to be used with the model.
+            - "rephrase_prompt": str
+                A prompt for rephrasing tasks, if applicable.
+            - "context_window": int
+                Size of the context window for the model's input.
+            - "retrieve_type": str
+                Specifies the type of retrieval mechanism to be used with the model.
+            - "watsonx_project_id": str
+                Project ID for IBM WatsonX (required if using WatsonX).
+            - "chat_vertex_ai_credentials": dict
+                Credentials for Google Vertex AI (required if using Vertexai).
+
+    Returns:
+    -------
+    llm : object
+        An instance of a language model corresponding to the specified model type.
+        The returned object can be used to perform various natural language processing tasks.
+
+    """
+
     model_type = (
         configuration["model_type"]
         if configuration["model_type"]
         else DEFAULT_MODEL_TYPE
     )
+    api_url = configuration["api_url"]
+    api_key = configuration["api_key"]
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
-    prompt_template = configuration["prompt"]
-    rephrase_prompt_template = configuration["rephrase_prompt"]
-    context_window = configuration["context_window"]
-    retrieve_type = configuration["retrieve_type"]
-
-    retriever = OpenSearchRetriever(
-        search_text=question,
-        rerank=rerank,
-        reranker_api_url=reranker_api_url,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        virtual_host=virtual_host,
-        jwt=jwt,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
-        vector_indices=vector_indices,
-        context_window=context_window,
-        retrieve_type=retrieve_type,
-        opensearch_host=opensearch_host,
-        grpc_host=grpc_host,
-    )
-
-    documents = retriever.invoke(question)
-
     match model_type:
         case ModelType.OPENAI.value:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
@@ -134,6 +128,57 @@ def get_chain(
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
+    return llm
+
+
+def get_chain(
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    vector_indices,
+    virtual_host,
+    question,
+    reformulate,
+    rerank,
+    reranker_api_url,
+    opensearch_host,
+    grpc_host,
+):
+    configuration = get_llm_configuration(grpc_host, virtual_host)
+    prompt_template = configuration["prompt"]
+    rephrase_prompt_template = configuration["rephrase_prompt"]
+    context_window = configuration["context_window"]
+    retrieve_type = configuration["retrieve_type"]
+
+    retriever = OpenSearchRetriever(
+        search_text=question,
+        rerank=rerank,
+        reranker_api_url=reranker_api_url,
+        range_values=range_values,
+        after_key=after_key,
+        suggest_keyword=suggest_keyword,
+        suggestion_category_id=suggestion_category_id,
+        virtual_host=virtual_host,
+        jwt=jwt,
+        extra=extra,
+        sort=sort,
+        sort_after_key=sort_after_key,
+        language=language,
+        vector_indices=vector_indices,
+        context_window=context_window,
+        retrieve_type=retrieve_type,
+        opensearch_host=opensearch_host,
+        grpc_host=grpc_host,
+    )
+
+    documents = retriever.invoke(question)
+    llm = initialize_language_model(configuration)
     prompt = ChatPromptTemplate.from_template(prompt_template)
     parser = StrOutputParser()
     chain = prompt | llm | parser
@@ -205,14 +250,11 @@ def get_chat_chain(
     grpc_host,
 ):
     configuration = get_llm_configuration(grpc_host, virtual_host)
-    api_url = configuration["api_url"]
-    api_key = configuration["api_key"]
     model_type = (
         configuration["model_type"]
         if configuration["model_type"]
         else DEFAULT_MODEL_TYPE
     )
-    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
@@ -244,50 +286,7 @@ def get_chat_chain(
         grpc_host=grpc_host,
     )
 
-    match model_type:
-        case ModelType.OPENAI.value:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key)
-        case ModelType.OLLAMA.value:
-            llm = ChatOllama(model=model, base_url=api_url)
-        case ModelType.HUGGING_FACE_CUSTOM.value:
-            llm = CustomChatHuggingFaceModel(base_url=api_url)
-        case ModelType.IBM_WATSONX.value:
-            watsonx_project_id = configuration["watsonx_project_id"]
-            parameters = {
-                "decoding_method": "sample",
-                "max_new_tokens": 100,
-                "min_new_tokens": 1,
-                "temperature": 0.5,
-                "top_k": 50,
-                "top_p": 1,
-            }
-            llm = ChatWatsonx(
-                model_id=model,
-                url=api_url,
-                apikey=api_key,
-                project_id=watsonx_project_id,
-                params=parameters,
-            )
-        case ModelType.CHAT_VERTEX_AI.value:
-            credentials = configuration["chat_vertex_ai_credentials"]
-            project_id = credentials["quota_project_id"]
-            json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
-            credential_file_path = "application_default_credentials.json"
-            with open(credential_file_path, "w", encoding="utf-8") as outfile:
-                outfile.write(json_credentials)
-
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
-
-            llm = ChatVertexAI(
-                model=model,
-                project=project_id,
-                temperature=0,
-                max_tokens=None,
-                max_retries=6,
-                stop=None,
-            )
-        case _:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+    llm = initialize_language_model(configuration)
 
     contextualize_q_system_prompt = rephrase_prompt_template
 
