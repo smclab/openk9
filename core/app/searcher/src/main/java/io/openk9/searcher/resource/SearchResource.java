@@ -43,7 +43,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
-import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
@@ -348,8 +347,6 @@ public class SearchResource {
 			.toQueryParserRequest(searchRequest)
 			.toBuilder();
 
-		setVectorIndices(searchRequest, requestBuilder);
-
 		Map<String, Value> extra = new HashMap<>();
 
 		for (String headerName : supportedHeadersName) {
@@ -407,26 +404,6 @@ public class SearchResource {
 
 		return sortList;
 
-	}
-
-	private static void setVectorIndices(
-		SearchRequest searchRequest,
-		QueryParserRequest.Builder requestBuilder) {
-		var searchTokens = searchRequest.getSearchQuery();
-
-		for (ParserSearchToken token : searchTokens) {
-
-			var tokenType = token.getTokenType();
-
-			if (tokenType != null
-				&& (tokenType.equalsIgnoreCase("knn")
-					|| tokenType.equalsIgnoreCase("hybrid"))) {
-
-				requestBuilder.setVectorIndices(true);
-				break;
-			}
-
-		}
 	}
 
 	private static String getHighlightName(String highlightName) {

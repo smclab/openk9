@@ -17,24 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.util.K9Entity;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -46,6 +28,26 @@ import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.util.K9Entity;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -120,7 +122,7 @@ public class CreateBucketTest {
 		assertEquals(datasourceIds.size(), createdBucket.getDatasources().size());
 
 		var dataSources = createdBucket.getDatasources().iterator();
-		assertEquals(CreateConnection.DATASOURCE_NAME, dataSources.next().getName());
+		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, dataSources.next().getName());
 
 		assertEquals(suggestionCategorieIds.size(), createdBucket.getSuggestionCategories().size());
 		assertEquals(tabIds.size(), createdBucket.getTabs().size());

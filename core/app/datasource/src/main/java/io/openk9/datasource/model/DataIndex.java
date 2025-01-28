@@ -21,18 +21,20 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.util.OpenSearchUtils;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
@@ -41,6 +43,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "data_index")
@@ -56,13 +60,13 @@ public class DataIndex extends K9Entity {
 
 	@Column(name = "description", length = 4096)
 	private String description;
+
 	@ManyToMany(cascade = {
 		jakarta.persistence.CascadeType.MERGE,
 		jakarta.persistence.CascadeType.PERSIST,
 		jakarta.persistence.CascadeType.REFRESH,
 		jakarta.persistence.CascadeType.DETACH
-	}
-	)
+	})
 	@JoinTable(name = "data_index_doc_types",
 		joinColumns = @JoinColumn(name = "data_index_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "doc_types_id", referencedColumnName = "id"))
@@ -76,24 +80,30 @@ public class DataIndex extends K9Entity {
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
 
-	@JsonIgnore
-	@ToString.Exclude
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "vector_index_id", referencedColumnName = "id")
-	private VectorIndex vectorIndex;
-
 	@Transient
 	@Setter(AccessLevel.NONE)
 	@Getter(AccessLevel.NONE)
 	private String indexName;
 
-	public void addDocType(DocType docType) {
-		docTypes.add(docType);
-	}
+	@Column(name = "knn_index")
+	private boolean knnIndex = false;
 
-	public void removeDocType(DocType docType) {
-		docTypes.remove(docType);
-	}
+	@JsonIgnore
+	@ToString.Exclude
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "embedding_doc_type_field_id", referencedColumnName = "id")
+	private DocTypeField embeddingDocTypeField;
+
+	@Column(name = "chunk_type")
+	@Enumerated(EnumType.STRING)
+	private EmbeddingOuterClass.ChunkType chunkType;
+
+	@Column(name = "chunk_window_size")
+	private int chunkWindowSize;
+
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "embedding_json_config")
+	private String embeddingJsonConfig;
 
 	public String getIndexName() throws UnknownTenantException {
 		if (indexName == null) {
@@ -135,4 +145,5 @@ public class DataIndex extends K9Entity {
 			String.format("%s-%s", tenantId, getName())
 		);
 	}
+
 }

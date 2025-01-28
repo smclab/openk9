@@ -37,13 +37,13 @@ message Suggestions {
 }
 
 enum TokenType {
-    ENTITY = 0;
-    TEXT = 1;
-    DOCTYPE = 2;
-    AUTOCORRECT = 3;
-    AUTOCOMPLETE = 4;
-    KEYWORD_AUTOCOMPLETE = 5;
-    FILTER = 6;
+  ENTITY = 0;
+  TEXT = 1;
+  DOCTYPE = 2;
+  AUTOCORRECT = 3;
+  AUTOCOMPLETE = 4;
+  KEYWORD_AUTOCOMPLETE = 5;
+  FILTER = 6;
   KNN = 7;
 }
 
@@ -59,7 +59,7 @@ message QueryParserRequest {
   repeated Sort sort = 9;
   optional string sortAfterKey = 10;
   optional string language = 11;
-  optional bool vectorIndices = 12;
+  optional bool vectorIndices = 12 [deprecated = true];
 }
 
 message Sort {

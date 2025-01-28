@@ -17,6 +17,14 @@
 
 package io.openk9.datasource.listener;
 
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -27,13 +35,12 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.SchedulerService;
+
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.Message;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.OpenSearchStatusException;
@@ -48,12 +55,6 @@ import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.cluster.metadata.Template;
 import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.rest.RestStatus;
-
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 @ApplicationScoped
 public class JobSchedulerService {
@@ -321,7 +322,7 @@ public class JobSchedulerService {
 						"from Datasource d " +
 						"join fetch d.pluginDriver " +
 						"left join fetch d.dataIndex di " +
-						"left join fetch di.vectorIndex vi " +
+						"left join fetch di.embeddingDocTypeField edtf " +
 						"left join fetch di.docTypes " +
 						"where d.id = :id", Datasource.class)
 					.setParameter("id", request.datasourceId())

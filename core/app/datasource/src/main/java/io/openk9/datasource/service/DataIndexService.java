@@ -17,6 +17,18 @@
 
 package io.openk9.datasource.service;
 
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
@@ -28,8 +40,8 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UnknownTenantException;
-import io.openk9.datasource.model.VectorIndex;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -40,13 +52,10 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.OpenSearchUtils;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -60,14 +69,6 @@ import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
-
-import java.io.IOException;
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 @ApplicationScoped
 public class DataIndexService
@@ -92,61 +93,40 @@ public class DataIndexService
 		this.mapper = mapper;
 	}
 
+	public Uni<DataIndex> createByDatasource(
+		Mutiny.Session session, Datasource datasource) {
+
+		var pluginDriver = datasource.getPluginDriver();
+		var jsonConfig = pluginDriver.getJsonConfig();
+		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+
+		return pluginDriverClient.getSample(pluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				var transientDataIndex = new DataIndex();
+
+				transientDataIndex.setName(String.format("dataindex-%s", UUID.randomUUID()));
+				transientDataIndex.setDatasource(datasource);
+
+				return create(session, transientDataIndex)
+					.flatMap(dataIndex -> indexerEvents
+						.generateDocTypeFields(
+							session, dataIndex, mappings.getMap(), documentTypes)
+						.flatMap(__ -> findById(session, dataIndex.getId()))
+					);
+			});
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
-	}
-
-	public Uni<DataIndex> findByIdWithVectorIndex(Mutiny.Session session, long dataIndexId) {
-
-		return session.createQuery(
-				"from DataIndex di left join fetch di.vectorIndex where di.id = :dataIndexId",
-				DataIndex.class
-			)
-			.setParameter("dataIndexId", dataIndexId)
-			.getSingleResultOrNull();
-
-	}
-
-	public Uni<DataIndex> bindVectorDataIndex(long dataIndexId, long vectorIndexId) {
-
-		return sessionFactory.withTransaction((s, t) ->
-			bindVectorDataIndex(s, dataIndexId, vectorIndexId));
-	}
-
-	public Uni<DataIndex> bindVectorDataIndex(
-		Mutiny.Session session, long dataIndexId, long vectorIndexId) {
-
-		return session.find(DataIndex.class, dataIndexId)
-			.flatMap(dataIndex -> session
-				.find(VectorIndex.class, vectorIndexId)
-				.flatMap(vectorIndex -> {
-					dataIndex.setVectorIndex(vectorIndex);
-					return session.persist(dataIndex)
-						.map(unused -> dataIndex);
-				})
-			);
-
-	}
-
-	public Uni<DataIndex> unbindVectorDataIndex(long dataIndexId) {
-
-		return sessionFactory.withTransaction((s, t) ->
-			unbindVectorDataIndex(s, dataIndexId));
-
-	}
-
-	public Uni<DataIndex> unbindVectorDataIndex(
-		Mutiny.Session session, long dataIndexId) {
-
-		return session.find(DataIndex.class, dataIndexId)
-			.flatMap(dataIndex -> {
-					dataIndex.setVectorIndex(null);
-					return session.persist(dataIndex)
-						.map(unused -> dataIndex);
-				}
-			);
-
 	}
 
 	public Uni<Set<DocType>> getDocTypes(DataIndex dataIndex) {
@@ -290,34 +270,10 @@ public class DataIndexService
 		);
 	}
 
-	public Uni<DataIndex> createByDatasource(Mutiny.Session session, Datasource datasource) {
-
-		var pluginDriver = datasource.getPluginDriver();
-		var jsonConfig = pluginDriver.getJsonConfig();
-		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
-
-		return pluginDriverClient.getSample(pluginDriverInfo)
-			.flatMap(ingestionPayload -> {
-
-				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
-
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
-
-				var transientDataIndex = new DataIndex();
-
-				transientDataIndex.setName(String.format("dataindex-%s", UUID.randomUUID()));
-				transientDataIndex.setDatasource(datasource);
-
-				return create(session, transientDataIndex)
-					.flatMap(dataIndex -> indexerEvents
-						.generateDocTypeFields(
-							session, dataIndex, mappings.getMap(), documentTypes)
-						.flatMap(__ -> findById(session, dataIndex.getId()))
-					);
-			});
+	public Uni<DocTypeField> getEmbeddingDocTypeField(long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(dataIndex -> s.fetch(dataIndex.getEmbeddingDocTypeField()))
+		);
 	}
 
 	public Uni<DataIndex> createDataIndexFromDocTypes(

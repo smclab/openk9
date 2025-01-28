@@ -17,22 +17,17 @@
 
 package io.openk9.datasource.pipeline.service;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import io.openk9.datasource.TestUtils;
-import io.openk9.datasource.model.EmbeddingModel;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
-import java.util.Map;
+import jakarta.inject.Inject;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import io.openk9.datasource.model.EmbeddingModel;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class EmbeddingServiceTest {
@@ -50,36 +45,6 @@ class EmbeddingServiceTest {
 			.await().indefinitely();
 
 		assertNotNull(current);
-	}
-
-	@Test
-	void getMetadataMap() {
-
-		var datapayload = TestUtils
-			.getResourceAsJsonObject("embedding/datapayload.json")
-			.toBuffer()
-			.getBytes();
-
-		var documentContext = JsonPath
-			.using(Configuration.defaultConfiguration())
-			.parseUtf8(datapayload);
-
-		var metadataMap = EmbeddingService.getMetadataMap(
-			documentContext,
-			"$.sample;$.store.bicycle"
-		);
-
-		assertTrue(metadataMap.containsKey("sample"));
-		assertTrue(metadataMap.containsKey("store"));
-
-		Map<String, Object> sample = (Map<String, Object>) metadataMap.get("sample");
-		Map<String, Object> store = (Map<String, Object>) metadataMap.get("store");
-
-		assertEquals(20, sample.get("age"));
-
-		assertTrue(store.containsKey("bicycle"));
-		assertFalse(store.containsKey("book"));
-
 	}
 
 	@Test

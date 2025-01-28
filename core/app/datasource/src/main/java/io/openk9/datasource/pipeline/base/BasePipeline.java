@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.pipeline.base;
 
+import java.util.List;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.EnrichPipeline;
@@ -24,16 +26,13 @@ import io.openk9.datasource.pipeline.actor.IndexWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
-import io.openk9.datasource.pipeline.actor.closing.SendLast;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
-import io.openk9.datasource.pipeline.actor.working.Forward;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
+
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
-
-import java.util.List;
 
 public class BasePipeline {
 
@@ -46,15 +45,13 @@ public class BasePipeline {
 			shardingKey,
 			new WorkStage.Configurations(
 				EnrichPipeline.ENTITY_TYPE_KEY,
-				IndexWriter::create,
-				Forward::create
+				IndexWriter::create
 			),
 			new CloseStage.Configurations(
 				BasePipeline::closeResponseAggregator,
 				UpdateDatasource::create,
 				DeletionCompareNotifier::create,
-				EvaluateStatus::create,
-				SendLast::create
+				EvaluateStatus::create
 			)
 		);
 	}

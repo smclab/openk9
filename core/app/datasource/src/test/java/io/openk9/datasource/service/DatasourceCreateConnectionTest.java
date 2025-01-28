@@ -17,20 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.dto.VectorIndexDTO;
-import io.openk9.datasource.service.exception.K9Error;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -38,23 +24,36 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.service.exception.K9Error;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
+import io.quarkus.test.vertx.RunOnVertxContext;
+import io.quarkus.test.vertx.UniAsserter;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 @QuarkusTest
 class DatasourceCreateConnectionTest {
 
 	@Inject
 	DatasourceService datasourceService;
 
-	@InjectMock
+	@InjectSpy
 	PluginDriverService pluginDriverService;
 
-	@InjectMock
+	@InjectSpy
 	EnrichPipelineService enrichPipelineService;
 
-	@InjectMock
+	@InjectSpy
 	DataIndexService dataIndexService;
-
-	@InjectMock
-	VectorIndexService vectorIndexService;
 
 	@Test
 	@RunOnVertxContext
@@ -89,12 +88,6 @@ class DatasourceCreateConnectionTest {
 	@RunOnVertxContext
 	void should_create_everything_vector(UniAsserter asserter) {
 
-		given(dataIndexService.createByDatasource(any(), any()))
-			.willReturn(Uni.createFrom().item(CreateConnection.DATAINDEX));
-
-		given(vectorIndexService.create(anySession(), any(VectorIndexDTO.class)))
-			.willReturn(Uni.createFrom().item(CreateConnection.VECTORINDEX));
-
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_ENTITIES_VECTOR_DTO),
 			response -> {
@@ -116,13 +109,40 @@ class DatasourceCreateConnectionTest {
 					.should(times(1))
 					.createByDatasource(anySession(), any(Datasource.class));
 
-				then(vectorIndexService)
+			}
+		);
+
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_create_pipeline_dataIndex(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> pluginDriverService.create(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER
+				.name("PRE_EXIST_PLUGIN")
+				.build()
+			).flatMap(pluginDriver -> datasourceService
+				.createDatasourceConnection(
+					CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER
+						.pluginDriverId(pluginDriver.getId())
+						.build()
+				)
+			),
+			response -> {
+
+				then(pluginDriverService).should(times(1))
+					.findById(anySession(), eq(anyLong()));
+
+				then(pluginDriverService).shouldHaveNoMoreInteractions();
+
+				then(enrichPipelineService)
 					.should(times(1))
-					.create(anySession(), any(VectorIndexDTO.class));
+					.createWithItems(anySession(), any(PipelineWithItemsDTO.class));
 
 				then(dataIndexService)
 					.should(times(1))
-					.bindVectorDataIndex(anySession(), anyLong(), anyLong());
+					.createByDatasource(anySession(), any(Datasource.class));
 			}
 		);
 
@@ -133,53 +153,25 @@ class DatasourceCreateConnectionTest {
 	void should_create_plugin_and_dataIndex(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO),
+			() -> enrichPipelineService.createWithItems(PipelineWithItemsDTO.builder()
+				.name("PRE_EXIST_PIPELINE")
+				.build()
+			).flatMap(enrichPipelineResponse -> datasourceService.createDatasourceConnection(
+					CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER
+						.pipelineId(enrichPipelineResponse.getEntity().getId())
+						.build()
+				)
+			),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
-					.create(
-						anySession(),
-						eq(CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO.getPluginDriver())
-					);
+					.create(anySession(), eq(any(PluginDriver.class)));
 
 				then(enrichPipelineService)
 					.should(times(1))
-					.findById(
-						anySession(),
-						eq(CreateConnection.PIPELINE_ID)
-					);
+					.findById(anySession(), eq(anyLong()));
 
 				then(enrichPipelineService).shouldHaveNoMoreInteractions();
-
-				then(dataIndexService)
-					.should(times(1))
-					.createByDatasource(anySession(), any(Datasource.class));
-			}
-		);
-
-	}
-
-
-	@Test
-	@RunOnVertxContext
-	void should_create_pipeline_dataIndex(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO),
-			response -> {
-
-				then(pluginDriverService).should(times(1)).findById(
-					anySession(),
-					eq(CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO.getPluginDriverId())
-				);
-
-				then(pluginDriverService).shouldHaveNoMoreInteractions();
-
-				then(enrichPipelineService)
-					.should(times(1))
-					.createWithItems(anySession(), any(PipelineWithItemsDTO.class));
 
 				then(dataIndexService)
 					.should(times(1))

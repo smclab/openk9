@@ -17,6 +17,18 @@
 
 package io.openk9.datasource.service;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
@@ -31,27 +43,15 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
-import io.openk9.datasource.model.dto.VectorIndexDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
@@ -67,8 +67,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
-	@Inject
-	VectorIndexService vectorIndexService;
 
 	DatasourceService(DatasourceMapper mapper) {
 		this.mapper = mapper;
@@ -131,10 +129,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
 							.createByDatasource(session, datasource)
-							.flatMap(dataIndex -> createVectorIndex(
-									session, dataIndex, datasourceConnection.getVectorIndexConfigurations()
-								)
-							)
 							.invoke(datasource::setDataIndex)
 							.flatMap(__ -> persist(session, datasource))
 						)
@@ -432,8 +426,8 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return findByIdWithPluginDriver(s, updateConnectionDTO.getDatasourceId())
 			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 				.invoke(datasource::setEnrichPipeline)
-				.flatMap(enrichPipeline -> updateOrCreateDataIndex(
-					s, datasource, updateConnectionDTO))
+				.flatMap(enrichPipeline -> dataIndexService
+					.createByDatasource(s, datasource))
 				.invoke(datasource::setDataIndex)
 				.map(__ -> mapper.update(datasource, updateConnectionDTO))
 				.chain(newState -> merge(s, newState)));
@@ -466,36 +460,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					return s.persist(datasource);
 				})
 		);
-	}
-
-	private Uni<DataIndex> createVectorIndex(
-		Mutiny.Session session,
-		DataIndex dataIndex,
-		VectorIndexDTO.ConfigurationsDTO vectorIndexConfigurations) {
-
-		if (vectorIndexConfigurations != null) {
-			VectorIndexDTO vectorIndexDTO = VectorIndexDTO.builder()
-				.name(dataIndex.getName() + "-vector-index")
-				.configurations(vectorIndexConfigurations)
-				.build();
-
-			if (dataIndex.getVectorIndex() == null) {
-				return vectorIndexService.create(
-						session, vectorIndexDTO)
-					.flatMap(vectorIndex -> dataIndexService.bindVectorDataIndex(
-						session, dataIndex.getId(), vectorIndex.getId()));
-			}
-			else {
-				return vectorIndexService.update(
-						session, dataIndex.getVectorIndex().getId(), vectorIndexDTO)
-					.map(vectorIndex -> dataIndex);
-			}
-
-		}
-		else {
-			return Uni.createFrom().item(dataIndex);
-		}
-
 	}
 
 	private Uni<PluginDriver> getOrCreatePluginDriver(
@@ -552,27 +516,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		}
 		else {
 			return Uni.createFrom().nullItem();
-		}
-
-	}
-
-	private Uni<DataIndex> updateOrCreateDataIndex(
-		Mutiny.Session session,
-		Datasource datasource,
-		UpdateDatasourceConnectionDTO updateConnectionDTO) {
-
-		var dataIndexId = updateConnectionDTO.getDataIndexId();
-		var vectorIndexConfigurations = updateConnectionDTO.getVectorIndexConfigurations();
-
-		if (dataIndexId <= 0L) {
-			return dataIndexService.createByDatasource(session, datasource)
-				.flatMap(dataIndex ->
-					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
-		}
-		else {
-			return dataIndexService.findByIdWithVectorIndex(session, dataIndexId)
-				.flatMap(dataIndex ->
-					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
 		}
 
 	}

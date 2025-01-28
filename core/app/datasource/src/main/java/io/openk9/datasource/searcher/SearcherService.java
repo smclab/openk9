@@ -152,22 +152,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		var datasources = tenant.getDatasources();
 
-		if (request.hasVectorIndices() && request.getVectorIndices()) {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-				var vectorIndex = dataIndex.getVectorIndex();
+		for (Datasource datasource : datasources) {
+			var dataIndex = datasource.getDataIndex();
 
-				if (vectorIndex != null) {
-					indexNames.add(vectorIndex.getIndexName());
-				}
-			}
-		}
-		else {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-
-				indexNames.add(dataIndex.getIndexName());
-			}
+			indexNames.add(dataIndex.getIndexName());
 		}
 
 		return indexNames.toArray(String[]::new);
@@ -248,7 +236,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
 			docTypeFieldList,
-			request.getVectorIndices(),
 			language
 		);
 
@@ -276,7 +263,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
 		List<DocTypeField> docTypeFieldList,
-		boolean vectorIndices,
 		String language) {
 
 		Set<String> includes = new HashSet<>();
@@ -342,20 +328,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			}
 
-		}
-
-		if (vectorIndices) {
-			includes.addAll(List.of(
-				"chunkText",
-				"indexName",
-				"contentId",
-				"number",
-				"total",
-				"title",
-				"url",
-				"previous",
-				"next"
-			));
 		}
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();

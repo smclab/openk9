@@ -17,24 +17,24 @@
 
 package io.openk9.datasource.pipeline.service;
 
-public class VectorIndexNotFound extends EmbeddingServiceException {
-	public VectorIndexNotFound() {
+public class DataIndexNotFound extends EmbeddingServiceException {
+	public DataIndexNotFound() {
 		super();
 	}
 
-	public VectorIndexNotFound(String message) {
+	public DataIndexNotFound(String message) {
 		super(message);
 	}
 
-	public VectorIndexNotFound(String message, Throwable cause) {
+	public DataIndexNotFound(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public VectorIndexNotFound(Throwable cause) {
+	public DataIndexNotFound(Throwable cause) {
 		super(cause);
 	}
 
-	protected VectorIndexNotFound(
+	protected DataIndexNotFound(
 		String message,
 		Throwable cause,
 		boolean enableSuppression,

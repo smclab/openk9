@@ -17,6 +17,16 @@
 
 package io.openk9.datasource.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
+
+import java.util.List;
+import java.util.Map;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
@@ -24,6 +34,7 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.processor.indexwriter.IndexerEvents;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -32,18 +43,8 @@ import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)
@@ -80,7 +81,7 @@ class DynamicMappingDataIndexTest {
 				.create(s, DatasourceDTO.builder()
 					.name(DynamicMappingDataIndexTest.class.getName())
 					.description("test")
-					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
+					.jsonConfig(CreateConnection.JSON_CONFIG)
 					.scheduling(CreateConnection.SCHEDULING)
 					.schedulable(false)
 					.reindexing(CreateConnection.REINDEXING)

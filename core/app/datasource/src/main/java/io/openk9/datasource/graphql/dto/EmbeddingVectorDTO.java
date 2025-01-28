@@ -15,12 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.graphql.dto;
 
-import jakarta.validation.constraints.NotNull;
-
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import lombok.EqualsAndHashCode;
@@ -30,24 +26,27 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
-@NoArgsConstructor
 @SuperBuilder
+@NoArgsConstructor
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
-public class DataIndexDTO extends K9EntityDTO {
+@EqualsAndHashCode
+public class EmbeddingVectorDTO {
 
-	@NotNull
-	@Description("The field used during the text embedding, defined as JsonPath")
-	private String textEmbeddingField;
-	@NotNull
-	@Description("The chunk strategy to apply")
-	private EmbeddingOuterClass.ChunkType chunkType;
-	@Json
-	@Description("The configurations needed by the embedding model")
-	private String embeddingJsonConfig;
+	@Description("It is the field that contains the data that has to be embedded.")
+	private long embeddingDocTypeField;
+
 	@Description(
-		"The size of array chunks before and after the actual chunk, sent to embedding model")
-	private Integer chunkWindowSize;
+		"It defines the strategy to use when chunking the text that is going to be embedded.")
+	private EmbeddingOuterClass.ChunkType chunkType;
+
+	@Description(
+		"It defines the number of previous and next chunks that are related to every chunk.")
+	private int chunkWindowSize;
+
+	@Description(
+		"It defines the configurations that the user can pass to the embedding model service used.")
+	private String embeddingJsonConfig;
+
 
 }

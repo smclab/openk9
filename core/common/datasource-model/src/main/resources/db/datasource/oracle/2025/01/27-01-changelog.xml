@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2025/01/09-01-changelog.xml">
+
+	<changeSet id="1737988554-1" author="openk9">
+
+		<dropForeignKeyConstraint
+			baseTableName="data_index"
+			constraintName="data_index_vector_index_fk"/>
+
+		<dropTable tableName="vector_index"/>
+
+	</changeSet>
+
+	<changeSet id="1737988554-2" author="openk9">
+
+		<dropColumn tableName="data_index" columnName="vector_index_id"/>
+
+		<addColumn tableName="data_index">
+			<column name="knn_index" type="BOOLEAN"/>
+			<column name="chunk_type" type="VARCHAR2(255)"/>
+			<column name="chunk_window_size" type="NUMBER(10)"/>
+			<column name="embedding_json_config" type="CLOB"/>
+			<column name="embedding_doc_type_field_id" type="NUMBER(38)"/>
+		</addColumn>
+
+	</changeSet>
+
+
+</databaseChangeLog>

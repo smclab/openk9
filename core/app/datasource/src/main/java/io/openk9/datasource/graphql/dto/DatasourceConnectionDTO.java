@@ -19,7 +19,7 @@ package io.openk9.datasource.graphql.dto;
 
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.model.dto.VectorIndexDTO;
+
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,6 +53,6 @@ public class DatasourceConnectionDTO extends DatasourceDTO {
 
 	@Nullable
 	@Description("Configurations used for indexing vectors (optional)")
-	private VectorIndexDTO.ConfigurationsDTO vectorIndexConfigurations;
+	private EmbeddingVectorDTO embeddingVectorDTO;
 
 }

@@ -17,11 +17,12 @@
 
 package io.openk9.datasource.pipeline.service.dto;
 
-import io.openk9.datasource.model.Scheduler;
-import lombok.Data;
-
 import java.time.OffsetDateTime;
 import java.util.Set;
+
+import io.openk9.datasource.model.Scheduler;
+
+import lombok.Data;
 
 @Data
 public class SchedulerDTO {
@@ -33,7 +34,6 @@ public class SchedulerDTO {
 	private String oldDataIndexName;
 	private Long newDataIndexId;
 	private String newDataIndexName;
-	private String vectorIndexName;
 	private Scheduler.SchedulerStatus status;
 	private OffsetDateTime lastIngestionDate;
 

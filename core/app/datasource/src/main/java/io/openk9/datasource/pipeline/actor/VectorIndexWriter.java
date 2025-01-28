@@ -17,13 +17,21 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import jakarta.enterprise.inject.spi.CDI;
+
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
+
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import io.vertx.core.json.Json;
-import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -41,13 +49,6 @@ import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.opensearch.client.opensearch.indices.PutIndexTemplateResponse;
 import org.opensearch.client.transport.endpoints.BooleanResponse;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
@@ -68,7 +69,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		super(context);
 		this.asyncClient = CDI.current().select(OpenSearchAsyncClient.class).get();
-		this.vectorIndexName = scheduler.getVectorIndexName();
+		this.vectorIndexName = scheduler.getIndexName();
 		this.templateName = vectorIndexName + "-template";
 		this.replyTo = replyTo;
 

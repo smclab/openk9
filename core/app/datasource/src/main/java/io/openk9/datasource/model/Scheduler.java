@@ -17,8 +17,7 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
+import java.time.OffsetDateTime;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,11 +33,13 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToOne;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -62,7 +63,7 @@ import java.time.OffsetDateTime;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(value = "embeddingDocTypeField")
 				}
 			)
 		}
@@ -111,7 +112,7 @@ import java.time.OffsetDateTime;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(value = "embeddingDocTypeField")
 				}
 			)
 		}
@@ -172,4 +173,13 @@ public class Scheduler extends K9Entity {
 		STALE,
 		FAILURE
 	}
+
+	public DataIndex getDataIndex() {
+		if (newDataIndex == null) {
+			return oldDataIndex;
+		}
+
+		return newDataIndex;
+	}
+
 }

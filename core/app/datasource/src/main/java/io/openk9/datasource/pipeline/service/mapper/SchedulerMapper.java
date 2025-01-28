@@ -17,19 +17,20 @@
 
 package io.openk9.datasource.pipeline.service.mapper;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
 public interface SchedulerMapper {
@@ -41,10 +42,6 @@ public interface SchedulerMapper {
 		@Mapping(source = "oldDataIndex.indexName", target = "oldDataIndexName"),
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "newDataIndex.indexName", target = "newDataIndexName"),
-		@Mapping(
-			source = "oldDataIndex.vectorIndex.indexName",
-			target = "vectorIndexName"
-		)
 	})
 	SchedulerDTO map(Scheduler source);
 

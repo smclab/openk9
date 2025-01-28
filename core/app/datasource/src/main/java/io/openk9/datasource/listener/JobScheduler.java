@@ -27,7 +27,6 @@ import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 import io.openk9.datasource.pipeline.base.BasePipeline;
-import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.SchedulerUtil;
 import org.apache.pekko.actor.typed.ActorRef;
@@ -146,15 +145,6 @@ public class JobScheduler {
 			.onMessage(
 				StartSchedulingWork.class,
 				rq -> onStartSchedulingWork(ctx, messageGateway, rq)
-			)
-			.onMessage(StartVectorPipeline.class, msg -> onStartVectorPipeline(ctx, msg))
-			.onMessage(
-				PersistVectorSchedulerInternal.class,
-				msg -> onPersistVectorSchedulerInternal(ctx, msg)
-			)
-			.onMessage(
-				RegisterVectorQueue.class,
-				msg -> onRegisterVectorQueue(ctx, messageGateway, msg)
 			)
 			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs))
 			.build();
@@ -307,7 +297,8 @@ public class JobScheduler {
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
 			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
 
-		schedulingRef.tell(new Scheduling.Halt(exception));
+		schedulingRef.tell(
+			new Scheduling.Halt(new InvokePluginDriverException(exception)));
 
 		return Behaviors.same();
 	}
@@ -363,17 +354,8 @@ public class JobScheduler {
 				ctx.pipeToSelf(
 					JobSchedulerService.callHttpPluginDriverClient(
 						scheduler, lastIngestionDate),
-					(unused, throwable) -> {
-						if (throwable != null) {
-							return new HaltScheduling(
-								scheduler,
-								new InvokePluginDriverException(throwable)
-							);
-						}
-						else {
-							return new StartVectorPipeline(scheduler);
-						}
-					}
+					(unused, throwable) ->
+						new HaltScheduling(scheduler, throwable)
 				);
 
 			}
@@ -407,51 +389,6 @@ public class JobScheduler {
 			(s, throwable) ->
 				new StartSchedulingWork(s,null, throwable)
 		);
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onPersistVectorSchedulerInternal(
-		ActorContext<Command> ctx,
-		PersistVectorSchedulerInternal msg) {
-
-		Scheduler scheduler = msg.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-
-		Throwable exception = msg.throwable();
-
-		if (exception != null) {
-			log.errorf(
-				exception,
-				"Cannot persist the Vector Scheduler for tenant: %s and datasource: %s",
-				tenantId,
-				datasource
-			);
-
-			return Behaviors.same();
-		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantId, scheduler),
-			RegisterVectorQueue::new
-		);
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onRegisterVectorQueue(
-		ActorContext<Command> ctx,
-		ActorRef<MessageGateway.Command> messageGateway,
-		RegisterVectorQueue msg) {
-
-		var scheduler = msg.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-
-		messageGateway.tell(new MessageGateway.Register(
-			ShardingKey.asString(
-				tenantId, scheduler.getScheduleId())));
 
 		return Behaviors.same();
 	}
@@ -676,54 +613,6 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onStartVectorPipeline(
-		ActorContext<Command> ctx,
-		StartVectorPipeline msg) {
-
-		var scheduler = msg.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-
-		var oldDataIndex = scheduler.getOldDataIndex();
-
-		if (oldDataIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var vectorIndex = oldDataIndex.getVectorIndex();
-
-		if (vectorIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var scheduleId = scheduler.getScheduleId();
-		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
-
-		var vScheduler = new Scheduler();
-		vScheduler.setScheduleId(vScheduleId);
-		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		vScheduler.setDatasource(datasource);
-		vScheduler.setOldDataIndex(oldDataIndex);
-
-		ctx.pipeToSelf(
-			JobSchedulerService.fetchEmbeddingModel(tenantId),
-			(ignore, throwable) ->
-				new PersistVectorSchedulerInternal(vScheduler, throwable)
-		);
-
-		return Behaviors.same();
-	}
-
 	private static Behavior<Command> onTriggerDatasource(
 		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
 
@@ -916,7 +805,7 @@ public class JobScheduler {
 
 	private record HaltScheduling(
 		Scheduler scheduler,
-		InvokePluginDriverException exception
+		Throwable exception
 	) implements Command {}
 
 	private record InvokePluginDriverInternal(
@@ -928,14 +817,6 @@ public class JobScheduler {
 	private record PersistSchedulerInternal(
 		Scheduler scheduler, Throwable throwable
 	) implements Command {}
-
-	private record PersistVectorSchedulerInternal(
-		Scheduler scheduler, Throwable throwable
-	)
-		implements Command {}
-
-	private record RegisterVectorQueue(Scheduler scheduler, Throwable throwable)
-		implements Command {}
 
 	private record ScheduleDatasourceInternal(
 		String tenantName, long datasourceId, JobType jobType, boolean schedulable, String cron,
@@ -952,8 +833,6 @@ public class JobScheduler {
 	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
 		Throwable throwable
 	) implements Command {}
-
-	private record StartVectorPipeline(Scheduler scheduler) implements Command {}
 
 	private record TriggerDatasourceInternal(
 		String tenantName, Datasource datasource, Boolean reindex,
