@@ -218,8 +218,6 @@ async def rag_chat(
     rerank = search_query_chat.rerank
     chunk_window = search_query_chat.chunk_window
     virtual_host = urlparse(str(request.base_url)).hostname
-    # TODO remove line
-    virtual_host = "test.openk9.io"
 
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
