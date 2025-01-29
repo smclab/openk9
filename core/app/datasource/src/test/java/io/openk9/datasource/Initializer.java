@@ -210,9 +210,9 @@ public class Initializer {
 		log.info("Create a new full configured DatasourceConnection.");
 
 		datasourceService.createDatasourceConnection(
-				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER
+				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(INIT_DATASOURCE_CONNECTION)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
 						.name(INIT_DATASOURCE_PLUGIN)
 					.build()
 				)

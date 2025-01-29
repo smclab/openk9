@@ -31,6 +31,7 @@ import jakarta.ws.rs.core.Response;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.index.mappings.MappingsUtil;
@@ -94,7 +95,9 @@ public class DataIndexService
 	}
 
 	public Uni<DataIndex> createByDatasource(
-		Mutiny.Session session, Datasource datasource) {
+		Mutiny.Session session,
+		EmbeddingVectorDTO embeddingVectorDTO,
+		Datasource datasource) {
 
 		var pluginDriver = datasource.getPluginDriver();
 		var jsonConfig = pluginDriver.getJsonConfig();
@@ -111,6 +114,10 @@ public class DataIndexService
 				);
 
 				var transientDataIndex = new DataIndex();
+
+				if (embeddingVectorDTO != null) {
+					transientDataIndex.setKnnIndex(true);
+				}
 
 				transientDataIndex.setName(String.format("dataindex-%s", UUID.randomUUID()));
 				transientDataIndex.setDatasource(datasource);

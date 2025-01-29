@@ -34,7 +34,7 @@ import org.eclipse.microprofile.graphql.Description;
 public class EmbeddingVectorDTO {
 
 	@Description("It is the field that contains the data that has to be embedded.")
-	private long embeddingDocTypeField;
+	private Long embeddingDocTypeField;
 
 	@Description(
 		"It defines the strategy to use when chunking the text that is going to be embedded.")
@@ -42,7 +42,7 @@ public class EmbeddingVectorDTO {
 
 	@Description(
 		"It defines the number of previous and next chunks that are related to every chunk.")
-	private int chunkWindowSize;
+	private Integer chunkWindowSize;
 
 	@Description(
 		"It defines the configurations that the user can pass to the embedding model service used.")

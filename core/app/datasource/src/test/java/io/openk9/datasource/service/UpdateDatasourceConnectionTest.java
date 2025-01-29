@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.atLeastOnce;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.times;
 
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
@@ -92,7 +94,8 @@ class UpdateDatasourceConnectionTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
-		given(dataIndexService.createByDatasource(anySession(), any(Datasource.class)))
+		given(dataIndexService.createByDatasource(
+			anySession(), nullable(EmbeddingVectorDTO.class), any(Datasource.class)))
 			.willReturn(Uni.createFrom().item(new DataIndex()));
 
 		uniAsserter.assertThat(
@@ -104,7 +107,8 @@ class UpdateDatasourceConnectionTest {
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
-					.createByDatasource(anySession(), any(Datasource.class));
+					.createByDatasource(
+						anySession(), nullable(EmbeddingVectorDTO.class), any(Datasource.class));
 
 				then(mockSession).should(atLeastOnce())
 					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
@@ -163,7 +167,7 @@ class UpdateDatasourceConnectionTest {
 					.name("mockdatasourceconnection")
 					.scheduling(CreateConnection.SCHEDULING)
 					.datasourceId(Long.MAX_VALUE)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
 						.name("mockplugindatasourceconnection")
 						.build()
 					)

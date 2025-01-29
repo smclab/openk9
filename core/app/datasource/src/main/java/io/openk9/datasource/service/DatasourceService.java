@@ -128,7 +128,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
-							.createByDatasource(session, datasource)
+							.createByDatasource(
+								session,
+								datasourceConnectionDTO.getEmbeddingVectorDTO(),
+								datasource
+							)
 							.invoke(datasource::setDataIndex)
 							.flatMap(__ -> persist(session, datasource))
 						)
@@ -427,7 +431,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 				.invoke(datasource::setEnrichPipeline)
 				.flatMap(enrichPipeline -> dataIndexService
-					.createByDatasource(s, datasource))
+					.createByDatasource(s, updateConnectionDTO.getEmbeddingVectorDTO(), datasource))
 				.invoke(datasource::setDataIndex)
 				.map(__ -> mapper.update(datasource, updateConnectionDTO))
 				.chain(newState -> merge(s, newState)));

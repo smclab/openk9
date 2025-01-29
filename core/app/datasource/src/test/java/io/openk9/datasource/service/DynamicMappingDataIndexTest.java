@@ -103,7 +103,7 @@ class DynamicMappingDataIndexTest {
 					return datasource;
 				})
 				.flatMap(datasource -> dataIndexService
-					.createByDatasource(s, datasource))
+					.createByDatasource(s, null, datasource))
 			),
 			dataIndex -> {
 

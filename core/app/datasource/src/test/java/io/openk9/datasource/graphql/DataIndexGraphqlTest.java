@@ -36,7 +36,6 @@ import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.PluginDriverService;
-import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -55,7 +54,6 @@ public class DataIndexGraphqlTest {
 	private static final String DATA_INDEX_DATASOURCE_GRAPHQL_TEST =
 		"DataIndexDatasourceGraphqlTest";
 	private static final String DATA_INDEX_PLUGIN_GRAPHQL_TEST = "DataIndexPluginGraphqlTest";
-	private static final String DATA_INDEX_GRAPHQL_TEST = "DataIndexGraphqlTest";
 	private static final String TENANT_ID = "public";
 
 	@Inject
@@ -77,9 +75,9 @@ public class DataIndexGraphqlTest {
 
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER
+				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(DATA_INDEX_DATASOURCE_GRAPHQL_TEST)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
 						.name(DATA_INDEX_PLUGIN_GRAPHQL_TEST)
 						.jsonConfig(JsonObject.of(
 							"host", WireMockPluginDriver.HOST,
@@ -89,10 +87,7 @@ public class DataIndexGraphqlTest {
 						.build()
 					)
 					.embeddingVectorDTO(EmbeddingVectorDTO.builder()
-						.chunkWindowSize(0)
-						.chunkType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER)
 						.embeddingJsonConfig("{}")
-						.embeddingDocTypeField(10L)
 						.build())
 					.build()
 			),
@@ -157,8 +152,11 @@ public class DataIndexGraphqlTest {
 							.deleteById(TENANT_ID, dataIndex.getId()))
 						.flatMap(ignore -> datasourceService
 							.getPluginDriver(datasource.getId())
-							.flatMap(pluginDriver -> pluginDriverService
-								.deleteById(pluginDriver.getId())))
+							.flatMap(pluginDriver -> datasourceService
+								.unsetPluginDriver(datasource.getId())
+								.flatMap(ignoree -> pluginDriverService
+									.deleteById(pluginDriver.getId()))
+							))
 						.flatMap(ignore -> datasourceService
 							.deleteById(datasource.getId()))
 					)

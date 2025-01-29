@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO.DatasourceConnectionDTOBuilder;
+import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.model.dto.PluginDriverDTO.PluginDriverDTOBuilder;
@@ -36,68 +37,45 @@ public class CreateConnection {
 	public static final boolean SCHEDULABLE = true;
 	public static final String SCHEDULING = "0 0 * ? * * *";
 
-	public static final PluginDriverDTOBuilder<?, ?> PLUGIN_DRIVER_DTO_BUILDER =
-		PluginDrivers.getPluginDriverDTO(Preset.CRAWLER)
-			.toBuilder()
-			.jsonConfig(JsonObject.of(
-				"host", WireMockPluginDriver.HOST,
-				"port", WireMockPluginDriver.PORT,
-				"secure", false
-			).encode());
-
-	public static final DatasourceConnectionDTOBuilder<?, ?> DATASOURCE_CONNECTION_DTO_BUILDER =
-		DatasourceConnectionDTO.builder()
-			.description(DESCRIPTION)
-			.reindexable(REINDEXABLE)
-			.reindexing(REINDEXING)
-			.schedulable(SCHEDULABLE)
-			.scheduling(SCHEDULING)
-			.jsonConfig(JSON_CONFIG);
-
 	public static final DatasourceConnectionDTOBuilder<?, ?>
 		NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER =
-		DATASOURCE_CONNECTION_DTO_BUILDER
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER
+			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_PLUGIN")
 				.build());
-
 	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_PLUGIN_NO_PIPELINE_DATASOURCE")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER
+			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_PLUGIN_NO_PIPELINE_PLUGIN")
 				.build())
 			.build();
-
 	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NO_PLUGIN_NO_PIPELINE_DATASOURCE")
 			.build();
-
 	public static final DatasourceConnectionDTO NEW_ENTITIES_VECTOR_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_ENTITIES_VECTOR_DATASOURCE")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER
+			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_ENTITIES_VECTOR_PLUGIN")
 				.build())
-			// pipeline
-			.build();
-
-	public static final DatasourceConnectionDTO NEW_ENTITIES_BASE_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER
-			.name("NEW_ENTITIES_BASE_DTO")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER
-				.name("NEW_ENTITIES_BASE_PLUGIN")
+			.pipeline(PipelineWithItemsDTO.builder()
+				.name("NEW_ENTITIES_VECTOR_PIPELINE")
 				.build())
-			// pipeline
+			.embeddingVectorDTO(EmbeddingVectorDTO.builder().build())
 			.build();
-
+	public static final DatasourceConnectionDTOBuilder<?, ?> NEW_ENTITIES_BASE_DTO_BUILDER =
+		DATASOURCE_CONNECTION_DTO_BUILDER()
+			.name("NEW_ENTITIES_BASE_DTO")
+			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
+				.name("NEW_ENTITIES_BASE_PLUGIN")
+				.build());
 	public static final DatasourceConnectionDTOBuilder<?, ?>
 		PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER =
-		DATASOURCE_CONNECTION_DTO_BUILDER
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("PRE_EXIST_PLUGIN_NEW_PIPELINE_DATASOURCE");
-
 	public static final DatasourceConnectionDTO AMBIGUOUS_DTO =
 		DatasourceConnectionDTO.builder()
 			.name("AMBIGUOUS_DATASOURCE")
@@ -108,7 +86,7 @@ public class CreateConnection {
 			.jsonConfig(JSON_CONFIG)
 			.scheduling(SCHEDULING)
 			.pluginDriverId(Long.MAX_VALUE)
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER
+			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("AMBIGUOUS_PLUGIN")
 				.build())
 			.pipelineId(Long.MAX_VALUE)
@@ -116,6 +94,26 @@ public class CreateConnection {
 				.name("AMBIGUOUS_PIPELINE")
 				.build())
 			.build();
+
+	public static DatasourceConnectionDTOBuilder<?, ?> DATASOURCE_CONNECTION_DTO_BUILDER() {
+		return DatasourceConnectionDTO.builder()
+			.description(DESCRIPTION)
+			.reindexable(REINDEXABLE)
+			.reindexing(REINDEXING)
+			.schedulable(SCHEDULABLE)
+			.scheduling(SCHEDULING)
+			.jsonConfig(JSON_CONFIG);
+	}
+
+	public static PluginDriverDTOBuilder<?, ?> PLUGIN_DRIVER_DTO_BUILDER() {
+		return PluginDrivers.getPluginDriverDTO(Preset.CRAWLER)
+			.toBuilder()
+			.jsonConfig(JsonObject.of(
+				"host", WireMockPluginDriver.HOST,
+				"port", WireMockPluginDriver.PORT,
+				"secure", false
+			).encode());
+	}
 
 
 }
