@@ -531,7 +531,6 @@ async def get_chat_chain_tool(
     llm_with_tools = llm.bind_tools(tools)
 
     llm_with_tools_response = llm_with_tools.invoke(search_text)
-    print(llm_with_tools_response.tool_calls)
 
     if llm_with_tools_response.tool_calls:
         open_search_client = OpenSearch(
@@ -672,13 +671,13 @@ async def get_chat_chain_tool(
         conversation_title = ""
 
         for chunk in result:
-            if "answer" in chunk.keys() and result_answer == "":
+            if chunk and "answer" in chunk.keys() and result_answer == "":
                 result_answer += chunk
                 yield json.dumps({"chunk": "", "type": "START"})
-            elif "answer" in chunk.keys():
+            elif chunk and "answer" in chunk.keys():
                 result_answer += chunk
                 yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
-            elif "context" in chunk.keys():
+            elif chunk and "context" in chunk.keys():
                 for element in chunk["context"]:
                     document = element.dict()
                     document_id = document["metadata"]["document_id"]
@@ -686,7 +685,8 @@ async def get_chat_chain_tool(
                         documents_id.add(document_id)
                         documents.append(document)
             elif (
-                retrieve_citations
+                chunk
+                and retrieve_citations
                 and model_type != ModelType.HUGGING_FACE_CUSTOM.value
                 and "annotations" in chunk.keys()
             ):
@@ -706,7 +706,9 @@ async def get_chat_chain_tool(
 
         all_citations = (
             citations.get("annotations").dict()["citations"]
-            if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+            if citations
+            and retrieve_citations
+            and model_type != ModelType.HUGGING_FACE_CUSTOM.value
             else []
         )
         all_citations_dict = (
