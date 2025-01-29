@@ -87,7 +87,8 @@ def initialize_language_model(configuration):
         case ModelType.OPENAI.value:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
         case ModelType.OLLAMA.value:
-            llm = ChatOllama(model=model, base_url=api_url)
+            context_window = configuration["context_window"]
+            llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
         case ModelType.HUGGING_FACE_CUSTOM.value:
             llm = CustomChatHuggingFaceModel(base_url=api_url)
         case ModelType.IBM_WATSONX.value:
@@ -399,10 +400,10 @@ def get_chat_chain(
         if "answer" in chunk.keys() and result_answer == "":
             result_answer += chunk
             yield json.dumps({"chunk": "", "type": "START"})
-        elif "answer" in chunk.keys():
+        elif chunk and "answer" in chunk.keys():
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
-        elif "context" in chunk.keys():
+        elif chunk and "context" in chunk.keys():
             for element in chunk["context"]:
                 document = element.dict()
                 document_id = document["metadata"]["document_id"]
@@ -410,7 +411,8 @@ def get_chat_chain(
                     documents_id.add(document_id)
                     documents.append(document)
         elif (
-            retrieve_citations
+            chunk
+            and retrieve_citations
             and model_type != ModelType.HUGGING_FACE_CUSTOM.value
             and "annotations" in chunk.keys()
         ):
@@ -430,7 +432,9 @@ def get_chat_chain(
 
     all_citations = (
         citations.get("annotations").dict()["citations"]
-        if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        if citations
+        and retrieve_citations
+        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         else []
     )
     all_citations_dict = (
