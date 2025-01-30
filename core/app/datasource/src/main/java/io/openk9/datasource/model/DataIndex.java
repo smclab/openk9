@@ -86,7 +86,7 @@ public class DataIndex extends K9Entity {
 	private String indexName;
 
 	@Column(name = "knn_index")
-	private boolean knnIndex = false;
+	private Boolean knnIndex = false;
 
 	@JsonIgnore
 	@ToString.Exclude
