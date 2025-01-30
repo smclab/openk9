@@ -17,13 +17,16 @@
 
 package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import jakarta.validation.constraints.NotNull;
+
+import io.openk9.datasource.model.dto.util.K9EntityDTO;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 @NoArgsConstructor
 @SuperBuilder
@@ -33,7 +36,11 @@ import lombok.experimental.SuperBuilder;
 public class EmbeddingModelDTO extends K9EntityDTO {
 
 	@NotNull
+	@Description("It is the API url of the model that you want to use to embed your text.")
 	private String apiUrl;
+	@Description("It is the API key that you have to provide in order to make the authentication.")
 	private String apiKey;
+	@Description("It is the size of the vectors that your model returns.")
+	private int vectorSize;
 
 }

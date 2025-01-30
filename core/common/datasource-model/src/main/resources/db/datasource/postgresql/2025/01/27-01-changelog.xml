@@ -22,7 +22,7 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
-	logicalFilePath="db/datasource/2025/01/09-01-changelog.xml">
+	logicalFilePath="db/datasource/2025/01/27-01-changelog.xml">
 
 	<changeSet id="1737988554-1" author="openk9">
 		<dropForeignKeyConstraint

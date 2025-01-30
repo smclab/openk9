@@ -22,30 +22,12 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
-	logicalFilePath="db/datasource/2025/01/27-01-changelog.xml">
+	logicalFilePath="db/datasource/2025/01/30-01-changelog.xml">
 
-	<changeSet id="1737988554-1" author="openk9">
-
-		<dropForeignKeyConstraint
-			baseTableName="data_index"
-			constraintName="data_index_vector_index_fk"/>
-
-		<dropTable tableName="vector_index"/>
-
-	</changeSet>
-
-	<changeSet id="1737988554-2" author="openk9">
-
-		<dropColumn tableName="data_index" columnName="vector_index_id"/>
-
-		<addColumn tableName="data_index">
-			<column name="knn_index" type="BOOLEAN"/>
-			<column name="chunk_type" type="VARCHAR2(255)"/>
-			<column name="chunk_window_size" type="NUMBER(10)"/>
-			<column name="embedding_json_config" type="CLOB"/>
-			<column name="embedding_doc_type_field_id" type="NUMBER(38)"/>
+	<changeSet id="1738248306-1" author="openk9">
+		<addColumn tableName="embedding_model">
+			<column name="vector_size" type="NUMBER(10)"/>
 		</addColumn>
-
 	</changeSet>
 
 
