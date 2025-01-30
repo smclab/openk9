@@ -99,7 +99,7 @@ public class DataIndex extends K9Entity {
 	private EmbeddingOuterClass.ChunkType chunkType;
 
 	@Column(name = "chunk_window_size")
-	private int chunkWindowSize;
+	private Integer chunkWindowSize;
 
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "embedding_json_config")
