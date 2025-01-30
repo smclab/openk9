@@ -60,7 +60,7 @@ public class EmbeddingModel extends K9Entity {
 	private TenantBinding tenantBinding;
 
 	@Column(name = "vector_size")
-	private int vectorSize = 0;
+	private Integer vectorSize = 0;
 
 	@Transient
 	private boolean enabled = false;
