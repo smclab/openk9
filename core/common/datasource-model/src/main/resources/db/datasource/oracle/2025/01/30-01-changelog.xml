@@ -30,5 +30,19 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="1738248306-2" author="openk9">
+		<addDefaultValue
+			tableName="embedding_model"
+			columnName="vector_size"
+			defaultValue="0"
+		/>
+		<update tableName="embedding_model">
+			<column name="vector_size" value="0"/>
+			<where>
+				vector_size is null
+			</where>
+		</update>
+	</changeSet>
+
 
 </databaseChangeLog>
