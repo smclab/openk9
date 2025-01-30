@@ -127,9 +127,7 @@ public abstract class BaseSearchService {
 
 		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
 
-		Predicate disjunction = criteriaBuilder.conjunction();
-
-		List<Expression<Boolean>> expressions = disjunction.getExpressions();
+		Predicate conjunction = criteriaBuilder.conjunction();
 
 		if (suggestion) {
 
@@ -145,7 +143,8 @@ public abstract class BaseSearchService {
 
 			if (suggestionCategoryId > 0) {
 
-				expressions.add(
+				conjunction = criteriaBuilder.and(
+					conjunction,
 					criteriaBuilder.equal(
 						((Path<SuggestionCategory>)suggestionCategoryFetch)
 							.get(SuggestionCategory_.id),
@@ -174,14 +173,15 @@ public abstract class BaseSearchService {
 
 		dataIndexRoot.fetch(DataIndex_.vectorIndex, JoinType.LEFT);
 
-		expressions.add(
+		conjunction = criteriaBuilder.and(
+			conjunction,
 			criteriaBuilder.equal(
 				tenantBindingJoin.get(TenantBinding_.virtualHost),
 				virtualHost
 			)
 		);
 
-		criteriaQuery.where(disjunction);
+		criteriaQuery.where(conjunction);
 
 	}
 
