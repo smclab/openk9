@@ -74,6 +74,7 @@ def get_llm_configuration(grpc_host, virtual_host):
     model = json_config.get("model")
     prompt = json_config.get("prompt")
     prompt_no_rag = json_config.get("prompt_no_rag")
+    rag_tool_description = json_config.get("rag_tool_description")
     rephrase_prompt = json_config.get("rephrase_prompt")
     context_window = json_config.get("context_window")
     watsonx_project_id = json_config.get("watsonx_project_id")
@@ -87,6 +88,7 @@ def get_llm_configuration(grpc_host, virtual_host):
         "model": model,
         "prompt": prompt,
         "prompt_no_rag": prompt_no_rag,
+        "rag_tool_description": rag_tool_description,
         "rephrase_prompt": rephrase_prompt,
         "context_window": context_window,
         "retrieve_type": retrieve_type,
