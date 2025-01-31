@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import java.util.Set;
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.Initializer;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.Bucket;
@@ -70,8 +71,6 @@ import org.opensearch.search.aggregations.bucket.composite.CompositeAggregationB
 public class SearcherSuggestionsGrpcTest {
 
 
-	private static final String DEFAULT_BUCKET_NAME = "Default Bucket";
-	private static final String DEFAULT_DATASOURCE_NAME = "My New Connection";
 	private static final String ENTITY_NAME_PREFIX = "SearcherSuggestionsGrpcTest - ";
 
 	private static final String BUCKET_NAME_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
@@ -390,7 +389,7 @@ public class SearcherSuggestionsGrpcTest {
 	private Bucket getBucketDefault() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
-					bucketService.findByName(s, DEFAULT_BUCKET_NAME)
+					bucketService.findByName(s, io.openk9.datasource.model.init.Bucket.INSTANCE.getName())
 						.call(bucket ->
 							Mutiny.fetch(bucket.getSuggestionCategories()))
 						.call(bucket ->
@@ -416,7 +415,7 @@ public class SearcherSuggestionsGrpcTest {
 	private Datasource getDatasourceDefault() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
-					datasourceService.findByName(s, DEFAULT_DATASOURCE_NAME)
+					datasourceService.findByName(s, Initializer.INIT_DATASOURCE_CONNECTION)
 			)
 			.await()
 			.indefinitely();
