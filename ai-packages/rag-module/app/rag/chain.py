@@ -530,10 +530,11 @@ async def get_chat_chain_tool(
     llm_with_tools = llm.bind_tools(tools)
     llm_with_tools_response = llm_with_tools.invoke(search_text)
 
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
+    )
+
     if llm_with_tools_response.tool_calls:
-        open_search_client = OpenSearch(
-            hosts=[opensearch_host],
-        )
 
         retriever = OpenSearchRetriever(
             search_text=search_text,
@@ -694,7 +695,7 @@ async def get_chat_chain_tool(
             title_prompt = PromptTemplate(
                 input_variables=["question", "answer"],
                 template="""Generate a title for a conversation where the user asks:
-                    '{question}' and the AI responds: '{answer}'.""",
+                    '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
             )
             title_chain = title_prompt | llm | StrOutputParser()
             conversation_title = title_chain.invoke(
@@ -741,7 +742,7 @@ async def get_chat_chain_tool(
             open_search_client,
             search_text,
             result_answer["answer"],
-            conversation_title,
+            conversation_title.strip('"'),
             documents,
             chat_id,
             user_id,
@@ -757,9 +758,43 @@ async def get_chat_chain_tool(
         parser = StrOutputParser()
         chain = prompt | llm | parser
 
-        yield json.dumps({"chunk": "", "type": "START"})
+        result = chain.stream({"question": search_text})
 
-        for chunk in chain.stream({"question": search_text}):
+        result_answer = ""
+        documents = []
+        conversation_title = ""
+        start = True
+
+        for chunk in result:
+            if start:
+                start = False
+                yield json.dumps({"chunk": "", "type": "START"})
+
+            result_answer += chunk
             yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+
+        if chat_sequence_number == 1:
+            title_prompt = PromptTemplate(
+                input_variables=["question", "answer"],
+                template="""Generate a title for a conversation where the user asks:
+                    '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
+            )
+            title_chain = title_prompt | llm | StrOutputParser()
+            conversation_title = title_chain.invoke(
+                {"question": search_text, "answer": result_answer},
+            )
+            yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+
+        save_chat_message(
+            open_search_client,
+            search_text,
+            result_answer,
+            conversation_title.strip('"'),
+            documents,
+            chat_id,
+            user_id,
+            timestamp,
+            chat_sequence_number,
+        )
 
         yield json.dumps({"chunk": "", "type": "END"})
