@@ -52,15 +52,24 @@ import java.util.Set;
 @CircuitBreaker
 public class SuggestionCategoryGraphqlResource {
 
-	@Query
-	public Uni<Connection<SuggestionCategory>> getSuggestionCategories(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return suggestionCategoryService.findConnection(
-			after, before, first, last, searchText, sortByList);
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
+	@Inject
+	TranslationService translationService;
+
+	@Mutation
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeFieldToSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
+		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> addSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key, String value) {
+
+		return translationService
+			.addTranslation(SuggestionCategory.class, suggestionCategoryId, language, key, value)
+			.map((__) -> Tuple2.of("ok", null));
 	}
 
 	public Uni<Bucket> bucket(
@@ -70,11 +79,41 @@ public class SuggestionCategoryGraphqlResource {
 			suggestionCategory.getId());
 	}
 
+	public Uni<Response<SuggestionCategory>> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.getValidator().create(suggestionCategoryDTO);
+	}
+
+	@Mutation
+	public Uni<SuggestionCategory> deleteSuggestionCategory(@Id long suggestionCategoryId) {
+		return suggestionCategoryService.deleteById(suggestionCategoryId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<String, String>> deleteSuggestionCategoryTranslation(
+		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
+		String language, String key) {
+
+		return translationService
+			.deleteTranslation(SuggestionCategory.class, suggestionCategoryId, language, key)
+			.map((__) -> Tuple2.of("ok", null));
+	}
+
 	public Uni<DocTypeField> docTypeField(
 			@Source SuggestionCategory suggestionCategory) {
 
 		return suggestionCategoryService.getDocTypeField(
 			suggestionCategory.getId());
+	}
+
+	@Query
+	public Uni<Connection<SuggestionCategory>> getSuggestionCategories(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return suggestionCategoryService.findConnection(
+			after, before, first, last, searchText, sortByList);
 	}
 
 	@Query
@@ -89,57 +128,8 @@ public class SuggestionCategoryGraphqlResource {
 			.getTranslationDTOs(SuggestionCategory.class, suggestionCategory.getId());
 	}
 
-
 	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
 		return suggestionCategoryService.getValidator().patch(id, suggestionCategoryDTO);
-	}
-
-	public Uni<Response<SuggestionCategory>> updateSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.getValidator().update(id, suggestionCategoryDTO);
-	}
-
-	public Uni<Response<SuggestionCategory>> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {
-		return suggestionCategoryService.getValidator().create(suggestionCategoryDTO);
-	}
-
-	@Mutation
-	public Uni<Response<SuggestionCategory>> suggestionCategory(
-		@Id Long id, SuggestionCategoryDTO suggestionCategoryDTO,
-		@DefaultValue("false") boolean patch) {
-
-		if (id == null) {
-			return createSuggestionCategory(suggestionCategoryDTO);
-		} else {
-			return patch
-				? patchSuggestionCategory(id, suggestionCategoryDTO)
-				: updateSuggestionCategory(id, suggestionCategoryDTO);
-		}
-
-	}
-
-	@Mutation
-	public Uni<Response<SuggestionCategory>> suggestionCategoryWithDocTypeField(
-		@Id Long id, SuggestionCategoryWithDocTypeFieldDTO suggestionCategoryWithDocTypeFieldDTO,
-		@DefaultValue("false") boolean patch) {
-
-		if (id == null) {
-			return createSuggestionCategory(suggestionCategoryWithDocTypeFieldDTO);
-		} else {
-			return patch
-				? patchSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO)
-				: updateSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO);
-		}
-
-	}
-
-	@Mutation
-	public Uni<SuggestionCategory> deleteSuggestionCategory(@Id long suggestionCategoryId) {
-		return suggestionCategoryService.deleteById(suggestionCategoryId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeFieldToSuggestionCategory(@Id long suggestionCategoryId, @Id long docTypeFieldId) {
-		return suggestionCategoryService.addDocTypeField(suggestionCategoryId, docTypeFieldId);
 	}
 
 	/**
@@ -164,27 +154,6 @@ public class SuggestionCategoryGraphqlResource {
 			.map(sc -> Tuple2.of(sc, null));
 	}
 
-	/**
-	 * Unbinds a {@link DocTypeField} from a {@link SuggestionCategory}.
-	 *
-	 * <p>
-	 * This method replaces the deprecated {@code removeDocTypeFieldFromSuggestionCategory(long suggestionCategoryId, long docTypeFieldId)}.
-	 * The new implementation improves usability by eliminating the need to provide the {@code docTypeFieldId}.
-	 * </p>
-	 *
-	 * @param suggestionCategoryId The ID of the {@link SuggestionCategory} from which to unbind the {@link DocTypeField}.
-	 * @return A {@link Uni} containing the updated {@link SuggestionCategory} and the unbound {@link DocTypeField}.
-	 *
-	 * @see #removeDocTypeFieldFromSuggestionCategory(long, long)
-	 */
-	@Mutation
-	@Description("This mutation replaces `removeDocTypeFieldFromSuggestionCategory`. It does not require the `docTypeFieldId` parameter " +
-		"and provides a more efficient implementation.")
-	public Uni<SuggestionCategory> unbindDocTypeFieldFromSuggestionCategory(
-			@Id long suggestionCategoryId) {
-		return suggestionCategoryService.unsetDocTypeField(suggestionCategoryId);
-	}
-
 	@Mutation
 	public Uni<SuggestionCategory> setMultiSelect(
 		@Id @Name("suggestionCategoryId") long suggestionCategoryId, boolean multiSelect) {
@@ -192,23 +161,18 @@ public class SuggestionCategoryGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<String, String>> addSuggestionCategoryTranslation(
-		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
-		String language, String key, String value) {
+	public Uni<Response<SuggestionCategory>> suggestionCategory(
+		@Id Long id, SuggestionCategoryDTO suggestionCategoryDTO,
+		@DefaultValue("false") boolean patch) {
 
-		return translationService
-			.addTranslation(SuggestionCategory.class, suggestionCategoryId, language, key, value)
-			.map((__) -> Tuple2.of("ok", null));
-	}
+		if (id == null) {
+			return createSuggestionCategory(suggestionCategoryDTO);
+		} else {
+			return patch
+				? patchSuggestionCategory(id, suggestionCategoryDTO)
+				: updateSuggestionCategory(id, suggestionCategoryDTO);
+		}
 
-	@Mutation
-	public Uni<Tuple2<String, String>> deleteSuggestionCategoryTranslation(
-		@Id @Name("suggestionCategoryId") long suggestionCategoryId,
-		String language, String key) {
-
-		return translationService
-			.deleteTranslation(SuggestionCategory.class, suggestionCategoryId, language, key)
-			.map((__) -> Tuple2.of("ok", null));
 	}
 
 	@Subscription
@@ -235,9 +199,43 @@ public class SuggestionCategoryGraphqlResource {
 			.map(K9EntityEvent::getEntity);
 	}
 
-	@Inject
-	SuggestionCategoryService suggestionCategoryService;
+	@Mutation
+	public Uni<Response<SuggestionCategory>> suggestionCategoryWithDocTypeField(
+		@Id Long id, SuggestionCategoryWithDocTypeFieldDTO suggestionCategoryWithDocTypeFieldDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Inject
-	TranslationService translationService;
+		if (id == null) {
+			return createSuggestionCategory(suggestionCategoryWithDocTypeFieldDTO);
+		} else {
+			return patch
+				? patchSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO)
+				: updateSuggestionCategory(id, suggestionCategoryWithDocTypeFieldDTO);
+		}
+
+	}
+
+	/**
+	 * Unbinds a {@link DocTypeField} from a {@link SuggestionCategory}.
+	 *
+	 * <p>
+	 * This method replaces the deprecated {@code removeDocTypeFieldFromSuggestionCategory(long suggestionCategoryId, long docTypeFieldId)}.
+	 * The new implementation improves usability by eliminating the need to provide the {@code docTypeFieldId}.
+	 * </p>
+	 *
+	 * @param suggestionCategoryId The ID of the {@link SuggestionCategory} from which to unbind the {@link DocTypeField}.
+	 * @return A {@link Uni} containing the updated {@link SuggestionCategory} and the unbound {@link DocTypeField}.
+	 *
+	 * @see #removeDocTypeFieldFromSuggestionCategory(long, long)
+	 */
+	@Mutation
+	@Description("This mutation replaces `removeDocTypeFieldFromSuggestionCategory`. It does not require the `docTypeFieldId` parameter " +
+		"and provides a more efficient implementation.")
+	public Uni<SuggestionCategory> unbindDocTypeFieldFromSuggestionCategory(
+			@Id long suggestionCategoryId) {
+		return suggestionCategoryService.unsetDocTypeField(suggestionCategoryId);
+	}
+
+	public Uni<Response<SuggestionCategory>> updateSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {
+		return suggestionCategoryService.getValidator().update(id, suggestionCategoryDTO);
+	}
 }

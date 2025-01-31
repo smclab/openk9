@@ -133,6 +133,129 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
+	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
+		var indexNames = new HashSet<String>();
+
+		var datasources = tenant.getDatasources();
+
+		if (request.hasVectorIndices() && request.getVectorIndices()) {
+			for (Datasource datasource : datasources) {
+				var dataIndex = datasource.getDataIndex();
+				var vectorIndex = dataIndex.getVectorIndex();
+
+				if (vectorIndex != null) {
+					indexNames.add(vectorIndex.getIndexName());
+				}
+			}
+		}
+		else {
+			for (Datasource datasource : datasources) {
+				var dataIndex = datasource.getDataIndex();
+
+				indexNames.add(dataIndex.getIndexName());
+			}
+		}
+
+		return indexNames.toArray(String[]::new);
+	}
+
+	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
+		String requestLanguage = request.getLanguage();
+		if (requestLanguage != null && !requestLanguage.isBlank()) {
+			for (Language available : tenant.getAvailableLanguages()) {
+				if (available.getValue().equals(requestLanguage)) {
+					return requestLanguage;
+				}
+			}
+		}
+
+		Language defaultLanguage = tenant.getDefaultLanguage();
+		if (defaultLanguage != null) {
+			return defaultLanguage.getValue();
+		}
+
+		return Language.NONE;
+	}
+
+	private static Map<String, String> _getQueryParams(
+		Bucket bucket) {
+
+		var queryParams = new HashMap<String, String>();
+
+		var searchConfig = bucket.getSearchConfig();
+
+		if (searchConfig != null) {
+
+			var searchConfigName = searchConfig.getName();
+			var pipelineName = io.openk9.common.util.StringUtils.retainsAlnum(searchConfigName);
+
+			queryParams.put("search_pipeline", pipelineName);
+
+		}
+
+		return queryParams;
+	}
+
+	private static int _getScoreCompared(
+		Map<String, Object> o1, Map<String, Object> o2) {
+
+		double scoreO1 = _toDouble(o1.getOrDefault("score", -1.0));
+		double scoreO2 = _toDouble(o2.getOrDefault("score", -1.0));
+
+		return -Double.compare(scoreO1, scoreO2);
+
+	}
+
+	private static SearchSourceBuilder _getSearchSourceBuilder(
+		QueryParserRequest request, Bucket tenant, String language) {
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.trackTotalHits(true);
+
+		if (request.getRangeCount() == 2) {
+			searchSourceBuilder.from(request.getRange(0));
+			searchSourceBuilder.size(request.getRange(1));
+		}
+
+		List<DocTypeField> docTypeFieldList = Utils
+			.getDocTypeFieldsFrom(tenant)
+			.filter(docTypeField -> !docTypeField.isI18N())
+			.toList();
+
+		applySort(
+			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+			searchSourceBuilder
+		);
+
+		applyHighlightAndIncludeExclude(
+			searchSourceBuilder,
+			docTypeFieldList,
+			request.getVectorIndices(),
+			language
+		);
+
+		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+
+		return searchSourceBuilder;
+	}
+
+	private static double _toDouble(Object score) {
+		if (score instanceof Double) {
+			return (Double)score;
+		}
+		else if (score instanceof Float) {
+			return ((Float)score).doubleValue();
+		}
+		else {
+			return -1.0;
+		}
+	}
+
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
 		List<DocTypeField> docTypeFieldList,
@@ -366,129 +489,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			&& parent.getFieldType() == FieldType.I18N
 			? parent
 			: getI18nParent(parent);
-	}
-
-	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
-		var indexNames = new HashSet<String>();
-
-		var datasources = tenant.getDatasources();
-
-		if (request.hasVectorIndices() && request.getVectorIndices()) {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-				var vectorIndex = dataIndex.getVectorIndex();
-
-				if (vectorIndex != null) {
-					indexNames.add(vectorIndex.getIndexName());
-				}
-			}
-		}
-		else {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-
-				indexNames.add(dataIndex.getIndexName());
-			}
-		}
-
-		return indexNames.toArray(String[]::new);
-	}
-
-	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
-		String requestLanguage = request.getLanguage();
-		if (requestLanguage != null && !requestLanguage.isBlank()) {
-			for (Language available : tenant.getAvailableLanguages()) {
-				if (available.getValue().equals(requestLanguage)) {
-					return requestLanguage;
-				}
-			}
-		}
-
-		Language defaultLanguage = tenant.getDefaultLanguage();
-		if (defaultLanguage != null) {
-			return defaultLanguage.getValue();
-		}
-
-		return Language.NONE;
-	}
-
-	private static Map<String, String> _getQueryParams(
-		Bucket bucket) {
-
-		var queryParams = new HashMap<String, String>();
-
-		var searchConfig = bucket.getSearchConfig();
-
-		if (searchConfig != null) {
-
-			var searchConfigName = searchConfig.getName();
-			var pipelineName = io.openk9.common.util.StringUtils.retainsAlnum(searchConfigName);
-
-			queryParams.put("search_pipeline", pipelineName);
-
-		}
-
-		return queryParams;
-	}
-
-	private static int _getScoreCompared(
-		Map<String, Object> o1, Map<String, Object> o2) {
-
-		double scoreO1 = _toDouble(o1.getOrDefault("score", -1.0));
-		double scoreO2 = _toDouble(o2.getOrDefault("score", -1.0));
-
-		return -Double.compare(scoreO1, scoreO2);
-
-	}
-
-	private static SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket tenant, String language) {
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-		searchSourceBuilder.trackTotalHits(true);
-
-		if (request.getRangeCount() == 2) {
-			searchSourceBuilder.from(request.getRange(0));
-			searchSourceBuilder.size(request.getRange(1));
-		}
-
-		List<DocTypeField> docTypeFieldList = Utils
-			.getDocTypeFieldsFrom(tenant)
-			.filter(docTypeField -> !docTypeField.isI18N())
-			.toList();
-
-		applySort(
-			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-			searchSourceBuilder
-		);
-
-		applyHighlightAndIncludeExclude(
-			searchSourceBuilder,
-			docTypeFieldList,
-			request.getVectorIndices(),
-			language
-		);
-
-		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
-
-		SearchConfig searchConfig = tenant.getSearchConfig();
-
-		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-		return searchSourceBuilder;
-	}
-
-	private static double _toDouble(Object score) {
-		if (score instanceof Double) {
-			return (Double)score;
-		}
-		else if (score instanceof Float) {
-			return ((Float)score).doubleValue();
-		}
-		else {
-			return -1.0;
-		}
 	}
 
 	@Override
@@ -1216,10 +1216,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public static class SemanticsPos implements Comparable<SemanticsPos> {
 
 		public static final Comparator<SemanticsPos>
-			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
-		public static final Comparator<SemanticsPos>
 			SCORE_COMPARATOR = new ScoreComparator();
-
+		public static final Comparator<SemanticsPos>
+			TOKEN_TYPE_VALUE_SCORE_COMPARATOR = new TokenTypeValueComparator();
 		private Tuple<Integer> pos;
 		private Map<String, Object> semantics;
 

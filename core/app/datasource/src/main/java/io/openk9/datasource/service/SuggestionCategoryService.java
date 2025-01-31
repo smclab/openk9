@@ -41,8 +41,38 @@ import org.hibernate.reactive.mutiny.Mutiny;
 @ApplicationScoped
 public class SuggestionCategoryService extends
 	BaseK9EntityService<SuggestionCategory, SuggestionCategoryDTO> {
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+	@Inject
+	TranslationService translationService;
+
 	 SuggestionCategoryService(SuggestionCategoryMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
+		long suggestionCategoryId, long docTypeFieldId) {
+		return sessionFactory.withTransaction((s) -> findById(s, suggestionCategoryId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(suggestionCategory -> docTypeFieldService.findById(s, docTypeFieldId)
+				.onItem()
+				.ifNotNull()
+				.transform(docTypeField -> (docTypeField.isKeyword() || docTypeField.isI18N())
+					? docTypeField
+					: null
+				)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(docTypeField -> {
+					suggestionCategory.setDocTypeField(docTypeField);
+					return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
+				})));
+	}
+
+	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
+		return translationService.addTranslation(
+			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
 	}
 
 	public Uni<SuggestionCategory> create(SuggestionCategoryDTO suggestionDTO){
@@ -68,77 +98,9 @@ public class SuggestionCategoryService extends
 		return super.create(suggestionDTO);
 	}
 
-	public Uni<SuggestionCategory> patch(long suggestionId,
-		SuggestionCategoryDTO suggestionDTO) {
-
-		if (suggestionDTO instanceof
-			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
-
-			return sessionFactory.withTransaction(
-				(s, transaction) -> findById(s, suggestionId)
-					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
-					.flatMap(suggestion -> {
-						var newStateSuggestion =
-							mapper.patch(suggestion, withDocTypeFieldDTO);
-
-						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
-
-						if (docTypeFieldId != null) {
-
-							return docTypeFieldService.findById(s, docTypeFieldId)
-								.flatMap(docTypeField -> {
-									newStateSuggestion.setDocTypeField(docTypeField);
-									return s.merge(newStateSuggestion);
-								});
-						}
-
-						return s.merge(newStateSuggestion);
-
-					}));
-		}
-
-		return super.patch(suggestionId, suggestionDTO);
-	}
-
-	public Uni<SuggestionCategory> update(long suggestionId,
-		SuggestionCategoryDTO suggestionDTO) {
-
-		if (suggestionDTO instanceof
-			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
-
-			return sessionFactory.withTransaction(
-				(s, transaction) -> findById(s, suggestionId)
-					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
-					.flatMap(suggestion -> {
-						var newStateSuggestion =
-							mapper.update(suggestion, withDocTypeFieldDTO);
-						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
-
-						newStateSuggestion.setDocTypeField(null);
-
-						if (docTypeFieldId != null) {
-							return docTypeFieldService.findById(s, docTypeFieldId)
-								.flatMap(docTypeField -> {
-									newStateSuggestion.setDocTypeField(docTypeField);
-									return s.merge(newStateSuggestion);
-								});
-						}
-
-						return s.merge(newStateSuggestion);
-
-					}));
-		}
-
-		return super.update(suggestionId, suggestionDTO);
-	}
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {
-			SuggestionCategory_.NAME,
-			SuggestionCategory_.DESCRIPTION,
-			SuggestionCategory_.PRIORITY
-		};
+	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
+		return translationService.deleteTranslation(
+			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey());
 	}
 
 	public Uni<Bucket> getBucket(long suggestionCategoryId) {
@@ -185,6 +147,52 @@ public class SuggestionCategoryService extends
 		);
 	}
 
+	@Override
+	public Class<SuggestionCategory> getEntityClass() {
+		return SuggestionCategory.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {
+			SuggestionCategory_.NAME,
+			SuggestionCategory_.DESCRIPTION,
+			SuggestionCategory_.PRIORITY
+		};
+	}
+
+	public Uni<SuggestionCategory> patch(long suggestionId,
+		SuggestionCategoryDTO suggestionDTO) {
+
+		if (suggestionDTO instanceof
+			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, suggestionId)
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
+					.flatMap(suggestion -> {
+						var newStateSuggestion =
+							mapper.patch(suggestion, withDocTypeFieldDTO);
+
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						if (docTypeFieldId != null) {
+
+							return docTypeFieldService.findById(s, docTypeFieldId)
+								.flatMap(docTypeField -> {
+									newStateSuggestion.setDocTypeField(docTypeField);
+									return s.merge(newStateSuggestion);
+								});
+						}
+
+						return s.merge(newStateSuggestion);
+
+					}));
+		}
+
+		return super.patch(suggestionId, suggestionDTO);
+	}
+
 	public Uni<SuggestionCategory> setMultiSelect(long suggestionCategoryId, boolean multiSelect) {
 		return sessionFactory.withTransaction(s -> findById(s, suggestionCategoryId)
 			.onItem()
@@ -194,26 +202,6 @@ public class SuggestionCategoryService extends
 				return persist(s, suggestionCategory);
 			})
 		);
-	}
-
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> addDocTypeField(
-		long suggestionCategoryId, long docTypeFieldId) {
-		return sessionFactory.withTransaction((s) -> findById(s, suggestionCategoryId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(suggestionCategory -> docTypeFieldService.findById(s, docTypeFieldId)
-				.onItem()
-				.ifNotNull()
-				.transform(docTypeField -> (docTypeField.isKeyword() || docTypeField.isI18N())
-					? docTypeField
-					: null
-				)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(docTypeField -> {
-					suggestionCategory.setDocTypeField(docTypeField);
-					return persist(s, suggestionCategory).map(sc -> Tuple2.of(sc, docTypeField));
-				})));
 	}
 
 	public Uni<SuggestionCategory> unsetDocTypeField(
@@ -227,25 +215,36 @@ public class SuggestionCategoryService extends
 			}));
 	}
 
-	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
-		return translationService.addTranslation(
-			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
-	}
+	public Uni<SuggestionCategory> update(long suggestionId,
+		SuggestionCategoryDTO suggestionDTO) {
 
-	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
-		return translationService.deleteTranslation(
-			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey());
-	}
+		if (suggestionDTO instanceof
+			SuggestionCategoryWithDocTypeFieldDTO withDocTypeFieldDTO) {
 
-	@Inject
-	DocTypeFieldService docTypeFieldService;
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, suggestionId)
+					.call(suggestion -> Mutiny.fetch(suggestion.getDocTypeField()))
+					.flatMap(suggestion -> {
+						var newStateSuggestion =
+							mapper.update(suggestion, withDocTypeFieldDTO);
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
 
-	@Inject
-	TranslationService translationService;
+						newStateSuggestion.setDocTypeField(null);
 
-	@Override
-	public Class<SuggestionCategory> getEntityClass() {
-		return SuggestionCategory.class;
+						if (docTypeFieldId != null) {
+							return docTypeFieldService.findById(s, docTypeFieldId)
+								.flatMap(docTypeField -> {
+									newStateSuggestion.setDocTypeField(docTypeField);
+									return s.merge(newStateSuggestion);
+								});
+						}
+
+						return s.merge(newStateSuggestion);
+
+					}));
+		}
+
+		return super.update(suggestionId, suggestionDTO);
 	}
 
 }
