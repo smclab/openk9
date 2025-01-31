@@ -482,10 +482,7 @@ def get_chat_chain(
 def rag_tool(
     search_text,
 ):
-    """Risponde a domande relative ad AXA, alle sue polizze assicurative e ai suoi strumenti finanziari.
-    AXA è una società che fornisce polizze assicurative a protezione di beni come case e auto che a protezione
-    di persone come polizze vita e assicurazioni sanitarie. Inoltre AXA fornisce servizi finanziari come fondi
-    pensione e piani di investimento."""
+    """rag as a tool."""
 
     return search_text
 
@@ -524,12 +521,13 @@ async def get_chat_chain_tool(
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
     retrieve_type = configuration["retrieve_type"]
+    rag_tool_description = configuration["rag_tool_description"]
 
     llm = initialize_language_model(configuration)
 
+    rag_tool.description = rag_tool_description
     tools = [rag_tool]
     llm_with_tools = llm.bind_tools(tools)
-
     llm_with_tools_response = llm_with_tools.invoke(search_text)
 
     if llm_with_tools_response.tool_calls:
