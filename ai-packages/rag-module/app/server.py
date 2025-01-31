@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Optional
 from urllib.parse import urlparse
@@ -24,15 +23,8 @@ OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
