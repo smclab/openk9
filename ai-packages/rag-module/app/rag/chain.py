@@ -133,6 +133,44 @@ def initialize_language_model(configuration):
     return llm
 
 
+def generate_conversation_title(llm, search_text, result_answer):
+    """
+    Generate a conversation title based on user input and AI response.
+
+    This function creates a title for a conversation by utilizing a language model.
+    It takes the user's question and the AI's answer as input, formats them into a
+    prompt, and invokes the language model to generate an appropriate title in
+    Italian.
+
+    Args:
+        llm: An instance of a language model that processes the prompt and generates text.
+        search_text (str): The question posed by the user, which serves as the basis for
+                        the conversation title.
+        result_answer (str): The response provided by the AI, which complements the
+                            user's question in the title generation process.
+
+    Returns:
+        str: A generated title for the conversation in Italian.
+
+    Example:
+        >>> title = generate_conversation_title(llm_instance, "Qual è la tua opinione sul clima?",
+                                "Credo che sia un problema serio.")
+        >>> print(title)
+        "Discussione sul cambiamento climatico"
+    """
+    title_prompt = PromptTemplate(
+        input_variables=["question", "answer"],
+        template="""Generate a title for a conversation where the user asks:
+                            '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
+    )
+    title_chain = title_prompt | llm | StrOutputParser()
+    conversation_title = title_chain.invoke(
+        {"question": search_text, "answer": result_answer},
+    )
+
+    return conversation_title
+
+
 def get_chain(
     range_values,
     after_key,
@@ -420,14 +458,8 @@ def get_chat_chain(
             citations = chunk
 
     if chat_sequence_number == 1:
-        title_prompt = PromptTemplate(
-            input_variables=["question", "answer"],
-            template="""Generate a title for a conversation where the user asks:
-            '{question}' and the AI responds: '{answer}'.""",
-        )
-        title_chain = title_prompt | llm | StrOutputParser()
-        conversation_title = title_chain.invoke(
-            {"question": search_text, "answer": result_answer["answer"]},
+        conversation_title = generate_conversation_title(
+            llm, search_text, result_answer
         )
         yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
@@ -774,14 +806,8 @@ async def get_chat_chain_tool(
             yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
         if chat_sequence_number == 1:
-            title_prompt = PromptTemplate(
-                input_variables=["question", "answer"],
-                template="""Generate a title for a conversation where the user asks:
-                    '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
-            )
-            title_chain = title_prompt | llm | StrOutputParser()
-            conversation_title = title_chain.invoke(
-                {"question": search_text, "answer": result_answer},
+            conversation_title = generate_conversation_title(
+                llm, search_text, result_answer
             )
             yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
