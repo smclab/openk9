@@ -17,26 +17,27 @@
 
 package io.openk9.datasource.index.mappings;
 
-import io.openk9.datasource.TestUtils;
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-class MappingsUtilTest {
+import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+class IndexMappingsUtilTest {
 
 	@Test
 	void docTypesToMappings() {
 		Map<MappingsKey, Object> result =
-			MappingsUtil.docTypesToMappings(List.of(defaultDocType, webDocType));
+			IndexMappingsUtil.docTypesToMappings(List.of(defaultDocType, webDocType));
 		Assertions.assertEquals(expectedJson, JsonObject.mapFrom(result));
 	}
 

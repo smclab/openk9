@@ -27,13 +27,12 @@ import java.util.List;
 import java.util.Map;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-import io.openk9.datasource.processor.indexwriter.IndexerEvents;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -57,7 +56,7 @@ class DynamicMappingDataIndexTest {
 	DatasourceService datasourceService;
 
 	@InjectMock
-	IndexerEvents indexerEvents;
+	IndexMappingService indexMappingService;
 
 	@InjectSpy
 	HttpPluginDriverClient httpPluginDriverClient;
@@ -69,9 +68,8 @@ class DynamicMappingDataIndexTest {
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
 
-		given(indexerEvents.generateDocTypeFields(
+		given(indexMappingService.generateDocTypeFields(
 			any(Mutiny.Session.class),
-			any(DataIndex.class),
 			any(Map.class),
 			any(List.class)
 		)).willReturn(Uni.createFrom().voidItem());
@@ -111,11 +109,10 @@ class DynamicMappingDataIndexTest {
 					.should(times(1))
 					.getSample(any());
 
-				then(indexerEvents)
+				then(indexMappingService)
 					.should(times(1))
 					.generateDocTypeFields(
 						any(Mutiny.Session.class),
-						any(DataIndex.class),
 						argThat(DynamicMappingDataIndexTest::isAnIndexMapping),
 						argThat(DynamicMappingDataIndexTest::isADocumentTypeList)
 					);

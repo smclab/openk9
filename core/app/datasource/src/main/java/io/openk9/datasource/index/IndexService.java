@@ -17,17 +17,28 @@
 
 package io.openk9.datasource.index;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
@@ -38,22 +49,62 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
+import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 @ApplicationScoped
 public class IndexService {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+
+	public Uni<List<String>> getDocumentTypes(String indexName) {
+
+		SearchRequest searchRequest = new SearchRequest(indexName);
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.size(0);
+
+		searchSourceBuilder.aggregation(AggregationBuilders
+			.terms("documentTypes")
+			.field("documentTypes.keyword")
+			.size(1000)
+		);
+
+		searchRequest.source(searchSourceBuilder);
+		return Uni.createFrom()
+			.emitter(sink -> restHighLevelClient.searchAsync(
+				searchRequest,
+				RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onFailure(Exception e) {
+						sink.fail(e);
+					}
+
+					@Override
+					public void onResponse(SearchResponse searchResponse) {
+
+						var documentTypes = searchResponse
+							.getAggregations()
+							.<Terms>get("documentTypes")
+							.getBuckets()
+							.stream()
+							.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+							.toList();
+
+						sink.complete(documentTypes);
+					}
+				}
+			));
+
+	}
 
 	public Uni<Map<String, Object>> getMappings(String indexName) {
 		return Uni

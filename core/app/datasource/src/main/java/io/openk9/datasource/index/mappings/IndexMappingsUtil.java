@@ -17,17 +17,6 @@
 
 package io.openk9.datasource.index.mappings;
 
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.CharFilter;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.TokenFilter;
-import io.openk9.datasource.model.Tokenizer;
-import io.openk9.datasource.searcher.util.Utils;
-import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -37,9 +26,35 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class MappingsUtil {
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.CharFilter;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.Tokenizer;
+import io.openk9.datasource.searcher.util.Utils;
 
-	private MappingsUtil() {}
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
+
+public final class IndexMappingsUtil {
+
+	private IndexMappingsUtil() {
+	}
+
+	public static Map<MappingsKey, Object> docTypesToMappings(Collection<DocType> docTypes) {
+		return docTypes
+			.stream()
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.collect(
+				Collectors.collectingAndThen(
+					Collectors.toCollection(LinkedList::new),
+					IndexMappingsUtil::docTypeFieldsToMappings
+				)
+			);
+	}
 
 	public static Map<String, Object> docTypesToSettings(Collection<DocType> docTypes) {
 
@@ -86,18 +101,13 @@ public final class MappingsUtil {
 			analysis.put("char_filter", charFilterMap);
 		}
 
-		if (!analysis.isEmpty() || !index.isEmpty() ) {
-			Map<String, Object> settingsMap = new LinkedHashMap<>();
+		Map<String, Object> settingsMap = new LinkedHashMap<>();
 
-			settingsMap.put("analysis", analysis);
+		settingsMap.put("analysis", analysis);
 
-			settingsMap.put("index", index);
+		settingsMap.put("index", index);
 
-			return settingsMap;
-
-		}
-
-		return Map.of();
+		return settingsMap;
 
 	}
 
@@ -206,35 +216,6 @@ public final class MappingsUtil {
 		return analyzerMap;
 	}
 
-	public static Map<MappingsKey, Object> docTypesToMappings(Collection<DocType> docTypes) {
-		return docTypes
-			.stream()
-			.map(DocType::getDocTypeFields)
-			.flatMap(Collection::stream)
-			.collect(
-				Collectors.collectingAndThen(
-					Collectors.toCollection(LinkedList::new),
-					MappingsUtil::docTypeFieldsToMappings)
-			);
-	}
-
-	public static Map<MappingsKey, Object> docTypeFieldToMappings(DocTypeField docTypeField) {
-		return docTypeFieldsToMappings(Set.of(docTypeField));
-	}
-
-	public static Map<MappingsKey, Object> docTypeFieldsToMappings(
-		Collection<DocTypeField> docTypeFields) {
-
-		return createMappings_(
-			docTypeFields
-				.stream()
-				.filter(docTypeField -> docTypeField.getParentDocTypeField() == null)
-				.collect(Collectors.toList()),
-			new LinkedHashMap<>(),
-			MappingsKey.of("properties")
-		);
-	}
-
 	private static Map<MappingsKey, Object> createMappings_(
 		Collection<DocTypeField> docTypeFields,
 		Map<MappingsKey, Object> acc,
@@ -303,6 +284,23 @@ public final class MappingsUtil {
 
 		return acc;
 
+	}
+
+	private static Map<MappingsKey, Object> docTypeFieldToMappings(DocTypeField docTypeField) {
+		return docTypeFieldsToMappings(Set.of(docTypeField));
+	}
+
+	private static Map<MappingsKey, Object> docTypeFieldsToMappings(
+		Collection<DocTypeField> docTypeFields) {
+
+		return createMappings_(
+			docTypeFields
+				.stream()
+				.filter(docTypeField -> docTypeField.getParentDocTypeField() == null)
+				.collect(Collectors.toList()),
+			new LinkedHashMap<>(),
+			MappingsKey.of("properties")
+		);
 	}
 
 	private static Map<MappingsKey, Object> visit(MappingsKey nextKey, Map<MappingsKey, Object> current) {

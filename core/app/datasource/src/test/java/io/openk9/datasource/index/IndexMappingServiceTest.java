@@ -15,16 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.processor.indexwriter;
+package io.openk9.datasource.index;
 
-import io.openk9.datasource.TestUtils;
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -34,11 +29,16 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
 
-public class IndexerEventsTest {
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Test;
+
+public class IndexMappingServiceTest {
 
 	private static final JsonObject mappings = TestUtils
 		.getResourceAsJsonObject("es/mappings_response.json");
@@ -89,7 +89,7 @@ public class IndexerEventsTest {
 	public static void main(String[] args) {
 		Objects.requireNonNull(mappings);
 
-		for (DocTypeField docTypeField : IndexerEvents.toDocTypeFields(mappings.getMap())) {
+		for (DocTypeField docTypeField : IndexMappingService.toDocTypeFields(mappings.getMap())) {
 			printTree(docTypeField, "");
 		}
 	}
@@ -99,7 +99,7 @@ public class IndexerEventsTest {
 
 		Objects.requireNonNull(mappings);
 
-		List<DocTypeField> docTypeFields = IndexerEvents.toDocTypeFields(mappings.getMap());
+		List<DocTypeField> docTypeFields = IndexMappingService.toDocTypeFields(mappings.getMap());
 		Optional<DocTypeField> optField = docTypeFields
 			.stream()
 			.filter(f -> f.getFieldName().equals("acl"))
@@ -114,9 +114,8 @@ public class IndexerEventsTest {
 
 
 		Map<String, List<DocTypeField>> docTypeAndFieldsGroup =
-			IndexerEvents.toDocTypeAndFieldsGroup(
-				Tuple2.of(docTypeFields, List.of("web", "resources", "document"))
-			);
+			IndexMappingService.toDocTypeAndFieldsGroup(
+				docTypeFields, List.of("web", "resources", "document"));
 
 		assertTrue(
 			docTypeAndFieldsGroup
@@ -135,7 +134,7 @@ public class IndexerEventsTest {
 		);
 
 		Set<DocType> docTypes =
-			IndexerEvents.mergeDocTypes(docTypeAndFieldsGroup, List.of(docType));
+			IndexMappingService.mergeDocTypes(docTypeAndFieldsGroup, List.of(docType));
 
 		assertTrue(docTypes
 			.stream()

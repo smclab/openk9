@@ -15,34 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.processor.indexwriter;
+package io.openk9.datasource.index;
 
-import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.cache.P2PCache;
-import io.openk9.datasource.index.IndexService;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.util.DocTypeFieldUtils;
-import io.openk9.datasource.processor.util.Field;
-import io.openk9.datasource.service.DocTypeService;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
-import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.search.aggregations.AggregationBuilders;
-import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
-import org.opensearch.search.aggregations.bucket.terms.Terms;
-import org.opensearch.search.builder.SearchSourceBuilder;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -52,83 +26,59 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.util.DocTypeFieldUtils;
+import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.service.DocTypeService;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
-public class IndexerEvents {
+public class IndexMappingService {
 
-	@Inject
-	RestHighLevelClient client;
 	@Inject
 	IndexService indexService;
 	@Inject
 	DocTypeService docTypeService;
-	@Inject
-	ActorSystemProvider actorSystemProvider;
 
-	public Uni<Void> generateDocTypeFields(Mutiny.Session session, DataIndex dataIndex) {
+	public Uni<Set<DocType>> generateDocTypeFields(
+		Mutiny.Session session, String indexName) {
 
-		if (dataIndex == null) {
-			return Uni.createFrom().failure(new IllegalArgumentException("dataIndexId is null"));
-		}
-
-		return indexService
-			.getMappings(dataIndex.getIndexName())
-			.map(IndexerEvents::toDocTypeFields)
-			.plug(docTypeFieldsUni -> docTypeFieldsUni.flatMap(
-				docTypeFields -> _getDocumentTypes(dataIndex.getIndexName())
-					.map(docTypes -> Tuple2.of(docTypeFields, docTypes))
-			))
-			.map(IndexerEvents::toDocTypeAndFieldsGroup)
-			.call(map -> _persistDocType(map, dataIndex, session))
-			.replaceWithVoid();
+		return indexService.getMappings(indexName)
+			.flatMap(mappings -> indexService
+				.getDocumentTypes(indexName)
+				.flatMap(documentTypes -> generateDocTypeFields(
+					session, mappings, documentTypes)));
 	}
 
-	public Uni<Void> generateDocTypeFields(
+	public Uni<Set<DocType>> generateDocTypeFields(
 		Mutiny.Session session,
-		DataIndex dataIndex,
 		Map<String, Object> mappings,
 		List<String> documentTypes) {
 
-		var docTypeFields = IndexerEvents.toDocTypeFields(mappings);
+		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
 
-		var docTypeAndFieldsGroup = IndexerEvents.toDocTypeAndFieldsGroup(Tuple2.of(
-			docTypeFields,
-			documentTypes
-		));
+		var docTypeAndFieldsGroup = IndexMappingService
+			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
 
-		return _persistDocType(docTypeAndFieldsGroup, dataIndex, session);
+		return _persistDocType(docTypeAndFieldsGroup, session);
 	}
+
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
 		return _toDocTypeFields(_toFlatFields(mappings));
-	}
-
-	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
-		Tuple2<List<DocTypeField>, List<String>> t2) {
-
-		List<DocTypeField> docTypeFields = t2.getItem1();
-
-		List<String> documentTypes = t2.getItem2();
-
-		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
-			.collect(Collectors.groupingBy(
-				field -> documentTypes.stream()
-					.filter(dt ->
-						field.getFieldName().startsWith(dt + ".")
-						|| field.getFieldName().equals(dt)
-					)
-					.findFirst()
-					.orElse("default"),
-				Collectors.toList()
-			));
-
-		_explodeDocTypeFirstLevel(grouped);
-
-		return grouped;
 	}
 
 	protected static Set<DocType> mergeDocTypes(
 		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
 		Collection<DocType> existingDocTypes) {
+
 		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
 
 		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
@@ -181,6 +131,26 @@ public class IndexerEvents {
 
 		return docTypes;
 
+	}
+
+	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
+		List<DocTypeField> docTypeFields, List<String> documentTypes) {
+
+		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
+			.collect(Collectors.groupingBy(
+				field -> documentTypes.stream()
+					.filter(dt ->
+						field.getFieldName().startsWith(dt + ".")
+						|| field.getFieldName().equals(dt)
+					)
+					.findFirst()
+					.orElse("default"),
+				Collectors.toList()
+			));
+
+		_explodeDocTypeFirstLevel(grouped);
+
+		return grouped;
 	}
 
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
@@ -375,59 +345,18 @@ public class IndexerEvents {
 
 	}
 
-	private Uni<List<String>> _getDocumentTypes(String indexName) {
-		return Uni.createFrom().item(() -> {
-
-			SearchRequest searchRequest = new SearchRequest(indexName);
-
-			SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-			searchSourceBuilder.size(0);
-
-			searchSourceBuilder.aggregation(AggregationBuilders
-				.terms("documentTypes")
-				.field("documentTypes.keyword")
-				.size(1000)
-			);
-
-			searchRequest.source(searchSourceBuilder);
-
-			try {
-				SearchResponse search = client.search(searchRequest, RequestOptions.DEFAULT);
-
-				return search
-					.getAggregations()
-					.<Terms>get("documentTypes")
-					.getBuckets()
-					.stream()
-					.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-					.collect(Collectors.toList());
-			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		});
-
-	}
-
-	private Uni<Void> _persistDocType(
-		Map<String, List<DocTypeField>> docTypesGroup,
-		DataIndex dataIndex,
+	private Uni<Set<DocType>> _persistDocType(
+		Map<String, List<DocTypeField>> docTypeFieldsByDocType,
 		Mutiny.Session session) {
 
-		Set<String> docTypeNames = docTypesGroup.keySet();
+		Set<String> docTypeNames = docTypeFieldsByDocType.keySet();
 
 		return docTypeService
 			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
-			.map(docTypes -> mergeDocTypes(docTypesGroup, docTypes))
+			.map(existingDocTypes -> mergeDocTypes(docTypeFieldsByDocType, existingDocTypes))
 			.flatMap(docTypes -> session
-				.merge(dataIndex)
-				.flatMap(merged -> {
-					merged.setDocTypes(docTypes);
-					return session.persist(merged);
-				})
-			)
-			.invoke(() -> P2PCache.askInvalidation(actorSystemProvider.getActorSystem()));
+				.mergeAll(docTypes.toArray())
+				.map(unused -> docTypes));
 	}
 
 }
