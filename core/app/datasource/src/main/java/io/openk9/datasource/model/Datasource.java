@@ -113,6 +113,16 @@ public class Datasource extends K9Entity {
 	@JoinColumn(name = "plugin_driver_id")
 	@JsonIgnore
 	private PluginDriver pluginDriver;
+	@Description("If true set active the purge job scheduling")
+	@Column(name = "purgeable")
+	private Boolean purgeable = false;
+	@Description("Chron quartz expression to define purging for this datasource")
+	@Column(name = "purging")
+	@Cron(type = CronType.QUARTZ)
+	private String purging;
+	@Description("The duration to identify orphaned Dataindex.")
+	@Column(name = "purge_max_age")
+	private String purgeMaxAge;
 	@Description("If true set datasource as reindexable")
 	@Column(name = "reindexable", nullable = false)
 	private Boolean reindexable = false;

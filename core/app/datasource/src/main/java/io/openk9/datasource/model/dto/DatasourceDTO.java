@@ -40,6 +40,16 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Json
 	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
+	@Description("If true set active the purge job scheduling")
+	@Builder.Default
+	private Boolean purgeable = false;
+	@Cron(type = CronType.QUARTZ)
+	@Description("Chron quartz expression to define purging for this datasource")
+	@Builder.Default
+	private String purging = "0 */10 * ? * *";
+	@Description("The duration to identify orphaned Dataindex.")
+	@Builder.Default
+	private String purgeMaxAge = "2d";
 	@NotNull
 	@Description("If true datasource is reindexed based on defined scheduling expression")
 	@Builder.Default
