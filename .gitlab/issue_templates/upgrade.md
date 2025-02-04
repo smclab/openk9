@@ -1,19 +1,20 @@
 ## Summary
 
-(descrizione della libreria, componente da aggiornare ed eventuali motivi che hanno portato al
-considerare l'aggiornamento)
+(This section provides a brief description of the purpose of this upgrade. We can explain why we
+need to upgrade the library or the dependency in scope.)
 
 ## Components
 
-(lista dei componenti impattati dall'aggiornameto)
+(Here we can list the components that are likely to be affected by this update.)
 
 ## Actions
 
-(la lista delle azioni previste per effettuare l'aggiornamento e per mitigare i problemi di
-compatibilità)
+(We can add a short analysis of the steps required in order to perform the update. We can also
+describe the solutions that we have found to mitigate compatibility issues.)
 
 ## Breaking changes
 
-(lista delle eventuali breaking changes)
+(After conducting the analysis, we need to document all the breaking changes that this update is
+going to introduce.)
 
 /label ~upgrade

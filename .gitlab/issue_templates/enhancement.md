@@ -5,21 +5,21 @@ is available, it may be useful to include the rationale behind the implementatio
 
 ## Requirements
 
-(This section is about the API or the Components that will be added or modified. Here we can defines
+(This section is about the API or the Components that will be added or modified. Here we can define
 the contracts of our API.)
 
-## Expected Behaviour
+## Expected Behavior
 
 (In this section, we can list the test cases and what we expect to happen when our API or Components
 are used.)
 
 ## Links / References
 
-(Here we can add all the implementations details and related analysis done.)
+(Here we can add all the implementation details and related analysis that have been conducted.)
 
 ## Breaking changes
 
-(We have to think about how our changes impacts the overall product.)
+(We have to think about how our changes impact the overall product.)
 
 ## Deprecations
 
