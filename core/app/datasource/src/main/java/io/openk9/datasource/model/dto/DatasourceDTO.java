@@ -46,7 +46,7 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Cron(type = CronType.QUARTZ)
 	@Description("Chron quartz expression to define purging for this datasource")
 	@Builder.Default
-	private String purging = "0 */10 * ? * *";
+	private String purging = "0 0 1 * * ?";
 	@Description("The duration to identify orphaned Dataindex.")
 	@Builder.Default
 	private String purgeMaxAge = "2d";

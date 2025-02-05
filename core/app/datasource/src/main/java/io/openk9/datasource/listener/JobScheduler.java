@@ -478,8 +478,7 @@ public class JobScheduler {
 		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension).defaultTimezone();
 
-		String jobName = tenantName + "-" + datasourceId;
-		var suffix = "-" + jobType.name().toLowerCase();
+		String jobName = tenantName + "-" + datasourceId + "-" + jobType.name().toLowerCase();
 
 		Command command = new TriggerDatasource(tenantName, datasourceId, false, null);
 
@@ -489,12 +488,10 @@ public class JobScheduler {
 				break;
 
 			case REINDEX:
-				jobName = jobName + suffix;
 				command = new TriggerDatasource(tenantName, datasourceId, true, null);
 				break;
 
 			case PURGE:
-				jobName = jobName + suffix;
 				command = new TriggerDatasourcePurge(tenantName, datasourceId, purgeMaxAge);
 				break;
 		}
@@ -548,8 +545,8 @@ public class JobScheduler {
 			return Behaviors.same();
 		}
 
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable",
-			datasourceId);
+		log.infof("Job of type %s not created: datasourceId: %s, the datasource is not schedulable",
+			jobType.name(), datasourceId);
 
 		return Behaviors.same();
 
