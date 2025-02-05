@@ -19,7 +19,6 @@ package io.openk9.datasource.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
@@ -28,20 +27,15 @@ import java.util.Map;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.IndexMappingService;
-import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.Json;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
@@ -49,13 +43,7 @@ import org.junit.jupiter.api.Test;
 @QuarkusTestResource(WireMockPluginDriver.class)
 class DynamicMappingDataIndexTest {
 
-	@Inject
-	DataIndexService dataIndexService;
-
-	@Inject
-	DatasourceService datasourceService;
-
-	@InjectMock
+	@InjectSpy
 	IndexMappingService indexMappingService;
 
 	@InjectSpy
@@ -68,40 +56,17 @@ class DynamicMappingDataIndexTest {
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
 
-		given(indexMappingService.generateDocTypeFields(
-			any(Mutiny.Session.class),
-			any(Map.class),
-			any(List.class)
-		)).willReturn(Uni.createFrom().voidItem());
 
 		asserter.assertThat(
-			() -> sessionFactory.withTransaction((s, t) -> datasourceService
-				.create(s, DatasourceDTO.builder()
-					.name(DynamicMappingDataIndexTest.class.getName())
-					.description("test")
-					.jsonConfig(CreateConnection.JSON_CONFIG)
-					.scheduling(CreateConnection.SCHEDULING)
-					.schedulable(false)
-					.reindexing(CreateConnection.REINDEXING)
-					.reindexable(false)
-					.build()
+			() -> sessionFactory.withTransaction((s, t) ->
+				indexMappingService.generateDocTypeFieldsFromPluginDriverRequest(
+					s,
+					HttpPluginDriverInfo.builder()
+						.host(WireMockPluginDriver.HOST)
+						.port(WireMockPluginDriver.PORT)
+						.secure(false)
+						.build()
 				)
-				.map(datasource -> {
-					var pluginDriver = new PluginDriver();
-					pluginDriver.setName("aaaa");
-					pluginDriver.setJsonConfig(Json.encode(
-						HttpPluginDriverInfo.builder()
-							.host(WireMockPluginDriver.HOST)
-							.port(WireMockPluginDriver.PORT)
-							.secure(false)
-							.build())
-					);
-					pluginDriver.setType(PluginDriver.PluginDriverType.HTTP);
-					datasource.setPluginDriver(pluginDriver);
-					return datasource;
-				})
-				.flatMap(datasource -> dataIndexService
-					.createByDatasource(s, null, datasource))
 			),
 			dataIndex -> {
 

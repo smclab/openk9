@@ -30,12 +30,12 @@ import static org.mockito.Mockito.times;
 
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 
 import io.quarkus.test.InjectMock;
@@ -94,8 +94,8 @@ class UpdateDatasourceConnectionTest {
 
 		var mockSession = mock(Mutiny.Session.class);
 
-		given(dataIndexService.createByDatasource(
-			anySession(), nullable(EmbeddingVectorDTO.class), any(Datasource.class)))
+		given(dataIndexService.createByDatasourceConnection(
+			anySession(), any(Datasource.class), nullable(DataIndexDTO.class)))
 			.willReturn(Uni.createFrom().item(new DataIndex()));
 
 		uniAsserter.assertThat(
@@ -107,8 +107,10 @@ class UpdateDatasourceConnectionTest {
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
-					.createByDatasource(
-						anySession(), nullable(EmbeddingVectorDTO.class), any(Datasource.class));
+					.createByDatasourceConnection(
+						anySession(),
+						any(Datasource.class), nullable(DataIndexDTO.class)
+					);
 
 				then(mockSession).should(atLeastOnce())
 					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));

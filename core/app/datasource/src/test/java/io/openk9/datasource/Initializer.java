@@ -234,8 +234,7 @@ public class Initializer {
 						.build()
 					)
 					.build()
-				)
-					.build()
+				).build()
 			)
 			.await()
 			.indefinitely();

@@ -27,9 +27,9 @@ import static org.mockito.Mockito.times;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.service.exception.K9Error;
 
@@ -122,10 +122,9 @@ class DatasourceCreateConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(
+					.createByDatasourceConnection(
 						anySession(),
-						any(EmbeddingVectorDTO.class),
-						any(Datasource.class)
+						any(Datasource.class), any(DataIndexDTO.class)
 					);
 
 			}
@@ -200,9 +199,9 @@ class DatasourceCreateConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(
-						anySession(), nullable(EmbeddingVectorDTO.class),
-						any(Datasource.class)
+					.createByDatasourceConnection(
+						anySession(),
+						any(Datasource.class), nullable(DataIndexDTO.class)
 					);
 			}
 		);
@@ -285,9 +284,9 @@ class DatasourceCreateConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createByDatasource(
-						anySession(), nullable(EmbeddingVectorDTO.class),
-						any(Datasource.class)
+					.createByDatasourceConnection(
+						anySession(),
+						any(Datasource.class), nullable(DataIndexDTO.class)
 					);
 			}
 		);

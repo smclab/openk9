@@ -23,7 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -34,13 +34,11 @@ import jakarta.ws.rs.core.Response;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.mappings.IndexMappingsUtil;
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.DataIndexMapper;
-import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
 import io.openk9.datasource.model.Datasource;
@@ -49,12 +47,12 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.datasource.web.DataIndexResource;
@@ -87,11 +85,7 @@ public class DataIndexService
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 	@Inject
-	HttpPluginDriverClient pluginDriverClient;
-	@Inject
 	IndexMappingService indexMappingService;
-	@Inject
-	IngestionPayloadMapper ingestionPayloadMapper;
 
 	private static final String DETAILS_FIELD = "details";
 
@@ -124,7 +118,7 @@ public class DataIndexService
 				.createQuery(query)
 				.getSingleResult()
 				.flatMap(dataIndex -> indexMappingService
-					.generateDocTypeFields(session, dataIndex.getIndexName())
+					.generateDocTypeFieldsFromIndexName(session, dataIndex.getIndexName())
 					.flatMap(docTypes -> {
 						dataIndex.setDocTypes(docTypes);
 						return merge(session, dataIndex);
@@ -287,41 +281,76 @@ public class DataIndexService
 		);
 	}
 
-	public Uni<DataIndex> createByDatasource(
+	@Override
+	public Uni<DataIndex> create(Mutiny.Session s, DataIndexDTO dto) {
+		var dataIndex = ((DataIndexMapper) mapper).create(dto, s);
+		return create(s, dataIndex);
+	}
+
+	/**
+	 * Create a new DataIndex for the datasource,
+	 * this dataIndex will be created with a set of docTypes generated from
+	 * the sample document sent by the pluginDriver associated.
+	 *
+	 * @param session      is used to make all the db calls in the same session
+	 * @param datasource   from where the pluginDriver info are retrieved
+	 * @param dataIndexDTO the configuration that will be applied to the dataIndex, if present
+	 * @return a uni with the dataIndex created and associated to the datasource.
+	 */
+	public Uni<DataIndex> createByDatasourceConnection(
 		Mutiny.Session session,
-		EmbeddingVectorDTO embeddingVectorDTO,
-		Datasource datasource) {
+		Datasource datasource, @Nullable DataIndexDTO dataIndexDTO) {
 
 		var pluginDriver = datasource.getPluginDriver();
 		var jsonConfig = pluginDriver.getJsonConfig();
-		var pluginDriverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+		var pluginDriverRequest
+			= Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
 
-		return pluginDriverClient.getSample(pluginDriverInfo)
-			.flatMap(ingestionPayload -> {
+		DataIndexDTO dto;
+		if (dataIndexDTO == null) {
+			dto = new DataIndexDTO();
+		}
+		else {
+			dto = dataIndexDTO;
+		}
 
-				var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+		if (dto.getName() == null) {
+			var dataIndexName = OpenSearchUtils.indexNameSanitizer(String.format(
+				"%s-%s",
+				datasource.getName(),
+				OffsetDateTime.now().toEpochSecond()
+			));
+			dto.setName(dataIndexName);
+		}
 
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
+		return indexMappingService.generateDocTypeFieldsFromPluginDriverRequest(
+				session, pluginDriverRequest)
+			.flatMap(docTypes -> {
+					var dataIndex = ((DataIndexMapper) mapper)
+						.create(dto, session);
 
-				var transientDataIndex = new DataIndex();
-
-				if (embeddingVectorDTO != null) {
-					transientDataIndex.setKnnIndex(true);
+					dataIndex.setDatasource(datasource);
+					dataIndex.setDocTypes(docTypes);
+					return merge(session, dataIndex);
 				}
+			);
 
-				transientDataIndex.setName(String.format("dataindex-%s", UUID.randomUUID()));
-				transientDataIndex.setDatasource(datasource);
+	}
 
-				return create(session, transientDataIndex)
-					.flatMap(dataIndex -> indexMappingService
-						.generateDocTypeFields(
-							session, mappings.getMap(), documentTypes)
-						.flatMap(__ -> findById(session, dataIndex.getId()))
-					);
-			});
+	@Override
+	public Uni<DataIndex> update(Mutiny.Session s, long id, DataIndexDTO dto) {
+
+		return findById(s, id)
+			.onItem().ifNotNull()
+			.transformToUni(
+				(prev) -> persist(s, ((DataIndexMapper) mapper).update(prev, dto, s))
+					.invoke(newEntity -> super.getProcessor().onNext(
+						K9EntityEvent.of(
+							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
+			.onItem().ifNull().failWith(
+				() -> new IllegalStateException(
+					"entity: " + dto.getClass().getSimpleName() + " with id: " +
+					id + " not found"));
 	}
 
 	public Uni<DataIndex> createDataIndexFromDocTypes(

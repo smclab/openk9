@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.graphql.dto;
 
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 
@@ -52,7 +53,7 @@ public class DatasourceConnectionDTO extends DatasourceDTO {
 	private PipelineWithItemsDTO pipeline;
 
 	@Nullable
-	@Description("Configurations used for indexing vectors (optional)")
-	private EmbeddingVectorDTO embeddingVectorDTO;
+	@Description("Configurations used to create the dataIndex (optional)")
+	private DataIndexDTO dataIndexDTO;
 
 }

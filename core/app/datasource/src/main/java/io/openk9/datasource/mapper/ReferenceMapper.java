@@ -15,27 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto.util;
+package io.openk9.datasource.mapper;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.enterprise.context.ApplicationScoped;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-import org.hibernate.validator.constraints.Length;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.mapstruct.Context;
+import org.mapstruct.Named;
+import org.mapstruct.TargetType;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@SuperBuilder(toBuilder = true)
-public class K9EntityDTO {
+@ApplicationScoped
+public class ReferenceMapper {
 
-	@Length(max = 255)
-	@NotEmpty
-	private String name;
+	public static final String GET_REFERENCE = "ReferenceMapper#getReference";
 
-	@Length(max = 4096)
-	private String description;
+	@Named(ReferenceMapper.GET_REFERENCE)
+	public <T> T getReference(
+		Long id,
+		@Context Mutiny.Session session,
+		@TargetType Class<T> entityClass) {
+
+		if (id == null) {
+			return null;
+		}
+
+		return session.getReference(entityClass, id);
+
+	}
 
 }

@@ -29,12 +29,16 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.util.OpenSearchUtils;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -47,16 +51,10 @@ public class IndexMappingService {
 	IndexService indexService;
 	@Inject
 	DocTypeService docTypeService;
-
-	public Uni<Set<DocType>> generateDocTypeFields(
-		Mutiny.Session session, String indexName) {
-
-		return indexService.getMappings(indexName)
-			.flatMap(mappings -> indexService
-				.getDocumentTypes(indexName)
-				.flatMap(documentTypes -> generateDocTypeFields(
-					session, mappings, documentTypes)));
-	}
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
+	@Inject
+	IngestionPayloadMapper ingestionPayloadMapper;
 
 	public Uni<Set<DocType>> generateDocTypeFields(
 		Mutiny.Session session,
@@ -69,6 +67,35 @@ public class IndexMappingService {
 			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
 
 		return _persistDocType(docTypeAndFieldsGroup, session);
+	}
+
+	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
+		Mutiny.Session session, String indexName) {
+
+		return indexService.getMappings(indexName)
+			.flatMap(mappings -> indexService
+				.getDocumentTypes(indexName)
+				.flatMap(documentTypes -> generateDocTypeFields(
+					session, mappings, documentTypes)));
+	}
+
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverRequest(
+		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+
+		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes =
+					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				return generateDocTypeFields(
+					session, mappings.getMap(), documentTypes);
+			});
 	}
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
@@ -353,10 +380,8 @@ public class IndexMappingService {
 
 		return docTypeService
 			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
-			.map(existingDocTypes -> mergeDocTypes(docTypeFieldsByDocType, existingDocTypes))
-			.flatMap(docTypes -> session
-				.mergeAll(docTypes.toArray())
-				.map(unused -> docTypes));
+			.map(existingDocTypes -> mergeDocTypes(
+				docTypeFieldsByDocType, existingDocTypes));
 	}
 
 }

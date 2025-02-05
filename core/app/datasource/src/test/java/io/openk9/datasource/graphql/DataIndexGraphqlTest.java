@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.concurrent.ExecutionException;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.graphql.dto.EmbeddingVectorDTO;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DataIndexService;
@@ -86,7 +86,7 @@ public class DataIndexGraphqlTest {
 						).encode())
 						.build()
 					)
-					.embeddingVectorDTO(EmbeddingVectorDTO.builder()
+					.dataIndexDTO(DataIndexDTO.builder()
 						.embeddingJsonConfig("{}")
 						.build())
 					.build()

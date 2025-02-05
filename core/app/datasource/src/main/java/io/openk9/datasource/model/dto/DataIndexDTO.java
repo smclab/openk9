@@ -17,12 +17,13 @@
 
 package io.openk9.datasource.model.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
+import io.smallrye.graphql.api.Nullable;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,23 +32,42 @@ import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
 @NoArgsConstructor
+@AllArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class DataIndexDTO extends K9EntityDTO {
 
-	@NotNull
-	@Description("The field used during the text embedding, defined as JsonPath")
-	private String textEmbeddingField;
-	@NotNull
-	@Description("The chunk strategy to apply")
-	private EmbeddingOuterClass.ChunkType chunkType;
-	@Json
-	@Description("The configurations needed by the embedding model")
-	private String embeddingJsonConfig;
-	@Description(
-		"The size of array chunks before and after the actual chunk, sent to embedding model")
+	@Nullable
+	@Builder.Default
+	@Description("""
+		Define if this index is a knn index, this property enables
+		vector similarity search features on this DataIndex.""")
+	private Boolean knnIndex = false;
+
+	@Nullable
+	@Description("The number of chunks before and after every chunk.")
 	private Integer chunkWindowSize;
+
+	@Nullable
+	@Description("The chunk strategy to apply.")
+	private EmbeddingOuterClass.ChunkType chunkType;
+
+	@Description("The datasourceId that is associated to this dataIndex")
+	private long datasourceId;
+
+	@Nullable
+	@Description(
+		"""
+			The field used during the text embedding,
+			must be a valid docTypeFieldId.
+			""")
+	private Long embeddingDocTypeFieldId;
+
+	@Json
+	@Nullable
+	@Description("The configurations used by the embedding model, if needed.")
+	private String embeddingJsonConfig;
 
 }
