@@ -56,10 +56,11 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	}
 
 	public DatasourcePurge(
-		ActorContext<Command> context, String tenantName, long datasourceId) {
+		ActorContext<Command> context, String tenantName, long datasourceId, String purgeMaxAge) {
 		super(context);
 		this.tenantName = tenantName;
 		this.datasourceId = datasourceId;
+		//TODO use parsing of maxAge parameter
 		this.maxAge = getMaxAge(context);
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
@@ -73,10 +74,10 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private List<DataIndex> currentChunk;
 
 	public static Behavior<Command> create(
-		String tenantName, long datasourceId) {
+		String tenantName, long datasourceId, String purgeMaxAge) {
 
 		return Behaviors.setup(ctx ->
-			new DatasourcePurge(ctx, tenantName, datasourceId));
+			new DatasourcePurge(ctx, tenantName, datasourceId, purgeMaxAge));
 	}
 
 	private Behavior<Command> onDeleteEsIndices() {
@@ -204,6 +205,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		return Behaviors.stopped();
 	}
 
+	//TODO change method to parse maxAge String or remove it.
 	private static Duration getMaxAge(ActorContext<?> context) {
 		Config config = context.getSystem().settings().config();
 

@@ -37,29 +37,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DatasourcePurgeGraphqlTest {
 
-	public static final String DATASOURCE = "datasource";
-	public static final String DATASOURCE_DTO = "datasourceDTO";
-	public static final String CRON_5_MINUTES = "0 */5 * ? * * *";
-	public static final String CRON_2_MINUTES = "0 */2 * ? * * *";
-	public static final String DURATION_5_DAYS = "5d";
 	private static final String ENTITY_NAME_PREFIX = "DatasourcePurgeGraphqlTest - ";
 
+	private static final String CRON_5_MINUTES = "0 */5 * ? * * *";
+	private static final String CRON_2_MINUTES = "0 */2 * ? * * *";
+	private static final String DATASOURCE = "datasource";
+	private static final String DATASOURCE_DTO = "datasourceDTO";
 	private static final String DATASOURCE_ONE_NAME = ENTITY_NAME_PREFIX + "Datasource 1";
 	private static final String DATASOURCE_TWO_NAME = ENTITY_NAME_PREFIX + "Datasource 2";
+	private static final String DURATION_5_DAYS = "5d";
 	private static final String ENTITY = "entity";
 	private static final String ID = "id";
 	private static final String NAME = "name";
-	public static final String PATCH = "patch";
-	public static final String PURGEABLE = "purgeable";
-	private static final boolean PURGEABLE_DEFAULT_VALUE = false;
-	public static final String PURGING = "purging";
-	public static final String PURGE_MAX_AGE = "purgeMaxAge";
-	private static final String PURGING_DEFAULT_VALUE = "0 */10 * ? * *";
+	private static final String PATCH = "patch";
+	private static final String PURGE_MAX_AGE = "purgeMaxAge";
 	private static final String PURGE_MAX_AGE_DEFAULT_VALUE = "2d";
-	public static final String SCHEDULABLE = "schedulable";
-	public static final String SCHEDULING = "scheduling";
-	public static final String REINDEXABLE = "reindexable";
-	public static final String REINDEXING = "reindexing";
+	private static final String PURGEABLE = "purgeable";
+	private static final boolean PURGEABLE_DEFAULT_VALUE = false;
+	private static final String PURGING = "purging";
+	private static final String PURGING_DEFAULT_VALUE = "0 */10 * ? * *";
+	private static final String REINDEXABLE = "reindexable";
+	private static final String REINDEXING = "reindexing";
+	private static final String SCHEDULABLE = "schedulable";
+	private static final String SCHEDULING = "scheduling";
 	private static final Logger log = Logger.getLogger(DatasourcePurgeGraphqlTest.class);
 
 	@Inject

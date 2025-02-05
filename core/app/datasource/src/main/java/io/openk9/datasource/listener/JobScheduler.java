@@ -17,17 +17,7 @@
 
 package io.openk9.datasource.listener;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
-
+import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -40,8 +30,6 @@ import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.util.CborSerializable;
-
-import com.typesafe.config.Config;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -53,6 +41,17 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
 import org.jboss.logging.Logger;
 import scala.Option;
+
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
 
 public class JobScheduler {
 
@@ -141,15 +140,6 @@ public class JobScheduler {
 				)
 			)
 			.onMessage(
-				ScheduleReindexDatasourceInternal.class,
-				srdi -> onScheduleReindexDatasourceInternal(srdi,
-					ctx,
-					quartzSchedulerTypedExtension,
-					messageGateway,
-					jobNames
-				)
-			)
-			.onMessage(
 				UnScheduleJobInternal.class,
 				rd -> onUnscheduleJobInternal(rd,
 					ctx,
@@ -203,16 +193,30 @@ public class JobScheduler {
 		ctx.getSelf().tell(
 			new ScheduleDatasourceInternal(
 				tenantName, datasourceId,
+				JobType.TRIGGER,
 				addDatasource.schedulable,
-				addDatasource.schedulingCron
+				addDatasource.schedulingCron,
+				null
 			)
 		);
 
 		ctx.getSelf().tell(
-			new ScheduleReindexDatasourceInternal(
+			new ScheduleDatasourceInternal(
 				tenantName, datasourceId,
+				JobType.REINDEX,
 				addDatasource.reindexable,
-				addDatasource.reindexingCron
+				addDatasource.reindexingCron,
+				null
+			)
+		);
+
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId,
+				JobType.PURGE,
+				addDatasource.purgeable,
+				addDatasource.purgingCron,
+				addDatasource.purgeMaxAge
 			)
 		);
 
@@ -483,13 +487,34 @@ public class JobScheduler {
 
 		String tenantName = scheduleDatasourceInternal.tenantName();
 		long datasourceId = scheduleDatasourceInternal.datasourceId();
+		JobType jobType = scheduleDatasourceInternal.jobType();
 		String cron = scheduleDatasourceInternal.cron();
 		boolean schedulable = scheduleDatasourceInternal.schedulable();
+		String purgeMaxAge = scheduleDatasourceInternal.purgeMaxAge();
 
 		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension).defaultTimezone();
 
 		String jobName = tenantName + "-" + datasourceId;
+		var suffix = "-" + jobType.name().toLowerCase();
+
+		Command command = new TriggerDatasource(tenantName, datasourceId, false, null);
+
+		switch (jobType) {
+			case JobType.TRIGGER:
+				command = new TriggerDatasource(tenantName, datasourceId, false, null);
+				break;
+
+			case REINDEX:
+				jobName = jobName + suffix;
+				command = new TriggerDatasource(tenantName, datasourceId, true, null);
+				break;
+
+			case PURGE:
+				jobName = jobName + suffix;
+				command = new TriggerDatasourcePurge(tenantName, datasourceId, purgeMaxAge);
+				break;
+		}
 
 		if (schedulable) {
 
@@ -498,19 +523,9 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.updateTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false, null),
+					command,
 					Option.empty(),
 					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName + PURGE_SUFFIX,
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
 					Option.empty(),
 					defaultTimezone
 				);
@@ -524,30 +539,18 @@ public class JobScheduler {
 				quartzSchedulerTypedExtension.createTypedJobSchedule(
 					jobName,
 					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false, null),
+					command,
 					Option.empty(),
 					cron,
 					Option.empty(),
 					defaultTimezone
 				);
 
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName + PURGE_SUFFIX,
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					defaultTimezone
-				);
-
-
 				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
 
 				List<String> newJobNames = new ArrayList<>(jobNames);
 
 				newJobNames.add(jobName);
-				newJobNames.add(jobName + PURGE_SUFFIX);
 
 				return initial(
 					ctx, quartzSchedulerTypedExtension,
@@ -558,83 +561,12 @@ public class JobScheduler {
 		}
 		else if (jobNames.contains(jobName)) {
 			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-			ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
 			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
 
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onScheduleReindexDatasourceInternal(
-		ScheduleReindexDatasourceInternal scheduleReindexDatasourceInternal,
-		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
-
-		String tenantName = scheduleReindexDatasourceInternal.tenantName();
-		long datasourceId = scheduleReindexDatasourceInternal.datasourceId();
-		String cron = scheduleReindexDatasourceInternal.cron();
-		boolean reindexable = scheduleReindexDatasourceInternal.reindexable();
-
-		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
-			quartzSchedulerTypedExtension).defaultTimezone();
-
-		String jobName = tenantName + "-" + datasourceId + REINDEX_SUFFIX;
-
-		if (reindexable) {
-
-			if (jobNames.contains(jobName)) {
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, true, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
-
-				return Behaviors.same();
-			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, true, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension,
-					messageGatewayService, newJobNames
-				);
-
-			}
-		}
-		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-			log.infof("Reindex job is not schedulable, removing job: %s", jobName);
-			return Behaviors.same();
-		}
-
-		log.infof("Reindex job not created: datasourceId: %s, the datasource is not reindexable", datasourceId);
+		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable",
+			datasourceId);
 
 		return Behaviors.same();
 
@@ -857,9 +789,10 @@ public class JobScheduler {
 		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
 
 		String tenantName = tdp.tenantName();
-		long datasourceId = tdp.datasourceId;
+		long datasourceId = tdp.datasourceId();
+		String purgeMaxAge = tdp.purgeMaxAge();
 
-		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId, purgeMaxAge));
 
 		return Behaviors.same();
 	}
@@ -957,14 +890,17 @@ public class JobScheduler {
 
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
-		boolean reindexable, String reindexingCron
+		boolean reindexable, String reindexingCron, boolean purgeable, String purgingCron,
+		String purgeMaxAge
 	) implements Command {}
 
 	public record TriggerDatasource(
 		String tenantName, long datasourceId, boolean reindex, OffsetDateTime startIngestionDate
 	) implements Command {}
 
-	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
+	public record TriggerDatasourcePurge(
+		String tenantName, long datasourceId, String purgeMaxAge
+	) implements Command {}
 
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
@@ -984,6 +920,12 @@ public class JobScheduler {
 		Scheduler scheduler, OffsetDateTime startIngestionDate
 	) implements Command {}
 
+	private enum JobType {
+		TRIGGER,
+		REINDEX,
+		PURGE
+	}
+
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
 	private record PersistSchedulerInternal(
@@ -999,11 +941,8 @@ public class JobScheduler {
 		implements Command {}
 
 	private record ScheduleDatasourceInternal(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
-
-	private record ScheduleReindexDatasourceInternal(
-		String tenantName, long datasourceId, boolean reindexable, String cron
+		String tenantName, long datasourceId, JobType jobType, boolean schedulable, String cron,
+		String purgeMaxAge
 	) implements Command {}
 
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}

@@ -76,7 +76,10 @@ public class SchedulerInitializer {
 			datasource.getSchedulable(),
 			datasource.getScheduling(),
 			datasource.getReindexable(),
-			datasource.getReindexing()
+			datasource.getReindexing(),
+			datasource.getPurgeable(),
+			datasource.getPurging(),
+			datasource.getPurgeMaxAge()
 		);
 
 	}
@@ -231,7 +234,10 @@ public class SchedulerInitializer {
 			datasource.getSchedulable(),
 			datasource.getScheduling(),
 			datasource.getReindexable(),
-			datasource.getReindexing());
+			datasource.getReindexing(),
+			datasource.getPurgeable(),
+			datasource.getPurging(),
+			datasource.getPurgeMaxAge());
 	}
 
 }
