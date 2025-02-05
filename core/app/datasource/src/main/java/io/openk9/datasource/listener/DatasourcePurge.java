@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.listener;
 
-import com.typesafe.config.Config;
 import io.openk9.datasource.model.DataIndex;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -31,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import static io.openk9.datasource.util.JobSchedulerUtil.parseDuration;
 
 public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
@@ -60,8 +61,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		super(context);
 		this.tenantName = tenantName;
 		this.datasourceId = datasourceId;
-		//TODO use parsing of maxAge parameter
-		this.maxAge = getMaxAge(context);
+		this.maxAge = parseDuration(purgeMaxAge);
 		getContext().getSelf().tell(Start.INSTANCE);
 	}
 
@@ -204,23 +204,4 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			"Job DatasourcePurge finished for datasource {}-{}", tenantName, datasourceId);
 		return Behaviors.stopped();
 	}
-
-	//TODO change method to parse maxAge String or remove it.
-	private static Duration getMaxAge(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		String configPath = "io.openk9.scheduling.purge.max-age";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return Duration.ofDays(2);
-			} else {
-				return config.getDuration(configPath);
-			}
-		} else {
-			return Duration.ofDays(2);
-		}
-
-	}
-
 }

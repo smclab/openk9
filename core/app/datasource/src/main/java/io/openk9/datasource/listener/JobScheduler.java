@@ -91,23 +91,6 @@ public class JobScheduler {
 		});
 	}
 
-	private static String getPurgeCron(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		String configPath = "io.openk9.scheduling.purge.cron";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return EVERY_DAY_AT_1_AM;
-			} else {
-				return config.getString(configPath);
-			}
-		} else {
-			return EVERY_DAY_AT_1_AM;
-		}
-
-	}
-
 	private static Behavior<Command> initial(
 		ActorContext<Command> ctx,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
