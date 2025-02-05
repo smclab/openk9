@@ -179,10 +179,6 @@ def get_chat_chain_tool(
     llm_with_tools = llm.bind_tools(tools)
     llm_with_tools_response = llm_with_tools.invoke(search_text)
 
-    open_search_client = OpenSearch(
-        hosts=[opensearch_host],
-    )
-
     if llm_with_tools_response.tool_calls:
         yield from stream_rag_conversation(
             search_text,
@@ -236,6 +232,10 @@ def get_chat_chain_tool(
                 llm, search_text, result_answer
             )
             yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+
+        open_search_client = OpenSearch(
+            hosts=[opensearch_host],
+        )
 
         save_chat_message(
             open_search_client,
