@@ -17,7 +17,7 @@ import { PreviewSvg } from "./svgElement/PreviewSvg";
 
 export const openk9 = new OpenK9({
   enabled: true,
-  searchAutoselect: false,
+  searchAutoselect: true,
   searchReplaceText: true,
   isActiveSkeleton: true,
   memoryResults: false,
@@ -31,6 +31,7 @@ export function App() {
   }
 
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
+  const [numberOfResults, setNumberOfResults] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
   const [isVisibleCalendar, setIsVisibleCalendar] = React.useState(false);
@@ -62,9 +63,14 @@ export function App() {
     setSearchText(text);
   }, 200);
 
+  const debouncedNumberOfResults = debounce((search) => {
+    setNumberOfResults(search);
+  }, 200);
+
   React.useEffect(() => {
     openk9.addEventListener("queryStateChange", (newConfig) => {
       debouncedUpdateSearch(newConfig.searchTokens);
+      debouncedNumberOfResults(newConfig.numberOfResults);
     });
   }, [openk9]);
 
@@ -98,8 +104,8 @@ export function App() {
         grid-template-rows: auto auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"
-          "tabs tabs tabs"
           "search search search"
+          "tabs tabs tabs"
           "filters panel panel"
           "filters result detail";
 
@@ -109,8 +115,8 @@ export function App() {
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
-            "tabs"
             "search"
+            "tabs"
             "panel"
             "result";
         }
@@ -122,8 +128,8 @@ export function App() {
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
-            "tabs"
             "search"
+            "tabs"
             "panel"
             "result";
         }
@@ -133,8 +139,8 @@ export function App() {
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar dockbar"
-            "tabs tabs"
             "search search"
+            "tabs tabs"
             "filters panel"
             "filters result";
             "result";
@@ -210,27 +216,11 @@ export function App() {
           />
         </div>
       </div>
-
-      <div
-        ref={(element) => openk9.updateConfiguration({ tabs: element })}
-        className="openk9-container-tabs"
-        css={css`
-          grid-area: tabs;
-          padding: 8px 16px 0;
-          margin-bottom: -16px;
-          overflow: auto;
-          height: max-content;
-          @media (max-width: 480px) {
-            display: none;
-          }
-        `}
-      />
-
       <div
         css={css`
           grid-area: search;
-          padding: 16px 0;
-
+          padding-top: 16px;
+          padding-bottom: 8px;
           @media (max-width: 480px) {
             padding-inline: 16px;
           }
@@ -260,61 +250,6 @@ export function App() {
             className="openk9-update-configuration-search"
             ref={(element) => openk9.updateConfiguration({ search: element })}
           />
-          {/* <div
-            css={css`
-              @media (max-width: 768px) {
-                display: flex;
-                gap: 20px;
-                flex-direction: row-reverse;
-                align-items: center;
-              }
-              @media (max-width: 480px) {
-                display: none;
-              }
-            `}
-            className="openk9-update-configuration-datapicker"
-            ref={(element) =>
-              openk9.updateConfiguration({
-                dataRangePicker: {
-                  element,
-                  start: startDate,
-                  end: endDate,
-                },
-              })
-            }
-          >
-            {searchText !== undefined && (
-              <button
-                onClick={() => setIsPanelVisible(!isPanelVisible)}
-                css={css`
-                  display: none;
-                  justify-self: center;
-                  background: red;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  padding: 10px;
-                  color: white;
-                  gap: 10px;
-                  cursor: pointer;
-                  @media (max-width: 768px) {
-                    display: flex;
-                    align-items: center;
-                  }
-                `}
-              >
-                {isPanelVisible ? (
-                  <>
-                    Chiudi Pannello <Logo />
-                  </>
-                ) : (
-                  <>
-                    Generate response <Logo />
-                  </>
-                )}
-              </button>
-            )}
-          </div> */}
-
           <div
             css={css`
               width: 100%;
@@ -426,39 +361,64 @@ export function App() {
               <FilterHorizontalSvg />
             </button>
             {searchText !== undefined && (
-              <button
-                onClick={() => setIsPanelVisible(!isPanelVisible)}
+              <div
                 css={css`
-                  justify-self: center;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  background: red;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  color: white;
-                  gap: 10px;
-                  cursor: pointer;
-                  display: flex;
-                  align-items: center;
+                  padding-block: 8px;
                   @media (min-width: 480px) {
                     display: none;
                   }
                 `}
               >
-                {isPanelVisible ? (
-                  <>
-                    Chiudi Pannello <Logo />
-                  </>
-                ) : (
-                  <>
-                    Genera <Logo />
-                  </>
-                )}
-              </button>
+                {/* <button
+                  onClick={() => setIsPanelVisible(!isPanelVisible)}
+                  css={css`
+                    justify-self: center;
+                    border: 1px solid red;
+                    border-radius: 20px;
+                    background: red;
+                    border: 1px solid red;
+                    border-radius: 20px;
+                    color: white;
+                    gap: 10px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    padding: 6px 10px;
+                    @media (min-width: 480px) {
+                      display: none;
+                    }
+                  `}
+                >
+                  {isPanelVisible ? (
+                    <>
+                      Chiudi <Logo />
+                    </>
+                  ) : (
+                    <>
+                      <Logo />
+                    </>
+                  )}
+                </button> */}
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      <div
+        ref={(element) => openk9.updateConfiguration({ tabs: element })}
+        className="openk9-container-tabs"
+        css={css`
+          grid-area: tabs;
+          overflow: auto;
+          padding-top: 8px;
+          padding-bottom: 16px;
+          height: max-content;
+          @media (max-width: 480px) {
+            display: none;
+          }
+        `}
+      />
 
       <div
         className="openk9-filters-mobile-container openk9-box"
@@ -486,7 +446,7 @@ export function App() {
           height: fit-content;
           border-radius: 8px;
 
-          @media (max-width: 480px) {
+          @media (max-width: 767px) {
             display: none;
           }
         `}
@@ -522,6 +482,16 @@ export function App() {
           </h2>
         </div>
         <div
+          css={css`
+            padding: 16px;
+          `}
+          ref={(element) =>
+            openk9.updateConfiguration({
+              dataRangePickerVertical: { element },
+            })
+          }
+        ></div>
+        <div
           className="openk9-filters-container openk9-box"
           ref={(element) =>
             openk9.updateConfiguration({
@@ -545,18 +515,7 @@ export function App() {
               display: none;
             }
           `}
-        >
-          <div
-            css={css`
-              padding: 16px;
-            `}
-            ref={(element) =>
-              openk9.updateConfiguration({
-                dataRangePickerVertical: { element },
-              })
-            }
-          ></div>
-        </div>
+        ></div>
       </div>
 
       {searchText !== undefined && (
@@ -586,11 +545,10 @@ export function App() {
               css={css`
                 justify-self: center;
                 border: 1px solid red;
-                border-radius: 20px;
                 background: red;
                 border: 1px solid red;
-                border-radius: 20px;
-                padding: 10px;
+                border-radius: 8px;
+                padding: 8px;
                 color: white;
                 gap: 10px;
                 cursor: pointer;
@@ -641,9 +599,63 @@ export function App() {
           grid-area: result;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
           overflow: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
           height: max-content;
+          @media (max-width: 480px) {
+            padding-inline: 16px;
+            gap: 10px;
+          }
         `}
-      />
+      >
+        {
+          <div
+            css={css`
+              display: flex;
+              justify-content: space-between;
+              background-color: white;
+              align-items: center;
+              @media (max-width: 480px) {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+                border-radius: 8px;
+              }
+            `}
+          >
+            <div
+              css={css`
+                padding: 16px;
+                border-radius: 8px;
+                font-weight: 700;
+                width: 100%;
+                @media (max-width: 480px) {
+                  padding: 0;
+                  padding-bottom: 8px;
+                }
+              `}
+            >
+              Numero di risultati:
+              <span
+                css={css`
+                  color: var(--openk9-embeddable-search--primary-color);
+                  margin-left: 5px;
+                `}
+              >
+                {numberOfResults}
+              </span>
+            </div>
+            <div
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  sortResults: { element },
+                })
+              }
+            ></div>
+          </div>
+        }
+      </div>
 
       <div
         className="openk9-results-container openk9-box"
