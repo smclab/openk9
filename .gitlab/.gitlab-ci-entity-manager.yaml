@@ -20,6 +20,8 @@ Build Entity-Manager image:
   variables:
     COMPONENT: "entity-manager"
   stage: build-image
+  before_script:
+    - apt-get update && apt-get install -y maven
   script:
     - cd core
     - echo "Running on branch:$CI_COMMIT_BRANCH"

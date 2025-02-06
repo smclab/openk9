@@ -6,8 +6,11 @@ stages:
   - maven_dependency_check
   - quality
   - container-scanning
-
-
+  - dependency-check
+  - build
+  - build-verifier
+  - publish
+  
 #Cache globale differenziata per ambienti o dipendenze specifiche
 cache:
   key: "maven-dependencies-${CI_COMMIT_REF_NAME}"
@@ -15,6 +18,8 @@ cache:
     - .m2/repository
   policy: pull-push
 
+variables:
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 
 include:
@@ -22,6 +27,7 @@ include:
   - local: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
   - local: '/.gitlab/.gitlab-ci-site.yaml'
   - local: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
+  - local: '/.gitlab/.gitlab-templates.yaml'
 
 
 ####################################################
@@ -220,6 +226,100 @@ Trigger Tika no-ocr:
   trigger:
     include: '/.gitlab/.gitlab-ci-tika-no-ocr.yaml'
 
+
+
+##########################################################################################################################
+#############################################  Pipeline FRONT-END   ######################################################
+##########################################################################################################################
+
+
+####################################################
+#################   Search Front-end   #############
+####################################################
+
+
+
+Trigger Search Frontend:
+  stage: trigger
+  rules:
+
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/search-frontend/**/*
+
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/search-frontend/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-search-frontend.yaml'
+    strategy: depend
+
+####################################################
+#################   Admin Front-end   #############
+####################################################
+
+Trigger Admin Frontend:
+  stage: trigger
+  rules:
+
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/admin-ui/**/*
+
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/admin-ui/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
+    strategy: depend
+
+####################################################
+#################   Tenant Front-end   #############
+####################################################
+
+Trigger Tenant Frontend:
+  stage: trigger
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/tenant-ui/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/tenant-ui/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
+    strategy: depend
+
+
+
+####################################################
+###############   Dependency Check FE   ############
+####################################################
+
+Dependency Check:
+  stage: dependency-check
+  image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
+  variables:
+    TOOL: yarn
+  script:
+    - cd js-packages/admin-ui
+    - /analyzer run
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+    paths:
+      - gl-dependency-scanning-report.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/**/*
+
+############################################   FINE PIPELINE-FRONTEND   ####################################################
+
+
 ##################################################################################################
 #  Rerfactoring delle 2 installazioni mvn per alleggerire il carico e non andare out of memory   #
 ##################################################################################################
@@ -229,7 +329,7 @@ Trigger Tika no-ocr:
 
 Maven Install Hibernate:
   stage: maven_build
-  image: maven:3.9.9-eclipse-temurin-21
+  image: maven:3.9.6-eclipse-temurin-21
   script:
     - cd vendor/hibernate-rx-multitenancy
     - mvn install
@@ -263,13 +363,13 @@ Maven Install Hibernate:
 
 Maven Install Core:
   stage: maven_build
-  image: maven:3.9.9-eclipse-temurin-21
+  image: maven:3.9.6-eclipse-temurin-21
   needs:
     - job: "Maven Install Hibernate"
       artifacts: true
   script:
     - cd core
-    - mvn install -P '!dependency-check, exclude-quarkus-test'
+    - mvn install -P 'exclude-quarkus-test'
   artifacts:
     paths:
       - core/target
@@ -301,7 +401,7 @@ Maven Install Core:
 
 Maven Dependency Check:
   stage: maven_dependency_check
-  image: maven:3.9.9-eclipse-temurin-21
+  image: maven:3.9.6-eclipse-temurin-21
   needs:
     - job: "Maven Install Core"
       artifacts: true

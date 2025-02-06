@@ -1,55 +1,105 @@
-Build Search Frontend Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 0
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - main
-    changes:
-      - js-packages/search-frontend/**/*
-      - .gitlab/.gitlab-ci-search-frontend.yml
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t search-frontend:latest -f js-packages/search-frontend/Dockerfile .
-    - docker tag search-frontend:latest $CI_REGISTRY_NAME/openk9/search-frontend:latest
-    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:latest
+stages:
+  - build
+  - container-scanning
+  - restart
+  - quality
+  - build-verifier
+  - publish
 
-Build Tagged Frontend Docker Image:
-  image: docker:19.03.13
-  services:
-    - docker:19.03.13-dind
-  stage: build-image
-  variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
-  only:
-    refs:
-      - tags
-    changes:
-      - js-packages/rest-api/**/*
-      - js-packages/search-ui-components/**/*
-      - js-packages/plugin-scripts/**/*
-      - js-packages/search-customizable-ui/**/*
-      - js-packages/search-frontend/**/*
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+# SonarQube Analysis
+SonarQube:
+  stage: quality
+  image: sonarsource/sonar-scanner-cli:latest
   script:
-    - docker build -t search-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-frontend/Dockerfile .
-    - docker tag search-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
+    - sonar-scanner -Dsonar.projectKey=search-frontend -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+# Build Docker Image - non c'è ancora Docker in docker, questa pipeline non parte
+Build Search Frontend:
+  stage: build
+  image: docker:24.0.2
+  variables:
+    DOCKER_BUILDKIT: 1  # Abilita BuildKit per una build più veloce
+  before_script:
+    - apk add --no-cache docker  # Installa Docker CLI
+    - dockerd &  # Avvia temporaneamente il daemon Docker
+    - while(! docker info > /dev/null 2>&1); do echo "Waiting for Docker to start..."; sleep 1; done
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USERNAME" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY/search-frontend:latest -f js-packages/search-frontend/Dockerfile .
+    - docker push $CI_REGISTRY/search-frontend:latest
+  after_script:
+    - kill $(cat /var/run/docker.pid)  # Arresta il daemon Docker
+  rules:
+    - when: never
+
+
+# Container Scanning
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  variables:
+    SCAN_IMAGE: "$CI_REGISTRY/search-frontend:latest"
+  script:
+    - container-scanning scan --image $SCAN_IMAGE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+
+
+# Trigger Restart
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for Search Frontend"
+    - |
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-admin-frontend" \
+        -F "ref=main" \
+        "${RESTART_TRIGGER_URL}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+# Build Verifier
+Build Verifier:
+  stage: build-verifier
+  #immagine con node/npm per provare yarn install e build
+  image: node:14
+  script:
+    - cd js-packages/search-frontend
+    - yarn install
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/search-frontend/**/*
+    # quando c'è merge request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+
+
+# Publish
+Publish Search Frontend:
+  stage: publish
+  image: node:16    
+  script:
+    - cd js-packages/search-frontend
+    - pwd
+    - whoami
+    - yarn install
+    # Imposta il token npm nel file .npmrc dell'utente corrente, così npm publish
+    # può autenticarsi su npmjs.com
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+    - npm publish --access public
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - when: never
+

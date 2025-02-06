@@ -1,52 +1,85 @@
-Build Latest Admin Ui Docker Image:
+stages:
+  - build
+  - container-scanning
+  - restart
+  - quality
+  - build-verifier
+
+
+
+
+
+# SonarQube Analysis
+SonarQube:
+  stage: quality
+  image: sonarsource/sonar-scanner-cli:latest
+  script:
+    - sonar-scanner -Dsonar.projectKey=admin-frontend -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+
+# Build Docker Image
+Build Admin Frontend:
+  stage: build
   image: docker:24.0.2
   services:
     - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 0
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - main
-    changes:
-      - js-packages/admin-ui/**/*
-      - .gitlab/.gitlab-ci-admin-frontend.yml
-  except:
-    - schedules
+
   before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -t openk9-admin-ui:latest -f js-packages/admin-ui/Dockerfile .
-    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+    - docker build -t $CI_REGISTRY/admin-frontend:latest -f js-packages/admin-ui/Dockerfile .
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
+        docker push $CI_REGISTRY/admin-frontend:latest
+      fi
+  rules:
+    #- changes:
+    #    - js-packages/admin-ui/**/*
+    - when: never
+
+# Container Scanning (se non funge, comparare con search-frontend)
+Container Scanning:
+  stage: container-scanning
+  extends: .container-scanning-template
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Trigger Restart
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for Admin Frontend"
+    - |
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-admin-frontend" \
+        -F "ref=main" \
+        "${RESTART_TRIGGER_URL}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 
-Build Tagged Admin Ui Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - tags
-    changes:
-      - js-packages/admin-ui/**/*
-  except:
-    - schedules
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+
+
+
+
+
+# Build Verifier
+Build Verifier:
+  stage: build-verifier
+  #immagine con node/npm per provare yarn install e build
+  image: node:14
   script:
-    - docker build -t openk9-admin-ui:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
-    - docker tag openk9-admin-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/openk9-admin-ui:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9openk9-admin-ui:${CI_COMMIT_REF_NAME}
+    - cd js-packages/admin-ui
+    - yarn install
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/admin-ui/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

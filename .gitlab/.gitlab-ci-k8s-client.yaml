@@ -21,6 +21,8 @@ Build K8S-Client image:
   variables:
     COMPONENT: "k8s-client"
   stage: build-image
+  before_script:
+    - apt-get update && apt-get install -y maven
   script:
     - cd core
     - |

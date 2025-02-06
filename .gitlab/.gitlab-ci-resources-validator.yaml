@@ -19,8 +19,10 @@ include:
 Build Resources-Validator image:
   extends: .build_template
   variables:
-    COMPONENT: "resources-validator"
+    COMPONENT: "resources-validatore"
   stage: build-image
+  before_script:
+    - apt-get update && apt-get install -y maven
   script:
     - cd core
     - |
