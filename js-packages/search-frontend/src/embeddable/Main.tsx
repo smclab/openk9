@@ -56,6 +56,7 @@ import SelectComponent from "../components/Select";
 import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 import GenerateResponse from "../components/GenerateResponse";
+import { useRange } from "../components/useRange";
 
 type MainProps = {
   configuration: Configuration;
@@ -195,7 +196,6 @@ export function Main({
       window.removeEventListener("resize", checkIfMobile);
     };
   }, []);
-
   React.useEffect(() => {
     const checkIfMobile = () => {
       const isMobileMinWidth = window.innerWidth <= 380;
@@ -516,12 +516,10 @@ export function Main({
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
               selectOptions={sortList}
-              classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
               templateCustom={configuration.template}
               setViewButtonDetail={setViewButtonDetail}
-              selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
             />
           )}
@@ -577,14 +575,11 @@ export function Main({
               sortAfterKey={sortAfterKey}
               numberOfResults={numberOfResults}
               setIdPreview={setIdPreview}
-              selectedSort={selectedSort}
               setSelectedSort={setSelectedSort}
               counterIsVisible={
                 configuration.resultList?.counterIsVisible || false
               }
-              label={configuration.resultList?.label}
               selectOptions={sortList}
-              classNameLabel={classNameLabelSort}
               memoryResults={memoryResults}
               viewButton={viewButton}
               setViewButtonDetail={setViewButtonDetail}
@@ -959,7 +954,7 @@ function useSearch({
   >([]);
   const debounced = useDebounce(selectionsState, debounceTimeSearch);
   const infoSort = tabTokens?.sort?.sort;
-
+  const { numberOfResults } = useRange();
   const queryAnalysis = !configuration.useQueryAnalysis
     ? { data: undefined }
     : useQueryAnalysis({
@@ -1049,6 +1044,7 @@ function useSearch({
       filterTokens,
       searchTokens,
       numberOfFilters: counterTotalFilters,
+      numberOfResults: numberOfResults,
     });
     setCurrentPage(0);
   }, [
@@ -1172,14 +1168,12 @@ function useTabs(
       sortList && sortList.find((sortElement) => sortElement.isDefault);
 
     const completeTab = createTab?.map((tab) => ({ ...tab, isTab: true }));
-    return (
-      {
-        tabTokens: completeTab,
-        sort: sort?.field
-          ? { sort: { field: sort.field, type: sort.type }, isSort: true }
-          : undefined,
-      } ?? {}
-    );
+    return {
+      tabTokens: completeTab,
+      sort: sort?.field
+        ? { sort: { field: sort.field, type: sort.type }, isSort: true }
+        : undefined,
+    };
   }, [selectedTabIndex, tabs, language]);
   const [tabsValue, setTabsValue] = React.useState(tabTokens);
   React.useEffect(() => {
@@ -1442,6 +1436,7 @@ export type QueryState = {
   filterTokens: Array<SearchToken>;
   searchTokens: Array<SearchToken>;
   numberOfFilters: number;
+  numberOfResults: number;
 };
 
 function deriveSearchQuery(

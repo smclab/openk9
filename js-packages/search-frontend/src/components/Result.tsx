@@ -39,10 +39,6 @@ function Result<E>(props: ResultProps<E>) {
     templateCustom,
   } = props;
 
-  const classContainer = result?.source?.documentTypes
-    .map((element: string) => "openk9-card-" + element)
-    .join(" ", "");
-
   const getCustomTemplate = () => {
     if (!templateCustom || templateCustom.length === 0) return null;
 

@@ -235,10 +235,9 @@ function FilterCategoryDynamic({
                     padding: 3px;
                     flex-grow: 1;
                     text-indent: 25px;
-                    border-radius: 4px;
+                    border-radius: 8px;
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
-                    border-radius: 20px;
                     background: #fafafa;
                     :focus {
                       border: 1px solid
@@ -402,7 +401,7 @@ function FilterCategoryDynamic({
                   padding: 8px 16px;
                   border: 1px solid
                     var(--openk9-embeddable-search--primary-color);
-                  border-radius: 20px;
+                  border-radius: 8px;
                 `}
                 onClick={() => {
                   suggestions.fetchNextPage();
