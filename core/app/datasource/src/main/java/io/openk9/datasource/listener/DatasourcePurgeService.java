@@ -218,11 +218,12 @@ public class DatasourcePurgeService {
 			tenantId, datasourceId, maxAgeDate
 		);
 
-		return sessionFactory.withStatelessTransaction(
-			tenantId, (s, t) -> s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
-				.setParameter("id", datasourceId)
-				.setParameter("maxAgeDate", maxAgeDate)
-				.getResultList()
+		return sessionFactory.withTransaction(
+			tenantId, (s, t) ->
+				s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
+					.setParameter("id", datasourceId)
+					.setParameter("maxAgeDate", maxAgeDate)
+					.getResultList()
 		);
 
 	}

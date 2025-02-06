@@ -39,7 +39,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private enum Start implements Command {INSTANCE}
 	private enum Stop implements Command {INSTANCE}
 	private enum FetchDataIndexOrphans implements Command {INSTANCE}
-	private record PrepareChunks(List<DataIndex> dataIndices) implements Command {}
+	private record PrepareChunks(List<DataIndex> dataIndices, Throwable throwable) implements Command {}
 	private enum WorkNextChunk implements Command {INSTANCE}
 
 	@Override
@@ -125,9 +125,8 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private Behavior<Command> onFetchDataIndexOrphans() {
 
 		getContext().pipeToSelf(
-			DatasourcePurgeService.fetchOrphans(
-				tenantName, datasourceId, maxAge),
-			(dataIndices, throwable) -> new PrepareChunks(dataIndices)
+			DatasourcePurgeService.fetchOrphans(tenantName, datasourceId, maxAge),
+			PrepareChunks::new
 		);
 
 		return Behaviors.same();
@@ -135,6 +134,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 	private Behavior<Command> onPrepareChunks(PrepareChunks prepareChunks) {
 		List<DataIndex> dataIndices = prepareChunks.dataIndices;
+		Throwable throwable = prepareChunks.throwable;
 
 		if (dataIndices != null && !dataIndices.isEmpty()) {
 			int chunkSize = 10;
@@ -167,6 +167,9 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		else {
 			getContext().getLog().info(
 				"No DataIndex orphans found for datasource {}-{}", tenantName, datasourceId);
+			if (throwable != null) {
+				getContext().getLog().error("Error fetching Dataindex orphan.", throwable);
+			}
 			getContext().getSelf().tell(Stop.INSTANCE);
 		}
 
