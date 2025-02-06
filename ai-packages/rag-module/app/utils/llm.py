@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from enum import Enum
 from typing import List
@@ -20,8 +21,16 @@ from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history, save_chat_message
 
+LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
+
+logging.basicConfig(
+    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ModelType(Enum):
@@ -285,6 +294,7 @@ def stream_rag_conversation(
         if configuration["model_type"]
         else DEFAULT_MODEL_TYPE
     )
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
@@ -317,6 +327,15 @@ def stream_rag_conversation(
     )
 
     llm = initialize_language_model(configuration)
+
+    info = {
+        "chain": "chat_chain",
+        "user_id": user_id,
+        "model_type": model_type,
+        "model": model,
+        "question": search_text[:200] + "...",
+    }
+    logger.info(json.dumps(info))
 
     contextualize_q_system_prompt = rephrase_prompt_template
 
@@ -453,6 +472,13 @@ def stream_rag_conversation(
         )
         yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
+        info = {
+            "chain": "chat_chain",
+            "user_id": user_id,
+            "conversation_title": conversation_title.strip('"'),
+        }
+        logger.info(json.dumps(info))
+
     all_citations = (
         citations.get("annotations").dict()["citations"]
         if citations
@@ -484,6 +510,14 @@ def stream_rag_conversation(
                 "type": "DOCUMENT",
             }
         )
+
+    info = {
+        "chain": "chat_chain",
+        "user_id": user_id,
+        "answer": result_answer["answer"][:200] + "...",
+        "retrieved_documents_number": len(documents),
+    }
+    logger.info(json.dumps(info))
 
     save_chat_message(
         open_search_client,

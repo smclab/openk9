@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Header, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from opensearchpy import OpenSearch
@@ -25,6 +25,7 @@ GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
+
 
 app.add_middleware(
     CORSMiddleware,
