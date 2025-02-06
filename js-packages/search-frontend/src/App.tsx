@@ -453,7 +453,7 @@ export function App() {
           border-radius: 8px;
           height: auto;
           overflow: auto;
-          @media (max-width: 767px) {
+          @media (max-width: 768px) {
             display: none;
           }
         `}
