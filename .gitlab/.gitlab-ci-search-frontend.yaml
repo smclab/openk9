@@ -81,7 +81,7 @@ Build Verifier:
     - changes:
         - js-packages/search-frontend/**/*
     # quando c'è merge request
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 
 
@@ -99,7 +99,7 @@ Publish Search Frontend:
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
     - npm publish --access public
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
     - when: never
 
