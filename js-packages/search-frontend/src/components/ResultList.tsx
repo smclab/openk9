@@ -309,10 +309,6 @@ export function InfiniteResults<E>({
         height: 100%;
         overflow-y: auto;
         overflow-x: hidden;
-        border-radius: 8px;
-        background-color: var(
-          --openk9-embeddable-search--primary-background-color
-        );
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -346,6 +342,10 @@ export function InfiniteResults<E>({
             css={css`
               list-style-type: none;
               padding: 0;
+              margin: 0;
+              gap: 10px;
+              display: flex;
+              flex-direction: column;
             `}
           >
             {results.data?.pages.map((page, pageIndex) => {
@@ -357,6 +357,14 @@ export function InfiniteResults<E>({
                         role="listitem"
                         aria-labelledby="resultid"
                         key={resultIndex}
+                        css={css`
+                          background: white;
+                          border: 2px solid transparent;
+                          border-radius: 8px;
+                          :hover {
+                            border: 2px solid gray;
+                          }
+                        `}
                       >
                         <ResultMemo<E>
                           renderers={renderers}
@@ -535,6 +543,7 @@ function NoResults() {
         justify-content: center;
         height: 100%;
         padding: 30px;
+        background: white;
       `}
     >
       <Logo size={128} />
@@ -556,7 +565,6 @@ export function useInfiniteResults<E>(
   const client = useOpenK9Client();
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
   const { setRange } = useRange();
-  const { setNumberOfResults } = useRange();
 
   return useInfiniteQuery(
     ["results", searchQueryData, sortData, language] as const,

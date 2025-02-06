@@ -29,17 +29,6 @@ body {
   overflow-x: hidden !important;
 }
 
-.openk9-embeddable-search--result-container {
-  margin: 16px 16px 0px 16px;
-  border: 2px solid
-    var(--openk9-embeddable-not-active-border-card--primary-color);
-  border-radius: 4px;
-}
-
-.openk9-embeddable-search--result-container:hover {
-  border: 2px solid var(--openk9-embeddable-active-border-card--primary-color);
-}
-
 .openk9-embeddable-search--result-badge {
   padding: 8px 16px;
   background-color: var(--openk9-embeddable-search--secondary-background-color);

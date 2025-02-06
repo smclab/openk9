@@ -108,6 +108,7 @@ export function App() {
           "tabs tabs tabs"
           "filters panel panel"
           "filters result detail";
+        padding: 20px;
 
         @media (max-width: 480px) {
           padding: 0;
@@ -144,6 +145,12 @@ export function App() {
             "filters panel"
             "filters result";
             "result";
+
+        }
+
+         @media (min-width: 1024px) and (max-width: 1280px) {
+        grid-template-columns: 1.2fr 2.3fr 1.8fr;
+        grid-template-rows: auto auto auto auto 1fr;
 
         }
       `}
@@ -443,9 +450,9 @@ export function App() {
           flex-direction: column;
           gap: 3px;
           box-sizing: border-box;
-          height: fit-content;
           border-radius: 8px;
-
+          height: auto;
+          overflow: auto;
           @media (max-width: 767px) {
             display: none;
           }
@@ -597,12 +604,13 @@ export function App() {
         }
         css={css`
           grid-area: result;
-          margin-top: ${searchText !== undefined ? "20px" : "unset"};
+          margin-top: ${searchText !== undefined ? "10px" : "unset"};
           overflow: auto;
           display: flex;
           flex-direction: column;
-          gap: 20px;
-          height: max-content;
+          gap: 10px;
+          height: auto;
+
           @media (max-width: 480px) {
             padding-inline: 16px;
             gap: 10px;
@@ -616,18 +624,17 @@ export function App() {
               justify-content: space-between;
               background-color: white;
               align-items: center;
+              border-radius: 8px;
               @media (max-width: 480px) {
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 16px;
-                border-radius: 8px;
               }
             `}
           >
             <div
               css={css`
                 padding: 16px;
-                border-radius: 8px;
                 font-weight: 700;
                 width: 100%;
                 @media (max-width: 480px) {
@@ -701,7 +708,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          height: fit-content;
+          height: auto;
           border-radius: 8px;
           border: 1px solid var(--openk9-embeddable-search--border-color);
           margin-top: ${searchText !== undefined ? "20px" : "unset"};

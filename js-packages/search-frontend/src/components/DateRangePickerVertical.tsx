@@ -186,7 +186,6 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleStartDateChange}
             css={css`
-              min-width: 130px;
               width: 100%;
               border: transparent;
               background: transparent;
@@ -291,7 +290,6 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleEndDateChange}
             css={css`
-              min-width: 130px;
               width: 100%;
               border: transparent;
               background: transparent;
