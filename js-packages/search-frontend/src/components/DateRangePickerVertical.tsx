@@ -125,15 +125,24 @@ export function DataRangePickerVertical({
         height: "100%",
         justifyContent: "center",
         flexDirection: "column",
+        gap: "10px",
       }}
     >
       <div className="DateRangePickerVertical-startDate-container">
-        <p className="DateRangePickerVertical-date-title">
+        <p
+          className="DateRangePickerVertical-date-title"
+          css={css`
+            font-weight: 700;
+          `}
+        >
           Dal ({t("gg/mm/aaaa")}):
         </p>
         <div
           css={css`
             display: flex;
+            border: 1px solid gray;
+            border-radius: 8px;
+            gap: 20px;
           `}
         >
           <label
@@ -177,23 +186,13 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleStartDateChange}
             css={css`
-              border-top: 1px solid black;
-              border-left: 1px solid black;
-              border-bottom: 1px solid black;
               min-width: 130px;
               width: 100%;
-              height: 42px;
+              border: transparent;
+              background: transparent;
             `}
           />
-          <div
-            className="openk9-calendar-button"
-            css={css`
-              border-top: 1px solid black;
-              border-bottom: 1px solid black;
-              border-left: none;
-              border-right: 1px solid black;
-            `}
-          >
+          <div className="openk9-calendar-button" css={css``}>
             <SingleDatePicker
               date={start || startDate}
               numberOfMonths={1}
@@ -236,12 +235,19 @@ export function DataRangePickerVertical({
         </p>
       )}
       <div className="DateRangePickerVertical-endDate-container">
-        <p className="DateRangePickerVertical-date-title">
+        <p
+          className="DateRangePickerVertical-date-title"
+          css={css`
+            font-weight: 700;
+          `}
+        >
           Al ({t("gg/mm/aaaa")}):
         </p>
         <div
           css={css`
             display: flex;
+            border: 1px solid gray;
+            border-radius: 8px;
           `}
         >
           <label
@@ -285,12 +291,10 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleEndDateChange}
             css={css`
-              border-top: 1px solid black;
-              border-left: 1px solid black;
-              border-bottom: 1px solid black;
               min-width: 130px;
               width: 100%;
-              height: 42px;
+              border: transparent;
+              background: transparent;
             `}
           />
           <style>{`
@@ -301,15 +305,7 @@ export function DataRangePickerVertical({
                       width:88%;
                     }
          `}</style>
-          <div
-            className="openk9-calendar-button"
-            css={css`
-              border-top: 1px solid black;
-              border-bottom: 1px solid black;
-              border-left: none;
-              border-right: 1px solid black;
-            `}
-          >
+          <div className="openk9-calendar-button" css={css``}>
             <SingleDatePicker
               date={end || endDate}
               numberOfMonths={1}
