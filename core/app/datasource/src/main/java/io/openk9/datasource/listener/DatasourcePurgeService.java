@@ -179,7 +179,7 @@ public class DatasourcePurgeService {
 			);
 
 		log.infof(
-			"Deleting Opensearch orphans indices for datasource {}-{}",
+			"Deleting Opensearch orphans indices for datasource %s-%s",
 			tenantId, datasourceId
 		);
 

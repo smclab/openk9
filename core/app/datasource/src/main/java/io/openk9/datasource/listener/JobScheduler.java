@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.listener;
 
-import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -55,9 +54,6 @@ import java.util.UUID;
 
 public class JobScheduler {
 
-	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
-	private static final String PURGE_SUFFIX = "-purge";
-	private static final String REINDEX_SUFFIX = "-reindex";
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
 	public static Behavior<Command> create(
@@ -454,9 +450,12 @@ public class JobScheduler {
 
 		String jobName = tenantName + "-" + datasourceId;
 
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + REINDEX_SUFFIX));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.TRIGGER.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.REINDEX.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.PURGE.name().toLowerCase()));
 
 		return Behaviors.same();
 
