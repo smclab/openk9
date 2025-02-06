@@ -1,10 +1,10 @@
 stages:
-  - build
-  - container-scanning
-  - restart
   - quality
   - build-verifier
   - publish
+  - build
+  - container-scanning
+  - restart
 
 # SonarQube Analysis
 SonarQube:
