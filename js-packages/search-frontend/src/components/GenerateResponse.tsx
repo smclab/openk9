@@ -4,6 +4,7 @@ import React from "react";
 import isEqual from "lodash/isEqual";
 import { recoverySearchQueryAndSort } from "./ResultList";
 import { useRange } from "./useRange";
+import Markdown from "react-markdown";
 
 export default function GenerateResponse({
   question,
@@ -68,7 +69,11 @@ export default function GenerateResponse({
             {isChatting || loadingSearch ? (
               <SmallLoader />
             ) : (
-              message?.answer && <Answer>{message.answer}</Answer>
+              message?.answer && (
+                <Answer>
+                  <Markdown>{message.answer}</Markdown>
+                </Answer>
+              )
             )}
           </ContainerBox>
         </Container>
@@ -78,9 +83,8 @@ export default function GenerateResponse({
 }
 const Container = styled.div`
   background: white;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 16px;
 `;
 
 const ContainerBox = styled.div`
