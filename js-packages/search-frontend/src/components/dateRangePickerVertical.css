@@ -17,10 +17,6 @@
   margin: 5px 0;
 }
 
-.DateRangePickerVertical-startDate-container {
-  margin: 0 0 10px 0;
-}
-
 .SingleDatePickerInput__showClearDate {
   padding-right: 0;
 }
@@ -71,5 +67,5 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .SingleDatePickerInput_clearDate__default_2 {
-  left: -100%;
+  left: -60%;
 }
