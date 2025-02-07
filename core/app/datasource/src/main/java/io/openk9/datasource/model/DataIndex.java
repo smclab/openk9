@@ -43,6 +43,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -55,7 +56,9 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor(staticName = "of")
 public class DataIndex extends K9Entity {
 
-	@Column(name = "name", nullable = false, unique = true)
+	@Column(
+		name = "name", nullable = false, unique = true, updatable = false)
+	@Immutable
 	private String name;
 
 	@Column(name = "description", length = 4096)
@@ -85,7 +88,8 @@ public class DataIndex extends K9Entity {
 	@Getter(AccessLevel.NONE)
 	private String indexName;
 
-	@Column(name = "knn_index")
+	@Column(name = "knn_index", updatable = false)
+	@Immutable
 	private Boolean knnIndex = false;
 
 	@JsonIgnore

@@ -131,7 +131,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 							.createByDatasourceConnection(
 								session,
 								datasource,
-								datasourceConnectionDTO.getDataIndexDTO()
+								datasourceConnectionDTO.getDataIndex()
 							)
 							.invoke(datasource::setDataIndex)
 							.flatMap(__ -> persist(session, datasource))
@@ -533,7 +533,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		UpdateDatasourceConnectionDTO updateConnectionDTO) {
 
 		var dataIndexId = updateConnectionDTO.getDataIndexId();
-		var dataIndexDTO = updateConnectionDTO.getDataIndexDTO();
+		var dataIndexDTO = updateConnectionDTO.getDataIndex();
 
 		if (dataIndexId <= 0L) {
 			return dataIndexService.createByDatasourceConnection(
@@ -543,7 +543,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			);
 		}
 		else {
-			// todo: cannot be done
 			return dataIndexService.update(
 				session, dataIndexId, dataIndexDTO);
 

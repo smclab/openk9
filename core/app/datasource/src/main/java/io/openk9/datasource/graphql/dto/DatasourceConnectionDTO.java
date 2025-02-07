@@ -54,6 +54,6 @@ public class DatasourceConnectionDTO extends DatasourceDTO {
 
 	@Nullable
 	@Description("Configurations used to create the dataIndex (optional)")
-	private DataIndexDTO dataIndexDTO;
+	private DataIndexDTO dataIndex;
 
 }
