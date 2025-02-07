@@ -543,6 +543,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			);
 		}
 		else {
+			// todo: cannot be done
 			return dataIndexService.update(
 				session, dataIndexId, dataIndexDTO);
 

@@ -59,7 +59,7 @@ class DynamicMappingDataIndexTest {
 
 		asserter.assertThat(
 			() -> sessionFactory.withTransaction((s, t) ->
-				indexMappingService.generateDocTypeFieldsFromPluginDriverRequest(
+				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
 					s,
 					HttpPluginDriverInfo.builder()
 						.host(WireMockPluginDriver.HOST)

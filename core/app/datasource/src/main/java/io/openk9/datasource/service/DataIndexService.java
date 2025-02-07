@@ -17,27 +17,23 @@
 
 package io.openk9.datasource.service;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.IndexService;
-import io.openk9.datasource.index.mappings.IndexMappingsUtil;
-import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DataIndex_;
@@ -45,38 +41,26 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.datasource.web.DataIndexResource;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.opensearch.OpenSearchStatusException;
-import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.opensearch.action.support.IndicesOptions;
-import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.IndicesClient;
-import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
-import org.opensearch.cluster.metadata.ComposableIndexTemplate;
-import org.opensearch.cluster.metadata.Template;
-import org.opensearch.common.compress.CompressedXContent;
-import org.opensearch.common.settings.Settings;
 
 @ApplicationScoped
 public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
+
+	public static final String DETAILS_FIELD = "details";
 
 	@Inject
 	DocTypeService docTypeService;
@@ -86,8 +70,6 @@ public class DataIndexService
 	RestHighLevelClient restHighLevelClient;
 	@Inject
 	IndexMappingService indexMappingService;
-
-	private static final String DETAILS_FIELD = "details";
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
@@ -230,63 +212,6 @@ public class DataIndexService
 		return DataIndex.class;
 	}
 
-	@Override
-	public Uni<DataIndex> deleteById(long entityId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, entityId)
-				.onItem()
-				.transformToUni(dataIndex -> Uni.createFrom()
-					.<AcknowledgedResponse>emitter(emitter -> {
-
-						try {
-							DeleteIndexRequest deleteIndexRequest =
-								new DeleteIndexRequest(dataIndex.getIndexName());
-
-							deleteIndexRequest
-								.indicesOptions(
-									IndicesOptions.fromMap(
-										Map.of("ignore_unavailable", true),
-										deleteIndexRequest.indicesOptions()
-									)
-								);
-
-							AcknowledgedResponse delete = restHighLevelClient.indices().delete(
-								deleteIndexRequest,
-								RequestOptions.DEFAULT
-							);
-
-							emitter.complete(delete);
-						}
-						catch (UnknownTenantException | IOException e) {
-							emitter.fail(e);
-						}
-					})
-				)
-				.onItem()
-				.transformToUni(ignore -> findById(s, entityId)
-					.call(dataIndex -> s.fetch(dataIndex.getDocTypes())))
-				.onItem()
-				.transformToUni(dataIndex -> {
-					dataIndex.getDocTypes().clear();
-					return s.persist(dataIndex);
-				})
-				.onItem()
-				.transformToUni(ignore -> deleteById(s, entityId))
-		);
-	}
-
-	public Uni<DocTypeField> getEmbeddingDocTypeField(long id) {
-		return sessionFactory.withTransaction((s, t) -> findById(s, id)
-			.flatMap(dataIndex -> s.fetch(dataIndex.getEmbeddingDocTypeField()))
-		);
-	}
-
-	@Override
-	public Uni<DataIndex> create(Mutiny.Session s, DataIndexDTO dto) {
-		var dataIndex = ((DataIndexMapper) mapper).create(dto, s);
-		return create(s, dataIndex);
-	}
-
 	/**
 	 * Create a new DataIndex for the datasource,
 	 * this dataIndex will be created with a set of docTypes generated from
@@ -303,8 +228,8 @@ public class DataIndexService
 
 		var pluginDriver = datasource.getPluginDriver();
 		var jsonConfig = pluginDriver.getJsonConfig();
-		var pluginDriverRequest
-			= Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+		var pluginDriverInfo =
+			Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
 
 		DataIndexDTO dto;
 		if (dataIndexDTO == null) {
@@ -318,39 +243,26 @@ public class DataIndexService
 			var dataIndexName = OpenSearchUtils.indexNameSanitizer(String.format(
 				"%s-%s",
 				datasource.getName(),
-				OffsetDateTime.now().toEpochSecond()
+				UUID.randomUUID()
 			));
 			dto.setName(dataIndexName);
 		}
 
-		return indexMappingService.generateDocTypeFieldsFromPluginDriverRequest(
-				session, pluginDriverRequest)
+		return indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
+				session, pluginDriverInfo)
 			.flatMap(docTypes -> {
-					var dataIndex = ((DataIndexMapper) mapper)
-						.create(dto, session);
-
-					dataIndex.setDatasource(datasource);
-					dataIndex.setDocTypes(docTypes);
-					return merge(session, dataIndex);
-				}
-			);
+				var dataIndex = createMapper(session, dto);
+				dataIndex.setDatasource(datasource);
+				dataIndex.setDocTypes(docTypes);
+				return merge(session, dataIndex);
+			});
 
 	}
 
-	@Override
-	public Uni<DataIndex> update(Mutiny.Session s, long id, DataIndexDTO dto) {
-
-		return findById(s, id)
-			.onItem().ifNotNull()
-			.transformToUni(
-				(prev) -> persist(s, ((DataIndexMapper) mapper).update(prev, dto, s))
-					.invoke(newEntity -> super.getProcessor().onNext(
-						K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
-			.onItem().ifNull().failWith(
-				() -> new IllegalStateException(
-					"entity: " + dto.getClass().getSimpleName() + " with id: " +
-					id + " not found"));
+	public Uni<DocTypeField> getEmbeddingDocTypeField(long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(dataIndex -> s.fetch(dataIndex.getEmbeddingDocTypeField()))
+		);
 	}
 
 	public Uni<DataIndex> createDataIndexFromDocTypes(
@@ -369,106 +281,101 @@ public class DataIndexService
 						" docTypeIds requested: " + docTypeIds.size());
 				}
 
-				DataIndex dataIndex = new DataIndex();
+				DataIndex transientDataIndex = new DataIndex();
 
-				dataIndex.setDescription("auto-generated");
+				transientDataIndex.setName(dataIndexName);
 
-				dataIndex.setName(dataIndexName);
+				transientDataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
 
-				dataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
+				transientDataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-				dataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
-
-				return persist(s, dataIndex)
-					.map(__ -> {
-						Map<MappingsKey, Object> mappings =
-							IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
-
-						Settings settings;
-
-						Map<String, Object> settingsMap =
-							indexSettings != null && !indexSettings.isEmpty() ?
-								indexSettings :
-								IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
-
-						if (settingsMap.isEmpty()) {
-							settings = Settings.EMPTY;
-						}
-						else {
-							settings = Settings.builder()
-								.loadFromMap(settingsMap)
-								.build();
-						}
-
-						PutComposableIndexTemplateRequest
-							putComposableIndexTemplateRequest =
-							new PutComposableIndexTemplateRequest();
-
-						ComposableIndexTemplate composableIndexTemplate = null;
-
-						try {
-							var indexName = dataIndex.getIndexName();
-
-							composableIndexTemplate = new ComposableIndexTemplate(
-								List.of(indexName),
-								new Template(settings, new CompressedXContent(
-									Json.encode(mappings)), null),
-								null, null, null, null
-							);
-
-							putComposableIndexTemplateRequest
-								.name(indexName + "-template")
-								.indexTemplate(composableIndexTemplate);
-
-							return putComposableIndexTemplateRequest;
-						}
-						catch (UnknownTenantException e) {
-							throw new WebApplicationException(Response
-								.status(Response.Status.INTERNAL_SERVER_ERROR)
-								.entity(JsonObject.of(
-									DETAILS_FIELD, "cannot obtain a proper index name"
-								))
-								.build());
-						}
-						catch (IOException e) {
-							throw new WebApplicationException(Response
-								.status(Response.Status.INTERNAL_SERVER_ERROR)
-								.entity(JsonObject.of(
-									DETAILS_FIELD, "failed creating IndexTemplate"
-								))
-								.build());
-						}
-
-					})
-					.call((req) -> Uni.createFrom().emitter((sink) -> {
-
-						try {
-							IndicesClient indices = restHighLevelClient.indices();
-
-							indices.putIndexTemplate(req, RequestOptions.DEFAULT);
-
-							sink.complete(null);
-						}
-						catch (OpenSearchStatusException e) {
-							sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
-								.status(e.status().getStatus())
-								.entity(JsonObject.of(
-									DETAILS_FIELD, e.getMessage()))
-								.build()));
-						}
-						catch (Exception e) {
-							sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
-								.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
-								.entity(JsonObject.of(
-									DETAILS_FIELD, e.getMessage()))
-								.build()));
-						}
-
-					}))
-					.map(__ -> dataIndex);
-
+				return persist(s, transientDataIndex)
+					.flatMap(dataIndex -> indexService
+						.createIndexTemplate(indexSettings, dataIndex)
+						.map(unused -> dataIndex)
+					);
 			})
 		);
+	}
+
+	@Override
+	public Uni<DataIndex> deleteById(long entityId) {
+		return sessionFactory.withTransaction(s -> findById(s, entityId)
+			.call(indexService::deleteIndex)
+			.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
+			.flatMap(dataIndex -> {
+				dataIndex.getDocTypes().clear();
+				return s.persist(dataIndex);
+			})
+			.flatMap(ignore -> deleteById(s, entityId))
+		);
+	}
+
+	@Override
+	public Uni<DataIndex> update(
+		Mutiny.Session session, long id, DataIndexDTO dto) {
+
+		return findThenMapAndPersist(
+			session, id, dto,
+			(dIdx, dIdxDto) -> updateMapperClosure(
+				session, dIdx, dIdxDto)
+		);
+	}
+
+	@Override
+	protected Uni<DataIndex> patch(
+		Mutiny.Session session, long id, DataIndexDTO dto) {
+
+		return findThenMapAndPersist(
+			session, id, dto,
+			(dIdx, dIdxDto) -> patchMapperClosure(
+				session, dIdx, dIdxDto)
+		);
+	}
+
+	private DataIndex createMapper(
+		Mutiny.Session session, DataIndexDTO dto) {
+
+		var dataIndex = mapper.create(dto);
+
+		if (dto.getEmbeddingDocTypeFieldId() != null) {
+			dataIndex.setEmbeddingDocTypeField(session.getReference(
+					DocTypeField.class,
+					dto.getEmbeddingDocTypeFieldId()
+				)
+			);
+		}
+
+		return dataIndex;
+	}
+
+	private DataIndex patchMapperClosure(
+		Mutiny.Session session, DataIndex prev, DataIndexDTO dto) {
+
+		var patched = mapper.patch(prev, dto);
+
+		if (dto.getEmbeddingDocTypeFieldId() != null) {
+			patched.setEmbeddingDocTypeField(session.getReference(
+				DocTypeField.class, dto.getEmbeddingDocTypeFieldId()));
+		}
+
+		return patched;
+	}
+
+	private DataIndex updateMapperClosure(
+		Mutiny.Session session, DataIndex prev, DataIndexDTO dto) {
+
+		var updated = mapper.update(prev, dto);
+
+		if (dto.getEmbeddingDocTypeFieldId() == null) {
+			updated.setEmbeddingDocTypeField(null);
+		}
+		else {
+			updated.setEmbeddingDocTypeField(session.getReference(
+				DocTypeField.class, dto.getEmbeddingDocTypeFieldId()));
+		}
+
+		return updated;
 	}
 
 }

@@ -19,46 +19,148 @@ package io.openk9.datasource.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
-import io.openk9.datasource.mapper.DatasourceMapper;
-import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
+import io.openk9.datasource.resource.util.Pageable;
 
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.Mock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentMatchers;
 
 @QuarkusTest
 class UpdateDatasourceConnectionTest {
 
+	private static final String TENANT_ID = "public";
+	private static final String ENRICH_ITEM_1 = "UDCT.enrichItem1";
+	private static final String ENRICH_ITEM_2 = "UDCT.enrichItem2";
+	private static final String ENRICH_PIPELINE = "UDCT.enrichPiepeline";
+	private static final String PLUGIN_DRIVER = "UDCT.pluginDriver";
+	private static final String DATASOURCE = "UDCT.datasource";
+	private static final String JSON_PATH = "$";
+	private static final String JSON_CONFIG = "{}";
+	private static final long REQUEST_TIMEOUT = 60000L;
+
 	@Inject
 	DatasourceService datasourceService;
-	@InjectMock
+	@InjectSpy
 	PluginDriverService pluginDriverService;
-	@InjectMock
+	@InjectSpy
 	EnrichPipelineService enrichPipelineService;
-	@InjectMock
+	@InjectSpy
 	DataIndexService dataIndexService;
+	@Inject
+	EnrichItemService enrichItemService;
+	@Inject
+	DocTypeService docTypeService;
+	@InjectMock
+	IndexService indexService;
+
+	private long datasourceId;
+	private long dataIndexId;
+	private long pipelineId;
+	private long pluginDriverId;
+	private long embeddingDocTypeFieldId;
+
+	@BeforeEach
+	void setup() {
+
+		var enrich1 = enrichItemService.create(EnrichItemDTO.builder()
+			.name(ENRICH_ITEM_1)
+			.type(EnrichItem.EnrichItemType.HTTP_ASYNC)
+			.serviceName(ENRICH_ITEM_1)
+			.jsonPath(JSON_PATH)
+			.jsonConfig(JSON_CONFIG)
+			.requestTimeout(REQUEST_TIMEOUT)
+			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
+			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
+			.build()
+		).await().indefinitely();
+
+		var enrich2 = enrichItemService.create(EnrichItemDTO.builder()
+			.name(ENRICH_ITEM_2)
+			.type(EnrichItem.EnrichItemType.HTTP_SYNC)
+			.serviceName(ENRICH_ITEM_2)
+			.jsonPath(JSON_PATH)
+			.jsonConfig(JSON_CONFIG)
+			.requestTimeout(REQUEST_TIMEOUT)
+			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
+			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
+			.build()
+		).await().indefinitely();
+
+		var datasource = datasourceService.createDatasourceConnection(
+				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
+					.name(DATASOURCE)
+					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+						.name(PLUGIN_DRIVER)
+						.build()
+					)
+					.pipeline(PipelineWithItemsDTO.builder()
+						.name(ENRICH_PIPELINE)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich1.getId())
+							.weight(1)
+							.build()
+						)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich2.getId())
+							.weight(2)
+							.build()
+						)
+						.build()
+					).build()
+			)
+			.await()
+			.indefinitely();
+
+		this.pluginDriverId = pluginDriverService.findByName(TENANT_ID, PLUGIN_DRIVER)
+			.await().indefinitely().getId();
+
+		this.pipelineId = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
+			.await().indefinitely().getId();
+
+
+		this.datasourceId = datasource.getEntity().getId();
+
+		var dataIndex = datasourceService.getDataIndex(datasourceId)
+			.await().indefinitely();
+
+		this.dataIndexId = dataIndex.getId();
+
+		var docTypes = dataIndexService.getDocTypes(
+			dataIndex.getId(), Pageable.DEFAULT).await().indefinitely();
+
+		var firstDocType = docTypes.iterator().next();
+
+		var docTypeFields = docTypeService.getDocTypeFields(
+			firstDocType.getId(), Pageable.DEFAULT).await().indefinitely();
+
+		var firstDocTypeField = docTypeFields.iterator().next();
+
+		this.embeddingDocTypeFieldId = firstDocTypeField.getId();
+
+	}
 
 	// PluginDriver Tests
 
@@ -67,23 +169,20 @@ class UpdateDatasourceConnectionTest {
 	void should_bind_existing_enrichPipeline_when_enrichPipelineId_is_not_null_and_enrichPipelineDto_is_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(enrichPipelineService.findById(anySession(), anyLong()))
-			.willReturn(Uni.createFrom().item(new EnrichPipeline()));
-
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(Long.MAX_VALUE)
-					.pipelineId(Long.MAX_VALUE)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.pipelineId(pipelineId)
 					.build()
 			),
-			datasource -> then(mockSession).should(times(1)).merge(argThat(
-				UpdateDatasourceConnectionTest::hasEnrichPipeline))
+			datasource -> Assertions.assertTrue(
+				hasEnrichPipeline(datasource.getEntity())
+			)
 		);
-
 
 	}
 
@@ -92,28 +191,29 @@ class UpdateDatasourceConnectionTest {
 	void should_create_a_new_dataIndex_when_dataIndexId_is_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(dataIndexService.createByDatasourceConnection(
-			anySession(), any(Datasource.class), nullable(DataIndexDTO.class)))
-			.willReturn(Uni.createFrom().item(new DataIndex()));
+		DataIndexDTO mockdataindex = DataIndexDTO.builder()
+			.name("mockdataindex")
+			.build();
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(Long.MAX_VALUE)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.dataIndexDTO(mockdataindex)
 					.build()
 			),
 			datasource -> {
 				then(dataIndexService).should(times(1))
 					.createByDatasourceConnection(
-						anySession(),
-						any(Datasource.class), nullable(DataIndexDTO.class)
+						any(Mutiny.Session.class),
+						any(Datasource.class),
+						eq(mockdataindex)
 					);
 
-				then(mockSession).should(atLeastOnce())
-					.merge(argThat(UpdateDatasourceConnectionTest::hasDataIndex));
+				Assertions.assertTrue(hasDataIndex(datasource.getEntity()));
 			}
 		);
 
@@ -126,31 +226,27 @@ class UpdateDatasourceConnectionTest {
 	void should_create_and_bind_enrichPipeline_when_enrichPipelineId_is_null_and_enrichPipelineDto_is_not_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(enrichPipelineService.createWithItems(anySession(), any(PipelineWithItemsDTO.class)))
-			.willReturn(Uni.createFrom().item(new EnrichPipeline()));
+		PipelineWithItemsDTO newPipeline = PipelineWithItemsDTO.builder()
+			.name("enrich-pipeline2")
+			.build();
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(Long.MAX_VALUE)
-					.pipeline(PipelineWithItemsDTO.builder()
-						.name("mockpipeline")
-						.build()
-					)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.pipeline(newPipeline)
 					.build()
 			),
 			datasource -> {
-				then(enrichPipelineService).should(times(1))
-					.createWithItems(anySession(), any(PipelineWithItemsDTO.class));
+				then(enrichPipelineService).should(times(1)).createWithItems(
+					any(Mutiny.Session.class),
+					eq(newPipeline)
+				);
 
-				then(mockSession).should(atLeastOnce())
-					.merge(
-						argThat(UpdateDatasourceConnectionTest::hasEnrichPipeline)
-					);
-
+				Assertions.assertTrue(hasEnrichPipeline(datasource.getEntity()));
 			}
 		);
 	}
@@ -160,22 +256,29 @@ class UpdateDatasourceConnectionTest {
 	void should_have_no_interaction_with_pluginDriver_when_pluginDriverDto_is_not_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
+		final String pluginName = "mockplugindatasourceconnection";
 
 		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
+			() ->
+				datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
-					.name("mockdatasourceconnection")
+					.name(DATASOURCE)
 					.scheduling(CreateConnection.SCHEDULING)
-					.datasourceId(Long.MAX_VALUE)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
 					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
-						.name("mockplugindatasourceconnection")
+						.name(pluginName)
 						.build()
 					)
 					.build()
 			),
-			datasource -> then(pluginDriverService).shouldHaveNoInteractions()
+			datasource -> then(pluginDriverService)
+				.should(never())
+				.create(
+					any(Mutiny.Session.class),
+					ArgumentMatchers.<PluginDriverDTO>argThat(p ->
+						p.getName().equals(pluginName))
+				)
 		);
 	}
 
@@ -184,19 +287,21 @@ class UpdateDatasourceConnectionTest {
 	void should_have_no_interaction_with_pluginDriver_when_pluginId_is_not_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.name("mockdatasourceconnection")
-					.datasourceId(Long.MAX_VALUE)
-					.pluginDriverId(Long.MAX_VALUE)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.pluginDriverId(pluginDriverId)
 					.scheduling(CreateConnection.SCHEDULING)
 					.build()
 			),
-			datasource -> then(pluginDriverService).shouldHaveNoInteractions()
+			datasource -> then(pluginDriverService)
+				.should(never())
+				.findById(eq(pluginDriverId))
 		);
 	}
 
@@ -205,17 +310,17 @@ class UpdateDatasourceConnectionTest {
 	void should_unbind_enrichPipeline_when_enrichPipelineId_is_null_and_enrichPipelineDto_is_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
-
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(Long.MAX_VALUE)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
 					.build()
 			),
-			datasource -> then(mockSession).should(times(1)).merge(argThat(
-				UpdateDatasourceConnectionTest::hasNotEnrichPipeline))
+			datasource -> Assertions.assertTrue(
+				hasNotEnrichPipeline(datasource.getEntity()))
 		);
 
 	}
@@ -224,23 +329,56 @@ class UpdateDatasourceConnectionTest {
 
 	@Test
 	@RunOnVertxContext
-	void should_update_existing_enrichPipeline_when_enrichPipelineId_is_not_null_and_enrichPipelineDto_is_not_null(
+	void should_update_dataIndex_when_dataIndexId_is_not_null_and_dataIndexDto_is_not_null(
 		UniAsserter uniAsserter) {
 
-		var mockSession = mock(Mutiny.Session.class);
-
-		given(enrichPipelineService.patchOrUpdateWithItems(
-			anySession(), anyLong(), any(PipelineWithItemsDTO.class), eq(false))
-		).willReturn(Uni.createFrom().item(new EnrichPipeline()));
+		DataIndexDTO mockdataindex = DataIndexDTO.builder()
+			.name("mockknnindex")
+			.knnIndex(true)
+			.chunkWindowSize(2)
+			.embeddingDocTypeFieldId(embeddingDocTypeFieldId)
+			.build();
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				mockSession,
 				UpdateDatasourceConnectionDTO.builder()
-					.datasourceId(Long.MAX_VALUE)
-					.pipelineId(Long.MAX_VALUE)
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.dataIndexId(dataIndexId)
+					.dataIndexDTO(mockdataindex)
+					.build()
+			),
+			datasource -> {
+				then(dataIndexService).should(times(1))
+					.update(
+						any(Mutiny.Session.class),
+						any(Datasource.class),
+						eq(mockdataindex)
+					);
+
+				Assertions.assertTrue(hasDataIndex(datasource.getEntity()));
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_update_existing_enrichPipeline_when_enrichPipelineId_is_not_null_and_enrichPipelineDto_is_not_null(
+		UniAsserter uniAsserter) {
+
+		uniAsserter.assertThat(
+			() -> datasourceService.updateDatasourceConnection(
+				UpdateDatasourceConnectionDTO.builder()
+					.name(DATASOURCE)
+					.scheduling(CreateConnection.SCHEDULING)
+					.reindexing(CreateConnection.REINDEXING)
+					.datasourceId(datasourceId)
+					.pipelineId(pipelineId)
 					.pipeline(PipelineWithItemsDTO.builder()
-						.name("mockpipeline")
+						.name(ENRICH_PIPELINE)
+						.description("update")
 						.build()
 					)
 					.build()
@@ -249,54 +387,71 @@ class UpdateDatasourceConnectionTest {
 
 				then(enrichPipelineService).should(times(1))
 					.patchOrUpdateWithItems(
-						anySession(), anyLong(),
-						any(PipelineWithItemsDTO.class), eq(false)
+						any(Mutiny.Session.class),
+						anyLong(),
+						any(PipelineWithItemsDTO.class),
+						eq(false)
 					);
 
-				then(mockSession).should(times(1))
-					.merge(
-						argThat(UpdateDatasourceConnectionTest::hasEnrichPipeline)
-					);
+				Assertions.assertTrue(hasEnrichPipeline(datasource.getEntity()));
 			}
 		);
 
 	}
 
-	@Test
-	@RunOnVertxContext
-	void should_create_a_new_dataIndex_with_vectorIndex_when_dataIndexId_is_null_and_vectorIndexDto_is_not_null(
-		UniAsserter uniAsserter) {
-	}
+	@AfterEach
+	void tearDown() {
+		var datasource = datasourceService.findByName(TENANT_ID, DATASOURCE)
+			.await().indefinitely();
 
-	@Test
-	@RunOnVertxContext
-	void should_bind_an_existing_dataIndex_and_update_vectorIndex_when_dataIndexId_is_not_null_and_vectorIndex_exist_and_vectorIndexDto_is_not_null(
-		UniAsserter uniAsserter) {
-	}
+		var pluginDriver = pluginDriverService.findByName(TENANT_ID, PLUGIN_DRIVER)
+			.await().indefinitely();
 
-	@Test
-	@RunOnVertxContext
-	void should_bind_an_existing_dataIndex_and_create_vectorIndex_when_dataIndexId_is_not_null_and_vectorIndex_does_not_exist_and_vectorIndexDto_is_not_null(
-		UniAsserter uniAsserter) {
-	}
+		var dataIndex = datasourceService.getDataIndex(datasource.getId())
+			.await().indefinitely();
 
-	@Test
-	@RunOnVertxContext
-	void should_bind_an_existing_dataIndex_and_do_not_modify_vectorIndex_when_dataIndexId_is_not_null_and_vectorIndex_exist_and_vectorIndexDto_is_null(
-		UniAsserter uniAsserter) {
-	}
+		var enrichItem1 = enrichItemService.findByName(TENANT_ID, ENRICH_ITEM_1)
+			.await().indefinitely();
+		var enrichItem2 = enrichItemService.findByName(TENANT_ID, ENRICH_ITEM_2)
+			.await().indefinitely();
 
-	@Test
-	@RunOnVertxContext
-	void should_bind_an_existing_dataIndex_and_do_not_create_vectorIndex_when_dataIndexId_is_not_null_and_vectorIndex_does_not_exist_and_vectorIndexDto_is_null(
-		UniAsserter uniAsserter) {
+		var enrichPipeline = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
+			.await().indefinitely();
+
+		// unset relations
+		datasourceService.unsetPluginDriver(datasource.getId())
+			.await().indefinitely();
+
+		datasourceService.unsetDataIndex(datasource.getId())
+			.await().indefinitely();
+
+		datasourceService.unsetEnrichPipeline(datasource.getId())
+			.await().indefinitely();
+
+		enrichPipelineService.removeEnrichItem(enrichPipeline.getId(), enrichItem1.getId())
+			.await().indefinitely();
+		enrichPipelineService.removeEnrichItem(enrichPipeline.getId(), enrichItem2.getId())
+			.await().indefinitely();
+
+		// deletes entities
+		enrichItemService.deleteById(enrichItem1.getId())
+			.await().indefinitely();
+		enrichItemService.deleteById(enrichItem2.getId())
+			.await().indefinitely();
+		enrichPipelineService.deleteById(enrichPipeline.getId())
+			.await().indefinitely();
+		dataIndexService.deleteById(dataIndex.getId())
+			.await().indefinitely();
+		pluginDriverService.deleteById(pluginDriver.getId())
+			.await().indefinitely();
+		datasourceService.deleteById(datasource.getId())
+			.await().indefinitely();
+
+		this.datasourceId = 0;
+
 	}
 
 	// Utils
-
-	private static Mutiny.Session anySession() {
-		return any(Mutiny.Session.class);
-	}
 
 	private static boolean hasEnrichPipeline(Datasource datasource) {
 		return datasource != null && datasource.getEnrichPipeline() != null;
@@ -314,22 +469,4 @@ class UpdateDatasourceConnectionTest {
 		return datasource != null && datasource.getDataIndex() == null;
 	}
 
-	@Mock
-	public static class MockDatasourceService extends DatasourceService {
-
-		MockDatasourceService() {
-			super(Mappers.getMapper(DatasourceMapper.class));
-		}
-
-		@Override
-		public Uni<Datasource> findByIdWithPluginDriver(Mutiny.Session session, long datasourceId) {
-			if (datasourceId == Long.MAX_VALUE) {
-				return Uni.createFrom().item(new Datasource());
-			}
-			else {
-				return super.findByIdWithPluginDriver(session, datasourceId);
-			}
-		}
-
-	}
 }

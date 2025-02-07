@@ -108,9 +108,9 @@ public class IndexMappingServiceTest {
 			.findFirst();
 		assertTrue(optField.isPresent());
 		DocTypeField field = optField.get();
-		assertSame(field.getFieldType(), FieldType.BOOLEAN);
+		assertSame(FieldType.BOOLEAN, field.getFieldType());
 		assertEquals("public", field.getFieldName());
-		assertEquals(field.getPath(), "acl.public");
+		assertEquals("acl.public", field.getPath());
 
 
 		Map<String, List<DocTypeField>> docTypeAndFieldsGroup =

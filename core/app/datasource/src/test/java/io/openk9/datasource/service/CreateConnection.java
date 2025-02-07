@@ -21,7 +21,6 @@ import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
 import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO.DatasourceConnectionDTOBuilder;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.grpc.Preset;
-import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO.PluginDriverDTOBuilder;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
@@ -64,7 +63,6 @@ public class CreateConnection {
 			.pipeline(PipelineWithItemsDTO.builder()
 				.name("NEW_ENTITIES_VECTOR_PIPELINE")
 				.build())
-			.dataIndexDTO(DataIndexDTO.builder().build())
 			.build();
 	public static final DatasourceConnectionDTOBuilder<?, ?> NEW_ENTITIES_BASE_DTO_BUILDER =
 		DATASOURCE_CONNECTION_DTO_BUILDER()

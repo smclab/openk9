@@ -124,7 +124,8 @@ class DatasourceCreateConnectionTest {
 					.should(times(1))
 					.createByDatasourceConnection(
 						anySession(),
-						any(Datasource.class), any(DataIndexDTO.class)
+						any(Datasource.class),
+						nullable(DataIndexDTO.class)
 					);
 
 			}

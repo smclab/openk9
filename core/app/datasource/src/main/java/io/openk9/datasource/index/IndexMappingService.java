@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.index;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -28,21 +29,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
+import io.openk9.datasource.index.mappings.IndexMappingsUtil;
+import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
+import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.util.OpenSearchUtils;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.cluster.metadata.ComposableIndexTemplate;
+import org.opensearch.cluster.metadata.Template;
+import org.opensearch.common.compress.CompressedXContent;
+import org.opensearch.common.settings.Settings;
 
 @ApplicationScoped
 public class IndexMappingService {
@@ -56,17 +70,67 @@ public class IndexMappingService {
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
 
-	public Uni<Set<DocType>> generateDocTypeFields(
-		Mutiny.Session session,
-		Map<String, Object> mappings,
-		List<String> documentTypes) {
+	public static PutComposableIndexTemplateRequest getPutComposableIndexTemplateRequest(
+		Map<String, Object> indexSettings, DataIndex dataIndex) {
 
-		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
+		Map<MappingsKey, Object> mappings =
+			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
 
-		var docTypeAndFieldsGroup = IndexMappingService
-			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
+		Settings settings;
 
-		return _persistDocType(docTypeAndFieldsGroup, session);
+		Map<String, Object> settingsMap =
+			indexSettings != null && !indexSettings.isEmpty() ?
+				indexSettings :
+				IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+
+		if (settingsMap.isEmpty()) {
+			settings = Settings.EMPTY;
+		}
+		else {
+			settings = Settings.builder()
+				.loadFromMap(settingsMap)
+				.build();
+		}
+
+		PutComposableIndexTemplateRequest request =
+			new PutComposableIndexTemplateRequest();
+
+		ComposableIndexTemplate composableIndexTemplate = null;
+
+		try {
+			var indexName = dataIndex.getIndexName();
+
+			composableIndexTemplate = new ComposableIndexTemplate(
+				List.of(indexName),
+				new Template(
+					settings, new CompressedXContent(
+					Json.encode(mappings)), null
+				),
+				null, null, null, null
+			);
+
+			request
+				.name(indexName + "-template")
+				.indexTemplate(composableIndexTemplate);
+
+			return request;
+		}
+		catch (UnknownTenantException e) {
+			throw new WebApplicationException(Response
+				.status(Response.Status.INTERNAL_SERVER_ERROR)
+				.entity(JsonObject.of(
+					DataIndexService.DETAILS_FIELD, "cannot obtain a proper index name"
+				))
+				.build());
+		}
+		catch (IOException e) {
+			throw new WebApplicationException(Response
+				.status(Response.Status.INTERNAL_SERVER_ERROR)
+				.entity(JsonObject.of(
+					DataIndexService.DETAILS_FIELD, "failed creating IndexTemplate"
+				))
+				.build());
+		}
 	}
 
 	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
@@ -79,23 +143,17 @@ public class IndexMappingService {
 					session, mappings, documentTypes)));
 	}
 
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverRequest(
-		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+	public Uni<Set<DocType>> generateDocTypeFields(
+		Mutiny.Session session,
+		Map<String, Object> mappings,
+		List<String> documentTypes) {
 
-		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
-			.flatMap(ingestionPayload -> {
+		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
 
-				var documentTypes =
-					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+		var docTypeAndFieldsGroup = IndexMappingService
+			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
 
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
-
-				return generateDocTypeFields(
-					session, mappings.getMap(), documentTypes);
-			});
+		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
 	}
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
@@ -372,16 +430,35 @@ public class IndexMappingService {
 
 	}
 
-	private Uni<Set<DocType>> _persistDocType(
-		Map<String, List<DocTypeField>> docTypeFieldsByDocType,
-		Mutiny.Session session) {
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
+		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
 
-		Set<String> docTypeNames = docTypeFieldsByDocType.keySet();
+		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes =
+					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				return generateDocTypeFields(
+					session, mappings.getMap(), documentTypes);
+			});
+	}
+
+	private Uni<Set<DocType>> _refreshDocTypeSet(
+		Mutiny.Session session, Map<String, List<DocTypeField>> docTypeAndFieldsGroup) {
+
+		Set<String> docTypeNames = docTypeAndFieldsGroup.keySet();
 
 		return docTypeService
 			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
 			.map(existingDocTypes -> mergeDocTypes(
-				docTypeFieldsByDocType, existingDocTypes));
+				docTypeAndFieldsGroup, existingDocTypes)
+			);
 	}
 
 }

@@ -88,6 +88,7 @@ public class DataIndexGraphqlTest {
 					)
 					.dataIndexDTO(DataIndexDTO.builder()
 						.embeddingJsonConfig("{}")
+						.knnIndex(true)
 						.build())
 					.build()
 			),

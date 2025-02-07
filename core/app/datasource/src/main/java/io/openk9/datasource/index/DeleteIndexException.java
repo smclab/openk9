@@ -15,15 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.mapper;
+package io.openk9.datasource.index;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+public class DeleteIndexException extends Exception {
+	public DeleteIndexException() {
+	}
 
-import org.mapstruct.Mapper;
+	public DeleteIndexException(String message) {
+		super(message);
+	}
 
-@Mapper(config = K9EntityMapper.class)
-public interface DataIndexMapper
-	extends K9EntityMapper<DataIndex, DataIndexDTO> {
+	public DeleteIndexException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
+	public DeleteIndexException(Throwable cause) {
+		super(cause);
+	}
+
+	public DeleteIndexException(
+		String message,
+		Throwable cause,
+		boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 }

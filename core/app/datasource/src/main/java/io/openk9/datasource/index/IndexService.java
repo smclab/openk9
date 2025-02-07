@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.index;
 
+import static io.openk9.datasource.service.DataIndexService.DETAILS_FIELD;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,8 +28,11 @@ import java.util.Locale;
 import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 import io.openk9.datasource.index.response.CatResponse;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.service.CannotCreateIndexTemplateException;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;
@@ -36,9 +41,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
+import org.opensearch.OpenSearchStatusException;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.support.IndicesOptions;
+import org.opensearch.action.support.master.AcknowledgedResponse;
+import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
@@ -63,6 +73,92 @@ public class IndexService {
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 
+	public Uni<Void> createIndexTemplate(
+		Map<String, Object> indexSettings, DataIndex dataIndex) {
+
+		var request = IndexMappingService.getPutComposableIndexTemplateRequest(
+			indexSettings, dataIndex);
+
+		return Uni.createFrom()
+			.emitter((sink) -> {
+				IndicesClient indices = restHighLevelClient.indices();
+				indices.putIndexTemplateAsync(
+					request,
+					RequestOptions.DEFAULT,
+					new ActionListener<>() {
+
+						@Override
+						public void onFailure(Exception e) {
+
+							if (e instanceof OpenSearchStatusException osse) {
+								sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
+									.status(osse.status().getStatus())
+									.entity(JsonObject.of(
+										DETAILS_FIELD, osse.getMessage()))
+									.build()));
+							}
+							else {
+								sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
+									.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+									.entity(JsonObject.of(
+										DETAILS_FIELD, e.getMessage()))
+									.build()));
+							}
+
+						}
+
+						@Override
+						public void onResponse(AcknowledgedResponse acknowledgedResponse) {
+							if (acknowledgedResponse.isAcknowledged()) {
+								sink.complete(null);
+							}
+							else {
+								sink.fail(new CannotCreateIndexTemplateException());
+							}
+						}
+					}
+				);
+			});
+	}
+
+	public Uni<Void> deleteIndex(DataIndex dataIndex) {
+
+		return Uni.createFrom().emitter(emitter -> {
+			DeleteIndexRequest deleteIndexRequest =
+				new DeleteIndexRequest(dataIndex.getIndexName());
+
+			deleteIndexRequest
+				.indicesOptions(
+					IndicesOptions.fromMap(
+						Map.of("ignore_unavailable", true),
+						deleteIndexRequest.indicesOptions()
+					)
+				);
+
+			restHighLevelClient.indices().deleteAsync(
+				deleteIndexRequest,
+				RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onFailure(Exception e) {
+						emitter.fail(e);
+
+					}
+
+					@Override
+					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
+						if (acknowledgedResponse.isAcknowledged()) {
+							emitter.complete(null);
+						}
+						else {
+							emitter.fail(new DeleteIndexException());
+						}
+					}
+				}
+			);
+		});
+	}
+
 	public Uni<List<String>> getDocumentTypes(String indexName) {
 
 		SearchRequest searchRequest = new SearchRequest(indexName);
@@ -78,6 +174,7 @@ public class IndexService {
 		);
 
 		searchRequest.source(searchSourceBuilder);
+
 		return Uni.createFrom()
 			.emitter(sink -> restHighLevelClient.searchAsync(
 				searchRequest,

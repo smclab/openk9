@@ -15,15 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.mapper;
+package io.openk9.datasource.service;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+public class CannotCreateIndexTemplateException extends Exception {
 
-import org.mapstruct.Mapper;
+	public CannotCreateIndexTemplateException() {
+	}
 
-@Mapper(config = K9EntityMapper.class)
-public interface DataIndexMapper
-	extends K9EntityMapper<DataIndex, DataIndexDTO> {
+	public CannotCreateIndexTemplateException(String message) {
+		super(message);
+	}
+
+	public CannotCreateIndexTemplateException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public CannotCreateIndexTemplateException(Throwable cause) {
+		super(cause);
+	}
+
+	public CannotCreateIndexTemplateException(
+		String message,
+		Throwable cause,
+		boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 
 }

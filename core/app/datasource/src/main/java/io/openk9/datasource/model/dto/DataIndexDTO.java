@@ -22,20 +22,20 @@ import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import io.smallrye.graphql.api.Nullable;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DataIndexDTO extends K9EntityDTO {
 
@@ -53,9 +53,6 @@ public class DataIndexDTO extends K9EntityDTO {
 	@Nullable
 	@Description("The chunk strategy to apply.")
 	private EmbeddingOuterClass.ChunkType chunkType;
-
-	@Description("The datasourceId that is associated to this dataIndex")
-	private long datasourceId;
 
 	@Nullable
 	@Description(
