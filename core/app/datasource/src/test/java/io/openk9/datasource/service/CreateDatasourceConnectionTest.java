@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class DatasourceCreateConnectionTest {
+class CreateDatasourceConnectionTest {
 
 	@Inject
 	DatasourceService datasourceService;
@@ -66,7 +66,7 @@ class DatasourceCreateConnectionTest {
 					.name("NEW_ENTITIES_BASE_PIPELINE")
 					.build()
 			).flatMap(pipeline -> datasourceService.createDatasourceConnection(
-					CreateConnection.NEW_ENTITIES_BASE_DTO_BUILDER
+				DatasourceConnectionObjects.NEW_ENTITIES_BASE_DTO_BUILDER
 						.pipelineId(pipeline.getEntity().getId())
 						.build()
 				)
@@ -104,7 +104,7 @@ class DatasourceCreateConnectionTest {
 
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.NEW_ENTITIES_VECTOR_DTO),
+				DatasourceConnectionObjects.NEW_ENTITIES_VECTOR_DTO),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
@@ -138,12 +138,12 @@ class DatasourceCreateConnectionTest {
 	void should_create_pipeline_dataIndex(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> pluginDriverService.create(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+			() -> pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 				.name("PRE_EXIST_PLUGIN")
 				.build()
 			).flatMap(pluginDriver -> datasourceService
 				.createDatasourceConnection(
-					CreateConnection.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER
+					DatasourceConnectionObjects.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER
 						.pluginDriverId(pluginDriver.getId())
 						.build()
 				)
@@ -184,7 +184,7 @@ class DatasourceCreateConnectionTest {
 				.name("PRE_EXIST_PIPELINE")
 				.build()
 			).flatMap(enrichPipelineResponse -> datasourceService.createDatasourceConnection(
-					CreateConnection.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER
+				DatasourceConnectionObjects.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER
 						.pipelineId(enrichPipelineResponse.getEntity().getId())
 						.build()
 				)
@@ -215,7 +215,7 @@ class DatasourceCreateConnectionTest {
 
 		asserter.assertFailedWith(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.NEW_ENTITIES_BASE_DTO_BUILDER
+				DatasourceConnectionObjects.NEW_ENTITIES_BASE_DTO_BUILDER
 					.name("transaction_exception_test")
 					.pipeline(PipelineWithItemsDTO.builder()
 						.name(Initializer.INIT_DATASOURCE_PIPELINE)
@@ -236,7 +236,7 @@ class DatasourceCreateConnectionTest {
 	void should_fail_with_validation_exception_when_ambiguousDto(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.AMBIGUOUS_DTO),
+			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.AMBIGUOUS_DTO),
 			response -> {
 
 				Assertions.assertFalse(response.getFieldValidators().isEmpty());
@@ -255,7 +255,7 @@ class DatasourceCreateConnectionTest {
 	void should_fail_with_validation_exception_when_no_plugin_driver_dto(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.NO_PLUGIN_NO_PIPELINE_DTO),
+			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.NO_PLUGIN_NO_PIPELINE_DTO),
 			response -> {
 				Assertions.assertFalse(response.getFieldValidators().isEmpty());
 
@@ -272,13 +272,13 @@ class DatasourceCreateConnectionTest {
 	void should_not_associate_any_pipeline(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(CreateConnection.NEW_PLUGIN_NO_PIPELINE_DTO),
+			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.NEW_PLUGIN_NO_PIPELINE_DTO),
 			response -> {
 				then(pluginDriverService)
 					.should(times(1))
 					.create(
 						anySession(),
-						eq(CreateConnection.NEW_PLUGIN_NO_PIPELINE_DTO.getPluginDriver())
+						eq(DatasourceConnectionObjects.NEW_PLUGIN_NO_PIPELINE_DTO.getPluginDriver())
 					);
 
 				then(enrichPipelineService).shouldHaveNoInteractions();

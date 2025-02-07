@@ -464,9 +464,9 @@ public class UnboundBucketTest {
 	private void createDatasourceOne() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -478,12 +478,12 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
-	private void createDatasourceTwo() {
+	private void createDatasourceThree() {
 		DatasourceDTO dto = DatasourceDTO.builder()
-			.name(DATASOURCE_TWO_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.name(DATASOURCE_THREE_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -495,12 +495,12 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
-	private void createDatasourceThree() {
+	private void createDatasourceTwo() {
 		DatasourceDTO dto = DatasourceDTO.builder()
-			.name(DATASOURCE_THREE_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.name(DATASOURCE_TWO_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -515,9 +515,9 @@ public class UnboundBucketTest {
 	private void createDatasourceFour() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_FOUR_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -528,6 +528,7 @@ public class UnboundBucketTest {
 			.await()
 			.indefinitely();
 	}
+
 	private void createSuggestionCategoryOne() {
 		SuggestionCategoryDTO dto = SuggestionCategoryDTO.builder()
 			.name(SUGGESTION_CATEGORY_ONE_NAME)

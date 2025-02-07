@@ -32,8 +32,8 @@ import jakarta.inject.Inject;
 
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-import io.openk9.datasource.service.CreateConnection;
 import io.openk9.datasource.service.DataIndexService;
+import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.PluginDriverService;
 
@@ -75,9 +75,9 @@ public class DataIndexGraphqlTest {
 
 		asserter.assertThat(
 			() -> datasourceService.createDatasourceConnection(
-				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
+				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(DATA_INDEX_DATASOURCE_GRAPHQL_TEST)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 						.name(DATA_INDEX_PLUGIN_GRAPHQL_TEST)
 						.jsonConfig(JsonObject.of(
 							"host", WireMockPluginDriver.HOST,

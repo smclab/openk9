@@ -31,7 +31,7 @@ import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.init.Bucket;
 import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.CreateConnection;
+import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichItemService;
@@ -210,9 +210,9 @@ public class Initializer {
 		log.info("Create a new full configured DatasourceConnection.");
 
 		datasourceService.createDatasourceConnection(
-				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
+				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(INIT_DATASOURCE_CONNECTION)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 						.name(INIT_DATASOURCE_PLUGIN)
 					.build()
 				)

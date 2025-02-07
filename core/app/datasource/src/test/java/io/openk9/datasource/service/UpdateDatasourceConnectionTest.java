@@ -99,8 +99,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.dataIndex(newDataIndex)
 					.build()
@@ -146,8 +146,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.dataIndexId(dataIndexId)
 					.dataIndex(updateDataIndexDto)
@@ -188,8 +188,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.pipelineId(pipelineId)
 					.build()
@@ -216,8 +216,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.pipeline(newPipeline)
 					.build()
@@ -242,8 +242,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.build()
 			),
@@ -262,8 +262,8 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.pipelineId(pipelineId)
 					.pipeline(PipelineWithItemsDTO.builder()
@@ -301,10 +301,10 @@ class UpdateDatasourceConnectionTest {
 				datasourceService.updateDatasourceConnection(
 					UpdateDatasourceConnectionDTO.builder()
 						.name(DATASOURCE)
-						.scheduling(CreateConnection.SCHEDULING)
-						.reindexing(CreateConnection.REINDEXING)
+						.scheduling(DatasourceConnectionObjects.SCHEDULING)
+						.reindexing(DatasourceConnectionObjects.REINDEXING)
 						.datasourceId(datasourceId)
-						.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+						.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 							.name(pluginName)
 							.build()
 						)
@@ -331,11 +331,11 @@ class UpdateDatasourceConnectionTest {
 			() -> datasourceService.updateDatasourceConnection(
 				UpdateDatasourceConnectionDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
+					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
 					.pluginDriverId(pluginDriverId)
-					.scheduling(CreateConnection.SCHEDULING)
+					.scheduling(DatasourceConnectionObjects.SCHEDULING)
 					.build()
 			),
 			datasource -> then(pluginDriverService)
@@ -372,9 +372,9 @@ class UpdateDatasourceConnectionTest {
 		).await().indefinitely();
 
 		var datasource = datasourceService.createDatasourceConnection(
-				CreateConnection.DATASOURCE_CONNECTION_DTO_BUILDER()
+				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(DATASOURCE)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO_BUILDER()
+					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 						.name(PLUGIN_DRIVER)
 						.build()
 					)

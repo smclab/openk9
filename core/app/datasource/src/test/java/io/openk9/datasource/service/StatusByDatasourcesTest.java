@@ -17,23 +17,24 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
+import java.util.UUID;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -101,9 +102,9 @@ public class StatusByDatasourcesTest {
 	private void createDatasourceOne() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 

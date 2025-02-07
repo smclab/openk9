@@ -27,7 +27,7 @@ import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 
 import io.vertx.core.json.JsonObject;
 
-public class CreateConnection {
+public class DatasourceConnectionObjects {
 
 	public static final String DESCRIPTION = "A new datasource connection";
 	public static final String JSON_CONFIG = "{}";
