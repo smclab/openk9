@@ -6,21 +6,6 @@ stages:
   - build-verifier
 
 
-
-
-
-# SonarQube Analysis
-SonarQube:
-  stage: quality
-  image: sonarsource/sonar-scanner-cli:latest
-  script:
-    - sonar-scanner -Dsonar.projectKey=admin-frontend -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-
-
 # Build Docker Image
 Build Admin Frontend:
   stage: build
@@ -63,12 +48,6 @@ Trigger Restart:
         "${RESTART_TRIGGER_URL}"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-
-
-
-
-
-
 
 # Build Verifier
 Build Verifier:
