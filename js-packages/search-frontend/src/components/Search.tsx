@@ -433,7 +433,7 @@ export function Search({
                 inputRef &&
                   inputRef.current &&
                   search(inputRef?.current?.value || "");
-                if (callbackClickSearch) callbackClickSearch();
+                if (actionOnClick) actionOnClick();
               }}
             >
               <svg
