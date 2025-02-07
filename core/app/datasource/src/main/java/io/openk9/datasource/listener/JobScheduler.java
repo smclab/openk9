@@ -54,6 +54,7 @@ import java.util.UUID;
 
 public class JobScheduler {
 
+	public sealed interface Command extends CborSerializable {}
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
 	public static Behavior<Command> create(
@@ -865,7 +866,11 @@ public class JobScheduler {
 		entityRef.tell(Scheduling.WakeUp.INSTANCE);
 	}
 
-	public sealed interface Command extends CborSerializable {}
+	private enum JobType {
+		TRIGGER,
+		REINDEX,
+		PURGE
+	}
 
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
@@ -898,12 +903,6 @@ public class JobScheduler {
 	private record InvokePluginDriverInternal(
 		Scheduler scheduler, OffsetDateTime startIngestionDate
 	) implements Command {}
-
-	private enum JobType {
-		TRIGGER,
-		REINDEX,
-		PURGE
-	}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 

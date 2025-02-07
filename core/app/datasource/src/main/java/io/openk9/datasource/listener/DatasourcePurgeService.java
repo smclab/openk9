@@ -48,42 +48,29 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class DatasourcePurgeService {
 
-	private static final Logger log = Logger.getLogger(DatasourcePurgeService.class);
-
-	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
-		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
-	private static final String BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX =
-		"UPDATE scheduler SET old_data_index_id = null WHERE old_data_index_id in (:ids)";
-	private static final String BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX =
-		"UPDATE scheduler SET new_data_index_id = null WHERE new_data_index_id in (:ids)";
 	private static final String BULK_DELETE_DATA_INDEX =
 		"DELETE FROM data_index t WHERE t.id in (:ids)";
+	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
+		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
+	private static final String BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX =
+		"UPDATE scheduler SET new_data_index_id = null WHERE new_data_index_id in (:ids)";
+	private static final String BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX =
+		"UPDATE scheduler SET old_data_index_id = null WHERE old_data_index_id in (:ids)";
+	private static final String DELETE_DATA_INDICES = "DatasourcePurgeService#deleteDataIndices";
+	private static final String DELETE_INDICES = "DatasourcePurgeService#deleteIndices";
+	private static final String FETCH_ORPHANS = "DatasourcePurgeService#fetchOrphans";
 	private static final String JPQL_QUERY_DATA_INDEX_ORPHANS =
 		"select di " +
 		"from DataIndex di " +
 		"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
 		"where d.id = :id " +
 		"and di.modifiedDate < :maxAgeDate";
-
-	private static final String DELETE_DATA_INDICES = "DatasourcePurgeService#deleteDataIndices";
-	private static final String DELETE_INDICES = "DatasourcePurgeService#deleteIndices";
-	private static final String FETCH_ORPHANS = "DatasourcePurgeService#fetchOrphans";
-
+	private static final Logger log = Logger.getLogger(DatasourcePurgeService.class);
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
-
-	public static CompletableFuture<Void> deleteIndices(List<DataIndex> dataIndices) {
-
-		var request = new DeleteIndicesRequest(dataIndices);
-
-		return EventBusInstanceHolder.getEventBus()
-			.<Void>request(DELETE_INDICES, request)
-			.map(Message::body)
-			.subscribeAsCompletionStage();
-	}
 
 	public static CompletableFuture<Void> deleteDataIndices(
 		String tenantId, long datasourceId, List<DataIndex> dataIndices) {
@@ -92,6 +79,16 @@ public class DatasourcePurgeService {
 
 		return EventBusInstanceHolder.getEventBus()
 			.<Void>request(DELETE_DATA_INDICES, request)
+			.map(Message::body)
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletableFuture<Void> deleteIndices(List<DataIndex> dataIndices) {
+
+		var request = new DeleteIndicesRequest(dataIndices);
+
+		return EventBusInstanceHolder.getEventBus()
+			.<Void>request(DELETE_INDICES, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -190,13 +187,13 @@ public class DatasourcePurgeService {
 				RequestOptions.DEFAULT,
 				new ActionListener<AcknowledgedResponse>() {
 					@Override
-					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-						emitter.complete(acknowledgedResponse);
+					public void onFailure(Exception e) {
+						emitter.fail(e);
 					}
 
 					@Override
-					public void onFailure(Exception e) {
-						emitter.fail(e);
+					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
+						emitter.complete(acknowledgedResponse);
 					}
 				}
 			)
@@ -228,14 +225,14 @@ public class DatasourcePurgeService {
 
 	}
 
-	private record DeleteIndicesRequest(List<DataIndex> dataIndices) {}
-
-	private record FetchOrphansRequest(String tenantId, long datasourceId, Duration maxAge) {}
-
 	private record DeleteDataIndicesRequest(
 		String tenantId,
 		long datasourceId,
 		List<DataIndex> dataIndices
 	) {}
+
+	private record DeleteIndicesRequest(List<DataIndex> dataIndices) {}
+
+	private record FetchOrphansRequest(String tenantId, long datasourceId, Duration maxAge) {}
 
 }
