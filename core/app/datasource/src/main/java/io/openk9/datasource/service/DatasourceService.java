@@ -128,7 +128,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
-							.createByDatasourceConnection(
+							.createDataIndexByDatasourceConnection(
 								session,
 								datasource,
 								datasourceConnectionDTO.getDataIndex()
@@ -536,7 +536,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		var dataIndexDTO = updateConnectionDTO.getDataIndex();
 
 		if (dataIndexId <= 0L) {
-			return dataIndexService.createByDatasourceConnection(
+			return dataIndexService.createDataIndexByDatasourceConnection(
 				session,
 				datasource,
 				dataIndexDTO

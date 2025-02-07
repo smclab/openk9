@@ -107,7 +107,7 @@ class UpdateDatasourceConnectionTest {
 			),
 			response -> {
 				then(dataIndexService).should(times(1))
-					.createByDatasourceConnection(
+					.createDataIndexByDatasourceConnection(
 						any(Mutiny.Session.class),
 						any(Datasource.class),
 						eq(newDataIndex)
