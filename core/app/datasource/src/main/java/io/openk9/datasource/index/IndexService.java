@@ -34,6 +34,7 @@ import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -454,7 +455,7 @@ public class IndexService {
 						return Uni.createFrom().failure(
 							new CannotCreateComponentTemplateException());
 					}
-				});
+				}).emitOn(Infrastructure.getDefaultWorkerPool());
 		}
 		catch (Exception e) {
 			return Uni.createFrom()
