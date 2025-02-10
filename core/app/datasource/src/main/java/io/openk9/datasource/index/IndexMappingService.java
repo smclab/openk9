@@ -51,6 +51,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
@@ -61,6 +62,9 @@ import org.opensearch.common.settings.Settings;
 
 @ApplicationScoped
 public class IndexMappingService {
+
+	private final static Logger log =
+		Logger.getLogger(IndexMappingService.class);
 
 	@Inject
 	IndexService indexService;
@@ -104,6 +108,17 @@ public class IndexMappingService {
 	 **/
 	public Uni<Void> createEmbeddingComponentTemplate(
 		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		if (log.isDebugEnabled()) {
+			log.debugf(
+				"""
+					Creating a componentTemplate for an embeddingModel named %s,
+					the vector size is %d.
+					""",
+				embeddingComponentTemplate.name(),
+				embeddingComponentTemplate.vectorSize()
+			);
+		}
 
 		return indexService.putComponentTemplate(
 			createComponentTemplateRequest(embeddingComponentTemplate));

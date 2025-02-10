@@ -72,6 +72,8 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 @ApplicationScoped
 public class IndexService {
 
+	private final static Logger log = Logger.getLogger(IndexService.class);
+
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 	@Inject
@@ -160,28 +162,34 @@ public class IndexService {
 			});
 	}
 
-	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
 
-		try {
-			return Uni.createFrom().completionStage(asyncClient.cluster()
-					.putComponentTemplate(putComponentTemplateRequest)
-				)
-				.onFailure().transform(CannotCreateComponentTemplateException::new)
-				.onItem()
-				.transformToUni(response -> {
-					if (response.acknowledged()) {
-						return Uni.createFrom().voidItem();
-					}
-					else {
-						return Uni.createFrom().failure(
-							new CannotCreateComponentTemplateException());
-					}
-				});
+		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
+			new ArrayList<>(indexNames.size());
+
+		for (String indexName : indexNames) {
+			Uni<Tuple2<Boolean, String>> existIndexName =
+				indexExist(indexName)
+					.onItemOrFailure()
+					.transform((exist, t) -> {
+
+						if (t != null) {
+							log.error("Error while checking index exist", t);
+							return false;
+						}
+
+						return exist;
+
+					})
+					.map(exist -> Tuple2.of(exist, indexName));
+			existIndexNames.add(existIndexName);
 		}
-		catch (Exception e) {
-			return Uni.createFrom()
-				.failure(new CannotCreateComponentTemplateException(e));
-		}
+
+		return Uni.join()
+			.all(existIndexNames)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
+
 	}
 
 	public Uni<List<String>> getDocumentTypes(String indexName) {
@@ -388,37 +396,6 @@ public class IndexService {
 			});
 	}
 
-
-	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
-
-		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
-			new ArrayList<>(indexNames.size());
-
-		for (String indexName : indexNames) {
-			Uni<Tuple2<Boolean, String>> existIndexName =
-				indexExist(indexName)
-					.onItemOrFailure()
-					.transform((exist, t) -> {
-
-						if (t != null) {
-							logger.error("Error while checking index exist", t);
-							return false;
-						}
-
-						return exist;
-
-					})
-					.map(exist -> Tuple2.of(exist, indexName));
-			existIndexNames.add(existIndexName);
-		}
-
-		return Uni.join()
-			.all(existIndexNames)
-			.usingConcurrencyOf(1)
-			.andCollectFailures();
-
-	}
-
 	public Uni<Long> indexCount(String...indexName) {
 		return Uni
 			.createFrom()
@@ -432,7 +409,7 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((countResponse, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index count", throwable);
+					log.error("Error getting index count", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(countResponse.getCount());
@@ -452,14 +429,38 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index exist", throwable);
+					log.error("Error getting index exist", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(response);
 			});
 	}
 
-	@Inject
-	Logger logger;
+	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		try {
+			return Uni.createFrom().completionStage(asyncClient.cluster()
+					.putComponentTemplate(putComponentTemplateRequest)
+				)
+				.onFailure().transform(CannotCreateComponentTemplateException::new)
+				.onItem()
+				.transformToUni(response -> {
+					if (response.acknowledged()) {
+						if (log.isDebugEnabled()) {
+							log.debug("Component template successfully created.");
+						}
+						return Uni.createFrom().voidItem();
+					}
+					else {
+						return Uni.createFrom().failure(
+							new CannotCreateComponentTemplateException());
+					}
+				});
+		}
+		catch (Exception e) {
+			return Uni.createFrom()
+				.failure(new CannotCreateComponentTemplateException(e));
+		}
+	}
 
 }
