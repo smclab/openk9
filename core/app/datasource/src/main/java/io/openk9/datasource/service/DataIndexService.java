@@ -32,7 +32,9 @@ import jakarta.persistence.criteria.Root;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.DataIndexTemplate;
 import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.index.IndexName;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
@@ -203,8 +205,9 @@ public class DataIndexService
 				transientDataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
 				return persist(s, transientDataIndex)
-					.flatMap(dataIndex -> indexService
-						.createIndexTemplate(indexSettings, dataIndex)
+					.flatMap(dataIndex -> indexMappingService
+						.createDataIndexTemplate(
+							new DataIndexTemplate(indexSettings, dataIndex))
 						.map(unused -> dataIndex)
 					);
 			})
@@ -214,7 +217,8 @@ public class DataIndexService
 	@Override
 	public Uni<DataIndex> deleteById(long entityId) {
 		return sessionFactory.withTransaction(s -> findById(s, entityId)
-			.call(indexService::deleteIndex)
+			.call(dataIndex -> indexService.deleteIndex(
+				new IndexName(dataIndex.getIndexName())))
 			.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
 			.flatMap(dataIndex -> {
 				dataIndex.getDocTypes().clear();

@@ -35,7 +35,6 @@ import jakarta.ws.rs.core.Response;
 import io.openk9.datasource.index.mappings.IndexMappingsUtil;
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -72,8 +71,149 @@ public class IndexMappingService {
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
 
-	public static PutComposableIndexTemplateRequest getPutComposableIndexTemplateRequest(
-		Map<String, Object> indexSettings, DataIndex dataIndex) {
+	/**
+	 * Create an Index template
+	 *
+	 * @param dataIndexTemplate
+	 * @return
+	 */
+	public Uni<Void> createDataIndexTemplate(
+		DataIndexTemplate dataIndexTemplate) {
+
+		return indexService.createIndexTemplate(
+			createIndexTemplateRequest(dataIndexTemplate));
+	}
+
+	/**
+	 * Create or update a component template that defines an embedding mapping.
+	 *
+	 * @param embeddingComponentTemplate The object containing the name of the component
+	 *                                   template and the dimension of the {@code knnVector}.
+	 *                                   Must not be {@code null}.
+	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
+	 * succeeds, the result is empty. If the operation fails, the failure is
+	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
+	 * the error appropriately.
+	 **/
+	public Uni<Void> createEmbeddingComponentTemplate(
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		return indexService.putComponentTemplate(
+			createComponentTemplateRequest(embeddingComponentTemplate));
+	}
+
+	public Uni<Set<DocType>> generateDocTypeFields(
+		Mutiny.Session session,
+		Map<String, Object> mappings,
+		List<String> documentTypes) {
+
+		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
+
+		var docTypeAndFieldsGroup = IndexMappingService
+			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
+
+		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
+	}
+
+	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
+		Mutiny.Session session, String indexName) {
+
+		return indexService.getMappings(indexName)
+			.flatMap(mappings -> indexService
+				.getDocumentTypes(indexName)
+				.flatMap(documentTypes -> generateDocTypeFields(
+					session, mappings, documentTypes)));
+	}
+
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
+		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+
+		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes =
+					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				return generateDocTypeFields(
+					session, mappings.getMap(), documentTypes);
+			});
+	}
+
+	protected static PutComponentTemplateRequest createComponentTemplateRequest(
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		return PutComponentTemplateRequest.of(component -> component
+			.name(embeddingComponentTemplate.name())
+			.template(template -> template
+				.settings(settings -> settings.knn(true))
+				.mappings(mapping -> mapping
+					.properties(
+						"indexName", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"contentId", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"number", p -> p
+							.integer(int_ -> int_)
+					)
+					.properties(
+						"total", p -> p
+							.integer(int_ -> int_)
+					)
+					.properties(
+						"chunkText", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"title", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"url", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"vector", p -> p
+							.knnVector(knn -> knn.dimension(embeddingComponentTemplate.vectorSize()))
+					)
+				)
+			)
+		);
+	}
+
+	protected static PutComposableIndexTemplateRequest createIndexTemplateRequest(
+		DataIndexTemplate indexTemplateRequest) {
+
+		var dataIndex = indexTemplateRequest.dataIndex();
+		var indexSettings = indexTemplateRequest.settings();
 
 		Map<MappingsKey, Object> mappings =
 			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
@@ -133,51 +273,6 @@ public class IndexMappingService {
 				))
 				.build());
 		}
-	}
-
-	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
-		Mutiny.Session session, String indexName) {
-
-		return indexService.getMappings(indexName)
-			.flatMap(mappings -> indexService
-				.getDocumentTypes(indexName)
-				.flatMap(documentTypes -> generateDocTypeFields(
-					session, mappings, documentTypes)));
-	}
-
-	public Uni<Set<DocType>> generateDocTypeFields(
-		Mutiny.Session session,
-		Map<String, Object> mappings,
-		List<String> documentTypes) {
-
-		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
-
-		var docTypeAndFieldsGroup = IndexMappingService
-			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
-
-		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
-	}
-
-	/**
-	 * Create or update a component template that defines an embedding mapping.
-	 *
-	 * @param embeddingComponentTemplate The object containing the name of the component
-	 *                                   template and the dimension of the {@code knnVector}.
-	 *                                   Must not be {@code null}.
-	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
-	 * succeeds, the result is empty. If the operation fails, the failure is
-	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
-	 * the error appropriately.
-	 **/
-	public Uni<Void> createEmbeddingComponentTemplate(
-		EmbeddingComponentTemplate embeddingComponentTemplate) {
-
-		return indexService.putComponentTemplate(
-			createComponentTemplateRequest(embeddingComponentTemplate));
-	}
-
-	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
-		return _toDocTypeFields(_toFlatFields(mappings));
 	}
 
 	protected static Set<DocType> mergeDocTypes(
@@ -258,6 +353,10 @@ public class IndexMappingService {
 		return grouped;
 	}
 
+	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
+		return _toDocTypeFields(_toFlatFields(mappings));
+	}
+
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
 		for (String docTypeName : grouped.keySet()) {
 			if (!docTypeName.equals("default")) {
@@ -281,65 +380,6 @@ public class IndexMappingService {
 					});
 			}
 		}
-	}
-
-	private static void _setDocTypeToDocTypeFields(
-		DocType docType, Set<DocTypeField> docTypeFields) {
-
-		if (docTypeFields == null) {
-			return;
-		}
-
-		for (DocTypeField docTypeField : docTypeFields) {
-			docTypeField.setDocType(docType);
-			_setDocTypeToDocTypeFields(docType, docTypeField.getSubDocTypeFields());
-		}
-
-	}
-
-	private static Field _toFlatFields(Map<String, Object> mappings) {
-		Field root = Field.createRoot();
-		_toFlatFields(mappings, root);
-		return root;
-	}
-
-	private static void _toFlatFields(
-		Map<String, Object> mappings, Field root) {
-
-		for (Map.Entry<String, Object> kv : mappings.entrySet()) {
-
-			String key = kv.getKey();
-			Object value = kv.getValue();
-
-			if (key.equals("properties")) {
-				_toFlatFields((Map<String, Object>) value, root);
-			}
-			else if (value instanceof Map && ((Map) value).size() == 1) {
-				Map<String, Object> map = (Map<String, Object>) value;
-				if (map.containsKey("type")) {
-					root.addSubField(Field.of(key, (String) map.get("type")));
-				}
-				else {
-					Field newRoot = Field.of(key);
-					root.addSubField(newRoot);
-					_toFlatFields((Map<String, Object>) value, newRoot);
-				}
-			}
-			else if (value instanceof Map && ((Map) value).size() > 1) {
-				Map<String, Object> localMap = ((Map<String, Object>) value);
-
-				Field newRoot = Field.of(key);
-
-				root.addSubField(newRoot);
-
-				if (localMap.containsKey("type")) {
-					_populateField(newRoot, localMap);
-				}
-
-			}
-
-		}
-
 	}
 
 	private static Field _populateField(
@@ -374,6 +414,20 @@ public class IndexMappingService {
 		}
 
 		return field;
+
+	}
+
+	private static void _setDocTypeToDocTypeFields(
+		DocType docType, Set<DocTypeField> docTypeFields) {
+
+		if (docTypeFields == null) {
+			return;
+		}
+
+		for (DocTypeField docTypeField : docTypeFields) {
+			docTypeField.setDocType(docType);
+			_setDocTypeToDocTypeFields(docType, docTypeField.getSubDocTypeFields());
+		}
 
 	}
 
@@ -450,88 +504,49 @@ public class IndexMappingService {
 
 	}
 
-	protected static PutComponentTemplateRequest createComponentTemplateRequest(
-		EmbeddingComponentTemplate embeddingComponentTemplate) {
+	private static void _toFlatFields(
+		Map<String, Object> mappings, Field root) {
 
-		return PutComponentTemplateRequest.of(component -> component
-			.name(embeddingComponentTemplate.name())
-			.template(template -> template
-				.settings(settings -> settings.knn(true))
-				.mappings(mapping -> mapping
-					.properties(
-						"indexName", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"contentId", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"number", p -> p
-							.integer(int_ -> int_)
-					)
-					.properties(
-						"total", p -> p
-							.integer(int_ -> int_)
-					)
-					.properties(
-						"chunkText", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"title", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"url", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"vector", p -> p
-							.knnVector(knn -> knn.dimension(embeddingComponentTemplate.vectorSize()))
-					)
-				)
-			)
-		);
+		for (Map.Entry<String, Object> kv : mappings.entrySet()) {
+
+			String key = kv.getKey();
+			Object value = kv.getValue();
+
+			if (key.equals("properties")) {
+				_toFlatFields((Map<String, Object>) value, root);
+			}
+			else if (value instanceof Map && ((Map) value).size() == 1) {
+				Map<String, Object> map = (Map<String, Object>) value;
+				if (map.containsKey("type")) {
+					root.addSubField(Field.of(key, (String) map.get("type")));
+				}
+				else {
+					Field newRoot = Field.of(key);
+					root.addSubField(newRoot);
+					_toFlatFields((Map<String, Object>) value, newRoot);
+				}
+			}
+			else if (value instanceof Map && ((Map) value).size() > 1) {
+				Map<String, Object> localMap = ((Map<String, Object>) value);
+
+				Field newRoot = Field.of(key);
+
+				root.addSubField(newRoot);
+
+				if (localMap.containsKey("type")) {
+					_populateField(newRoot, localMap);
+				}
+
+			}
+
+		}
+
 	}
 
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
-		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
-
-		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
-			.flatMap(ingestionPayload -> {
-
-				var documentTypes =
-					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
-
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
-
-				return generateDocTypeFields(
-					session, mappings.getMap(), documentTypes);
-			});
+	private static Field _toFlatFields(Map<String, Object> mappings) {
+		Field root = Field.createRoot();
+		_toFlatFields(mappings, root);
+		return root;
 	}
 
 	private Uni<Set<DocType>> _refreshDocTypeSet(

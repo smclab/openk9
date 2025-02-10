@@ -31,7 +31,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 import io.openk9.datasource.index.response.CatResponse;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.service.CannotCreateIndexTemplateException;
 import io.openk9.datasource.util.UniActionListener;
 
@@ -59,6 +58,7 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.core.action.ActionListener;
@@ -116,10 +116,7 @@ public class IndexService {
 	}
 
 	public Uni<Void> createIndexTemplate(
-		Map<String, Object> indexSettings, DataIndex dataIndex) {
-
-		var request = IndexMappingService.getPutComposableIndexTemplateRequest(
-			indexSettings, dataIndex);
+		PutComposableIndexTemplateRequest request) {
 
 		return Uni.createFrom()
 			.emitter((sink) -> {
