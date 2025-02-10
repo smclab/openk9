@@ -72,10 +72,17 @@ public class IndexMappingService {
 	IngestionPayloadMapper ingestionPayloadMapper;
 
 	/**
-	 * Create an Index template
+	 * Create an IndexTemplate from a dataIndex and a settings map.
+	 * The indexTemplate mappings will be created from the docTypes
+	 * associated to dataIndex.
+	 * The indexTemplate settings will be created from the settings map.
 	 *
-	 * @param dataIndexTemplate
-	 * @return
+	 * @param dataIndexTemplate The object containing the dataIndex and the settings map
+	 *                         	used to create the dataIndex
+	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
+	 * succeeds, the result is empty. If the operation fails, the failure is
+	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
+	 * the error appropriately.
 	 */
 	public Uni<Void> createDataIndexTemplate(
 		DataIndexTemplate dataIndexTemplate) {
