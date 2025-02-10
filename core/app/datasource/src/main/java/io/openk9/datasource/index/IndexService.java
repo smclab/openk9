@@ -59,6 +59,8 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
@@ -72,6 +74,46 @@ public class IndexService {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	OpenSearchAsyncClient asyncClient;
+
+	public Uni<Void> deleteIndex(IndexName indexName) {
+
+		return Uni.createFrom().emitter(emitter -> {
+			DeleteIndexRequest deleteIndexRequest =
+				new DeleteIndexRequest(indexName.value());
+
+			deleteIndexRequest
+				.indicesOptions(
+					IndicesOptions.fromMap(
+						Map.of("ignore_unavailable", true),
+						deleteIndexRequest.indicesOptions()
+					)
+				);
+
+			restHighLevelClient.indices().deleteAsync(
+				deleteIndexRequest,
+				RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onFailure(Exception e) {
+						emitter.fail(e);
+
+					}
+
+					@Override
+					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
+						if (acknowledgedResponse.isAcknowledged()) {
+							emitter.complete(null);
+						}
+						else {
+							emitter.fail(new DeleteIndexException());
+						}
+					}
+				}
+			);
+		});
+	}
 
 	public Uni<Void> createIndexTemplate(
 		Map<String, Object> indexSettings, DataIndex dataIndex) {
@@ -121,42 +163,28 @@ public class IndexService {
 			});
 	}
 
-	public Uni<Void> deleteIndex(DataIndex dataIndex) {
+	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
 
-		return Uni.createFrom().emitter(emitter -> {
-			DeleteIndexRequest deleteIndexRequest =
-				new DeleteIndexRequest(dataIndex.getIndexName());
-
-			deleteIndexRequest
-				.indicesOptions(
-					IndicesOptions.fromMap(
-						Map.of("ignore_unavailable", true),
-						deleteIndexRequest.indicesOptions()
-					)
-				);
-
-			restHighLevelClient.indices().deleteAsync(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT,
-				new ActionListener<>() {
-					@Override
-					public void onFailure(Exception e) {
-						emitter.fail(e);
-
+		try {
+			return Uni.createFrom().completionStage(asyncClient.cluster()
+					.putComponentTemplate(putComponentTemplateRequest)
+				)
+				.onFailure().transform(CannotCreateComponentTemplateException::new)
+				.onItem()
+				.transformToUni(response -> {
+					if (response.acknowledged()) {
+						return Uni.createFrom().voidItem();
 					}
-
-					@Override
-					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-						if (acknowledgedResponse.isAcknowledged()) {
-							emitter.complete(null);
-						}
-						else {
-							emitter.fail(new DeleteIndexException());
-						}
+					else {
+						return Uni.createFrom().failure(
+							new CannotCreateComponentTemplateException());
 					}
-				}
-			);
-		});
+				});
+		}
+		catch (Exception e) {
+			return Uni.createFrom()
+				.failure(new CannotCreateComponentTemplateException(e));
+		}
 	}
 
 	public Uni<List<String>> getDocumentTypes(String indexName) {

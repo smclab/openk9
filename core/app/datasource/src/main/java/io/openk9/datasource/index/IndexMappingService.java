@@ -53,6 +53,8 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
@@ -154,6 +156,24 @@ public class IndexMappingService {
 			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
 
 		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
+	}
+
+	/**
+	 * Create or update a component template that defines an embedding mapping.
+	 *
+	 * @param embeddingComponentTemplate The object containing the name of the component
+	 *                                   template and the dimension of the {@code knnVector}.
+	 *                                   Must not be {@code null}.
+	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
+	 * succeeds, the result is empty. If the operation fails, the failure is
+	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
+	 * the error appropriately.
+	 **/
+	public Uni<Void> createEmbeddingComponentTemplate(
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		return indexService.putComponentTemplate(
+			createComponentTemplateRequest(embeddingComponentTemplate));
 	}
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
@@ -428,6 +448,71 @@ public class IndexMappingService {
 
 		}
 
+	}
+
+	protected static PutComponentTemplateRequest createComponentTemplateRequest(
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		return PutComponentTemplateRequest.of(component -> component
+			.name(embeddingComponentTemplate.name())
+			.template(template -> template
+				.settings(settings -> settings.knn(true))
+				.mappings(mapping -> mapping
+					.properties(
+						"indexName", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"contentId", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"number", p -> p
+							.integer(int_ -> int_)
+					)
+					.properties(
+						"total", p -> p
+							.integer(int_ -> int_)
+					)
+					.properties(
+						"chunkText", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"title", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"url", p -> p
+							.text(text -> text.fields(
+								"keyword",
+								Property.of(field -> field
+									.keyword(keyword -> keyword.ignoreAbove(256)))
+							))
+					)
+					.properties(
+						"vector", p -> p
+							.knnVector(knn -> knn.dimension(embeddingComponentTemplate.vectorSize()))
+					)
+				)
+			)
+		);
 	}
 
 	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
