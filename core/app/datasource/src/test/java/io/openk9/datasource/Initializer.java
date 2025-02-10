@@ -23,6 +23,7 @@ import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
@@ -40,6 +41,7 @@ import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
 
+import io.quarkus.test.InjectMock;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -68,6 +70,10 @@ public class Initializer {
 
 	@Inject
 	TabService tabService;
+
+	@InjectMock
+	IndexService indexService;
+
 
 	public void initDb(@Observes Startup startup) {
 
