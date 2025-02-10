@@ -17,24 +17,45 @@
 
 package io.openk9.datasource.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.ws.rs.NotFoundException;
+
+import io.openk9.datasource.index.EmbeddingComponentTemplate;
+import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.EmbeddingModelMapper;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.EmbeddingModel_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, EmbeddingModelDTO> {
 
+	@Inject
+	IndexMappingService indexMappingService;
+
 	EmbeddingModelService(EmbeddingModelMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> merge(String tenantId, T entity) {
+		return createComponentTemplate((EmbeddingModel) entity)
+			.flatMap((unused -> super.merge(tenantId, entity)));
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> persist(String tenantId, T entity) {
+		return createComponentTemplate((EmbeddingModel) entity)
+			.flatMap((unused -> super.persist(tenantId, entity)));
 	}
 
 	@Override
@@ -98,6 +119,16 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 
 	public Uni<EmbeddingModel> enable(long id) {
 		return sessionFactory.withTransaction((s, t) -> enable(s, id));
+	}
+
+	private Uni<Void> createComponentTemplate(EmbeddingModel entity) {
+		var embeddingComponentTemplate = new EmbeddingComponentTemplate(
+			entity.getName(),
+			entity.getVectorSize()
+		);
+
+		return indexMappingService.createEmbeddingComponentTemplate(
+			embeddingComponentTemplate);
 	}
 
 }
