@@ -17,10 +17,13 @@
 
 package io.openk9.datasource.mock;
 
-import io.quarkiverse.rabbitmqclient.RabbitMQClient;
-import io.quarkus.test.Mock;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+
+import io.openk9.datasource.index.IndexService;
+
+import io.quarkiverse.rabbitmqclient.RabbitMQClient;
+import io.quarkus.test.Mock;
 import org.mockito.Mockito;
 import org.opensearch.client.RestHighLevelClient;
 
@@ -38,6 +41,13 @@ public final class MockedBeans {
 	@ApplicationScoped
 	public RabbitMQClient mockRabbitMQClient() {
 		return Mockito.mock(RabbitMQClient.class);
+	}
+
+	@Produces
+	@Mock
+	@ApplicationScoped
+	public IndexService mockIndexService() {
+		return Mockito.mock(IndexService.class);
 	}
 
 }

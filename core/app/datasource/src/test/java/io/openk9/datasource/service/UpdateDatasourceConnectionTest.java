@@ -27,7 +27,6 @@ import static org.mockito.Mockito.times;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
-import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.DataIndexDTO;
@@ -37,7 +36,6 @@ import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -75,8 +73,6 @@ class UpdateDatasourceConnectionTest {
 	EnrichItemService enrichItemService;
 	@Inject
 	DocTypeService docTypeService;
-	@InjectMock
-	IndexService indexService;
 
 	private long datasourceId;
 	private long dataIndexId;
