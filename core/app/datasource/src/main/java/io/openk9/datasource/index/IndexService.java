@@ -31,7 +31,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 
 import io.openk9.datasource.index.response.CatResponse;
-import io.openk9.datasource.service.CannotCreateIndexTemplateException;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;

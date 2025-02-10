@@ -17,8 +17,12 @@
 
 package io.openk9.datasource.index;
 
-public class DeleteIndexException extends Exception {
+import io.openk9.datasource.service.exception.K9Error;
+
+public class DeleteIndexException extends K9Error {
+
 	public DeleteIndexException() {
+		super("unknown error");
 	}
 
 	public DeleteIndexException(String message) {
@@ -31,13 +35,5 @@ public class DeleteIndexException extends Exception {
 
 	public DeleteIndexException(Throwable cause) {
 		super(cause);
-	}
-
-	public DeleteIndexException(
-		String message,
-		Throwable cause,
-		boolean enableSuppression,
-		boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }

@@ -15,11 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service;
+package io.openk9.datasource.index;
 
-public class CannotCreateIndexTemplateException extends Exception {
+import io.openk9.datasource.service.exception.K9Error;
+
+public class CannotCreateIndexTemplateException extends K9Error {
 
 	public CannotCreateIndexTemplateException() {
+		super("unknown error");
 	}
 
 	public CannotCreateIndexTemplateException(String message) {
@@ -33,13 +36,4 @@ public class CannotCreateIndexTemplateException extends Exception {
 	public CannotCreateIndexTemplateException(Throwable cause) {
 		super(cause);
 	}
-
-	public CannotCreateIndexTemplateException(
-		String message,
-		Throwable cause,
-		boolean enableSuppression,
-		boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
 }

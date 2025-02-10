@@ -17,9 +17,12 @@
 
 package io.openk9.datasource.index;
 
-public class CannotCreateComponentTemplateException extends Exception {
+import io.openk9.datasource.service.exception.K9Error;
+
+public class CannotCreateComponentTemplateException extends K9Error {
+
 	public CannotCreateComponentTemplateException() {
-		super();
+		super("unknown error");
 	}
 
 	public CannotCreateComponentTemplateException(String message) {
@@ -32,13 +35,5 @@ public class CannotCreateComponentTemplateException extends Exception {
 
 	public CannotCreateComponentTemplateException(Throwable cause) {
 		super(cause);
-	}
-
-	protected CannotCreateComponentTemplateException(
-		String message,
-		Throwable cause,
-		boolean enableSuppression,
-		boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }
