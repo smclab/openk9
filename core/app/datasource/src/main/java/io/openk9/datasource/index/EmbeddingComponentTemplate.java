@@ -17,5 +17,13 @@
 
 package io.openk9.datasource.index;
 
+import io.openk9.datasource.util.OpenSearchUtils;
+
 public record EmbeddingComponentTemplate(String name, int vectorSize) {
+
+	public EmbeddingComponentTemplate {
+		name = OpenSearchUtils.indexNameSanitizer(name);
+		assert vectorSize > 0;
+	}
+
 }
