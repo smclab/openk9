@@ -1,0 +1,8 @@
+## Quarkus configuration
+quarkus:
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.io/,"
+
+## Keycloak configuration
+keycloak:
+  host: "keycloak.openk9.io"   #-TBMD

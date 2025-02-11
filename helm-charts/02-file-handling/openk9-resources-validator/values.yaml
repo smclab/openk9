@@ -1,0 +1,281 @@
+# Copyright Smc Treviso, S.r.l All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+# Default values for openk9-resources-validator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## @param replicaCount Number of Resources Validator replicas to deploy
+##
+replicaCount: 1
+
+## @section Resources Validator Image parameters
+## Docker Resources Validator image version
+## ref: https://hub.docker.com/u/smclab
+## @param image.registry [default: REGISTRY_NAME] Resources Validator image registry
+## @skip image.tag Resources Validator image tag (immutable tags are recommended)
+## @param image.pullPolicy Resources Validator image pull policy
+## @param image.pullSecrets Specify docker-registry secret names as an array
+image:
+  registry: ""
+  name: smclab/openk9-resources-validator
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+  ## Specify a imagePullPolicy
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
+  ##
+  pullPolicy: Always
+
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ## Example:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets:
+    - docker-registry-secret
+  
+## @param commonAnnotations Annotations to add to all deployed objects
+##
+commonAnnotations:
+  prometheus.io/scheme: http
+  prometheus.io/scrape: "true"
+
+## @param nameOverride String to partially override fullname template (will maintain the release name)
+##
+nameOverride: ""
+
+## @param fullnameOverride String to fully override fullname template
+##
+fullnameOverride: ""
+
+## Http Access Log configuration
+config:
+  httpAccessLog:
+    enabled: true
+    pattern: "%h %l %u %t \"%r\" %s %b %D"
+
+## JVM configuration
+jvm:
+  toolOptions: ""
+
+## Kubernetes service type
+##
+service:
+  ## @param service.type Kubernetes Service type
+  ##
+  type: ClusterIP
+  ## Service ports
+  ## @param service.port Http service port
+  port: 8080
+  ## Service ports
+  ## @param service.port Http service port
+  debugPort: 5005
+  ## Service ports
+  ## @param service.port Http service port
+  grpcPort: 9000
+
+## Quarkus configuration
+quarkus:
+## - add rel 1.6.0
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.io/,"
+  LogConsoleJson: false ## put to true to force json log format
+  LogLevel: "INFO"
+
+## Opensearch configuration 
+opensearch:
+  host: "opensearch-master-headless"
+  port: 9200
+  username: "opensearch"
+  passwordSecretName: "opensearch-password"
+  keyPasswordSecret: "password"
+  keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
+
+## OpenK9 grpc services configuration
+openk9:
+  ## Openk File Manager configuration
+  fileManager:
+    host: "openk9-file-manager"
+    port: 8080
+  ## Openk Datasource configuration
+  datasource:
+    host: "openk9-datasource"
+    port: 8080
+
+## Opentelemetry configuration
+otel:
+  disabled: true
+  endpoint: ""
+
+## Resources Validator pods ServiceAccount
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Resources Validator pods
+  ##
+  create: false
+  ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
+  ##
+  annotations: {}
+  ## @param serviceAccount.name Name of the created serviceAccount
+  ## If not set and create is true, a name is generated using the fullname template
+  ##
+  name: ""
+
+## @param podAnnotations Resources Validator Pod annotations. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## Resources Validator pods' Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+## @param podSecurityContext.enabled Enable Resources Validator pods' Security Context
+## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
+## @param podSecurityContext.supplementalGroups Set filesystem extra groups
+## @param podSecurityContext.fsGroup Set Resources Validator pod's Security Context fsGroup
+##
+podSecurityContext: {}
+  # fsGroup: 2000
+
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## Configure the ingress resource that allows you to access the
+## Resources Validator installation. Set up the URL
+## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+##
+ingress:
+  ## @param ingress.enabled Enable ingress resource for Resources Validator console
+  ##
+  enabled: false
+  ## @param ingress.enabled Enable ingress resource for Resources Validator console
+  ##
+  host: openk9.local   #-TBMD
+  ## @param ingress.annotations Additional annotations for the Ingress resource.
+  ## For a full list of possible ingress annotations, please see
+  ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+  ##
+  ## e.g:
+  ## annotations:
+  ##   kubernetes.io/ingress.class: nginx
+  ##
+  annotations: {}
+  ## @param ingress.servicePort Path for the default port.
+  ##
+  servicePort: 8080
+  ## @param ingress.paths Paths for the default host.
+  ##
+  paths:
+    - /api/resources-validator
+  ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
+  ##
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret   #-TBMD
+
+# In OpenShift use Route instead of Ingress
+route:
+  enabled: false
+  annotations: {}
+  host: openk9.local #-TBMD
+  path: /api/resources-validator
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret   #-TBMD
+
+## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 2
+##     memory: 512Mi
+##   limits:
+##     cpu: 3
+##     memory: 1024Mi
+##
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilizationPercentage: 80
+  averageMemoryUtilizationPercentage: 80
+
+## @param nodeSelector Node labels for pod assignment. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+##
+nodeSelector: {}
+
+## @param tolerations Tolerations for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## @param affinity Affinity for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+
+## Configure Resources Validator containers' extra options for startup probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param startupProbe.enabled Enable startupProbe
+## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+## @param startupProbe.periodSeconds Period seconds for startupProbe
+## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
+## @param startupProbe.failureThreshold Failure threshold for startupProbe
+## @param startupProbe.successThreshold Success threshold for startupProbe
+##
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Resources Validator containers' extra options for liveness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param livenessProbe.enabled Enable livenessProbe
+## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+## @param livenessProbe.periodSeconds Period seconds for livenessProbe
+## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+## @param livenessProbe.failureThreshold Failure threshold for livenessProbe
+## @param livenessProbe.successThreshold Success threshold for livenessProbe
+##
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Resources Validator containers' extra options for readiness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param readinessProbe.enabled Enable readinessProbe
+## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+## @param readinessProbe.successThreshold Success threshold for readinessProbe
+##
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+

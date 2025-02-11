@@ -1,0 +1,6 @@
+image:
+  registry: ""   #-TBMD
+  name: smclab/search-frontend
+  # Overrides the image tag whose default is the chart appVersion.
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.0"

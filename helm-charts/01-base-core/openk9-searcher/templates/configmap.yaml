@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+data:
+  QUARKUS_OPENSEARCH_HOSTS: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+  QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: {{ include "helper.datasourceHost" . | quote }}
+  QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
+  OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
+  QUARKUS_OIDC_AUTH_SERVER_URL: '{{ include "helper.keycloakURL" . }}/realms/master'
+  QUARKUS_OIDC_CLIENT_ID: {{ .Values.keycloak.clientId | quote }}
+  QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: {{ include "helper.keycloakURL" . | quote }}
+  OPENK9_AUTHSERVERURL_TEMPLATE: '{{ include "helper.keycloakURL" . }}/realms/{realm}'
+  ##
+  QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
+  QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
+  QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
+  QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
+
+  # JVM Memory variable
+  JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
+
+  # Opentelemetry env
+  QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
+  QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ .Values.otel.endpoint | quote }}

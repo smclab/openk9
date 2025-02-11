@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: openk9-db
+spec:
+  ttlSecondsAfterFinished: 120
+  template:
+    spec:
+      containers:
+      - name: openk9-db
+        image: bitnami/postgresql:14
+        command: ["/bin/sh", "-c"]
+        args: ["psql -c \"CREATE ROLE openk9 WITH LOGIN ENCRYPTED PASSWORD 'openk9'\"; psql -c \"CREATE DATABASE openk9 OWNER openk9;\"" ]
+        env:
+        - name: PGHOST
+          value: "postgresql"
+        - name: PGPORT
+          value: "5432"
+        - name: PGUSER
+          value: "postgres"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-password
+              key: postgres-password
+      restartPolicy: Never
