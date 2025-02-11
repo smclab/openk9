@@ -21,6 +21,7 @@ import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
@@ -36,7 +37,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-;
+import java.util.List;
 
 @ApplicationScoped
 public class SuggestionCategoryService extends
@@ -101,6 +102,32 @@ public class SuggestionCategoryService extends
 	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
 		return translationService.deleteTranslation(
 			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey());
+	}
+
+	/**
+	 * Retrieves a list of DocTypeField entities that are unbound to the given SuggestionCategory ID
+	 * and have a FieldType of either KEYWORD or I18N.
+	 *
+	 * @param suggestionCategoryId The ID of the SuggestionCategory to exclude associated DocTypeFields.
+	 * @return A Uni containing a list of DocTypeField objects that meet the filtering criteria.
+	 */
+	public Uni<List<DocTypeField>> findUnboundDocTypeFieldsBySuggestionCategory(
+			long suggestionCategoryId) {
+		return sessionFactory.withTransaction(s -> {
+			String queryString = "SELECT dtf FROM DocTypeField dtf " +
+				"WHERE NOT EXISTS ( " +
+				"SELECT 1 " +
+				"FROM SuggestionCategory sc " +
+				"WHERE sc.docTypeField.id = dtf.id " +
+				"AND sc.id = (:suggestionCategoryId)) " +
+				"AND (dtf.fieldType = (:keyword) OR dtf.fieldType = (:i18n))";
+
+			return s.createQuery(queryString, DocTypeField.class)
+				.setParameter("suggestionCategoryId", suggestionCategoryId)
+				.setParameter("keyword", FieldType.KEYWORD)
+				.setParameter("i18n", FieldType.I18N)
+				.getResultList();
+		});
 	}
 
 	public Uni<Bucket> getBucket(long suggestionCategoryId) {
