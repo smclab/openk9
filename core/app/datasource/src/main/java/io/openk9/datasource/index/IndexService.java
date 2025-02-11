@@ -33,6 +33,7 @@ import jakarta.ws.rs.WebApplicationException;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
@@ -45,7 +46,6 @@ import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.support.IndicesOptions;
-import org.opensearch.action.support.master.AcknowledgedResponse;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
@@ -78,9 +78,50 @@ public class IndexService {
 	@Inject
 	OpenSearchAsyncClient asyncClient;
 
+	public Uni<Void> createIndexTemplate(
+		PutComposableIndexTemplateRequest request) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			IndicesClient indices = restHighLevelClient.indices();
+
+			try {
+				var response = indices.putIndexTemplate(
+					request,
+					RequestOptions.DEFAULT
+				);
+
+				if (response.isAcknowledged()) {
+					return null;
+				}
+				else {
+					var templateName = request.name();
+					log.errorf("Error creating indexTemplate %s", templateName);
+
+					throw new CannotCreateIndexTemplateException();
+				}
+			}
+			catch (OpenSearchStatusException osse) {
+				throw new WebApplicationException(jakarta.ws.rs.core.Response
+					.status(osse.status().getStatus())
+					.entity(JsonObject.of(
+						DETAILS_FIELD, osse.getMessage()))
+					.build());
+			}
+			catch (Exception e) {
+				throw new WebApplicationException(jakarta.ws.rs.core.Response
+					.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(JsonObject.of(
+						DETAILS_FIELD, e.getMessage()))
+					.build());
+			}
+
+		});
+	}
+
 	public Uni<Void> deleteIndex(IndexName indexName) {
 
-		return Uni.createFrom().emitter(emitter -> {
+		return VertxContextSupport.executeBlocking(() -> {
 			DeleteIndexRequest deleteIndexRequest =
 				new DeleteIndexRequest(indexName.value());
 
@@ -92,73 +133,31 @@ public class IndexService {
 					)
 				);
 
-			restHighLevelClient.indices().deleteAsync(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT,
-				new ActionListener<>() {
-					@Override
-					public void onFailure(Exception e) {
-						emitter.fail(e);
-
-					}
-
-					@Override
-					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-						if (acknowledgedResponse.isAcknowledged()) {
-							emitter.complete(null);
-						}
-						else {
-							emitter.fail(new DeleteIndexException());
-						}
-					}
-				}
-			);
-		});
-	}
-
-	public Uni<Void> createIndexTemplate(
-		PutComposableIndexTemplateRequest request) {
-
-		return Uni.createFrom()
-			.emitter((sink) -> {
-				IndicesClient indices = restHighLevelClient.indices();
-				indices.putIndexTemplateAsync(
-					request,
-					RequestOptions.DEFAULT,
-					new ActionListener<>() {
-
-						@Override
-						public void onFailure(Exception e) {
-
-							if (e instanceof OpenSearchStatusException osse) {
-								sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
-									.status(osse.status().getStatus())
-									.entity(JsonObject.of(
-										DETAILS_FIELD, osse.getMessage()))
-									.build()));
-							}
-							else {
-								sink.fail(new WebApplicationException(jakarta.ws.rs.core.Response
-									.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
-									.entity(JsonObject.of(
-										DETAILS_FIELD, e.getMessage()))
-									.build()));
-							}
-
-						}
-
-						@Override
-						public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-							if (acknowledgedResponse.isAcknowledged()) {
-								sink.complete(null);
-							}
-							else {
-								sink.fail(new CannotCreateIndexTemplateException());
-							}
-						}
-					}
+			try {
+				var response = restHighLevelClient.indices().delete(
+					deleteIndexRequest,
+					RequestOptions.DEFAULT
 				);
-			});
+
+				if (response.isAcknowledged()) {
+					return null;
+				}
+				else {
+					log.errorf(
+						"Error deleting index %s, cluster didn't acknowledge",
+						indexName.value()
+					);
+
+					throw new DeleteIndexException();
+				}
+			}
+			catch (Exception e) {
+				log.errorf(e, "Error deleting index %s", indexName.value());
+
+				throw new DeleteIndexException();
+			}
+
+		});
 	}
 
 	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
