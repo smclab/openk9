@@ -473,7 +473,8 @@ public class IndexService {
 						return Uni.createFrom().failure(
 							new CannotCreateComponentTemplateException());
 					}
-				}).emitOn(Infrastructure.getDefaultWorkerPool());
+				})
+				.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 		}
 		catch (Exception e) {
 			log.errorf(
