@@ -34,7 +34,6 @@ import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -440,52 +439,52 @@ public class IndexService {
 
 		var componentTemplateName = putComponentTemplateRequest.name();
 
-		try {
-			return Uni.createFrom().completionStage(asyncClient.cluster()
-					.putComponentTemplate(putComponentTemplateRequest)
-				)
-				.onFailure().transform(throwable -> {
+		return Uni.createFrom()
+			.deferred(() -> {
+				try {
+					return Uni.createFrom()
+						.completionStage(asyncClient.cluster()
+							.putComponentTemplate(putComponentTemplateRequest))
+						.onFailure().transform(throwable -> {
+							log.errorf(
+								throwable,
+								"Error when trying to create a componentTemplate %s.",
+								componentTemplateName
+							);
+
+							return new CannotCreateComponentTemplateException();
+						})
+						.flatMap(response -> {
+							if (response.acknowledged()) {
+								if (log.isDebugEnabled()) {
+									log.debugf(
+										"componentTemplate %s successfully created.",
+										componentTemplateName
+									);
+								}
+								return Uni.createFrom().voidItem();
+							}
+							else {
+								log.errorf(
+									"Cluster didn't acknowledge the operation for componentTemplate %s",
+									componentTemplateName
+								);
+
+								return Uni.createFrom().failure(
+									new CannotCreateComponentTemplateException());
+							}
+						});
+				}
+				catch (Exception e) {
 					log.errorf(
-						throwable,
-						"Error when trying to create a componentTemplate %s.",
+						e,
+						"Error creating ComponentTemplate %s.",
 						componentTemplateName
 					);
 
-					return new CannotCreateComponentTemplateException();
-				})
-				.onItem()
-				.transformToUni(response -> {
-					if (response.acknowledged()) {
-						if (log.isDebugEnabled()) {
-							log.debugf(
-								"componentTemplate %s successfully created.",
-								componentTemplateName
-							);
-						}
-						return Uni.createFrom().voidItem();
-					}
-					else {
-						log.errorf(
-							"Cluster didn't acknowledge the operation for componentTemplate %s",
-							componentTemplateName
-						);
-
-						return Uni.createFrom().failure(
-							new CannotCreateComponentTemplateException());
-					}
-				})
-				.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-		}
-		catch (Exception e) {
-			log.errorf(
-				e,
-				"Error creating ComponentTemplate %s.",
-				componentTemplateName
-			);
-
-			return Uni.createFrom()
-				.failure(new CannotCreateComponentTemplateException());
-		}
+					throw new CannotCreateComponentTemplateException();
+				}
+			});
 	}
 
 }
