@@ -19,9 +19,12 @@ package io.openk9.datasource.grpc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.mock;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeast;
 
+import java.io.IOException;
 import java.util.Set;
 import jakarta.inject.Inject;
 
@@ -49,6 +52,7 @@ import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import io.smallrye.mutiny.Uni;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -56,13 +60,11 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.core.action.ActionListener;
+import org.opensearch.client.indices.CreateIndexRequest;
+import org.opensearch.search.aggregations.AggregationBuilder;
 import org.opensearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 
 @Slf4j
@@ -96,8 +98,8 @@ public class SearcherSuggestionsGrpcTest {
 	@GrpcClient
 	Searcher searcher;
 
-	@InjectMock
-	RestHighLevelClient client;
+	@InjectSpy(convertScopes = true)
+	RestHighLevelClient openSearchClient;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -133,32 +135,30 @@ public class SearcherSuggestionsGrpcTest {
 			getBucketDefault().getId(),
 			getSuggestionCategoryOne().getBuckets().iterator().next().getId()
 		);
+
+		var dataIndex = datasourceService.getDataIndex(getDatasourceDefault().getId())
+			.await().indefinitely();
+
+		try {
+			var createIndexRequest = new CreateIndexRequest(dataIndex.getIndexName());
+
+			openSearchClient.indices()
+				.create(createIndexRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
+
 
 	@Test
 	@Order(2)
 	void should_aggregate_with_doc_type_field_one_only() {
 
-		SearchResponse searchResponseMock = mock(SearchResponse.class);
-		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
-
 		BDDMockito.given(tenantManager.findTenant(notNull()))
 			.willReturn(Uni.createFrom().item(
 				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME)
 					.build()));
-
-		BDDMockito.given(
-			client.searchAsync(
-				captor.capture(),
-				any(RequestOptions.class),
-				any(ActionListener.class)))
-			.willAnswer(invocation -> {
-				ActionListener<SearchResponse> listener =
-					invocation.getArgument(2);
-
-				listener.onResponse(searchResponseMock);
-				return null;
-			});
 
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeField = suggestionCategoryOne.getDocTypeField();
@@ -168,23 +168,38 @@ public class SearcherSuggestionsGrpcTest {
 			.setSuggestionCategoryId(suggestionCategoryOne.getId())
 			.build();
 
-		var response =
-			searcher.suggestionsQueryParser(request)
-				.await()
-				.indefinitely();
+		searcher.suggestionsQueryParser(request)
+			.await()
+			.indefinitely();
 
-		var searchRequest = captor.getValue();
+		then(openSearchClient)
+			.should(atLeast(1))
+			.searchAsync(
+				argThat(
+					searchRequest -> {
+						var aggregatorFactories = searchRequest
+							.source()
+							.aggregations()
+							.getAggregatorFactories();
 
-		searchRequest.source().aggregations().getAggregatorFactories().stream()
-			.forEach(aggregationBuilder -> {
-				var sources =
-					((CompositeAggregationBuilder) aggregationBuilder).sources();
+						for (AggregationBuilder builder : aggregatorFactories) {
+							var sources =
+								((CompositeAggregationBuilder) builder).sources();
 
-				assertEquals(1, sources.size());
-				assertEquals(
-					docTypeField.getName(),
-					sources.getFirst().name());
-			});
+							assertEquals(1, sources.size());
+							assertEquals(
+								docTypeField.getName(),
+								sources.getFirst().name()
+							);
+						}
+
+						return true;
+					}
+				),
+				any(),
+				any()
+			);
+
 	}
 
 	@Test

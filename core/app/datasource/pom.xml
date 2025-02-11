@@ -294,39 +294,47 @@
 
     <!-- // Test dependencies -->
 
-    <dependency>
-      <groupId>org.wiremock</groupId>
-      <artifactId>wiremock</artifactId>
-      <scope>test</scope>
-      <version>3.9.2</version>
-    </dependency>
+	  <dependency>
+		  <groupId>org.wiremock</groupId>
+		  <artifactId>wiremock</artifactId>
+		  <scope>test</scope>
+		  <version>3.9.2</version>
+	  </dependency>
 
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>datasource-model</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-liquibase</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>io.quarkus</groupId>
-          <artifactId>quarkus-agroal</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-graphql-client</artifactId>
-      <scope>test</scope>
-    </dependency>
+	  <dependency>
+		  <groupId>io.openk9.common</groupId>
+		  <artifactId>datasource-model</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-liquibase</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-jdbc-postgresql</artifactId>
+		  <scope>test</scope>
+		  <exclusions>
+			  <exclusion>
+				  <groupId>io.quarkus</groupId>
+				  <artifactId>quarkus-agroal</artifactId>
+			  </exclusion>
+		  </exclusions>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-graphql-client</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+
+	  <!--	in order to activate elasticsearch dev-service,
+	  		we need to add an elasticsearch extension -->
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-elasticsearch-rest-client</artifactId>
+		  <scope>test</scope>
+	  </dependency>
 
     <!-- Test dependencies // -->
 

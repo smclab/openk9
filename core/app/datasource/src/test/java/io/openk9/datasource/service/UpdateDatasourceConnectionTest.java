@@ -28,9 +28,7 @@ import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
 import io.openk9.datasource.resource.util.Pageable;
@@ -51,15 +49,10 @@ import org.mockito.ArgumentMatchers;
 class UpdateDatasourceConnectionTest {
 
 	private static final String TENANT_ID = "public";
-	private static final String ENRICH_ITEM_1 = "UDCT.enrichItem1";
-	private static final String ENRICH_ITEM_2 = "UDCT.enrichItem2";
 	private static final String ENRICH_PIPELINE = "UDCT.enrichPiepeline";
 	private static final String PLUGIN_DRIVER = "UDCT.pluginDriver";
 	private static final String DATASOURCE = "UDCT.datasource";
 	private static final String DATAINDEX = "UDCT.dataindex";
-	private static final String JSON_PATH = "$";
-	private static final String JSON_CONFIG = "{}";
-	private static final long REQUEST_TIMEOUT = 60000L;
 
 	@Inject
 	DatasourceService datasourceService;
@@ -69,8 +62,6 @@ class UpdateDatasourceConnectionTest {
 	EnrichPipelineService enrichPipelineService;
 	@InjectSpy
 	DataIndexService dataIndexService;
-	@Inject
-	EnrichItemService enrichItemService;
 	@Inject
 	DocTypeService docTypeService;
 
@@ -343,30 +334,6 @@ class UpdateDatasourceConnectionTest {
 	@BeforeEach
 	void setup() {
 
-		var enrich1 = enrichItemService.create(EnrichItemDTO.builder()
-			.name(ENRICH_ITEM_1)
-			.type(EnrichItem.EnrichItemType.HTTP_ASYNC)
-			.serviceName(ENRICH_ITEM_1)
-			.jsonPath(JSON_PATH)
-			.jsonConfig(JSON_CONFIG)
-			.requestTimeout(REQUEST_TIMEOUT)
-			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
-			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
-			.build()
-		).await().indefinitely();
-
-		var enrich2 = enrichItemService.create(EnrichItemDTO.builder()
-			.name(ENRICH_ITEM_2)
-			.type(EnrichItem.EnrichItemType.HTTP_SYNC)
-			.serviceName(ENRICH_ITEM_2)
-			.jsonPath(JSON_PATH)
-			.jsonConfig(JSON_CONFIG)
-			.requestTimeout(REQUEST_TIMEOUT)
-			.behaviorMergeType(EnrichItem.BehaviorMergeType.MERGE)
-			.behaviorOnError(EnrichItem.BehaviorOnError.FAIL)
-			.build()
-		).await().indefinitely();
-
 		var datasource = datasourceService.createDatasourceConnection(
 				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(DATASOURCE)
@@ -376,16 +343,6 @@ class UpdateDatasourceConnectionTest {
 					)
 					.pipeline(PipelineWithItemsDTO.builder()
 						.name(ENRICH_PIPELINE)
-						.item(PipelineWithItemsDTO.ItemDTO.builder()
-							.enrichItemId(enrich1.getId())
-							.weight(1)
-							.build()
-						)
-						.item(PipelineWithItemsDTO.ItemDTO.builder()
-							.enrichItemId(enrich2.getId())
-							.weight(2)
-							.build()
-						)
 						.build()
 					)
 					.dataIndex(DataIndexDTO.builder()
@@ -404,7 +361,6 @@ class UpdateDatasourceConnectionTest {
 
 		this.pipelineId = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
 			.await().indefinitely().getId();
-
 
 		this.datasourceId = datasource.getEntity().getId();
 
@@ -427,8 +383,6 @@ class UpdateDatasourceConnectionTest {
 
 	}
 
-
-
 	@AfterEach
 	void tearDown() {
 		var datasource = datasourceService.findByName(TENANT_ID, DATASOURCE)
@@ -438,11 +392,6 @@ class UpdateDatasourceConnectionTest {
 			.await().indefinitely();
 
 		var dataIndex = datasourceService.getDataIndex(datasource.getId())
-			.await().indefinitely();
-
-		var enrichItem1 = enrichItemService.findByName(TENANT_ID, ENRICH_ITEM_1)
-			.await().indefinitely();
-		var enrichItem2 = enrichItemService.findByName(TENANT_ID, ENRICH_ITEM_2)
 			.await().indefinitely();
 
 		var enrichPipeline = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
@@ -458,16 +407,7 @@ class UpdateDatasourceConnectionTest {
 		datasourceService.unsetEnrichPipeline(datasource.getId())
 			.await().indefinitely();
 
-		enrichPipelineService.removeEnrichItem(enrichPipeline.getId(), enrichItem1.getId())
-			.await().indefinitely();
-		enrichPipelineService.removeEnrichItem(enrichPipeline.getId(), enrichItem2.getId())
-			.await().indefinitely();
-
 		// deletes entities
-		enrichItemService.deleteById(enrichItem1.getId())
-			.await().indefinitely();
-		enrichItemService.deleteById(enrichItem2.getId())
-			.await().indefinitely();
 		enrichPipelineService.deleteById(enrichPipeline.getId())
 			.await().indefinitely();
 		dataIndexService.deleteById(dataIndex.getId())

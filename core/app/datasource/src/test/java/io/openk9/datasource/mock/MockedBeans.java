@@ -20,34 +20,16 @@ package io.openk9.datasource.mock;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
-import io.openk9.datasource.index.IndexService;
-
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.test.Mock;
 import org.mockito.Mockito;
-import org.opensearch.client.RestHighLevelClient;
 
 public final class MockedBeans {
-
-	@Produces
-	@Mock
-	@ApplicationScoped
-	public RestHighLevelClient mockClient() {
-		return Mockito.mock(RestHighLevelClient.class);
-	}
-
 	@Produces
 	@Mock
 	@ApplicationScoped
 	public RabbitMQClient mockRabbitMQClient() {
 		return Mockito.mock(RabbitMQClient.class);
-	}
-
-	@Produces
-	@Mock
-	@ApplicationScoped
-	public IndexService mockIndexService() {
-		return Mockito.mock(IndexService.class);
 	}
 
 }

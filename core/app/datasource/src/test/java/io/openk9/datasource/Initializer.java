@@ -248,6 +248,7 @@ public class Initializer {
 				.name("Test embedding model")
 				.apiUrl("embedding-model.local")
 				.apiKey("secret-key")
+				.vectorSize(1500)
 				.build())
 			.await()
 			.indefinitely();
@@ -289,6 +290,7 @@ public class Initializer {
 				.name("Test embedding model disabled")
 				.apiUrl("embedding-model.disabled.local")
 				.apiKey("secret")
+				.vectorSize(1234)
 				.build())
 			.await()
 			.indefinitely();
