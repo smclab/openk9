@@ -438,28 +438,52 @@ public class IndexService {
 
 	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
 
+		var componentTemplateName = putComponentTemplateRequest.name();
+
 		try {
 			return Uni.createFrom().completionStage(asyncClient.cluster()
 					.putComponentTemplate(putComponentTemplateRequest)
 				)
-				.onFailure().transform(CannotCreateComponentTemplateException::new)
+				.onFailure().transform(throwable -> {
+					log.errorf(
+						throwable,
+						"Error when trying to create a componentTemplate %s.",
+						componentTemplateName
+					);
+
+					return new CannotCreateComponentTemplateException();
+				})
 				.onItem()
 				.transformToUni(response -> {
 					if (response.acknowledged()) {
 						if (log.isDebugEnabled()) {
-							log.debug("Component template successfully created.");
+							log.debugf(
+								"componentTemplate %s successfully created.",
+								componentTemplateName
+							);
 						}
 						return Uni.createFrom().voidItem();
 					}
 					else {
+						log.errorf(
+							"Cluster didn't acknowledge the operation for componentTemplate %s",
+							componentTemplateName
+						);
+
 						return Uni.createFrom().failure(
 							new CannotCreateComponentTemplateException());
 					}
 				}).emitOn(Infrastructure.getDefaultWorkerPool());
 		}
 		catch (Exception e) {
+			log.errorf(
+				e,
+				"Error creating ComponentTemplate %s.",
+				componentTemplateName
+			);
+
 			return Uni.createFrom()
-				.failure(new CannotCreateComponentTemplateException(e));
+				.failure(new CannotCreateComponentTemplateException());
 		}
 	}
 

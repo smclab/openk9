@@ -111,10 +111,7 @@ public class IndexMappingService {
 
 		if (log.isDebugEnabled()) {
 			log.debugf(
-				"""
-					Creating a componentTemplate for an embeddingModel named %s,
-					the vector size is %d.
-					""",
+				"Creating a componentTemplate named %s, the vector size is %d.",
 				embeddingComponentTemplate.name(),
 				embeddingComponentTemplate.vectorSize()
 			);
