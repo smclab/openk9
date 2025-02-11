@@ -48,14 +48,16 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 
 	@Override
 	public <T extends K9Entity> Uni<T> merge(Mutiny.Session session, T entity) {
-		return createComponentTemplate((EmbeddingModel) entity)
-			.flatMap((unused -> super.merge(session, entity)));
+		return super.merge(session, entity)
+			.call(merged ->
+				createComponentTemplate((EmbeddingModel) merged));
 	}
 
 	@Override
 	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
-		return createComponentTemplate((EmbeddingModel) entity)
-			.flatMap((unused -> super.persist(session, entity)));
+		return super.persist(session, entity)
+			.call(persisted ->
+				createComponentTemplate((EmbeddingModel) persisted));
 	}
 
 	@Override
