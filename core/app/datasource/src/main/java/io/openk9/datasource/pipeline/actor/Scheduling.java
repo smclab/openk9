@@ -536,7 +536,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						);
 					}
 
-					return Behaviors.same();
 				}
 
 				if (!failureTracked && lastReceived) {
@@ -544,7 +543,6 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
-					return Behaviors.same();
 				}
 
 				if (log.isTraceEnabled()) {
@@ -556,8 +554,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 					getContext().getSelf().tell(Close.INSTANCE);
 
-					return Behaviors.same();
 				}
+
+				return Behaviors.same();
 
 			case STALE:
 
@@ -570,9 +569,9 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						)
 					);
 
-					return Behaviors.same();
-
 				}
+
+				return Behaviors.same();
 
 			default:
 
