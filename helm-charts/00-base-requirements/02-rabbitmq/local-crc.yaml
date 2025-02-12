@@ -1,0 +1,139 @@
+# This scenario creates a single-instance standalone RabbitMQ
+# machine, with the most basic configuration and limited
+# resource to be fit in a local CodeReady Containers environment
+
+image:
+  tag: 3.11.0-debian-11-r1
+
+auth:
+  ## @param auth.username RabbitMQ application username
+  username: "openk9"
+  ## @param auth.password RabbitMQ application password
+  # existingPasswordSecret: "rabbitmq-password"
+  #username: "openk9"
+  password: "openk9"
+
+clustering:
+  enabled: false
+
+replicaCount: 1
+
+terminationGracePeriodSeconds: 30
+
+resources:
+  limits:
+    #cpu: "1000m"
+    memory: "1Gi"
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+
+persistence:
+  size: 5Gi
+
+# OpenShift doesn't like static uid/gui
+podSecurityContext:
+  enabled: false
+
+# Custom
+containerSecurityContext:
+  enabled: true
+  runAsUser: null
+
+# OpenShift doesn't like initContainers with preconfigured uid
+volumePermissions:
+  enabled: false
+
+extraConfiguration: |-
+  consumer_timeout = 14400000
+
+memoryHighWatermark:
+  ## @param memoryHighWatermark.enabled Enable configuring Memory high watermark on RabbitMQ
+  ##
+  enabled: true
+  ## @param memoryHighWatermark.type Memory high watermark type. Either `absolute` or `relative`
+  ##
+  type: "absolute"
+  ## Memory high watermark value.
+  ## @param memoryHighWatermark.value Memory high watermark value
+  ## The default value of 0.4 stands for 40% of available RAM
+  ## Note: the memory relative limit is applied to the resource.limits.memory to calculate the memory threshold
+  ## You can also use an absolute value, e.g.: 256MB
+  ##
+  value: 6G
+
+## Prometheus Metrics
+##
+metrics:
+  ## @param metrics.enabled Enable exposing RabbitMQ metrics to be gathered by Prometheus
+  ##
+  enabled: true
+  ## @param metrics.plugins Plugins to enable Prometheus metrics in RabbitMQ
+  ##
+  plugins: "rabbitmq_prometheus"
+  ## Prometheus pod annotations
+  ## @param metrics.podAnnotations [object] Annotations for enabling prometheus to access the metrics endpoint
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.service.ports.metrics }}"
+
+  ## Prometheus Service Monitor
+  ## ref: https://github.com/coreos/prometheus-operator
+  ##
+  serviceMonitor:
+    ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
+    ##
+    enabled: false
+    ## @param metrics.serviceMonitor.namespace Specify the namespace in which the serviceMonitor resource will be created
+    ##
+    namespace: ""
+    ## @param metrics.serviceMonitor.interval Specify the interval at which metrics should be scraped
+    ##
+    interval: 30s
+    ## @param metrics.serviceMonitor.scrapeTimeout Specify the timeout after which the scrape is ended
+    ## e.g:
+    ## scrapeTimeout: 30s
+    ##
+    scrapeTimeout: ""
+    ## @param metrics.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
+    ##
+    jobLabel: ""
+    ## @param metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping.
+    ##
+    relabelings: []
+    ## @param metrics.serviceMonitor.metricRelabelings MetricsRelabelConfigs to apply to samples before ingestion.
+    ##
+    metricRelabelings: []
+    ## @param metrics.serviceMonitor.honorLabels honorLabels chooses the metric's labels on collisions with target labels
+    ##
+    honorLabels: false
+    ## @param metrics.serviceMonitor.targetLabels Used to keep given service's labels in target
+    ## e.g:
+    ## - app.kubernetes.io/name
+    ##
+    targetLabels: {}
+    ## @param metrics.serviceMonitor.podTargetLabels Used to keep given pod's labels in target
+    ## e.g:
+    ## - app.kubernetes.io/name
+    ##
+    podTargetLabels: {}
+    ## @param metrics.serviceMonitor.path Define the path used by ServiceMonitor to scrap metrics
+    ## Could be /metrics for aggregated metrics or /metrics/per-object for more details
+    ##
+    path: ""
+    ## @param metrics.serviceMonitor.selector ServiceMonitor selector labels
+    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
+    ##
+    ## selector:
+    ##   prometheus: my-prometheus
+    ##
+    selector: {}
+    ## @param metrics.serviceMonitor.labels Extra labels for the ServiceMonitor
+    ##
+    labels: {}
+    ## @param metrics.serviceMonitor.annotations Extra annotations for the ServiceMonitor
+    ##
+    annotations: {}
+

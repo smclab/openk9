@@ -1,0 +1,30 @@
+# This scenario creates a single-instance standalone PostgreSQL
+# machine, with the most basic configuration and limited
+# resource to be fit in a local CodeReady Containers environment
+
+
+image:
+  # We want latest PostgreSQL 13.x
+  tag: 2022.12.2-debian-11-r0
+
+persistence:
+    size: 10Gi
+
+auth:
+   existingSecret: minio-secret
+#   existingSecretPasswordKey: "password"  
+#    rootUser: "minio"
+#    rootPassword: "minio123"
+
+# OpenShift doesn't like initContainers with preconfigured uid
+volumePermissions:
+  enabled: false
+
+# OpenShift doesn't like static uid/gui
+podSecurityContext:
+  fsGroup: null
+
+# OpenShift doesn't like static uid/gui
+containerSecurityContext:
+  runAsUser: null
+  runAsNonRoot: true

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "adminer.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "adminer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "adminer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "adminer.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: adminer
+          image: {{ template "adminer.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+           - name: ADMINER_DEFAULT_SERVER
+             value: postgresql
+          command: ["php", "-S", "0.0.0.0:{{ .Values.service.port }}", "-t", "/var/www/html"]
