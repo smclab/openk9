@@ -49,13 +49,13 @@ import lombok.ToString;
 	@NamedEntityGraph(
 		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
 		attributeNodes = {
-			@NamedAttributeNode(value = "datasource"),
+			@NamedAttributeNode(value = Scheduler_.DATASOURCE),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -63,7 +63,7 @@ import lombok.ToString;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "embeddingDocTypeField")
+					@NamedAttributeNode(value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD)
 				}
 			)
 		}
@@ -72,15 +72,15 @@ import lombok.ToString;
 		name = Scheduler.ENRICH_ITEMS_ENTITY_GRAPH,
 		attributeNodes = {
 			@NamedAttributeNode(
-				value = "datasource",
+				value = Scheduler_.DATASOURCE,
 				subgraph = "datasource-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -89,7 +89,7 @@ import lombok.ToString;
 				name = "datasource-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipeline",
+						value = Datasource_.ENRICH_PIPELINE,
 						subgraph = "enrichPipeline-subgraph"
 					)
 				}
@@ -98,7 +98,7 @@ import lombok.ToString;
 				name = "enrichPipeline-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipelineItems",
+						value = EnrichPipeline_.ENRICH_PIPELINE_ITEMS,
 						subgraph = "enrichPipelineItems-subgraph"
 					)
 				}
@@ -106,13 +106,13 @@ import lombok.ToString;
 			@NamedSubgraph(
 				name = "enrichPipelineItems-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "enrichItem")
+					@NamedAttributeNode(value = EnrichPipelineItem_.ENRICH_ITEM)
 				}
 			),
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "embeddingDocTypeField")
+					@NamedAttributeNode(value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD)
 				}
 			)
 		}
