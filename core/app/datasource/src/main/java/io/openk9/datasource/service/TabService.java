@@ -52,8 +52,66 @@ import java.util.Set;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
+	@Inject
+	SortingService _sortingService;
+	@Inject
+	TokenTabService _tokenTabService;
+	@Inject
+	TranslationService translationService;
+
 	TabService(TabMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<Tuple2<Tab, Sorting>> addSortingToTab(long tabId, long sortingId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tab -> _sortingService.findById(s, sortingId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sorting -> s.
+					fetch(tab.getSortings())
+					.flatMap(sortings -> {
+						if (sortings.add(sorting)) {
+							tab.setSortings(sortings);
+							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
+
+	}
+
+	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(tab -> _tokenTabService.findById(s, tokenTabId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tokenTab -> s.
+					fetch(tab.getTokenTabs())
+					.flatMap(tokenTabs -> {
+						if (tokenTabs.add(tokenTab)) {
+							tab.setTokenTabs(tokenTabs);
+							return persist(s, tab).map(newD -> Tuple2.of(newD, tokenTab));
+						}
+						return Uni.createFrom().nullItem();
+					})
+				)
+			)
+		);
+
+	}
+
+	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
+		return translationService.addTranslation(
+			Tab.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
 	}
 
 	public Uni<Tab> create(TabDTO tabDTO){
@@ -89,86 +147,45 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		return super.create(tabDTO);
 	}
 
-	public Uni<Tab> patch(long tabId, TabDTO tabDTO) {
-		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
-
-			return sessionFactory.withTransaction(
-				(s, transaction) -> findById(s, tabId)
-					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
-					.flatMap(tab -> {
-						var newStateTab = mapper.patch(tab, tabWithTokenTabsDTO);
-						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
-
-						UniJoin.Builder<Void> builder = Uni.join().builder();
-						builder.add(Uni.createFrom().voidItem());
-
-						if (tokenTabIds != null) {
-							var oldTokenTabs = newStateTab.getTokenTabs();
-
-							//Iterate over the old TokenTabs to remove it from the Tab
-							for (TokenTab oldTokenTab : oldTokenTabs) {
-								builder.add(removeTokenTabToTab(
-									tabId, oldTokenTab.getId())
-									.replaceWithVoid()
-								);
-							}
-
-							for (long tokenTabId : tokenTabIds) {
-								builder.add(addTokenTabToTab(tabId, tokenTabId)
-									.replaceWithVoid()
-								);
-							}
-						}
-
-						return builder.joinAll()
-							.usingConcurrencyOf(1)
-							.andCollectFailures()
-							.map(voids -> newStateTab);
-					}));
-		}
-
-		return super.patch(tabId, tabDTO);
+	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
+		return translationService.deleteTranslation(
+			Tab.class, id, dto.getLanguage(), dto.getKey());
 	}
 
-	public Uni<Tab> update(long tabId, TabDTO tabDTO) {
-		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
+	public Uni<Boolean> existsByName(String name) {
+		return sessionFactory.withTransaction(s -> {
 
-			return sessionFactory.withTransaction(
-				(s, transaction) -> findById(s, tabId)
-					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
-					.flatMap(tab -> {
-						var newStateTab = mapper.update(tab, tabWithTokenTabsDTO);
-						var oldTokenTabs = newStateTab.getTokenTabs();
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+			Class<Tab> entityClass = getEntityClass();
 
-						UniJoin.Builder<Void> builder = Uni.join().builder();
-						builder.add(Uni.createFrom().voidItem());
+			CriteriaQuery<Long> query = cb.createQuery(Long.class);
 
-						//Iterate over the old TokenTabs to remove it from the Tab
-						for (TokenTab oldTokenTab : oldTokenTabs) {
-							builder.add(removeTokenTabToTab(
-								tabId, oldTokenTab.getId())
-								.replaceWithVoid()
-							);
-						}
+			Root<Tab> from = query.from(entityClass);
 
-						if (tokenTabIds != null) {
-							for (long tokenTabId : tokenTabIds) {
-								builder.add(addTokenTabToTab(tabId, tokenTabId)
-									.replaceWithVoid()
-								);
-							}
-						}
+			query.select(cb.count(from));
 
-						return builder.joinAll()
-							.usingConcurrencyOf(1)
-							.andCollectFailures()
-							.map(voids -> newStateTab);
-					}));
-		}
+			query.where(cb.equal(from.get(Tab_.name), name));
 
-		return super.update(tabId, tabDTO);
+			return s
+				.createQuery(query)
+				.getSingleResult()
+				.map(count -> count > 0);
+
+		});
+
+	}
+
+	public Uni<Tab> findByName(String name) {
+		return sessionFactory.withTransaction((s) -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<Tab> cq = cb.createQuery(Tab.class);
+			Root<Tab> root = cq.from(Tab.class);
+			cq.where(cb.equal(root.get(Tab_.name), name));
+			return s.createQuery(cq)
+				.setFlushMode(FlushMode.MANUAL)
+				.getSingleResultOrNull();
+		});
 	}
 
 	public Uni<List<Tab>> findUnboundTabsByTokenTab(long tokenTabId) {
@@ -200,19 +217,74 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 	}
 
 	@Override
+	public Class<Tab> getEntityClass() {
+		return Tab.class;
+	}
+
+	@Override
 	public String[] getSearchFields() {
 		return new String[] {Tab_.NAME, Tab_.DESCRIPTION};
 	}
 
-	public Uni<Connection<TokenTab>> getTokenTabsConnection(
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable) {
+		return getSortings(sortingId, pageable, Filter.DEFAULT);
+	}
+
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[]{sortingId},
+			Tab_.SORTINGS, Sorting.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			searchText);
+	}
+
+	public Uni<Page<Sorting>> getSortings(
+		long sortingId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[]{sortingId},
+			Tab_.SORTINGS, Sorting.class,
+			pageable.getLimit(), pageable.getSortBy().name(),
+			pageable.getAfterId(), pageable.getBeforeId(),
+			filter);
+	}
+
+	public Uni<Set<Sorting>> getSortings(Tab tab) {
+		return sessionFactory.withTransaction(s -> s.fetch(tab.getSortings()));
+	}
+
+	public Uni<Connection<Sorting>> getSortingsConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 		return findJoinConnection(
-			id, Tab_.TOKEN_TABS, TokenTab.class,
-			_tokenTabService.getSearchFields(), after, before, first, last,
+			id, Tab_.SORTINGS, Sorting.class,
+			_sortingService.getSearchFields(), after, before, first, last,
 			searchText, sortByList, notEqual);
 	}
 
+	public Uni<List<Tab>> getTabListByNames(String[] tabNames) {
+		return sessionFactory.withTransaction(s -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			Class<Tab> entityClass = getEntityClass();
+
+			CriteriaQuery<Tab> query = cb.createQuery(entityClass);
+
+			Root<Tab> from = query.from(entityClass);
+
+			query.where(from.get(Tab_.name).in(List.of(tabNames)));
+
+			return s
+				.createQuery(query)
+				.getResultList();
+
+		});
+	}
 
 	public Uni<Page<TokenTab>> getTokenTabs(
 		long tabId, Pageable pageable) {
@@ -256,20 +328,69 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 		});
 	}
 
-	public Uni<Tuple2<Tab, TokenTab>> addTokenTabToTab(long tabId, long tokenTabId) {
+	public Uni<Connection<TokenTab>> getTokenTabsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, Tab_.TOKEN_TABS, TokenTab.class,
+			_tokenTabService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	public Uni<Tab> patch(long tabId, TabDTO tabDTO) {
+		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, tabId)
+					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.flatMap(tab -> {
+						var newStateTab = mapper.patch(tab, tabWithTokenTabsDTO);
+						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
+
+						if (tokenTabIds != null) {
+							var oldTokenTabs = newStateTab.getTokenTabs();
+
+							//Iterate over the old TokenTabs to remove it from the Tab
+							for (TokenTab oldTokenTab : oldTokenTabs) {
+								builder.add(removeTokenTabToTab(
+									tabId, oldTokenTab.getId())
+									.replaceWithVoid()
+								);
+							}
+
+							for (long tokenTabId : tokenTabIds) {
+								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.map(voids -> newStateTab);
+					}));
+		}
+
+		return super.patch(tabId, tabDTO);
+	}
+
+	public Uni<Tuple2<Tab, Sorting>> removeSortingToTab(long tabId, long sortingId) {
 
 		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(tab -> _tokenTabService.findById(s, tokenTabId)
+			.transformToUni(tab -> _sortingService.findById(s, sortingId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tokenTab -> s.
-					fetch(tab.getTokenTabs())
-					.flatMap(tokenTabs -> {
-						if (tokenTabs.add(tokenTab)) {
-							tab.setTokenTabs(tokenTabs);
-							return persist(s, tab).map(newD -> Tuple2.of(newD, tokenTab));
+				.transformToUni(sorting -> s
+					.fetch(tab.getSortings())
+					.flatMap(sortings -> {
+						if (tab.removeSorting(sortings, sortingId)) {
+							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
 						}
 						return Uni.createFrom().nullItem();
 					})
@@ -301,171 +422,45 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 	}
 
-	public Uni<Connection<Sorting>> getSortingsConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-		return findJoinConnection(
-			id, Tab_.SORTINGS, Sorting.class,
-			_sortingService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
+	public Uni<Tab> update(long tabId, TabDTO tabDTO) {
+		if (tabDTO instanceof TabWithTokenTabsDTO tabWithTokenTabsDTO) {
 
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, tabId)
+					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.flatMap(tab -> {
+						var newStateTab = mapper.update(tab, tabWithTokenTabsDTO);
+						var oldTokenTabs = newStateTab.getTokenTabs();
 
-	public Uni<Page<Sorting>> getSortings(
-		long sortingId, Pageable pageable) {
-		return getSortings(sortingId, pageable, Filter.DEFAULT);
-	}
+						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
-	public Uni<Page<Sorting>> getSortings(
-		long sortingId, Pageable pageable, String searchText) {
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
 
-		return findAllPaginatedJoin(
-			new Long[]{sortingId},
-			Tab_.SORTINGS, Sorting.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(),
-			searchText);
-	}
-
-	public Uni<Page<Sorting>> getSortings(
-		long sortingId, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			new Long[]{sortingId},
-			Tab_.SORTINGS, Sorting.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(),
-			filter);
-	}
-
-	public Uni<Set<Sorting>> getSortings(Tab tab) {
-		return sessionFactory.withTransaction(s -> s.fetch(tab.getSortings()));
-	}
-
-	public Uni<Tuple2<Tab, Sorting>> addSortingToTab(long tabId, long sortingId) {
-
-		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(tab -> _sortingService.findById(s, sortingId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(sorting -> s.
-					fetch(tab.getSortings())
-					.flatMap(sortings -> {
-						if (sortings.add(sorting)) {
-							tab.setSortings(sortings);
-							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
+						//Iterate over the old TokenTabs to remove it from the Tab
+						for (TokenTab oldTokenTab : oldTokenTabs) {
+							builder.add(removeTokenTabToTab(
+								tabId, oldTokenTab.getId())
+								.replaceWithVoid()
+							);
 						}
-						return Uni.createFrom().nullItem();
-					})
-				)
-			)
-		);
 
-	}
-
-	public Uni<Tuple2<Tab, Sorting>> removeSortingToTab(long tabId, long sortingId) {
-
-		return sessionFactory.withTransaction((s, tr) -> findById(s, tabId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(tab -> _sortingService.findById(s, sortingId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(sorting -> s
-					.fetch(tab.getSortings())
-					.flatMap(sortings -> {
-						if (tab.removeSorting(sortings, sortingId)) {
-							return persist(s, tab).map(newD -> Tuple2.of(newD, sorting));
+						if (tokenTabIds != null) {
+							for (long tokenTabId : tokenTabIds) {
+								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
 						}
-						return Uni.createFrom().nullItem();
-					})
-				)
-			)
-		);
 
-	}
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.map(voids -> newStateTab);
+					}));
+		}
 
-	public Uni<Tab> findByName(String name) {
-		return sessionFactory.withTransaction((s) -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-			CriteriaQuery<Tab> cq = cb.createQuery(Tab.class);
-			Root<Tab> root = cq.from(Tab.class);
-			cq.where(cb.equal(root.get(Tab_.name), name));
-			return s.createQuery(cq)
-				.setFlushMode(FlushMode.MANUAL)
-				.getSingleResultOrNull();
-		});
-	}
-
-	public Uni<List<Tab>> getTabListByNames(String[] tabNames) {
-		return sessionFactory.withTransaction(s -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			Class<Tab> entityClass = getEntityClass();
-
-			CriteriaQuery<Tab> query = cb.createQuery(entityClass);
-
-			Root<Tab> from = query.from(entityClass);
-
-			query.where(from.get(Tab_.name).in(List.of(tabNames)));
-
-			return s
-				.createQuery(query)
-				.getResultList();
-
-		});
-	}
-
-	public Uni<Boolean> existsByName(String name) {
-		return sessionFactory.withTransaction(s -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			Class<Tab> entityClass = getEntityClass();
-
-			CriteriaQuery<Long> query = cb.createQuery(Long.class);
-
-			Root<Tab> from = query.from(entityClass);
-
-			query.select(cb.count(from));
-
-			query.where(cb.equal(from.get(Tab_.name), name));
-
-			return s
-				.createQuery(query)
-				.getSingleResult()
-				.map(count -> count > 0);
-
-		});
-
-	}
-
-	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
-		return translationService.addTranslation(
-			Tab.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
-	}
-
-	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
-		return translationService.deleteTranslation(
-			Tab.class, id, dto.getLanguage(), dto.getKey());
-	}
-
-
-	@Inject
-	TokenTabService _tokenTabService;
-
-	@Inject
-	SortingService _sortingService;
-
-	@Inject
-	TranslationService translationService;
-
-	@Override
-	public Class<Tab> getEntityClass() {
-		return Tab.class;
+		return super.update(tabId, tabDTO);
 	}
 
 }
