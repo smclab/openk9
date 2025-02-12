@@ -17,18 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.util.List;
-import java.util.Set;
-
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
@@ -46,11 +34,21 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.FlushMode;
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {
@@ -102,9 +100,12 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
 						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
+
 						if (tokenTabIds != null) {
 							var oldTokenTabs = newStateTab.getTokenTabs();
 
+							//Iterate over the old TokenTabs to remove it from the Tab
 							for (TokenTab oldTokenTab : oldTokenTabs) {
 								builder.add(removeTokenTabToTab(
 									tabId, oldTokenTab.getId())
@@ -122,7 +123,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
-							.map(voids -> tab);
+							.map(voids -> newStateTab);
 					}));
 		}
 
@@ -136,12 +137,15 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 				(s, transaction) -> findById(s, tabId)
 					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
 					.flatMap(tab -> {
-						var oldTokenTabs = tab.getTokenTabs();
+						var newStateTab = mapper.update(tab, tabWithTokenTabsDTO);
+						var oldTokenTabs = newStateTab.getTokenTabs();
 
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
 
 						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
 
+						//Iterate over the old TokenTabs to remove it from the Tab
 						for (TokenTab oldTokenTab : oldTokenTabs) {
 							builder.add(removeTokenTabToTab(
 								tabId, oldTokenTab.getId())
@@ -160,7 +164,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
-							.map(voids -> tab);
+							.map(voids -> newStateTab);
 					}));
 		}
 
