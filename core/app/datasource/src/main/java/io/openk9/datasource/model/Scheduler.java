@@ -65,6 +65,14 @@ import lombok.ToString;
 				attributeNodes = {
 					@NamedAttributeNode(value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD)
 				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
+				}
 			)
 		}
 	),
@@ -112,7 +120,17 @@ import lombok.ToString;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD)
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph")
+				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
 				}
 			)
 		}
