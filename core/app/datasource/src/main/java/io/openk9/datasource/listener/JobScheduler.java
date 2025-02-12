@@ -143,8 +143,12 @@ public class JobScheduler {
 				pndi -> onPersistSchedulerInternal(ctx, pndi)
 			)
 			.onMessage(
-				StartSchedulingWork.class,
-				rq -> onStartSchedulingWork(ctx, messageGateway, rq)
+				PersistSchedulerResponse.class,
+				res -> onPersistSchedulerResponse(ctx, messageGateway, res)
+			)
+			.onMessage(
+				InvokePluginDriverResponse.class,
+				res -> onInvokePluginDriverResponse(ctx, res)
 			)
 			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs))
 			.build();
@@ -275,7 +279,7 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(response, throwable) ->
-				new StartSchedulingWork(scheduler, startIngestionDate, throwable)
+				new PersistSchedulerResponse(scheduler, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
@@ -355,10 +359,31 @@ public class JobScheduler {
 					JobSchedulerService.callHttpPluginDriverClient(
 						scheduler, lastIngestionDate),
 					(unused, throwable) ->
-						new HaltScheduling(scheduler, throwable)
+						new InvokePluginDriverResponse(scheduler, throwable)
 				);
 
 			}
+		}
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onInvokePluginDriverResponse(
+		ActorContext<Command> ctx,
+		InvokePluginDriverResponse res) {
+
+		var scheduler = res.scheduler();
+		var exception = res.exception();
+
+		if (exception != null) {
+			ctx.getSelf().tell(new HaltScheduling(scheduler, exception));
+		}
+		else {
+			var datasource = scheduler.getDatasource();
+			var tenantId = datasource.getTenant();
+			var scheduleId = scheduler.getScheduleId();
+
+			startSchedulingActor(ctx, tenantId, scheduleId);
 		}
 
 		return Behaviors.same();
@@ -387,7 +412,7 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(s, throwable) ->
-				new StartSchedulingWork(s,null, throwable)
+				new PersistSchedulerResponse(s, null, throwable)
 		);
 
 		return Behaviors.same();
@@ -581,10 +606,10 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onStartSchedulingWork(
+	private static Behavior<Command> onPersistSchedulerResponse(
 		ActorContext<Command> ctx,
 		ActorRef<MessageGateway.Command> messageGateway,
-		StartSchedulingWork rq) {
+		PersistSchedulerResponse rq) {
 
 		var scheduler = rq.scheduler();
 		var datasource = scheduler.getDatasource();
@@ -600,8 +625,6 @@ public class JobScheduler {
 			return Behaviors.same();
 
 		}
-
-		startSchedulingActor(ctx, tenantId, scheduler.getScheduleId());
 
 		messageGateway.tell(new MessageGateway.Register(
 			ShardingKey.asString(
@@ -803,6 +826,11 @@ public class JobScheduler {
 		String tenantName, OffsetDateTime startIngestionDate, Throwable throwable
 	) implements Command {}
 
+	private record InvokePluginDriverResponse(
+		Scheduler scheduler,
+		Throwable exception
+	) implements Command {}
+
 	private record HaltScheduling(
 		Scheduler scheduler,
 		Throwable exception
@@ -830,7 +858,8 @@ public class JobScheduler {
 		Throwable throwable
 	) implements Command {}
 
-	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
+	private record PersistSchedulerResponse(
+		Scheduler scheduler, OffsetDateTime startIngestionDate,
 		Throwable throwable
 	) implements Command {}
 
