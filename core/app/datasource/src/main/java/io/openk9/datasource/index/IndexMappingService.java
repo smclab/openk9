@@ -112,7 +112,7 @@ public class IndexMappingService {
 		if (log.isDebugEnabled()) {
 			log.debugf(
 				"Creating a componentTemplate named %s, the vector size is %d.",
-				embeddingComponentTemplate.name(),
+				embeddingComponentTemplate.getComponentTemplateName(),
 				embeddingComponentTemplate.vectorSize()
 			);
 		}
@@ -167,7 +167,7 @@ public class IndexMappingService {
 		EmbeddingComponentTemplate embeddingComponentTemplate) {
 
 		return PutComponentTemplateRequest.of(component -> component
-			.name(embeddingComponentTemplate.name())
+			.name(embeddingComponentTemplate.getComponentTemplateName())
 			.template(template -> template
 				.settings(settings -> settings.knn(true))
 				.mappings(mapping -> mapping

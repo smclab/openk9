@@ -49,8 +49,7 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 	@Override
 	public <T extends K9Entity> Uni<T> merge(T entity) {
 		return createComponentTemplate((EmbeddingModel) entity)
-			.flatMap(unused -> super.merge(entity)
-			);
+			.flatMap(unused -> super.merge(entity));
 	}
 
 	@Override
@@ -123,13 +122,19 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 	}
 
 	private Uni<Void> createComponentTemplate(EmbeddingModel entity) {
-		var embeddingComponentTemplate = new EmbeddingComponentTemplate(
-			entity.getName(),
-			entity.getVectorSize()
-		);
+		return sessionFactory.withTransaction((s, t) -> s
+				.find(TenantBinding.class, 1L))
+			.flatMap(tenantBinding -> {
+				var tenantId = tenantBinding.getTenant();
+				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
+					tenantId,
+					entity.getName(),
+					entity.getVectorSize()
+				);
 
-		return indexMappingService.createEmbeddingComponentTemplate(
-			embeddingComponentTemplate);
+				return indexMappingService.createEmbeddingComponentTemplate(
+					embeddingComponentTemplate);
+			});
 	}
 
 }

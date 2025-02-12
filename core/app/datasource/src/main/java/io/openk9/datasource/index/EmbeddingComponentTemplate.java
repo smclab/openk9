@@ -19,11 +19,28 @@ package io.openk9.datasource.index;
 
 import io.openk9.datasource.util.OpenSearchUtils;
 
-public record EmbeddingComponentTemplate(String name, int vectorSize) {
+public record EmbeddingComponentTemplate(String tenantId, String name, int vectorSize) {
 
 	public EmbeddingComponentTemplate {
-		name = OpenSearchUtils.indexNameSanitizer(name);
+
+		assert name != null && !name.isEmpty();
+		assert tenantId != null && !tenantId.isEmpty();
 		assert vectorSize > 0;
+	}
+
+	public String getComponentTemplateName() {
+		return OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, name));
+	}
+
+	@Override
+	public String name() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String tenantId() {
+		throw new UnsupportedOperationException();
 	}
 
 }
