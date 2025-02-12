@@ -35,15 +35,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 @CircuitBreaker
 @Path("/v1/data-index")
 @RolesAllowed("k9-admin")
 public class DataIndexResource {
 
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
 	@Inject
 	DocTypeService docTypeService;
 	@Inject
