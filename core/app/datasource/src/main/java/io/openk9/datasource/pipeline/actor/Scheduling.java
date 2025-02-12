@@ -17,7 +17,18 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import com.typesafe.config.Config;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.model.Scheduler;
@@ -28,6 +39,8 @@ import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
+
+import com.typesafe.config.Config;
 import io.quarkus.runtime.util.ExceptionUtil;
 import lombok.Getter;
 import org.apache.pekko.actor.typed.ActorRef;
@@ -45,18 +58,6 @@ import org.apache.pekko.cluster.typed.ClusterSingleton;
 import org.apache.pekko.cluster.typed.SingletonActor;
 import org.apache.pekko.cluster.typed.Subscribe;
 import org.jboss.logging.Logger;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
@@ -626,10 +627,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		var exception = updateScheduler.exception();
 		var replyTo = updateScheduler.replyTo();
 
-		if (exception != null) {
-			replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
-		}
-		else {
+		if (scheduler != null) {
+
 			log.infof(
 				"Fetched Scheduling with id %s, status %s, lastIngestionDate %s.",
 				scheduler.getId(),
@@ -640,6 +639,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			this.scheduler = scheduler;
 
 			replyTo.tell(Success.INSTANCE);
+		}
+		else {
+
+			if (exception != null) {
+				replyTo.tell(new Failure(ExceptionUtil.generateStackTrace(exception)));
+			}
+			else {
+				replyTo.tell(new Failure("error while fetching scheduler"));
+			}
 		}
 
 		return Behaviors.same();
