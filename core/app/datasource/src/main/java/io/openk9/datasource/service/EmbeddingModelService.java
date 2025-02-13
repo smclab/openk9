@@ -46,6 +46,12 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 		this.mapper = mapper;
 	}
 
+	public Uni<EmbeddingModel> fetchCurrent(Mutiny.Session session) {
+		return session.createNamedQuery(
+				EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+			.getSingleResult();
+	}
+
 	@Override
 	public <T extends K9Entity> Uni<T> merge(T entity) {
 		return createComponentTemplate((EmbeddingModel) entity)

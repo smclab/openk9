@@ -31,6 +31,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
+import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
@@ -54,6 +55,8 @@ public class EmbeddingService {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@CacheName("bucket-resource")
 	Cache cache;
@@ -234,7 +237,7 @@ public class EmbeddingService {
 			cache,
 			new CompositeCacheKey(request),
 			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-				getEmbeddingConfiguration(request.tenantId)
+					getEmbeddingConfiguration(s, request.tenantId)
 					.onItem().ifNull().failWith(ConfigurationNotFound::new)
 					.flatMap(embeddingConfiguration -> s.createNamedQuery(
 							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
@@ -281,40 +284,49 @@ public class EmbeddingService {
 		String indexName
 	) {}
 
-	public record EmbeddingConfiguration(
-		String apiUrl,
-		String apiKey
-	) {}
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+		return sessionFactory.withTransaction(
+			tenantId, (s, t) ->
+				getEmbeddingConfiguration(s, tenantId)
+		);
+	}
 
 	public record EmbeddedText(
 		List<Float> vector
 	) {}
 
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(
+		Mutiny.Session session,
+		String tenantId) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(tenantId),
-			sessionFactory.withTransaction(
-				tenantId, (s, t) -> s
-					.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-					.getSingleResult()
-					.map(embeddingModel -> new EmbeddingConfiguration(
-						embeddingModel.getApiUrl(),
-						embeddingModel.getApiKey()
-					))
-					.onFailure()
-					.invoke(throwable ->
-						log.warnf(
-							throwable,
-							"Cannot fetch current embedding model for tenantId %s",
-							tenantId
-						)
+			embeddingModelService.fetchCurrent(session)
+				.map(EmbeddingConfiguration::map)
+				.onFailure()
+				.invoke(throwable ->
+					log.warnf(
+						throwable,
+						"Cannot fetch current embedding model for tenantId %s",
+						tenantId
 					)
-					.onFailure()
-					.recoverWithNull()
-			)
+				)
+				.onFailure()
+				.recoverWithNull()
 		);
 
 	}
+
+	public record EmbeddingConfiguration(
+		String apiUrl,
+		String apiKey
+	) {
+
+		public static EmbeddingConfiguration map(EmbeddingModel model) {
+			return new EmbeddingConfiguration(model.getApiUrl(), model.getApiKey());
+		}
+
+	}
+
 }
