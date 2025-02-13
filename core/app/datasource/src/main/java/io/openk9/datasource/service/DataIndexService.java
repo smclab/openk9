@@ -19,8 +19,6 @@ package io.openk9.datasource.service;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.annotation.Nullable;
@@ -52,6 +50,7 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.datasource.web.DataIndexResource;
+import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -180,9 +179,16 @@ public class DataIndexService
 
 	}
 
-	public Uni<DataIndex> createDataIndexFromDocTypes(
-		long datasourceId, List<Long> docTypeIds, String name,
-		Map<String, Object> indexSettings) {
+	/**
+	 * Create a new dataIndex for a datasource, the indexMapping will be created
+	 * from the docTypes fetched by their ids.
+	 *
+	 * @param datasourceId the id of the datasource related to this dataIndex
+	 * @param request
+	 * @return
+	 */
+	public Uni<DataIndex> createDataIndexByDocTypes(
+		long datasourceId, DataIndexByDocTypes request) {
 
 		String dataIndexName = name == null ? "data-" + OffsetDateTime.now() : name;
 
