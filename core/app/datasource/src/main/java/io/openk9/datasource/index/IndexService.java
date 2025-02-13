@@ -58,7 +58,7 @@ import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
-import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.xcontent.MediaType;
@@ -76,7 +76,7 @@ public class IndexService {
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 	@Inject
-	OpenSearchAsyncClient asyncClient;
+	OpenSearchClient openSearchClient;
 
 	public Uni<Void> createIndexTemplate(
 		PutComposableIndexTemplateRequest request) {
@@ -438,52 +438,42 @@ public class IndexService {
 
 		var componentTemplateName = putComponentTemplateRequest.name();
 
-		return Uni.createFrom()
-			.deferred(() -> {
-				try {
-					return Uni.createFrom()
-						.completionStage(asyncClient.cluster()
-							.putComponentTemplate(putComponentTemplateRequest))
-						.onFailure().transform(throwable -> {
-							log.errorf(
-								throwable,
-								"Error when trying to create a componentTemplate %s.",
-								componentTemplateName
-							);
+		var cluster = openSearchClient.cluster();
 
-							return new CannotCreateComponentTemplateException();
-						})
-						.flatMap(response -> {
-							if (response.acknowledged()) {
-								if (log.isDebugEnabled()) {
-									log.debugf(
-										"componentTemplate %s successfully created.",
-										componentTemplateName
-									);
-								}
-								return Uni.createFrom().voidItem();
-							}
-							else {
-								log.errorf(
-									"Cluster didn't acknowledge the operation for componentTemplate %s",
-									componentTemplateName
-								);
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response =
+					cluster.putComponentTemplate(putComponentTemplateRequest);
 
-								return Uni.createFrom().failure(
-									new CannotCreateComponentTemplateException());
-							}
-						});
+				if (response.acknowledged()) {
+					if (log.isDebugEnabled()) {
+						log.debugf(
+							"componentTemplate %s successfully created.",
+							componentTemplateName
+						);
+					}
+					return Uni.createFrom().voidItem();
 				}
-				catch (Exception e) {
+				else {
 					log.errorf(
-						e,
-						"Error creating ComponentTemplate %s.",
+						"Cluster didn't acknowledge the operation for componentTemplate %s",
 						componentTemplateName
 					);
 
-					throw new CannotCreateComponentTemplateException();
+					return Uni.createFrom().failure(
+						new CannotCreateComponentTemplateException());
 				}
-			});
+			}
+			catch (IOException e) {
+				log.errorf(
+					e,
+					"Error when trying to create a componentTemplate %s.",
+					componentTemplateName
+				);
+
+				throw new CannotCreateComponentTemplateException();
+			}
+		}).replaceWithVoid();
 	}
 
 }

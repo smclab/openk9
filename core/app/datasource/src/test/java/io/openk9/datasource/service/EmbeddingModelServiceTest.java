@@ -45,7 +45,6 @@ public class EmbeddingModelServiceTest {
 	@Test
 	@RunOnVertxContext
 	void should_create_embedding_model_service_with_component_template(UniAsserter asserter) {
-
 		var req = new EmbeddingComponentTemplate(
 			"public",
 			EMBEDDING_MODEL_NAME,
@@ -79,8 +78,6 @@ public class EmbeddingModelServiceTest {
 				}
 			}
 		);
-
-
 	}
 
 }
