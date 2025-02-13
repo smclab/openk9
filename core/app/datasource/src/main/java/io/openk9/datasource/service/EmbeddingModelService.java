@@ -55,16 +55,16 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 	@Override
 	public <T extends K9Entity> Uni<T> merge(Mutiny.Session session, T entity) {
 
-		return createComponentTemplate((EmbeddingModel) entity)
-			.flatMap(unused -> super.merge(session, entity));
+		return super.merge(session, entity)
+			.call(model -> createComponentTemplate(session, (EmbeddingModel) model));
 
 	}
 
 	@Override
 	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
 
-		return createComponentTemplate((EmbeddingModel) entity)
-			.flatMap(unused -> super.persist(session, entity));
+		return super.persist(session, entity)
+			.call(model -> createComponentTemplate(session, (EmbeddingModel) model));
 
 	}
 
@@ -131,9 +131,9 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 		return sessionFactory.withTransaction((s, t) -> enable(s, id));
 	}
 
-	private Uni<Void> createComponentTemplate(EmbeddingModel entity) {
-		return sessionFactory.withTransaction((s, t) -> s
-				.find(TenantBinding.class, 1L))
+	private Uni<Void> createComponentTemplate(Mutiny.Session session, EmbeddingModel entity) {
+
+		return session.find(TenantBinding.class, 1L)
 			.flatMap(tenantBinding -> {
 				var tenantId = tenantBinding.getTenant();
 				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
@@ -145,6 +145,7 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 				return indexMappingService.createEmbeddingComponentTemplate(
 					embeddingComponentTemplate);
 			});
+
 	}
 
 }
