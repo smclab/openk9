@@ -233,6 +233,7 @@ public class IndexMappingService {
 
 		var dataIndex = indexTemplateRequest.dataIndex();
 		var indexSettings = indexTemplateRequest.settings();
+		var embeddingModel = indexTemplateRequest.embeddingModel();
 
 		Map<MappingsKey, Object> mappings =
 			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
@@ -261,13 +262,24 @@ public class IndexMappingService {
 		try {
 			var indexName = dataIndex.getIndexName();
 
+			List<String> componentTemplates = new ArrayList<>();
+
+			if (embeddingModel != null) {
+
+				var componentTemplate = EmbeddingComponentTemplate
+					.fromEmbeddingModel(embeddingModel);
+				componentTemplates.add(componentTemplate.getName());
+
+			}
+
 			composableIndexTemplate = new ComposableIndexTemplate(
 				List.of(indexName),
 				new Template(
 					settings, new CompressedXContent(
 					Json.encode(mappings)), null
 				),
-				null, null, null, null
+				componentTemplates
+				, null, null, null
 			);
 
 			request

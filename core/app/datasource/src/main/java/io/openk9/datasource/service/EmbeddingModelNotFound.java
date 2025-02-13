@@ -15,13 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.service;
 
-import java.util.Map;
+import io.openk9.datasource.service.exception.K9Error;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.EmbeddingModel;
+public class EmbeddingModelNotFound extends K9Error {
+	public EmbeddingModelNotFound(String message) {
+		super(message);
+	}
 
-public record DataIndexTemplate(
-	Map<String, Object> settings, DataIndex dataIndex, EmbeddingModel embeddingModel
-) {}
+	public EmbeddingModelNotFound(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public EmbeddingModelNotFound(Throwable cause) {
+		super(cause);
+	}
+}

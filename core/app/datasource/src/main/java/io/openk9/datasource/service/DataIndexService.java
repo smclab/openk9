@@ -41,6 +41,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
@@ -64,6 +65,9 @@ public class DataIndexService
 
 	@Inject
 	DocTypeService docTypeService;
+	@Inject
+	public
+	EmbeddingModelService embeddingModelService;
 	@Inject
 	IndexService indexService;
 	@Inject
@@ -190,12 +194,15 @@ public class DataIndexService
 	public Uni<DataIndex> createDataIndexByDocTypes(
 		long datasourceId, DataIndexByDocTypes request) {
 
-		String dataIndexName = name == null ? "data-" + OffsetDateTime.now() : name;
+		var indexName = request.getIndexName();
+		var docTypeIds = request.getDocTypeIds();
+		var settings = request.getSettings();
+
+		String dataIndexName = indexName == null ? "data-" + OffsetDateTime.now() : indexName;
 
 		return sessionFactory.withTransaction((s, t) -> docTypeService
 			.findDocTypes(docTypeIds, s)
 			.flatMap(docTypeList -> {
-
 				if (docTypeList.size() != docTypeIds.size()) {
 					throw new RuntimeException(
 						"docTypeIds found: " + docTypeList.size() +
@@ -205,16 +212,40 @@ public class DataIndexService
 				DataIndex transientDataIndex = new DataIndex();
 
 				transientDataIndex.setName(dataIndexName);
-
 				transientDataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
-
 				transientDataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-				return persist(s, transientDataIndex)
-					.flatMap(dataIndex -> indexMappingService
-						.createDataIndexTemplate(
-							new DataIndexTemplate(indexSettings, dataIndex))
-						.map(unused -> dataIndex)
+				Uni<EmbeddingModel> knnFlowUni = null;
+
+				var knnIndex = request.getKnnIndex();
+
+				if (knnIndex != null && knnIndex) {
+
+					transientDataIndex.setKnnIndex(true);
+
+					var embeddingModelId = request.getEmbeddingModelId();
+
+					if (embeddingModelId != null && embeddingModelId > 0) {
+						knnFlowUni = embeddingModelService.findById(s, embeddingModelId);
+					}
+					else {
+						knnFlowUni = embeddingModelService.fetchCurrent(s);
+					}
+
+				}
+				else {
+					knnFlowUni = Uni.createFrom().nullItem();
+				}
+
+				return knnFlowUni
+					.onFailure()
+					.transform(EmbeddingModelNotFound::new)
+					.flatMap(embeddingModel -> persist(s, transientDataIndex)
+						.flatMap(dataIndex -> indexMappingService
+							.createDataIndexTemplate(
+								new DataIndexTemplate(settings, dataIndex, embeddingModel))
+							.map(unused -> dataIndex)
+						)
 					);
 			})
 		);
