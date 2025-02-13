@@ -109,6 +109,7 @@ export function App() {
           "filters panel panel"
           "filters result detail";
         padding: 20px;
+        padding-top:0px;
 
         @media (max-width: 480px) {
           padding: 0;
