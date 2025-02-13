@@ -23,7 +23,7 @@
 
 .SingleDatePickerInput_clearDate {
   margin: 0px 0px 0px 0px;
-  top: 47%;
+  top: 46%;
   right: 10%;
   background-color: #fff;
   padding: 0;
@@ -68,4 +68,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .SingleDatePickerInput_clearDate__default_2 {
   left: -60%;
+  width: fit-content !important;
+  background: transparent;
+  left: -10%;
+}
+
+.SingleDatePickerInput
+  .SingleDatePicker_picker.SingleDatePicker_picker__directionLeft {
+  top: 0px !important;
+  left: 55px !important;
 }

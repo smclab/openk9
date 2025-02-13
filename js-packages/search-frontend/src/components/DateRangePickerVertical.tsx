@@ -135,7 +135,7 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          Dal ({t("gg/mm/aaaa")}):
+          {t("from")} ({t("gg/mm/aaaa")}):
         </p>
         <div
           css={css`
@@ -169,12 +169,12 @@ export function DataRangePickerVertical({
             `}
             htmlFor={"input-start-date"}
           >
-            input per data inizio
+            {t("start-day")}
           </label>
           <input
             type="text"
             id={"input-start-date"}
-            placeholder="Data Inizio"
+            placeholder={t("start-day") || "Data Inizio"}
             className="input-start-calendar"
             value={dataStart}
             onChange={(event) => {
@@ -211,20 +211,9 @@ export function DataRangePickerVertical({
                 );
               }}
               placeholder={t("start-day") || "Start day"}
-              openDirection="up"
+              openDirection="down"
               phrases={customPhrasesStart}
             />
-            <style>{`
-                  .DateInput  {
-                     display: none; 
-                   }
-                   .SingleDatePickerInput_clearDate__default_2{
-                      width:88%;
-                    }
-                      .SingleDatePickerInput__withBorder {
-                        background: inherit;
-                      }
-           `}</style>
           </div>
         </div>
       </div>
@@ -273,12 +262,12 @@ export function DataRangePickerVertical({
               white-space: nowrap;
             `}
           >
-            input per data fine
+            {t("end-day")}
           </label>
           <input
             id={"input-end-date"}
             type="text"
-            placeholder="Data Fine"
+            placeholder={t("end-day") || "Data fine"}
             className="input-end-calendar"
             value={dataEnd}
             onChange={(event) => {

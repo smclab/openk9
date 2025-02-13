@@ -309,7 +309,7 @@ export function App() {
                     `}
                   >
                     {startDate === null
-                      ? "Seleziona una data"
+                      ? t("choose-a-date")
                       : moment(startDate).format("DD MMM YYYY")}
                   </div>
                   {endDate !== null && (
@@ -451,8 +451,7 @@ export function App() {
           gap: 3px;
           box-sizing: border-box;
           border-radius: 8px;
-          height: auto;
-          overflow: auto;
+          height: calc(100vh - 193.6px);
           @media (max-width: 768px) {
             display: none;
           }
@@ -511,7 +510,7 @@ export function App() {
             flex-direction: column-reverse;
             background-color: inherit;
             border-radius: 8px;
-
+            overflow: auto;
             @media (max-width: 480px) {
               display: none;
             }
@@ -607,7 +606,7 @@ export function App() {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          height: auto;
+          height: calc(100vh - 193.6px);
 
           @media (max-width: 480px) {
             padding-inline: 16px;
@@ -641,7 +640,7 @@ export function App() {
                 }
               `}
             >
-              Numero di risultati:
+              {t("number-of-results")}
               <span
                 css={css`
                   color: var(--openk9-embeddable-search--primary-color);
@@ -706,7 +705,7 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          height: auto;
+          height: calc(100vh - 193.6px);
           border-radius: 8px;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
 

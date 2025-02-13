@@ -32,6 +32,7 @@ export function ModalDetail({
           right: 0px;
           bottom: 0px;
           background: ${background};
+          overflow: auto;
         `}
       >
         {content}

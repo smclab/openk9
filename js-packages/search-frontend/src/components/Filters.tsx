@@ -79,7 +79,6 @@ function Filters({
             align-items: center;
             justify-content: center;
             height: 50vh;
-            margin-left: 30px;
           `}
         >
           <Logo size={100} />
