@@ -509,9 +509,7 @@ export function App() {
             display: flex;
             height: max-content;
             flex-direction: column-reverse;
-            background-color: var(
-              --openk9-embeddable-search--primary-background-color
-            );
+            background-color: inherit;
             border-radius: 8px;
 
             @media (max-width: 480px) {
