@@ -50,21 +50,19 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Description("The duration to identify orphaned Dataindex.")
 	@Builder.Default
 	private String purgeMaxAge = "2d";
-	@NotNull
 	@Description("If true datasource is reindexed based on defined scheduling expression")
 	@Builder.Default
 	private Boolean reindexable = false;
-	@NotNull
 	@Cron(type = CronType.QUARTZ)
 	@Description("Chron quartz expression to define reindexing of datasource")
-	private String reindexing;
-	@NotNull
+	@Builder.Default
+	private String reindexing = "0 0 1 * * ?";
 	@Description("If true datasource is scheduled based on defined scheduling expression")
 	@Builder.Default
 	private Boolean schedulable = false;
-	@NotNull
 	@Cron(type = CronType.QUARTZ)
 	@Description("Chron quartz expression to define scheduling of datasource")
-	private String scheduling;
+	@Builder.Default
+	private String scheduling = "0 */5 * ? * * *";
 
 }

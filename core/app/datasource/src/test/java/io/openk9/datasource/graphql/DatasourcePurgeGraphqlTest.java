@@ -72,11 +72,13 @@ public class DatasourcePurgeGraphqlTest {
 	private static final String PURGEABLE = "purgeable";
 	private static final boolean PURGEABLE_DEFAULT_VALUE = false;
 	private static final String PURGING = "purging";
-	private static final String PURGING_DEFAULT_VALUE = "0 */10 * ? * *";
+	private static final String PURGING_DEFAULT_VALUE = "0 0 1 * * ?";
 	private static final String REINDEXABLE = "reindexable";
 	private static final String REINDEXING = "reindexing";
+	private static final String REINDEXING_DEFAULT_VALUE = "0 0 1 * * ?";
 	private static final String SCHEDULABLE = "schedulable";
 	private static final String SCHEDULING = "scheduling";
+	private static final String SCHEDULING_DEFAULT_VALUE = "0 */5 * ? * * *";
 	private static final Logger log = Logger.getLogger(DatasourcePurgeGraphqlTest.class);
 
 	@Inject
@@ -103,11 +105,7 @@ public class DatasourcePurgeGraphqlTest {
 						arg(
 							DATASOURCE_DTO,
 							inputObject(
-								prop(NAME, DATASOURCE_ONE_NAME),
-								prop(SCHEDULABLE, false),
-								prop(SCHEDULING, CRON_5_MINUTES),
-								prop(REINDEXABLE, false),
-								prop(REINDEXING, CRON_5_MINUTES)
+								prop(NAME, DATASOURCE_ONE_NAME)
 							)
 						)
 					),
@@ -128,8 +126,10 @@ public class DatasourcePurgeGraphqlTest {
 
 		var datasourceOne = getDatasourceOne();
 
-		assertEquals(CRON_5_MINUTES, datasourceOne.getScheduling());
-		assertEquals(CRON_5_MINUTES, datasourceOne.getReindexing());
+		assertEquals(SCHEDULING_DEFAULT_VALUE, datasourceOne.getScheduling());
+		assertFalse(datasourceOne.getSchedulable());
+		assertEquals(REINDEXING_DEFAULT_VALUE, datasourceOne.getReindexing());
+		assertFalse(datasourceOne.getReindexable());
 		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceOne.getPurgeable());
 		assertEquals(PURGING_DEFAULT_VALUE, datasourceOne.getPurging());
 		assertEquals(PURGE_MAX_AGE_DEFAULT_VALUE, datasourceOne.getPurgeMaxAge());
@@ -143,8 +143,8 @@ public class DatasourcePurgeGraphqlTest {
 
 		var datasourceOne = getDatasourceOne();
 
-		assertEquals(CRON_5_MINUTES, datasourceOne.getScheduling());
-		assertEquals(CRON_5_MINUTES, datasourceOne.getReindexing());
+		assertEquals(SCHEDULING_DEFAULT_VALUE, datasourceOne.getScheduling());
+		assertEquals(REINDEXING_DEFAULT_VALUE, datasourceOne.getReindexing());
 		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceOne.getPurgeable());
 		assertEquals(PURGING_DEFAULT_VALUE, datasourceOne.getPurging());
 		assertEquals(PURGE_MAX_AGE_DEFAULT_VALUE, datasourceOne.getPurgeMaxAge());
