@@ -64,12 +64,12 @@ public class EmbeddingModelServiceTest {
 				var cluster = openSearchClient.cluster();
 				try {
 					var res = cluster.getComponentTemplate(ct -> ct
-						.name(req.getComponentTemplateName()));
+						.name(req.getName()));
 
 					var componentTemplate = res.componentTemplates().getFirst();
 
 					Assertions.assertEquals(
-						req.getComponentTemplateName(),
+						req.getName(),
 						componentTemplate.name()
 					);
 

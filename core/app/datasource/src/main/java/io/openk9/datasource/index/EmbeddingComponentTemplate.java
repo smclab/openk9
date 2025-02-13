@@ -17,25 +17,37 @@
 
 package io.openk9.datasource.index;
 
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.util.OpenSearchUtils;
 
-public record EmbeddingComponentTemplate(String tenantId, String name, int vectorSize) {
+public record EmbeddingComponentTemplate(
+	String tenantId, String embeddingModelName, int vectorSize
+) {
 
 	public EmbeddingComponentTemplate {
 
-		assert name != null && !name.isEmpty();
+		assert embeddingModelName != null && !embeddingModelName.isEmpty();
 		assert tenantId != null && !tenantId.isEmpty();
 		assert vectorSize > 0;
 	}
 
-	public String getComponentTemplateName() {
-		return OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", tenantId, name));
+	public static EmbeddingComponentTemplate fromEmbeddingModel(EmbeddingModel embeddingModel) {
+
+		return new EmbeddingComponentTemplate(
+			embeddingModel.getTenant(),
+			embeddingModel.getName(),
+			embeddingModel.getVectorSize()
+		);
 	}
 
 	@Override
-	public String name() {
+	public String embeddingModelName() {
 		throw new UnsupportedOperationException();
+	}
+
+	public String getName() {
+		return OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, embeddingModelName));
 	}
 
 	@Override
