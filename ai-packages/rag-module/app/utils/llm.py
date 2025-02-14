@@ -483,6 +483,7 @@ def stream_rag_conversation(
             chunk
             and retrieve_citations
             and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+            and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
             and "annotations" in chunk.keys()
         ):
             citations = chunk
@@ -505,11 +506,14 @@ def stream_rag_conversation(
         if citations
         and retrieve_citations
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else []
     )
     all_citations_dict = (
         {citation["document_id"]: citation["citations"] for citation in all_citations}
-        if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        if retrieve_citations
+        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else {}
     )
 
