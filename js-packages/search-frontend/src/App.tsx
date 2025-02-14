@@ -1,19 +1,19 @@
+import { debounce } from "lodash";
+import moment from "moment";
 import React from "react";
-import { OpenK9 } from "./embeddable/entry";
+import { useTranslation } from "react-i18next";
 import { css } from "styled-components/macro";
-import { Logo } from "./components/Logo";
-import "./index.css";
 import "./app.css";
-import { MaintenancePage } from "./components/MaintenancePage";
-import "./ScrollBar.css";
 import "./components/dataRangePicker.css";
+import { DeleteLogo } from "./components/DeleteLogo";
+import { Logo } from "./components/Logo";
+import { MaintenancePage } from "./components/MaintenancePage";
+import { OpenK9 } from "./embeddable/entry";
+import "./index.css";
+import "./ScrollBar.css";
 import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
-import moment from "moment";
-import { DeleteLogo } from "./components/DeleteLogo";
-import { useTranslation } from "react-i18next";
-import { debounce } from "lodash";
-import { PreviewSvg } from "./svgElement/PreviewSvg";
+import { FilterSvg } from "./svgElement/FiltersSvg";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -463,12 +463,11 @@ export function App() {
           css={css`
             display: flex;
             gap: 5px;
-            padding: 8px 16px;
-            margin-top: 5px;
+            padding: 16px;
           `}
         >
           <div>
-            <PreviewSvg />
+            <FilterSvg size={14} />
           </div>
           <h2
             id="title-preview-openk9"
@@ -477,11 +476,10 @@ export function App() {
             css={css`
               font-style: normal;
               font-weight: 700;
-              font-size: 18px;
+              font-size: 16px;
               height: 18px;
               line-height: 22px;
               align-items: center;
-              color: #3f3f46;
               margin: 0;
             `}
           >
@@ -508,10 +506,10 @@ export function App() {
           css={css`
             display: flex;
             height: max-content;
-            flex-direction: column-reverse;
             background-color: inherit;
             border-radius: 8px;
             overflow: auto;
+            widht: 100%;
             @media (max-width: 480px) {
               display: none;
             }

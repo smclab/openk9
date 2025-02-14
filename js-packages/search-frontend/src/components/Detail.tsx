@@ -136,12 +136,10 @@ function Detail<E>(props: DetailProps<E>) {
       <div
         className="openk9-detail-container-title box-title"
         css={css`
-          padding: 0px 16px;
           width: 100%;
           background: #fafafa;
-          padding-top: 17px;
-          padding-bottom: 8px;
           display: flex;
+          padding: 16px;
           gap: 3px;
           box-sizing: border-box;
           justify-content: space-between;
@@ -157,7 +155,7 @@ function Detail<E>(props: DetailProps<E>) {
           `}
         >
           <div>
-            <PreviewSvg />
+            <PreviewSvg size={23} />
           </div>
           <h2
             id="title-preview-openk9"
@@ -166,11 +164,10 @@ function Detail<E>(props: DetailProps<E>) {
             css={css`
               font-style: normal;
               font-weight: 700;
-              font-size: 18px;
+              font-size: 16px;
               height: 18px;
               line-height: 22px;
               align-items: center;
-              color: #3f3f46;
               margin: 0;
             `}
           >

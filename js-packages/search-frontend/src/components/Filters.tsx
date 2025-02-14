@@ -4,7 +4,6 @@ import { SearchToken, SortField } from "./client";
 import { useOpenK9Client } from "./client";
 import { useQuery } from "react-query";
 import { useInfiniteResults } from "./ResultList";
-import { FilterSvg } from "../svgElement/FiltersSvg";
 import { Logo } from "./Logo";
 import {
   FilterCategoryDynamicMemo,
@@ -253,10 +252,15 @@ function translateSuggesionCategoryName({
 }
 
 export function SkeletonFilters() {
-  const { t } = useTranslation();
   return (
-    <div>
+    <div
+      className="container-openk9-skeleton"
+      css={css`
+        width: 100%;
+      `}
+    >
       <div
+        className="container-openk9-skeleton-wrapper"
         css={css`
           padding-inline: 16px;
         `}
