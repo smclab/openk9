@@ -45,6 +45,7 @@ import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -126,6 +127,23 @@ public class SuggestionCategoryGraphqlResource {
 
 		return translationService
 			.getTranslationDTOs(SuggestionCategory.class, suggestionCategory.getId());
+	}
+
+	/**
+	 * Retrieves a list of DocTypeField entities that are unbound to the given SuggestionCategory ID
+	 * and have a FieldType of either KEYWORD or I18N.
+	 *
+	 * @param suggestionCategoryId The ID of the SuggestionCategory to exclude associated DocTypeFields.
+	 * @return A Uni containing a list of DocTypeField objects that meet the filtering criteria.
+	 */
+	@Description("Fetches DocTypeFields unbound to the provided SuggestionCategory ID " +
+		"with FieldType KEYWORD or I18N.")
+	@Query
+	public Uni<List<DocTypeField>> getUnboundDocTypeFieldsBySuggestionCategory(
+			long suggestionCategoryId) {
+
+		return suggestionCategoryService.findUnboundDocTypeFieldsBySuggestionCategory(
+			suggestionCategoryId);
 	}
 
 	public Uni<Response<SuggestionCategory>> patchSuggestionCategory(@Id long id, SuggestionCategoryDTO suggestionCategoryDTO) {

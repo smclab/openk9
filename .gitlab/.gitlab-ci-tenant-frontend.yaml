@@ -1,53 +1,73 @@
-Build Latest Tenant Ui Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 0
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - main
-    changes:
-      - .gitlab/.gitlab-ci-tenant-frontend.yml
-      - js-packages/tenant-ui/**/*
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t openk9-tenant-ui:latest -f js-packages/tenant-ui/Dockerfile .
-    - docker tag openk9-tenant-ui:latest $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:latest
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:latest
+stages:
+  - quality
+  - build
+  - container-scanning
+  - restart
+  - build-verifier
 
 
-Build Tagged Tenant Ui Docker Image:
+
+# Build Docker Image
+Build Tenant Frontend:
+  stage: build
   image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
   variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - tags
-    changes:
-      - .gitlab/.gitlab-ci-tenant-frontend.yml
-      - js-packages/tenant-ui/**/*
-  except:
-    - schedules
+    DOCKER_BUILDKIT: 1
   before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+    - apk add --no-cache docker
+    - dockerd &
+    - while(! docker info > /dev/null 2>&1); do echo "Waiting for Docker to start..."; sleep 1; done
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USERNAME" --password-stdin $CI_REGISTRY
   script:
-    - docker build -t tenant-ui:${CI_COMMIT_REF_NAME} -f js-packages/tenant-ui/Dockerfile .
-    - docker tag tenant-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/tenant-ui:${CI_COMMIT_REF_NAME}
+    - docker build -t $CI_REGISTRY/tenant-ui:latest -f js-packages/tenant-ui/Dockerfile .
+    - docker push $CI_REGISTRY/tenant-ui:latest
+  after_script:
+    - kill $(cat /var/run/docker.pid)
+  rules:
+    - when: never
+    #- changes:
+    #    - js-packages/tenant-ui/**/*
+
+# Container Scanning
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  variables:
+    SCAN_IMAGE: "$CI_REGISTRY/tenant-frontend:latest"
+  script:
+    - container-scanning scan --image $SCAN_IMAGE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+# Trigger Restart
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for Tenant Frontend"
+    - |
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-tenant-frontend" \
+        -F "ref=main" \
+        "${RESTART_TRIGGER_URL}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+# Build Verifier
+Build Verifier:
+  stage: build-verifier
+  #immagine con node/npm per provare yarn install e build
+  image: node:14
+  script:
+    - cd js-packages/tenant-ui
+    - yarn install    
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/tenant-ui/**/*
+    #quando c'è mergerequest
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
