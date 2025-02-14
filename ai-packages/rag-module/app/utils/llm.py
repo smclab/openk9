@@ -380,7 +380,11 @@ def stream_rag_conversation(
 
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
-    if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value:
+    if (
+        retrieve_citations
+        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
+    ):
         citations_chain = qa_prompt | llm.with_structured_output(Citations)
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
