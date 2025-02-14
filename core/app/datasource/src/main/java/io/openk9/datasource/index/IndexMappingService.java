@@ -35,6 +35,7 @@ import jakarta.ws.rs.core.Response;
 import io.openk9.datasource.index.mappings.IndexMappingsUtil;
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -231,6 +232,7 @@ public class IndexMappingService {
 	protected static PutComposableIndexTemplateRequest createIndexTemplateRequest(
 		DataIndexTemplate indexTemplateRequest) {
 
+		var tenantId = indexTemplateRequest.tenantId();
 		var dataIndex = indexTemplateRequest.dataIndex();
 		var indexSettings = indexTemplateRequest.settings();
 		var embeddingModel = indexTemplateRequest.embeddingModel();
@@ -260,7 +262,14 @@ public class IndexMappingService {
 		ComposableIndexTemplate composableIndexTemplate = null;
 
 		try {
-			var indexName = dataIndex.getIndexName();
+			String indexName = null;
+
+			if (tenantId != null) {
+				indexName = DataIndex.getIndexName(tenantId, dataIndex);
+			}
+			else {
+				indexName = dataIndex.getIndexName();
+			}
 
 			List<String> componentTemplates = new ArrayList<>();
 

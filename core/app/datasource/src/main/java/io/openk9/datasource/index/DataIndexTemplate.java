@@ -23,5 +23,6 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.EmbeddingModel;
 
 public record DataIndexTemplate(
-	Map<String, Object> settings, DataIndex dataIndex, EmbeddingModel embeddingModel
+	String tenantId, Map<String, Object> settings,
+	DataIndex dataIndex, EmbeddingModel embeddingModel
 ) {}

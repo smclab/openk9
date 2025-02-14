@@ -56,6 +56,12 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor(staticName = "of")
 public class DataIndex extends K9Entity {
 
+	public static String getIndexName(String tenantId, DataIndex dataIndex) {
+		return OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, dataIndex.getName())
+		);
+	}
+
 	@Column(
 		name = "name", nullable = false, unique = true, updatable = false)
 	@Immutable
@@ -145,9 +151,7 @@ public class DataIndex extends K9Entity {
 			}
 		}
 
-		this.indexName = OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", tenantId, getName())
-		);
+		this.indexName = getIndexName(tenantId, this);
 	}
 
 }

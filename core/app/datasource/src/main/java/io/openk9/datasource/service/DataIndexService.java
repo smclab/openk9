@@ -43,7 +43,9 @@ import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
@@ -180,18 +182,18 @@ public class DataIndexService
 				dataIndex.setDatasource(datasource);
 				dataIndex.setDocTypes(docTypes);
 				return merge(session, dataIndex)
-					.call(merged -> embeddingModelService
+					.call(merged -> session.find(TenantBinding.class, 1L)
+						.map(K9Entity::getTenant)
+						.call(tenantId -> embeddingModelService
 						.fetchCurrent(session)
 						.onFailure()
 						.recoverWithNull()
 						.flatMap(embeddingModel ->
 							indexMappingService.createDataIndexTemplate(
 								new DataIndexTemplate(
-									Map.of(),
-									merged,
-									embeddingModel
-								)
+									tenantId, Map.of(), merged, embeddingModel)
 							)
+						)
 						)
 					);
 			});
@@ -258,7 +260,7 @@ public class DataIndexService
 					.flatMap(embeddingModel -> persist(s, transientDataIndex)
 						.flatMap(dataIndex -> indexMappingService
 							.createDataIndexTemplate(
-								new DataIndexTemplate(settings, dataIndex, embeddingModel))
+								new DataIndexTemplate(null, settings, dataIndex, embeddingModel))
 							.map(unused -> dataIndex)
 						)
 					);
