@@ -19,6 +19,7 @@ package io.openk9.datasource.model.dto.util;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -26,6 +27,7 @@ import org.hibernate.validator.constraints.Length;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @SuperBuilder(toBuilder = true)
 public class K9EntityDTO {
 

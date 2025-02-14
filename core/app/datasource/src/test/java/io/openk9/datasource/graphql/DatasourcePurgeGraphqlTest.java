@@ -18,15 +18,14 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.service.DatasourceService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
-import org.glassfish.jaxb.core.v2.TODO;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.MethodOrderer;
@@ -34,7 +33,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ExecutionException;
 
 import static io.smallrye.graphql.client.core.Argument.arg;
@@ -62,6 +60,10 @@ public class DatasourcePurgeGraphqlTest {
 	private static final String DATASOURCE_DTO = "datasourceDTO";
 	private static final String DATASOURCE_ONE_NAME = ENTITY_NAME_PREFIX + "Datasource 1";
 	private static final String DATASOURCE_TWO_NAME = ENTITY_NAME_PREFIX + "Datasource 2";
+	private static final String DATASOURCE_THREE_NAME = ENTITY_NAME_PREFIX + "Datasource 3";
+	private static final String DESCRIPTION = "description";
+	private static final String DESCRIPTION_DEFAULT = "Default description";
+	private static final String DESCRIPTION_ONE = "Description 1";
 	private static final String DURATION_5_DAYS = "5d";
 	private static final String ENTITY = "entity";
 	private static final String ID = "id";
@@ -74,11 +76,13 @@ public class DatasourcePurgeGraphqlTest {
 	private static final String PURGING = "purging";
 	private static final String PURGING_DEFAULT_VALUE = "0 0 1 * * ?";
 	private static final String REINDEXABLE = "reindexable";
+	private static final boolean REINDEXABLE_DEFAULT_VALUE = false;
 	private static final String REINDEXING = "reindexing";
 	private static final String REINDEXING_DEFAULT_VALUE = "0 0 1 * * ?";
 	private static final String SCHEDULABLE = "schedulable";
+	private static final boolean SCHEDULABLE_DEFAULT_VALUE = false;
 	private static final String SCHEDULING = "scheduling";
-	private static final String SCHEDULING_DEFAULT_VALUE = "0 */5 * ? * * *";
+	private static final String SCHEDULING_DEFAULT_VALUE = "0 */30 * ? * * *";
 	private static final Logger log = Logger.getLogger(DatasourcePurgeGraphqlTest.class);
 
 	@Inject
@@ -93,6 +97,12 @@ public class DatasourcePurgeGraphqlTest {
 
 	@Test
 	@Order(1)
+	void init() {
+		createDatasourceThree();
+	}
+
+	@Test
+	@Order(2)
 	void should_create_datasource_one_with_default_purge_fields()
 		throws ExecutionException, InterruptedException {
 
@@ -137,7 +147,7 @@ public class DatasourcePurgeGraphqlTest {
 	}
 
 	@Test
-	@Order(2)
+	@Order(3)
 	void should_patch_datasource_one_purge_fields()
 		throws ExecutionException, InterruptedException {
 
@@ -194,7 +204,7 @@ public class DatasourcePurgeGraphqlTest {
 	}
 
 	@Test
-	@Order(3)
+	@Order(4)
 	void should_create_datasource_two_with_custom_purge_fields()
 		throws ExecutionException, InterruptedException {
 
@@ -208,9 +218,10 @@ public class DatasourcePurgeGraphqlTest {
 							DATASOURCE_DTO,
 							inputObject(
 								prop(NAME, DATASOURCE_TWO_NAME),
-								prop(SCHEDULABLE, false),
+								prop(DESCRIPTION, DESCRIPTION_DEFAULT),
+								prop(SCHEDULABLE, true),
 								prop(SCHEDULING, CRON_2_MINUTES),
-								prop(REINDEXABLE, false),
+								prop(REINDEXABLE, true),
 								prop(REINDEXING, CRON_2_MINUTES),
 								prop(PURGEABLE, true),
 								prop(PURGING, CRON_2_MINUTES),
@@ -235,22 +246,28 @@ public class DatasourcePurgeGraphqlTest {
 
 		var datasourceTwo = getDatasourceTwo();
 
+		assertEquals(DESCRIPTION_DEFAULT, datasourceTwo.getDescription());
+		assertTrue(datasourceTwo.getSchedulable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getScheduling());
+		assertTrue(datasourceTwo.getReindexable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getReindexing());
-		assertEquals(true, datasourceTwo.getPurgeable());
+		assertTrue(datasourceTwo.getPurgeable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getPurging());
 		assertEquals(DURATION_5_DAYS, datasourceTwo.getPurgeMaxAge());
 
 	}
 
 	@Test
-	@Order(4)
-	void should_update_datasource_two_purge_fields()
+	@Order(5)
+	void should_update_datasource_two()
 		throws ExecutionException, InterruptedException {
 
 		var datasourceTwo = getDatasourceTwo();
 
+		assertEquals(DESCRIPTION_DEFAULT, datasourceTwo.getDescription());
+		assertTrue(datasourceTwo.getSchedulable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getScheduling());
+		assertTrue(datasourceTwo.getReindexable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getReindexing());
 		assertEquals(true, datasourceTwo.getPurgeable());
 		assertEquals(CRON_2_MINUTES, datasourceTwo.getPurging());
@@ -268,6 +285,7 @@ public class DatasourcePurgeGraphqlTest {
 							DATASOURCE_DTO,
 							inputObject(
 								prop(NAME, DATASOURCE_TWO_NAME),
+								prop(DESCRIPTION, DESCRIPTION_ONE),
 								prop(SCHEDULABLE, false),
 								prop(SCHEDULING, CRON_5_MINUTES),
 								prop(REINDEXABLE, false),
@@ -293,7 +311,10 @@ public class DatasourcePurgeGraphqlTest {
 
 		var datasourceTwoUpdated = getDatasourceTwo();
 
+		assertEquals(DESCRIPTION_ONE, datasourceTwoUpdated.getDescription());
+		assertFalse(datasourceTwoUpdated.getSchedulable());
 		assertEquals(CRON_5_MINUTES, datasourceTwoUpdated.getScheduling());
+		assertFalse(datasourceTwoUpdated.getReindexable());
 		assertEquals(CRON_5_MINUTES, datasourceTwoUpdated.getReindexing());
 		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceTwoUpdated.getPurgeable());
 		assertEquals(PURGING_DEFAULT_VALUE, datasourceTwoUpdated.getPurging());
@@ -301,13 +322,16 @@ public class DatasourcePurgeGraphqlTest {
 	}
 
 	@Test
-	@Order(5)
-	void should_update_datasource_two_with_null_purge_fields()
+	@Order(6)
+	void should_update_datasource_two_with_null_fields_reset_to_default_value()
 		throws ExecutionException, InterruptedException {
 
 		var datasourceTwo = getDatasourceTwo();
 
+		assertEquals(DESCRIPTION_ONE, datasourceTwo.getDescription());
+		assertFalse(datasourceTwo.getSchedulable());
 		assertEquals(CRON_5_MINUTES, datasourceTwo.getScheduling());
+		assertFalse(datasourceTwo.getReindexable());
 		assertEquals(CRON_5_MINUTES, datasourceTwo.getReindexing());
 		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceTwo.getPurgeable());
 		assertEquals(PURGING_DEFAULT_VALUE, datasourceTwo.getPurging());
@@ -325,10 +349,11 @@ public class DatasourcePurgeGraphqlTest {
 							DATASOURCE_DTO,
 							inputObject(
 								prop(NAME, DATASOURCE_TWO_NAME),
-								prop(SCHEDULABLE, false),
-								prop(SCHEDULING, CRON_5_MINUTES),
-								prop(REINDEXABLE, false),
-								prop(REINDEXING, CRON_5_MINUTES),
+								prop(DESCRIPTION, null),
+								prop(SCHEDULABLE, null),
+								prop(SCHEDULING, null),
+								prop(REINDEXABLE, null),
+								prop(REINDEXING, null),
 								prop(PURGEABLE, null),
 								prop(PURGING, null),
 								prop(PURGE_MAX_AGE, null)
@@ -350,18 +375,216 @@ public class DatasourcePurgeGraphqlTest {
 
 		var datasourceTwoUpdated = getDatasourceTwo();
 
-		assertEquals(CRON_5_MINUTES, datasourceTwoUpdated.getScheduling());
-		assertEquals(CRON_5_MINUTES, datasourceTwoUpdated.getReindexing());
-		assertNull(datasourceTwoUpdated.getPurgeable());
-		assertNull(datasourceTwoUpdated.getPurging());
-		assertNull(datasourceTwoUpdated.getPurgeMaxAge());
+		assertNull(datasourceTwoUpdated.getDescription());
+		assertFalse(datasourceTwoUpdated.getSchedulable());
+		assertEquals(SCHEDULING_DEFAULT_VALUE, datasourceTwoUpdated.getScheduling());
+		assertFalse(datasourceTwoUpdated.getReindexable());
+		assertEquals(REINDEXING_DEFAULT_VALUE, datasourceTwoUpdated.getReindexing());
+		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceTwoUpdated.getPurgeable());
+		assertEquals(PURGING_DEFAULT_VALUE, datasourceTwoUpdated.getPurging());
+		assertEquals(PURGE_MAX_AGE_DEFAULT_VALUE, datasourceTwoUpdated.getPurgeMaxAge());
 	}
 
 	@Test
-	@Order(6)
+	@Order(7)
+	void should_patch_datasource_three_without_params_keep_original_values()
+		throws ExecutionException, InterruptedException {
+
+		var datasourceThree = getDatasourceThree();
+
+		// Check original values
+		assertEquals(DESCRIPTION_DEFAULT, datasourceThree.getDescription());
+		assertTrue(datasourceThree.getSchedulable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getScheduling());
+		assertTrue(datasourceThree.getReindexable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getReindexing());
+		assertTrue(datasourceThree.getPurgeable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getPurging());
+		assertEquals(DURATION_5_DAYS, datasourceThree.getPurgeMaxAge());
+
+		// Patch datasource
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					DATASOURCE,
+					args(
+						arg(ID, datasourceThree.getId()),
+						arg(PATCH, true),
+						arg(
+							DATASOURCE_DTO,
+							inputObject(
+								prop(NAME, DATASOURCE_THREE_NAME)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response: %s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var datasourceThreePatched = getDatasourceThree();
+
+		// Check if the patched datasource keeps its original values
+		assertEquals(DESCRIPTION_DEFAULT, datasourceThreePatched.getDescription());
+		assertTrue(datasourceThreePatched.getSchedulable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getScheduling());
+		assertTrue(datasourceThreePatched.getReindexable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getReindexing());
+		assertTrue(datasourceThreePatched.getPurgeable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getPurging());
+		assertEquals(DURATION_5_DAYS, datasourceThreePatched.getPurgeMaxAge());
+
+	}
+
+	@Test
+	@Order(8)
+	void should_patch_datasource_three_with_null_fields_keep_original_values()
+		throws ExecutionException, InterruptedException {
+
+		var datasourceThree = getDatasourceThree();
+
+		// Check original values
+		assertEquals(DESCRIPTION_DEFAULT, datasourceThree.getDescription());
+		assertTrue(datasourceThree.getSchedulable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getScheduling());
+		assertTrue(datasourceThree.getReindexable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getReindexing());
+		assertTrue(datasourceThree.getPurgeable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getPurging());
+		assertEquals(DURATION_5_DAYS, datasourceThree.getPurgeMaxAge());
+
+		// Patch datasource
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					DATASOURCE,
+					args(
+						arg(ID, datasourceThree.getId()),
+						arg(PATCH, true),
+						arg(
+							DATASOURCE_DTO,
+							inputObject(
+								prop(NAME, DATASOURCE_THREE_NAME),
+								prop(DESCRIPTION, null),
+								prop(SCHEDULABLE, null),
+								prop(SCHEDULING, null),
+								prop(REINDEXABLE, null),
+								prop(REINDEXING, null),
+								prop(PURGEABLE, null),
+								prop(PURGING, null),
+								prop(PURGE_MAX_AGE, null)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response: %s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var datasourceThreePatched = getDatasourceThree();
+
+		// Check if the patched datasource keeps its original values
+		assertEquals(DESCRIPTION_DEFAULT, datasourceThreePatched.getDescription());
+		assertTrue(datasourceThreePatched.getSchedulable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getScheduling());
+		assertTrue(datasourceThreePatched.getReindexable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getReindexing());
+		assertTrue(datasourceThreePatched.getPurgeable());
+		assertEquals(CRON_2_MINUTES, datasourceThreePatched.getPurging());
+		assertEquals(DURATION_5_DAYS, datasourceThreePatched.getPurgeMaxAge());
+
+	}
+
+	@Test
+	@Order(9)
+	void should_update_datasource_three_without_params_reset_to_default_values()
+		throws ExecutionException, InterruptedException {
+
+		var datasourceThree = getDatasourceThree();
+
+		// Check original values
+		assertTrue(datasourceThree.getSchedulable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getScheduling());
+		assertTrue(datasourceThree.getReindexable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getReindexing());
+		assertTrue(datasourceThree.getPurgeable());
+		assertEquals(CRON_2_MINUTES, datasourceThree.getPurging());
+		assertEquals(DURATION_5_DAYS, datasourceThree.getPurgeMaxAge());
+
+		// Patch datasource
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					DATASOURCE,
+					args(
+						arg(ID, datasourceThree.getId()),
+						arg(PATCH, false),
+						arg(
+							DATASOURCE_DTO,
+							inputObject(
+								prop(NAME, DATASOURCE_THREE_NAME)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response: %s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var datasourceThreeUpdated = getDatasourceThree();
+
+		// Check if the updated datasource resets its values to the default
+		// or null if the specific field does not have a default.
+		assertNull(datasourceThreeUpdated.getDescription());
+		assertEquals(SCHEDULABLE_DEFAULT_VALUE, datasourceThreeUpdated.getSchedulable());
+		assertEquals(SCHEDULING_DEFAULT_VALUE, datasourceThreeUpdated.getScheduling());
+		assertEquals(REINDEXABLE_DEFAULT_VALUE, datasourceThreeUpdated.getReindexable());
+		assertEquals(REINDEXING_DEFAULT_VALUE, datasourceThreeUpdated.getReindexing());
+		assertEquals(PURGEABLE_DEFAULT_VALUE, datasourceThreeUpdated.getPurgeable());
+		assertEquals(PURGING_DEFAULT_VALUE, datasourceThreeUpdated.getPurging());
+		assertEquals(PURGE_MAX_AGE_DEFAULT_VALUE, datasourceThreeUpdated.getPurgeMaxAge());
+
+	}
+
+	@Test
+	@Order(10)
 	void tearDown() {
 		var datasourceOne = getDatasourceOne();
 		var datasourceTwo = getDatasourceTwo();
+		var datasourceThree = getDatasourceThree();
 
 		sessionFactory.withTransaction(
 			(s, transaction) ->
@@ -377,9 +600,38 @@ public class DatasourcePurgeGraphqlTest {
 		.await()
 		.indefinitely();
 
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.deleteById(datasourceThree.getId())
+			)
+			.await()
+			.indefinitely();
+
 		assertThrows(NoResultException.class, this::getDatasourceOne);
 		assertThrows(NoResultException.class, this::getDatasourceTwo);
+		assertThrows(NoResultException.class, this::getDatasourceThree);
 
+	}
+
+	private void createDatasourceThree() {
+		DatasourceDTO dto = DatasourceDTO.builder()
+			.name(DATASOURCE_THREE_NAME)
+			.description(DESCRIPTION_DEFAULT)
+			.schedulable(true)
+			.scheduling(CRON_2_MINUTES)
+			.reindexable(true)
+			.reindexing(CRON_2_MINUTES)
+			.purgeable(true)
+			.purging(CRON_2_MINUTES)
+			.purgeMaxAge(DURATION_5_DAYS)
+			.build();
+
+		sessionFactory.withTransaction(
+			(s, transaction) ->
+				datasourceService.create(dto)
+		)
+		.await()
+		.indefinitely();
 	}
 
 	private Datasource getDatasourceOne() {
@@ -395,6 +647,15 @@ public class DatasourcePurgeGraphqlTest {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
 					datasourceService.findByName(s,DATASOURCE_TWO_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private Datasource getDatasourceThree() {
+		return sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.findByName(s,DATASOURCE_THREE_NAME)
 			)
 			.await()
 			.indefinitely();
