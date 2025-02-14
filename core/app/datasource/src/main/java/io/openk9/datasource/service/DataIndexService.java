@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.annotation.Nullable;
@@ -178,7 +179,21 @@ public class DataIndexService
 				var dataIndex = createMapper(session, dto);
 				dataIndex.setDatasource(datasource);
 				dataIndex.setDocTypes(docTypes);
-				return merge(session, dataIndex);
+				return merge(session, dataIndex)
+					.call(merged -> embeddingModelService
+						.fetchCurrent(session)
+						.onFailure()
+						.recoverWithNull()
+						.flatMap(embeddingModel ->
+							indexMappingService.createDataIndexTemplate(
+								new DataIndexTemplate(
+									Map.of(),
+									merged,
+									embeddingModel
+								)
+							)
+						)
+					);
 			});
 
 	}
@@ -215,7 +230,7 @@ public class DataIndexService
 				transientDataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
 				transientDataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
 
-				Uni<EmbeddingModel> knnFlowUni = null;
+				Uni<EmbeddingModel> knnFlowUni;
 
 				var knnIndex = request.getKnnIndex();
 
