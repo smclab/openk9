@@ -430,6 +430,7 @@ export function Search({
                 inputRef &&
                   inputRef.current &&
                   search(inputRef?.current?.value || "");
+                if (actionOnClick) actionOnClick();
               }}
             >
               <svg

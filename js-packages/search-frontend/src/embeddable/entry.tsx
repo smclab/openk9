@@ -265,7 +265,7 @@ type FilterProps = {
 
 type ResulListPaginationProps = {
   element: Element | string | null;
-  anchor?: React.MutableRefObject<HTMLDivElement | null>;
+  callback?: () => void | null | undefined;
 };
 
 type TabsProps = {
@@ -310,6 +310,19 @@ type activeFiltersConfigurableProps = {
   element: Element | string | null;
   actioneRemoveFilters?(): void;
   callbackRemoveFilter?(): void;
+};
+
+type SkeletonProps = {
+  skeleton: Element | string | null;
+  width?: string | null | undefined;
+  height?: string | null | undefined;
+  counter?: number | null | undefined;
+  circle?: boolean | null | undefined;
+  backgroundColor?: string | null | undefined;
+  itereitorKey?: string | null | undefined;
+  containerMax?: boolean | null | undefined;
+  position?: "column" | "row";
+  gap?: string | null | undefined;
 };
 
 type searchWithSuggestionsProps =
@@ -396,6 +409,7 @@ export type Configuration = {
   searchWithSuggestions: searchWithSuggestionsProps;
   searchMobile: SearchMobileConfiguration | null;
   select: SelectProps | null;
+  skeleton: SkeletonProps | null;
   sortableConfigurable: SortableProps | null;
   sortResults: SortResultsProps | null;
   sortResultConfigurable: SortResultConfigurableProps | null;
@@ -453,6 +467,7 @@ const defaultConfiguration: Configuration = {
   searchReplaceText: true,
   searchWithSuggestions: null,
   showSyntax: true,
+  skeleton: null,
   sort: [],
   sortResults: null,
   sortable: null,

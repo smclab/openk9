@@ -19,7 +19,6 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
-  SortField,
 } from "../components/client";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
 import TabsSkeleton, { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
@@ -57,6 +56,7 @@ import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 import GenerateResponse from "../components/GenerateResponse";
 import { useRange } from "../components/useRange";
+import CustomSkeleton from "../components/Skeleton";
 
 type MainProps = {
   configuration: Configuration;
@@ -269,7 +269,12 @@ export function Main({
             customMessageSearch={
               configuration?.searchConfigurable?.customMessageSearch
             }
-            actionOnClick={configuration?.searchConfigurable?.actionOnClick}
+            actionOnClick={() => {
+              const functionCallback =
+                configuration?.searchConfigurable?.actionOnClick;
+              if (functionCallback) functionCallback();
+              setCurrentPage(0);
+            }}
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
             }
@@ -346,7 +351,11 @@ export function Main({
             onSelectedTabIndexChange={setSelectedTabIndex}
             language={languageSelect}
             resetFilter={resetFilter}
-            onAction={configuration.tabsConfigurable?.onAction}
+            onAction={() => {
+              const callback = configuration.tabsConfigurable?.onAction;
+              if (callback) callback();
+              setCurrentPage(0);
+            }}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
             distance={configuration.tabsConfigurable?.distance}
@@ -610,19 +619,34 @@ export function Main({
               isMobile={isMobile}
               overChangeCard={false}
               language={languageSelect}
-              setSortAfterKey={setSortAfterKey}
               sortAfterKey={sortAfterKey}
               numberOfResults={totalResult || 0}
               pagination={numberOfResults}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
-              anchor={configuration.resultListPagination?.anchor}
+              callback={configuration.resultListPagination?.callback}
             />
           )}
         </I18nextProvider>,
         configuration.resultListPagination
           ? configuration.resultListPagination.element
           : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <CustomSkeleton
+            backgroundColor={configuration.skeleton?.backgroundColor}
+            circle={configuration.skeleton?.circle}
+            containerMax={configuration.skeleton?.containerMax}
+            counter={configuration.skeleton?.counter}
+            gap={configuration.skeleton?.gap}
+            height={configuration.skeleton?.height}
+            itereitorKey={configuration.skeleton?.itereitorKey}
+            position={configuration.skeleton?.position}
+            width={configuration.skeleton?.width}
+          />
+        </I18nextProvider>,
+        configuration.sortable,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -648,7 +672,6 @@ export function Main({
         </I18nextProvider>,
         configuration.login,
       )}
-
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <SortResultListCustom
@@ -1046,7 +1069,6 @@ function useSearch({
       numberOfFilters: counterTotalFilters,
       numberOfResults: numberOfResults,
     });
-    setCurrentPage(0);
   }, [
     onQueryStateChange,
     defaultTokens,

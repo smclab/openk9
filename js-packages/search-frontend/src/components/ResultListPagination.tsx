@@ -1,21 +1,21 @@
-import React from "react";
-import { css } from "styled-components/macro";
-import { Virtuoso } from "react-virtuoso";
-import { ResultMemo } from "./Result";
-import { GenericResultItem, SearchToken, SortField } from "./client";
-import { Logo } from "./Logo";
-import { Renderers, useRenderers } from "./useRenderers";
-import { CustomVirtualScrollbar } from "./CustomScrollbar";
-import { useOpenK9Client } from "./client";
-import { useInfiniteQuery, useQuery } from "react-query";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { ResultSvg } from "../svgElement/ResultSvg";
-import { SortResultListMemo } from "./SortResultList";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import CustomSkeleton from "./Skeleton";
+import { useInfiniteQuery } from "react-query";
+import { css } from "styled-components/macro";
 import { ResultTitleTwo } from "../renderer-components";
+import { Logo } from "./Logo";
+import { ResultMemo } from "./Result";
+import CustomSkeleton from "./Skeleton";
 import { setSortResultsType } from "./SortResults";
-const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
+import {
+  GenericResultItem,
+  SearchToken,
+  SortField,
+  useOpenK9Client,
+} from "./client";
+import styled from "styled-components";
+import { Renderers, useRenderers } from "./useRenderers";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -32,14 +32,13 @@ type ResultsProps<E> = {
   isMobile: boolean;
   overChangeCard?: boolean;
   language: string;
-  setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
   pagination: number;
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  anchor?: React.MutableRefObject<HTMLDivElement | null>;
+  callback?: () => void;
 };
 function ResultsPagination<E>({
   displayMode,
@@ -51,20 +50,16 @@ function ResultsPagination<E>({
   setDetailMobile,
   overChangeCard = false,
   language,
-  setSortAfterKey,
   sortAfterKey,
   setTotalResult,
   numberOfResults,
   pagination,
   currentPage,
   setCurrentPage,
-  anchor,
+  callback,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
 
-  const changePage = (page: number) => {
-    setCurrentPage(page);
-  };
   if (!renderers) return null;
   switch (displayMode.type) {
     case "finite":
@@ -83,14 +78,12 @@ function ResultsPagination<E>({
             isMobile={isMobile}
             overChangeCard={overChangeCard}
             language={language}
-            setSortAfterKey={setSortAfterKey}
             sortAfterKey={sortAfterKey}
             numberOfResults={numberOfResults}
             currentPage={currentPage}
-            changePage={changePage}
             elementForPage={pagination}
             setCurrentPage={setCurrentPage}
-            anchor={anchor}
+            callback={callback}
           />
         </React.Suspense>
       );
@@ -98,88 +91,6 @@ function ResultsPagination<E>({
 }
 
 export const ResultsPaginationMemo = React.memo(ResultsPagination);
-
-type ResultCountProps = {
-  children: number | undefined;
-  setSortResult: setSortResultsType;
-  isMobile: boolean;
-};
-
-function ResultCount({ children, setSortResult, isMobile }: ResultCountProps) {
-  const client = useOpenK9Client();
-  const { t } = useTranslation();
-
-  return (
-    <React.Fragment>
-      <div
-        className="openk9-result-list-container-title box-title"
-        css={css`
-          padding: 0px 16px;
-          width: 100%;
-          background: #fafafa;
-          padding-top: 20.7px;
-          padding-bottom: 12.7px;
-          display: flex;
-          margin-bottom: 8px;
-          gap: 5px;
-        `}
-      >
-        <span>
-          <ResultSvg />
-        </span>
-        <span className="openk9-result-list-title title">
-          <h2
-            css={css`
-              font-style: normal;
-              font-weight: 700;
-              font-size: 18px;
-              height: 18px;
-              line-height: 22px;
-              align-items: center;
-              color: #3f3f46;
-              margin: 0;
-            `}
-          >
-            {t("result")}
-          </h2>
-        </span>
-      </div>
-      <div
-        className="openk9-number-result-list-container-wrapper "
-        css={css`
-          padding: 8px 16px;
-          font-weight: Helvetica;
-          font-weight: 700;
-        `}
-      >
-        <div
-          className="openk9-number-result-list-container more-detail-content"
-          css={css`
-            padding: 8px 5px;
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            display: flex;
-            justify-content: space-between;
-            border-radius: 8px;
-            align-items: center;
-          `}
-        >
-          <span
-            className="openk9-number-result-list-number-of-results "
-            css={css`
-              color: var(--openk9-embeddable-search--active-color);
-              margin-left: 5px;
-            `}
-          >
-            {children?.toLocaleString("it")}
-          </span>
-          <span>
-            <SortResultListMemo setSortResult={setSortResult} />
-          </span>
-        </div>
-      </div>
-    </React.Fragment>
-  );
-}
 
 type ResulListProps<E> = {
   renderers: Renderers;
@@ -195,14 +106,12 @@ type ResulListProps<E> = {
 };
 
 type InfiniteResultsProps<E> = ResulListProps<E> & {
-  setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
   numberOfResults: number;
   currentPage: number;
   elementForPage: number;
-  changePage: (page: number) => void;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
-  anchor?: React.MutableRefObject<HTMLDivElement | null>;
+  callback?: () => void;
 };
 export function InfiniteResults<E>({
   renderers,
@@ -210,19 +119,16 @@ export function InfiniteResults<E>({
   onDetail,
   setDetailMobile,
   sort,
-  setSortResult,
   isMobile,
   overChangeCard = false,
   language,
-  setSortAfterKey,
   sortAfterKey,
   setTotalResult,
   currentPage,
   numberOfResults,
-  changePage,
   elementForPage,
+  callback,
   setCurrentPage,
-  anchor,
 }: InfiniteResultsProps<E>) {
   const result = currentPage * elementForPage;
   const results = useInfiniteResults<E>(
@@ -234,7 +140,6 @@ export function InfiniteResults<E>({
     result,
   );
 
-  const { t } = useTranslation();
   const itemsPerPage = 3; // Numero di elementi per pagina
   const pagesToShow = 3; // Numero di pagine da mostrare per volta
   const partialResult = numberOfResults / elementForPage;
@@ -249,15 +154,6 @@ export function InfiniteResults<E>({
       resetClick();
     }
   }, [currentPage]);
-
-  function scrollToOverlay() {
-    if (anchor && anchor.current) {
-      anchor.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }
 
   const handlePrevClick = () => {
     setViewButton((view) => ({
@@ -325,9 +221,6 @@ export function InfiniteResults<E>({
               }
             `}
           >
-            <ResultCount setSortResult={setSortResult} isMobile={isMobile}>
-              {results.data?.pages[0].total}
-            </ResultCount>
             {results.data?.pages.map((page, pageIndex) => {
               return (
                 <React.Fragment key={pageIndex}>
@@ -358,89 +251,59 @@ export function InfiniteResults<E>({
                   gap: 10px;
                 `}
               >
-                <CreateButton
-                  action={resetClick}
-                  value="<<"
-                  disable={viewButton.start === 0}
-                  ariaL="bottone per mostrare le prime pagine"
-                />
-                <CreateButton
-                  action={handlePrevClick}
-                  value="<"
-                  disable={viewButton.start === 0}
-                  ariaL="bottone per mostrare le tre pagine precedenti"
-                />
+                <PaginationsButton
+                  onClick={resetClick}
+                  disabled={viewButton.start === 0}
+                  aria-label="bottone per mostrare le prime pagine"
+                >
+                  {"<<"}
+                </PaginationsButton>
+                <PaginationsButton
+                  onClick={handlePrevClick}
+                  disabled={viewButton.start === 0}
+                >
+                  {"<"}
+                </PaginationsButton>
                 {Array.from({ length: numberOfPage }).map(
                   (_, index) =>
                     ((index === viewButton.start && index === viewButton.end) ||
                       (index >= viewButton.start &&
                         index < viewButton.end)) && (
-                      <CreateButton
-                        action={() => {
+                      <PaginationsButton
+                        key={index}
+                        onClick={() => {
                           results.fetchNextPage();
                           setCurrentPage(index);
-                          scrollToOverlay();
+                          callback && callback();
                         }}
-                        key={index}
-                        value={"" + (index + 1)}
-                        isCurrent={currentPage === index}
-                        ariaL={
+                        isActive={currentPage === index}
+                        aria-label={
                           "clicca per vedere la " + (index + 1) + " pagina"
                         }
-                      />
+                      >
+                        {"" + (index + 1)}
+                      </PaginationsButton>
                     ),
                 )}
-                <CreateButton
-                  action={handleNextClick}
-                  value=">"
-                  disable={viewButton.end >= numberOfPage}
-                  ariaL="bottone per mostrare le tre pagine successive "
-                />
-                <CreateButton
-                  action={() => resetEndClick(numberOfPage)}
-                  value=">>"
-                  disable={viewButton.end >= numberOfPage}
-                  ariaL="bottone per mostrare le ultime tre pagine"
-                />
+                <PaginationsButton
+                  onClick={handleNextClick}
+                  disabled={viewButton.end >= numberOfPage}
+                  aria-label="bottone per mostrare le tre pagine successive"
+                >
+                  {">"}
+                </PaginationsButton>
+                <PaginationsButton
+                  onClick={() => resetEndClick(numberOfPage)}
+                  disabled={viewButton.end >= numberOfPage}
+                  aria-label="bottone per mostrare le ultime tre pagine"
+                >
+                  {">>"}
+                </PaginationsButton>
               </div>
             </React.Fragment>
           </div>
         ) : (
           <React.Fragment>
-            <div className="openk9-container-no-results">
-              <div
-                className="openk9-result-list-container-title box-title"
-                css={css`
-                  padding: 0px 16px;
-                  width: 100%;
-                  background: #fafafa;
-                  padding-top: 20.7px;
-                  padding-bottom: 12.7px;
-                  display: flex;
-                  margin-bottom: 8px;
-                `}
-              >
-                <span>
-                  <ResultSvg />
-                </span>
-                <span
-                  className="openk9-result-list-title title"
-                  css={css`
-                    margin-left: 5px;
-                    font-style: normal;
-                    font-weight: 700;
-                    font-size: 18px;
-                    height: 18px;
-                    line-height: 22px;
-                    align-items: center;
-                    color: #3f3f46;
-                    margin-left: 8px;
-                  `}
-                >
-                  {t("result")}
-                </span>
-              </div>
-            </div>
             <NoResults />
           </React.Fragment>
         )}
@@ -502,113 +365,9 @@ function useInfiniteResults<E>(
   );
 }
 
-function CreateButton({
-  value,
-  action,
-  ariaL,
-  disable = false,
-  isCurrent = false,
-}: {
-  value: string;
-  action: () => void;
-  ariaL: string;
-  disable?: boolean;
-  isCurrent?: boolean;
-}) {
-  return (
-    <button
-      className={`openk9-result-list-pagination-button ${
-        isCurrent ? "select" : "not-select"
-      }`}
-      disabled={disable}
-      aria-label={ariaL}
-      onClick={action}
-      css={css`
-        padding: 4px 8px !important;
-        background: ${isCurrent ? "#c83939" : "white"};
-        border-radius: 50px;
-        border: 1px solid #c83939;
-        font-size: 15px;
-        cursor: pointer;
-        color: ${isCurrent ? "white" : "#c83939"};
-      `}
-    >
-      {value}
-    </button>
-  );
-}
-
 export function SkeletonResult() {
-  const { t } = useTranslation();
   return (
     <React.Fragment>
-      <div className="openk9-skeleton">
-        <div
-          className="openk9-result-list-container-title box-title openk9-skeleton-container-result"
-          css={css`
-            padding: 0px 16px;
-            width: 100%;
-            background: #fafafa;
-            padding-top: 20.7px;
-            padding-bottom: 12.7px;
-            display: flex;
-            margin-bottom: 8px;
-          `}
-        >
-          <span>
-            <ResultSvg />
-          </span>
-          <span
-            className="openk9-result-list-title title openk9-skeleton-container-title"
-            css={css`
-              margin-left: 5px;
-              font-style: normal;
-              font-weight: 700;
-              font-size: 18px;
-              height: 18px;
-              line-height: 22px;
-              align-items: center;
-              color: #3f3f46;
-              margin-left: 8px;
-            `}
-          >
-            <CustomSkeleton width="80px" />
-          </span>
-        </div>
-      </div>
-      <div
-        className="openk9-number-result-list-container-wrapper openk9-skeleton-container-wrapper"
-        css={css`
-          padding: 8px 16px;
-          font-weight: Helvetica;
-          font-weight: 700;
-        `}
-      >
-        <div
-          className="openk9-number-result-list-container more-detail-content openk9-skeleton-container-more-detail"
-          css={css`
-            padding: 8px 5px;
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            display: flex;
-            justify-content: space-between;
-            border-radius: 8px;
-            align-items: center;
-          `}
-        >
-          <span
-            className="openk9-number-result-list-number-of-results openk9-skeleton-container-number-of-results"
-            css={css`
-              color: var(--openk9-embeddable-search--active-color);
-              margin-left: 5px;
-            `}
-          >
-            <CustomSkeleton width="80px" />
-          </span>
-          <span>
-            <CustomSkeleton width="80px" />
-          </span>
-        </div>
-      </div>
       {new Array(3).fill(null).map((_, index) => (
         <div
           className="openk9-embeddable-search--result-container openk9-skeleton-container--result-container"
@@ -641,3 +400,17 @@ export function SkeletonResult() {
     </React.Fragment>
   );
 }
+
+const PaginationsButton = styled.button<{
+  isActive?: boolean;
+}>`
+  ${({ isActive = false }) => `
+        padding: 4px 8px !important;
+        background: ${isActive ? "#c83939" : "white"};
+        border-radius: 50px;
+        border: 1px solid #c83939;
+        font-size: 15px;
+        cursor: pointer;
+        color: ${isActive ? "white" : "#c83939"};
+  `}
+`;
