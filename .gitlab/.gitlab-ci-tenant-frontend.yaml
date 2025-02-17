@@ -61,13 +61,13 @@ Trigger Restart:
 Build Verifier:
   stage: build-verifier
   #immagine con node/npm per provare yarn install e build
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/tenant-ui
     - yarn install    
     - yarn build
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - changes:
         - js-packages/tenant-ui/**/*
     #quando c'è mergerequest
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

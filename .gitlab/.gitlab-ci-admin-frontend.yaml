@@ -53,12 +53,12 @@ Trigger Restart:
 Build Verifier:
   stage: build-verifier
   #immagine con node/npm per provare yarn install e build
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/admin-ui
     - yarn install
     - yarn build
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - changes:
         - js-packages/admin-ui/**/*
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

@@ -62,23 +62,23 @@ Trigger Restart:
 Build Verifier:
   stage: build-verifier
   #immagine con node/npm per provare yarn install e build
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/search-frontend
     - yarn install
     - yarn build
   rules:
+    - if: '$CI_COMMIT_BRANCH == "merge_request_event"'
     - changes:
         - js-packages/search-frontend/**/*
     # quando c'è merge request
-    - if: '$CI_COMMIT_BRANCH == "main"'
 
 
 
 # Publish
 Publish Search Frontend:
   stage: publish
-  image: node:16    
+  image: node:18
   script:
     - cd js-packages/search-frontend
     - pwd
@@ -91,5 +91,7 @@ Publish Search Frontend:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+    - changes:
+        - js-packages/search-frontend/**/*
     - when: never
 
