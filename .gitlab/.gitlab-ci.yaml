@@ -342,6 +342,8 @@ Maven Install Hibernate:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
+    - changes:
+        - core/**/*
     # Caso 1: Quando c'è un commit sul main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
     # Caso 2: Quando viene approvata una merge request su main
@@ -353,8 +355,6 @@ Maven Install Hibernate:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
-    - changes:
-        - core/**/*
 
 
 
@@ -377,6 +377,8 @@ Maven Install Core:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
+    - changes:
+      - core/**/*
     # Caso 1: Quando c'è un commit sul main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
     # Caso 2: Quando viene approvata una merge request su main
@@ -388,8 +390,6 @@ Maven Install Core:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
-    - changes:
-        - core/**/*
 
 
 Maven Dependency Check:
@@ -413,6 +413,8 @@ Maven Dependency Check:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
+    - changes:
+        - core/**/*
     # Caso 1: Quando c'è un commit sul main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
     # Caso 2: Quando viene approvata una merge request su main
@@ -422,8 +424,6 @@ Maven Dependency Check:
     # Blocco della prima esecuzione quando viene creato un branch
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - changes:
-        - core/**/*
 
 
 
