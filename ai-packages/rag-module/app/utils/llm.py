@@ -21,6 +21,8 @@ from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history, save_chat_message
 
+from google.auth import default, transport
+
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
 DEFAULT_MODEL_TYPE = "openai"
@@ -39,6 +41,7 @@ class ModelType(Enum):
     HUGGING_FACE_CUSTOM = "hugging-face-custom"
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
+    CHAT_VERTEX_AI_MODEL_GARDEN = "chat_vertex_ai_model_garden"
 
 
 def initialize_language_model(configuration):
@@ -134,6 +137,20 @@ def initialize_language_model(configuration):
                 max_retries=6,
                 stop=None,
             )
+        case ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value:
+            chat_vertex_ai_model_garden = configuration["chat_vertex_ai_model_garden"]
+            project_id = chat_vertex_ai_model_garden["project_id"]
+            endpoint_id = chat_vertex_ai_model_garden["endpoint_id"]
+            location = chat_vertex_ai_model_garden["location"]
+
+            credentials, _ = default()
+            auth_request = transport.requests.Request()
+            credentials.refresh(auth_request)
+
+            api_key = credentials.token
+            base_url = f"https://{endpoint_id}/v1/projects/{project_id}/locations/{location}/endpoints/openapi"
+
+            llm = ChatOpenAI(model=model, api_key=api_key, base_url=base_url)
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
@@ -363,7 +380,11 @@ def stream_rag_conversation(
 
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
-    if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value:
+    if (
+        retrieve_citations
+        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
+    ):
         citations_chain = qa_prompt | llm.with_structured_output(Citations)
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
@@ -462,6 +483,7 @@ def stream_rag_conversation(
             chunk
             and retrieve_citations
             and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+            and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
             and "annotations" in chunk.keys()
         ):
             citations = chunk
@@ -484,11 +506,14 @@ def stream_rag_conversation(
         if citations
         and retrieve_citations
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else []
     )
     all_citations_dict = (
         {citation["document_id"]: citation["citations"] for citation in all_citations}
-        if retrieve_citations and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        if retrieve_citations
+        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else {}
     )
 
