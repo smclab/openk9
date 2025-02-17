@@ -25,7 +25,6 @@ variables:
 include:
   - local: '/.gitlab/.gitlab-ci-search-frontend.yaml'
   - local: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
-  - local: '/.gitlab/.gitlab-ci-site.yaml'
   - local: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
   - local: '/.gitlab/.gitlab-templates.yaml'
 
