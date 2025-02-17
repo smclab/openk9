@@ -353,10 +353,8 @@ Maven Install Hibernate:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
-
-
-
-
+    - changes:
+        - core/**/*
 
 
 
@@ -390,12 +388,8 @@ Maven Install Core:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
-
-
-
-
-
-
+    - changes:
+        - core/**/*
 
 
 Maven Dependency Check:
@@ -428,6 +422,8 @@ Maven Dependency Check:
     # Blocco della prima esecuzione quando viene creato un branch
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
+    - changes:
+        - core/**/*
 
 
 

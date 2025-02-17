@@ -90,8 +90,8 @@ Publish Search Frontend:
     - npm publish --access public
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-    - changes:
+      changes:
         - js-packages/search-frontend/**/*
+      when: manual
     - when: never
 
