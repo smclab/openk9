@@ -28,6 +28,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.ws.rs.NotFoundException;
 
 import io.openk9.common.graphql.util.relay.Connection;
@@ -47,6 +48,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
@@ -438,14 +440,31 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT b from Bucket b " +
-								 "WHERE b.id not in ( " +
-								 "SELECT sc.bucket.id FROM SuggestionCategory sc " +
-								 "WHERE sc.bucket is not null and sc.id = (:suggestionCategoryId))";
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
 
-			return s.createQuery(queryString, Bucket.class)
-				.setParameter("suggestionCategoryId", suggestionCategoryId)
-				.getResultList();
+			// Root for Bucket entity
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			// Subquery to find buckets already associated with the suggestion category
+			Subquery<Long> subquery = criteriaQuery.subquery(Long.class);
+			Root<SuggestionCategory> scRoot = subquery.from(SuggestionCategory.class);
+
+			// Join SuggestionCategory to Bucket via bucket field in SuggestionCategory
+			Join<SuggestionCategory, Bucket> joinBucket = scRoot.join(
+				SuggestionCategory_.buckets,
+				JoinType.INNER
+			);
+
+			// Apply the condition that the suggestion category id matches the provided id
+			subquery.select(joinBucket.get(Bucket_.id))
+				.where(cb.equal(scRoot.get(SuggestionCategory_.id), suggestionCategoryId));
+
+			// Build the main query: select buckets where their id is not in the subquery result
+			criteriaQuery.select(bucketRoot)
+				.where(cb.not(bucketRoot.get(Bucket_.id).in(subquery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 

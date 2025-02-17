@@ -17,6 +17,11 @@
 
 package io.openk9.datasource.service;
 
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.Bucket;
@@ -32,12 +37,9 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class SuggestionCategoryService extends
@@ -130,11 +132,11 @@ public class SuggestionCategoryService extends
 		});
 	}
 
-	public Uni<Bucket> getBucket(long suggestionCategoryId) {
+	public Uni<Set<Bucket>> getBuckets(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s ->
 			findById(s, suggestionCategoryId)
 				.flatMap(suggestionCategory ->
-					s.fetch(suggestionCategory.getBucket()))
+					s.fetch(suggestionCategory.getBuckets()))
 		);
 	}
 

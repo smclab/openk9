@@ -17,31 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.DocTypeFieldService;
-import io.openk9.datasource.service.SuggestionCategoryService;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import jakarta.json.JsonObject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -53,6 +28,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
+
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
+import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.service.SuggestionCategoryService;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -105,9 +106,6 @@ public class SuggestionCategoryGraphqlTest {
 		createDocTypeFieldTwo();
 		createSuggestionCategoryOneWithDocTypeFieldOne();
 		createBucketOne();
-
-		//bind
-		bindBucketOneToSuggestionCategoryOne();
 
 		assertEquals(
 			suggestionCategoriesCount + 1,
@@ -181,7 +179,7 @@ public class SuggestionCategoryGraphqlTest {
 					field(ID),
 					field(NAME),
 					field(
-						BUCKET,
+						"buckets",
 						field(ID),
 						field(NAME)
 					)
@@ -203,7 +201,9 @@ public class SuggestionCategoryGraphqlTest {
 			suggestionCategoryOne.getId(),
 			Long.parseLong(suggestionCategoryR.getString(ID)));
 
-		var bucketR = suggestionCategoryR.getJsonObject(BUCKET);
+		var bucketR = suggestionCategoryR.getJsonArray("buckets")
+			.getFirst()
+			.asJsonObject();
 
 		assertNotNull(bucketR);
 		assertEquals(
@@ -330,6 +330,7 @@ public class SuggestionCategoryGraphqlTest {
 		var docTypeFieldTwo = getDocTypeFieldTwo();
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 
+		unbindBucketOneFromSuggestionCategoryOne();
 		suggestionCategoryService.unsetDocTypeField(suggestionCategoryOne.getId())
 			.await().indefinitely();
 
@@ -350,16 +351,6 @@ public class SuggestionCategoryGraphqlTest {
 		)
 		.await()
 		.indefinitely();
-	}
-
-	private void bindBucketOneToSuggestionCategoryOne() {
-		var suggestionCategoryOne = getSuggestionCategoryOne();
-		var bucketOne = getBucketOne();
-
-		sessionFactory.withTransaction(
-			(s, transaction) ->
-				bucketService.addSuggestionCategory(bucketOne.getId(), suggestionCategoryOne.getId())
-		);
 	}
 
 	private void createBucketOne() {
@@ -456,5 +447,18 @@ public class SuggestionCategoryGraphqlTest {
 		)
 		.await()
 		.indefinitely();
+	}
+
+	private void unbindBucketOneFromSuggestionCategoryOne() {
+		var suggestionCategoryOne = getSuggestionCategoryOne();
+		var bucketOne = getBucketOne();
+
+		sessionFactory.withTransaction(
+			(s, transaction) ->
+				bucketService.removeSuggestionCategory(
+					bucketOne.getId(),
+					suggestionCategoryOne.getId()
+				)
+		).await().indefinitely();
 	}
 }

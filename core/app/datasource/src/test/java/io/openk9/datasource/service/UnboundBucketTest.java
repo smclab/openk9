@@ -257,6 +257,10 @@ public class UnboundBucketTest {
 	@AfterEach
 	void tearDown() {
 
+		unbindBucketOneToSuggestionCategoryOne();
+		unbindBucketDefaultToSuggestionCategoryTwo();
+		unbindBucketDefaultToSuggestionCategoryThree();
+
 		removeDatasourceOne();
 		removeDatasourceTwo();
 		removeDatasourceThree();
@@ -276,7 +280,6 @@ public class UnboundBucketTest {
 		removeTabThree();
 
 	}
-
 	private Long allBucketCount() {
 
 		return sessionFactory.withTransaction(
@@ -933,6 +936,36 @@ public class UnboundBucketTest {
 			.await()
 			.indefinitely();
 	}
+
+	private void unbindBucketDefaultToSuggestionCategoryThree() {
+		var bucketId = getBucketDefault().getId();
+		var suggestionCategoryId = getSuggestionCategoryThree().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+
+	}
+
+	private void unbindBucketDefaultToSuggestionCategoryTwo() {
+		var bucketId = getBucketDefault().getId();
+		var suggestionCategoryId = getSuggestionCategoryTwo().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+	}
+
+	private void unbindBucketOneToSuggestionCategoryOne() {
+		var bucketId = getBucketOne().getId();
+		var suggestionCategoryId = getSuggestionCategoryOne().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+
+	}
+
 
 	private void removeSuggestionCategoryOne() {
 		var suggestionCategoryId = getSuggestionCategoryOne().getId();

@@ -17,22 +17,21 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
+import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "suggestion_category")
@@ -67,7 +66,8 @@ public class SuggestionCategory extends K9Entity {
 	private DocTypeField docTypeField;
 
 	@ToString.Exclude
-	@ManyToOne(
+	@ManyToMany(
+		mappedBy = "suggestionCategories",
 		cascade = {
 			jakarta.persistence.CascadeType.PERSIST,
 			jakarta.persistence.CascadeType.MERGE,
@@ -76,7 +76,6 @@ public class SuggestionCategory extends K9Entity {
 		}
 	)
 	@JsonIgnore
-	@JoinColumn(name = "bucket_id")
-	private Bucket bucket;
+	private Set<Bucket> buckets;
 
 }
