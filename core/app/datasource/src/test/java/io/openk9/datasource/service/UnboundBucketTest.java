@@ -51,6 +51,7 @@ public class UnboundBucketTest {
 	private static final String DATASOURCE_ONE_NAME = ENTITY_NAME_PREFIX + "Datasource 1";
 	private static final String DATASOURCE_TWO_NAME = ENTITY_NAME_PREFIX + "Datasource 2";
 	private static final String DATASOURCE_THREE_NAME = ENTITY_NAME_PREFIX + "Datasource 3";
+	private static final String DATASOURCE_FOUR_NAME = ENTITY_NAME_PREFIX + "Datasource 4";
 	private static final String SUGGESTION_CATEGORY_ONE_NAME =
 		ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String SUGGESTION_CATEGORY_TWO_NAME =
@@ -87,6 +88,7 @@ public class UnboundBucketTest {
 		createDatasourceOne();
 		createDatasourceTwo();
 		createDatasourceThree();
+		createDatasourceFour();
 
 		createSuggestionCategoryOne();
 		createSuggestionCategoryTwo();
@@ -245,12 +247,20 @@ public class UnboundBucketTest {
 		assertEquals(allBucketCount(), unboundBuckets.size());
 	}
 
+	@Test
+	void should_retrieve_all_bucket_from_not_associated_datasource() {
+		var unboundBuckets = getUnboundBucketByDatasourceFour();
+
+		assertEquals(allBucketCount(), unboundBuckets.size());
+	}
+
 	@AfterEach
 	void tearDown() {
 
 		removeDatasourceOne();
 		removeDatasourceTwo();
 		removeDatasourceThree();
+		removeDatasourceFour();
 
 		removeSuggestionCategoryOne();
 		removeSuggestionCategoryTwo();
@@ -499,6 +509,22 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
+	private void createDatasourceFour() {
+		DatasourceDTO dto = DatasourceDTO.builder()
+			.name(DATASOURCE_FOUR_NAME)
+			.scheduling(CreateConnection.SCHEDULING)
+			.schedulable(false)
+			.reindexing(CreateConnection.REINDEXING)
+			.reindexable(false)
+			.build();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.create(dto)
+			)
+			.await()
+			.indefinitely();
+	}
 	private void createSuggestionCategoryOne() {
 		SuggestionCategoryDTO dto = SuggestionCategoryDTO.builder()
 			.name(SUGGESTION_CATEGORY_ONE_NAME)
@@ -683,6 +709,15 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
+	private Datasource getDatasourceFour() {
+		return sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.findByName(s, DATASOURCE_FOUR_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private List<SuggestionCategory> getSuggestionCategoryAll() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
@@ -766,6 +801,14 @@ public class UnboundBucketTest {
 
 	private List<Bucket> getUnboundBucketByDatasourceTwo() {
 		var datasourceId = getDatasourceTwo().getId();
+
+		return bucketService.findUnboundBucketsByDatasource(datasourceId)
+			.await()
+			.indefinitely();
+	}
+
+	private List<Bucket> getUnboundBucketByDatasourceFour() {
+		var datasourceId = getDatasourceFour().getId();
 
 		return bucketService.findUnboundBucketsByDatasource(datasourceId)
 			.await()
@@ -871,6 +914,17 @@ public class UnboundBucketTest {
 
 	private void removeDatasourceThree() {
 		var datasourceId = getDatasourceThree().getId();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.deleteById(datasourceId)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void removeDatasourceFour() {
+		var datasourceId = getDatasourceFour().getId();
 
 		sessionFactory.withTransaction(
 				(s, transaction) ->
