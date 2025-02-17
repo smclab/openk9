@@ -17,6 +17,19 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.ws.rs.NotFoundException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
@@ -44,23 +57,11 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -438,9 +439,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s -> {
 			String queryString = "SELECT b from Bucket b " +
-				"WHERE b.id not in ( " +
-				"SELECT sc.bucket.id FROM SuggestionCategory sc " +
-				"WHERE sc.id = (:suggestionCategoryId))";
+								 "WHERE b.id not in ( " +
+								 "SELECT sc.bucket.id FROM SuggestionCategory sc " +
+								 "WHERE sc.bucket is not null and sc.id = (:suggestionCategoryId))";
 
 			return s.createQuery(queryString, Bucket.class)
 				.setParameter("suggestionCategoryId", suggestionCategoryId)

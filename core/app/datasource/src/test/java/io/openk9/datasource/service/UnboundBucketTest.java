@@ -237,6 +237,14 @@ public class UnboundBucketTest {
 		assertEquals(allBucketCount(), unboundBuckets.size());
 	}
 
+	@Test
+	void should_retrieve_all_bucket_from_not_associated_suggestionCategory() {
+
+		var unboundBuckets = getUnboundBucketBySuggestionCategoryFour();
+
+		assertEquals(allBucketCount(), unboundBuckets.size());
+	}
+
 	@AfterEach
 	void tearDown() {
 
