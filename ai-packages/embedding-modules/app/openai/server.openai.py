@@ -13,6 +13,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 import embedding_pb2
 import embedding_pb2_grpc
 from derived_text_splitter import DerivedTextSplitter
+from text_cleaner import clean_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,7 +45,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         chunk_jsonConfig = json_format.MessageToDict(chunk.jsonConfig)
         api_key = request.api_key
         os.environ["OPENAI_API_KEY"] = api_key
-        text = request.text
+        text = clean_text(request.text)
         text_splitted = []
         chunks = []
 
@@ -139,9 +140,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 4:
-            text_splitter = SemanticChunker(
-                embeddings
-            )
+            text_splitter = SemanticChunker(embeddings)
             text_splitted = text_splitter.split_text(text)
 
         total_chunks = len(text_splitted)

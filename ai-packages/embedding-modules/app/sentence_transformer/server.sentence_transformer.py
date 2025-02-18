@@ -5,16 +5,15 @@ from concurrent import futures
 from logging import StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 
-import grpc
-from google.protobuf import json_format
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
-from langchain_text_splitters import CharacterTextSplitter
-from langchain_experimental.text_splitter import SemanticChunker
-
 import embedding_pb2
 import embedding_pb2_grpc
-
+import grpc
 from derived_text_splitter import DerivedTextSplitter
+from google.protobuf import json_format
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
+from text_cleaner import clean_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -44,6 +43,7 @@ embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
 logger.info("Embedding Model Loaded")
 
+
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
         start = time.time()
@@ -53,7 +53,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         chunk_jsonConfig = json_format.MessageToDict(chunk.jsonConfig)
         api_key = request.api_key
         os.environ["OPENAI_API_KEY"] = api_key
-        text = request.text
+        text = clean_text(request.text)
         text_splitted = []
         chunks = []
 
@@ -146,9 +146,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 4:
-            text_splitter = SemanticChunker(
-                embeddings
-            )
+            text_splitter = SemanticChunker(embeddings)
             text_splitted = text_splitter.split_text(text)
 
         total_chunks = len(text_splitted)
