@@ -1,6 +1,19 @@
+import logging
+import os
+from datetime import date
+
 from langchain.schema import AIMessage, HumanMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
+from opensearchpy import OpenSearch
+
+LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+
+logging.basicConfig(
+    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_chat_history(
@@ -173,3 +186,78 @@ def save_chat_message(
         index=user_id,
         body=message,
     )
+
+
+def delete_documents(opensearch_host, interval_in_days=30):
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
+    )
+
+    all_indices = open_search_client.indices.get(index="*")
+    all_indices = list(all_indices.keys())
+    logger.info(f"Found {len(all_indices)} indices: {all_indices}")
+
+    today = date.today()
+    delete_actions = []
+
+    for index in all_indices:
+        logger.info(f"Processing index: {index}")
+
+        # Query to group documents by chat_id and get the latest document for each group
+        query = {
+            "size": 0,
+            "aggs": {
+                "group_by_chat_id": {
+                    "terms": {
+                        "field": "chat_id.keyword",
+                        "size": 10000,
+                    },
+                    "aggs": {
+                        "latest_document": {
+                            "top_hits": {
+                                "size": 1,
+                                "sort": [{"chat_sequence_number": {"order": "desc"}}],
+                                "_source": [
+                                    "timestamp",
+                                    "chat_sequence_number",
+                                    "chat_id",
+                                ],
+                            }
+                        }
+                    },
+                }
+            },
+        }
+        response = open_search_client.search(index=index, body=query)
+        buckets = response["aggregations"]["group_by_chat_id"]["buckets"]
+
+        for bucket in buckets:
+            latest_document = bucket["latest_document"]["hits"]["hits"][0]
+            index_id = latest_document["_index"]
+            chat_id = latest_document["_source"]["chat_id"]
+            document_timestamp = int(latest_document["_source"]["timestamp"]) / 1000
+            document_date = date.fromtimestamp(document_timestamp)
+            delta = (today - document_date).days
+
+            if delta > interval_in_days:
+                query = {"query": {"match": {"chat_id.keyword": chat_id}}}
+                response = open_search_client.search(
+                    index=index_id, body=query, size=10000
+                )
+                documents_to_delete = response["hits"]["hits"]
+
+                for document_to_delete in documents_to_delete:
+                    document_id = document_to_delete["_id"]
+                    delete_action = {"delete": {"_index": index_id, "_id": document_id}}
+                    delete_actions.append(delete_action)
+
+    if delete_actions:
+        logger.info(f"Deleting {len(delete_actions)} documents in bulk")
+        bulk_delete = open_search_client.bulk(delete_actions)
+        if bulk_delete.get("errors"):
+            logger.error("Errors occurred during bulk delete:")
+            for item in bulk_delete["items"]:
+                if "delete" in item and item["delete"].get("error"):
+                    logger.error(f"Failed to delete document: {item['delete']}")
+        else:
+            logger.info("Bulk delete completed successfully")
