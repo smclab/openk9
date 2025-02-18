@@ -189,6 +189,46 @@ def save_chat_message(
 
 
 def delete_documents(opensearch_host, interval_in_days=30):
+    """
+    Delete documents from OpenSearch indices that are older than a specified number of days.
+
+    This function connects to an OpenSearch instance, retrieves all indices, and for each index,
+    it identifies documents grouped by `chat_id`. It checks the latest document for each group
+    and deletes all documents associated with that `chat_id` if the latest document is older than
+    the specified interval in days.
+
+    Parameters
+    ----------
+    opensearch_host : str
+        The host URL of the OpenSearch instance (e.g., "http://localhost:9200").
+
+    interval_in_days : int, optional
+        The number of days to use as a threshold for deletion. Documents older than this
+        value will be deleted. Default is 30 days.
+
+    Returns
+    -------
+    None
+        This function does not return any value. It performs deletions directly on the OpenSearch instance.
+
+    Raises
+    ------
+    Exception
+        Raises an exception if there are errors during the connection to OpenSearch or during
+        the execution of search or delete operations.
+
+    Notes
+    -----
+    - The function logs the number of indices found and the number of documents deleted.
+    - It performs bulk deletions to optimize the deletion process.
+    - Ensure that the OpenSearch client is properly configured and that the necessary permissions
+      are in place to delete documents.
+
+    Examples
+    --------
+    >>> delete_documents("http://localhost:9200", interval_in_days=30)
+    """
+
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )
