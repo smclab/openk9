@@ -50,13 +50,11 @@ import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SuggestionCategoryGraphqlTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
@@ -96,8 +94,7 @@ public class SuggestionCategoryGraphqlTest {
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
 
-	@Test
-	@Order(1)
+	@BeforeEach
 	void setup() {
 		Long suggestionCategoriesCount = allSuggestionCategoryCount();
 
@@ -113,7 +110,6 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(2)
 	void should_return_doc_type_field_when_queried_from_suggestion_category()
 		throws ExecutionException, InterruptedException {
 
@@ -161,7 +157,6 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(3)
 	void should_return_bucket_when_queried_from_suggestion_category()
 		throws ExecutionException, InterruptedException {
 
@@ -220,8 +215,9 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(4)
-	void should_patch_suggestion_category_with_doc_type_field() throws ExecutionException, InterruptedException {
+	void should_patch_suggestion_category_with_doc_type_field()
+		throws ExecutionException, InterruptedException {
+
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeFieldTwoId = getDocTypeFieldTwo().getId();
 
@@ -243,7 +239,8 @@ public class SuggestionCategoryGraphqlTest {
 							)
 						)
 					),
-					field(ENTITY,
+					field(
+						ENTITY,
 						field(ID),
 						field(NAME),
 						field(
@@ -265,18 +262,19 @@ public class SuggestionCategoryGraphqlTest {
 
 		assertEquals(
 			getDocTypeFieldTwo().getId(),
-			suggestionCategoryOnePathed.getDocTypeField().getId());
+			suggestionCategoryOnePathed.getDocTypeField().getId()
+		);
 		assertEquals(
 			DOC_TYPE_FIELD_TWO_NAME,
-			suggestionCategoryOnePathed.getDocTypeField().getName());
+			suggestionCategoryOnePathed.getDocTypeField().getName()
+		);
 	}
 
 	@Test
-	@Order(5)
 	void should_return_doc_type_field_when_queried_from_all_suggestion_categories()
 		throws ExecutionException, InterruptedException {
 
-		var docTypeFieldTwo = getDocTypeFieldTwo();
+		var docTypeFieldOne = getDocTypeFieldOne();
 
 		var query = document(
 			operation(
@@ -324,20 +322,20 @@ public class SuggestionCategoryGraphqlTest {
 
 					assertNotNull(docTypeField);
 					assertEquals(
-						docTypeFieldTwo.getId(),
+						docTypeFieldOne.getId(),
 						Long.parseLong(docTypeField.getString(ID)));
 				}
 			});
 	}
 
-	@Test
-	@Order(6)
+	@AfterEach
 	void tearDown() {
 		var docTypeFieldOne = getDocTypeFieldOne();
 		var docTypeFieldTwo = getDocTypeFieldTwo();
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 
 		unbindBucketOneFromSuggestionCategoryOne();
+
 		suggestionCategoryService.unsetDocTypeField(suggestionCategoryOne.getId())
 			.await().indefinitely();
 
@@ -349,7 +347,11 @@ public class SuggestionCategoryGraphqlTest {
 
 		docTypeFieldService.deleteById(docTypeFieldTwo.getId())
 			.await().indefinitely();
+
+		var bucketOne = getBucketOne();
+		bucketService.deleteById(bucketOne.getId()).await().indefinitely();
 	}
+
 
 	private Long allSuggestionCategoryCount() {
 		return sessionFactory.withTransaction(
