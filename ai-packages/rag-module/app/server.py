@@ -1,5 +1,4 @@
 import os
-import app.utils.scheduler
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -13,6 +12,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils.keycloak import unauthorized_response, verify_token
+from app.utils.scheduler import start_document_deletion_scheduler
 
 app = FastAPI()
 
@@ -27,6 +27,8 @@ RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 
+# start scheduled tasks
+start_document_deletion_scheduler(opensearch_host=OPENSEARCH_HOST)
 
 app.add_middleware(
     CORSMiddleware,
