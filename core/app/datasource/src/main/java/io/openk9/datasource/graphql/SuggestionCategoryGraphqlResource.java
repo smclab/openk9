@@ -74,11 +74,20 @@ public class SuggestionCategoryGraphqlResource {
 			.map((__) -> Tuple2.of("ok", null));
 	}
 
-	public Uni<Set<Bucket>> buckets(
-		@Source SuggestionCategory suggestionCategory) {
+	public Uni<Connection<Bucket>> buckets(
+		@Source SuggestionCategory suggestionCategory,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false")
+		boolean notEqual) {
 
-		return suggestionCategoryService.getBuckets(
-			suggestionCategory.getId());
+		return suggestionCategoryService.getBucketsConnection(
+			suggestionCategory.getId(), after, before, first, last, searchText, sortByList,
+			notEqual
+		);
 	}
 
 	public Uni<Response<SuggestionCategory>> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {

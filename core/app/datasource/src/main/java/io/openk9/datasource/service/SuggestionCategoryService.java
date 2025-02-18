@@ -22,6 +22,8 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.mapper.SuggestionCategoryMapper;
 import io.openk9.datasource.model.Bucket;
@@ -137,6 +139,16 @@ public class SuggestionCategoryService extends
 			findById(s, suggestionCategoryId)
 				.flatMap(suggestionCategory ->
 					s.fetch(suggestionCategory.getBuckets()))
+		);
+	}
+
+	public Uni<Connection<Bucket>> getBucketsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, SuggestionCategory_.BUCKETS, Bucket.class,
+			new String[]{}, after, before, first,
+			last, searchText, sortByList, notEqual
 		);
 	}
 

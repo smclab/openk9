@@ -61,7 +61,6 @@ public class SuggestionCategoryGraphqlTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
 
-	private static final String BUCKET = "bucket";
 	private static final String BUCKET_NAME_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
 	private static final String DOC_TYPE_FIELD = "docTypeField";
 	private static final String DOC_TYPE_FIELD_ID = "docTypeFieldId";
@@ -79,6 +78,7 @@ public class SuggestionCategoryGraphqlTest {
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD_DTO = "suggestionCategoryWithDocTypeFieldDTO";
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD = "suggestionCategoryWithDocTypeField";
 	private static final String SUGGESTION_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
+	private static final String BUCKETS = "buckets";
 
 	@Inject
 	BucketService bucketService;
@@ -179,9 +179,15 @@ public class SuggestionCategoryGraphqlTest {
 					field(ID),
 					field(NAME),
 					field(
-						"buckets",
-						field(ID),
-						field(NAME)
+						BUCKETS,
+						field(
+							EDGES,
+							field(
+								NODE,
+								field(ID),
+								field(NAME)
+							)
+						)
 					)
 				)
 			)
@@ -201,9 +207,10 @@ public class SuggestionCategoryGraphqlTest {
 			suggestionCategoryOne.getId(),
 			Long.parseLong(suggestionCategoryR.getString(ID)));
 
-		var bucketR = suggestionCategoryR.getJsonArray("buckets")
+		var bucketR = suggestionCategoryR.getJsonObject(BUCKETS).getJsonArray(EDGES)
 			.getFirst()
-			.asJsonObject();
+			.asJsonObject()
+			.getJsonObject(NODE);
 
 		assertNotNull(bucketR);
 		assertEquals(
