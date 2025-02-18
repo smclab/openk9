@@ -11,6 +11,7 @@ RUN pip install -r requirements.txt  && \
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
 
 COPY app/text_splitters/derived_text_splitter.py ./
+COPY app/utils/text_cleaner.py ./
 COPY app/sentence_transformer/server.sentence_transformer.py ./server.py
 COPY app/sentence_transformer/client.sentence_transformer.py ./client.py
 
