@@ -137,7 +137,7 @@ function Detail<E>(props: DetailProps<E>) {
         className="openk9-detail-container-title box-title"
         css={css`
           width: 100%;
-          background: #fafafa;
+          background: white;
           display: flex;
           padding: 16px;
           gap: 3px;

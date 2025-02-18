@@ -92,7 +92,7 @@ function FiltersMobileLiveChange<E>({
         css={css`
           display: flex;
           justify-content: space-beetween;
-          background: #fafafa;
+          background: white;
           justify-content: baseline;
         `}
       >
@@ -101,7 +101,7 @@ function FiltersMobileLiveChange<E>({
           css={css`
             padding: 0px 16px;
             width: 100%;
-            background: #fafafa;
+            background: white;
             padding-top: 20px;
             padding-bottom: 13px;
             display: flex;
@@ -153,7 +153,7 @@ function FiltersMobileLiveChange<E>({
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
-          style={{ backgroundColor: "#FAFAFA", border: "none" }}
+          style={{ backgroundColor: "white", border: "none" }}
         >
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>

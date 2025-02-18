@@ -238,7 +238,7 @@ function FilterCategoryDynamic({
                     border-radius: 8px;
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
-                    background: #fafafa;
+                    background: white;
                     :focus {
                       border: 1px solid
                         var(--openk9-embeddable-search--active-color);

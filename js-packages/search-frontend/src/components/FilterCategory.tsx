@@ -214,7 +214,7 @@ function FilterCategory({
                   border: 1px solid
                     var(--openk9-embeddable-search--border-color);
                   border-radius: 20px;
-                  background: #fafafa;
+                  background: white;
                   :focus {
                     border: 1px solid
                       var(--openk9-embeddable-search--active-color);

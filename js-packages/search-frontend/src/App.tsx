@@ -446,7 +446,7 @@ export function App() {
         css={css`
           grid-area: filters;
           width: 100%;
-          background: #fafafa;
+          background: white;
           display: flex;
           flex-direction: column;
           gap: 3px;
