@@ -625,6 +625,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));
 	}
 
+	public Uni<Set<SuggestionCategory>> getSuggestionCategories(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
+
+	}
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};

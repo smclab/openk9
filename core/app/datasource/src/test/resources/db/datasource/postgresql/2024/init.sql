@@ -10,7 +10,7 @@ INSERT INTO "tenant_binding" (
 	'test.openk9.local'
 );
 
--- in order to test the
+-- test for changeSet with id 1739804793-2
 INSERT INTO bucket (
     id,
     name,
@@ -21,6 +21,7 @@ INSERT INTO bucket (
     'This is a sample bucket description.'
 );
 
+-- test for changeSet with id 1739804793-2
 INSERT INTO suggestion_category (
 	id,
     name,
