@@ -1,0 +1,21 @@
+image:
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.0"
+
+## Quarkus configuration
+quarkus:
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.io/,"
+  kubernetes:
+    namespace: openk9
+    secretName: openk9-tls-star-secret
+
+## Keycloak configuration
+keycloak:
+  host: "keycloak.openk9.io"  #-TBMD
+  clientId: "openk9"
+
+## K8s Namespace
+k8s:
+  namespace: "openk9"
+
