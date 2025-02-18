@@ -1,4 +1,5 @@
 import os
+import app.utils.scheduler
 from typing import Optional
 from urllib.parse import urlparse
 
