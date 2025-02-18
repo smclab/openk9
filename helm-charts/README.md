@@ -463,6 +463,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: keycloak
+    annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 8k
 spec:
   rules:
     - host: "keycloak.openk9.local"
@@ -481,6 +483,10 @@ spec:
       secretName: openk9-tls-star-secret
 _EOF_
 ```
+
+The annotation `nginx.ingress.kubernetes.io/proxy-buffer-size: 8k` is needed to handle redirects to Keycloak with big headers.
+
+
 
 ## OPENK9 COMPONENTS
 
