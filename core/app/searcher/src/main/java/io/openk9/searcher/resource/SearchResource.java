@@ -17,8 +17,32 @@
 
 package io.openk9.searcher.resource;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.ProtocolStringList;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
@@ -36,20 +60,14 @@ import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
+
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
@@ -57,6 +75,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
+import org.opensearch.ExceptionsHelper;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseListener;
@@ -70,23 +89,6 @@ import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.SearchHits;
 import org.opensearch.search.fetch.subphase.highlight.HighlightField;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Path("/v1")
 @RequestScoped
@@ -221,7 +223,7 @@ public class SearchResource {
 			.transform(throwable -> {
 				log.error("Search request failed", throwable);
 				return new WebApplicationException(jakarta.ws.rs.core.Response
-						.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+					.status(ExceptionsHelper.status(throwable).getStatus())
 						.entity(JsonObject.of(
 							"details", "Unable to serve search request"))
 					.build());
