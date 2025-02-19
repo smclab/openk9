@@ -75,9 +75,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
-import org.opensearch.ExceptionsHelper;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
+import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.common.CheckedFunction;
@@ -225,13 +225,23 @@ public class SearchResource {
 			.transform(throwable -> {
 				log.error("Search request failed", throwable);
 				return new WebApplicationException(jakarta.ws.rs.core.Response
-					.status(ExceptionsHelper.status(throwable).getStatus())
+					.status(getResponseStatus(throwable))
 						.entity(JsonObject.of(
 							"details", "Unable to serve search request"))
 					.build());
 				}
 			);
 
+	}
+
+	private int getResponseStatus(Throwable throwable) {
+		if (throwable instanceof ResponseException responseException) {
+			return responseException.getResponse()
+				.getStatusLine()
+				.getStatusCode();
+		}
+
+		return 500;
 	}
 
 	@POST
