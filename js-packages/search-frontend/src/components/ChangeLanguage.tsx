@@ -96,7 +96,7 @@ export function ChangeLanguage({
     name: language.name,
     icon: <GloboSvg />,
   }));
-  languageElement?.unshift(defaultValue);
+  languageElement?.unshift(defaultValue as any);
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>

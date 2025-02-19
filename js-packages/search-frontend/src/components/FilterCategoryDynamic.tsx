@@ -122,6 +122,7 @@ function FilterCategoryDynamic({
         flex-direction: column;
         gap: 10px;
         padding: 8px 16px;
+        width: 100%;
       `}
     >
       <div
