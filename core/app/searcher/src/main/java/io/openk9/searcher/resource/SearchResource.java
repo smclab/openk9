@@ -118,6 +118,8 @@ public class SearchResource {
 		headers;
 	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
 	List<String> supportedHeadersName;
+	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
+	Integer totalResultLimit;
 
 	@POST
 	@Path("/search-query")
@@ -663,9 +665,11 @@ public class SearchResource {
 		}
 
 		TotalHits totalHits = hits.getTotalHits();
+		var totalHitsValue = totalHits != null ? totalHits.value : totalResultLimit;
 
-		return new Response(result, totalHits.value);
+		return new Response(result, Math.min(totalHitsValue, totalResultLimit));
 	}
+
 
 	private void printShardFailures(SearchResponse searchResponse) {
 		if (searchResponse.getShardFailures() != null) {
