@@ -98,6 +98,7 @@ public class SearchResource {
 	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
+	private static final int INTERNAL_SERVER_ERROR = 500;
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 	@GrpcClient("searcher")
@@ -223,7 +224,6 @@ public class SearchResource {
 			})
 			.onFailure()
 			.transform(throwable -> {
-				log.error("Search request failed", throwable);
 				return new WebApplicationException(jakarta.ws.rs.core.Response
 					.status(getResponseStatus(throwable))
 						.entity(JsonObject.of(
@@ -235,13 +235,23 @@ public class SearchResource {
 	}
 
 	private int getResponseStatus(Throwable throwable) {
+
+		int statusCode = INTERNAL_SERVER_ERROR;
+
 		if (throwable instanceof ResponseException responseException) {
-			return responseException.getResponse()
+			statusCode = responseException.getResponse()
 				.getStatusLine()
 				.getStatusCode();
 		}
 
-		return 500;
+		if (statusCode == INTERNAL_SERVER_ERROR) {
+			log.error("Search request failed", throwable);
+		}
+		else {
+			log.warn("Search request failed", throwable);
+		}
+
+		return statusCode;
 	}
 
 	@POST
