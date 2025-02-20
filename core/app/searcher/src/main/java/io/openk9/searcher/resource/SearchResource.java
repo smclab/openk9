@@ -17,49 +17,6 @@
 
 package io.openk9.searcher.resource;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.ProtocolStringList;
-import io.openk9.searcher.client.dto.SearchRequest;
-import io.openk9.searcher.client.mapper.SearcherMapper;
-import io.openk9.searcher.grpc.QueryAnalysisRequest;
-import io.openk9.searcher.grpc.QueryAnalysisResponse;
-import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
-import io.openk9.searcher.grpc.QueryAnalysisTokens;
-import io.openk9.searcher.grpc.QueryParserRequest;
-import io.openk9.searcher.grpc.QueryParserResponse;
-import io.openk9.searcher.grpc.Searcher;
-import io.openk9.searcher.grpc.Sort;
-import io.openk9.searcher.grpc.TokenType;
-import io.openk9.searcher.grpc.Value;
-import io.openk9.searcher.mapper.InternalSearcherMapper;
-import io.openk9.searcher.payload.response.Response;
-import io.openk9.searcher.payload.response.SuggestionsResponse;
-import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
-import io.quarkus.grpc.GrpcClient;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.lucene.search.TotalHits;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.ShardSearchFailure;
-import org.elasticsearch.client.ResponseListener;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.CheckedFunction;
-import org.elasticsearch.common.text.Text;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-import org.jboss.logging.Logger;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -80,9 +37,56 @@ import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+
+import io.openk9.searcher.client.dto.SearchRequest;
+import io.openk9.searcher.client.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.QueryAnalysisRequest;
+import io.openk9.searcher.grpc.QueryAnalysisResponse;
+import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
+import io.openk9.searcher.grpc.QueryAnalysisTokens;
+import io.openk9.searcher.grpc.QueryParserRequest;
+import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.grpc.Sort;
+import io.openk9.searcher.grpc.TokenType;
+import io.openk9.searcher.grpc.Value;
+import io.openk9.searcher.mapper.InternalSearcherMapper;
+import io.openk9.searcher.payload.response.Response;
+import io.openk9.searcher.payload.response.SuggestionsResponse;
+import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
+
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
+import io.quarkus.grpc.GrpcClient;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.lucene.search.TotalHits;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.ShardSearchFailure;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.ResponseListener;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.CheckedFunction;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
+import org.elasticsearch.common.xcontent.NamedXContentRegistry;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.jboss.logging.Logger;
 
 @Path("/v1")
 @RequestScoped
@@ -109,68 +113,7 @@ public class SearchResource {
 
 	}
 
-	@POST
-	@Path("/search")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<Response> search(SearchRequest searchRequest) {
-
-		QueryParserRequest queryParserRequest =
-			getQueryParserRequest(searchRequest);
-
-		Uni<QueryParserResponse> queryParserResponseUni =
-			searcherClient.queryParser(queryParserRequest);
-
-		return queryParserResponseUni
-			.flatMap(queryParserResponse -> {
-
-				ByteString query = queryParserResponse.getQuery();
-
-				String searchRequestElasticS = query.toStringUtf8();
-
-				ProtocolStringList indexNameList =
-					queryParserResponse.getIndexNameList();
-
-				if (indexNameList == null || indexNameList.isEmpty()) {
-					return Uni.createFrom().item(Response.EMPTY);
-				}
-
-				String indexNames =
-					String.join(",", indexNameList);
-
-				org.elasticsearch.client.Request request =
-					new org.elasticsearch.client.Request(
-						"GET", "/" + indexNames + "/_search");
-
-				request.setJsonEntity(searchRequestElasticS);
-
-				return Uni.createFrom().<SearchResponse>emitter((sink) -> client
-					.getLowLevelClient()
-					.performRequestAsync(request, new ResponseListener() {
-						@Override
-						public void onSuccess(
-							org.elasticsearch.client.Response response) {
-							try {
-								SearchResponse searchResponse =
-									parseEntity(response.getEntity(),
-										SearchResponse::fromXContent);
-
-								sink.complete(searchResponse);
-							}
-							catch (IOException e) {
-								sink.fail(e);
-							}
-						}
-
-						@Override
-						public void onFailure(Exception e) {
-							sink.fail(e);
-						}
-					}))
-					.map(this::_toSearchResponse);
-
-			});
-
-	}
+	private static final int INTERNAL_SERVER_ERROR = 500;
 
 	@POST
 	@Path("/suggestions")
@@ -455,6 +398,178 @@ public class SearchResource {
 			});
 
 	}
+	private static final String DETAILS_FIELD = "details";
+
+	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
+
+		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+			Object value = entry.getValue();
+			if (value instanceof Map) {
+				Map<String, Object> objectMap = (Map<String, Object>) value;
+				if (objectMap.containsKey("i18n")) {
+
+					Map<String, Object> i18nMap =
+						(Map<String, Object>) objectMap.get("i18n");
+
+					if (!i18nMap.isEmpty()) {
+						if (i18nMap.values().iterator().next() instanceof String) {
+							String i18nString =
+								(String) i18nMap.values().iterator().next();
+							entry.setValue(i18nString);
+						}
+						else if (i18nMap.values().iterator().next() instanceof List<?>) {
+							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
+								.stream()
+								.map(object -> String.valueOf(object))
+								.toList();
+							entry.setValue(i18nList);
+						}
+						else {
+							logger.warn("The object i18nList is not a String or a List<String>");
+						}
+					}
+
+				}
+				else if (objectMap.containsKey("base")) {
+					entry.setValue(objectMap.get("base"));
+				}
+				else {
+					mapI18nFields((Map<String, Object>) value);
+				}
+			}
+			if (value instanceof Iterable) {
+				for (Object item: (Iterable<?>) value) {
+					if (item instanceof Map) {
+						mapI18nFields((Map<String, Object>) item);
+					}
+				}
+			}
+		}
+
+	}
+
+	private static String getHighlightName(String highlightName) {
+		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
+		if (matcher.find()) {
+			return matcher.replaceFirst("");
+		}
+		else  {
+			return highlightName;
+		}
+	}
+	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
+	Integer totalResultLimit;
+
+
+	private void _printShardFailures(SearchResponse searchResponse) {
+		if (searchResponse.getShardFailures() != null) {
+			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
+				logger.warn(failure.reason());
+			}
+		}
+	}
+
+	@Inject
+	SearcherMapper searcherMapper;
+
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
+
+	@Inject
+	RestHighLevelClient client;
+
+	@GrpcClient("searcher")
+	Searcher searcherClient;
+
+
+	static Logger logger = Logger.getLogger(SearchResource.class);
+
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken;
+
+	@Context
+	HttpServerRequest request;
+
+	@Context
+	HttpHeaders
+	headers;
+
+	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
+	List<String> supportedHeadersName;
+
+	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<Response> search(SearchRequest searchRequest) {
+
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
+
+		Uni<QueryParserResponse> queryParserResponseUni =
+			searcherClient.queryParser(queryParserRequest);
+
+		return queryParserResponseUni
+			.flatMap(queryParserResponse -> {
+
+				ByteString query = queryParserResponse.getQuery();
+
+				String searchRequestElasticS = query.toStringUtf8();
+
+				ProtocolStringList indexNameList =
+					queryParserResponse.getIndexNameList();
+
+				if (indexNameList == null || indexNameList.isEmpty()) {
+					return Uni.createFrom().item(Response.EMPTY);
+				}
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				org.elasticsearch.client.Request request =
+					new org.elasticsearch.client.Request(
+						"GET", "/" + indexNames + "/_search");
+
+				request.setJsonEntity(searchRequestElasticS);
+
+				return Uni.createFrom().<SearchResponse>emitter((sink) -> client
+					.getLowLevelClient()
+					.performRequestAsync(request, new ResponseListener() {
+						@Override
+						public void onSuccess(
+							org.elasticsearch.client.Response response) {
+							try {
+								SearchResponse searchResponse =
+									parseEntity(response.getEntity(),
+										SearchResponse::fromXContent);
+
+								sink.complete(searchResponse);
+							}
+							catch (IOException e) {
+								sink.fail(e);
+							}
+						}
+
+						@Override
+						public void onFailure(Exception e) {
+							sink.fail(e);
+						}
+					}))
+					.map(this::_toSearchResponse)
+					.onFailure()
+					.transform(throwable -> new WebApplicationException(
+						getErrorResponse(throwable)
+					));
+
+			});
+
+	}
+
+	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
+		Collections.synchronizedMap(new IdentityHashMap<>());
+
+	private static final Object namedXContentRegistryKey = new Object();
+	private static final Pattern i18nHighlithKeyPattern = Pattern.compile("\\.i18n\\..{5,}$|\\.base$");
 
 	private Response _toSearchResponse(SearchResponse searchResponse) {
 		_printShardFailures(searchResponse);
@@ -514,108 +629,38 @@ public class SearchResource {
 
 		TotalHits totalHits = hits.getTotalHits();
 
-		return new Response(result, totalHits.value);
+		long totalResult = totalHits != null
+			? Math.min(totalHits.value, totalResultLimit)
+			: 0;
+
+		return new Response(result, totalResult);
 	}
 
-	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
+	private javax.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
-		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
-			Object value = entry.getValue();
-			if (value instanceof Map) {
-				Map<String, Object> objectMap = (Map<String, Object>) value;
-				if (objectMap.containsKey("i18n")) {
+		int statusCode = INTERNAL_SERVER_ERROR;
+		String reason;
 
-					Map<String, Object> i18nMap =
-						(Map<String, Object>) objectMap.get("i18n");
-
-					if (!i18nMap.isEmpty()) {
-						if (i18nMap.values().iterator().next() instanceof String) {
-							String i18nString =
-								(String) i18nMap.values().iterator().next();
-							entry.setValue(i18nString);
-						}
-						else if (i18nMap.values().iterator().next() instanceof List<?>) {
-							List i18nList = ((List<Object>) i18nMap.values().iterator().next())
-								.stream()
-								.map(object -> String.valueOf(object))
-								.toList();
-							entry.setValue(i18nList);
-						}
-						else {
-							logger.warn("The object i18nList is not a String or a List<String>");
-						}
-					}
-
-				}
-				else if (objectMap.containsKey("base")) {
-					entry.setValue(objectMap.get("base"));
-				}
-				else {
-					mapI18nFields((Map<String, Object>) value);
-				}
-			}
-			if (value instanceof Iterable) {
-				for (Object item: (Iterable<?>) value) {
-					if (item instanceof Map) {
-						mapI18nFields((Map<String, Object>) item);
-					}
-				}
-			}
+		if (throwable instanceof ResponseException responseException) {
+			statusCode = responseException.getResponse()
+				.getStatusLine()
+				.getStatusCode();
 		}
 
+		if (statusCode == INTERNAL_SERVER_ERROR) {
+			reason = "Unable to serve search request";
+			logger.error(reason, throwable);
+		}
+		else {
+			reason = "Invalid search request";
+			logger.warn(reason, throwable);
+		}
+
+		return javax.ws.rs.core.Response
+			.status(statusCode)
+			.entity(JsonObject
+				.of(DETAILS_FIELD, reason))
+			.build();
 	}
-
-	private static String getHighlightName(String highlightName) {
-		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
-		if (matcher.find()) {
-			return matcher.replaceFirst("");
-		}
-		else  {
-			return highlightName;
-		}
-	}
-
-	private void _printShardFailures(SearchResponse searchResponse) {
-		if (searchResponse.getShardFailures() != null) {
-			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
-				logger.warn(failure.reason());
-			}
-		}
-	}
-
-	@Inject
-	SearcherMapper searcherMapper;
-
-	@Inject
-	InternalSearcherMapper internalSearcherMapper;
-
-	@Inject
-	RestHighLevelClient client;
-
-	@GrpcClient("searcher")
-	Searcher searcherClient;
-
-
-	static Logger logger = Logger.getLogger(SearchResource.class);
-
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken;
-
-	@Context
-	HttpServerRequest request;
-
-	@Context
-	HttpHeaders
-	headers;
-
-	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
-	List<String> supportedHeadersName;
-
-	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
-		Collections.synchronizedMap(new IdentityHashMap<>());
-
-	private static final Object namedXContentRegistryKey = new Object();
-	private static final Pattern i18nHighlithKeyPattern = Pattern.compile("\\.i18n\\..{5,}$|\\.base$");
 
 }

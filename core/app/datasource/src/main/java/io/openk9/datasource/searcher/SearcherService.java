@@ -17,6 +17,23 @@
 
 package io.openk9.datasource.searcher;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -51,6 +68,7 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
+
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -66,6 +84,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -87,25 +106,20 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.jboss.logging.Logger;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
+
+	@ConfigProperty(
+		name = "openk9.datasource.searcher-service.max-search-page-from",
+		defaultValue = "10000"
+	)
+	Integer maxSearchPageFrom;
+
+	@ConfigProperty(
+		name = "openk9.datasource.searcher-service.max-search-page-size",
+		defaultValue = "200"
+	)
+	Integer maxSearchPageSize;
 
 	@Override
 	@ActivateRequestContext
@@ -144,8 +158,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					searchSourceBuilder.query(boolQueryBuilder);
 
 					if (request.getRangeCount() == 2) {
-						searchSourceBuilder.from(request.getRange(0));
-						searchSourceBuilder.size(request.getRange(1));
+						searchSourceBuilder.from(Math.min(
+							request.getRange(0), maxSearchPageFrom));
+
+						searchSourceBuilder.size(Math.min(
+							request.getRange(1), maxSearchPageSize));
 					}
 
 					List<DocTypeField> docTypeFieldList =
