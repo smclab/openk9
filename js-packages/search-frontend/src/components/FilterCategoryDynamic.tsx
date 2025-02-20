@@ -104,7 +104,6 @@ function FilterCategoryDynamic({
       css={css`
         ${isUniqueLoadMore ? "width: 50%" : null}
         @media  (max-width: 768px) {
-          width: 100%;
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
         @media (max-width: 480px) {
@@ -122,7 +121,6 @@ function FilterCategoryDynamic({
         flex-direction: column;
         gap: 10px;
         padding: 8px 16px;
-        width: 100%;
       `}
     >
       <div

@@ -509,7 +509,7 @@ export function App() {
             background-color: inherit;
             border-radius: 8px;
             overflow: auto;
-            widht: 100%;
+            flex-direction: column;
             @media (max-width: 480px) {
               display: none;
             }
