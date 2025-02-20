@@ -223,35 +223,14 @@ public class SearchResource {
 					.map(this::toSearchResponse);
 			})
 			.onFailure()
-			.transform(throwable -> {
-				return new WebApplicationException(jakarta.ws.rs.core.Response
+			.transform(throwable -> new WebApplicationException(
+				jakarta.ws.rs.core.Response
 					.status(getResponseStatus(throwable))
-						.entity(JsonObject.of(
-							"details", "Unable to serve search request"))
-					.build());
-				}
+					.entity(JsonObject.of(
+						"details", "Unable to serve search request"))
+					.build())
 			);
 
-	}
-
-	private int getResponseStatus(Throwable throwable) {
-
-		int statusCode = INTERNAL_SERVER_ERROR;
-
-		if (throwable instanceof ResponseException responseException) {
-			statusCode = responseException.getResponse()
-				.getStatusLine()
-				.getStatusCode();
-		}
-
-		if (statusCode == INTERNAL_SERVER_ERROR) {
-			log.error("Search request failed", throwable);
-		}
-		else {
-			log.warn("Search request failed", throwable);
-		}
-
-		return statusCode;
 	}
 
 	@POST
@@ -587,6 +566,26 @@ public class SearchResource {
 
 	}
 
+	private int getResponseStatus(Throwable throwable) {
+
+		int statusCode = INTERNAL_SERVER_ERROR;
+
+		if (throwable instanceof ResponseException responseException) {
+			statusCode = responseException.getResponse()
+				.getStatusLine()
+				.getStatusCode();
+		}
+
+		if (statusCode == INTERNAL_SERVER_ERROR) {
+			log.error("Search request failed", throwable);
+		}
+		else {
+			log.warn("Search request failed", throwable);
+		}
+
+		return statusCode;
+	}
+
 	private <Resp> Resp parseEntity(
 		final HttpEntity entity,
 		final CheckedFunction<XContentParser, Resp, IOException> entityParser)
@@ -689,7 +688,6 @@ public class SearchResource {
 
 		return new Response(result, Math.min(totalHitsValue, totalResultLimit));
 	}
-
 
 	private void printShardFailures(SearchResponse searchResponse) {
 		if (searchResponse.getShardFailures() != null) {
