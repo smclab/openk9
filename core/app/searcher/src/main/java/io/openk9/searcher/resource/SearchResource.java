@@ -99,6 +99,7 @@ public class SearchResource {
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
 	private static final int INTERNAL_SERVER_ERROR = 500;
+	private static final String DETAILS_FIELD = "details";
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 	@GrpcClient("searcher")
@@ -224,11 +225,7 @@ public class SearchResource {
 			})
 			.onFailure()
 			.transform(throwable -> new WebApplicationException(
-				jakarta.ws.rs.core.Response
-					.status(getResponseStatus(throwable))
-					.entity(JsonObject.of(
-						"details", "Unable to serve search request"))
-					.build())
+				getErrorResponse(throwable))
 			);
 
 	}
@@ -566,9 +563,10 @@ public class SearchResource {
 
 	}
 
-	private int getResponseStatus(Throwable throwable) {
+	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
 		int statusCode = INTERNAL_SERVER_ERROR;
+		String reason = "Unable to serve search request";
 
 		if (throwable instanceof ResponseException responseException) {
 			statusCode = responseException.getResponse()
@@ -577,13 +575,18 @@ public class SearchResource {
 		}
 
 		if (statusCode == INTERNAL_SERVER_ERROR) {
-			log.error("Search request failed", throwable);
+			log.error(reason, throwable);
 		}
 		else {
-			log.warn("Search request failed", throwable);
+			reason = "Invalid search request";
+			log.warn(reason, throwable);
 		}
 
-		return statusCode;
+		return jakarta.ws.rs.core.Response
+			.status(statusCode)
+			.entity(JsonObject
+				.of(DETAILS_FIELD, reason))
+			.build();
 	}
 
 	private <Resp> Resp parseEntity(
