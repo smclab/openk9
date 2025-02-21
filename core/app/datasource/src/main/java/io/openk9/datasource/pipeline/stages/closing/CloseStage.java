@@ -17,20 +17,21 @@
 
 package io.openk9.datasource.pipeline.stages.closing;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 public class CloseStage extends AggregateBehavior {
 
@@ -62,12 +63,8 @@ public class CloseStage extends AggregateBehavior {
 
 	public record Configurations(
 		Function<List<AggregateItem.Reply>, AggregateBehavior.Response> aggregator,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... handlersFactories
-	) {
-		@SafeVarargs
-		public Configurations {}
-
-	}
+		List<Function<ShardingKey, Behavior<AggregateItem.Command>>> handlersFactories
+	) {}
 
 	@Override
 	protected AggregateItem.Starter mapCommand(Starter starter) {

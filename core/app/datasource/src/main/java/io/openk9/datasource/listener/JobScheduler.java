@@ -17,6 +17,17 @@
 
 package io.openk9.datasource.listener;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -25,10 +36,9 @@ import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
-import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.SchedulerUtil;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -40,17 +50,6 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
 import org.jboss.logging.Logger;
 import scala.Option;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
 
 public class JobScheduler {
 
@@ -299,7 +298,7 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
+			Scheduling.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
 
 		schedulingRef.tell(
 			new Scheduling.Halt(new InvokePluginDriverException(exception)));
@@ -790,7 +789,7 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 		var entityRef = clusterSharding.entityRefFor(
-			SchedulingEntityType.getTypeKey(shardingKey),
+			Scheduling.ENTITY_TYPE_KEY,
 			shardingKey.asString()
 		);
 

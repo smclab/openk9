@@ -23,20 +23,29 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
+import io.openk9.datasource.model.PipelineType;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
+import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
+import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
+import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.pipeline.stages.working.WorkStage;
 import io.openk9.datasource.util.CborSerializable;
 
@@ -53,6 +62,7 @@ import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.apache.pekko.actor.typed.javadsl.ReceiveBuilder;
 import org.apache.pekko.actor.typed.javadsl.TimerScheduler;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.apache.pekko.cluster.typed.Cluster;
 import org.apache.pekko.cluster.typed.ClusterSingleton;
 import org.apache.pekko.cluster.typed.SingletonActor;
@@ -60,6 +70,9 @@ import org.apache.pekko.cluster.typed.Subscribe;
 import org.jboss.logging.Logger;
 
 public class Scheduling extends AbstractBehavior<Scheduling.Command> {
+
+	public static final EntityTypeKey<Scheduling.Command> ENTITY_TYPE_KEY =
+		EntityTypeKey.create(Scheduling.Command.class, "scheduling-key");
 
 	public static final String SCHEDULING_TIMEOUT = "io.openk9.scheduling.timeout";
 	public static final String WORKERS_PER_NODE = "io.openk9.scheduling.workers-per-node";
@@ -72,15 +85,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private static final String SETTING_UP_BEHAVIOR = "Setting up";
 	private static final String STOPPED_BEHAVIOR = "Stopped";
 	private static final Logger log = Logger.getLogger(Scheduling.class);
-	private final ActorRef<AggregateBehavior.Command> closeStage;
 	private final Map<HeldMessage, ActorRef<Response>> heldMessages = new HashMap<>();
 	private final Deque<Command> lag = new ArrayDeque<>();
 	@Getter
 	private final ShardingKey shardingKey;
 	private final Duration timeout;
 	private final TimerScheduler<Command> timers;
-	private final ActorRef<WorkStage.Command> workStage;
 	private final int workersPerNode;
+	private ActorRef<WorkStage.Command> workStage;
+	private ActorRef<AggregateBehavior.Command> closeStage;
 	private boolean failureTracked = false;
 	private OffsetDateTime lastIngestionDate;
 	private boolean lastReceived = false;
@@ -93,9 +106,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	public Scheduling(
 		ActorContext<Command> context,
 		TimerScheduler<Command> timers,
-		ShardingKey shardingKey,
-		WorkStage.Configurations workStageConfigurations,
-		CloseStage.Configurations closeStageConfigurations) {
+		ShardingKey shardingKey) {
 
 		super(context);
 		this.shardingKey = shardingKey;
@@ -117,16 +128,46 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 		getContext().getSelf().tell(Setup.INSTANCE);
 
-		var workStageAdapter = getContext().messageAdapter(
-			WorkStage.Response.class,
-			WorkStageResponse::new
-		);
+	}
 
-		this.workStage = getContext().spawnAnonymous(WorkStage.create(
-			getShardingKey(),
-			workStageAdapter,
-			workStageConfigurations
-		));
+	public static Behavior<Command> create(ShardingKey shardingKey) {
+
+		return Behaviors.<Command>supervise(
+				Behaviors.setup(ctx ->
+					Behaviors.withTimers(timers ->
+						new Scheduling(ctx, timers, shardingKey)
+					)
+				)
+			)
+			.onFailure(SupervisorStrategy.restartWithBackoff(
+					Duration.ofSeconds(3),
+					Duration.ofSeconds(60),
+					0.2
+				)
+			);
+	}
+
+	protected static CloseStage.Aggregated closeResponseAggregator(List<AggregateItem.Reply> replies) {
+
+		return replies.stream()
+			.filter(EvaluateStatus.Success.class::isInstance)
+			.findFirst()
+			.map(reply -> (EvaluateStatus.Success) reply)
+			.map(EvaluateStatus.Success::status)
+			.map(CloseStage.Aggregated::new)
+			.orElse(new CloseStage.Aggregated(Scheduler.SchedulerStatus.FINISHED));
+
+	}
+
+	@SafeVarargs
+	private static LinkedList<EntityTypeKey<Processor.Command>> linkedList(EntityTypeKey<Processor.Command>... entityTypeKeys) {
+		return new LinkedList<>(Arrays.asList(entityTypeKeys));
+	}
+
+	private void createCloseStage() {
+		if (this.closeStage != null) {
+			return;
+		}
 
 		var closeStageAdapter = getContext().messageAdapter(
 			AggregateBehavior.Response.class,
@@ -136,29 +177,15 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.closeStage = getContext().spawnAnonymous(CloseStage.create(
 			getShardingKey(),
 			closeStageAdapter,
-			closeStageConfigurations
-		));
-
-	}
-
-	public static Behavior<Command> create(
-		ShardingKey shardingKey,
-		WorkStage.Configurations workStageConfigurations,
-		CloseStage.Configurations closeStageConfigurations) {
-
-		return Behaviors.<Command>supervise(
-				Behaviors.setup(ctx ->
-					Behaviors.withTimers(timers -> new Scheduling(
-						ctx, timers, shardingKey,
-						workStageConfigurations,
-						closeStageConfigurations
-					))))
-			.onFailure(SupervisorStrategy.restartWithBackoff(
-					Duration.ofSeconds(3),
-					Duration.ofSeconds(60),
-					0.2
+			new CloseStage.Configurations(
+				Scheduling::closeResponseAggregator,
+				List.of(
+					UpdateDatasource::create,
+					DeletionCompareNotifier::create,
+					EvaluateStatus::create
 				)
-			);
+			)
+		));
 	}
 
 	private static Duration getTimeout(ActorContext<?> context) {
@@ -171,6 +198,42 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		Config config = context.getSystem().settings().config();
 
 		return PekkoUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
+	}
+
+	private void createWorkStage(PipelineType pipelineType) {
+		if (this.workStage != null) {
+			return;
+		}
+
+		WorkStage.Configurations workStageConfigurations =
+			switch (pipelineType) {
+				case ENRICH -> new WorkStage.Configurations(
+					linkedList(EnrichPipeline.ENTITY_TYPE_KEY),
+					IndexWriter::create
+				);
+				case EMBEDDING -> new WorkStage.Configurations(
+					linkedList(EmbeddingProcessor.ENTITY_TYPE_KEY),
+					VectorIndexWriter::create
+				);
+				case ENRICH_EMBEDDING -> new WorkStage.Configurations(
+					linkedList(
+						EnrichPipeline.ENTITY_TYPE_KEY,
+						EmbeddingProcessor.ENTITY_TYPE_KEY
+					),
+					VectorIndexWriter::create
+				);
+			};
+
+		var workStageAdapter = getContext().messageAdapter(
+			WorkStage.Response.class,
+			WorkStageResponse::new
+		);
+
+		this.workStage = getContext().spawnAnonymous(WorkStage.create(
+			getShardingKey(),
+			workStageAdapter,
+			workStageConfigurations
+		));
 	}
 
 	@Override
@@ -636,6 +699,12 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 			);
 
 			this.scheduler = scheduler;
+
+			var pipelineType = scheduler.getPipelineType();
+
+			createWorkStage(pipelineType);
+
+			createCloseStage();
 
 			replyTo.tell(Success.INSTANCE);
 		}

@@ -17,8 +17,12 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import com.rabbitmq.client.Channel;
-import com.typesafe.config.Config;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Set;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
@@ -27,6 +31,9 @@ import io.openk9.datasource.pipeline.consumer.MainConsumer;
 import io.openk9.datasource.pipeline.consumer.RetryConsumer;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+
+import com.rabbitmq.client.Channel;
+import com.typesafe.config.Config;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -49,12 +56,6 @@ import org.apache.pekko.cluster.typed.ClusterSingleton;
 import org.apache.pekko.cluster.typed.SingletonActor;
 import org.jboss.logging.Logger;
 import scala.Option;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Set;
 
 public class MessageGateway
 	extends AbstractBehavior<MessageGateway.Command> {
@@ -128,7 +129,7 @@ public class MessageGateway
 		ClusterSharding clusterSharding = ClusterSharding.get(system);
 
 		EntityRef<Scheduling.Command> entityRef = clusterSharding.entityRefFor(
-			SchedulingEntityType.getTypeKey(ShardingKey.fromString(schedulingKey)),
+			Scheduling.ENTITY_TYPE_KEY,
 			schedulingKey
 		);
 

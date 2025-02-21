@@ -17,6 +17,10 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.BiFunction;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
@@ -28,6 +32,7 @@ import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.apache.pekko.actor.typed.ActorRef;
@@ -42,11 +47,6 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private static final Logger log = Logger.getLogger(WorkStage.class);
@@ -60,7 +60,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final ClusterSharding sharding;
-	private final EntityTypeKey<Processor.Command> processorType;
+	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypes;
 	private long counter = 0;
 
 	public WorkStage(
@@ -72,7 +72,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		super(context);
 		this.shardingKey = shardingKey;
 		this.replyTo = replyTo;
-		this.processorType = configurations.processorType();
+		this.processorTypes = configurations.processorTypes();
 
 		ActorSystem<Void> system = getContext().getSystem();
 		this.sharding = ClusterSharding.get(system);
@@ -94,16 +94,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			EndProcessResponse::new
 		);
 
-		List<Behavior<AggregateItem.Command>> handlerBehaviors = new ArrayList<>();
-		for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory
-			: configurations.endProcessHandlers()) {
-
-			var handlerBehavior = handlerFactory.apply(shardingKey);
-
-			handlerBehaviors.add(handlerBehavior);
-		}
-
-		endProcessHandlersBehaviors = handlerBehaviors;
+		endProcessHandlersBehaviors = List.of();
 	}
 
 	public static Behavior<Command> create(
@@ -206,6 +197,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
+			// TODO: handle the case where we have multiple processors
+			var processorType = processorTypes.getFirst();
 			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
 				processorType,
 				processKey.asString()
@@ -283,15 +276,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	}
 
 	public record Configurations(
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... endProcessHandlers
+		LinkedList<EntityTypeKey<Processor.Command>> processorTypes,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory
 	) {
-
-		@SafeVarargs
-		public Configurations {
-		}
-
 	}
 
 	private Behavior<Command> onEndProcessResponse(EndProcessResponse endProcessResponse) {

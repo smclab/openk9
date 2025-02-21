@@ -15,32 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.base;
+package io.openk9.datasource.pipeline.actor;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
+
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-class BasePipelineTest {
-
-	@Test
-	void should_get_status_from_reply() {
-		List<AggregateItem.Reply> replies = List.of(
-			new EvaluateStatus.Success(Scheduler.SchedulerStatus.ERROR),
-			UpdateDatasource.Success.INSTANCE
-		);
-
-		var aggregate = BasePipeline.closeResponseAggregator(replies);
-
-		assertEquals(Scheduler.SchedulerStatus.ERROR, aggregate.status());
-	}
+class SchedulingActorTest {
 
 	@Test
 	void should_get_status_default() {
@@ -49,9 +38,21 @@ class BasePipelineTest {
 			DeletionCompareNotifier.Success.INSTANCE
 		);
 
-		var aggregate = BasePipeline.closeResponseAggregator(replies);
+		var aggregate = Scheduling.closeResponseAggregator(replies);
 
 		assertEquals(Scheduler.SchedulerStatus.FINISHED, aggregate.status());
+	}
+
+	@Test
+	void should_get_status_from_reply() {
+		List<AggregateItem.Reply> replies = List.of(
+			new EvaluateStatus.Success(Scheduler.SchedulerStatus.ERROR),
+			UpdateDatasource.Success.INSTANCE
+		);
+
+		var aggregate = Scheduling.closeResponseAggregator(replies);
+
+		assertEquals(Scheduler.SchedulerStatus.ERROR, aggregate.status());
 	}
 
 }

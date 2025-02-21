@@ -42,6 +42,7 @@ public interface SchedulerMapper {
 		@Mapping(source = "oldDataIndex.indexName", target = "oldDataIndexName"),
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "newDataIndex.indexName", target = "newDataIndexName"),
+		@Mapping(source = "datasource.pipelineType", target = "pipelineType")
 	})
 	SchedulerDTO map(Scheduler source);
 
