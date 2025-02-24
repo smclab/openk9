@@ -233,6 +233,8 @@ def delete_documents(opensearch_host, interval_in_days=30):
         hosts=[opensearch_host],
     )
 
+    interval_in_days = os.getenv("INTERVAL_IN_DAYS")
+
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
     logger.info(f"Found {len(all_indices)} indices: {all_indices}")
