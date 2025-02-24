@@ -600,7 +600,7 @@ export function App() {
         }
         css={css`
           grid-area: result;
-          margin-top: ${searchText !== undefined ? "10px" : "unset"};
+          margin-top: ${searchText !== undefined ? "20px" : "unset"};
           overflow: auto;
           display: flex;
           flex-direction: column;
