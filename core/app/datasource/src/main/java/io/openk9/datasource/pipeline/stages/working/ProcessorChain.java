@@ -45,7 +45,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 
 		super(context);
 
-		this.processorTypeKeys = processorTypeKeys;
+		this.processorTypeKeys = new LinkedList<>(processorTypeKeys);
 		this.processorResponseAdapter = getContext().messageAdapter(
 			Processor.Response.class, ProcessorResponse::new
 		);
