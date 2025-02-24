@@ -114,7 +114,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			.onMessage(Write.class, this::onWrite)
 			.onMessage(PostWrite.class, this::onPostWrite)
 			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
-			.onMessage(LastForwarded.class, this::onLastForwarded)
 			.build();
 	}
 
@@ -225,8 +224,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else if (dataPayload.getContentId() != null) {
 
 			if (this.writer == null) {
-				this.writer = getContext()
-					.spawnAnonymous(this.writerFactory.apply(
+				this.writer = getContext().spawnAnonymous(
+					this.writerFactory.apply(
 							scheduler,
 							indexWriterAdapter
 						)
@@ -238,20 +237,16 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
-			var processorType = processorTypes.pop();
-
-			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
-				processorType,
-				processKey.asString()
-			);
-
 			var heldMessage = new HeldMessage(
 				processKey,
 				counter,
 				parsingDateTimeStamp
 			);
 
-			dataProcess.tell(new Processor.Start(
+			var processorChain =
+				getContext().spawnAnonymous(ProcessorChain.create(processorTypes));
+
+			processorChain.tell(new Processor.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				scheduler,
 				heldMessage,
@@ -306,15 +301,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	}
 
-	private Behavior<Command> onLastForwarded(LastForwarded lastForwarded) {
-
-		this.replyTo.tell(new Last(lastForwarded.requester()));
-
-		return Behaviors.same();
-
-	}
-
-
 	public sealed interface Command {}
 
 	public sealed interface Response {}
@@ -347,8 +333,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private record EndProcessResponse(AggregateBehavior.Response response) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
-
-	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
 
 	public record Failed(HeldMessage heldMessage, WorkStageException exception)
 		implements Callback {}
