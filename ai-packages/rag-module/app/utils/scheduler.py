@@ -51,7 +51,7 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
         )
         scheduler.start()
 
-    else:
+    elif not schedule:
         if scheduler.get_job(JOB_ID):
             scheduler.remove_job(JOB_ID)
         if scheduler.running and not scheduler.get_jobs():
