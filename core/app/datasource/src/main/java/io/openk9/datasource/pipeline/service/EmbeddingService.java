@@ -107,9 +107,7 @@ public class EmbeddingService {
 						.setText(text)
 						.build())
 					.map(embeddingResponse -> EmbeddingService.mapToPayload(
-						embeddingResponse, indexName, contentId,
-						acl, windowSize
-						)
+						embeddingResponse, indexName, contentId, acl, windowSize)
 					);
 			})
 			.subscribeAsCompletionStage();
@@ -185,18 +183,28 @@ public class EmbeddingService {
 			);
 
 			var previous = getPrevious(windowSize, number, chunks)
-				.stream().map(it -> mapToJsonObject(
-					indexName, contentId,
+				.stream()
+				.map(it -> mapToJsonObject(
+					indexName,
+					contentId,
 					acl,
-						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
+					it.getNumber(),
+					it.getTotal(),
+					it.getText(),
+					it.getVectorsList()
 					)
 				);
 
 			var next = getNext(windowSize, number, total, chunks)
-				.stream().map(it -> mapToJsonObject(
-					indexName, contentId,
+				.stream()
+				.map(it -> mapToJsonObject(
+					indexName,
+					contentId,
 					acl,
-						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
+					it.getNumber(),
+					it.getTotal(),
+					it.getText(),
+					it.getVectorsList()
 					)
 				);
 
