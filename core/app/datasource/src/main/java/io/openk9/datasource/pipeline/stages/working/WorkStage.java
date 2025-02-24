@@ -19,12 +19,12 @@ package io.openk9.datasource.pipeline.stages.working;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
-import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
@@ -84,7 +84,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		this.dataProcessAdapter = getContext().messageAdapter(
 			Processor.Response.class,
-			PostProcess::new
+			OnProcessorResponse::new
 		);
 
 		this.writerFactory = configurations.writerFactory();
@@ -110,7 +110,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(StartWorker.class, this::onStartWorker)
-			.onMessage(PostProcess.class, this::onPostProcess)
+			.onMessage(OnProcessorResponse.class, this::onProcessorResponse)
 			.onMessage(Write.class, this::onWrite)
 			.onMessage(PostWrite.class, this::onPostWrite)
 			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
@@ -140,6 +140,47 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			this.replyTo.tell(new Failed(heldMessage, exception));
 
+		}
+
+		return Behaviors.same();
+	}
+
+	private Behavior<Command> onProcessorResponse(OnProcessorResponse onProcessorResponse) {
+
+		var response = onProcessorResponse.response();
+		var heldMessage = response.heldMessage();
+
+		switch (response) {
+			case Processor.Success success -> {
+				try {
+
+					var processorType = processorTypes.pop();
+					var processKey = heldMessage.processKey();
+
+					EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
+						processorType,
+						processKey.asString()
+					);
+
+					dataProcess.tell(new Processor.Start(
+						success.payload(),
+						success.scheduler(),
+						heldMessage,
+						this.dataProcessAdapter
+					));
+
+				}
+				catch (NoSuchElementException e) {
+					getContext().getSelf().tell(new Write(success.payload(), heldMessage));
+				}
+			}
+			case Processor.Skip skip -> this.replyTo.tell(new Done(heldMessage));
+			case Processor.Failure failure -> {
+
+				var exception = failure.exception();
+
+				this.replyTo.tell(new Failed(heldMessage, exception));
+			}
 		}
 
 		return Behaviors.same();
@@ -197,8 +238,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
-			// TODO: handle the case where we have multiple processors
-			var processorType = processorTypes.getFirst();
+			var processorType = processorTypes.pop();
+
 			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
 				processorType,
 				processKey.asString()
@@ -228,35 +269,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		else {
 
 			this.replyTo.tell(new Last(requester));
-
-		}
-
-		return Behaviors.same();
-	}
-
-	private Behavior<Command> onPostProcess(PostProcess postProcess) {
-
-		var response = postProcess.response();
-		var heldMessage = response.heldMessage();
-
-		if (response instanceof Processor.Success success) {
-
-			getContext().getSelf().tell(new Write(
-				success.payload(),
-				heldMessage
-			));
-
-		}
-		else if (response instanceof EnrichPipeline.Skip) {
-
-			this.replyTo.tell(new Done(heldMessage));
-
-		}
-		else if (response instanceof Processor.Failure failure) {
-
-			var exception = failure.exception();
-
-			this.replyTo.tell(new Failed(heldMessage, exception));
 
 		}
 
@@ -315,7 +327,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record PostProcess(Processor.Response response) implements Command {}
+	private record OnProcessorResponse(Processor.Response response) implements Command {}
 
 	public record Halt(DataProcessException exception, ActorRef<Scheduling.Response> requester)
 		implements Response {}

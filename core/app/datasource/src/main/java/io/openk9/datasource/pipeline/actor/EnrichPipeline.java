@@ -17,6 +17,12 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
+import java.util.Set;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.collection.Collections;
 import io.openk9.datasource.model.EnrichItem;
@@ -28,6 +34,7 @@ import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.JsonMerge;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -37,12 +44,6 @@ import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.Set;
 
 public class EnrichPipeline {
 
@@ -92,7 +93,7 @@ public class EnrichPipeline {
 			scheduling,
 			heldMessage,
 			dataPayload,
-			scheduler.getId(),
+			scheduler,
 			scheduler.getEnrichItems()
 		);
 
@@ -104,9 +105,11 @@ public class EnrichPipeline {
 		ActorRef<Processor.Response> replyTo,
 		HeldMessage heldMessage,
 		DataPayload dataPayload,
-		long schedulerId,
+		SchedulerDTO scheduler,
 		Set<EnrichItemDTO> enrichPipelineItems
 	) {
+
+		long schedulerId = scheduler.getId();
 
 		if (enrichPipelineItems.isEmpty()) {
 
@@ -121,7 +124,7 @@ public class EnrichPipeline {
 
 			var buffer = Json.encodeToBuffer(dataPayload);
 
-			replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
+			replyTo.tell(new Processor.Success(buffer.getBytes(), scheduler, heldMessage));
 
 			return Behaviors.stopped();
 		}
@@ -212,7 +215,7 @@ public class EnrichPipeline {
 
 						yield initPipeline(
 							ctx, httpSupervisor, replyTo,
-							heldMessage, dataPayload, schedulerId, tail
+							heldMessage, dataPayload, scheduler, tail
 						);
 
 					}
@@ -230,7 +233,11 @@ public class EnrichPipeline {
 
 						var buffer = Json.encodeToBuffer(dataPayload);
 
-						replyTo.tell(new Processor.Success(buffer.getBytes(), heldMessage));
+						replyTo.tell(new Processor.Success(
+							buffer.getBytes(),
+							scheduler,
+							heldMessage
+						));
 
 						yield Behaviors.stopped();
 
@@ -324,7 +331,7 @@ public class EnrichPipeline {
 						dataPayload.getContentId()
 					);
 
-					replyTo.tell(new Skip(heldMessage));
+					replyTo.tell(new Processor.Skip(heldMessage));
 
 					return Behaviors.stopped();
 				}
@@ -355,7 +362,7 @@ public class EnrichPipeline {
 					replyTo,
 					heldMessage,
 					newDataPayload,
-					schedulerId,
+					scheduler,
 					tail
 				);
 
@@ -420,7 +427,5 @@ public class EnrichPipeline {
 	private record InternalResponseWrapper(byte[] jsonObject) implements Processor.Command {}
 
 	private record InternalError(DataProcessException exception) implements Processor.Command {}
-
-	public record Skip(HeldMessage heldMessage) implements Processor.Response {}
 
 }
