@@ -4,44 +4,55 @@ from apscheduler.triggers.cron import CronTrigger
 from app.utils.chat_history import delete_documents
 
 
-def start_document_deletion_scheduler(opensearch_host):
+scheduler = BackgroundScheduler()
+JOB_ID = "document_deletion_job"
+
+
+def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression):
+    """Configure and control the document deletion scheduler.
+
+    Manages the lifecycle of a background scheduler that periodically deletes
+    documents from OpenSearch based on the provided parameters. Implements
+    thread-safe job management with a singleton scheduler instance.
+
+    :param str opensearch_host: OpenSearch connection string (host:port)
+    :param bool schedule: True to enable scheduling, False to disable
+    :param str cron_expression: Cron schedule for deletions (5-part format)
+
+    **Usage Example**:
+
+    .. code-block:: python
+
+        # Enable daily cleanup at midnight
+        start_document_deletion_scheduler(
+            "localhost:9200",
+            True,
+            "0 0 * * *"
+        )
+
+        # Disable cleanup
+        start_document_deletion_scheduler(None, False, "")
+
+    **Cron Format**:
+
+    * ``minute hour day month day_of_week``
+    * Uses standard cron syntax with 5 time components
+    * Example: "0 3 * * 0" = Sundays at 3:00 AM
     """
-    Start a background scheduler to delete documents from OpenSearch indices.
+    if schedule and not scheduler.running:
 
-    This function sets up a scheduled job that runs at specified times to delete documents
-    older than a specified number of days from the OpenSearch instance. The deletion is
-    performed by the `delete_documents` function.
+        def delete_documents_cron():
+            delete_documents(opensearch_host)
 
-    Parameters
-    ----------
-    opensearch_host : str
-        The host URL of the OpenSearch instance (e.g., "http://localhost:9200").
+        trigger = CronTrigger.from_crontab(cron_expression)
 
-    Returns
-    -------
-    None
-        This function does not return any value. It starts a background scheduler.
+        scheduler.add_job(
+            delete_documents_cron, trigger=trigger, id=JOB_ID, replace_existing=True
+        )
+        scheduler.start()
 
-    Notes
-    -----
-    - Ensure that the APScheduler library is installed and properly configured in your environment.
-    - The job will run according to the specified cron expression.
-
-    Examples
-    --------
-    >>> start_document_deletion_scheduler("http://localhost:9200")
-    """
-
-    interval_in_days = 30
-    cron_expression = "0 00 * * *"
-    minute, hour, day, month, day_of_week = cron_expression.split()
-
-    def delete_documents_cron():
-        delete_documents(opensearch_host, interval_in_days)
-
-    scheduler = BackgroundScheduler()
-    trigger = CronTrigger(
-        month=month, day=day, day_of_week=day_of_week, hour=hour, minute=minute
-    )
-    scheduler.add_job(delete_documents_cron, trigger)
-    scheduler.start()
+    else:
+        if scheduler.get_job(JOB_ID):
+            scheduler.remove_job(JOB_ID)
+        if scheduler.running and not scheduler.get_jobs():
+            scheduler.shutdown(wait=False)
