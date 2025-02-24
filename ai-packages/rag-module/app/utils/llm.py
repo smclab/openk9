@@ -488,19 +488,6 @@ def stream_rag_conversation(
         ):
             citations = chunk
 
-    if chat_sequence_number == 1:
-        conversation_title = generate_conversation_title(
-            llm, search_text, result_answer
-        )
-        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
-
-        info = {
-            "chain": "chat_chain",
-            "user_id": user_id,
-            "conversation_title": conversation_title.strip('"'),
-        }
-        logger.info(json.dumps(info))
-
     all_citations = (
         citations.get("annotations").dict()["citations"]
         if citations
@@ -535,6 +522,19 @@ def stream_rag_conversation(
                 "type": "DOCUMENT",
             }
         )
+
+    if chat_sequence_number == 1 and user_id:
+        conversation_title = generate_conversation_title(
+            llm, search_text, result_answer
+        )
+        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+
+        info = {
+            "chain": "chat_chain",
+            "user_id": user_id,
+            "conversation_title": conversation_title.strip('"'),
+        }
+        logger.info(json.dumps(info))
 
     info = {
         "chain": "chat_chain",
