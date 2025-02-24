@@ -82,7 +82,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 
 					var processor = sharding.entityRefFor(
 						processorTypeKey,
-						processKey.toString()
+						processKey.asString()
 					);
 
 					processor.tell(new Processor.Start(
@@ -115,7 +115,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 		var processorType = this.processorTypeKeys.pop();
 
 		var processor = sharding.entityRefFor(
-			processorType, heldMessage.processKey().toString());
+			processorType, heldMessage.processKey().asString());
 
 		processor.tell(new Processor.Start(
 			start.ingestPayload(),
