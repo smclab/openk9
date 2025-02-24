@@ -24,11 +24,17 @@ OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
+SCHEDULE = bool(os.getenv("SCHEDULE"))
+CRON_EXPRESSION = os.getenv("CRON_EXPRESSION")
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 
 # start scheduled tasks
-start_document_deletion_scheduler(opensearch_host=OPENSEARCH_HOST)
+start_document_deletion_scheduler(
+    opensearch_host=OPENSEARCH_HOST,
+    schedule=SCHEDULE,
+    cron_expression=CRON_EXPRESSION,
+)
 
 app.add_middleware(
     CORSMiddleware,
