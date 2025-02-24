@@ -664,9 +664,11 @@ public class SearchResource {
 		}
 
 		TotalHits totalHits = hits.getTotalHits();
-		var totalHitsValue = totalHits != null ? totalHits.value : totalResultLimit;
+		var totalResult = totalHits != null
+			? Math.min(totalHits.value, totalResultLimit)
+			: 0;
 
-		return new Response(result, Math.min(totalHitsValue, totalResultLimit));
+		return new Response(result, totalResult);
 	}
 
 	private void printShardFailures(SearchResponse searchResponse) {
