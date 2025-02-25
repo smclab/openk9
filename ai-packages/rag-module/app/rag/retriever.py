@@ -22,7 +22,7 @@ class OpenSearchRetriever(BaseRetriever):
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
-    chunk_window: Optional[bool] = True
+    chunk_window: Optional[int] = 0
     range_values: list
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
@@ -167,7 +167,7 @@ class OpenSearchRetriever(BaseRetriever):
             )
             documents = reranked_documents
 
-        if self.chunk_window:
+        if self.chunk_window > 0:
             documents_to_merge = [
                 {
                     "document_id": doc.metadata["document_id"],
@@ -183,7 +183,7 @@ class OpenSearchRetriever(BaseRetriever):
                 for doc in documents
             ]
             merged_documents = get_context_window_merged(
-                documents_to_merge, window_size=4
+                documents_to_merge, window_size=self.chunk_window
             )
 
             for merged_document in merged_documents:
