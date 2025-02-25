@@ -599,6 +599,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 						);
 					}
 
+					return Behaviors.same();
+
 				}
 
 				if (!failureTracked && lastReceived) {
