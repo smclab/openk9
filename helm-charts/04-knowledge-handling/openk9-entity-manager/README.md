@@ -1,14 +1,13 @@
-# Helm package for Openk9 Searcher
+# Helm package for Openk9 Entity Manager
 
 ## Introduction
 
-This chart bootstraps Openk9 Searcher deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps Openk9 Entity Manager deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 
 - Kubernetes 1.23+
 - Helm 3.8.0+
-- PV provisioner support in the underlying infrastructure
 
 ## Installing the Chart
 
@@ -21,10 +20,10 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 Then install using following command:
 
 ```bash
-helm upgrade -i searcher openk9/openk9-searcher
+helm upgrade -i file-manager openk9/openk9-file-manager
 ```
 
-The command deploys Openk9 Searcher on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+The command deploys Openk9 Entity Manager on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 # Parameters
 
@@ -32,10 +31,10 @@ The command deploys Openk9 Searcher on the Kubernetes cluster in the default con
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `image.registry`    | Openk9 Searcher image registry                                                                                  | `REGISTRY_NAME`            |
-| `image.repository`  | Openk9 Searcher image repository                                                                                | `REPOSITORY_NAME/openk9` |
-| `image.digest`      | Openk9 Searcher image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
-| `image.pullPolicy`  | Openk9 Searcher image pull policy                                                                               | `IfNotPresent`             |
+| `image.registry`    | Openk9 Entity Manager image registry                                                                                  | `REGISTRY_NAME`            |
+| `image.repository`  | Openk9 Entity Manager image repository                                                                                | `REPOSITORY_NAME/openk9` |
+| `image.digest`      | Openk9 Entity Manager image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
+| `image.pullPolicy`  | Openk9 v image pull policy                                                                               | `IfNotPresent`             |
 | `image.pullSecrets` | Specify docker-registry secret names as an array                                                         | `[]`                       |
 | `image.debug`       | Set to true if you would like to see extra information on logs                                           | `false`                    |
 
@@ -43,14 +42,14 @@ The command deploys Openk9 Searcher on the Kubernetes cluster in the default con
 
 | Name                                         | Description                                                                                                                                                             | Value                                             |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `nameOverride`                               | String to partially override searcher.fullname template (will maintain the release name)                                                                                | `""`                                              |
-| `fullnameOverride`                           | String to fully override searcher.fullname template                                                                                                                     | `""`                                              |
+| `nameOverride`                               | String to partially override file-manager.fullname template (will maintain the release name)                                                                                | `""`                                              |
+| `fullnameOverride`                           | String to fully override rabbifile-managertmq.fullname template                                                                                                                     | `""`                                              |
 | `commonAnnotations`                          | Annotations to add to all deployed objects                                                                                                                              | `{}`                                              |
 | `hostAliases`                                | Deployment pod host aliases                                                                                                                                             | `[]`                                              |
 
 ### Quarkus configurations
 
-Openk9 Searcher service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
+Openk9 Entity Manager service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
@@ -61,18 +60,17 @@ Openk9 Searcher service is based on Quarkus Framework. Use following parameters 
 
 ### JVM configuration
 
-Openk9 Searcher is a JVM service. To control JVM based tool options use following parameters:
+Openk9 Entity Manager is a JVM service. To control JVM based tool options use following parameters:
 
-Openk9 Searcher service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
+Openk9 Entity Manager service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `jvm.toolOptions`    | JVM Tool Options                                                                       | ``            |
 
-
 ### Configure Opensearch
 
-Openk9 Searcher needs Opensearch to work. 
+Openk9 Entity Mananager needs Opensearch to work. 
 
 To configure connection to Opensearch following parameters are available:
 
@@ -86,38 +84,37 @@ To configure connection to Opensearch following parameters are available:
 | `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
 
 
-### Configure Keycloak
+### Configure Neo4j
 
-Openk9 Searcher needs Keycloak to work. 
+Openk9 Entity Manager needs Neo4j to work. 
 
-To configure connection to Keycloak following parameters are available:
+To configure connection to Neo4j following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `keycloak.host`    | Keycloak host                         | `keycloak.openk9.local`            |
-| `keycloak.clientId`  | Keycloak client                             | `openk9` |
+| `neo4j.host`    | Neo4j url          | `neo4j-neo4j`            |
+| `neo4j.port`    | Neo4j port          | `7687`            |
+| `neo4j.username`    | Neo4j username          | `neo4j`            |
+| `neo4j.passwordSecretName` | Name of the secret where password is stored                            | `neo4j-secret`                       |
+| `neo4j.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `neo4j-password`                    |
+| `neo4j.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_NEO4J_AUTHENTICATION_PASSWORD`   |
+
 
 ### Configure connections to other Openk9 services
 
-Openk9 Searcher needs to communicate with other components to work. 
-In particular Openk9 Searcher need to communicate with Tenant Manager and Searcher to perform tenant resolving.
+Openk9 Entity Manager needs to communicate with other components to work. 
+In particular Openk9 Entity Manager need to communicate with Datasource to perform tenant resolving.
 
-To configure connection to Tenant Manager following parameters are available:
-
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
-
-To configure connection to Searcher following parameters are available:
+To configure connection to Datasource following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `openk9.Searcher.host`    | Searcher host                         | `openk9-Searcher`            |
+| `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
 
 
 ### Configure Opentelemetry
 
-Openk9 Searcher supports collecting metrics about traffic using OpenTelemetry.
+Openk9 Entity Manager supports collecting metrics about traffic using OpenTelemetry.
 
 To enable this feature you need an active instance of OpenTelemetry Collector. Here [official documentation](https://opentelemetry.io/docs/collector/installation/) to install.
 
@@ -132,9 +129,9 @@ To activate and set pointing to Opentelemetry collector use following parameters
 
 ### Service account and rbac
 
-Openk9 Searcher doesn't need particular Service Account or rbac. 
+Openk9 Entity Manager doesn't need particular Service Account or rbac. 
 
-But if you want for some reasons associate a pre-created Service Account to Openk9 Searcher you can do using following parameters:
+But if you want for some reasons associate a pre-created Service Account to Openk9 Entity Manager you can do using following parameters:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
@@ -147,17 +144,16 @@ But if you want for some reasons associate a pre-created Service Account to Open
 
 | Name                                          | Description                                                                                | Value   |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- |
-| `serviceAccount.create`                       | Enable creation of ServiceAccount for Searcher pods                                        | `true`  |
+| `serviceAccount.create`                       | Enable creation of ServiceAccount for RabbitMQ pods                                        | `true`  |
 | `serviceAccount.name`                         | Name of the created serviceAccount                                                         | `""`    |
 | `serviceAccount.automountServiceAccountToken` | Auto-mount the service account token in the pod                                            | `false` |
 | `serviceAccount.annotations`                  | Annotations for service account. Evaluated as a template. Only used if `create` is `true`. | `{}`    |
 | `rbac.create`                                 | Whether RBAC rules should be created                                                       | `true`  |
 | `rbac.rules`                                  | Custom RBAC rules                                                                          | `[]`    |                              |
 
-
 ### Configure ingress or route
 
-Openk9 Searcher doesn't need to openk9 Apis externally.
+Openk9 Entity Manager doesn't need to openk9 Apis externally.
 
 For Ingress creation presente of an Ingress Controller is mandatory on your cluster. Check [Kubernets Documentation](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for availables Ingress Controllers.
 
@@ -184,7 +180,7 @@ To configure Route for Openshift use:
 
 ### Startup, readiness and liveness probes
 
-Openk9 Searcher supports Readiness, Liveness and Startup Probes.
+Openk9 Entity Manager supports Readiness, Liveness and Startup Probes.
 
 It uses [Quarkus health check endpoint](https://quarkus.io/guides/smallrye-health#running-the-health-check) to perform healht check actions. 
 
@@ -213,7 +209,7 @@ To configure probes appropriately you can use following parameters:
 
 ### Resource requests and limits
 
-Openk9 Searcher chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
+Openk9 Entity Manager chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
 
 | `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
 
@@ -278,7 +274,7 @@ To horizontally scale this chart once it has been deployed, two options are avai
     replicaCount=3
 ```
 
-When scaling down the solution, unnecessary Ingestion nodes are automatically stopped. 
+When scaling down the solution, unnecessary Entity Manager nodes are automatically stopped. 
 
 Is possible also to set autoscaling using following parameters:
 
@@ -307,7 +303,6 @@ config:
     enabled: true
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 ```
-
 
 ### Known issues
 

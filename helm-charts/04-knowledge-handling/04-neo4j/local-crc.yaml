@@ -1,0 +1,37 @@
+# This scenario creates a single-instance standalone Neo4j
+# machine, with the most basic configuration and limited
+# resource to be fit in a local CodeReady Containers environment
+###############################################################
+
+core:
+  standalone: true
+  numberOfServers: 1
+  persistentVolume:
+    size: 5Gi
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: 4Gi
+    requests:
+      cpu: "100m"
+      memory: 512Mi
+  discoveryService:
+    instances: [0]
+
+dbms:
+    memory:
+        use_memrec: false
+        heap:
+            initial_size: 1024m
+            max_size: 1024m
+        pagecache:
+            size: 123m
+        transaction:
+            memory_allocation: ON_HEAP
+            max_size: 60m
+            global_max_size: 200m
+
+
+acceptLicenseAgreement: "yes"
+existingPasswordSecret: "neo4j-secret"
+defaultDatabase: "neo4j"

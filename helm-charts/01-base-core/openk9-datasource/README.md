@@ -207,6 +207,7 @@ But if you want for some reasons you can modifying following parameters:
 | `ingress.enabled`    | If enable Ingress creation     | `false`            |
 | `ingress.host`  | Ingress host                                    | `{}` |
 | `ingress.annotations`  | Ingress annotations                                    | `{}` |
+| `ingress.ingressClassName`  | Ingress Class Name (If not present overwrite default Ingress Class Name)         | `{}` |
 | `ingress.tls.enabled`  | If enable tls on Ingress                                    | `` |
 | `ingress.tls.secretName`  | Secret with tls certificate to associate to Ingress                                    | `` |
 

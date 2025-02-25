@@ -1,12 +1,9 @@
 {{- if .Values.ingress.enabled }}
-{{- $paths := .Values.ingress.paths -}}
-{{- $serviceport := .Values.ingress.servicePort -}}
-{{- $service := include "common.names.name" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ template "common.names.name" . }}
-  namespace: {{ .Release.Namespace | quote }} 
+  namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
   {{- if (or .Values.commonAnnotations .Values.ingress.annotations) }}
   annotations: 
@@ -21,15 +18,13 @@ spec:
     - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
-           {{- range .Values.ingress.paths }}
-          - path: {{ . }}
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $service }}
-                port: 
-                  number:  {{ $serviceport }}
-            {{- end -}}
+        - path: /entity-manager
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ template "common.names.name" . }}
+              port:
+                number: {{ .Values.service.port }}
   {{- if .Values.ingress.tls.enabled }}
   tls:
     - hosts:
