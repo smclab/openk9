@@ -276,6 +276,11 @@ public class EmbeddingService {
 					)
 				)
 				.onFailure()
+				.invoke(throwable -> log.error(
+					"Something went wrong when trying to get Embedding chunks configuration",
+					throwable
+				))
+				.onFailure()
 				.recoverWithNull()
 		);
 	}
