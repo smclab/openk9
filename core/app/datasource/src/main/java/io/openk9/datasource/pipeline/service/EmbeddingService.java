@@ -90,9 +90,9 @@ public class EmbeddingService {
 					.parseUtf8(payload);
 
 				var docTypeField = Objects.requireNonNull(configurations.docTypeField());
-				var path = docTypeField.getPath();
+				var docTypeFieldJsonPath = "$." + docTypeField.getPath();
 
-				String text = documentContext.read(path);
+				String text = documentContext.read(docTypeFieldJsonPath);
 
 				String contentId = documentContext.read("$.contentId");
 				Map<String, Object> acl = documentContext.read("$.acl");
