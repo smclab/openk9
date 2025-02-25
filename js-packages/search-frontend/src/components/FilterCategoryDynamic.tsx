@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
+import { Logo } from "./Logo";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -264,6 +265,7 @@ function FilterCategoryDynamic({
               margin: 0;
             `}
           >
+            {filters.length === 0 && <NoFiltersSearch />}
             {filters.map((suggestion, index) => {
               const asSearchToken = mapSuggestionToSearchToken(
                 suggestion,
@@ -737,5 +739,28 @@ function CheckBoxSelect({
         `}
       />
     </React.Fragment>
+  );
+}
+
+export function NoFiltersSearch() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <div
+        className="openk9-filter-category-no-results-is-open"
+        css={css`
+          color: var(--openk9-embeddable-search--secondary-text-color);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+        `}
+      >
+        <Logo size={100} />
+        <h4>{t("no-filters")} </h4>
+      </div>
+    </div>
   );
 }

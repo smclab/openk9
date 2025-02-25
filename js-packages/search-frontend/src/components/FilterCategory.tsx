@@ -676,6 +676,9 @@ export function NoFilter({
     <fieldset
       className="openk9-filter-category-container"
       css={css`
+        @media (max-width: 480px) {
+          width: unset;
+        }
         margin: 0;
         padding: 0;
         border: none;
@@ -687,7 +690,7 @@ export function NoFilter({
         display: flex;
         flex-direction: column;
         gap: 10px;
-        padding: 8px;
+        padding: 8px 16px;
       `}
     >
       <div
@@ -700,13 +703,16 @@ export function NoFilter({
         `}
       >
         <legend
+          className="legend-filters"
           css={css`
             :first-letter {
               text-transform: uppercase;
             }
           `}
         >
-          <strong>{suggestionCategoryName}</strong>
+          <strong className="name-category-filter">
+            {suggestionCategoryName}
+          </strong>
         </legend>
 
         <button
