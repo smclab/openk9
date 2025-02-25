@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,6 +56,11 @@ import org.hibernate.type.SqlTypes;
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class DataIndex extends K9Entity {
+
+	private static final int DEFAULT_CHUNK_WINDOW_SIZE = 0;
+	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";
+	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
+		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 
 	public static String getIndexName(String tenantId, DataIndex dataIndex) {
 		return OpenSearchUtils.indexNameSanitizer(
@@ -106,14 +112,14 @@ public class DataIndex extends K9Entity {
 
 	@Column(name = "chunk_type")
 	@Enumerated(EnumType.STRING)
-	private EmbeddingOuterClass.ChunkType chunkType;
+	private EmbeddingOuterClass.ChunkType chunkType = DEFAULT_CHUNK_TYPE;
 
 	@Column(name = "chunk_window_size")
-	private Integer chunkWindowSize;
+	private Integer chunkWindowSize = DEFAULT_CHUNK_WINDOW_SIZE;
 
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "embedding_json_config")
-	private String embeddingJsonConfig;
+	private String embeddingJsonConfig = DEFAULT_EMBEDDING_JSON_CONFIG;
 
 	public String getIndexName() throws UnknownTenantException {
 		if (indexName == null) {
@@ -121,6 +127,21 @@ public class DataIndex extends K9Entity {
 		}
 
 		return indexName;
+	}
+
+	public void setChunkType(EmbeddingOuterClass.ChunkType chunkType) {
+		this.chunkType =
+			Objects.requireNonNullElse(chunkType, DEFAULT_CHUNK_TYPE);
+	}
+
+	public void setChunkWindowSize(Integer chunkWindowSize) {
+		this.chunkWindowSize =
+			Objects.requireNonNullElse(chunkWindowSize, DEFAULT_CHUNK_WINDOW_SIZE);
+	}
+
+	public void setEmbeddingJsonConfig(String embeddingJsonConfig) {
+		this.embeddingJsonConfig =
+			Objects.requireNonNullElse(embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
 	}
 
 	@PostLoad
