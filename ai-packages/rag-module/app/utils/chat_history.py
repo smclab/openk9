@@ -1,5 +1,6 @@
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
+from langchain.schema import HumanMessage, AIMessage
 
 
 def get_chat_history(
@@ -15,8 +16,22 @@ def get_chat_history(
         for item in memory:
             question = item["_source"]["question"]
             answer = item["_source"]["answer"]
-            chat_history.add_message({"role": "human", "content": question})
-            chat_history.add_message({"role": "ai", "content": answer})
+            chat_history.add_message(HumanMessage(content=question))
+            chat_history.add_message(AIMessage(content=answer))
+
+    return chat_history
+
+
+def get_chat_history_from_frontend(
+    chat_history_from_frontend,
+) -> BaseChatMessageHistory:
+    chat_history = ChatMessageHistory()
+
+    for item in chat_history_from_frontend:
+        question = item["question"]
+        answer = item["answer"]
+        chat_history.add_message(HumanMessage(content=question))
+        chat_history.add_message(AIMessage(content=answer))
 
     return chat_history
 
