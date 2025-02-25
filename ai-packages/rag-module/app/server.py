@@ -120,7 +120,8 @@ class SearchQueryChat(BaseModel):
     language: Optional[str] = None
     vectorIndices: Optional[bool] = True
     searchText: str
-    userId: str
+    userId: Optional[str] = None
+    chatHistory: Optional[list] = None
     timestamp: str
     chatSequenceNumber: int
     retrieveCitations: Optional[bool] = False
@@ -146,6 +147,7 @@ async def rag_chat(
     vector_indices = search_query_chat.vectorIndices
     search_text = search_query_chat.searchText
     user_id = search_query_chat.userId
+    chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     retrieve_citations = search_query_chat.retrieveCitations
@@ -173,6 +175,7 @@ async def rag_chat(
         search_text,
         chat_id,
         user_id,
+        chat_history,
         timestamp,
         chat_sequence_number,
         retrieve_citations,
