@@ -265,6 +265,7 @@ public class JobScheduler {
 
 			if (oldDataIndex != null) {
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+				newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
 
 				if (docTypes != null && !docTypes.isEmpty()) {
 					ctx.getSelf().tell(
