@@ -22,7 +22,7 @@ export default function GenerateResponse({
   //da rimuovere quando passiamo alla search con il pulsante
   const [loadingSearch, setLoadingSearch] = React.useState(false);
 
-  const { generateResponse, message, isChatting, isLoading } =
+  const { generateResponse, message, isChatting, cancelAllResponses } =
     useGenerateResponse({
       initialMessages: [],
       setIsRequestLoading: setLoadingSearch,
@@ -40,6 +40,7 @@ export default function GenerateResponse({
       const clearSearchQuery = searchQuery.map(
         ({ isSearch, isTab, filter, goToSuggestion, count, ...rest }) => rest,
       );
+      cancelAllResponses();
       generateResponse(
         question,
         clearSearchQuery,
