@@ -63,7 +63,10 @@ import lombok.ToString;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD)
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph"
+					)
 				}
 			),
 			@NamedSubgraph(
