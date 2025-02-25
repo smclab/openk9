@@ -55,7 +55,6 @@ class SearchQuery(BaseModel):
     vectorIndices: Optional[bool] = False
     searchText: str
     reformulate: Optional[bool] = True
-    rerank: Optional[bool] = False
 
 
 @app.post("/api/rag/generate")
@@ -77,7 +76,6 @@ async def rag_generate(
     vector_indices = search_query_request.vectorIndices
     search_text = search_query_request.searchText
     reformulate = search_query_request.reformulate
-    rerank = search_query_request.rerank
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -101,7 +99,6 @@ async def rag_generate(
         virtual_host,
         search_text,
         reformulate,
-        rerank,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
@@ -127,8 +124,6 @@ class SearchQueryChat(BaseModel):
     timestamp: str
     chatSequenceNumber: int
     retrieveCitations: Optional[bool] = False
-    rerank: Optional[bool] = False
-    chunk_window: Optional[bool] = False
 
 
 @app.post("/api/rag/chat")
@@ -154,8 +149,6 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     retrieve_citations = search_query_chat.retrieveCitations
-    rerank = search_query_chat.rerank
-    chunk_window = search_query_chat.chunk_window
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -183,9 +176,7 @@ async def rag_chat(
         timestamp,
         chat_sequence_number,
         retrieve_citations,
-        rerank,
         RERANKER_API_URL,
-        chunk_window,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )
@@ -215,8 +206,6 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     retrieve_citations = search_query_chat.retrieveCitations
-    rerank = search_query_chat.rerank
-    chunk_window = search_query_chat.chunk_window
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -244,9 +233,7 @@ async def rag_chat(
         timestamp,
         chat_sequence_number,
         retrieve_citations,
-        rerank,
         RERANKER_API_URL,
-        chunk_window,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
     )

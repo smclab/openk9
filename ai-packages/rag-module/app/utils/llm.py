@@ -4,6 +4,7 @@ import os
 from enum import Enum
 from typing import List
 
+from google.auth import default, transport
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
@@ -20,8 +21,6 @@ from pydantic import BaseModel, Field
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history, save_chat_message
-
-from google.auth import default, transport
 
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
@@ -223,9 +222,7 @@ class Citations(BaseModel):
 
 def stream_rag_conversation(
     search_text: str,
-    rerank: bool,
     reranker_api_url: str,
-    chunk_window: bool,
     range_values: list,
     after_key: str,
     suggest_keyword: str,
@@ -258,9 +255,7 @@ def stream_rag_conversation(
 
     Args:
         search_text (str): User's query text to process.
-        rerank (bool): Whether to enable document reranking.
         reranker_api_url (str): Endpoint URL for the reranking service.
-        chunk_window (bool): Flag to enable context window merging.
         range_values (list): Range filters for document retrieval.
         after_key (str): Pagination key for search results.
         suggest_keyword (str): Suggested keyword for query expansion.
@@ -285,6 +280,8 @@ def stream_rag_conversation(
             - rephrase_prompt (str): Contextualization prompt template
             - context_window (int): Model context window size
             - retrieve_type (str): Document retrieval strategy
+            - rerank (bool): Whether to enable document reranking
+            - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
 
     Yields:
         Iterator[str]: JSON-encoded stream objects with following formats:
@@ -316,6 +313,8 @@ def stream_rag_conversation(
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
     retrieve_type = configuration["retrieve_type"]
+    rerank = configuration["rerank"]
+    chunk_window = configuration["chunk_window"]
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -466,6 +465,7 @@ def stream_rag_conversation(
     conversation_title = ""
 
     for chunk in result:
+        print(chunk)
         if chunk and "answer" in chunk.keys() and result_answer == "":
             result_answer += chunk
             yield json.dumps({"chunk": "", "type": "START"})
@@ -491,16 +491,16 @@ def stream_rag_conversation(
     all_citations = (
         citations.get("annotations").dict()["citations"]
         if citations
-        and retrieve_citations
-        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
-        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
+           and retrieve_citations
+           and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+           and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else []
     )
     all_citations_dict = (
         {citation["document_id"]: citation["citations"] for citation in all_citations}
         if retrieve_citations
-        and model_type != ModelType.HUGGING_FACE_CUSTOM.value
-        and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
+           and model_type != ModelType.HUGGING_FACE_CUSTOM.value
+           and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else {}
     )
 

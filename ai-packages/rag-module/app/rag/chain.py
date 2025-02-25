@@ -29,7 +29,6 @@ def get_chain(
     virtual_host,
     question,
     reformulate,
-    rerank,
     reranker_api_url,
     opensearch_host,
     grpc_host,
@@ -101,9 +100,7 @@ def get_chat_chain(
     timestamp,
     chat_sequence_number,
     retrieve_citations,
-    rerank,
     reranker_api_url,
-    chunk_window,
     opensearch_host,
     grpc_host,
 ):
@@ -111,9 +108,7 @@ def get_chat_chain(
 
     yield from stream_rag_conversation(
         search_text,
-        rerank,
         reranker_api_url,
-        chunk_window,
         range_values,
         after_key,
         suggest_keyword,
@@ -163,9 +158,7 @@ def get_chat_chain_tool(
     timestamp,
     chat_sequence_number,
     retrieve_citations,
-    rerank,
     reranker_api_url,
-    chunk_window,
     opensearch_host,
     grpc_host,
 ):
@@ -182,9 +175,7 @@ def get_chat_chain_tool(
     if llm_with_tools_response.tool_calls:
         yield from stream_rag_conversation(
             search_text,
-            rerank,
             reranker_api_url,
-            chunk_window,
             range_values,
             after_key,
             suggest_keyword,
