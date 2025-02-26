@@ -100,7 +100,6 @@ def get_chat_chain(
     chat_history,
     timestamp,
     chat_sequence_number,
-    retrieve_citations,
     reranker_api_url,
     opensearch_host,
     grpc_host,
@@ -128,7 +127,6 @@ def get_chat_chain(
         chat_history,
         timestamp,
         chat_sequence_number,
-        retrieve_citations,
         configuration,
     )
 
@@ -160,7 +158,6 @@ def get_chat_chain_tool(
     chat_history,
     timestamp,
     chat_sequence_number,
-    retrieve_citations,
     reranker_api_url,
     opensearch_host,
     grpc_host,
@@ -197,7 +194,6 @@ def get_chat_chain_tool(
             chat_history,
             timestamp,
             chat_sequence_number,
-            retrieve_citations,
             configuration,
         )
 

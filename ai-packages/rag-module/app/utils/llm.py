@@ -20,7 +20,11 @@ from pydantic import BaseModel, Field
 
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
-from app.utils.chat_history import (get_chat_history, get_chat_history_from_frontend, save_chat_message)
+from app.utils.chat_history import (
+    get_chat_history,
+    get_chat_history_from_frontend,
+    save_chat_message,
+)
 
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
@@ -241,7 +245,6 @@ def stream_rag_conversation(
     chat_history: list,
     timestamp: str,
     chat_sequence_number: int,
-    retrieve_citations: bool,
     configuration: dict,
 ):
     """
@@ -275,7 +278,6 @@ def stream_rag_conversation(
         chat_history (list): Chat history for not logged users.
         timestamp (str): ISO format timestamp of the request.
         chat_sequence_number (int): Sequence number in conversation history.
-        retrieve_citations (bool): Flag to enable citation extraction.
         configuration (dict): Configuration dictionary containing:
             - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
             - prompt (str): Main prompt template
@@ -284,6 +286,7 @@ def stream_rag_conversation(
             - retrieve_type (str): Document retrieval strategy
             - rerank (bool): Whether to enable document reranking
             - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
+            - retrieve_citations (bool): Flag to enable citation extraction.
 
     Yields:
         Iterator[str]: JSON-encoded stream objects with following formats:
@@ -314,6 +317,7 @@ def stream_rag_conversation(
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
+    retrieve_citations = configuration["retrieve_citations"]
     retrieve_type = configuration["retrieve_type"]
     rerank = configuration["rerank"]
     chunk_window = configuration["chunk_window"]
@@ -382,41 +386,44 @@ def stream_rag_conversation(
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
     history_factory = (
-        get_chat_history_from_frontend if not user_id
-        else get_chat_history
+        get_chat_history_from_frontend if not user_id else get_chat_history
     )
 
-    history_factory_config = [
-        ConfigurableFieldSpec(
-            id="chat_history_from_frontend",
-            annotation=str,
-            name="chat_history_from_frontend",
-            description="chat_history_from_frontend.",
-            default="",
-        ),
-    ] if not user_id else [
-        ConfigurableFieldSpec(
-            id="open_search_client",
-            annotation=str,
-            name="Opensearch client",
-            description="Opensearch client.",
-            default="",
-        ),
-        ConfigurableFieldSpec(
-            id="user_id",
-            annotation=str,
-            name="User ID",
-            description="Unique identifier for the user.",
-            default="",
-        ),
-        ConfigurableFieldSpec(
-            id="chat_id",
-            annotation=str,
-            name="Chat ID",
-            description="Unique identifier for the chat.",
-            default="",
-        ),
-    ]
+    history_factory_config = (
+        [
+            ConfigurableFieldSpec(
+                id="chat_history_from_frontend",
+                annotation=str,
+                name="chat_history_from_frontend",
+                description="chat_history_from_frontend.",
+                default="",
+            ),
+        ]
+        if not user_id
+        else [
+            ConfigurableFieldSpec(
+                id="open_search_client",
+                annotation=str,
+                name="Opensearch client",
+                description="Opensearch client.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="user_id",
+                annotation=str,
+                name="User ID",
+                description="Unique identifier for the user.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="chat_id",
+                annotation=str,
+                name="Chat ID",
+                description="Unique identifier for the chat.",
+                default="",
+            ),
+        ]
+    )
 
     if (
         retrieve_citations
