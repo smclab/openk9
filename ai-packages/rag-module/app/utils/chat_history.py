@@ -188,7 +188,7 @@ def save_chat_message(
     )
 
 
-def delete_documents(opensearch_host, interval_in_days=30):
+def delete_documents(opensearch_host, interval_in_days=180):
     """
     Delete documents from OpenSearch indices that are older than a specified number of days.
 
@@ -226,14 +226,14 @@ def delete_documents(opensearch_host, interval_in_days=30):
 
     Examples
     --------
-    >>> delete_documents("http://localhost:9200", interval_in_days=30)
+    >>> delete_documents("http://localhost:9200", interval_in_days=180)
     """
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )
 
-    interval_in_days = os.getenv("INTERVAL_IN_DAYS")
+    interval_in_days = os.getenv("INTERVAL_IN_DAYS", 180)
 
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
