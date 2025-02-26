@@ -164,14 +164,107 @@ class SearchQueryChat(BaseModel):
     chatSequenceNumber: int
 
 
-@app.post("/api/rag/chat")
+@app.post(
+    "/api/rag/chat",
+    tags=["RAG"],
+    summary="Chat with RAG system",
+    description="Streaming endpoint for RAG-powered chat interactions using Server-Sent Events (SSE)",
+    response_description="Stream of chat events in SSE format",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid request body or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "searchText"],
+                                "msg": "field required",
+                                "type": "value_error.missing",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Basic Example": {
+                            "summary": "A basic example with minimal fields",
+                            "value": {
+                                "searchText": "What is OpenK9?",
+                                "userId": "user-123",
+                                "timestamp": "1731928126578",
+                                "chatSequenceNumber": 1,
+                            },
+                        },
+                        "Advanced Example": {
+                            "summary": "An advanced example with all fields",
+                            "value": {
+                                "searchText": "What is OpenK9?",
+                                "userId": "user-123",
+                                "timestamp": "1731928126578",
+                                "chatSequenceNumber": 1,
+                                "retrieveCitations": True,
+                                "rerank": False,
+                                "chunk_window": False,
+                                "range": [0, 5],
+                                "vectorIndices": True,
+                                "chatId": "chat-456",
+                                "afterKey": "some-key",
+                                "suggestKeyword": "OpenK9",
+                                "suggestionCategoryId": 1,
+                                "extra": {"filter": ["example"]},
+                                "sort": ["field1:asc"],
+                                "sortAfterKey": "sort-key",
+                                "language": "en",
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def rag_chat(
     search_query_chat: SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(None),
     openk9_acl: Optional[list[str]] = Header(None),
 ):
-    """Definition of /api/rag/chat api."""
+    """
+    Handle RAG chat interactions with streaming response.
+
+    - **search_query_chat**: Request body with chat parameters
+    - **authorization**: JWT bearer token for authentication
+    - **openk9_acl**: Access control list for tenant isolation
+    """
     chat_id = search_query_chat.chatId
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
