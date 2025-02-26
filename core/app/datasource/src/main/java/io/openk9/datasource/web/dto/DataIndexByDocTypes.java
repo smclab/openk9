@@ -34,6 +34,6 @@ public class DataIndexByDocTypes {
 	private Map<String, Object> settings;
 	private Boolean knnIndex;
 	private Long embeddingModelId;
-	private Long embeddingDocTypeField;
+	private Long embeddingDocTypeFieldId;
 
 }
