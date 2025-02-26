@@ -239,6 +239,8 @@ public class DataIndexService
 				if (knnIndex != null && knnIndex) {
 
 					transientDataIndex.setKnnIndex(true);
+					transientDataIndex.setEmbeddingDocTypeField(
+						s.getReference(DocTypeField.class, request.getEmbeddingDocTypeField()));
 
 					var embeddingModelId = request.getEmbeddingModelId();
 
