@@ -221,7 +221,7 @@ async def rag_chat(
     return EventSourceResponse(chain)
 
 
-@app.post("/api/rag/chat_tool")
+@app.post("/api/rag/chat-tool")
 async def rag_chat(
     search_query_chat: SearchQueryChat,
     request: Request,
@@ -287,7 +287,7 @@ class UserChats(BaseModel):
     paginationSize: int = 10
 
 
-@app.post("/api/rag/user_chats")
+@app.post("/api/rag/user-chats")
 async def get_user_chats(
     user_chats: UserChats, request: Request, authorization: str = Header()
 ):
@@ -334,7 +334,7 @@ async def get_user_chats(
     return result
 
 
-@app.get("/api/rag/getChat/{user_id}/{chat_id}")
+@app.get("/api/rag/get-chat/{user_id}/{chat_id}")
 async def get_chat(
     user_id: str, chat_id: str, request: Request, authorization: str = Header()
 ):
