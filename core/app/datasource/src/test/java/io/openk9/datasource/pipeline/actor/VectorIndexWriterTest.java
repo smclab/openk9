@@ -17,23 +17,34 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.util.Map;
+
 import io.openk9.datasource.TestUtils;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
-
 class VectorIndexWriterTest {
 
-	static byte[] payload = TestUtils
-		.getResourceAsJsonArray("vectoridxwriter/embeddedchunks.json")
+	static byte[] chunks = TestUtils
+		.getResourceAsJsonArray("vectoridxwriter/chunks.json")
 		.toBuffer()
 		.getBytes();
+
+	static byte[] document = TestUtils
+		.getResourceAsJsonObject("vectoridxwriter/document.json")
+		.toBuffer()
+		.getBytes();
+
+	static byte[] empty = new byte[]{};
+
+	static byte[] emptyArray = "[]".getBytes();
+
 	static Sample johnDoe = new Sample("John", "Doe", "john.doe@acme.com", 20);
 
 	@Test
-	void getChunks() {
-		var chunks = VectorIndexWriter.getChunks(payload);
+	void should_get_chunks_as_list() {
+		var chunks = VectorIndexWriter.parsePayload(VectorIndexWriterTest.chunks);
 
 		Assertions.assertEquals(3, chunks.size());
 
@@ -47,15 +58,40 @@ class VectorIndexWriterTest {
 		);
 
 		Assertions.assertEquals(johnDoe, sample);
-
 	}
 
 	@Test
-	void getVectorSize() {
-		var vectorSize = VectorIndexWriter.getVectorSize(payload);
+	void should_get_document_as_list() {
+		var document = VectorIndexWriter.parsePayload(VectorIndexWriterTest.document);
 
-		Assertions.assertEquals(6, vectorSize);
+		Assertions.assertEquals(1, document.size());
+
+		var chunk = (Map<String, Object>) document.getFirst();
+		var metadata = (Map<String, Object>) chunk.get("sample");
+		var sample = new Sample(
+			(String) metadata.get("firstName"),
+			(String) metadata.get("lastName"),
+			(String) metadata.get("email"),
+			(int) metadata.get("age")
+		);
+
+		Assertions.assertEquals(johnDoe, sample);
 	}
+
+	@Test
+	void should_get_emptyArray_as_empty_list() {
+		var emptyArray = VectorIndexWriter.parsePayload(VectorIndexWriterTest.emptyArray);
+
+		Assertions.assertTrue(emptyArray.isEmpty());
+	}
+
+	@Test
+	void should_get_empty_as_empty_list() {
+		var empty = VectorIndexWriter.parsePayload(VectorIndexWriterTest.empty);
+
+		Assertions.assertTrue(empty.isEmpty());
+	}
+
 
 	record Sample(
 		String firstName,
