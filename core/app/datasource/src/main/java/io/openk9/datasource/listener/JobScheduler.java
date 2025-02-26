@@ -511,45 +511,51 @@ public class JobScheduler {
 
 		if (schedulable) {
 
-			if (jobNames.contains(jobName)) {
+			try {
+				if (jobNames.contains(jobName)) {
 
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					command,
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
+					quartzSchedulerTypedExtension.updateTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
 
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
+					log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
 
-				return Behaviors.same();
+					return Behaviors.same();
+				}
+				else {
+
+					quartzSchedulerTypedExtension.createTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
+
+					log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
+
+					List<String> newJobNames = new ArrayList<>(jobNames);
+
+					newJobNames.add(jobName);
+
+					return initial(
+						ctx, quartzSchedulerTypedExtension,
+						messageGatewayService, newJobNames
+					);
+
+				}
 			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					command,
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension,
-					messageGatewayService, newJobNames
-				);
-
+			catch (Exception e) {
+				log.errorf(e, "Error creating job \"%s\"", jobName);
+				return Behaviors.same();
 			}
 		}
 		else if (jobNames.contains(jobName)) {
