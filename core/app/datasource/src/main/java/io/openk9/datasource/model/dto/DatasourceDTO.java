@@ -17,9 +17,8 @@
 
 package io.openk9.datasource.model.dto;
 
-import com.cronutils.model.CronType;
-import com.cronutils.validation.Cron;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.validation.ValidQuartzCron;
 import io.openk9.datasource.validation.json.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,20 +39,20 @@ public class DatasourceDTO extends K9EntityDTO {
 	private String jsonConfig;
 	@Description("If true set active the purge job scheduling")
 	private Boolean purgeable;
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define purging for this datasource")
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define purging for this datasource")
 	private String purging;
 	@Description("The duration to identify orphaned Dataindex.")
 	private String purgeMaxAge;
 	@Description("If true datasource is reindexed based on defined scheduling expression")
 	private Boolean reindexable;
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define reindexing of datasource")
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define reindexing of datasource")
 	private String reindexing;
 	@Description("If true datasource is scheduled based on defined scheduling expression")
 	private Boolean schedulable;
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define scheduling of datasource")
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define scheduling of datasource")
 	private String scheduling;
 
 }

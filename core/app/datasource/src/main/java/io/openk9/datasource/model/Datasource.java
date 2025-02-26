@@ -17,11 +17,10 @@
 
 package io.openk9.datasource.model;
 
-import com.cronutils.model.CronType;
-import com.cronutils.validation.Cron;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidQuartzCron;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -127,7 +126,7 @@ public class Datasource extends K9Entity {
 	private Boolean purgeable = DEFAULT_PURGEABLE;
 	@Description("Chron quartz expression to define purging for this datasource")
 	@Column(name = "purging")
-	@Cron(type = CronType.QUARTZ)
+	@ValidQuartzCron
 	private String purging = DEFAULT_PURGING;
 	@Description("The duration to identify orphaned Dataindex.")
 	@Column(name = "purge_max_age")
@@ -137,7 +136,7 @@ public class Datasource extends K9Entity {
 	private Boolean reindexable = DEFAULT_REINDEXABLE;
 	@Description("Chron quartz expression to define reindexing of datasource")
 	@Column(name = "reindexing", nullable = false)
-	@Cron(type = CronType.QUARTZ)
+	@ValidQuartzCron
 	private String reindexing = DEFAULT_REINDEXING;
 	@Description("If true set datasource as schedulable")
 	@Column(name = "schedulable", nullable = false)
@@ -148,7 +147,7 @@ public class Datasource extends K9Entity {
 	private Set<Scheduler> schedulers = new LinkedHashSet<>();
 	@Description("Chron quartz expression to define scheduling of datasource")
 	@Column(name = "scheduling", nullable = false)
-	@Cron(type = CronType.QUARTZ)
+	@ValidQuartzCron
 	private String scheduling = DEFAULT_SCHEDULING;
 
 	public void setPurgeable(Boolean purgeable) {
