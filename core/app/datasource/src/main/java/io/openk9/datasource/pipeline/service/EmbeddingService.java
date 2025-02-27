@@ -194,6 +194,12 @@ public class EmbeddingService {
 		jsonObject.put("indexName", indexName);
 		Map<String, Object> acl = (Map<String, Object>) root.get("acl");
 
+		for (Map.Entry<String, Object> entry : root.entrySet()) {
+
+			jsonObject.put(entry.getKey(), entry.getValue());
+
+		}
+
 		if (acl == null || acl.isEmpty()) {
 			jsonObject.put("acl", Map.of("public", true));
 		}
@@ -201,11 +207,6 @@ public class EmbeddingService {
 			jsonObject.put("acl", acl);
 		}
 
-		for (Map.Entry<String, Object> entry : root.entrySet()) {
-
-			jsonObject.put(entry.getKey(), entry.getValue());
-
-		}
 		return jsonObject;
 	}
 
