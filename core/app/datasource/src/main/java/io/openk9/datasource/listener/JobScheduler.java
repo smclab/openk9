@@ -245,6 +245,7 @@ public class JobScheduler {
 			);
 
 			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+			scheduler.setErrorDescription(throwable1.getMessage());
 
 			JobSchedulerService.persistScheduler(tenantName, scheduler);
 
