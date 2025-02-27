@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Header, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from opensearchpy import OpenSearch
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
@@ -48,7 +48,30 @@ async def lifespan(app: FastAPI):
     )
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="OpenK9 RAG API",
+    description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
+    version="1.0.0",
+    openapi_tags=[
+        {
+            "name": "RAG",
+            "description": "Endpoints for Retrieval-Augmented Generation operations",
+        },
+        {
+            "name": "Chat",
+            "description": "Endpoints for fetch chat history",
+        },
+    ],
+    contact={
+        "name": "OpenK9 Support",
+        "email": "smc.roma@smc.it",
+    },
+    license_info={
+        "name": "GNU Affero General Public License v3.0",
+        "url": "https://github.com/smclab/openk9/blob/main/LICENSE",
+    },
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -77,28 +100,146 @@ class SearchToken(BaseModel):
 
 
 class SearchQuery(BaseModel):
-    """SearchQuery class model."""
+    """Represents a search query with various parameters for filtering, sorting, and pagination."""
 
     searchQuery: list[SearchToken]
-    range: list
-    afterKey: Optional[str] = None
-    suggestKeyword: Optional[str] = None
-    suggestionCategoryId: Optional[int] = None
-    extra: Optional[dict[str, list]] = {}
-    sort: Optional[list] = None
-    sortAfterKey: Optional[str] = None
-    language: Optional[str] = None
-    vectorIndices: Optional[bool] = False
-    searchText: str
-    reformulate: Optional[bool] = True
+    range: list = Field(
+        ...,
+        description="Range filter as [start, end]",
+        example=[0, 5],
+    )
+    afterKey: Optional[str] = Field(
+        None, description="Pagination key for subsequent requests", example="page_2"
+    )
+    suggestKeyword: Optional[str] = Field(
+        None,
+        description="Partial keyword for suggestion autocomplete",
+        example="OpenK9",
+    )
+    suggestionCategoryId: Optional[int] = Field(
+        None, description="Category ID to filter suggestions", example=1
+    )
+    extra: Optional[dict[str, list]] = Field(
+        default_factory=dict,
+        description="Additional filter parameters",
+        example={"filter": ["example"]},
+    )
+    sort: Optional[list] = Field(
+        None,
+        description="Sorting criteria with field:direction format",
+        example=["field1:asc"],
+    )
+    sortAfterKey: Optional[str] = Field(
+        None, description="Pagination key for sorted results", example="sort-key"
+    )
+    language: Optional[str] = Field(
+        None, description="Language code for localized results", example="it_IT"
+    )
+    vectorIndices: Optional[bool] = Field(
+        False, description="Enable vector space search", example=True
+    )
+    searchText: str = Field(
+        ..., description="Primary search text input", example="What is OpenK9?"
+    )
+    reformulate: Optional[bool] = Field(
+        True, description="Enable query reformulation", example=True
+    )
 
 
-@app.post("/api/rag/generate")
+@app.post(
+    "/api/rag/generate",
+    tags=["RAG"],
+    summary="Generate RAG-powered search results",
+    description="""Processes a complex search query with multiple parameters and returns results
+    via Server-Sent Events stream. Supports faceted search, suggestions, and vector-based retrieval.""",
+    response_description="Stream of search results in SSE format",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid request body or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "searchText"],
+                                "msg": "field required",
+                                "type": "value_error.missing",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Basic Example": {
+                            "summary": "A basic example with minimal fields",
+                            "value": {
+                                "range": [],
+                                "searchText": "What is OpenK9?",
+                            },
+                        },
+                        "Advanced Example": {
+                            "summary": "An advanced example with all fields",
+                            "value": {
+                                "range": [],
+                                "afterKey": "page_2",
+                                "suggestKeyword": "OpenK9",
+                                "suggestionCategoryId": 1,
+                                "extra": {"filter": ["example"]},
+                                "sort": ["field1:asc"],
+                                "sortAfterKey": "sort-key",
+                                "language": "it_IT",
+                                "vectorIndices": True,
+                                "searchText": "What is OpenK9?",
+                                "reformulate": True,
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def rag_generate(
     search_query_request: SearchQuery,
     request: Request,
-    authorization: Optional[str] = Header(None),
-    openk9_acl: Optional[list[str]] = Header(None),
+    authorization: Optional[str] = Header(
+        None,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
+    openk9_acl: Optional[list[str]] = Header(
+        None,
+        description="Access control list for tenant resources",
+        example=["group:admins", "project:openk9"],
+    ),
 ):
     """Definition of /api/rag/generate api."""
     search_query = search_query_request.searchQuery
@@ -147,21 +288,87 @@ async def rag_generate(
 class SearchQueryChat(BaseModel):
     """SearchQueryChat class model."""
 
-    chatId: Optional[str] = None
-    range: Optional[list] = [0, 5]
-    afterKey: Optional[str] = None
-    suggestKeyword: Optional[str] = None
-    suggestionCategoryId: Optional[int] = None
-    extra: Optional[dict[str, list]] = {}
-    sort: Optional[list] = None
-    sortAfterKey: Optional[str] = None
-    language: Optional[str] = None
-    vectorIndices: Optional[bool] = True
-    searchText: str
-    userId: Optional[str] = None
-    chatHistory: Optional[list] = None
-    timestamp: str
-    chatSequenceNumber: int
+    chatId: Optional[str] = Field(
+        None,
+        description="Unique identifier for chat session",
+        example="chat_abc123def456",
+    )
+    range: Optional[list] = Field(
+        [0, 5],
+        description="Result window range as [offset, limit]",
+        example=[0, 5],
+    )
+    afterKey: Optional[str] = Field(
+        None, description="Pagination key for subsequent requests", example="page_2"
+    )
+    suggestKeyword: Optional[str] = Field(
+        None,
+        description="Partial keyword for suggestion autocomplete",
+        example="OpenK9",
+    )
+    suggestionCategoryId: Optional[int] = Field(
+        None, description="Category ID to filter suggestions", example=1
+    )
+    extra: Optional[dict[str, list]] = Field(
+        default_factory=dict,
+        description="Additional filter parameters",
+        example={"filter": ["example"]},
+    )
+    sort: Optional[list] = Field(
+        None,
+        description="Sorting criteria with field:direction format",
+        example=["field1:asc"],
+    )
+    sortAfterKey: Optional[str] = Field(
+        None, description="Pagination key for sorted results", example="sort-key"
+    )
+    language: Optional[str] = Field(
+        None, description="Language code for localized results", example="it_IT"
+    )
+    vectorIndices: Optional[bool] = Field(
+        True, description="Enable vector search", example=True
+    )
+    searchText: str = Field(
+        ..., description="Primary search text input", example="What is OpenK9?"
+    )
+    userId: Optional[str] = Field(
+        None, description="Unique user identifier", example="user_12345"
+    )
+    chatHistory: Optional[list] = Field(
+        None,
+        description="Previous chat messages in conversation",
+        example=[
+            {
+                "question": "Che cos’è la garanzia Infortuni del Conducente?",
+                "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
+                "title": "Spiegazione della Garanzia Infortuni del Conducente di AXA",
+                "sources": [
+                    {
+                        "title": "Assicurazione Infortuni Conducente | AXA",
+                        "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                        "source": "local",
+                        "citations": [],
+                    },
+                    {
+                        "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
+                        "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
+                        "source": "local",
+                        "citations": [],
+                    },
+                ],
+                "chat_id": "1740389549494",
+                "user_id": "1740389552570",
+                "timestamp": "1740389552570",
+                "chat_sequence_number": 1,
+            },
+        ],
+    )
+    timestamp: str = Field(
+        ..., description="Timestamp of request", example="1740389552570"
+    )
+    chatSequenceNumber: int = Field(
+        ..., description="Incremental conversation turn number", example=3
+    )
 
 
 @app.post(
@@ -246,6 +453,69 @@ class SearchQueryChat(BaseModel):
                                 "language": "en",
                             },
                         },
+                        "Example for not logged users": {
+                            "summary": "An example for not logged users",
+                            "value": {
+                                "searchText": "quanto vale?",
+                                "chatSequenceNumber": 3,
+                                "timestamp": "1731928126578",
+                                "chatHistory": [
+                                    {
+                                        "question": "Che cos’è la garanzia Infortuni del Conducente?",
+                                        "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
+                                        "title": "",
+                                        "sources": [
+                                            {
+                                                "title": "Assicurazione Infortuni Conducente | AXA",
+                                                "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                            {
+                                                "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
+                                                "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                        ],
+                                        "chat_id": "1740389549494",
+                                        "user_id": "1740389552570",
+                                        "timestamp": "1740389552570",
+                                        "chat_sequence_number": 1,
+                                    },
+                                    {
+                                        "question": "a cosa porta?",
+                                        "answer": "La garanzia Infortuni del Conducente porta i seguenti benefici:\n\n1. **Spese Mediche**: Copertura delle spese mediche in caso di infortunio durante la guida.\n2. **Indennizzo per Incidenti Gravi**: Sicurezza economica in caso di incidenti gravi che comportano invalidità permanente.\n3. **Tutela della Salute del Conducente**: Protezione per la salute del guidatore e dei passeggeri, offrendo supporto in situazioni di emergenza.\n\nIn generale, questa garanzia offre una protezione aggiuntiva rispetto all'assicurazione obbligatoria RC auto, garantendo maggiore tranquillità al conducente.",
+                                        "title": "",
+                                        "sources": [
+                                            {
+                                                "title": "Assicurazione Infortuni Conducente | AXA - AXA.it - AXA",
+                                                "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                                                "source": "local",
+                                                "citations": [
+                                                    {
+                                                        "quote": "La garanzia accessoria Infortuni del Conducente è una garanzia che rafforza la tua polizza assicurativa che protegge auto, moto, ciclomotore, quadriciclo o autocarro da eventi non coperti dall’assicurazione obbligatoria RC. Sei coperto anche se ti fermi a causa di un guasto o incidente e ti fai male durante le operazioni per riprendere la marcia o mentre segnali un pericolo ad altri conducenti. E non solo, sono inclusi anche gli infortuni dovuti a malore, incoscienza, asfissia, annegamento, assideramento o congelamento."
+                                                    },
+                                                    {
+                                                        "quote": "Grazie alla garanzia Infortuni del Conducente, ho potuto affrontare la situazione con serenità."
+                                                    },
+                                                ],
+                                            },
+                                            {
+                                                "title": "Assicurazione auto online: la tua polizza su misura | AXA - AXA.it - AXA",
+                                                "url": "https://www.axa.it/assicurazione-auto",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                        ],
+                                        "chat_id": "1740389549494",
+                                        "user_id": "1740389552570",
+                                        "timestamp": "1731928126578",
+                                        "chat_sequence_number": 2,
+                                    },
+                                ],
+                            },
+                        },
                     }
                 }
             }
@@ -255,8 +525,16 @@ class SearchQueryChat(BaseModel):
 async def rag_chat(
     search_query_chat: SearchQueryChat,
     request: Request,
-    authorization: Optional[str] = Header(None),
-    openk9_acl: Optional[list[str]] = Header(None),
+    authorization: Optional[str] = Header(
+        None,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
+    openk9_acl: Optional[list[str]] = Header(
+        None,
+        description="Access control list for tenant resources",
+        example=["group:admins", "project:openk9"],
+    ),
 ):
     """
     Handle RAG chat interactions with streaming response.
@@ -314,12 +592,170 @@ async def rag_chat(
     return EventSourceResponse(chain)
 
 
-@app.post("/api/rag/chat-tool")
+@app.post(
+    "/api/rag/chat-tool",
+    tags=["RAG"],
+    summary="Chat with RAG system",
+    description="Streaming endpoint for RAG-powered chat interactions using Server-Sent Events (SSE)",
+    response_description="Stream of chat events in SSE format",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid request body or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "searchText"],
+                                "msg": "field required",
+                                "type": "value_error.missing",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Basic Example": {
+                            "summary": "A basic example with minimal fields",
+                            "value": {
+                                "searchText": "What is OpenK9?",
+                                "userId": "user-123",
+                                "timestamp": "1731928126578",
+                                "chatSequenceNumber": 1,
+                            },
+                        },
+                        "Advanced Example": {
+                            "summary": "An advanced example with all fields",
+                            "value": {
+                                "searchText": "What is OpenK9?",
+                                "userId": "user-123",
+                                "timestamp": "1731928126578",
+                                "chatSequenceNumber": 1,
+                                "retrieveCitations": True,
+                                "rerank": False,
+                                "chunk_window": False,
+                                "range": [0, 5],
+                                "vectorIndices": True,
+                                "chatId": "chat-456",
+                                "afterKey": "some-key",
+                                "suggestKeyword": "OpenK9",
+                                "suggestionCategoryId": 1,
+                                "extra": {"filter": ["example"]},
+                                "sort": ["field1:asc"],
+                                "sortAfterKey": "sort-key",
+                                "language": "en",
+                            },
+                        },
+                        "Example for not logged users": {
+                            "summary": "An example for not logged users",
+                            "value": {
+                                "searchText": "quanto vale?",
+                                "chatSequenceNumber": 3,
+                                "timestamp": "1731928126578",
+                                "chatHistory": [
+                                    {
+                                        "question": "Che cos’è la garanzia Infortuni del Conducente?",
+                                        "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
+                                        "title": "",
+                                        "sources": [
+                                            {
+                                                "title": "Assicurazione Infortuni Conducente | AXA",
+                                                "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                            {
+                                                "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
+                                                "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                        ],
+                                        "chat_id": "1740389549494",
+                                        "user_id": "1740389552570",
+                                        "timestamp": "1740389552570",
+                                        "chat_sequence_number": 1,
+                                    },
+                                    {
+                                        "question": "a cosa porta?",
+                                        "answer": "La garanzia Infortuni del Conducente porta i seguenti benefici:\n\n1. **Spese Mediche**: Copertura delle spese mediche in caso di infortunio durante la guida.\n2. **Indennizzo per Incidenti Gravi**: Sicurezza economica in caso di incidenti gravi che comportano invalidità permanente.\n3. **Tutela della Salute del Conducente**: Protezione per la salute del guidatore e dei passeggeri, offrendo supporto in situazioni di emergenza.\n\nIn generale, questa garanzia offre una protezione aggiuntiva rispetto all'assicurazione obbligatoria RC auto, garantendo maggiore tranquillità al conducente.",
+                                        "title": "",
+                                        "sources": [
+                                            {
+                                                "title": "Assicurazione Infortuni Conducente | AXA - AXA.it - AXA",
+                                                "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
+                                                "source": "local",
+                                                "citations": [
+                                                    {
+                                                        "quote": "La garanzia accessoria Infortuni del Conducente è una garanzia che rafforza la tua polizza assicurativa che protegge auto, moto, ciclomotore, quadriciclo o autocarro da eventi non coperti dall’assicurazione obbligatoria RC. Sei coperto anche se ti fermi a causa di un guasto o incidente e ti fai male durante le operazioni per riprendere la marcia o mentre segnali un pericolo ad altri conducenti. E non solo, sono inclusi anche gli infortuni dovuti a malore, incoscienza, asfissia, annegamento, assideramento o congelamento."
+                                                    },
+                                                    {
+                                                        "quote": "Grazie alla garanzia Infortuni del Conducente, ho potuto affrontare la situazione con serenità."
+                                                    },
+                                                ],
+                                            },
+                                            {
+                                                "title": "Assicurazione auto online: la tua polizza su misura | AXA - AXA.it - AXA",
+                                                "url": "https://www.axa.it/assicurazione-auto",
+                                                "source": "local",
+                                                "citations": [],
+                                            },
+                                        ],
+                                        "chat_id": "1740389549494",
+                                        "user_id": "1740389552570",
+                                        "timestamp": "1731928126578",
+                                        "chat_sequence_number": 2,
+                                    },
+                                ],
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def rag_chat(
     search_query_chat: SearchQueryChat,
     request: Request,
-    authorization: Optional[str] = Header(None),
-    openk9_acl: Optional[list[str]] = Header(None),
+    authorization: Optional[str] = Header(
+        None,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
+    openk9_acl: Optional[list[str]] = Header(
+        None,
+        description="Access control list for tenant resources",
+        example=["group:admins", "project:openk9"],
+    ),
 ):
     """Definition of /api/rag/chat api."""
     chat_id = search_query_chat.chatId
@@ -372,17 +808,95 @@ async def rag_chat(
 
 
 class UserChats(BaseModel):
-    """UserChats class model."""
+    """Model for retrieving user chat history."""
 
-    userId: str
-    chatSequenceNumber: int = 1
-    paginationFrom: int = 0
-    paginationSize: int = 10
+    userId: str = Field(
+        None, description="Unique user identifier", example="user_12345"
+    )
+    chatSequenceNumber: int = Field(
+        1, description="Incremental conversation turn number", example=1
+    )
+    paginationFrom: int = Field(0, description="Pagination start index", example=0)
+    paginationSize: int = Field(10, description="Number of items per page", example=10)
 
 
-@app.post("/api/rag/user-chats")
+@app.post(
+    "/api/rag/user-chats",
+    tags=["Chat"],
+    summary="Retrieve user chat history",
+    description="Fetches paginated chat history for a specific user",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid request body or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "searchText"],
+                                "msg": "field required",
+                                "type": "value_error.missing",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+    openapi_extra={
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Basic Example": {
+                            "summary": "A basic example with minimal fields",
+                            "value": {"userId": "aa71e6e9-b41e-4468-8b98-ba3cb0adfb6a"},
+                        },
+                        "Advanced Example": {
+                            "summary": "An advanced example with all fields",
+                            "value": {
+                                "userId": "aa71e6e9-b41e-4468-8b98-ba3cb0adfb6a",
+                                "chatSequenceNumber": 1,
+                                "paginationFrom": 0,
+                                "paginationSize": 10,
+                            },
+                        },
+                    }
+                }
+            }
+        }
+    },
+)
 async def get_user_chats(
-    user_chats: UserChats, request: Request, authorization: str = Header()
+    user_chats: UserChats,
+    request: Request,
+    authorization: str = Header(
+        ...,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
 ):
     user_id = user_chats.userId
     chat_sequence_number = user_chats.chatSequenceNumber
@@ -427,9 +941,61 @@ async def get_user_chats(
     return result
 
 
-@app.get("/api/rag/get-chat/{user_id}/{chat_id}")
+@app.get(
+    "/api/rag/get-chat/{user_id}/{chat_id}",
+    tags=["Chat"],
+    summary="Retrieve user specific chat",
+    description="Fetches user complete conversation history for a specific chat_id",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Validation Error - Invalid request body or parameters",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["body", "searchText"],
+                                "msg": "field required",
+                                "type": "value_error.missing",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+)
 async def get_chat(
-    user_id: str, chat_id: str, request: Request, authorization: str = Header()
+    user_id: str,
+    chat_id: str,
+    request: Request,
+    authorization: str = Header(
+        ...,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
 ):
     virtual_host = urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
