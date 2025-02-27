@@ -226,16 +226,6 @@ public class JobScheduler {
 		var startIngestionDate = createNewScheduler.startIngestionDate;
 		var throwable1 = createNewScheduler.throwable;
 
-		if (throwable1 != null) {
-
-			log.error("Scheduler cannot be created.", throwable1);
-
-			return Behaviors.same();
-
-		}
-
-		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
-
 		var scheduleId = UUID.randomUUID().toString();
 
 		Scheduler scheduler = new Scheduler();
@@ -243,6 +233,25 @@ public class JobScheduler {
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+
+		// The scheduler cannot start, so a scheduler in FAILURE state is created
+		if (throwable1 != null) {
+
+			log.errorf(
+				throwable1,
+				"The scheduler cannot start, so a scheduler with schedule-id %s " +
+					"in FAILURE state is created.",
+				scheduler.getScheduleId()
+			);
+
+			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+
+			JobSchedulerService.persistScheduler(tenantName, scheduler);
+
+			return Behaviors.same();
+		}
+
+		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
