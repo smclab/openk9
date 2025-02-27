@@ -38,19 +38,18 @@ import java.util.concurrent.CompletableFuture;
 public class SchedulingService {
 
 	private final static String FETCH_SCHEDULER = "SchedulingService#fetchScheduler";
-	private final static String PERSIST_STATUS = "SchedulingService#persistStatus";
-	private final static String PERSIST_LAST_INGESTION_DATE =
-		"SchedulingService#persistLastIngestionDate";
+	private static final String GET_DELETED_CONTENT_ID = "SchedulingService#getDeletedContentId";
 	private final static String PERSIST_ERROR_DESCRIPTION =
 		"SchedulingService#persistErrorDescription";
-	private static final String GET_DELETED_CONTENT_ID = "SchedulingService#getDeletedContentId";
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
+	private final static String PERSIST_LAST_INGESTION_DATE =
+		"SchedulingService#persistLastIngestionDate";
+	private final static String PERSIST_STATUS = "SchedulingService#persistStatus";
 	@Inject
 	SchedulerMapper schedulerMapper;
 	@Inject
 	SchedulerService schedulerService;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(ShardingKey shardingKey) {
 
@@ -60,11 +59,25 @@ public class SchedulingService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<SchedulerDTO> persistStatus(
-		ShardingKey shardingKey, Scheduler.SchedulerStatus status) {
+	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
 
 		return EventBusInstanceHolder.getEventBus()
-			.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
+			.request(
+				GET_DELETED_CONTENT_ID,
+				new GetDeletedContentIdRequest(shardingKey)
+			)
+			.map(message -> (List<String>) message.body())
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
+		ShardingKey shardingKey, Exception exception) {
+
+		return EventBusInstanceHolder.getEventBus()
+			.request(
+				PERSIST_ERROR_DESCRIPTION,
+				new PersistErrorDescription(shardingKey, exception)
+			)
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
@@ -81,27 +94,22 @@ public class SchedulingService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
-		ShardingKey shardingKey, Exception exception) {
+	public static CompletableFuture<SchedulerDTO> persistStatus(
+		ShardingKey shardingKey, Scheduler.SchedulerStatus status) {
 
 		return EventBusInstanceHolder.getEventBus()
-			.request(
-				PERSIST_ERROR_DESCRIPTION,
-				new PersistErrorDescription(shardingKey, exception)
-			)
+			.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
+	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
 
-		return EventBusInstanceHolder.getEventBus()
-			.request(
-				GET_DELETED_CONTENT_ID,
-				new GetDeletedContentIdRequest(shardingKey)
-			)
-			.map(message -> (List<String>) message.body())
-			.subscribeAsCompletionStage();
+		return s
+			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+			.setParameter("scheduleId", scheduleId)
+			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
+			.getSingleResult();
 	}
 
 	@ConsumeEvent(FETCH_SCHEDULER)
@@ -115,43 +123,6 @@ public class SchedulingService {
 				s.setDefaultReadOnly(true);
 				return doFetchScheduler(s, scheduleId);
 			})
-			.map(schedulerMapper::map);
-	}
-
-	@ConsumeEvent(PERSIST_STATUS)
-	Uni<SchedulerDTO> persistStatus(PersistStatusRequest request) {
-
-		var schedulingKey = request.shardingKey();
-		var tenantId = schedulingKey.tenantId();
-		var scheduleId = schedulingKey.scheduleId();
-		var status = request.status();
-
-		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
-				s, scheduleId)
-				.flatMap(entity -> {
-					entity.setStatus(status);
-					return s.merge(entity);
-				})
-			)
-			.map(schedulerMapper::map);
-	}
-
-	@ConsumeEvent(PERSIST_LAST_INGESTION_DATE)
-	Uni<SchedulerDTO> persistLastIngestionDate(
-		PersistLastIngestionDateRequest request) {
-
-		var schedulingKey = request.shardingKey();
-		var tenantId = schedulingKey.tenantId();
-		var scheduleId = schedulingKey.scheduleId();
-		var lastIngestionDate = request.lastIngestionDate();
-
-		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
-				s, scheduleId)
-				.flatMap(entity -> {
-					entity.setLastIngestionDate(lastIngestionDate);
-					return s.merge(entity);
-				})
-			)
 			.map(schedulerMapper::map);
 	}
 
@@ -184,20 +155,50 @@ public class SchedulingService {
 			.map(schedulerMapper::map);
 	}
 
-	private Uni<Scheduler> doFetchScheduler(Mutiny.Session s, String scheduleId) {
+	@ConsumeEvent(PERSIST_LAST_INGESTION_DATE)
+	Uni<SchedulerDTO> persistLastIngestionDate(
+		PersistLastIngestionDateRequest request) {
 
-		return s
-			.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-			.setParameter("scheduleId", scheduleId)
-			.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.ENRICH_ITEMS_ENTITY_GRAPH))
-			.getSingleResult();
+		var schedulingKey = request.shardingKey();
+		var tenantId = schedulingKey.tenantId();
+		var scheduleId = schedulingKey.scheduleId();
+		var lastIngestionDate = request.lastIngestionDate();
+
+		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
+				s, scheduleId)
+				.flatMap(entity -> {
+					entity.setLastIngestionDate(lastIngestionDate);
+					return s.merge(entity);
+				})
+			)
+			.map(schedulerMapper::map);
+	}
+
+	@ConsumeEvent(PERSIST_STATUS)
+	Uni<SchedulerDTO> persistStatus(PersistStatusRequest request) {
+
+		var schedulingKey = request.shardingKey();
+		var tenantId = schedulingKey.tenantId();
+		var scheduleId = schedulingKey.scheduleId();
+		var status = request.status();
+
+		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
+				s, scheduleId)
+				.flatMap(entity -> {
+					entity.setStatus(status);
+					return s.merge(entity);
+				})
+			)
+			.map(schedulerMapper::map);
 	}
 
 	private record FetchRequest(ShardingKey shardingKey) {}
 
-	private record PersistStatusRequest(
+	private record GetDeletedContentIdRequest(ShardingKey shardingKey) {}
+
+	private record PersistErrorDescription(
 		ShardingKey shardingKey,
-		Scheduler.SchedulerStatus status
+		Exception exception
 	) {}
 
 	private record PersistLastIngestionDateRequest(
@@ -205,11 +206,9 @@ public class SchedulingService {
 		OffsetDateTime lastIngestionDate
 	) {}
 
-	private record PersistErrorDescription(
+	private record PersistStatusRequest(
 		ShardingKey shardingKey,
-		Exception exception
+		Scheduler.SchedulerStatus status
 	) {}
-
-	private record GetDeletedContentIdRequest(ShardingKey shardingKey) {}
 
 }
