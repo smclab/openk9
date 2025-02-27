@@ -36,6 +36,7 @@ import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
@@ -93,9 +94,7 @@ public class EmbeddingService {
 				var docTypeFieldJsonPath = "$." + docTypeField.getPath();
 
 				String text = documentContext.read(docTypeFieldJsonPath);
-
-				String contentId = documentContext.read("$.contentId");
-				Map<String, Object> acl = documentContext.read("$.acl");
+				var root = getRoot(documentContext);
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
 						.newBuilder()
@@ -107,19 +106,10 @@ public class EmbeddingService {
 						.setText(text)
 						.build())
 					.map(embeddingResponse -> EmbeddingService.mapToPayload(
-						embeddingResponse, indexName, contentId, acl, windowSize)
+						embeddingResponse, indexName, root, windowSize)
 					);
 			})
 			.subscribeAsCompletionStage();
-	}
-
-	protected static <T> List<T> getPrevious(
-		int windowSize, int number, List<T> chunks) {
-
-		var fromIndex = Math.max(number - 1 - windowSize, 0);
-		var toIndex = Math.min(number - 1 + windowSize, number - 1);
-
-		return chunks.subList(fromIndex, toIndex);
 	}
 
 	protected static <T> List<T> getNext(
@@ -131,38 +121,24 @@ public class EmbeddingService {
 		return chunks.subList(fromIndex, toIndex);
 	}
 
-	private static JsonObject mapToJsonObject(
-		String indexName,
-		String contentId,
-		Map<String, Object> acl,
-		int number,
-		int total,
-		String chunkText,
-		List<Float> vector) {
+	protected static <T> List<T> getPrevious(
+		int windowSize, int number, List<T> chunks) {
 
-		var jsonObject = new JsonObject();
+		var fromIndex = Math.max(number - 1 - windowSize, 0);
+		var toIndex = Math.min(number - 1 + windowSize, number - 1);
 
-		jsonObject.put("number", number);
-		jsonObject.put("total", total);
-		jsonObject.put("chunkText", chunkText);
-		jsonObject.put("vector", vector);
-		jsonObject.put("indexName", indexName);
-		jsonObject.put("contentId", contentId);
+		return chunks.subList(fromIndex, toIndex);
+	}
 
-		if (acl == null || acl.isEmpty()) {
-			jsonObject.put("acl", Map.of("public", true));
-		}
-		else {
-			jsonObject.put("acl", acl);
-		}
+	protected static Map<String, Object> getRoot(DocumentContext documentContext) {
 
-		return jsonObject;
+		return documentContext.read("$");
 	}
 
 	protected static byte[] mapToPayload(
 		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
-		String indexName, String contentId,
-		Map<String, Object> acl,
+		String indexName,
+		Map<String, Object> root,
 		int windowSize) {
 
 		var jsonArray = new JsonArray();
@@ -177,36 +153,19 @@ public class EmbeddingService {
 			var vector = responseChunk.getVectorsList();
 
 			var jsonObject = mapToJsonObject(
-				indexName, contentId,
-				acl,
-				number, total, chunkText, vector
-			);
+				indexName, root, number, total, chunkText, vector);
 
 			var previous = getPrevious(windowSize, number, chunks)
-				.stream()
-				.map(it -> mapToJsonObject(
-					indexName,
-					contentId,
-					acl,
-					it.getNumber(),
-					it.getTotal(),
-					it.getText(),
-					it.getVectorsList()
-					)
-				);
+				.stream().map(it -> mapToJsonObject(
+					indexName, root, it.getNumber(), it.getTotal(),
+					it.getText(), it.getVectorsList()
+				));
 
 			var next = getNext(windowSize, number, total, chunks)
-				.stream()
-				.map(it -> mapToJsonObject(
-					indexName,
-					contentId,
-					acl,
-					it.getNumber(),
-					it.getTotal(),
-					it.getText(),
-					it.getVectorsList()
-					)
-				);
+				.stream().map(it -> mapToJsonObject(
+					indexName, root, it.getNumber(), it.getTotal(),
+					it.getText(), it.getVectorsList()
+				));
 
 			jsonObject.put("previous", previous);
 			jsonObject.put("next", next);
@@ -216,6 +175,30 @@ public class EmbeddingService {
 		}
 
 		return jsonArray.toBuffer().getBytes();
+	}
+
+	private static JsonObject mapToJsonObject(
+		String indexName,
+		Map<String, Object> root,
+		int number,
+		int total,
+		String chunkText,
+		List<Float> vector) {
+
+		var jsonObject = new JsonObject();
+
+		jsonObject.put("number", number);
+		jsonObject.put("total", total);
+		jsonObject.put("chunkText", chunkText);
+		jsonObject.put("vector", vector);
+		jsonObject.put("indexName", indexName);
+
+		for (Map.Entry<String, Object> entry : root.entrySet()) {
+
+			jsonObject.put(entry.getKey(), entry.getValue());
+
+		}
+		return jsonObject;
 	}
 
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
