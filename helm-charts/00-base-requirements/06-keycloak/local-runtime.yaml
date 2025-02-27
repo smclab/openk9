@@ -40,6 +40,14 @@ service:
   ports:
     http: 80
 
+resources:
+  limits: 
+    memory: 2Gi
+    cpu: 1000m
+  requests:
+    memory: 1Gi
+    cpu: 100m
+
 production: true
 
 proxy: edge

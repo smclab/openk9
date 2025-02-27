@@ -1,6 +1,6 @@
 # OpenK9 Helm Charts 
 
-This repository contains the Helm Charts and other elements that allow you to install OpenK9 **version 2.1.0-SNAPSHOT**:
+This repository contains the Helm Charts and other elements that allow you to install OpenK9 **version 3.0.0-SNAPSHOT**:
 
 - in a standard [Kubernets](https://kubernetes.io/) installed in the Cloud or On-Premises
 - in a standard [OpenShift](https://www.redhat.com/it/technologies/cloud-computing/openshift) installed in the Cloud or On-Premises
@@ -86,7 +86,8 @@ oc project openk9
 
 ### Domain
 
-Once Openk9 is installed, you need a valid domain to run it and create new virtual tenant. If you don't have a valid domain you can configure your local dns or map cluster IP in local hosts file.
+Once Openk9 is installed, you need a valid domain to run it and create new virtual tenant. 
+If you don't have a valid domain you can configure your local dns or map cluster IP in local hosts file.
 
 ### Tls
 
@@ -106,7 +107,7 @@ You can also use external installation outside Kubernetes/Openshift cluster if y
 Currently installing through [Helm Charts](https://helm.sh/docs/topics/charts/) is the best choice.
 
 Inside this repository there is the
-`00-base-requirements` folder where, for each product, there are configuration files for different installation scenarios.
+[00-base-requirements](./00-base-requirements) folder where, for each product, there are configuration files for different installation scenarios.
 
 So clone this repository before start to install.
 
@@ -123,7 +124,7 @@ To proceed add the repository containing the charts to your local helm:
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/
 ```
 
-Create a secret with credentials for elasticsearch:
+Create a secret with credentials for Opensearch:
 
 For Kubernetes execute:
 
@@ -303,6 +304,9 @@ For Openshift execute:
 
 ```bash
 export POSTGRES_PASSWORD=$(oc get secret -n openk9 postgres-password -o jsonpath="{.data.postgres-password}" | base64 --decode)
+```
+
+```bash
 oc run postgresql-client --rm --tty -i --restart='Never' \
    -n openk9 \
    --image docker.io/bitnami/postgresql:14 \
@@ -337,9 +341,9 @@ pod "postgresql-client" deleted
 ```
 
 
-### Keycloack v23.0.7
+### Keycloack v25.0.6
 
-[Keycloak](https://www.keycloak.org/) is used by OpenK9 to manage and delegate user authentication logics. As well as some aspects of the authorization logic.
+[Keycloak](https://www.keycloak.org/) is used by OpenK9 to manage and delegate user authentication logic. As well as some aspects of the authorization logic.
 
 #### Database PostgreSQL
 
@@ -426,7 +430,7 @@ Install Keycloak
 For Kubernetes/OpenShift execute:
 
 ```bash
-helm install keycloak --version 19.3.3 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-runtime.yaml
+helm install keycloak --version 23.0.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-runtime.yaml
 ```
 
 
@@ -453,7 +457,7 @@ Access to console using url [http://localhost:8280](http://localhost:8280) and l
 
 Keycloak must be exposed through Ingress in order to be externally reachable for the login flow.
 
-Use following command to create ingress from terminal. Update host in spec.rules and in tls.hosts to match your domain.
+Use following command to create ingress from terminal. Update host in spec.rules and in tls.hosts to match your domain and sustitute to `keycloak.openk9.local`.
 
 Change also tls.secretName if yoy have renamed tls secret.
 
@@ -463,7 +467,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: keycloak
-    annotations:
+  annotations:
     nginx.ingress.kubernetes.io/proxy-buffer-size: 8k
 spec:
   rules:
@@ -501,7 +505,7 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 ```
 
 Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
-`01-base-core` folder where, for each component, there is official chart.
+[01-base-core](./01-base-core) folder where, for each component, there is official chart.
 
 Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
 
@@ -511,7 +515,7 @@ For every charts, there is also a scenarios folder, with files to install compon
 
 Base core components are mandatory components to install and run Openk9 in its core functionalities.
 
-### Ingestion
+### INGESTION
 
 The Ingestion component exposes the Rest API through which Openk9 accepts the data arriving from the different external data sources connected.
 
@@ -564,7 +568,7 @@ oc -n openk9 port-forward svc/openk9-ingestion 8080:8080
 
 Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
 
-### Tenant Manager
+### TENANT MANAGER
 
 The Tenant Manager component defines the logic for managing and creating tenants.
 
@@ -572,9 +576,11 @@ To learn more on Tenant Manager component, read [official documentation](https:/
 
 Tenant Manager interacts with Keycloak and needs a specific configured realm and client. This client is then used to log in and call tenant manager Apis using specific [dedicated UI](#tenant-ui).
 
+Create it before install. Follow [official documentation](https://staging-site.openk9.io/docs/first-configuration#tenant-manager-keycloak-configuration).
+
 Check [official documentation]() on how configure realm and client on Keycloak.
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure Tenant Manager to run correctly in your cluster.
 
@@ -606,7 +612,7 @@ ingress:
 
 For advanced configurations read [README.md](./01-base-core/openk9-tenant-manager/README.md) inside Tenant Manager chart folder.
 
-## Installation
+#### Installation
 
 The Tenant Manager requires the presence of a database for historicizing the configurations relating to the tenants created. 
 Use a `Job` to create the necessary database on PostgreSQL for this component. The database will be managed by a dedicated user.
@@ -701,13 +707,13 @@ oc -n openk9 port-forward svc/openk9-tenant-manager 8080:8080
 
 Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
 
-## DATASOURCE
+### DATASOURCE
 
 The Datasource component represents the manager of the various indexed data sources.
 
 To learn more on Datasource component, read [official documentation](https://www.openk9.io/docs/datasource).
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure Datasource to run correctly in your cluster.
 
@@ -726,7 +732,7 @@ keycloak:
 
 For advanced configurations read [README.md](./01-base-core/openk9-datasource/README.md) inside Datasource chart folder.
 
-## Installation
+#### Installation
 
 The Datasource requires the presence of a database for historicizing the product configuration. 
 Use a `Job` to create the necessary database on PostgreSQL for this component. The database will be managed by a dedicated user.
@@ -784,7 +790,7 @@ For Opeshift execute:
 helm upgrade -i datasource 01-base-core/openk9-datasource -n openk9 -f 01-base-core/openk9-datasource/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -800,15 +806,15 @@ Per Openshift execute:
 oc -n openk9 port-forward svc/openk9-datasource 8080:8080
 ```
 
-Access to console using url "http://localhost:8080/q/health". If status is UP service is OK.
+Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health) If status is UP service is OK.
 
-## SEARCHER
+### SEARCHER
 
-The "Searcher" component exposes and implements Search Api use to search and filter indexed data.
+The Searcher component exposes and implements Search Api use to search and filter indexed data.
 
 To learn more on Searcher component, read [official documentation](https://www.openk9.io/docs/searcher).
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure searcher to run correctly in your cluster.
 
@@ -827,7 +833,7 @@ quarkus:
 
 For advanced configurations read [README.md](./01-base-core/openk9-searcher/README.md) inside Searcher chart folder.
 
-## Installation
+#### Installation
 
 
 For Kubernetes execute:
@@ -842,7 +848,7 @@ For Opeshift execute:
 helm upgrade -i searcher 01-base-core/openk9-searcher -n openk9 -f 01-base-core/openk9-searcher/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -860,13 +866,13 @@ oc -n openk9 port-forward svc/openk9-searcher 8080:8080
 
 Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
 
-## K8S CLIENT
+### K8S CLIENT
 
-The "K8s Client" component exposes and implements Search Api use to search and filter indexed data.
+The K8s Client component exposes and implements Search Api use to search and filter indexed data.
 
 To learn more on K8s Client component, read [official documentation](https://www.openk9.io/docs/searcher).
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure k8s client to run correctly in your cluster.
 
@@ -892,7 +898,7 @@ k8s:
 
 For advanced configurations read [README.md](./06-utilities/openk9-k8s-client/README.md) inside K8s Client chart folder.
 
-## Installation
+#### Installation
 
 For kubernetes execute:
 
@@ -906,7 +912,7 @@ For Opeshift execute:
 helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilities/openk9-k8s-client/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -931,7 +937,7 @@ Access to console using url [http://localhost:8080/q/health](http://localhost:80
 
 The Tenant UI is used to configure and manage different tenants.
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure Tenant UI to run correctly in your cluster.
 
@@ -951,7 +957,7 @@ ingress:
 
 For advanced configurations read [README.md](./01-base-core/openk9-tenant-ui/README.md) inside Tenant UI chart folder.
 
-## Installation
+#### Installation
 
 For Kubernetes execute:
 
@@ -965,9 +971,9 @@ For Opeshift execute:
 helm upgrade -i tenant-ui 01-base-core/openk9-tenant-ui -n openk9 -f 01-base-core/openk9-tenant-ui/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
-Learn more on how to use and configure all needed to access to Tenant UI on [official documentation]().
+Learn more on how to use and configure all needed to access to Tenant UI on [official documentation](https://staging-site.openk9.io/docs/first-configuration).
 
 ### Admin Ui
 
@@ -975,9 +981,9 @@ The Admin UI is used to configure and manage configurations of single tenant.
 
 For advanced configurations read [README.md](./01-base-core/openk9-admin-ui/README.md) inside Admin UI chart folder.
 
-## Installation
+#### Installation
 
-For kubernetes/K3s execute:
+For kubernetes execute:
 
 ```bash
 helm upgrade -i admin-ui 01-base-core/openk9-admin-ui -n openk9 -f 01-base-core/openk9-admin-ui/scenarios/local-runtime.yaml
@@ -989,9 +995,9 @@ For Opeshift execute:
 helm upgrade -i admin-ui 01-base-core/openk9-admin-ui -n openk9 -f 01-base-core/openk9-admin-ui/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
-Learn more on how to use and configure all needed to access to Admin UI on [official documentation]().
+Learn more on how to use and configure all needed to access to Admin UI on [official documentation](https://staging-site.openk9.io/docs/first-configuration#configure-and-start-your-first-datasource).
 
 ### Search Frontend
 
@@ -999,9 +1005,9 @@ The Search Frontend is used to access to standard search interface of Openk9.
 
 For advanced configurations read [README.md](./01-base-core/openk9-search-frontend/README.md) inside Search Frontend chart folder.
 
-## Installation
+#### Installation
 
-For kubernetes/K3s execute:
+For kubernetes execute:
 
 ```bash
 helm upgrade -i search-frontend 01-base-core/openk9-search-frontend -n openk9 -f 01-base-core/openk9-search-frontend/scenarios/local-runtime.yaml
@@ -1013,9 +1019,9 @@ For Opeshift execute:
 helm upgrade -i search-frontend 01-base-core/openk9-search-frontend -n openk9 -f 01-base-core/openk9-search-frontend/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
-Learn more on how to use and access to standard Search Frontend on [official documentation]().
+Learn more on how to use and access to standard Search Frontend on [official documentation](https://staging-site.openk9.io/docs/standalone-app).
 
 ## GEN AI COMPONENTS INSTALLATION
 

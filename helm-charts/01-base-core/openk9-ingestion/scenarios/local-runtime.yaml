@@ -1,4 +1,4 @@
 ## Quarkus configuration
 quarkus:
-  HttpCors: true
-  HttpCorsOrigin: "/https://.*.openk9.io/,"
+  HttpCors: false
+  HttpCorsOrigin: "/https://.*.openk9.local/,"

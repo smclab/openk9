@@ -21,7 +21,7 @@ image:
   name: smclab/openk9-tenant-ui
   # Overrides the image tag whose default is the chart appVersion.
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.0"
+  tag: "3.0.0-SNASPHOT"
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
@@ -111,7 +111,7 @@ ingress:
   enabled: true
   ## @param ingress.enabled Enable ingress resource for Tenant Ui console
   ##
-  host: tenant-manager.openk9.io   #-TBMD
+  host: tenant-manager.openk9.local   #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.
   ## For a full list of possible ingress annotations, please see
   ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
