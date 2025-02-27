@@ -38,6 +38,7 @@ def get_chain(
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
     retrieve_type = configuration["retrieve_type"]
+    rerank = configuration["rerank"]
 
     retriever = OpenSearchRetriever(
         search_text=question,
