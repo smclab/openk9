@@ -31,7 +31,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static io.openk9.datasource.util.JobSchedulerUtil.parseDuration;
+import static io.openk9.datasource.util.SchedulerUtil.parseDuration;
 
 public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 

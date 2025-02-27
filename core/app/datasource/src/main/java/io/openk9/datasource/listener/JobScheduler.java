@@ -29,6 +29,7 @@ import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
 import io.openk9.datasource.pipeline.base.BasePipeline;
 import io.openk9.datasource.pipeline.vector.VectorPipeline;
 import io.openk9.datasource.util.CborSerializable;
+import io.openk9.datasource.util.SchedulerUtil;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -244,8 +245,10 @@ public class JobScheduler {
 				scheduler.getScheduleId()
 			);
 
+			var errorDescription = SchedulerUtil.getErrorDescription(throwable1);
+
 			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
-			scheduler.setErrorDescription(throwable1.getMessage());
+			scheduler.setErrorDescription(errorDescription);
 
 			JobSchedulerService.persistScheduler(tenantName, scheduler);
 

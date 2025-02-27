@@ -23,19 +23,16 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.service.SchedulerService;
-import io.quarkus.runtime.util.ExceptionUtil;
+import io.openk9.datasource.util.SchedulerUtil;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.io.LineNumberReader;
-import java.io.StringReader;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SchedulingService {
@@ -105,21 +102,6 @@ public class SchedulingService {
 			)
 			.map(message -> (List<String>) message.body())
 			.subscribeAsCompletionStage();
-	}
-
-	protected static String getErrorDescription(Exception exception) {
-		var invertedStackTrace =
-			ExceptionUtil.rootCauseFirstStackTrace(exception);
-
-		var stringReader = new StringReader(invertedStackTrace);
-		var lineNumberReader = new LineNumberReader(stringReader);
-
-		var collapsed = lineNumberReader.lines()
-			.filter(line -> !line.startsWith("\tat"))
-			.filter(line -> !line.startsWith("\t..."))
-			.collect(Collectors.joining("\n"));
-
-		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
 	}
 
 	@ConsumeEvent(FETCH_SCHEDULER)
@@ -192,7 +174,7 @@ public class SchedulingService {
 		return sessionFactory.withTransaction(tenantId, (s, tx) -> doFetchScheduler(
 				s, scheduleId)
 				.flatMap(entity -> {
-					var errorDescription = getErrorDescription(exception);
+					var errorDescription = SchedulerUtil.getErrorDescription(exception);
 
 					entity.setErrorDescription(errorDescription);
 

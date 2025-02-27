@@ -18,12 +18,62 @@
 package io.openk9.datasource.util;
 
 import com.typesafe.config.impl.ConfigImplUtil;
+import io.quarkus.runtime.util.ExceptionUtil;
 
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-public class JobSchedulerUtil {
+public class SchedulerUtil {
 
+	/**
+	 * Extracts a concise error description from a throwable by removing unnecessary stack trace details.
+	 * The method retrieves the full stack trace, prioritizes the root cause, and filters out less relevant lines,
+	 * such as stack trace elements (`at ...`) and collapsed stack trace sections (`... n more`).
+	 * The resulting description is truncated to a maximum of 4000 characters.
+	 *
+	 * @param throwable the throwable from which to extract the error description
+	 * @return a cleaned-up error message, prioritizing the root cause and removing redundant details,
+	 *          truncated to a maximum of 4000 characters
+	 */
+	public static String getErrorDescription(Throwable throwable) {
+		var invertedStackTrace =
+			ExceptionUtil.rootCauseFirstStackTrace(throwable);
+
+		var stringReader = new StringReader(invertedStackTrace);
+		var lineNumberReader = new LineNumberReader(stringReader);
+
+		var collapsed = lineNumberReader.lines()
+			.filter(line -> !line.startsWith("\tat"))
+			.filter(line -> !line.startsWith("\t..."))
+			.collect(Collectors.joining("\n"));
+
+		return collapsed.substring(0, Math.min(collapsed.length(), 4000));
+	}
+
+	/**
+	 * Parses a duration string and converts it into a {@link java.time.Duration} object.
+	 * The input string should contain a numeric value followed by a time unit, such as "5s" (5 seconds) or "2.5h" (2.5 hours).
+	 *
+	 * <p>Supported time units (case-sensitive):
+	 * <ul>
+	 *   <li>"ns", "nanos", "nanoseconds" - Nanoseconds</li>
+	 *   <li>"us", "micros", "microseconds" - Microseconds</li>
+	 *   <li>"ms", "millis", "milliseconds" - Milliseconds</li>
+	 *   <li>"s", "seconds" - Seconds</li>
+	 *   <li>"m", "minutes" - Minutes</li>
+	 *   <li>"h", "hours" - Hours</li>
+	 *   <li>"d", "days" - Days</li>
+	 * </ul>
+	 *
+	 * <p>If the input string is empty, contains an invalid unit, or cannot be parsed as a number,
+	 * the method returns a default {@link java.time.Duration} of 2 days.
+	 *
+	 * @param durationString the string representing the duration, containing a numeric value and a time unit
+	 * @return the parsed {@link java.time.Duration} object, or a default of 2 days if the input is invalid
+	 */
 	public static Duration parseDuration(String durationString) {
 		String s = ConfigImplUtil.unicodeTrim(durationString);
 		String unitString = getUnits(s);
@@ -78,6 +128,7 @@ public class JobSchedulerUtil {
 			}
 			else {
 				long nanosInUnit = units.toNanos(1);
+				numberString = numberString.replace(",", ".");
 				return Duration.ofNanos((long) (Double.parseDouble(numberString) * nanosInUnit));
 			}
 		}
