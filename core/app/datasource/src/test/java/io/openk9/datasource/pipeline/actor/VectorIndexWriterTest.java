@@ -44,7 +44,7 @@ class VectorIndexWriterTest {
 
 	@Test
 	void should_get_chunks_as_list() {
-		var chunks = VectorIndexWriter.parsePayload(VectorIndexWriterTest.chunks);
+		var chunks = VectorIndexWriter.parseChunks(VectorIndexWriterTest.chunks);
 
 		Assertions.assertEquals(3, chunks.size());
 
@@ -62,7 +62,7 @@ class VectorIndexWriterTest {
 
 	@Test
 	void should_get_document_as_list() {
-		var document = VectorIndexWriter.parsePayload(VectorIndexWriterTest.document);
+		var document = VectorIndexWriter.parseChunks(VectorIndexWriterTest.document);
 
 		Assertions.assertEquals(1, document.size());
 
@@ -80,14 +80,14 @@ class VectorIndexWriterTest {
 
 	@Test
 	void should_get_emptyArray_as_empty_list() {
-		var emptyArray = VectorIndexWriter.parsePayload(VectorIndexWriterTest.emptyArray);
+		var emptyArray = VectorIndexWriter.parseChunks(VectorIndexWriterTest.emptyArray);
 
 		Assertions.assertTrue(emptyArray.isEmpty());
 	}
 
 	@Test
 	void should_get_empty_as_empty_list() {
-		var empty = VectorIndexWriter.parsePayload(VectorIndexWriterTest.empty);
+		var empty = VectorIndexWriter.parseChunks(VectorIndexWriterTest.empty);
 
 		Assertions.assertTrue(empty.isEmpty());
 	}

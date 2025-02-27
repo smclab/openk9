@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import jakarta.enterprise.inject.spi.CDI;
 
@@ -42,6 +43,7 @@ import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
@@ -52,7 +54,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		Logger.getLogger(VectorIndexWriter.class);
 
 	private final OpenSearchAsyncClient asyncClient;
-	private final String vectorIndexName;
+	private final String indexName;
 	private final ActorRef<Writer.Response> replyTo;
 
 	public VectorIndexWriter(
@@ -62,7 +64,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		super(context);
 		this.asyncClient = CDI.current().select(OpenSearchAsyncClient.class).get();
-		this.vectorIndexName = scheduler.getIndexName();
+		this.indexName = scheduler.getIndexName();
 		this.replyTo = replyTo;
 
 	}
@@ -70,10 +72,20 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	public static Behavior<Writer.Command> create(
 		SchedulerDTO scheduler, ActorRef<Writer.Response> replyTo) {
 
-		return Behaviors.setup(ctx -> new VectorIndexWriter(ctx, scheduler, replyTo));
+		return Behaviors.setup(ctx ->
+			new VectorIndexWriter(ctx, scheduler, replyTo));
 	}
 
-	protected static List<Object> parsePayload(byte[] json) {
+	@Override
+	public Receive<Writer.Command> createReceive() {
+		return newReceiveBuilder()
+			.onMessage(Writer.Start.class, this::onStart)
+			.onMessage(WriteDocuments.class, this::onWriteDocuments)
+			.onMessage(IndexDocumentResponse.class, this::onIndexDocumentResponse)
+			.build();
+	}
+
+	protected static List<Object> parseChunks(byte[] json) {
 		try {
 			var documentContext = JsonPath
 				.using(Configuration.defaultConfiguration())
@@ -94,21 +106,27 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		}
 	}
 
-	@Override
-	public Receive<Writer.Command> createReceive() {
-		return newReceiveBuilder()
-			.onMessage(Writer.Start.class, this::onStart)
-			.onMessage(IndexDocumentResponse.class, this::onIndexDocumentResponse)
-			.build();
+	private CompletableFuture<DeleteByQueryResponse> deleteChunksByContentId(HeldMessage heldMessage)
+		throws IOException {
+
+		return asyncClient.deleteByQuery(delete -> delete
+			.index(indexName)
+			.query(query -> query
+				.match(match -> match
+					.field("contentId.keyword")
+					.query(fieldValue -> fieldValue
+						.stringValue(heldMessage.contentId()))
+				))
+		);
 	}
 
 	private Behavior<Writer.Command> onIndexDocumentResponse(
-		IndexDocumentResponse brc) {
+		IndexDocumentResponse indexDocumentResponse) {
 
-		var bulkResponse = brc.bulkResponse;
-		var heldMessage = brc.heldMessage;
-		var embeddedChunks = brc.embeddedChunks;
-		var throwable = brc.exception;
+		var bulkResponse = indexDocumentResponse.bulkResponse;
+		var heldMessage = indexDocumentResponse.heldMessage;
+		var embeddedChunks = indexDocumentResponse.dataPayload;
+		var throwable = indexDocumentResponse.exception;
 
 		if (bulkResponse != null) {
 
@@ -129,6 +147,8 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 					new WriterException(reasons),
 					heldMessage
 				));
+
+				return this;
 			}
 
 		}
@@ -140,40 +160,25 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			}
 
 			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
+
+			return this;
+
 		}
-		else {
-			var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();
-			replyTo.tell(new Writer.Success(dataPayload, heldMessage));
-		}
+
+		var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();
+		replyTo.tell(new Writer.Success(dataPayload, heldMessage));
 
 		return this;
 	}
 
 	private Behavior<Writer.Command> onStart(Writer.Start start) {
 
-		var embeddedChunks = start.dataPayload();
+		var dataPayload = start.dataPayload();
 		var heldMessage = start.heldMessage();
 
-		var bulkOperations = new ArrayList<BulkOperation>();
+		var chunks = parseChunks(dataPayload);
 
-		for (Object chunk : parsePayload(embeddedChunks)) {
-
-			var bulkOperation = new BulkOperation.Builder()
-				.index(new IndexOperation.Builder<>()
-					.index(vectorIndexName)
-					.document(chunk)
-					.build())
-				.build();
-
-			bulkOperations.add(bulkOperation);
-
-			if (log.isTraceEnabled()) {
-				log.tracef("%s: Add a new bulk operation", heldMessage);
-			}
-		}
-
-		if (bulkOperations.isEmpty()) {
-
+		if (chunks.isEmpty()) {
 			if (log.isDebugEnabled()) {
 				log.debugf(
 					"%s: There isn't any operation to send to the server.",
@@ -187,21 +192,21 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 				)
 			);
 
+			return this;
 		}
 
-		var bulkRequest = new BulkRequest.Builder()
-			.index(vectorIndexName)
-			.operations(bulkOperations)
-			.build();
-
 		try {
-
 			getContext().pipeToSelf(
-				asyncClient.bulk(bulkRequest),
-				(bulkResponse, exception) -> new IndexDocumentResponse(
-					embeddedChunks, heldMessage, bulkResponse, (Exception) exception)
+				deleteChunksByContentId(heldMessage),
+				(deleteChunksResponse, throwable) ->
+					new WriteDocuments(
+						deleteChunksResponse,
+						throwable,
+						chunks,
+						heldMessage,
+						dataPayload
+					)
 			);
-
 		}
 		catch (IOException e) {
 			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
@@ -211,11 +216,65 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 	}
 
+	private Behavior<Writer.Command> onWriteDocuments(WriteDocuments writeDocuments) {
+
+		var heldMessage = writeDocuments.heldMessage();
+		var chunks = writeDocuments.chunks();
+		var dataPayload = writeDocuments.dataPayload();
+
+		List<BulkOperation> bulkOperations = new ArrayList<>();
+
+		for (Object chunk : chunks) {
+
+			var bulkOperation = new BulkOperation.Builder()
+				.index(new IndexOperation.Builder<>()
+					.index(indexName)
+					.document(chunk)
+					.build())
+				.build();
+
+			bulkOperations.add(bulkOperation);
+
+			if (log.isTraceEnabled()) {
+				log.tracef("%s: Add a new bulk operation", heldMessage);
+			}
+
+		}
+
+		var bulkRequest = new BulkRequest.Builder()
+			.index(indexName)
+			.operations(bulkOperations)
+			.build();
+
+		try {
+
+			getContext().pipeToSelf(
+				asyncClient.bulk(bulkRequest),
+				(bulkResponse, exception) -> new IndexDocumentResponse(
+					dataPayload, heldMessage, bulkResponse, (Exception) exception)
+			);
+
+		}
+		catch (IOException e) {
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+		}
+
+		return this;
+	}
+
 	private record IndexDocumentResponse(
-		byte[] embeddedChunks,
+		byte[] dataPayload,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
+	) implements Writer.Command {}
+
+	private record WriteDocuments(
+		DeleteByQueryResponse deleteChunksResponse,
+		Throwable throwable,
+		List<Object> chunks,
+		HeldMessage heldMessage,
+		byte[] dataPayload
 	) implements Writer.Command {}
 
 }

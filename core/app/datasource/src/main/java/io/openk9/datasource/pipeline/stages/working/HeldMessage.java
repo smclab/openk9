@@ -24,19 +24,22 @@ import io.openk9.common.util.ShardingKey;
 public record HeldMessage(
 	ShardingKey processKey,
 	long messageNumber,
-	long parsingDate
+	long parsingDate,
+	String contentId
 ) {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {return true;}
 		if (!(o instanceof HeldMessage that)) {return false;}
 		return parsingDate == that.parsingDate && messageNumber == that.messageNumber &&
-			   Objects.equals(processKey, that.processKey);
+			   Objects.equals(processKey, that.processKey) &&
+			   Objects.equals(contentId, that.contentId);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(processKey, messageNumber, parsingDate);
+		return Objects.hash(
+			processKey, messageNumber, parsingDate, contentId);
 	}
 
 }

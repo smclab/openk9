@@ -201,6 +201,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 		else if (dataPayload.getContentId() != null) {
 
+			var contentId = dataPayload.getContentId();
+
 			if (this.writer == null) {
 				this.writer = getContext().spawnAnonymous(
 					this.writerFactory.apply(
@@ -218,7 +220,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			var heldMessage = new HeldMessage(
 				processKey,
 				counter,
-				parsingDateTimeStamp
+				parsingDateTimeStamp,
+				contentId
 			);
 
 			var processorChain =
