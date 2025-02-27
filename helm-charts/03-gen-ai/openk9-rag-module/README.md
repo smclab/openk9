@@ -1,8 +1,8 @@
-# Helm package for Openk9 Ingestion
+# Helm package for Openk9 Rag Module
 
 ## Introduction
 
-This chart bootstraps Openk9 Ingestion deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps Openk9 Rag Module deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 
@@ -21,10 +21,10 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 Then install using following command:
 
 ```bash
-helm upgrade -i ingestion openk9/openk9-ingestion
+helm upgrade -i Rag-module openk9/openk9-Rag-module
 ```
 
-The command deploys Openk9 Ingestion on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+The command deploys Openk9 Rag Module on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 # Parameters
 
@@ -32,10 +32,10 @@ The command deploys Openk9 Ingestion on the Kubernetes cluster in the default co
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `image.registry`    | Openk9 Ingestion image registry                                                                                  | `REGISTRY_NAME`            |
-| `image.repository`  | Openk9 Ingestion image repository                                                                                | `REPOSITORY_NAME/openk9` |
-| `image.digest`      | Openk9 Ingestion image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
-| `image.pullPolicy`  | Openk9 Ingestion image pull policy                                                                               | `IfNotPresent`             |
+| `image.registry`    | Openk9 Rag Module image registry                                                                                  | `REGISTRY_NAME`            |
+| `image.repository`  | Openk9 Rag Module image repository                                                                                | `REPOSITORY_NAME/openk9` |
+| `image.digest`      | Openk9 Rag Module image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
+| `image.pullPolicy`  | Openk9 Rag Module image pull policy                                                                               | `IfNotPresent`             |
 | `image.pullSecrets` | Specify docker-registry secret names as an array                                                         | `[]`                       |
 | `image.debug`       | Set to true if you would like to see extra information on logs                                           | `false`                    |
 
@@ -48,74 +48,53 @@ The command deploys Openk9 Ingestion on the Kubernetes cluster in the default co
 | `commonAnnotations`                          | Annotations to add to all deployed objects                                                                                                                              | `{}`                                              |
 | `hostAliases`                                | Deployment pod host aliases                                                                                                                                             | `[]`                                              |
 
-### Quarkus configurations
 
-Openk9 Ingestion service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
+### Configure Opensearch
 
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `quarkus.HttpCors`    | If Cors is enabled                                                                              | `true`            |
-| `quarkus.HttpCorsOrigin`  | Cors origin allowed                                   | `/https://.*.openk9.local/,` |
-| `quarkus.LogConsoleJson`      | If json log is enabled | `false`                       |
-| `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
+Openk9 Datasource needs Opensearch to work. 
 
-### JVM configuration
-
-Openk9 Ingestion is a JVM service. To control JVM based tool options use following parameters:
-
-Openk9 Ingestion service is based on Quarkus Framework. Use following parameters to set main quarkus configurations.
+To configure connection to Opensearch following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `jvm.toolOptions`    | JVM Tool Options                                                                       | ``            |
+| `opensearch.host`    | Opensearch host                             | `opensearch-cluster-master-headless`            |
+| `opensearch.port`  | Port where Opensearch is exposed                                    | `9200` |
+| `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
+| `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
+| `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
+| `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
 
 
-### Configure Rabbitmq
+### Configure Keycloak
 
-Openk9 Ingestion needs Rabbitmq to work. 
+Openk9 Datasource needs Keycloak to work. 
 
-To configure connection to Rabbitmq following parameters are available:
+To configure connection to Keycloak following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `rabbitmq.host`    | Rabbitmq host                                                                                  | `rabbitmq-headless`            |
-| `rabbitmq.port`  | Port where Rabbitmq is exposed                                    | `5672` |
-| `rabbitmq.username`  | Rabbitmq user                                                                               | `openk9`             |
-| `rabbitmq.passwordSecretName` | Name of the secret where password is stored                            | `rabbitmq-password`                       |
-| `rabbitmq.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `rabbitmq-password`                    |
-| `rabbitmq.keyPasswordEnvName`       | Name of environment variable where password is set       | `RABBITMQ_PASSWORD`   |
+| `keycloak.url`    | Keycloak host                         | `keycloak.openk9.local`            |
+| `keycloak.clientId`  | Keycloak client                             | `openk9` |
+
 
 ### Configure connections to other Openk9 services
 
-Openk9 Ingestion needs to communicate with other components to work. 
-In particular Openk9 Ingestion need to communicate with File Manager to perform tenant resolving.
+Openk9 Datasource needs to communicate with other components to work. 
+In particular Openk9 Rag Module need to communicate with Datasource and Tenant Manager.
 
-To configure connection to File Manager following parameters are available:
-
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `openk9.fileManager.host`    | File Manager host                         | `openk9-file-manager`            |
-
-### Configure Opentelemetry
-
-Openk9 Ingestion supports collecting metrics about traffic using OpenTelemetry.
-
-To enable this feature you need an active instance of OpenTelemetry Collector. Here [official documentation](https://opentelemetry.io/docs/collector/installation/) to install.
-
-Once install you need to configure appropriately some parameters on this Helm Chart.
-
-To activate and set pointing to Opentelemetry collector use following parameters.
+To configure connection to Datasource following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `otel.disabled`    | If OpenTelemetry is disabled     | `true`            |
-| `otel.endpoint`  | OpenTelemetry Collector endpoint                                    | `` |
+| `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
+| `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
+
 
 ### Service account and rbac
 
-Openk9 Ingestion doesn't need particular Service Account or rbac. 
+Openk9 Rag Module doesn't need particular Service Account or rbac. 
 
-But if you want for some reasons associate a pre-created Service Account to Openk9 Ingestion you can do using following parameters:
+But if you want for some reasons associate a pre-created Service Account to Openk9 Rag Module you can do using following parameters:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
@@ -123,8 +102,6 @@ But if you want for some reasons associate a pre-created Service Account to Open
 | `serviceAccount.annotations`  | Service Account annotations                                    | `{}` |
 | `serviceAccount.name`  | Name of pre created Service Account                                    | `` |
 
-
-TO CONTROL
 
 ### RBAC parameters
 
@@ -139,7 +116,7 @@ TO CONTROL
 
 ### Configure ingress or route
 
-Openk9 Ingestion doesn't need to openk9 Apis externally.
+Openk9 Rag Module doesn't need to openk9 Apis externally.
 
 For Ingress creation presente of an Ingress Controller is mandatory on your cluster. Check [Kubernets Documentation](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for availables Ingress Controllers.
 
@@ -149,7 +126,6 @@ But if you want for some reasons you can modifying following parameters:
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `ingress.enabled`    | If enable Ingress creation     | `false`            |
 | `ingress.host`  | Ingress host                                    | `{}` |
-| `ingress.ingressClassName`  | Ingress Class Name (If not present overwrite default Ingress Class Name)         | `{}` |
 | `ingress.annotations`  | Ingress annotations                                    | `{}` |
 | `ingress.tls.enabled`  | If enable tls on Ingress                                    | `` |
 | `ingress.tls.secretName`  | Secret with tls certificate to associate to Ingress                                    | `` |
@@ -166,7 +142,7 @@ To configure Route for Openshift use:
 
 ### Startup, readiness and liveness probes
 
-Openk9 Ingestion supports Readiness, Liveness and Startup Probes.
+Openk9 Rag Module supports Readiness, Liveness and Startup Probes.
 
 It uses [Quarkus health check endpoint](https://quarkus.io/guides/smallrye-health#running-the-health-check) to perform healht check actions. 
 
@@ -195,7 +171,7 @@ To configure probes appropriately you can use following parameters:
 
 ### Resource requests and limits
 
-Openk9 Ingestion chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
+Openk9 Rag Module chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
 
 | `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
 
@@ -274,21 +250,6 @@ Is possible also to set autoscaling using following parameters:
 
 ### Advanced logging
 
-In case you want to configure Openk9 Ingestion logging you can set up following parameters:
-
-An example:
-
-```yaml
-quarkus:
-  LogConsoleJson: false ## put to true to force json log format
-  LogLevel: "INFO" ## change log level
-
-## Http Access Log configuration
-config:
-  httpAccessLog:
-    enabled: true
-    pattern: "%h %l %u %t \"%r\" %s %b %D"
-```
 
 ### Known issues
 

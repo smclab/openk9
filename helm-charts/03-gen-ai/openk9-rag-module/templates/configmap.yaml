@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+data:
+  ORIGINS: {{ .Values.cors.origins | quote }}
+  KEYCLOAK_URL: {{ .Values.keycloak.url | quote }}
+  
+  OPENSEARCH_HOST: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+
+  GRPC_DATASOURCE_HOST: {{ .Values.openk9.datasource.host | quote }}
+  GRPC_TENANT_MANAGER_HOST: {{ .Values.openk9.tenantManager.host | quote }}

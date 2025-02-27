@@ -504,16 +504,16 @@ To add in your local environment Openk9 helm repo run:
 helm repo add openk9 https://registry.smc.it/repository/helm-private/
 ```
 
+## BASE CORE COMPONENTS INSTALLATION
+
+Base core components are mandatory components to install and run Openk9 in its core functionalities.
+
 Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
 [01-base-core](./01-base-core) folder where, for each component, there is official chart.
 
 Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
 
 For every charts, there is also a scenarios folder, with files to install components in different platforms (Kubernetes/Openshift).
-
-## BASE CORE COMPONENTS INSTALLATION
-
-Base core components are mandatory components to install and run Openk9 in its core functionalities.
 
 ### INGESTION
 
@@ -1027,13 +1027,20 @@ Learn more on how to use and access to standard Search Frontend on [official doc
 
 Gen AI components add to Openk9 functionalities to chat with your data using Large Language Models.
 
+Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
+[03-gen-ai](./03-gen-ai) folder where, for each component, there is official chart.
+
+Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
+
+For every charts, there is also a scenarios folder, with files to install components in different platforms (Kubernetes/Openshift).
+
 ### Embedding Module
 
 Embedding Module is module that perform chunking and embedding operations in case you need to enable data vectorization for Retrieval Augumented Generation experience.
 
 To learn more on Embedding Module, read [official documentation]().
 
-For advanced configurations read [README.md](./08-gen-ai/openk9-embedding-module/README.md) inside Embedding Module chart folder.
+For advanced configurations read [README.md](./03-gen-ai/openk9-embedding-module/README.md) inside Embedding Module chart folder.
 
 ## Installation
 
@@ -1075,7 +1082,7 @@ Rag Module is module that exposes Apis to chat with your data using Generative A
 
 To learn more on Rag Module, read [official documentation]().
 
-For advanced configurations read [README.md](./08-gen-ai/openk9-embedding-module/README.md) inside Embedding Module chart folder.
+For advanced configurations read [README.md](./03-gen-ai/openk9-rag-module/README.md) inside Rag Module chart folder.
 
 ## Installation
 
@@ -1117,7 +1124,7 @@ Talk To is used to access to Generative search interface of Openk9.
 
 To learn more on how to use Talk To, read [official documentation]().
 
-For advanced configurations read [README.md](./08-gen-ai/openk9-talk-to/README.md) inside Talk To chart folder.
+For advanced configurations read [README.md](./03-gen-ai/openk9-talk-to/README.md) inside Talk To chart folder.
 
 ## Installation
 
@@ -1142,6 +1149,13 @@ Learn more on how to use and configure all needed to access and chat with your d
 ## FILE HANDLING COMPONENTS
 
 File handling components add to Openk9 functionalities to handle and parse binaries coming from external data source.
+
+Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
+[02-file-handling](./02-file-handling/) folder where, for each component, there is official chart.
+
+Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
+
+For every charts, there is also a scenarios folder, with files to install components in different platforms (Kubernetes/Openshift).
 
 ### Minio
 
