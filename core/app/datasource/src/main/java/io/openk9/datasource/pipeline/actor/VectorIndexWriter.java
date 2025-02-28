@@ -20,6 +20,7 @@ package io.openk9.datasource.pipeline.actor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -85,16 +86,16 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			.build();
 	}
 
-	protected static List<Object> parseChunks(byte[] json) {
+	protected static List<Map<String, Object>> parseChunks(byte[] json) {
 		try {
 			var documentContext = JsonPath
 				.using(Configuration.defaultConfiguration())
 				.parseUtf8(json);
 
-			var root = documentContext.read("$");
+			Map<String, Object> root = documentContext.read("$");
 
 			if (root instanceof List) {
-				return documentContext.read("$.*");
+				return (List<Map<String, Object>>) root;
 			}
 			else {
 				return List.of(root);
@@ -224,7 +225,24 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		List<BulkOperation> bulkOperations = new ArrayList<>();
 
-		for (Object chunk : chunks) {
+		for (Map<String, Object> chunk : chunks) {
+
+			// fallback for acl mapping
+			try {
+
+				var acl = (Map<String, Object>) chunk.get("acl");
+
+				if (acl == null || acl.isEmpty()) {
+					chunk.put("acl", Map.of("public", true));
+				}
+
+			}
+			catch (Exception e) {
+
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+
+				return this;
+			}
 
 			var bulkOperation = new BulkOperation.Builder()
 				.index(new IndexOperation.Builder<>()
@@ -272,7 +290,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	private record WriteDocuments(
 		DeleteByQueryResponse deleteChunksResponse,
 		Throwable throwable,
-		List<Object> chunks,
+		List<Map<String, Object>> chunks,
 		HeldMessage heldMessage,
 		byte[] dataPayload
 	) implements Writer.Command {}
