@@ -90,7 +90,11 @@ public class EmbeddingService {
 					.using(Configuration.defaultConfiguration())
 					.parseUtf8(payload);
 
-				var docTypeField = Objects.requireNonNull(configurations.docTypeField());
+				var docTypeField = Objects.requireNonNull(
+					configurations.docTypeField(),
+					"The source field for text embedding is not specified."
+				);
+
 				var docTypeFieldJsonPath = "$." + docTypeField.getPath();
 
 				String text = documentContext.read(docTypeFieldJsonPath);
