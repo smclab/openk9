@@ -53,7 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DatasourceValidationsGraphqlTest {
 
 	private static final String ENTITY_NAME_PREFIX = "DatasourceValidationsGraphqlTest - ";
