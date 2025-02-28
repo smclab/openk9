@@ -48,7 +48,7 @@ class VectorIndexWriterTest {
 
 		Assertions.assertEquals(3, chunks.size());
 
-		var chunk = (Map<String, Object>) chunks.get(1);
+		var chunk = chunks.getFirst();
 		var metadata = (Map<String, Object>) chunk.get("sample");
 		var sample = new Sample(
 			(String) metadata.get("firstName"),

@@ -92,13 +92,13 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 				.using(Configuration.defaultConfiguration())
 				.parseUtf8(json);
 
-			Map<String, Object> root = documentContext.read("$");
+			Object root = documentContext.read("$");
 
 			if (root instanceof List) {
 				return (List<Map<String, Object>>) root;
 			}
 			else {
-				return List.of(root);
+				return List.of((Map<String, Object>) root);
 			}
 		}
 		catch (IllegalArgumentException e) {
