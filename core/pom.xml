@@ -97,7 +97,7 @@
 		<quarkus.platform.version>3.17.3</quarkus.platform.version>
 		<quarkus.version>3.17.3</quarkus.version>
 		<quarkiverse.opensearch.version>1.13.0</quarkiverse.opensearch.version>
-		<quarkiverse.rabbitmq.version>3.2.0</quarkiverse.rabbitmq.version>
+		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<hibernate.version>6.6.0.Final</hibernate.version>
 		<surefire-plugin.version>3.3.1</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
