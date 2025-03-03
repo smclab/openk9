@@ -64,9 +64,22 @@ async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 
+class SearchToken(BaseModel):
+    """SearchToken class model."""
+
+    tokenType: str
+    keywordKey: Optional[str] = ""
+    values: list[str]
+    filter: Optional[bool] = False
+    entityType: Optional[str] = ""
+    entityName: Optional[str] = ""
+    extra: Optional[dict[str, str]] = {}
+
+
 class SearchQuery(BaseModel):
     """SearchQuery class model."""
 
+    searchQuery: list[SearchToken]
     range: list
     afterKey: Optional[str] = None
     suggestKeyword: Optional[str] = None
@@ -88,6 +101,7 @@ async def rag_generate(
     openk9_acl: Optional[list[str]] = Header(None),
 ):
     """Definition of /api/rag/generate api."""
+    search_query = search_query_request.searchQuery
     range_values = search_query_request.range
     after_key = search_query_request.afterKey
     suggest_keyword = search_query_request.suggestKeyword
@@ -109,6 +123,7 @@ async def rag_generate(
         unauthorized_response()
 
     chain = get_chain(
+        search_query,
         range_values,
         after_key,
         suggest_keyword,

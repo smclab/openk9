@@ -16,6 +16,7 @@ from app.utils.llm import (
 
 
 def get_chain(
+    search_query,
     range_values,
     after_key,
     suggest_keyword,
@@ -41,6 +42,7 @@ def get_chain(
     rerank = configuration["rerank"]
 
     retriever = OpenSearchRetriever(
+        search_query=search_query,
         search_text=question,
         rerank=rerank,
         reranker_api_url=reranker_api_url,
