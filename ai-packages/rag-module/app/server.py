@@ -383,3 +383,18 @@ async def get_chat(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Item not found.",
     )
+
+
+@app.get("/live")
+async def liveness_probe():
+    return {"status": "alive"}
+
+
+@app.get("/ready")
+async def readiness_probe():
+    return {"status": "alive"}
+
+
+@app.get("/startup")
+async def startup_probe():
+    return {"status": "alive"}
