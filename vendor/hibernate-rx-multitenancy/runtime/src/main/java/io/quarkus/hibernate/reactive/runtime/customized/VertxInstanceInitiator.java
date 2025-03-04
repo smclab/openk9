@@ -17,13 +17,13 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.Map;
+
 import io.vertx.core.Vertx;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.reactive.vertx.VertxInstance;
 import org.hibernate.reactive.vertx.impl.ProvidedVertxInstance;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import java.util.Map;
 
 public class VertxInstanceInitiator implements StandardServiceInitiator<VertxInstance> {
 

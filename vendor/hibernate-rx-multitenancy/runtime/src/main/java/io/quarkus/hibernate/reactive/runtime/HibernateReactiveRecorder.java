@@ -17,12 +17,12 @@
 
 package io.quarkus.hibernate.reactive.runtime;
 
+import java.util.List;
+import java.util.Map;
+
 import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfig;
 import io.quarkus.hibernate.orm.runtime.integration.HibernateOrmIntegrationRuntimeDescriptor;
 import io.quarkus.runtime.annotations.Recorder;
-
-import java.util.List;
-import java.util.Map;
 
 @Recorder
 public class HibernateReactiveRecorder {

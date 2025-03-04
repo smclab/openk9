@@ -17,11 +17,12 @@
 
 package io.quarkus.hibernate.reactive;
 
-import io.quarkus.test.QuarkusUnitTest;
 import jakarta.inject.Inject;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+
+import io.quarkus.test.QuarkusUnitTest;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.junit.jupiter.api.Assertions;

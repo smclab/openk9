@@ -17,15 +17,16 @@
 
 package io.quarkus.hibernate.reactive.sql_load_script;
 
-import io.quarkus.runtime.configuration.ConfigurationException;
-import io.quarkus.test.QuarkusUnitTest;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+
+import io.quarkus.runtime.configuration.ConfigurationException;
+import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileNotFoundSqlLoadScriptTestCase {
     @RegisterExtension

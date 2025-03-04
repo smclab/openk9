@@ -17,6 +17,34 @@
 
 package io.quarkus.hibernate.reactive.deployment;
 
+import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
+import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
+import static io.quarkus.hibernate.orm.deployment.HibernateConfigUtil.firstPresent;
+import static io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.AvailableSettings.STORAGE_ENGINE;
+import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
+import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
+import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
+
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.RecorderBeanInitializedBuildItem;
 import io.quarkus.datasource.common.runtime.DataSourceUtil;
@@ -33,10 +61,10 @@ import io.quarkus.deployment.builditem.ApplicationArchivesBuildItem;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.HotDeploymentWatchedFileBuildItem;
 import io.quarkus.deployment.builditem.LaunchModeBuildItem;
+import io.quarkus.deployment.builditem.LogCategoryBuildItem;
 import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
-import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.hibernate.orm.deployment.HibernateConfigUtil;
@@ -60,36 +88,10 @@ import io.quarkus.hibernate.reactive.runtime.ReactiveSessionFactoryProducer;
 import io.quarkus.reactive.datasource.deployment.VertxPoolBuildItem;
 import io.quarkus.runtime.LaunchMode;
 import io.quarkus.runtime.configuration.ConfigurationException;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.reactive.provider.impl.ReactiveIntegrator;
 import org.jboss.logging.Logger;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static io.quarkus.deployment.annotations.ExecutionTime.RUNTIME_INIT;
-import static io.quarkus.deployment.annotations.ExecutionTime.STATIC_INIT;
-import static io.quarkus.hibernate.orm.deployment.HibernateConfigUtil.firstPresent;
-import static io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_MODE;
-import static org.hibernate.cfg.AvailableSettings.STORAGE_ENGINE;
-import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
-import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
-import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 
 @BuildSteps(onlyIf = HibernateReactiveEnabled.class)
 public final class HibernateReactiveProcessor {
@@ -103,16 +105,6 @@ public final class HibernateReactiveProcessor {
 		"org.hibernate.reactive.persister.collection.impl.ReactiveOneToManyPersister",
 		"org.hibernate.reactive.persister.collection.impl.ReactiveBasicCollectionPersister",
     };
-
-    @BuildStep
-    @Record(STATIC_INIT)
-	public void build(
-		RecorderContext recorderContext,
-		HibernateReactiveRecorder recorder,
-		JpaModelBuildItem jpaModel) {
-        final boolean enableRx = hasEntities(jpaModel);
-        recorder.callHibernateReactiveFeatureInit(enableRx);
-    }
 
     @BuildStep
     public void buildReactivePersistenceUnit(
@@ -169,7 +161,8 @@ public final class HibernateReactiveProcessor {
 		if (dbKindOptional.isEmpty()) {
 			throw new ConfigurationException(
 				"The default datasource must be configured for Hibernate Reactive. Refer to https://quarkus.io/guides/datasource for guidance.",
-				Set.of("quarkus.datasource.db-kind", "quarkus.datasource.username",
+				Set.of(
+					"quarkus.datasource.db-kind", "quarkus.datasource.username",
 					"quarkus.datasource.password"
 				)
 			);
@@ -198,7 +191,8 @@ public final class HibernateReactiveProcessor {
             // - we don't support starting Hibernate Reactive from a persistence.xml
             // - we don't support Hibernate Envers with Hibernate Reactive
             persistenceUnitDescriptors.produce(new PersistenceUnitDescriptorBuildItem(reactivePU,
-				new RecordedConfig(Optional.of(DataSourceUtil.DEFAULT_DATASOURCE_NAME),
+				new RecordedConfig(
+					Optional.of(DataSourceUtil.DEFAULT_DATASOURCE_NAME),
 					dbKindOptional, Optional.empty(),
 					persistenceUnitConfig.dialect().dialect(),
 					io.quarkus.hibernate.orm.runtime.migration.MultiTenancyStrategy.NONE,
@@ -209,7 +203,26 @@ public final class HibernateReactiveProcessor {
 				jpaModel.getXmlMappings(reactivePU.getName()),
 				true, false, capabilities
 			));
-        }
+		}
+	}
+
+	@BuildStep
+	void reflections(BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
+		reflectiveClass.produce(new ReflectiveClassBuildItem(
+			false,
+			false,
+			REFLECTIVE_CONSTRUCTORS_NEEDED
+		));
+	}
+
+    @BuildStep
+    @Record(STATIC_INIT)
+	public void build(
+		RecorderContext recorderContext,
+		HibernateReactiveRecorder recorder,
+		JpaModelBuildItem jpaModel) {
+        final boolean enableRx = hasEntities(jpaModel);
+        recorder.callHibernateReactiveFeatureInit(enableRx);
     }
 
 	@BuildStep
@@ -240,24 +253,6 @@ public final class HibernateReactiveProcessor {
 	}
 
 	@BuildStep
-	void reflections(BuildProducer<ReflectiveClassBuildItem> reflectiveClass) {
-		reflectiveClass.produce(new ReflectiveClassBuildItem(
-			false,
-			false,
-			REFLECTIVE_CONSTRUCTORS_NEEDED
-		));
-	}
-
-	@BuildStep
-	void services(BuildProducer<ServiceProviderBuildItem> producer) {
-		producer.produce(
-			new ServiceProviderBuildItem(
-				org.hibernate.service.spi.SessionFactoryServiceContributor.class.getName(),
-				org.hibernate.reactive.service.internal.ReactiveSessionFactoryServiceContributor.class.getName()
-			));
-	}
-
-    @BuildStep
 	void waitForVertxPool(
 		List<VertxPoolBuildItem> vertxPool,
 		List<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptorBuildItems,
@@ -286,6 +281,14 @@ public final class HibernateReactiveProcessor {
 		);
         return new PersistenceProviderSetUpBuildItem();
     }
+
+	@BuildStep
+	void silenceLogging(BuildProducer<LogCategoryBuildItem> logCategories) {
+		logCategories.produce(new LogCategoryBuildItem(
+			ReactiveIntegrator.class.getName(),
+			Level.WARNING
+		));
+	}
 
     /**
      * This is mostly copied from
@@ -331,7 +334,7 @@ public final class HibernateReactiveProcessor {
 			modelClassesAndPackagesPerPersistencesUnits.entrySet().stream()
 				.filter(e -> !DEFAULT_PERSISTENCE_UNIT_NAME.equals(e.getKey()) &&
 							 !e.getValue().isEmpty())
-                .map(Map.Entry::getKey)
+				.map(Entry::getKey)
                 .collect(Collectors.toSet());
         if (!nonDefaultPUWithModelClassesOrPackages.isEmpty()) {
             // Not supported yet; see https://github.com/quarkusio/quarkus/issues/21110
@@ -358,13 +361,8 @@ public final class HibernateReactiveProcessor {
 		);
 
 		setDialectAndStorageEngine(
-			dbKindOptional,
-			explicitDialect,
-			explicitDbMinVersion,
-			dbKindDialectBuildItems,
-			persistenceUnitConfig.dialect().storageEngine(),
-			systemProperties,
-			desc
+			dbKindOptional, explicitDialect, explicitDbMinVersion, dbKindDialectBuildItems,
+			persistenceUnitConfig.dialect().storageEngine(), systemProperties, desc
 		);
 
         // Physical Naming Strategy
@@ -405,8 +403,7 @@ public final class HibernateReactiveProcessor {
         }
 		if (persistenceUnitConfig.quoteIdentifiers().strategy() ==
 			IdentifierQuotingStrategy.ALL_EXCEPT_COLUMN_DEFINITIONS) {
-			desc
-				.getProperties()
+			desc.getProperties()
 				.setProperty(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
 					"true"
@@ -447,8 +444,7 @@ public final class HibernateReactiveProcessor {
         }
 
 		desc.getProperties().setProperty(
-			AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE,
-			Integer.toString(
+			AvailableSettings.QUERY_PLAN_CACHE_MAX_SIZE, Integer.toString(
 				persistenceUnitConfig.query().queryPlanCacheMaxSize())
 		);
 
@@ -464,8 +460,7 @@ public final class HibernateReactiveProcessor {
 
         // JDBC
 		persistenceUnitConfig.jdbc().timezone().ifPresent(
-			timezone -> desc
-				.getProperties()
+			timezone -> desc.getProperties()
 				.setProperty(AvailableSettings.JDBC_TIME_ZONE, timezone));
 
 		persistenceUnitConfig.jdbc().statementFetchSize().ifPresent(
@@ -530,6 +525,10 @@ public final class HibernateReactiveProcessor {
 		else {
             //Disable implicit loading of the default import script (import.sql)
             desc.getProperties().setProperty(AvailableSettings.HBM2DDL_IMPORT_FILES, "");
+			desc.getProperties().setProperty(
+				AvailableSettings.HBM2DDL_SKIP_DEFAULT_IMPORT_FILE,
+				"true"
+			);
         }
 
         // Caching

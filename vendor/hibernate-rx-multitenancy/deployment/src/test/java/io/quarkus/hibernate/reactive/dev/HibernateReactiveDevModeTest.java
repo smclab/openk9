@@ -17,16 +17,16 @@
 
 package io.quarkus.hibernate.reactive.dev;
 
+import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Arrays;
+
 import io.quarkus.test.QuarkusDevModeTest;
 import io.restassured.response.Response;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.util.Arrays;
-
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Checks that public field access is correctly replaced with getter/setter calls,

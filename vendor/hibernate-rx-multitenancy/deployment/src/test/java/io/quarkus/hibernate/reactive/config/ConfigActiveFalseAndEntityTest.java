@@ -17,18 +17,19 @@
 
 package io.quarkus.hibernate.reactive.config;
 
-import io.quarkus.arc.Arc;
-import io.quarkus.test.QuarkusUnitTest;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import jakarta.enterprise.inject.CreationException;
 import jakarta.persistence.EntityManagerFactory;
+
+import io.quarkus.arc.Arc;
+import io.quarkus.test.QuarkusUnitTest;
 import org.hibernate.SessionFactory;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConfigActiveFalseAndEntityTest {
 

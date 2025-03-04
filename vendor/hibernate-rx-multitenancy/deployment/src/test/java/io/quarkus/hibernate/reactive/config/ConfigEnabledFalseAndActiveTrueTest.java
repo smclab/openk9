@@ -17,12 +17,12 @@
 
 package io.quarkus.hibernate.reactive.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConfigEnabledFalseAndActiveTrueTest {
 

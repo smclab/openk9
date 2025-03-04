@@ -17,11 +17,11 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.Map;
+
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.reactive.context.Context;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import java.util.Map;
 
 /**
  * Custom Quarkus initiator for the {@link Context} service; this

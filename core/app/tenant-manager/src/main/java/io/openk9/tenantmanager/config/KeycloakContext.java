@@ -17,9 +17,10 @@
 
 package io.openk9.tenantmanager.config;
 
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig;
 import lombok.Getter;
 
 @ApplicationScoped

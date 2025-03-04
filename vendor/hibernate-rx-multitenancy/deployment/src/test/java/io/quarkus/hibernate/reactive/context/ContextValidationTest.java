@@ -17,12 +17,12 @@
 
 package io.quarkus.hibernate.reactive.context;
 
+import static io.restassured.RestAssured.given;
+
 import io.quarkus.test.QuarkusDevModeTest;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static io.restassured.RestAssured.given;
 
 /**
  * Checks that Hibernate Reactive will refuse to store a contextual Session into

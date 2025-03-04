@@ -17,11 +17,11 @@
 
 package io.quarkus.hibernate.reactive.mapping.timezone;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.quarkus.hibernate.reactive.SchemaUtil;
 import io.quarkus.test.QuarkusUnitTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimezoneDefaultStorageNativeTest extends AbstractTimezoneDefaultStorageTest {
 

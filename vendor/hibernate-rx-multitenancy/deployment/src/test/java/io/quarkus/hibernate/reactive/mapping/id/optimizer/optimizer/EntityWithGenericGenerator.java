@@ -20,6 +20,7 @@ package io.quarkus.hibernate.reactive.mapping.id.optimizer.optimizer;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 

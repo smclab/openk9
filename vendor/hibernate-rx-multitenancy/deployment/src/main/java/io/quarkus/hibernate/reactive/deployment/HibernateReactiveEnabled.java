@@ -17,9 +17,9 @@
 
 package io.quarkus.hibernate.reactive.deployment;
 
-import io.quarkus.hibernate.orm.deployment.HibernateOrmConfig;
-
 import java.util.function.BooleanSupplier;
+
+import io.quarkus.hibernate.orm.deployment.HibernateOrmConfig;
 
 /**
  * Supplier that can be used to only run build steps
