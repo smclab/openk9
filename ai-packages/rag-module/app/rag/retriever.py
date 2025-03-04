@@ -19,7 +19,7 @@ SCORE_THRESHOLD = 0.5
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
-    search_query: Optional[list]
+    search_query: Optional[list] = None
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
