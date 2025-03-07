@@ -6,6 +6,9 @@ from logging.handlers import TimedRotatingFileHandler
 
 import grpc
 from google.protobuf import json_format
+from grpc_health.v1.health import HealthServicer
+from grpc_health.v1 import health_pb2_grpc, health_pb2
+from grpc_reflection.v1alpha import reflection
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
@@ -42,7 +45,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         chunk = request.chunk
         chunk_type = chunk.type
-        chunk_jsonConfig = json_format.MessageToDict(chunk.jsonConfig)
+        chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
         api_key = request.api_key
         os.environ["OPENAI_API_KEY"] = api_key
         text = clean_text(request.text)
@@ -53,13 +56,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         if chunk_type == 1:
             chunk_size = (
-                int(chunk_jsonConfig["size"])
-                if "size" in chunk_jsonConfig
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
                 else DEFAULT_CHUNK_SIZE
             )
             chunk_overlap = (
-                int(chunk_jsonConfig["overlap"])
-                if "overlap" in chunk_jsonConfig
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
                 else DEFAULT_CHUNK_OVERLAP
             )
             text_splitter = DerivedTextSplitter(
@@ -70,33 +73,33 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         elif chunk_type == 2:
             chunk_size = (
-                int(chunk_jsonConfig["size"])
-                if "size" in chunk_jsonConfig
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
                 else DEFAULT_CHUNK_SIZE
             )
             chunk_overlap = (
-                int(chunk_jsonConfig["overlap"])
-                if "overlap" in chunk_jsonConfig
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
                 else DEFAULT_CHUNK_OVERLAP
             )
             chunk_separator = (
-                chunk_jsonConfig["separator"]
-                if "separator" in chunk_jsonConfig
+                chunk_json_config["separator"]
+                if "separator" in chunk_json_config
                 else DEFAULT_SEPARATOR
             )
             chunk_model_name = (
-                chunk_jsonConfig["model_name"]
-                if "model_name" in chunk_jsonConfig
+                chunk_json_config["model_name"]
+                if "model_name" in chunk_json_config
                 else DEFAULT_MODEL_NAME
             )
             chunk_encoding = (
-                chunk_jsonConfig["encoding"]
-                if "encoding" in chunk_jsonConfig
+                chunk_json_config["encoding"]
+                if "encoding" in chunk_json_config
                 else DEFAULT_ENCODING_NAME
             )
             chunk_is_separator_regex = (
-                chunk_jsonConfig["is_separator_regex"]
-                if "is_separator_regex" in chunk_jsonConfig
+                chunk_json_config["is_separator_regex"]
+                if "is_separator_regex" in chunk_json_config
                 else DEFAULT_IS_SEPARATOR_REGEX
             )
             text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
@@ -111,23 +114,23 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         elif chunk_type == 3 or chunk_type == 0:
             chunk_size = (
-                int(chunk_jsonConfig["size"])
-                if "size" in chunk_jsonConfig
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
                 else DEFAULT_CHUNK_SIZE
             )
             chunk_overlap = (
-                int(chunk_jsonConfig["overlap"])
-                if "overlap" in chunk_jsonConfig
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
                 else DEFAULT_CHUNK_OVERLAP
             )
             chunk_separator = (
-                chunk_jsonConfig["separator"]
-                if "separator" in chunk_jsonConfig
+                chunk_json_config["separator"]
+                if "separator" in chunk_json_config
                 else DEFAULT_SEPARATOR
             )
             chunk_is_separator_regex = (
-                chunk_jsonConfig["is_separator_regex"]
-                if "is_separator_regex" in chunk_jsonConfig
+                chunk_json_config["is_separator_regex"]
+                if "is_separator_regex" in chunk_json_config
                 else DEFAULT_IS_SEPARATOR_REGEX
             )
             text_splitter = CharacterTextSplitter(
@@ -168,9 +171,31 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+
+    # Add Health Service
+    health_servicer = HealthServicer()
+    health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
+
+    # Register Embedding Service
     embedding_pb2_grpc.add_EmbeddingServicer_to_server(EmbeddingServicer(), server)
+
+    # Enable reflection
+    service_names = (
+        embedding_pb2.DESCRIPTOR.services_by_name["Embedding"].full_name,
+        health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
+        reflection.SERVICE_NAME,
+    )
+    reflection.enable_server_reflection(service_names, server)
+
+    # Start the server
     server.add_insecure_port("[::]:5000")
     server.start()
+    logger.info("Server started")
+
+    # Update health status to SERVING once the server is ready
+    health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
+    logger.info("Health status set to SERVING")
+
     server.wait_for_termination()
 
 
