@@ -18,6 +18,8 @@ google-auth-httplib2==0.2.0
 googleapis-common-protos==1.65.0
 greenlet==3.1.0
 grpcio==1.66.1
+grpcio-health-checking==1.66.1
+grpcio-reflection==1.66.1
 grpcio-tools==1.66.1
 h11==0.14.0
 httpcore==1.0.5
