@@ -33,20 +33,19 @@ DEFAULT_CHUNK_SIZE = 100
 DEFAULT_CHUNK_OVERLAP = 10
 DEFAULT_SEPARATOR = "\n\n"
 DEFAULT_MODEL_NAME = "gpt2"
+DEFAULT_EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
 DEFAULT_ENCODING_NAME = None
 DEFAULT_IS_SEPARATOR_REGEX = False
 
 # default text embedding parameters
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL")
-if EMBEDDING_MODEL is None:
-    EMBEDDING_MODEL = "intfloat/multilingual-e5-large"
-
-embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-
-logger.info("Embedding Model Loaded")
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
 
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
+    def __init__(self, embeddings):
+        super().__init__()
+        self.embeddings = embeddings  # Store embeddings as an instance variable
+
     def GetMessages(self, request, context):
         start = time.time()
 
@@ -148,7 +147,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 4:
-            text_splitter = SemanticChunker(embeddings)
+            text_splitter = SemanticChunker(self.embeddings)
             text_splitted = text_splitter.split_text(text)
 
         total_chunks = len(text_splitted)
@@ -158,7 +157,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "number": index,
                 "total": total_chunks,
                 "text": chunk_text,
-                "vectors": embeddings.embed_query(chunk_text),
+                "vectors": self.embeddings.embed_query(chunk_text),
             }
             chunks.append(chunk)
 
@@ -173,18 +172,42 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         return embedding_pb2.EmbeddingResponse(chunks=chunks)
 
+class HealthCheckServicer(HealthServicer):
+    """gRPC health check servicer with embedding model monitoring.
+
+    Attributes:
+        embedding_model (HuggingFaceEmbeddings): Embedding model to monitor
+    """
+    def __init__(self, embedding_model):
+        super().__init__()
+        self.embedding_model = embedding_model
+
+    def check_embedding_model_health(self):
+        try:
+            response = self.embedding_model.embed_query("embedding model health check")
+            return True if response else False
+        except Exception as e:
+            logger.error("Embedding model health check failed: %s", e)
+            return False
+
+    def Check(self, request, context):
+        if self.check_embedding_model_health():
+            return health_pb2.HealthCheckResponse(status=health_pb2.HealthCheckResponse.SERVING)
+        else:
+            return health_pb2.HealthCheckResponse(status=health_pb2.HealthCheckResponse.NOT_SERVING)
+
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
-    # Add Health Service
-    health_servicer = HealthServicer()
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+
+    health_servicer = HealthCheckServicer(embeddings)
     health_pb2_grpc.add_HealthServicer_to_server(health_servicer, server)
 
-    # Register Embedding Service
-    embedding_pb2_grpc.add_EmbeddingServicer_to_server(EmbeddingServicer(), server)
+    embedding_servicer = EmbeddingServicer(embeddings)
+    embedding_pb2_grpc.add_EmbeddingServicer_to_server(embedding_servicer, server)
 
-    # Enable reflection
     service_names = (
         embedding_pb2.DESCRIPTOR.services_by_name["Embedding"].full_name,
         health_pb2.DESCRIPTOR.services_by_name["Health"].full_name,
@@ -192,16 +215,18 @@ def serve():
     )
     reflection.enable_server_reflection(service_names, server)
 
-    # Start the server
-    server.add_insecure_port("[::]:5000")
-    server.start()
-    logger.info("Server started")
-
-    # Update health status to SERVING once the server is ready
-    health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
-    logger.info("Health status set to SERVING")
-
-    server.wait_for_termination()
+    if health_servicer.check_embedding_model_health():
+        # Start the server
+        server.add_insecure_port("[::]:5000")
+        server.start()
+        logger.info("Server started")
+        health_servicer.set("", health_pb2.HealthCheckResponse.SERVING)
+        logger.info("Health status set to SERVING")
+        server.wait_for_termination()
+    else:
+        logger.error("Embedding Model Health Check Failed")
+        health_servicer.set("", health_pb2.HealthCheckResponse.NOT_SERVING)
+        logger.error("Health status set to NOT_SERVING")
 
 
 if __name__ == "__main__":
