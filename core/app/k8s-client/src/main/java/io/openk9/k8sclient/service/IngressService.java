@@ -51,6 +51,9 @@ public final class IngressService {
 	@ConfigProperty(name = "quarkus.kubernetes.ingress.secretName")
 	String secretName;
 
+	@ConfigProperty(name = "quarkus.kubernetes.ingress.ingressClassName")
+	String ingressClassName;
+
 	public Uni<HasMetadata> create(IngressDef ingressDef) {
 		return Uni.createFrom()
 			.item(() -> {
@@ -99,6 +102,7 @@ public final class IngressService {
 				.withHosts(ingressDef.virtualHost())
 				.build()
 			)
+			.withIngressClassName(ingressClassName)
 			.withRules(new IngressRuleBuilder()
 				.withHost(ingressDef.virtualHost())
 				.withNewHttp()
