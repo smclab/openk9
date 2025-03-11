@@ -302,8 +302,18 @@ Find more information about how to deal with common errors related to Openk9's H
 
 ## Upgrading
 
-### To 2.0.0
+### To 3.0.0 (Temporary Name)
 
+Add to values configuration to define Ingress Class Name:
+
+```yaml
+## Quarkus configuration
+quarkus:
+  kubernetes:
+    ingressClassName: "" ## Setup to Ingress Class Name present in your cluster
+```
+
+### To 2.0.0
 
 ### To 1.7.0
 
