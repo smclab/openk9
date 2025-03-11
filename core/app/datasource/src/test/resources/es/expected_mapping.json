@@ -1,5 +1,4 @@
 {
-	"dynamic": "true",
 	"properties": {
 		"contentId": {
 			"type": "text",

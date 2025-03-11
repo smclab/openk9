@@ -20,11 +20,9 @@ package io.openk9.datasource.util;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
-import static java.util.stream.Collectors.toList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
@@ -39,7 +37,6 @@ import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.cluster.ClusterModule;
 import org.opensearch.cluster.metadata.IndexMetadata;
-import org.opensearch.common.CheckedConsumer;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
 import org.opensearch.common.xcontent.XContentFactory;
@@ -62,9 +59,6 @@ import org.opensearch.index.query.WrapperQueryBuilder;
 import org.opensearch.index.similarity.SimilarityService;
 import org.opensearch.indices.IndicesModule;
 import org.opensearch.indices.mapper.MapperRegistry;
-import org.opensearch.plugins.MapperPlugin;
-import org.opensearch.plugins.Plugin;
-import org.opensearch.plugins.ScriptPlugin;
 import org.opensearch.script.ScriptModule;
 import org.opensearch.script.ScriptService;
 
@@ -72,9 +66,17 @@ public class OpenSearchUtils {
 
 	private static final String IGNORE_INDEX = "IGNORE_INDEX";
 	private static final String DOCUMENT_TYPE = MapperService.SINGLE_MAPPING_NAME;
-
-	private OpenSearchUtils() {
-	}
+	private static final Settings INDEX_SETTING =
+		Settings.builder().put(
+			"index.version.created",
+			Version.CURRENT
+		).build();
+	private static final NamedXContentRegistry DEFAULT_NAMED_X_CONTENT_REGISTRY =
+		new NamedXContentRegistry(
+			ClusterModule.getNamedXWriteables()
+		);
+	private static final Set<Character> FORBIDDEN_CHARACTERS = Set.of(
+		':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
 
 	public static JsonObject getDynamicMapping(
 		IngestionPayload ingestionPayload,
@@ -88,40 +90,7 @@ public class OpenSearchUtils {
 	}
 
 
-	protected static final Settings SETTINGS = Settings.builder().put(
-		"index.version.created",
-		Version.CURRENT
-	).build();
-	private static final NamedXContentRegistry DEFAULT_NAMED_X_CONTENT_REGISTRY =
-		new NamedXContentRegistry(
-			ClusterModule.getNamedXWriteables()
-		);
-
-	public static JsonObject getDynamicMapping(byte[] payload) {
-
-		DocumentMapper documentMapper = null;
-		try {
-			documentMapper = createMapperService(Version.CURRENT, dynamicMapping(b -> {}))
-				.documentMapperWithAutoCreate()
-				.getDocumentMapper();
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
-
-		Mapping mapping = documentMapper.mapping();
-		if (mapping != null) {
-			doc.addDynamicMappingsUpdate(mapping);
-		}
-
-		return ((JsonObject) Json
-			.decodeValue(doc
-				.dynamicMappingsUpdate()
-				.toString()
-			)
-		).getJsonObject(DOCUMENT_TYPE);
+	private OpenSearchUtils() {
 	}
 
 	/**
@@ -177,9 +146,6 @@ public class OpenSearchUtils {
 		}
 	}
 
-	private static final Set<Character> FORBIDDEN_CHARACTERS = Set.of(
-		':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
-
 	private static SourceToParse sourceToParse(byte[] payload) {
 
 		return new SourceToParse(
@@ -191,8 +157,65 @@ public class OpenSearchUtils {
 
 	}
 
-	protected static IndexAnalyzers createIndexAnalyzers(IndexSettings indexSettings) {
-		return new IndexAnalyzers(
+	public static JsonObject getDynamicMapping(byte[] payload) {
+
+		try (MapperService mapperService = createMapperService()) {
+
+			DocumentMapper documentMapper = mapperService
+				.documentMapperWithAutoCreate()
+				.getDocumentMapper();
+
+			ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
+
+			Mapping mapping = documentMapper.mapping();
+			if (mapping != null) {
+				doc.addDynamicMappingsUpdate(mapping);
+			}
+
+			return ((JsonObject) Json
+				.decodeValue(doc
+					.dynamicMappingsUpdate()
+					.toString()
+				)
+			).getJsonObject(DOCUMENT_TYPE);
+
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static MapperService createMapperService()
+		throws IOException {
+
+		IndexMetadata meta = IndexMetadata.builder("index")
+			.settings(Settings.builder()
+				.put("index.version.created", Version.CURRENT)
+			)
+			.numberOfReplicas(0)
+			.numberOfShards(1)
+			.build();
+
+		MapperRegistry mapperRegistry = new IndicesModule(
+			emptyList()
+		).getMapperRegistry();
+
+		ScriptModule scriptModule = new ScriptModule(Settings.EMPTY, emptyList());
+
+		ScriptService scriptService = new ScriptService(
+			INDEX_SETTING,
+			scriptModule.engines,
+			scriptModule.contexts
+		);
+
+		IndexSettings indexSettings = new IndexSettings(meta, INDEX_SETTING);
+		SimilarityService similarityService = new SimilarityService(
+			indexSettings,
+			scriptService,
+			emptyMap()
+		);
+
+		IndexAnalyzers indexAnalyzers = new IndexAnalyzers(
 			singletonMap(
 				"default",
 				new NamedAnalyzer("default", AnalyzerScope.INDEX, new StandardAnalyzer())
@@ -200,43 +223,11 @@ public class OpenSearchUtils {
 			emptyMap(),
 			emptyMap()
 		);
-	}
 
-	protected static MapperService createMapperService(Version version, XContentBuilder mapping)
-		throws IOException {
-		IndexMetadata meta = IndexMetadata.builder("index")
-			.settings(Settings.builder().put("index.version.created", version))
-			.numberOfReplicas(0)
-			.numberOfShards(1)
-			.build();
-		IndexSettings indexSettings = new IndexSettings(meta, getIndexSettings());
-		MapperRegistry mapperRegistry = new IndicesModule(
-			getPlugins().stream()
-				.filter(p -> p instanceof MapperPlugin)
-				.map(p -> (MapperPlugin) p)
-				.collect(toList())
-		).getMapperRegistry();
-		ScriptModule scriptModule = new ScriptModule(
-			Settings.EMPTY,
-			getPlugins().stream()
-				.filter(p -> p instanceof ScriptPlugin)
-				.map(p -> (ScriptPlugin) p)
-				.collect(toList())
-		);
-		ScriptService scriptService = new ScriptService(
-			getIndexSettings(),
-			scriptModule.engines,
-			scriptModule.contexts
-		);
-		SimilarityService similarityService = new SimilarityService(
-			indexSettings,
-			scriptService,
-			emptyMap()
-		);
 		MapperService mapperService = new MapperService(
 			indexSettings,
-			createIndexAnalyzers(indexSettings),
-			xContentRegistry(),
+			indexAnalyzers,
+			DEFAULT_NAMED_X_CONTENT_REGISTRY,
 			similarityService,
 			mapperRegistry,
 			() -> {
@@ -245,48 +236,16 @@ public class OpenSearchUtils {
 			() -> true,
 			scriptService
 		);
-		merge(mapperService, mapping);
+
+		XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().endObject();
+
+		mapperService.merge(
+			"_doc",
+			new CompressedXContent(BytesReference.bytes(mapping)),
+			MapperService.MergeReason.MAPPING_UPDATE
+		);
+
 		return mapperService;
 	}
 
-	protected static Settings getIndexSettings() {
-		return SETTINGS;
-	}
-
-	protected static Collection<? extends Plugin> getPlugins() {
-		return emptyList();
-	}
-
-	protected static void merge(MapperService mapperService, XContentBuilder mapping)
-		throws IOException {
-		merge(mapperService, MapperService.MergeReason.MAPPING_UPDATE, mapping);
-	}
-
-	protected static void merge(
-		MapperService mapperService,
-		MapperService.MergeReason reason,
-		XContentBuilder mapping) throws IOException {
-		mapperService.merge("_doc", new CompressedXContent(BytesReference.bytes(mapping)), reason);
-	}
-
-	protected static NamedXContentRegistry xContentRegistry() {
-		return DEFAULT_NAMED_X_CONTENT_REGISTRY;
-	}
-
-	private static XContentBuilder dynamicMapping(CheckedConsumer<XContentBuilder, IOException> buildFields)
-		throws IOException {
-		return topMapping(b -> {
-			b.field("dynamic", true);
-			b.startObject("properties");
-			buildFields.accept(b);
-			b.endObject();
-		});
-	}
-
-	private static XContentBuilder topMapping(CheckedConsumer<XContentBuilder, IOException> buildFields)
-		throws IOException {
-		XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject("_doc");
-		buildFields.accept(builder);
-		return builder.endObject().endObject();
-	}
 }
