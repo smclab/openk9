@@ -51,7 +51,7 @@ public class UploadService {
 	public String uploadObject(InputStream inputStream, String datasourceId, String fileId, String schemaName) {
 
 		try {
-			String bucketName = "datasource" + datasourceId;
+			String bucketName = schemaName + "-datasource" + datasourceId;
 
 			boolean found =
 					minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());

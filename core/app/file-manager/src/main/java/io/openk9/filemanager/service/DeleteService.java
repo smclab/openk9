@@ -49,7 +49,7 @@ public class DeleteService {
 			String datasourceId = fileResourceResponse.getDatasourceId();
 			String fileId = fileResourceResponse.getFileId();
 
-			String bucketName = "datasource" + datasourceId;
+			String bucketName = schemaName + "-datasource" + datasourceId;
 
 			logger.info("Removing object with fileId " + fileId + " in bucket " + bucketName);
 

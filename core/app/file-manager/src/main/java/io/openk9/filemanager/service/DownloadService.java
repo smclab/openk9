@@ -57,7 +57,7 @@ public class DownloadService {
 				String datasourceId = fileResourceResponse.getDatasourceId();
 				String fileId = fileResourceResponse.getFileId();
 
-				String bucketName = "datasource" + datasourceId;
+				String bucketName = schemaName + "-datasource" + datasourceId;
 
 				return minioClient.getObject(
 						GetObjectArgs.builder()
@@ -76,22 +76,6 @@ public class DownloadService {
 
 	@GrpcClient("filemanager")
 	FileManagerGrpc.FileManagerBlockingStub filemanager;
-
-
-	/*public boolean isObjectExist(String bucketName, String objectName) {
-		try {
-			minioClient.statObject(StatObjectArgs.builder()
-					.bucket(bucketName)
-					.object(objectName).build());
-			return true;
-		} catch (ErrorResponseException e) {
-			e.printStackTrace();
-			return false;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException(e.getMessage());
-		}
-	}*/
 
 	@Inject
 	Logger logger;
