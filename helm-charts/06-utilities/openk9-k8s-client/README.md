@@ -60,6 +60,7 @@ Openk9 K8s Client service is based on Quarkus Framework. Use following parameter
 | `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
 | `quarkus.kubernetes.namespace`  | Name of Kubernetes Namespace                 | `openk9`             |
 | `quarkus.kubernetes.secretName`  | Secret with tls certificate to associate to ingresses                 | `openk9-tls-star-secret`             |
+| `quarkus.kubernetes.ingressClassName`  | Ingress Class Name to associate to ingresses                 | ``             |
 
 ### JVM configuration
 

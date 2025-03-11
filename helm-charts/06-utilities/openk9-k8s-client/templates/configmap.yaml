@@ -29,6 +29,7 @@ data:
 
   QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
   QUARKUS_KUBERNETES_INGRESS_SECRETNAME: {{ .Values.quarkus.kubernetes.secretName | quote }}
+  QUARKUS_KUBERNETES_INGRESS_INGRESSCLASSNAME: {{ .Values.quarkus.kubernetes.ingressClassName | quote }}
 
   # JVM Memory variable
   JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
