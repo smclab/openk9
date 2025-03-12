@@ -1,0 +1,12 @@
+beautifulsoup4==4.12.2
+dateparser==1.1.8
+fastapi==0.104.1
+pydantic==2.4.2
+requests==2.31.0
+scrapy-playwright==0.0.33
+scrapy-user-agents==0.1.1
+Scrapy==2.11.0
+scrapyd-client==1.2.3
+scrapyd==1.4.3
+uvicorn[standard]==0.23.2
+requests-futures==1.0.1
