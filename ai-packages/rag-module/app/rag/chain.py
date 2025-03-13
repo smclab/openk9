@@ -79,9 +79,6 @@ def get_chain(
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
-    for element in documents:
-        yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
-
     yield json.dumps({"chunk": "", "type": "END"})
 
 
