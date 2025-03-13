@@ -385,16 +385,6 @@ async def get_chat(
     )
 
 
-@app.get("/live")
-async def liveness_probe():
-    return {"status": "alive"}
-
-
-@app.get("/ready")
-async def readiness_probe():
-    return {"status": "alive"}
-
-
-@app.get("/startup")
-async def startup_probe():
-    return {"status": "alive"}
+@app.get("/health")
+async def get_health():
+    return {"status": "UP"}
