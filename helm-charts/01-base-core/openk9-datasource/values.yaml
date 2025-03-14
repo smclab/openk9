@@ -102,17 +102,6 @@ scheduling:
   ConsumerMaxRetries: '2'
   ConsumerTimeout: '10m'
 
-## PostgreSQL configuration
-postgresql:
-  reactiveUrl: "postgresql://postgresql/openk9"   #-TBMD
-  # username
-  port: 5432
-  database: "openk9"
-  username: "openk9"    #-TBMD
-  passwordSecretName: "postgres-password"
-  keyPasswordSecret: "user-password"
-  keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
-
 ## Database configuration
 database:
 
