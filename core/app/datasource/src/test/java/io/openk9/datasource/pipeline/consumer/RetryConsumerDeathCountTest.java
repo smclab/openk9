@@ -29,6 +29,7 @@ import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.test.junit.QuarkusTest;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,6 +50,8 @@ public class RetryConsumerDeathCountTest {
 
 	private Channel channel;
 	private Connection connection;
+	private static final int MAX_RETRY = 3;
+	private Integer deathCount;
 
 	@BeforeEach
 	void setup() {
@@ -82,7 +85,7 @@ public class RetryConsumerDeathCountTest {
 			MAIN_QUEUE,
 			(consumerTag, message) -> {
 				var deliveryTag = message.getEnvelope().getDeliveryTag();
-				log.infof("MainQueue received: %s", message.getBody());
+				log.infof("MainQueue received: %s", deliveryTag);
 
 				channel.basicNack(
 					deliveryTag,
@@ -100,11 +103,13 @@ public class RetryConsumerDeathCountTest {
 			RETRY_QUEUE,
 			(consumerTag, message) -> {
 				var deliveryTag = message.getEnvelope().getDeliveryTag();
-				log.infof("RetryQueue received: %s", message.getBody());
+				log.infof("RetryQueue received: %s", deliveryTag);
 				var properties = message.getProperties();
-				var deathCount = RetryConsumer.incrementDeathCount(properties);
+				this.deathCount = RetryConsumer.incrementDeathCount(properties);
 
-				if (deathCount < 3) {
+				log.infof("deathCount value: %s", deathCount);
+
+				if (deathCount < MAX_RETRY) {
 
 					channel.basicPublish(
 						AMQ_TOPIC_EXCHANGE,
@@ -134,13 +139,13 @@ public class RetryConsumerDeathCountTest {
 			ERROR_QUEUE,
 			(consumerTag, message) -> {
 				var deliveryTag = message.getEnvelope().getDeliveryTag();
-				log.infof("ErrorQueue received: %s", message.getBody());
-
-				latch.countDown();
+				log.infof("ErrorQueue received: %s", deliveryTag);
 
 				channel.basicAck(deliveryTag, false);
 
 				log.infof("ack %s", deliveryTag);
+
+				latch.countDown();
 			},
 			(consumerTag, sig) -> {
 				log.info("consumer closed");
@@ -150,6 +155,7 @@ public class RetryConsumerDeathCountTest {
 
 		latch.await();
 
+		Assertions.assertEquals(MAX_RETRY, deathCount);
 	}
 
 	@AfterEach
