@@ -1,8 +1,4 @@
-# This scenario creates a single standalone Ingestion
-# machine, with the most basic configuration and limited
-# resource to be fit in a local CodeReady Components environment
-
-  
-  
-
-
+## Quarkus configuration
+quarkus:
+  HttpCors: false
+  HttpCorsOrigin: "/https://.*.openk9.local/,"

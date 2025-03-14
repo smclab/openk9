@@ -1,45 +1,7 @@
-image:
-  ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.0"
-
 ## Cors configuration
 cors:
   origins: "*"
 
 ## Keycloak configuration
 keycloak:
-  url: "https://keycloak.openk9.io/"
-
-## Configure the ingress resource that allows you to access the
-## Rag Module installation. Set up the URL
-## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
-##
-ingress:
-  ## @param ingress.enabled Enable ingress resource for Rag Module console
-  ##
-  enabled: true
-  ## @param ingress.enabled Enable ingress resource for Rag Module console
-  ##
-  host: prova.openk9.io   #-TBMD
-  ## @param ingress.annotations Additional annotations for the Ingress resource.
-  ## For a full list of possible ingress annotations, please see
-  ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
-  ##
-  ## e.g:
-  ## annotations:
-  ##   kubernetes.io/ingress.class: nginx
-  ##
-  annotations: {}
-  ## @param ingress.servicePort Path for the default port.
-  ##
-  servicePort: 8080
-  ## @param ingress.paths Paths for the default host.
-  ##
-  paths:
-    - /api/rag-chat
-    - /api/rag/generate
-  ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
-  ##
-  tls:
-    enabled: true
-    secretName: openk9-tls-star-secret   #-TBMD
+  url: "https://keycloak.openk9.local/"

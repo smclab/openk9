@@ -1,5 +1,0 @@
-image:
-  registry: ""  #-TBMD 
-  name: smclab/openk9-admin-ui
-  ## Overrides the image tag whose default is the chart appVersion.
-  tag: "3.0.0-SNAPSHOT"

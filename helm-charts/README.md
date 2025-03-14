@@ -39,7 +39,7 @@ Read more about compatibility matrix on Github.
     - [File Manager](#file-manager)
     - [Tika](#tika)
 
-
+    
 ## Prerequisites
 
 To install Openk9 following this installation guide, you need to have locally installed tools.

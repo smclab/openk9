@@ -5,9 +5,10 @@ resources:
     cpu: "100m"
     memory: "100Mi"
 
-extraEnvs:
-  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
-    value: "20dfFHt45yu"
+# Allows you to load environment variables from kubernetes secret or config map
+envFrom:
+  - secretRef:
+      name: opensearch-password
 
 config:
   # Values must be YAML literal style scalar / YAML multiline string.
@@ -25,4 +26,3 @@ config:
   #   rootLogger.appenderRef.console.ref = console
   opensearch.yml: |
     plugins.security.disabled: true
-
