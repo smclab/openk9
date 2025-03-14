@@ -22,7 +22,7 @@
     <parent>
         <artifactId>hibernate-rx-multitenancy-parent</artifactId>
         <groupId>io.openk9</groupId>
-		<version>3.19.2</version>
+		<version>3.19.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
