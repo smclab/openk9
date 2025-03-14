@@ -112,6 +112,32 @@ postgresql:
   passwordSecretName: "postgres-password"
   keyPasswordSecret: "user-password"
   keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+
+## Database configuration
+database:
+
+  type: "postgresql" 
+  
+  # ---- Parameters PostgreSQL ----
+  postgresql:
+    reactiveUrl: "postgresql://postgresql/openk9"
+    port: 5432
+    database: "openk9"
+    username: "openk9"
+    passwordSecretName: "postgres-password"
+    keyPasswordSecret: "user-password"
+    keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+
+  # ---- Parameters Oracle ----
+  oracle:
+    reactiveUrl: "oracle://my-oracle-db-oracle-db:1521/K9"
+    port: 1521
+    database: "K9"
+    username: "OPENK9"
+    passwordSecretName: "oracle-password"
+    keyPasswordSecret: "oracle-user-password"
+    keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+
   
 ## Opensearch configuration
 opensearch:

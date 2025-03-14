@@ -109,14 +109,31 @@ keycloak:
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
 
 
-## PostgreSQL configuration
-postgresql:
-  reactiveUrl: "postgresql://postgresql/tenantmanager"     #-TBMD
-  reactiveUrlOpenk9: "postgresql://postgresql/openk9"       #-TBMD
-  username: "openk9"
-  passwordSecretName: "postgres-password"
-  keyPasswordSecret: "user-password"
-  keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+## Database configuration
+database:
+
+  type: "postgresql" 
+
+  ## PostgreSQL configuration
+  postgresql:
+    reactiveUrl: "postgresql://postgresql/tenantmanager"     #-TBMD
+    reactiveUrlOpenk9: "postgresql://postgresql/openk9"       #-TBMD
+    username: "openk9"
+    passwordSecretName: "postgres-password"
+    keyPasswordSecret: "user-password"
+    keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+
+  ## PostgreSQL configuration
+  oracle:
+    reactiveUrl: "oracle://my-oracle-db-oracle-db:1521/K9"     #-TBMD
+    reactiveUrlOpenk9: "oracle://my-oracle-db-oracle-db:1521/K9"       #-TBMD
+    username: "OPENK9"
+    passwordSecretName: "oracle-password"
+    keyPasswordSecret: "oracle-user-password"
+    keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+    liquibase:
+      changeLogLockTable: "DATABASECHANGELOGLOCK_DATASOURCE"
+      changeLogTable: "DATABASECHANGELOG_DATASOURCE"
 
 ## Opentelemetry configuration
 otel:

@@ -16,8 +16,23 @@ data:
   QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
 
   # Database env variables
-  QUARKUS_DATASOURCE_REACTIVE_URL: {{ .Values.postgresql.reactiveUrl | quote }}
-  QUARKUS_DATASOURCE_USERNAME: {{ .Values.postgresql.username | quote }}
+  QUARKUS_DATASOURCE_REACTIVE_URL: |
+    {{- if eq .Values.database.type "oracle" -}}
+      {{ .Values.database.oracle.reactiveUrl | quote }}
+    {{- else if eq .Values.database.type "postgresql" -}}
+      {{ .Values.database.postgresql.reactiveUrl | quote }}
+    {{- else -}}
+      "jdbc:postgresql://localhost:5432/unknown"  # default di fallback
+    {{- end }}
+  QUARKUS_DATASOURCE_USERNAME: |
+    {{- if eq .Values.database.type "oracle" -}}
+      {{ .Values.database.oracle.username | quote }}
+    {{- else if eq .Values.database.type "postgresql" -}}
+      {{ .Values.database.postgresql.username | quote }}
+    {{- else -}}
+      "unknown"
+    {{- end }}
+
   QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'none'
   QUARKUS_HIBERNATE_ORM_LOG_SQL: "false"
 

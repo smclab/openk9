@@ -76,22 +76,41 @@ Openk9 Tenant Manager service is based on Quarkus Framework. Use following param
 | `jvm.toolOptions`    | JVM Tool Options                                                                       | ``            |
 
 
-### Configure Postgresql
+### Configure Database
 
-Openk9 Tenant Manager needs Postgresql to work. 
+Openk9 Tenant Manager needs Postgresql or Oracle to work. 
 
-To configure connection to Postgresql following parameters are available:
+To configure connection to Postgresql or Oracle following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `postgresql.reactiveUrl`    | Postgresql url          | `postgresql://postgresql/openk9`            |
+| `database.type`    | Database to use. Default is postgresql         | `postgresql`            |
+
+Configure these when database type is postgresql
+
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `postgresql.reactiveUrl`    | Postgresql url for Tenant Manager database          | `postgresql://postgresql/openk9`            |
+| `postgresql.reactiveUrlOpenk9`    | Postgresql url for Openk9 database         | `postgresql://postgresql/openk9`            |
 | `postgresql.port`  | Port where Postgresql is exposed                                    | `5432` |
-| `postgresql.database`    | Postgresql databse          | `openk9`            |
 | `postgresql.username`  | Postgresql user                                 | `openk9`             |
 | `postgresql.passwordSecretName` | Name of the secret where password is stored                            | `postgres-password`                       |
 | `postgresql.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `user-password`                    |
-| `postgresql.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_Searcher_PASSWORD`   |
+| `postgresql.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
 
+Configure these when database type is oracle
+
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `oracle.reactiveUrl`    | Oracle url for Tenant Manager database          | `oracle://my-oracle-db-oracle-db:1521/K9`            |
+| `oracle.reactiveUrlOpenk9`    | Oracle url for Openk9 database         | `oracle://my-oracle-db-oracle-db:1521/K9`            |
+| `oracle.port`  | Port where Oracle is exposed                                    | `1521` |
+| `oracle.username`  | Oracle user                                 | `OPENK9`             |
+| `oracle.passwordSecretName` | Name of the secret where password is stored                            | `oracle-password`                       |
+| `oracle.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `oracle-user-password`                    |
+| `oracle.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
 
 ### Configure Keycloak
 

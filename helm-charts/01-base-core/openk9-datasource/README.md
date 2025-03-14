@@ -87,11 +87,17 @@ Openk9 Datasource service is based on Quarkus Framework. Use following parameter
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `jvm.toolOptions`    | JVM Tool Options                                                                       | ``            |
 
-### Configure Postgresql
+### Configure Database
 
-Openk9 Datasource needs Postgresql to work. 
+Openk9 Datasource needs Postgresql or Oracle to work. 
 
-To configure connection to Postgresql following parameters are available:
+To configure connection to Postgresql or Oracle following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `database.type`    | Database to use. Default is postgresql         | `postgresql`            |
+
+Configure these when database type is postgresql
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
@@ -102,6 +108,18 @@ To configure connection to Postgresql following parameters are available:
 | `postgresql.passwordSecretName` | Name of the secret where password is stored                            | `postgres-password`                       |
 | `postgresql.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `user-password`                    |
 | `postgresql.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
+
+Configure these when database type is oracle
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `oracle.reactiveUrl`    | Oracle url          | `oracle://my-oracle-db-oracle-db:1521/K9`            |
+| `oracle.port`  | Port where Oracle is exposed                                    | `5432` |
+| `oracle.database`    | Oracle databse          | `K9`            |
+| `oracle.username`  | Oracle user                                 | `OPENK9`             |
+| `oracle.passwordSecretName` | Name of the secret where password is stored                            | `oracle-password`                       |
+| `oracle.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `oracle-user-password`                    |
+| `oracle.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
 
 ### Configure Opensearch
 

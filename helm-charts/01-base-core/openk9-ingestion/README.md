@@ -59,6 +59,7 @@ Openk9 Ingestion service is based on Quarkus Framework. Use following parameters
 | `quarkus.LogConsoleJson`      | If json log is enabled | `false`                       |
 | `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
 
+
 ### JVM configuration
 
 Openk9 Ingestion is a JVM service. To control JVM based tool options use following parameters:
