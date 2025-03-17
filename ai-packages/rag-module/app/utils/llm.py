@@ -47,6 +47,47 @@ class ModelType(Enum):
     CHAT_VERTEX_AI_MODEL_GARDEN = "chat_vertex_ai_model_garden"
 
 
+def save_google_application_credentials(credentials):
+    """
+    Save Google Application credentials to a JSON file and configure environment variables.
+
+    Serializes credentials to a JSON file and sets the GOOGLE_APPLICATION_CREDENTIALS environment
+    variable to enable automatic credential discovery by Google Cloud client libraries.
+
+    .. note::
+        The environment variable modification only affects the current process and child processes.
+
+    :param dict credentials: Dictionary containing Google Application credentials data.
+        Expected to contain service account or user credential fields.
+        Must be JSON-serializable (typically contains key/values with primitive types).
+
+    :raises json.JSONEncodeError: If credentials contain non-serializable data types
+    :raises OSError: If file writing operations fail (e.g., permission issues)
+
+    Example::
+
+        "credentials": {
+            "account": "",
+            "client_id": "client_id",
+            "client_secret": "client_secret",
+            "quota_project_id": "quota_project_id",
+            "endpoint_id": "endpoint_id",
+            "location": "location",
+            "refresh_token": "refresh_token",
+            "type": "type",
+            "universe_domain": "universe_domain"
+            }
+        save_google_cloud_credentials(credentials)
+    """
+    json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
+    credential_file_path = "application_default_credentials.json"
+
+    with open(credential_file_path, "w", encoding="utf-8") as outfile:
+        outfile.write(json_credentials)
+
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
+
+
 def initialize_language_model(configuration):
     """
     Initialize and return a language model based on the specified model type
@@ -123,14 +164,9 @@ def initialize_language_model(configuration):
                 params=parameters,
             )
         case ModelType.CHAT_VERTEX_AI.value:
-            credentials = configuration["chat_vertex_ai_credentials"]
-            project_id = credentials["quota_project_id"]
-            json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
-            credential_file_path = "application_default_credentials.json"
-            with open(credential_file_path, "w", encoding="utf-8") as outfile:
-                outfile.write(json_credentials)
-
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
+            google_credentials = configuration["chat_vertex_ai_credentials"]
+            save_google_application_credentials(google_credentials)
+            project_id = google_credentials["quota_project_id"]
 
             llm = ChatVertexAI(
                 model=model,
@@ -142,9 +178,11 @@ def initialize_language_model(configuration):
             )
         case ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value:
             chat_vertex_ai_model_garden = configuration["chat_vertex_ai_model_garden"]
-            project_id = chat_vertex_ai_model_garden["project_id"]
-            endpoint_id = chat_vertex_ai_model_garden["endpoint_id"]
-            location = chat_vertex_ai_model_garden["location"]
+            google_credentials = chat_vertex_ai_model_garden["credentials"]
+            save_google_application_credentials(google_credentials)
+            project_id = google_credentials["quota_project_id"]
+            endpoint_id = google_credentials["endpoint_id"]
+            location = google_credentials["location"]
 
             credentials, _ = default()
             auth_request = transport.requests.Request()
