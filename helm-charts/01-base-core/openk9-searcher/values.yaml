@@ -110,6 +110,10 @@ openk9:
   tenantManager:
     host: "openk9-tenant-manager"
 
+search:
+  total:
+    limit: 10000
+
 ## Opentelemetry configuration
 otel:
   disabled: true

@@ -26,3 +26,5 @@ data:
   # Opentelemetry env
   QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
   QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ .Values.otel.endpoint | quote }}
+
+  OPENK9_SEARCHER_TOTAL_RESULT_LIMIT: {{ .Values.search.total.limit | quote }}

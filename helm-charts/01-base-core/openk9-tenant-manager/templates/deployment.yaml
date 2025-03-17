@@ -77,11 +77,20 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.keycloak.passwordSecretName }}
                   key: {{ .Values.keycloak.keyPasswordSecret }}
-            - name: {{ .Values.postgresql.keyPasswordEnvName }}
+            {{- if eq .Values.database.type "postgresql" }}
+            - name: {{ .Values.database.postgresql.keyPasswordEnvName }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.postgresql.passwordSecretName }}
-                  key: {{ .Values.postgresql.keyPasswordSecret }}
+                  name: {{ .Values.database.postgresql.passwordSecretName }}
+                  key: {{ .Values.database.postgresql.keyPasswordSecret }}
+            {{- end }}
+            {{- if eq .Values.database.type "oracle" }}
+            - name: {{ .Values.database.oracle.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.oracle.passwordSecretName }}
+                  key: {{ .Values.database.oracle.keyPasswordSecret }}
+            {{- end }} 
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http

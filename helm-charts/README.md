@@ -44,7 +44,7 @@ Read more about compatibility matrix on Github.
 
 To install Openk9 following this installation guide, you need to have locally installed tools.
 
-For Kubernetes/k3s:
+For Kubernetes:
 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [helm](https://helm.sh/docs/intro/install/)
@@ -249,7 +249,7 @@ open browser on [http://localhost:15672](http://localhost:15672) and log in with
 
 Several elements of OpenK9 require the presence of a relational database. [PostgreSQL](https://www.postgresql.org/) represents the best open source solution.
 
-To install PostgreSQL use the Helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/master/bitnami/postgres) which manages the different aspects of a stand-alone installation.
+To install PostgreSQL use the Helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) which manages the different aspects of a stand-alone installation.
 
 To proceed add the repository containing the charts to your local helm:
 
@@ -457,9 +457,9 @@ Access to console using url [http://localhost:8280](http://localhost:8280) and l
 
 Keycloak must be exposed through Ingress in order to be externally reachable for the login flow.
 
-Use following command to create ingress from terminal. Update host in spec.rules and in tls.hosts to match your domain and sustitute to `keycloak.openk9.local`.
+Use following command to create ingress from terminal. Update host in spec.rules and in tls.hosts to match your domain and substitute to `keycloak.openk9.local`.
 
-Change also tls.secretName if yoy have renamed tls secret.
+Change also tls.secretName if you have renamed tls secret.
 
 ```bash
 cat <<_EOF_ | kubectl apply -n openk9 -f -
@@ -508,7 +508,7 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 
 Base core components are mandatory components to install and run Openk9 in its core functionalities.
 
-Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
+Inside the this repository there is
 [01-base-core](./01-base-core) folder where, for each component, there is official chart.
 
 Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
@@ -528,10 +528,10 @@ Edit your local yaml file to overwrite main configurations and configure Ingesti
 Following are main configurations to edit:
 
 ```bash
-## Quarkus configuration
-quarkus:
-  HttpCors: true ## Change to disable Cors
-  HttpCorsOrigin: "/https://.*.openk9.local/," ## Change to configure Cors for your domain
+## Http limit max size
+limit:
+  max:
+    size: 10240K # Change to accept message with body greater than default
 ```
 
 For advanced configurations read [README.md](./01-base-core/openk9-ingestion/README.md) inside Ingestion chart folder.
@@ -574,7 +574,7 @@ The Tenant Manager component defines the logic for managing and creating tenants
 
 To learn more on Tenant Manager component, read [official documentation](https://www.openk9.io/docs/tenant-manager).
 
-Tenant Manager interacts with Keycloak and needs a specific configured realm and client. This client is then used to log in and call tenant manager Apis using specific [dedicated UI](#tenant-ui).
+Tenant Manager interacts with Keycloak and needs a specific configured realm and client. This client is then used to log in and call tenant manager Apis using specific  dedicated UI.
 
 Create it before install. Follow [official documentation](https://staging-site.openk9.io/docs/first-configuration#tenant-manager-keycloak-configuration).
 
@@ -657,7 +657,7 @@ Events:
 
 Then create a Secret with the coordinates of the newly created user.
 
-Per Kubernetes execute:
+For Kubernetes execute:
 
 ```bash
 kubectl -n openk9 create secret generic postgresql-tenant-manager-secret \
@@ -666,7 +666,7 @@ kubectl -n openk9 create secret generic postgresql-tenant-manager-secret \
   --from-literal=password=openk9
 ```
 
-Per openshift execute:
+For openshift execute:
 
 ```bash
 oc -n openk9 create secret generic postgresql-tenant-manager-secret \
@@ -973,7 +973,7 @@ helm upgrade -i tenant-ui 01-base-core/openk9-tenant-ui -n openk9 -f 01-base-cor
 
 #### Verify installation
 
-Learn more on how to use and configure all needed to access to Tenant UI on [official documentation](https://staging-site.openk9.io/docs/first-configuration).
+Learn more on how to use and configure all needed to access to Tenant UI on [official documentation](https://staging-site.openk9.io/docs/first-configuration#first-tenant-creation).
 
 ### Admin Ui
 
@@ -1027,7 +1027,7 @@ Learn more on how to use and access to standard Search Frontend on [official doc
 
 Gen AI components add to Openk9 functionalities to chat with your data using Large Language Models.
 
-Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
+Inside this repository there is the
 [03-gen-ai](./03-gen-ai) folder where, for each component, there is official chart.
 
 Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
@@ -1042,22 +1042,22 @@ To learn more on Embedding Module, read [official documentation]().
 
 For advanced configurations read [README.md](./03-gen-ai/openk9-embedding-module/README.md) inside Embedding Module chart folder.
 
-## Installation
+#### Installation
 
 
 For kubernetes/K3s execute:
 
 ```bash
-helm upgrade -i embedding-module 08-gen-ai/openk9-embedding-module -n openk9 -f 08-gen-ai/openk9-embedding-module/scenarios/local-runtime.yaml
+helm upgrade -i embedding-module 03-gen-ai/openk9-embedding-module -n openk9 -f 03-gen-ai/openk9-embedding-module/scenarios/local-runtime.yaml
 ```
 
 For Opeshift execute:
 
 ```bash
-helm upgrade -i embedding-module 08-gen-ai/openk9-embedding-module -n openk9 -f 08-gen-ai/openk9-embedding-module/scenarios/local-crc.yaml
+helm upgrade -i embedding-module 03-gen-ai/openk9-embedding-module -n openk9 -f 03-gen-ai/openk9-embedding-module/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -1084,7 +1084,7 @@ To learn more on Rag Module, read [official documentation]().
 
 For advanced configurations read [README.md](./03-gen-ai/openk9-rag-module/README.md) inside Rag Module chart folder.
 
-## Installation
+#### Installation
 
 
 For kubernetes/K3s execute:
@@ -1099,7 +1099,7 @@ For Opeshift execute:
 helm upgrade -i rag-module 08-gen-ai/openk9-rag-module -n openk9 -f 08-gen-ai/openk9-rag-module/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -1126,7 +1126,7 @@ To learn more on how to use Talk To, read [official documentation]().
 
 For advanced configurations read [README.md](./03-gen-ai/openk9-talk-to/README.md) inside Talk To chart folder.
 
-## Installation
+#### Installation
 
 
 For kubernetes/K3s execute:
@@ -1141,7 +1141,7 @@ For Opeshift execute:
 helm upgrade -i talk-to 08-gen-ai/openk9-talk-to -n openk9 -f 08-gen-ai/openk9-talk-to/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Learn more on how to use and configure all needed to access and chat with your data using Talk To UI on [official documentation]().
 
@@ -1150,7 +1150,7 @@ Learn more on how to use and configure all needed to access and chat with your d
 
 File handling components add to Openk9 functionalities to handle and parse binaries coming from external data source.
 
-Inside the [openk9-helm-charts repository](https://github.com/smclab/openk9-helm-charts) there is the
+Inside this repository there is the
 [02-file-handling](./02-file-handling/) folder where, for each component, there is official chart.
 
 Inside every chart folder, there is a README file with chart documentation. Explore it for advanced configuration.
@@ -1221,7 +1221,7 @@ File Manager is the component delegated to upload and dowload binaries to Minio.
 
 To learn more on File Manager component, read [official documentation](https://www.openk9.io/docs/file-manager).
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure File Manager to run correctly in your cluster.
 
@@ -1250,7 +1250,7 @@ For Opeshift execute:
 helm upgrade -i file-manager 02-file-handling/openk9-file-manager -n openk9 -f 02-file-handling/openk9-file-manager/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -1274,7 +1274,7 @@ Tika is the component delegated to parse binaries coming from external data sour
 
 To learn more on Tika component, read [official documentation](https://www.openk9.io/docs/tika).
 
-## Main configurations
+#### Main configurations
 
 Edit your local yaml file to overwrite main configurations and configure Tika to run correctly in your cluster.
 
@@ -1303,7 +1303,7 @@ For Opeshift execute:
 helm upgrade -i tika 02-file-handling/openk9-tika -n openk9 -f 02-file-handling/openk9-tika/scenarios/local-crc.yaml
 ```
 
-## Verify installation
+#### Verify installation
 
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
@@ -1326,199 +1326,8 @@ Access to console using url "http://localhost:8080/q/health". If status is UP se
 
 Openk9 has available connectors you can install in your environment and use to extract data from your data source.
 
-### OPENK9 WEB CONNECTOR
+Explore Connectors section on [official site](https://staging-site.openk9.io/plugins/).
 
-Openk9 Web Connector is a crawler that permits to extract data from web site using Sitemap or alternately browsing the URLs in depth.
+Some universal connectors are open and is possibile to install them from Tenant Ui.
 
-To learn more on Openk9 Web Connector, read [official documentation]().
-
-## Installation
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i openk9-web-connector 04-connectors/openk9-web-connector -n openk9
-```
-
-For Opeshift execute:
-
-```bash
-helm upgrade -i openk9-web-connector 04-connectors/openk9-web-connector -n openk9
-```
-
-## Verify installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-Per Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-web-connector 5000:5000
-```
-
-Per Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-web-connector  5000:5000
-```
-
-Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
-
-### OPENK9 LIFERAY CONNECTOR
-
-Openk9 Liferay Connector is a connector that permits to extract data from Liferay portal.
-
-To learn more on Openk9 Liferay Connector, read [official documentation]().
-
-## Installation
-
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i openk9-liferay-connector 04-connectors/openk9-liferay-connector -n openk9
-```
-
-For Opeshift execute:
-
-```bash
-helm upgrade -i openk9-liferay-connector 04-connectors/openk9-liferay-connector -n openk9
-```
-
-## Verify installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-Per Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-liferay-connector 5000:5000
-```
-
-Per Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-liferay-connector  5000:5000
-```
-
-Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
-
-### OPENK9 EMAIL CONNECTOR
-
-Openk9 Email Connector is a connector that permits to extract data from Imap email server.
-
-To learn more on Openk9 Email Connector, read [official documentation]().
-
-## Installation
-
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i openk9-email-connector 04-connectors/openk9-email-connector -n openk9
-```
-
-For Opeshift execute:
-
-```bash
-helm upgrade -i openk9-email-connector 04-connectors/openk9-email-connector -n openk9
-```
-
-## Verify installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-Per Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-email-connector 5000:5000
-```
-
-Per Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-email-connector  5000:5000
-```
-
-Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
-
-### OPENK9 GITLAB CONNECTOR
-
-Openk9 Gitlab Connector is a connector that permits to extract data from Gitlab server.
-
-To learn more on Openk9 Gitlab Connector, read [official documentation]().
-
-## Installation
-
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i openk9-gitlab-connector 04-connectors/openk9-gitlab-connector -n openk9
-```
-
-For Opeshift execute:
-
-```bash
-helm upgrade -i openk9-gitlab-connector 04-connectors/openk9-gitlab-connector -n openk9
-```
-
-## Verify installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-Per Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-gitlab-connector 5000:5000
-```
-
-Per Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-gitlab-connector  5000:5000
-```
-
-Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
-
-### OPENK9 MINIO CONNECTOR
-
-Openk9 Minio Connector is a connector that permits to extract data from Minio server.
-
-To learn more on Openk9 Minio Connector, read [official documentation]().
-
-## Installation
-
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i openk9-minio-connector 04-connectors/openk9-minio-connector -n openk9
-```
-
-For Opeshift execute:
-
-```bash
-helm upgrade -i openk9-minio-connector 04-connectors/openk9-minio-connector -n openk9
-```
-
-## Verify installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-Per Kubernetes execute:
-
-```minio
-kubectl -n openk9 port-forward svc/openk9-web-connector 5000:5000
-```
-
-Per Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-minio-connector  5000:5000
-```
-
-Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
-
-## ENRICHERS
-
+Check [official document]() to view how to install and configure it to index data.

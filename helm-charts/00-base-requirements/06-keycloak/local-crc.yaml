@@ -47,7 +47,7 @@ ingress:
   ingressClassName: ""
   pathType: Prefix
   apiVersion: "networking.k8s.io/v1"
-  hostname: test-keycloaknew.mycluster-fra02-b3-642985-aff3c2f7c4350abb9e85aa5214015dda-0000.eu-de.containers.appdomain.cloud  #-TOMD
+  hostname: keycloak.openk9.local  #-TOMD
   path: /
   servicePort: 8080
   ## @param ingress.annotations [object] Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.

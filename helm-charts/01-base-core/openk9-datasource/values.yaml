@@ -156,6 +156,13 @@ openk9:
   tenantManager:
     host: "openk9-tenant-manager"
 
+
+## Search Page Configuration
+search:
+  page:
+    from: 10000
+    size: 200
+
 ## Opentelemetry configuration
 otel:
   disabled: true
