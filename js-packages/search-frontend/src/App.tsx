@@ -29,7 +29,6 @@ export function App() {
   if (serviceStatus === "down") {
     return <MaintenancePage />;
   }
-
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [numberOfResults, setNumberOfResults] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
@@ -110,7 +109,11 @@ export function App() {
           "filters result detail";
         padding: 20px;
         padding-top:0px;
-
+        @-moz-document url-prefix() {
+          .openk9-container-tabs {
+          margin-bottom: 30px;
+           }
+        }
         @media (max-width: 480px) {
           padding: 0;
           grid-template-columns: 1fr;
@@ -152,7 +155,6 @@ export function App() {
          @media (min-width: 1024px) and (max-width: 1280px) {
         grid-template-columns: 1.2fr 2.3fr 1.8fr;
         grid-template-rows: auto auto auto auto 1fr;
-
         }
       `}
     >
