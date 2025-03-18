@@ -41,6 +41,12 @@ export function DataRangePickerVertical({
   const [validationStart, setValidationStart] = React.useState("");
   const [validationEnd, setValidationEnd] = React.useState("");
   React.useEffect(() => {
+    if (startDate) {
+      startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
+    if (endDate) {
+      endDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
     onChange({
       startDate: startDate?._d || undefined,
       endDate: endDate?._d || undefined,
