@@ -33,12 +33,10 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.SchedulerService;
 
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.eventbus.Message;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -195,8 +193,7 @@ public class JobSchedulerService {
 		var tenantId = datasource.getTenant();
 		var pluginDriver = datasource.getPluginDriver();
 
-		var httpPluginDriverInfo = Json.decodeValue(
-			pluginDriver.getJsonConfig(), HttpPluginDriverInfo.class);
+		var httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
 
 		return httpPluginDriverClient.invoke(
 			httpPluginDriverInfo,

@@ -17,23 +17,28 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity(name = PluginDriver.ENTITY_NAME)
 @Table(name = PluginDriver.TABLE_NAME)
@@ -59,7 +64,7 @@ public class PluginDriver extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
-	@OneToMany(mappedBy = "pluginDriver", cascade = jakarta.persistence.CascadeType.ALL)
+	@OneToMany(mappedBy = "pluginDriver", cascade = CascadeType.ALL)
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<AclMapping> aclMappings
@@ -76,6 +81,14 @@ public class PluginDriver extends K9Entity {
 	public enum Provisioning {
 		SYSTEM,
 		USER
+	}
+
+	@JsonIgnore
+	public HttpPluginDriverInfo getHttpPluginDriverInfo() {
+		if (Objects.requireNonNull(type) == PluginDriverType.HTTP) {
+			return Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+		}
+		throw new InvalidPluginDriverType();
 	}
 
 }
