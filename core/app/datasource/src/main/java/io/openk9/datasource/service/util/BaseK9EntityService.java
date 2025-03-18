@@ -510,7 +510,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.recoverWithUni(() -> {
 					var entity = mapper.create(dto);
 
-					return session.persist(entity)
+				return persist(session, entity)
 						.map(v -> entity)
 						.invoke(e -> processor.onNext(
 							K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e))
