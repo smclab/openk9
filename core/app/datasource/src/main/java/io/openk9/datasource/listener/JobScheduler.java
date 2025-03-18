@@ -38,7 +38,6 @@ import org.apache.pekko.actor.typed.receptionist.Receptionist;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.jboss.logging.Logger;
 import scala.Option;
 
@@ -93,6 +92,7 @@ public class JobScheduler {
 
 	private static Behavior<Command> busy(
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
 		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
@@ -100,13 +100,13 @@ public class JobScheduler {
 
 		return newReceiveBuilder(
 			ctx,
+			currentBehavior,
 			messageBuffer,
 			quartzSchedulerTypedExtension,
 			messageGateway,
 			jobNames
 		)
 		.onMessage(TriggerDatasource.class, jm -> onStashMessage(messageBuffer, jm))
-		.onMessage(UpdateState.class, us -> onUpdateBusyState(us))
 		.build();
 	}
 
@@ -116,6 +116,7 @@ public class JobScheduler {
 
 	private static BehaviorBuilder<Command> newReceiveBuilder(
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
 		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
@@ -143,6 +144,7 @@ public class JobScheduler {
 				sdi -> onScheduleDatasourceInternal(
 					sdi,
 					ctx,
+					currentBehavior,
 					messageBuffer,
 					quartzSchedulerTypedExtension,
 					messageGateway,
@@ -562,6 +564,7 @@ public class JobScheduler {
 	private static Behavior<Command> onScheduleDatasourceInternal(
 		ScheduleDatasourceInternal scheduleDatasourceInternal,
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
 		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
@@ -631,18 +634,29 @@ public class JobScheduler {
 
 					newJobNames.add(jobName);
 
-					// update the actor jobNames value and return the same behavior
-					ctx.getSelf().tell(
-						new UpdateState(
-							ctx,
-							messageBuffer,
-							quartzSchedulerTypedExtension,
-							messageGatewayService,
-							newJobNames
-						)
-					);
-
-					return Behaviors.same();
+					// return the current behavior and update the actor jobNames list
+					switch (currentBehavior) {
+						case READY -> {
+							return ready(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+						case BUSY -> {
+							return busy(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+					}
 				}
 			}
 			catch (Exception e) {
@@ -781,7 +795,14 @@ public class JobScheduler {
 				tenantId, datasource, reindex, startIngestionDate, throwable)
 		);
 
-		return busy(ctx, messageBuffer, quartzSchedulerTypedExtension, messageGateway, jobNames);
+		return busy(
+			ctx,
+			CurrentBehavior.BUSY,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		);
 	}
 
 	private static Behavior<Command> onTriggerDatasourceInternal(
@@ -886,28 +907,9 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onUpdateBusyState (UpdateState msg) {
-		return busy(
-			msg.ctx,
-			msg.messageBuffer,
-			msg.quartzSchedulerTypedExtension,
-			msg.messageGateway,
-			msg.jobNames
-		);
-	}
-
-	private static Behavior<Command> onUpdateReadyState (UpdateState msg) {
-		return ready(
-			msg.ctx,
-			msg.messageBuffer,
-			msg.quartzSchedulerTypedExtension,
-			msg.messageGateway,
-			msg.jobNames
-		);
-	}
-
 		private static Behavior<Command> ready(
 			ActorContext<Command> ctx,
+			CurrentBehavior currentBehavior,
 			StashBuffer<Command> messageBuffer,
 			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 			ActorRef<MessageGateway.Command> messageGateway,
@@ -915,6 +917,7 @@ public class JobScheduler {
 
 		return newReceiveBuilder(
 			ctx,
+			currentBehavior,
 			messageBuffer,
 			quartzSchedulerTypedExtension,
 			messageGateway,
@@ -930,7 +933,6 @@ public class JobScheduler {
 				jobNames
 			)
 		)
-		.onMessage(UpdateState.class, us -> onUpdateReadyState(us))
 		.build();
 	}
 
@@ -1007,12 +1009,18 @@ public class JobScheduler {
 		return messageBuffer.unstashAll(
 			ready(
 				ctx,
+				CurrentBehavior.READY,
 				messageBuffer,
 				quartzSchedulerTypedExtension,
 				messageGateway,
 				jobNames
 			)
 		);
+	}
+
+	private enum CurrentBehavior {
+		READY,
+		BUSY
 	}
 
 	private enum JobType {
@@ -1091,13 +1099,5 @@ public class JobScheduler {
 	) implements Command {}
 
 	private record UnScheduleJobInternal(String jobName) implements Command {}
-
-	private record UpdateState(
-		ActorContext<Command> ctx,
-		StashBuffer<Command> messageBuffer,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGateway,
-		List<String> jobNames
-	) implements Command {}
 
 }
