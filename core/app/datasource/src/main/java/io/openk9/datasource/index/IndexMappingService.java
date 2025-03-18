@@ -61,6 +61,11 @@ import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
 
+/**
+ * Service responsible for handling the creation and management of index mappings in OpenSearch.
+ * This class provides functionality for creating index templates, component templates, and
+ * generating DocType fields from various sources like plugin drivers or existing indices.
+ */
 @ApplicationScoped
 public class IndexMappingService {
 
@@ -122,6 +127,14 @@ public class IndexMappingService {
 			createComponentTemplateRequest(embeddingComponentTemplate));
 	}
 
+	/**
+	 * Generates DocType and fields from provided mappings and document types.
+	 *
+	 * @param session       The Hibernate reactive session used for database operations
+	 * @param mappings      A map containing the field mappings structure
+	 * @param documentTypes List of document type names to be processed
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
 	public Uni<Set<DocType>> generateDocTypeFields(
 		Mutiny.Session session,
 		Map<String, Object> mappings,
@@ -135,6 +148,13 @@ public class IndexMappingService {
 		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
 	}
 
+	/**
+	 * Generates DocType fields from an existing index by retrieving its mappings and document types.
+	 *
+	 * @param session The Hibernate reactive session used for database operations
+	 * @param indexName The name of the index to retrieve mappings from
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
 	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
 		Mutiny.Session session, String indexName) {
 
@@ -145,6 +165,15 @@ public class IndexMappingService {
 					session, mappings, documentTypes)));
 	}
 
+	/**
+	 * Generates DocType fields from a plugin driver sample data.
+	 * This method retrieves a sample from the plugin driver, extracts document types
+	 * and mappings, and then generates the corresponding DocType fields.
+	 *
+	 * @param session The Hibernate reactive session used for database operations
+	 * @param httpPluginDriverInfo Information about the plugin driver to retrieve sample from
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
 	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
 		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
 
