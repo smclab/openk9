@@ -161,7 +161,12 @@ public class IndexMappingService {
 
 				return generateDocTypeFields(
 					session, mappings.getMap(), documentTypes);
-			});
+			})
+			.flatMap(docTypes ->
+				session.mergeAll(docTypes.toArray())
+					.map(unused -> docTypes)
+			);
+
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(
