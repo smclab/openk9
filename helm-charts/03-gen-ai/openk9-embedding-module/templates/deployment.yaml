@@ -30,11 +30,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: grpc
+              protocol: TCP
           ######################  Probes  ######################
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             grpc:
-              port: http
+              port: grpc
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
@@ -44,7 +48,7 @@ spec:
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe:
             grpc:
-              port: http
+              port: grpc
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
@@ -54,7 +58,7 @@ spec:
           {{- if .Values.startupProbe.enabled }}
           startupProbe:
             grpc:
-              port: http
+              port: grpc
             initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.startupProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
