@@ -83,10 +83,14 @@ public class PluginDriver extends K9Entity {
 		USER
 	}
 
+	public static HttpPluginDriverInfo parseHttpInfo(String jsonConfig) {
+		return Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+	}
+
 	@JsonIgnore
 	public HttpPluginDriverInfo getHttpPluginDriverInfo() {
 		if (Objects.requireNonNull(type) == PluginDriverType.HTTP) {
-			return Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+			return parseHttpInfo(jsonConfig);
 		}
 		throw new InvalidPluginDriverType();
 	}

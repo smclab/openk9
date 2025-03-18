@@ -42,6 +42,7 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
 import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
@@ -55,34 +56,86 @@ import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
 
-	private final static Logger log = Logger.getLogger(PluginDriverService.class);
-
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 	@Inject
 	IndexMappingService indexMappingService;
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
 	PluginDriverService(PluginDriverMapper mapper) {
 		this.mapper = mapper;
 	}
 
+	public Uni<PluginDriverDocTypesDTO> getDocTypes(long id) {
+		return sessionFactory.withSession(session -> findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getSample(pluginDriver.getHttpPluginDriverInfo()))
+
+			.map(IngestionPayloadMapper::getDocumentTypes)
+			.flatMap(docTypeNames -> {
+				var mutableSet = new HashSet<>(docTypeNames);
+				mutableSet.add("default");
+
+				return docTypeService.getDocTypeListByNames(
+					session,
+					mutableSet.toArray(String[]::new)
+				);
+			})
+			.map(PluginDriverDocTypesDTO::fromDocTypes)
+		);
+	}
+
 	@Override
 	public Class<PluginDriver> getEntityClass() {
 		return PluginDriver.class;
+	}
+
+	public Uni<PluginDriverFormDTO> getForm(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getForm(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
+	}
+
+	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getForm(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getHealth(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getHealth(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
 	}
 
 	@Override

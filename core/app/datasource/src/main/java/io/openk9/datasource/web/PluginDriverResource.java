@@ -26,14 +26,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
 import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.service.PluginDriverService;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.Json;
 
 @ApplicationScoped
 @Path("/pluginDrivers")
@@ -43,47 +41,34 @@ public class PluginDriverResource {
 	@Inject
 	PluginDriverService service;
 
-	@Inject
-	HttpPluginDriverClient client;
+	@GET
+	@Path("/documentTypes")
+	public Uni<PluginDriverDocTypesDTO> getDocTypes(@PathParam("id") long id) {
+		return service.getDocTypes(id);
+	}
 
 	@GET
 	@Path("/form/{id}")
 	public Uni<PluginDriverFormDTO> getForm(@PathParam("id") long id) {
-
-		return service.findById(id).flatMap(pluginDriver -> {
-			var driverInfo = pluginDriver.getHttpPluginDriverInfo();
-			return client.getForm(driverInfo);
-		});
-	}
-
-	@POST
-	@Path("/health")
-	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-
-		var jsonConfig = pluginDriverDTO.getJsonConfig();
-		var driverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
-
-		return client.getHealth(driverInfo);
-	}
-
-	@GET
-	@Path("/health/{id}")
-	public Uni<PluginDriverHealthDTO> getHealth(@PathParam("id") long id) {
-
-		return service.findById(id).flatMap(pluginDriver -> {
-			var driverInfo = pluginDriver.getHttpPluginDriverInfo();
-			return client.getHealth(driverInfo);
-		});
+		return service.getForm(id);
 	}
 
 	@POST
 	@Path("/form")
 	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+		return service.getForm(pluginDriverDTO);
+	}
 
-		var jsonConfig = pluginDriverDTO.getJsonConfig();
-		var driverInfo = Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
+	@GET
+	@Path("/health/{id}")
+	public Uni<PluginDriverHealthDTO> getHealth(@PathParam("id") long id) {
+		return service.getHealth(id);
+	}
 
-		return client.getForm(driverInfo);
+	@POST
+	@Path("/health")
+	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+		return service.getHealth(pluginDriverDTO);
 	}
 
 }
