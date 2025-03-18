@@ -543,9 +543,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			);
 		}
 		else {
-			return dataIndexService.update(
-				session, dataIndexId, dataIndexDTO);
-
+			return dataIndexService.findById(session, dataIndexId);
 		}
 
 	}

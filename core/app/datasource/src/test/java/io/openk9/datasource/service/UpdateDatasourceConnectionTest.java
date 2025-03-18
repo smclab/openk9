@@ -115,11 +115,11 @@ class UpdateDatasourceConnectionTest {
 
 	@Test
 	@RunOnVertxContext
-	void dataindex_should_be_updated_when_dataIndexId_is_not_null_and_dataIndexDto_is_not_null(
+	void dataindex_should_not_be_updated_when_dataIndexId_is_not_null_and_dataIndexDto_is_not_null(
 		UniAsserter uniAsserter) {
 
 		var name = "no-updatable-name";
-		var knnIndex = false;
+		var knnIndex = true;
 		var chunkWindowSize = 2;
 
 		DataIndexDTO updateDataIndexDto = DataIndexDTO.builder()
@@ -140,7 +140,7 @@ class UpdateDatasourceConnectionTest {
 					.dataIndex(updateDataIndexDto)
 					.build()),
 			response -> {
-				then(dataIndexService).should(times(1))
+				then(dataIndexService).should(never())
 					.update(
 						any(Mutiny.Session.class),
 						anyLong(),
@@ -151,12 +151,9 @@ class UpdateDatasourceConnectionTest {
 				var dataIndex = datasource.getDataIndex();
 
 				Assertions.assertTrue(hasDataIndex(datasource));
-				Assertions.assertEquals(
-					chunkWindowSize, dataIndex.getChunkWindowSize());
-				Assertions.assertEquals(
-					embeddingDocTypeFieldId,
-					dataIndex.getEmbeddingDocTypeField().getId()
-				);
+				Assertions.assertFalse(dataIndex.getKnnIndex());
+				Assertions.assertEquals(0, dataIndex.getChunkWindowSize());
+				Assertions.assertNull(dataIndex.getEmbeddingDocTypeField());
 
 				// immutable (updatable-false) fields
 				Assertions.assertNotEquals(name, dataIndex.getName());
