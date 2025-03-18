@@ -71,8 +71,6 @@ def save_google_application_credentials(credentials):
             "client_id": "client_id",
             "client_secret": "client_secret",
             "quota_project_id": "quota_project_id",
-            "endpoint_id": "endpoint_id",
-            "location": "location",
             "refresh_token": "refresh_token",
             "type": "type",
             "universe_domain": "universe_domain"
