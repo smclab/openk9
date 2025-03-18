@@ -24,10 +24,12 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.PluginDriverDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
@@ -94,7 +96,7 @@ class UpdateDatasourceConnectionTest {
 			),
 			response -> {
 				then(dataIndexService).should(times(1))
-					.createDataIndexByDatasourceConnection(
+					.createDataIndex(
 						any(Mutiny.Session.class),
 						any(Datasource.class),
 						eq(newDataIndex)
@@ -331,30 +333,39 @@ class UpdateDatasourceConnectionTest {
 	@BeforeEach
 	void setup() {
 
+		var pluginDriver =
+			pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+				.name(PLUGIN_DRIVER)
+				.build()
+			).await().indefinitely();
+
+		var docTypeIds = docTypeService.findAll()
+			.await()
+			.indefinitely()
+			.stream()
+			.map(DocType::getId)
+			.collect(Collectors.toSet());
+
 		var datasource = datasourceService.createDatasourceConnection(
 				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(DATASOURCE)
-					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-						.name(PLUGIN_DRIVER)
-						.build()
-					)
+					.pluginDriverId(pluginDriver.getId())
 					.pipeline(PipelineWithItemsDTO.builder()
 						.name(ENRICH_PIPELINE)
 						.build()
 					)
 					.dataIndex(DataIndexDTO.builder()
 						.name(DATAINDEX)
-						.chunkWindowSize(2)
 						.chunkType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER)
-						.knnIndex(true)
+						.docTypeIds(docTypeIds)
+						.knnIndex(false)
 						.build())
 					.build()
 			)
 			.await()
 			.indefinitely();
 
-		this.pluginDriverId = pluginDriverService.findByName(TENANT_ID, PLUGIN_DRIVER)
-			.await().indefinitely().getId();
+		this.pluginDriverId = pluginDriver.getId();
 
 		this.pipelineId = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
 			.await().indefinitely().getId();

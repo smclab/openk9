@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto;
 
+import java.util.Set;
+
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -66,5 +68,14 @@ public class DataIndexDTO extends K9EntityDTO {
 	@Nullable
 	@Description("The configurations used by the embedding model, if needed.")
 	private String embeddingJsonConfig;
+
+	@Nullable
+	@Description("The list of documentType ids that the dataIndex is composed of.")
+	private Set<Long> docTypeIds;
+
+	@Json
+	@Nullable
+	@Description("The settings that will be used when the associated indexTemplate is created.")
+	private String settings;
 
 }

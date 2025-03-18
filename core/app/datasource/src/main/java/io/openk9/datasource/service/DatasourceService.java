@@ -128,7 +128,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
-							.createDataIndexByDatasourceConnection(
+							.createDataIndex(
 								session,
 								datasource,
 								datasourceConnectionDTO.getDataIndex()
@@ -430,7 +430,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return findByIdWithPluginDriver(s, updateConnectionDTO.getDatasourceId())
 			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 				.invoke(datasource::setEnrichPipeline)
-				.flatMap(enrichPipeline -> updateOrCreateDataIndex(
+				.flatMap(enrichPipeline -> getOrCreateDataIndex(
 					s,
 					datasource,
 					updateConnectionDTO
@@ -527,7 +527,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	}
 
-	private Uni<DataIndex> updateOrCreateDataIndex(
+	private Uni<DataIndex> getOrCreateDataIndex(
 		Mutiny.Session session,
 		Datasource datasource,
 		UpdateDatasourceConnectionDTO updateConnectionDTO) {
@@ -536,7 +536,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		var dataIndexDTO = updateConnectionDTO.getDataIndex();
 
 		if (dataIndexId <= 0L) {
-			return dataIndexService.createDataIndexByDatasourceConnection(
+			return dataIndexService.createDataIndex(
 				session,
 				datasource,
 				dataIndexDTO

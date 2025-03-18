@@ -17,6 +17,7 @@
 
 package io.openk9.datasource;
 
+import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -24,18 +25,22 @@ import jakarta.inject.Inject;
 
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.init.Bucket;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.LargeLanguageModelService;
+import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
@@ -54,7 +59,10 @@ public class Initializer {
 	BucketService bucketService;
 	@Inject
 	DatasourceService datasourceService;
-
+	@Inject
+	PluginDriverService pluginDriverService;
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	EmbeddingModelService embeddingModelService;
 	@Inject
@@ -206,34 +214,51 @@ public class Initializer {
 			.build()
 		).await().indefinitely();
 
+		log.info("Create a plugin driver.");
+
+		var pluginDriver =
+			pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+				.name(INIT_DATASOURCE_PLUGIN)
+				.build()
+			).await().indefinitely();
+
+		var docTypeIds = docTypeService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
 		log.info("Create a new full configured DatasourceConnection.");
 
 		datasourceService.createDatasourceConnection(
 				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
 					.name(INIT_DATASOURCE_CONNECTION)
-					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-						.name(INIT_DATASOURCE_PLUGIN)
+					.pluginDriverId(pluginDriver.getId())
+					.pipeline(PipelineWithItemsDTO.builder()
+						.name(INIT_DATASOURCE_PIPELINE)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich1.getId())
+							.weight(1)
+							.build()
+						)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich2.getId())
+							.weight(2)
+							.build()
+						)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich3.getId())
+							.weight(3)
+							.build()
+						)
+						.build()
+					)
+					.dataIndex(DataIndexDTO.builder()
+						.knnIndex(false)
+						.docTypeIds(docTypeIds)
+						.build()
+					)
 					.build()
-				)
-				.pipeline(PipelineWithItemsDTO.builder()
-					.name(INIT_DATASOURCE_PIPELINE)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich1.getId())
-						.weight(1)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich2.getId())
-						.weight(2)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich3.getId())
-						.weight(3)
-						.build()
-					)
-					.build()
-				).build()
 			)
 			.await()
 			.indefinitely();

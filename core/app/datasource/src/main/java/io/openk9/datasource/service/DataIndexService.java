@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.annotation.Nullable;
@@ -45,7 +46,6 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -56,13 +56,16 @@ import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
 
 	public static final String DETAILS_FIELD = "details";
+	private static final Logger log = Logger.getLogger(DataIndexService.class);
 
 	@Inject
 	DocTypeService docTypeService;
@@ -78,50 +81,39 @@ public class DataIndexService
 		this.mapper = mapper;
 	}
 
-	/**
-	 * Create a new DataIndex for the datasource,
-	 * this dataIndex will be created with a set of docTypes generated from
-	 * the sample document sent by the pluginDriver associated.
-	 *
-	 * @param session      is used to make all the db calls in the same session
-	 * @param datasource   from where the pluginDriver info are retrieved
-	 * @param dataIndexDTO the configuration that will be applied to the dataIndex, if present
-	 * @return a uni with the dataIndex created and associated to the datasource.
-	 */
-	public Uni<DataIndex> createDataIndexByDatasourceConnection(
-		Mutiny.Session session,
-		Datasource datasource, @Nullable DataIndexDTO dataIndexDTO) {
+	public Uni<DataIndex> createDataIndex(
+		Mutiny.Session session, long datasourceId, @Nullable DataIndexDTO dataIndexDTO) {
 
-		var pluginDriver = datasource.getPluginDriver();
-		var jsonConfig = pluginDriver.getJsonConfig();
-		var pluginDriverInfo =
-			Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
-		var datasourceId = datasource.getId();
+		dataIndexDTO = requireDataIndexDTOElseGet(dataIndexDTO, datasourceId);
 
-		var dto = getDataIndexDTO(dataIndexDTO, datasourceId);
+		var settingsMap = getSettingsMap(dataIndexDTO.getSettings());
 
-		return indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
-				session, pluginDriverInfo)
-			.flatMap(docTypes -> {
-				var dataIndex = createMapper(session, dto);
-				dataIndex.setDatasource(datasource);
-				dataIndex.setDocTypes(docTypes);
-				return merge(session, dataIndex)
-					.call(merged -> session.find(TenantBinding.class, 1L)
-						.map(K9Entity::getTenant)
-						.call(tenantId -> embeddingModelService
+		return createDataIndexTransient(session, datasourceId, dataIndexDTO)
+			.flatMap(dataIndex -> merge(session, dataIndex)
+				.call(merged -> session.find(TenantBinding.class, 1L)
+					.map(K9Entity::getTenant)
+					.call(tenantId -> embeddingModelService
 						.fetchCurrent(session)
 						.onFailure()
 						.recoverWithNull()
 						.flatMap(embeddingModel ->
 							indexMappingService.createDataIndexTemplate(
 								new DataIndexTemplate(
-									tenantId, Map.of(), merged, embeddingModel)
+									tenantId, settingsMap, merged, embeddingModel)
 							)
 						)
-						)
-					);
-			});
+					)
+				)
+			);
+
+	}
+
+	public Uni<DataIndex> createDataIndex(
+		Mutiny.Session session, Datasource datasource, @Nullable DataIndexDTO dataIndexDTO) {
+
+		var datasourceId = datasource.getId();
+
+		return createDataIndex(session, datasourceId, dataIndexDTO);
 
 	}
 
@@ -195,75 +187,79 @@ public class DataIndexService
 	public Uni<DataIndex> createDataIndexByDocTypes(
 		long datasourceId, DataIndexByDocTypes request) {
 
-		var dataIndexDTO = getDataIndexDTO(request.getDataIndex(), datasourceId);
+		var dataIndexDTO = requireDataIndexDTOElseGet(
+			request.getDataIndex(), datasourceId);
 
 		var docTypeIds = request.getDocTypeIds();
 		var settings = request.getSettings();
 
-		return sessionFactory.withTransaction((s, t) -> docTypeService
-			.findDocTypes(docTypeIds, s)
-			.flatMap(docTypeList -> {
-				if (docTypeList.size() != docTypeIds.size()) {
-					throw new RuntimeException(
-						"docTypeIds found: " + docTypeList.size() +
-						" docTypeIds requested: " + docTypeIds.size());
-				}
+		return sessionFactory.withTransaction((s, t) ->
+			docTypeService
+				.findDocTypes(docTypeIds, s)
+				.flatMap(docTypeList -> createDataIndexTransient(
+					s, datasourceId, dataIndexDTO)
+					.flatMap(transientDataIndex -> {
+						if (docTypeList.size() != docTypeIds.size()) {
+							throw new RuntimeException(
+								"docTypeIds found: " + docTypeList.size() +
+								" docTypeIds requested: " + docTypeIds.size());
+						}
 
-				var transientDataIndex = createMapper(s, dataIndexDTO);
-				transientDataIndex.setDocTypes(new LinkedHashSet<>(docTypeList));
-				transientDataIndex.setDatasource(s.getReference(Datasource.class, datasourceId));
+						transientDataIndex.setDocTypes(
+							new LinkedHashSet<>(docTypeList));
+						transientDataIndex.setDatasource(s.getReference(
+							Datasource.class,
+							datasourceId
+						));
 
-				Uni<EmbeddingModel> knnFlowUni;
+						Uni<EmbeddingModel> knnFlowUni;
 
-				if (transientDataIndex.getKnnIndex()) {
+						if (transientDataIndex.getKnnIndex()) {
 
-					var embeddingModelId = request.getEmbeddingModelId();
+							var embeddingModelId = request.getEmbeddingModelId();
 
-					if (embeddingModelId != null && embeddingModelId > 0) {
-						knnFlowUni = embeddingModelService.findById(s, embeddingModelId);
-					}
-					else {
-						knnFlowUni = embeddingModelService.fetchCurrent(s);
-					}
+							if (embeddingModelId != null && embeddingModelId > 0) {
+								knnFlowUni = embeddingModelService.findById(
+									s, embeddingModelId);
+							}
+							else {
+								knnFlowUni = embeddingModelService.fetchCurrent(s);
+							}
 
-				}
-				else {
-					knnFlowUni = Uni.createFrom().nullItem();
-				}
+						}
+						else {
+							knnFlowUni = Uni.createFrom().nullItem();
+						}
 
-				return knnFlowUni
-					.onFailure()
-					.transform(EmbeddingModelNotFound::new)
-					.flatMap(embeddingModel -> persist(s, transientDataIndex)
-						.flatMap(dataIndex -> indexMappingService
-							.createDataIndexTemplate(new DataIndexTemplate(
-								null, settings, dataIndex, embeddingModel))
-							.map(unused -> dataIndex)
-						)
-					);
-			})
+						return knnFlowUni
+							.onFailure()
+							.transform(EmbeddingModelNotFound::new)
+							.flatMap(embeddingModel -> persist(s, transientDataIndex)
+								.flatMap(dataIndex -> indexMappingService
+									.createDataIndexTemplate(new DataIndexTemplate(
+										null, settings, dataIndex, embeddingModel))
+									.map(unused -> dataIndex)
+								)
+							);
+
+					})
+				)
 		);
 	}
 
-	private static DataIndexDTO getDataIndexDTO(DataIndexDTO dataIndexDTO, Long datasourceId) {
-		DataIndexDTO dto;
-		if (dataIndexDTO == null) {
-			dto = new DataIndexDTO();
+	private static Map<String, Object> getSettingsMap(String settingsJson) {
+
+		Map<String, Object> settingsMap = null;
+		try {
+			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);
+			settingsMap = settingsJsonObj.getMap();
 		}
-		else {
-			dto = dataIndexDTO;
+		catch (Exception exception) {
+			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
+			settingsMap = Map.of();
 		}
 
-		if (dto.getName() == null) {
-			var dataIndexName = String.format(
-				"%s-%s",
-				datasourceId,
-				UUID.randomUUID()
-			);
-
-			dto.setName(dataIndexName);
-		}
-		return dto;
+		return settingsMap;
 	}
 
 	@Override
@@ -386,20 +382,60 @@ public class DataIndexService
 		);
 	}
 
-	private DataIndex createMapper(
-		Mutiny.Session session, DataIndexDTO dto) {
-
-		var dataIndex = mapper.create(dto);
-
-		if (dto.getEmbeddingDocTypeFieldId() != null) {
-			dataIndex.setEmbeddingDocTypeField(session.getReference(
-					DocTypeField.class,
-					dto.getEmbeddingDocTypeFieldId()
-				)
-			);
+	private static DataIndexDTO requireDataIndexDTOElseGet(
+		DataIndexDTO dataIndexDTO,
+		Long datasourceId) {
+		DataIndexDTO dto;
+		if (dataIndexDTO == null) {
+			dto = new DataIndexDTO();
+		}
+		else {
+			dto = dataIndexDTO;
 		}
 
-		return dataIndex;
+		if (dto.getName() == null) {
+			var dataIndexName = String.format(
+				"%s-%s",
+				datasourceId,
+				UUID.randomUUID()
+			);
+
+			dto.setName(dataIndexName);
+		}
+		return dto;
+	}
+
+	private Uni<DataIndex> createDataIndexTransient(
+		Mutiny.Session session, long datasourceId, DataIndexDTO dto) {
+
+		// get docTypeIds
+		Set<Long> docTypeIds =
+			Objects.requireNonNullElseGet(dto.getDocTypeIds(), Set::of);
+
+		return docTypeService.getDocTypesAndDocTypeFields(session, docTypeIds)
+			.map(docTypes -> {
+
+				// mapping basic field
+				var dataIndex = mapper.create(dto);
+
+				// mapping docTypes
+				dataIndex.setDocTypes(Set.copyOf(docTypes));
+
+				// mapping datasource
+				var datasource = session.getReference(Datasource.class, datasourceId);
+				dataIndex.setDatasource(datasource);
+
+				// mapping embeddingDocTypeField
+				if (dto.getEmbeddingDocTypeFieldId() != null) {
+					dataIndex.setEmbeddingDocTypeField(session.getReference(
+							DocTypeField.class,
+							dto.getEmbeddingDocTypeFieldId()
+						)
+					);
+				}
+
+				return dataIndex;
+			});
 	}
 
 	private DataIndex patchMapperClosure(
