@@ -98,6 +98,25 @@ export function OpenK9Client({
     async getUserProfile() {
       return await keycloak.loadUserInfo();
     },
+    async getGenerateResponse({
+      searchQuery,
+      controller,
+    }: {
+      searchQuery: GenerateRequest;
+      controller: AbortController;
+    }) {
+      const url = "/api/rag/generate";
+      const data = await authFetch(url, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(searchQuery),
+        signal: controller.signal,
+      });
+      return data;
+    },
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(tenant + `/api/status`);
       if (response.ok) return "up";
