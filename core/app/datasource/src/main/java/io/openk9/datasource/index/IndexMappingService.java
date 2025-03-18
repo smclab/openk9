@@ -245,21 +245,7 @@ public class IndexMappingService {
 		Map<MappingsKey, Object> mappings =
 			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
 
-		Settings settings;
-
-		Map<String, Object> settingsMap =
-			indexSettings != null && !indexSettings.isEmpty() ?
-				indexSettings :
-				IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
-
-		if (settingsMap.isEmpty()) {
-			settings = Settings.EMPTY;
-		}
-		else {
-			settings = Settings.builder()
-				.loadFromMap(settingsMap)
-				.build();
-		}
+		var settings = getSettings(indexSettings, dataIndex);
 
 		PutComposableIndexTemplateRequest request =
 			new PutComposableIndexTemplateRequest();
@@ -400,6 +386,25 @@ public class IndexMappingService {
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
 		return _toDocTypeFields(_toFlatFields(mappings));
+	}
+
+	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
+		Settings settings;
+
+		settingsMap = settingsMap != null && !settingsMap.isEmpty()
+			? settingsMap
+			: IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+
+		if (settingsMap.isEmpty()) {
+			settings = Settings.EMPTY;
+		}
+		else {
+			settings = Settings.builder()
+				.loadFromMap(settingsMap)
+				.build();
+		}
+
+		return settings;
 	}
 
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
