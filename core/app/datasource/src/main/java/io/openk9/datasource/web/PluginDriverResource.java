@@ -42,7 +42,7 @@ public class PluginDriverResource {
 	PluginDriverService service;
 
 	@GET
-	@Path("/documentTypes")
+	@Path("/documentTypes/{id}")
 	public Uni<PluginDriverDocTypesDTO> getDocTypes(@PathParam("id") long id) {
 		return service.getDocTypes(id);
 	}
