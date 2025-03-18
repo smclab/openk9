@@ -18,7 +18,7 @@ replicaCount: 1
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
   registry: ""
-  name: smclab/openk9-embedding-module
+  name: smclab/openk9-embedding-module-openai
   ## Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
