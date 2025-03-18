@@ -104,6 +104,18 @@ public class PluginDriverService
 			);
 	}
 
+	@Override
+	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+		return super.merge(s, entity)
+			.log("PluginDriver updated.")
+			.log("Updating DocumentTypes associated with pluginDriver")
+			.call(() -> indexMappingService
+				.generateDocTypeFieldsFromPluginDriverSample(
+					s, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.log("DocumentTypes associated with pluginDriver updated.")
+			);
+	}
+
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
 		long pluginDriverId, String after,
 		String before, Integer first, Integer last, String searchText,
