@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -100,6 +101,10 @@ public class PluginDriverService
 			.call(() -> indexMappingService
 				.generateDocTypeFieldsFromPluginDriverSample(
 					session, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
 				.log("DocumentTypes associated with pluginDriver created.")
 			);
 	}
@@ -112,6 +117,10 @@ public class PluginDriverService
 			.call(() -> indexMappingService
 				.generateDocTypeFieldsFromPluginDriverSample(
 					s, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
 				.log("DocumentTypes associated with pluginDriver updated.")
 			);
 	}
