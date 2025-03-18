@@ -181,8 +181,8 @@ def initialize_language_model(configuration):
             google_credentials = chat_vertex_ai_model_garden["credentials"]
             save_google_application_credentials(google_credentials)
             project_id = google_credentials["quota_project_id"]
-            endpoint_id = google_credentials["endpoint_id"]
-            location = google_credentials["location"]
+            endpoint_id = chat_vertex_ai_model_garden["endpoint_id"]
+            location = chat_vertex_ai_model_garden["location"]
 
             credentials, _ = default()
             auth_request = transport.requests.Request()
