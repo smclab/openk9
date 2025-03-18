@@ -1,5 +1,5 @@
 // starts a dev server with automatic reloading
-
+const open = require("open");
 const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 
 module.exports = {
@@ -57,6 +57,14 @@ module.exports = {
         changeOrigin: true,
         secure: false,
       },
+    },
+    port: 8080,
+    onListening: function (devServer) {
+      if (!devServer) {
+        throw new Error("webpack-dev-server is not defined");
+      }
+      const port = devServer.server.address().port;
+      open(`http://localhost:${port}/search`);
     },
   },
 };
