@@ -7,7 +7,7 @@ WORKDIR /sentence_transformer_embedding_module/
 COPY app/sentence_transformer/requirements.sentence_transformer.txt ./requirements.txt
 COPY app/external_services/grpc/embedding/embedding.proto ./
 
-RUN pip install -r requirements.txt  && \
+RUN pip install --no-cache-dir -r requirements.txt  && \
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
 
 COPY app/text_splitters/derived_text_splitter.py ./
