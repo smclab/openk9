@@ -164,6 +164,18 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			});
 	}
 
+	public Uni<Datasource> deleteById(long datasourceId, String datasourceName) {
+
+		return findById(datasourceId)
+			.flatMap(datasource -> {
+				if (!datasource.getName().equals(datasourceName)) {
+					throw new ValidationException(
+						"datasourceName is not the same");
+				}
+				return deleteById(datasourceId);
+			});
+	}
+
 	public Uni<Datasource> findByIdWithPluginDriver(long datasourceId) {
 		return sessionFactory.withTransaction((s) ->
 			findByIdWithPluginDriver(s, datasourceId));

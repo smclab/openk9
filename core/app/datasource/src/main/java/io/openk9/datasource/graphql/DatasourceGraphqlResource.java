@@ -155,8 +155,8 @@ public class DatasourceGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Datasource> deleteDatasource(@Id long datasourceId) {
-		return datasourceService.deleteById(datasourceId);
+	public Uni<Datasource> deleteDatasource(@Id long datasourceId, String datasourceName) {
+		return datasourceService.deleteById(datasourceId, datasourceName);
 	}
 
 	public Uni<EnrichPipeline> enrichPipeline(
