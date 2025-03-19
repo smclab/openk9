@@ -17,8 +17,7 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO.DatasourceConnectionDTOBuilder;
+import io.openk9.datasource.graphql.dto.CreateDatasourceDTO;
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.model.dto.PluginDriverDTO.PluginDriverDTOBuilder;
@@ -36,25 +35,25 @@ public class DatasourceConnectionObjects {
 	public static final boolean SCHEDULABLE = true;
 	public static final String SCHEDULING = "0 0 * ? * * *";
 
-	public static final DatasourceConnectionDTOBuilder<?, ?>
+	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
 		NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO")
 			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_PLUGIN")
 				.build());
-	public static final DatasourceConnectionDTO NEW_PLUGIN_NO_PIPELINE_DTO =
+	public static final CreateDatasourceDTO NEW_PLUGIN_NO_PIPELINE_DTO =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_PLUGIN_NO_PIPELINE_DATASOURCE")
 			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_PLUGIN_NO_PIPELINE_PLUGIN")
 				.build())
 			.build();
-	public static final DatasourceConnectionDTO NO_PLUGIN_NO_PIPELINE_DTO =
+	public static final CreateDatasourceDTO NO_PLUGIN_NO_PIPELINE_DTO =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NO_PLUGIN_NO_PIPELINE_DATASOURCE")
 			.build();
-	public static final DatasourceConnectionDTO NEW_ENTITIES_VECTOR_DTO =
+	public static final CreateDatasourceDTO NEW_ENTITIES_VECTOR_DTO =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_ENTITIES_VECTOR_DATASOURCE")
 			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
@@ -64,18 +63,19 @@ public class DatasourceConnectionObjects {
 				.name("NEW_ENTITIES_VECTOR_PIPELINE")
 				.build())
 			.build();
-	public static final DatasourceConnectionDTOBuilder<?, ?> NEW_ENTITIES_BASE_DTO_BUILDER =
+	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
+		NEW_ENTITIES_BASE_DTO_BUILDER =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("NEW_ENTITIES_BASE_DTO")
 			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
 				.name("NEW_ENTITIES_BASE_PLUGIN")
 				.build());
-	public static final DatasourceConnectionDTOBuilder<?, ?>
+	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
 		PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER =
 		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("PRE_EXIST_PLUGIN_NEW_PIPELINE_DATASOURCE");
-	public static final DatasourceConnectionDTO AMBIGUOUS_DTO =
-		DatasourceConnectionDTO.builder()
+	public static final CreateDatasourceDTO AMBIGUOUS_DTO =
+		CreateDatasourceDTO.builder()
 			.name("AMBIGUOUS_DATASOURCE")
 			.description(DESCRIPTION)
 			.reindexing(REINDEXING)
@@ -93,8 +93,8 @@ public class DatasourceConnectionObjects {
 				.build())
 			.build();
 
-	public static DatasourceConnectionDTOBuilder<?, ?> DATASOURCE_CONNECTION_DTO_BUILDER() {
-		return DatasourceConnectionDTO.builder()
+	public static CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?> DATASOURCE_CONNECTION_DTO_BUILDER() {
+		return CreateDatasourceDTO.builder()
 			.description(DESCRIPTION)
 			.reindexable(REINDEXABLE)
 			.reindexing(REINDEXING)

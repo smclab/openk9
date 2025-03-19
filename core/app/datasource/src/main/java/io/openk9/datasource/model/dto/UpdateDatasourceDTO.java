@@ -17,21 +17,33 @@
 
 package io.openk9.datasource.model.dto;
 
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
+import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+
+import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 @SuperBuilder
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class UpdateDatasourceConnectionDTO extends DatasourceConnectionDTO {
+public class UpdateDatasourceDTO extends DatasourceDTO {
+
+	@Nullable
+	@Description("Pipeline to be associated (optional)")
+	private Long pipelineId;
+
+	@Nullable
+	@Description("Pipeline to be created and associated (optional)")
+	private PipelineWithItemsDTO pipeline;
 
 	long datasourceId;
+
 	long dataIndexId;
 
 }

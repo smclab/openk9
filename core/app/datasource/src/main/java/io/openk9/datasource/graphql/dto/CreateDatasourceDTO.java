@@ -34,7 +34,7 @@ import org.eclipse.microprofile.graphql.Description;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class DatasourceConnectionDTO extends DatasourceDTO {
+public class CreateDatasourceDTO extends DatasourceDTO {
 
 	@Nullable
 	@Description("PluginDriver to be associated (optional)")

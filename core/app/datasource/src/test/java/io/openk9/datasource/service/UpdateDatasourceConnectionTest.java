@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import java.util.stream.Collectors;
@@ -31,9 +30,7 @@ import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
-import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.model.dto.UpdateDatasourceDTO;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -45,7 +42,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 
 @QuarkusTest
 class UpdateDatasourceConnectionTest {
@@ -68,102 +64,10 @@ class UpdateDatasourceConnectionTest {
 	DocTypeService docTypeService;
 
 	private long datasourceId;
-	private long dataIndexId;
 	private long pipelineId;
-	private long pluginDriverId;
-	private long embeddingDocTypeFieldId;
+	private long dataIndexId;
 
-	@Test
-	@RunOnVertxContext
-	void dataIndex_should_be_created_when_dataIndexId_is_null(
-		UniAsserter uniAsserter) {
-
-		var newDataIndexName = "newDataIndex";
-
-		DataIndexDTO newDataIndex = DataIndexDTO.builder()
-			.name(newDataIndexName)
-			.build();
-
-		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
-					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
-					.datasourceId(datasourceId)
-					.dataIndex(newDataIndex)
-					.build()
-			),
-			response -> {
-				then(dataIndexService).should(times(1))
-					.createDataIndex(
-						any(Mutiny.Session.class),
-						any(Datasource.class),
-						eq(newDataIndex)
-					);
-
-				var datasource = response.getEntity();
-				var dataIndex = datasource.getDataIndex();
-
-				Assertions.assertTrue(hasDataIndex(datasource));
-				Assertions.assertEquals(newDataIndexName, dataIndex.getName());
-
-			}
-		);
-
-	}
-
-	// DataIndex tests
-
-	@Test
-	@RunOnVertxContext
-	void dataindex_should_not_be_updated_when_dataIndexId_is_not_null_and_dataIndexDto_is_not_null(
-		UniAsserter uniAsserter) {
-
-		var name = "no-updatable-name";
-		var knnIndex = true;
-		var chunkWindowSize = 2;
-
-		DataIndexDTO updateDataIndexDto = DataIndexDTO.builder()
-			.name(name)
-			.knnIndex(knnIndex)
-			.chunkWindowSize(chunkWindowSize)
-			.embeddingDocTypeFieldId(embeddingDocTypeFieldId)
-			.build();
-
-		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
-					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
-					.datasourceId(datasourceId)
-					.dataIndexId(dataIndexId)
-					.dataIndex(updateDataIndexDto)
-					.build()),
-			response -> {
-				then(dataIndexService).should(never())
-					.update(
-						any(Mutiny.Session.class),
-						anyLong(),
-						any(DataIndexDTO.class)
-					);
-
-				var datasource = response.getEntity();
-				var dataIndex = datasource.getDataIndex();
-
-				Assertions.assertTrue(hasDataIndex(datasource));
-				Assertions.assertFalse(dataIndex.getKnnIndex());
-				Assertions.assertEquals(0, dataIndex.getChunkWindowSize());
-				Assertions.assertNull(dataIndex.getEmbeddingDocTypeField());
-
-				// immutable (updatable-false) fields
-				Assertions.assertNotEquals(name, dataIndex.getName());
-				Assertions.assertNotEquals(knnIndex, dataIndex.getKnnIndex());
-
-			}
-		);
-	}
+	// EnrichPipeline tests
 
 	@Test
 	@RunOnVertxContext
@@ -172,11 +76,10 @@ class UpdateDatasourceConnectionTest {
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
+				UpdateDatasourceDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
+					.dataIndexId(dataIndexId)
 					.pipelineId(pipelineId)
 					.build()
 			),
@@ -187,7 +90,6 @@ class UpdateDatasourceConnectionTest {
 
 	}
 
-	// EnrichPipeline tests
 
 	@Test
 	@RunOnVertxContext
@@ -200,11 +102,10 @@ class UpdateDatasourceConnectionTest {
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
+				UpdateDatasourceDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
+					.dataIndexId(dataIndexId)
 					.pipeline(newPipeline)
 					.build()
 			),
@@ -226,11 +127,10 @@ class UpdateDatasourceConnectionTest {
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
+				UpdateDatasourceDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
+					.dataIndexId(dataIndexId)
 					.build()
 			),
 			datasource -> Assertions.assertTrue(
@@ -246,11 +146,10 @@ class UpdateDatasourceConnectionTest {
 
 		uniAsserter.assertThat(
 			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
+				UpdateDatasourceDTO.builder()
 					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
 					.datasourceId(datasourceId)
+					.dataIndexId(dataIndexId)
 					.pipelineId(pipelineId)
 					.pipeline(PipelineWithItemsDTO.builder()
 						.name(ENRICH_PIPELINE)
@@ -275,69 +174,14 @@ class UpdateDatasourceConnectionTest {
 
 	}
 
-	@Test
-	@RunOnVertxContext
-	void pluginDriverService_should_have_no_interaction_when_pluginDriverDto_is_not_null(
-		UniAsserter uniAsserter) {
-
-		final String pluginName = "mockplugindatasourceconnection";
-
-		uniAsserter.assertThat(
-			() ->
-				datasourceService.updateDatasourceConnection(
-					UpdateDatasourceConnectionDTO.builder()
-						.name(DATASOURCE)
-						.scheduling(DatasourceConnectionObjects.SCHEDULING)
-						.reindexing(DatasourceConnectionObjects.REINDEXING)
-						.datasourceId(datasourceId)
-						.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-							.name(pluginName)
-							.build()
-						)
-						.build()
-				),
-			datasource -> then(pluginDriverService)
-				.should(never())
-				.create(
-					any(Mutiny.Session.class),
-					ArgumentMatchers.<PluginDriverDTO>argThat(p ->
-						p.getName().equals(pluginName))
-				)
-		);
-	}
-
-	// PluginDriver Tests
-
-	@Test
-	@RunOnVertxContext
-	void pluginDriverService_should_have_no_interaction_when_pluginId_is_not_null(
-		UniAsserter uniAsserter) {
-
-		uniAsserter.assertThat(
-			() -> datasourceService.updateDatasourceConnection(
-				UpdateDatasourceConnectionDTO.builder()
-					.name(DATASOURCE)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.reindexing(DatasourceConnectionObjects.REINDEXING)
-					.datasourceId(datasourceId)
-					.pluginDriverId(pluginDriverId)
-					.scheduling(DatasourceConnectionObjects.SCHEDULING)
-					.build()
-			),
-			datasource -> then(pluginDriverService)
-				.should(never())
-				.findById(eq(pluginDriverId))
-		);
-	}
-
 	@BeforeEach
 	void setup() {
 
-		var pluginDriver =
-			pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+		var pluginDriver = pluginDriverService.create(
+			DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 				.name(PLUGIN_DRIVER)
 				.build()
-			).await().indefinitely();
+		).await().indefinitely();
 
 		var docTypeIds = docTypeService.findAll()
 			.await()
@@ -365,8 +209,6 @@ class UpdateDatasourceConnectionTest {
 			.await()
 			.indefinitely();
 
-		this.pluginDriverId = pluginDriver.getId();
-
 		this.pipelineId = enrichPipelineService.findByName(TENANT_ID, ENRICH_PIPELINE)
 			.await().indefinitely().getId();
 
@@ -377,22 +219,11 @@ class UpdateDatasourceConnectionTest {
 
 		this.dataIndexId = dataIndex.getId();
 
-		var docTypes = dataIndexService.getDocTypes(
-			dataIndex.getId(), Pageable.DEFAULT).await().indefinitely();
-
-		var firstDocType = docTypes.iterator().next();
-
-		var docTypeFields = docTypeService.getDocTypeFields(
-			firstDocType.getId(), Pageable.DEFAULT).await().indefinitely();
-
-		var firstDocTypeField = docTypeFields.iterator().next();
-
-		this.embeddingDocTypeFieldId = firstDocTypeField.getId();
-
 	}
 
 	@AfterEach
 	void tearDown() {
+
 		var datasource = datasourceService.findByName(TENANT_ID, DATASOURCE)
 			.await().indefinitely();
 
@@ -408,10 +239,8 @@ class UpdateDatasourceConnectionTest {
 		// unset relations
 		datasourceService.unsetPluginDriver(datasource.getId())
 			.await().indefinitely();
-
 		datasourceService.unsetDataIndex(datasource.getId())
 			.await().indefinitely();
-
 		datasourceService.unsetEnrichPipeline(datasource.getId())
 			.await().indefinitely();
 
@@ -426,25 +255,16 @@ class UpdateDatasourceConnectionTest {
 			.await().indefinitely();
 
 		this.datasourceId = 0;
+		this.dataIndexId = 0;
 
 	}
 
 	// Utils
-
 	private static boolean hasEnrichPipeline(Datasource datasource) {
 		return datasource != null && datasource.getEnrichPipeline() != null;
 	}
-
 	private static boolean hasNotEnrichPipeline(Datasource datasource) {
 		return datasource != null && datasource.getEnrichPipeline() == null;
-	}
-
-	private static boolean hasDataIndex(Datasource datasource) {
-		return datasource != null && datasource.getDataIndex() != null;
-	}
-
-	private static boolean hasNotDataIndex(Datasource datasource) {
-		return datasource != null && datasource.getDataIndex() == null;
 	}
 
 }
