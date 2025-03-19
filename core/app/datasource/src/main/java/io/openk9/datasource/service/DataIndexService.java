@@ -70,7 +70,6 @@ public class DataIndexService
 	@Inject
 	DocTypeService docTypeService;
 	@Inject
-	public
 	EmbeddingModelService embeddingModelService;
 	@Inject
 	IndexService indexService;

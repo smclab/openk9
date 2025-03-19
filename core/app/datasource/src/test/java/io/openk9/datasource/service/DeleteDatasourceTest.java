@@ -28,6 +28,7 @@ import io.openk9.datasource.model.init.Bucket;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -121,4 +122,17 @@ public class DeleteDatasourceTest {
 
 	}
 
+
+	@AfterEach
+	void tearDown() {
+		var datasource = datasourceService.findByName("public", DDT_DATASOURCE_CONNECTION)
+			.await().indefinitely();
+
+		datasourceService.deleteById(datasource.getId())
+			.await().indefinitely();
+
+		// also implicit testing deleteById
+		Assertions.assertNull(datasourceService.findById(datasource.getId())
+			.await().indefinitely());
+	}
 }
