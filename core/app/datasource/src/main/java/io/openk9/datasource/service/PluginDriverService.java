@@ -73,6 +73,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
 
+	private static final String DEFAULT_DOCUMENT_TYPE = "default";
+
 	@Inject
 	DocTypeService docTypeService;
 	@Inject
@@ -94,7 +96,7 @@ public class PluginDriverService
 			.map(IngestionPayloadMapper::getDocumentTypes)
 			.flatMap(docTypeNames -> {
 				var mutableSet = new HashSet<>(docTypeNames);
-				mutableSet.add("default");
+				mutableSet.add(DEFAULT_DOCUMENT_TYPE);
 
 				return docTypeService.getDocTypeListByNames(
 					session,
