@@ -30,52 +30,60 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class DeleteService {
 
-	@Inject
-	MinioClient minioClient;
-
-
+	// Method to delete an object from MinIO and file resource from the database
 	public void deleteObject(String resourceId, String schemaName) {
 
 		try {
 
+			// Creating request to find file resource by resourceId and schemaName
 			FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
-				FindFileResourceByResourceIdRequest.newBuilder()
-					.setResourceId(resourceId)
-					.setSchemaName(schemaName).build();
+					FindFileResourceByResourceIdRequest.newBuilder()
+							.setResourceId(resourceId)  // Set the resource ID for lookup
+							.setSchemaName(schemaName)   // Set the schema name for the resource
+							.build();  // Build the request object
 
+			// Calling the GRPC service to find the file resource by resourceId
 			FileResourceResponse fileResourceResponse =
-				filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
+					filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
 
+			// Extracting the datasourceId and fileId from the response
 			String datasourceId = fileResourceResponse.getDatasourceId();
 			String fileId = fileResourceResponse.getFileId();
 
+			// Constructing the bucket name using schema name and datasource ID
 			String bucketName = schemaName + "-datasource" + datasourceId;
 
+			// Logging the removal of the object from MinIO
 			logger.info("Removing object with fileId " + fileId + " in bucket " + bucketName);
 
+			// Removing the object from the MinIO bucket using fileId
 			minioClient.removeObject(
 					RemoveObjectArgs.builder()
-							.bucket(bucketName)
-							.object(fileId)
-							.build());
+							.bucket(bucketName)  // Specify the bucket
+							.object(fileId)      // Specify the object (file) ID to remove
+							.build());           // Build the remove object request
 
+			// Logging that the object was removed from the storage
 			logger.info("Removed object with resourceId: " + resourceId);
 
+			// Deleting the file resource from the database using filemanager service
 			filemanager.deleteFileResource(findFileResourceByResourceIdRequest);
 
+			// Logging the successful removal of the file resource
 			logger.info("Removed entity with resourceId: " + resourceId);
 
-
 		} catch (Exception e) {
-
+			// Logging any errors that occur during the delete operation
 			logger.info("Delete failed with exception: " + e.getMessage());
 		}
 	}
 
-	@GrpcClient("filemanager")
-	FileManagerGrpc.FileManagerBlockingStub filemanager;
+	@GrpcClient("filemanager")  // GRPC client injection for FileManager service
+	FileManagerGrpc.FileManagerBlockingStub filemanager;  // Blocking stub for FileManager GRPC service
 
 	@Inject
-	Logger logger;
+	Logger logger;  // Injecting Logger to log messages
 
+	@Inject
+	MinioClient minioClient;  // Inject MinioClient to interact with MinIO
 }
