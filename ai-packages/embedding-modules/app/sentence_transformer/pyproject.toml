@@ -1,6 +1,6 @@
 [project]
-name = "OpenK9 sentence transformer embedding-module"
-version = "0.2.0-SNAPSHOT"
+name = "sentence_transformer_embedding_module"
+version = "3.0.0-SNAPSHOT"
 description = "OpenK9 embedding module for sentence transformer"
 authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
 keywords = ["OpenK9", "Generative AI", "embedding", "RAG"]

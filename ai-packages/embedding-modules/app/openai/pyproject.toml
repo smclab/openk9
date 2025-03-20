@@ -1,6 +1,6 @@
 [project]
-name = "OpenK9 openai embedding-module"
-version = "0.2.0-SNAPSHOT"
+name = "openai_embedding_module"
+version = "3.0.0-SNAPSHOT"
 description = "OpenK9 embedding module for openai"
 authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
 keywords = ["OpenK9", "Generative AI", "embedding", "RAG"]
