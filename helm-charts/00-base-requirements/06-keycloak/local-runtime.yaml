@@ -98,7 +98,7 @@ ingress:
   ##
   selfSigned: false
  # extraTls:
- #   hosts: keycloak-mi.openk9.io
+ #   hosts: keycloak.openk9.local
  #  secretName: openk9-tls-star-secret
 
 

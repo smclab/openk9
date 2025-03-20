@@ -81,7 +81,7 @@ service:
 quarkus:
 ## - add rel 1.6.0
   HttpCors: true
-  HttpCorsOrigin: "/https://.*.openk9.io/,"
+  HttpCorsOrigin: "/https://.*.openk9.local/,"
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
 

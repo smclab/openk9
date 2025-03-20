@@ -57,7 +57,7 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  host: adminer-mi.openk9.io
+  host: adminer.openk9.local
   servicePort: 8080
   paths:
     - /
