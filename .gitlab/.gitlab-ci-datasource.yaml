@@ -1,68 +1,85 @@
 stages:
   - build-image
   - container-scanning
-  - deploy
   - restart
 
 variables:
+  # Immagine usata per il container scanning
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
 
-
-##########
-
-### PIPELINE MODELLO DA RIVEDERE GLI IF QUAND E COSA AVVIARE (vedere il disegno)
-
-########################################################
-######################### JOBS #########################
-########################################################
-
+###############################################################
+#                       BUILD DATASOURCE                      #
+###############################################################
 Build Datasource image:
   extends: .build_template
+  stage: build-image
   variables:
     COMPONENT: "datasource"
-  stage: build-image
-  before_script:
-    - apt-get update && apt-get install -y maven
   script:
-    - cd core
     - |
+      echo "=== Leggo la versione dal POM Maven ==="
+      cd core
       VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then                                               
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+
+      echo "=== Lancio 'mvn package' in base al branch/tag ==="
+      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
+        # Build + push immagine su branch main o su tag
+        ./mvnw package $MAVEN_CLI_OPTS \
+          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.push=true
+
       elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+        # Build senza push su merge request
+        ./mvnw package $MAVEN_CLI_OPTS \
+          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+          -Dquarkus.container-image.build=false \
+          -Dquarkus.container-image.push=false
+
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+        # Branch feature + autore Michele => push con tag 998-SNAPSHOT
         echo "Triggered by Michele"
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
+        ./mvnw package $MAVEN_CLI_OPTS \
+          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.push=true \
+          -Dquarkus.container-image.tag=998-SNAPSHOT \
+          -P 'exclude-quarkus-test'
+
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+        # Branch feature generico => push con tag 999-SNAPSHOT
+        ./mvnw package $MAVEN_CLI_OPTS \
+          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.push=true \
+          -Dquarkus.container-image.tag=999-SNAPSHOT \
+          -P 'exclude-quarkus-test'
       fi
   artifacts:
     paths:
       - .version
     expire_in: 24 hours
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: commit su main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+    # Caso 2: merge request
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # Caso 3: creazione di un tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco della PRIMA esecuzione quando viene creato un branch
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
+    # Caso 4: commit su feature branch con pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
-
-############## Container scanning   ##############
-
+###############################################################
+#                 CONTAINER SCANNING DATASOURCE               #
+###############################################################
 Container Scanning Datasource:
   dependencies: [Build Datasource image]
   extends: .container-scanning-template
@@ -72,38 +89,48 @@ Container Scanning Datasource:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
 
-
-############## Restart ##############
-
-
+###############################################################
+#              TRIGGER RESTART DATASOURCE APP                 #
+###############################################################
 Trigger Restart Datasource:
   image: alpine:latest
   stage: restart
   script:
-    - apk add --no-cache curl
     - |
+      echo "=== Installo 'curl' e valuto se far ripartire il datasource ==="
+      apk add --no-cache curl
+
       if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ || "$CI_COMMIT_TAG" != "" ]]; then
-        echo "Branch matches main or pattern"
+        echo "Branch/tag compatibile con la restart"
+
         if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-          echo "# Triggered by Michele #"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F "variables[NAMESPACE]=k9-backend01" -F ref=master $RESTART_TRIGGER_URL
+          echo "Trigger RESTART su k9-backend01 (Michele)"
+          curl -X POST \
+            -F token=$RESTART_TRIGGER_TOKEN \
+            -F "variables[TRIGGER_JOB]=restart-datasource" \
+            -F "variables[NAMESPACE]=k9-backend01" \
+            -F ref=master \
+            $RESTART_TRIGGER_URL
         else
-          echo "Commit author does not match"
-          curl -X POST -F token=$RESTART_TRIGGER_TOKEN -F "variables[TRIGGER_JOB]=restart-datasource" -F ref=master $RESTART_TRIGGER_URL
+          echo "Trigger RESTART generico (altri utenti)"
+          curl -X POST \
+            -F token=$RESTART_TRIGGER_TOKEN \
+            -F "variables[TRIGGER_JOB]=restart-datasource" \
+            -F ref=master \
+            $RESTART_TRIGGER_URL
         fi
       else
-        echo "Branch does not match main or pattern"
+        echo "Branch non compatibile con la restart"
       fi
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: commit su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
-    #- if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # (Disabilitato) Caso 2: merge request
+    # - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Caso 3: creazione di un tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco della PRIMA esecuzione su branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
+    # Caso 4: commit su branch con pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-

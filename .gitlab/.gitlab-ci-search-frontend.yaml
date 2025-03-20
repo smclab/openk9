@@ -1,53 +1,102 @@
+################################################################################
+#                                   STAGES                                     #
+################################################################################
 stages:
-  - quality
+  - build-image
   - build-verifier
-  - publish
-  - build
   - container-scanning
   - restart
+  - publish
 
 
-# Build Docker Image - non c'è ancora Docker in docker, questa pipeline non parte
-Build Search Frontend:
-  stage: build
-  image: docker:24.0.2
-  variables:
-    DOCKER_BUILDKIT: 1  # Abilita BuildKit per una build più veloce
-  before_script:
-    - apk add --no-cache docker  # Installa Docker CLI
-    - dockerd &  # Avvia temporaneamente il daemon Docker
-    - while(! docker info > /dev/null 2>&1); do echo "Waiting for Docker to start..."; sleep 1; done
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USERNAME" --password-stdin $CI_REGISTRY
+include:
+  - local: '/.gitlab/.gitlab-templates.yaml'
+
+################################################################################
+#                                  JOBS                                        #
+################################################################################
+
+#################
+# Fetch Version #
+#################
+Fetch version: 
+  stage: build-image
+  image: node:16-alpine
   script:
-    - docker build -t $CI_REGISTRY/search-frontend:latest -f js-packages/search-frontend/Dockerfile .
-    - docker push $CI_REGISTRY/search-frontend:latest
-  after_script:
-    - kill $(cat /var/run/docker.pid)  # Arresta il daemon Docker
+    - cd js-packages/search-frontend
+    - export VERSION=$(node -p "require('./package.json').version") # Legge la versione dal package.json
+    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Salva la versione in un file
+  artifacts:
+    paths:
+      - version.env
+    expire_in: 1 day
+
+######################## BUILD SEARCH FRONTEND ########################
+Build Search Frontend:
+  stage: build-image
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+    - job: Fetch version
+      artifacts: true
+  script:
+    - source $CI_PROJECT_DIR/version.env # Carica la versione dall'artifact
+    - echo "=== Using VERSION=$VERSION ==="
+    - echo "=== Configurazione credenziali Kaniko ==="
+    - export NODE_OPTIONS="--max-old-space-size=4096" # Aumenta la memoria massima per Node
+
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{\"auths\":{\"$CI_REGISTRY_NAME\":{\"auth\":\"$(printf "%s:%s" \ 
+      "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" \
+      | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json 
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+        --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
   rules:
-    - when: never
+    - changes:
+        - js-packages/search-frontend/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
+######################## BUILD VERIFIER (NODE) ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:14
+  script:
+    - cd js-packages/search-frontend
+    - yarn install
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/search-frontend/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
-# Container Scanning
+######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
-  variables:
-    SCAN_IMAGE: "$CI_REGISTRY/search-frontend:latest"
+  dependencies:
+    - "Build Search Frontend"
   script:
-    - container-scanning scan --image $SCAN_IMAGE
+    - source version.env # Carica la versione dall'artifact
+    - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" 
+    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"  # Esegue lo scan dell'immagine
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-
-
-
-# Trigger Restart
+######################## TRIGGER RESTART ########################
 Trigger Restart:
   stage: restart
   image: alpine:latest
   script:
     - apk add --no-cache curl
     - echo "Triggering restart for Search Frontend"
+      # Invia una richiesta POST al trigger URL per far partire il job `restart-admin-frontend`
     - |
       curl -X POST \
         -F "token=${RESTART_TRIGGER_TOKEN}" \
@@ -57,39 +106,33 @@ Trigger Restart:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-
-# Build Verifier
-Build Verifier:
-  stage: build-verifier
-  #immagine con node/npm per provare yarn install e build
-  image: node:14
-  script:
-    - cd js-packages/search-frontend
-    - yarn install
-    - yarn build
-  rules:
-    - changes:
-        - js-packages/search-frontend/**/*
-    # quando c'è merge request
-    - if: '$CI_COMMIT_BRANCH == "main"'
-
-
-
-# Publish
+####################### PUBLISH SEARCH FRONTEND #######################
 Publish Search Frontend:
   stage: publish
-  image: node:16    
+  image: node:16
   script:
     - cd js-packages/search-frontend
     - pwd
     - whoami
     - yarn install
-    # Imposta il token npm nel file .npmrc dell'utente corrente, così npm publish
-    # può autenticarsi su npmjs.com
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
     - npm publish --access public
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
     - when: never
+
+
+####################### DEPENDENCY CHECK #######################
+Dependency Check Search Frontend:
+  stage: dependency-check
+  needs:
+    - job: "Trigger Search Frontend"
+  extends: .dependency_check_frontend_template
+  allow_failure: true
+  script:
+    - cd js-packages/search-frontend
+    - /analyzer run
+
+
 

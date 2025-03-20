@@ -46,3 +46,19 @@
 
 
 
+.dependency_check_frontend_template:
+  image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
+  variables:
+    TOOL: yarn
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+    paths:
+      - gl-dependency-scanning-report.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/**/*

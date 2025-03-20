@@ -1,7 +1,10 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
 stages:
   - build-image
   - container-scanning
-  - deploy
   - restart
 
 variables:
@@ -11,18 +14,18 @@ include:
   - local: '/.gitlab/.gitlab-templates.yaml'
 
 
+################################################################################
+#                                   JOBS                                        #
+################################################################################
 
-########################################################
-######################### JOBS #########################
-########################################################
-
+######################## BUILD K8S-CLIENT IMAGE ########################
 Build K8S-Client image:
   extends: .build_template
   variables:
     COMPONENT: "k8s-client"
   stage: build-image
-  before_script:
-    - apt-get update && apt-get install -y maven
+  #before_script:
+  #  - apt-get update && apt-get install -y maven
   script:
     - cd core
     - |
@@ -30,7 +33,7 @@ Build K8S-Client image:
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
     - |
-      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then                                               
+      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
       elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
         ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
@@ -56,8 +59,8 @@ Build K8S-Client image:
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
-############## Container scanning ##############
 
+###################### CONTAINER SCANNING K8S-CLIENT ####################
 Container Scanning K8S-Client:
   dependencies: [Build K8S-Client image]
   extends: .container-scanning-template
@@ -68,9 +71,7 @@ Container Scanning K8S-Client:
     - if: '$CI_COMMIT_TAG'
 
 
-
-############## Restart ##############
-
+##################### TRIGGER RESTART K8S-CLIENT ########################
 Trigger Restart K8S-Client:
   image: alpine:latest
   stage: restart
@@ -88,7 +89,6 @@ Trigger Restart K8S-Client:
         fi
       else
         echo "Branch does not match main or pattern"
-      fi
   rules:
     # Caso 1: Quando c'è un commit su main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -101,5 +101,3 @@ Trigger Restart K8S-Client:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-
-

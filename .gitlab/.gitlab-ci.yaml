@@ -1,3 +1,7 @@
+#############################################
+#            GITLAB CI PIPELINE             #
+#############################################
+
 stages:
   - trigger
   - build-image
@@ -7,11 +11,11 @@ stages:
   - quality
   - container-scanning
   - dependency-check
-  - build
   - build-verifier
   - publish
-  
-#Cache globale differenziata per ambienti o dipendenze specifiche
+
+
+# Cache globale, differenziata per ambienti o dipendenze specifiche
 cache:
   key: "maven-dependencies-${CI_COMMIT_REF_NAME}"
   paths:
@@ -19,34 +23,33 @@ cache:
   policy: pull-push
 
 variables:
+  # Immagine da usare per il container scanning
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
-
 include:
-  - local: '/.gitlab/.gitlab-ci-search-frontend.yaml'
-  - local: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
-  - local: '/.gitlab/.gitlab-ci-site.yaml'
-  - local: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
   - local: '/.gitlab/.gitlab-templates.yaml'
 
 
-####################################################
-################## DATASOURCE ######################
-####################################################
-
+################################################################################
+#                               TRIGGER DATASOURCE                             #
+################################################################################
 Trigger Datasource:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch che rispetta ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/datasource/**/*
@@ -62,23 +65,27 @@ Trigger Datasource:
   trigger:
     include: '/.gitlab/.gitlab-ci-datasource.yaml'
 
-####################################################
-##################  SEARCHER  ######################
-####################################################
 
+################################################################################
+#                               TRIGGER SEARCHER                               #
+################################################################################
 Trigger Searcher:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/common/resources-common/**/*
@@ -90,23 +97,27 @@ Trigger Searcher:
   trigger:
     include: '/.gitlab/.gitlab-ci-searcher.yaml'
 
-####################################################
-##################  INGESTION  #####################
-####################################################
 
+################################################################################
+#                               TRIGGER INGESTION                              #
+################################################################################
 Trigger Ingestion:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/ingestion/**/*
@@ -115,23 +126,27 @@ Trigger Ingestion:
   trigger:
     include: '/.gitlab/.gitlab-ci-ingestion.yaml'
 
-####################################################
-##################  K8S-CLIENT  ####################
-####################################################
 
+################################################################################
+#                              TRIGGER K8S-CLIENT                              #
+################################################################################
 Trigger K8S-Client:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/k8s-client/**/*
@@ -146,48 +161,55 @@ Trigger K8S-Client:
     include: '/.gitlab/.gitlab-ci-k8s-client.yaml'
 
 
-####################################################
-##################  FILE-MANAGER  ##################
-####################################################
-
+################################################################################
+#                             TRIGGER FILE-MANAGER                             #
+################################################################################
 Trigger File-Manager:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/file-manager/**/*
-        - core/common/resources-common /**/*
+        - core/common/resources-common **/*
         - core/client/grpc/**/*
   trigger:
     include: '/.gitlab/.gitlab-ci-file-manager.yaml'
 
-####################################################
-################  TENANT-MANAGER  ##################
-####################################################
 
+################################################################################
+#                           TRIGGER TENANT-MANAGER                             #
+################################################################################
 Trigger Tenant-Manager:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/tenant-manager/**/*
@@ -202,23 +224,27 @@ Trigger Tenant-Manager:
   trigger:
     include: '/.gitlab/.gitlab-ci-tenant-manager.yaml'
 
-####################################################
-#####################   TIKA   #####################
-####################################################
 
+################################################################################
+#                              TRIGGER TIKA NO-OCR                             #
+################################################################################
 Trigger Tika no-ocr:
   stage: trigger
   rules:
-    # Caso 1: Quando c'è un commit su main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request
+
+    # Caso 2: merge request approvata
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-    # Caso 3: Quando viene creato un tag
+
+    # Caso 3: creazione tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch (escludiamo questa esecuzione)
+
+    # Blocco della prima esecuzione quando branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+
+    # Caso 4: feature branch ^\d+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
       changes:
         - core/app/tika/**/*
@@ -227,111 +253,107 @@ Trigger Tika no-ocr:
     include: '/.gitlab/.gitlab-ci-tika-no-ocr.yaml'
 
 
+################################################################################
+#                                TRIGGER TIKA OCR                              #
+################################################################################
+Trigger Tika ocr:
+  stage: trigger
+  rules:
+    # Caso 1: push su main
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
-##########################################################################################################################
-#############################################  Pipeline FRONT-END   ######################################################
-##########################################################################################################################
+    # Caso 2: merge request approvata
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
+
+    # Caso 3: creazione tag
+    - if: '$CI_COMMIT_TAG'
+
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+
+    # Caso 4: feature branch ^\d+-.*$
+    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
+      changes:
+        - core/app/tika/**/*
+        - core/common/resources-common/**/*
+  trigger:
+    include: '/.gitlab/.gitlab-ci-tika-ocr.yaml'
 
 
-####################################################
-#################   Search Front-end   #############
-####################################################
+################################################################################
+#                         PIPELINE FRONT-END TRIGGERS                          #
+################################################################################
 
-
-
+# SEARCH FRONTEND
 Trigger Search Frontend:
   stage: trigger
   rules:
-
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - js-packages/search-frontend/**/*
-
+      when: manual
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/search-frontend/**/*
+      when: manual
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
   trigger:
     include: '/.gitlab/.gitlab-ci-search-frontend.yaml'
     strategy: depend
 
-####################################################
-#################   Admin Front-end   #############
-####################################################
-
+# ADMIN FRONTEND
 Trigger Admin Frontend:
   stage: trigger
   rules:
-
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - js-packages/admin-ui/**/*
-
+      when: manual
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/admin-ui/**/*
+      when: manual
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
   trigger:
     include: '/.gitlab/.gitlab-ci-admin-frontend.yaml'
     strategy: depend
 
-####################################################
-#################   Tenant Front-end   #############
-####################################################
-
+# TENANT FRONTEND
 Trigger Tenant Frontend:
   stage: trigger
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - js-packages/tenant-ui/**/*
+      when: manual
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - js-packages/tenant-ui/**/*
+      when: manual
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
   trigger:
     include: '/.gitlab/.gitlab-ci-tenant-frontend.yaml'
     strategy: depend
 
 
 
-####################################################
-###############   Dependency Check FE   ############
-####################################################
 
-Dependency Check:
-  stage: dependency-check
-  image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
-  variables:
-    TOOL: yarn
-  script:
-    - cd js-packages/admin-ui
-    - /analyzer run
-  artifacts:
-    reports:
-      dependency_scanning: gl-dependency-scanning-report.json
-    paths:
-      - gl-dependency-scanning-report.json
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - js-packages/**/*
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/**/*
-
-############################################   FINE PIPELINE-FRONTEND   ####################################################
-
-
-##################################################################################################
-#  Rerfactoring delle 2 installazioni mvn per alleggerire il carico e non andare out of memory   #
-##################################################################################################
-
-
-
+################################################################################
+#                MAVEN BUILD: INSTALL HIBERNATE E CORE MODULES                 #
+################################################################################
 
 Maven Install Hibernate:
   stage: maven_build
   image: maven:3.9.6-eclipse-temurin-21
   script:
-    - cd vendor/hibernate-rx-multitenancy
+    - cd vendor/hibernate-rx-q
     - mvn install
   artifacts:
     paths:
@@ -343,23 +365,17 @@ Maven Install Hibernate:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
-    # Caso 1: Quando c'è un commit sul main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request su main
+    # Caso 2: MR su main
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # Caso 3: tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco della prima esecuzione su branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+    # Caso 4: feature branch ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
-
-
-
-
-
-
 
 Maven Install Core:
   stage: maven_build
@@ -380,25 +396,22 @@ Maven Install Core:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
-    # Caso 1: Quando c'è un commit sul main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request su main
+    # Caso 2: MR su main
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # Caso 3: tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco della prima esecuzione su branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^\d+-.*$
+    # Caso 4: feature branch ^\d+-.*$
     - if: '"$CI_COMMIT_BRANCH" =~ /^[0-9]+-.*$/'
 
 
-
-
-
-
-
-
+################################################################################
+#                           MAVEN DEPENDENCY CHECK                              #
+################################################################################
 Maven Dependency Check:
   stage: maven_dependency_check
   image: maven:3.9.6-eclipse-temurin-21
@@ -420,22 +433,20 @@ Maven Dependency Check:
       - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
   rules:
-    # Caso 1: Quando c'è un commit sul main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request su main
+    # Caso 2: MR su main
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # Caso 3: tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco prima esecuzione su branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
 
 
-
-#######################################################################################################
-################################        SONARQUBE         #############################################
-#######################################################################################################
-
+################################################################################
+#                                 SONARQUBE CHECK                               #
+################################################################################
 SonarQube Check:
   stage: quality
   image:
@@ -454,13 +465,62 @@ SonarQube Check:
     - sonar-scanner -Dsonar.qualitygate.wait=true
   allow_failure: true
   rules:
-    # Caso 1: Quando c'è un commit sul main (push su main)
+    # Caso 1: push su main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: Quando viene approvata una merge request su main
+    # Caso 2: MR su main
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: Quando viene creato un tag
+    # Caso 3: tag
     - if: '$CI_COMMIT_TAG'
-    # Blocco della prima esecuzione quando viene creato un branch
+    # Blocco prima esecuzione su branch appena creato
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
 
+
+################################################################################
+#                                AI PIPELINE                                   #
+################################################################################
+
+# Build RAG MODULE
+Trigger Rag Module:
+  stage: trigger
+  # Non blocca la pipeline se fallisce
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - ai-packages/rag-module/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - ai-packages/rag-module/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
+      changes:
+        - ai-packages/rag-module/**/*
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+  trigger:
+    include: '/.gitlab/.gitlab-ci-rag-module.yaml'
+    strategy: depend
+
+# Procedere a fare la build di Ebedding anche se RAG fallisce
+Trigger Embedding Module:
+  stage: trigger
+  # “needs” assicura che venga eseguito dopo “Trigger Rag Module”
+  needs:
+    - job: "Trigger Rag Module"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - ai-packages/embedding-modules/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - ai-packages/embedding-modules/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
+      changes:
+        - ai-packages/embedding-modules/**/*
+    # Blocco della prima esecuzione quando branch appena creato
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+  trigger:
+    include: '/.gitlab/.gitlab-ci-embedding-module.yaml'
+    strategy: depend

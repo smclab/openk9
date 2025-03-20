@@ -1,7 +1,10 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
 stages:
   - build-image
   - container-scanning
-  - deploy
   - restart
 
 variables:
@@ -11,18 +14,18 @@ include:
   - local: '/.gitlab/.gitlab-templates.yaml'
 
 
+################################################################################
+#                                   JOBS                                        #
+################################################################################
 
-########################################################
-######################### JOBS #########################
-########################################################
-
+######################## BUILD INGESTION IMAGE ########################
 Build Ingestion image:
   extends: .build_template
   variables:
     COMPONENT: "ingestion"
   stage: build-image
-  before_script:
-    - apt-get update && apt-get install -y maven
+  #before_script:
+  #  - apt-get update && apt-get install -y maven
   script:
     - cd core
     - |
@@ -58,11 +61,7 @@ Build Ingestion image:
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 
-
-
-############## Container scanning ##############
-
-
+###################### CONTAINER SCANNING INGESTION ######################
 Container Scanning Ingestion:
   dependencies: [Build Ingestion image]
   extends: .container-scanning-template
@@ -73,10 +72,7 @@ Container Scanning Ingestion:
     - if: '$CI_COMMIT_TAG'
 
 
-
-
-################# Restart ################
-
+######################### TRIGGER RESTART INGESTION ######################
 Trigger Restart Ingestion:
   image: alpine:latest
   stage: restart
@@ -94,7 +90,6 @@ Trigger Restart Ingestion:
         fi
       else
         echo "Branch does not match main or pattern"
-      fi
   rules:
     # Caso 1: Quando c'è un commit su main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -107,6 +102,3 @@ Trigger Restart Ingestion:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-
-
-
