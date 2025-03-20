@@ -21,4 +21,4 @@ data:
   # Opentelemetry env
   QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
 
-  QUARKUS_MINIO_SECURE: {{ .Values.quarkus.disabled | quote }}
+  QUARKUS_MINIO_SECURE: {{ .Values.quarkus.minioSecure | quote }}

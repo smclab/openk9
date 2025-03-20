@@ -17,7 +17,7 @@ replicaCount: 1
 ## @param image.pullPolicy Tenant Ui image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: ""   #-openk9/openk9-tenant-ui:1.5.0-SNAPSHOT
+  registry: ""
   name: smclab/openk9-tenant-ui
   # Overrides the image tag whose default is the chart appVersion.
   ## Overrides the image tag whose default is the chart appVersion.
