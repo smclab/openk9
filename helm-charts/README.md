@@ -1090,7 +1090,7 @@ For advanced configurations read [README.md](./03-gen-ai/openk9-rag-module/READM
 For kubernetes/K3s execute:
 
 ```bash
-helm upgrade -i rag-module 08-gen-ai/openk9-rag-module -n openk9 -f 08-gen-ai/openk9-rag-module/scenarios/local-runtime.yaml
+helm upgrade -i rag-module 03-gen-ai/openk9-rag-module -n openk9 -f 03-gen-ai/openk9-rag-module/scenarios/local-runtime.yaml
 ```
 
 For Opeshift execute:
@@ -1132,13 +1132,13 @@ For advanced configurations read [README.md](./03-gen-ai/openk9-talk-to/README.m
 For kubernetes/K3s execute:
 
 ```bash
-helm upgrade -i talk-to 08-gen-ai/openk9-talk-to -n openk9 -f 08-gen-ai/openk9-talk-to/scenarios/local-runtime.yaml
+helm upgrade -i talk-to 03-gen-ai/openk9-talk-to -n openk9 -f 03-gen-ai/openk9-talk-to/scenarios/local-runtime.yaml
 ```
 
 For Opeshift execute:
 
 ```bash
-helm upgrade -i talk-to 08-gen-ai/openk9-talk-to -n openk9 -f 08-gen-ai/openk9-talk-to/scenarios/local-crc.yaml
+helm upgrade -i talk-to 03-gen-ai/openk9-talk-to -n openk9 -f 03-gen-ai/openk9-talk-to/scenarios/local-crc.yaml
 ```
 
 #### Verify installation
