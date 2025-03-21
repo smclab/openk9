@@ -51,7 +51,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="OpenK9 RAG API",
     description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
-    version="1.0.0",
+    version="3.0.0-SNAPSHOT",
     openapi_tags=[
         {
             "name": "RAG",
@@ -88,21 +88,33 @@ async def redirect_root_to_docs():
 
 
 class SearchToken(BaseModel):
-    """SearchToken class model."""
+    """
+    SearchToken class model.
+    """
 
-    tokenType: str
-    keywordKey: Optional[str] = ""
-    values: list[str]
-    filter: Optional[bool] = False
-    entityType: Optional[str] = ""
-    entityName: Optional[str] = ""
-    extra: Optional[dict[str, str]] = {}
+    tokenType: str = Field(..., description="Type of the search token")
+    keywordKey: Optional[str] = Field(
+        "", description="Keyword key for the token", example=""
+    )
+    values: list[str] = Field(..., description="List of values for the token")
+    filter: Optional[bool] = Field(
+        False, description="Whether this token is used for filtering", example=False
+    )
+    entityType: Optional[str] = Field(
+        "", description="Type of entity for the token", example=""
+    )
+    entityName: Optional[str] = Field(
+        "", description="Name of the entity for the token", example=""
+    )
+    extra: Optional[dict[str, str]] = Field(
+        {}, description="Additional metadata for the token", example={}
+    )
 
 
 class SearchQuery(BaseModel):
     """Represents a search query with various parameters for filtering, sorting, and pagination."""
 
-    searchQuery: list[SearchToken]
+    searchQuery: list[SearchToken] = Field(..., description="List of search tokens")
     range: list = Field(
         ...,
         description="Range filter as [start, end]",
@@ -201,6 +213,17 @@ class SearchQuery(BaseModel):
                         "Basic Example": {
                             "summary": "A basic example with minimal fields",
                             "value": {
+                                "searchQuery": [
+                                    {
+                                        "entityType": "",
+                                        "entityName": "",
+                                        "tokenType": "TEXT",
+                                        "keywordKey": "",
+                                        "values": ["value"],
+                                        "extra": {},
+                                        "filter": True,
+                                    }
+                                ],
                                 "range": [],
                                 "searchText": "What is OpenK9?",
                             },
@@ -208,6 +231,17 @@ class SearchQuery(BaseModel):
                         "Advanced Example": {
                             "summary": "An advanced example with all fields",
                             "value": {
+                                "searchQuery": [
+                                    {
+                                        "entityType": "",
+                                        "entityName": "",
+                                        "tokenType": "TEXT",
+                                        "keywordKey": "",
+                                        "values": ["value"],
+                                        "extra": {},
+                                        "filter": True,
+                                    }
+                                ],
                                 "range": [],
                                 "afterKey": "page_2",
                                 "suggestKeyword": "OpenK9",
@@ -1044,6 +1078,11 @@ async def get_chat(
     )
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Check the health status of the Rag module",
+    description="Returns the current health status of the Rag module.",
+    tags=["Health Checks"],
+)
 async def get_health():
     return {"status": "UP"}
