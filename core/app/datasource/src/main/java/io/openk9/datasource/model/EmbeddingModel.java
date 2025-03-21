@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
@@ -24,12 +25,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
-import io.openk9.datasource.model.util.K9Entity;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
 @Table(name = "embedding_model")
@@ -37,9 +33,8 @@ import lombok.Setter;
 	name = EmbeddingModel.FETCH_CURRENT,
 	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
-@Getter
-@Setter
-public class EmbeddingModel extends K9Entity {
+@Data
+public class EmbeddingModel extends BaseModel {
 
 	public static final String FETCH_CURRENT = "EmbeddingModel.FetchCurrent";
 

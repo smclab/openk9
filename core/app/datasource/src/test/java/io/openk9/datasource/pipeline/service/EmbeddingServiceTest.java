@@ -17,18 +17,27 @@
 
 package io.openk9.datasource.pipeline.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.model.EmbeddingModel;
-
+import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.service.EmbeddingModelService;
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @QuarkusTest
 class EmbeddingServiceTest {
+
+	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
+	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
+	private static final String TYPE = "type";
+	private static final String MODEL = "model";
+
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -43,5 +52,54 @@ class EmbeddingServiceTest {
 			.await().indefinitely();
 
 		assertNotNull(current);
+	}
+
+	@Test
+	void should_create_embedding_model_one_with_type_and_model_fields() {
+		createEmbeddingModelOne();
+
+		var embeddingModelOne = getEmbeddingModelOne();
+
+		assertNotNull(embeddingModelOne);
+
+		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
+		assertEquals(TYPE, embeddingModelOne.getType());
+		assertEquals(MODEL, embeddingModelOne.getModel());
+
+		deleteEmbeddingModelOne();
+	}
+
+	private void createEmbeddingModelOne() {
+		var dto = EmbeddingModelDTO
+			.builder()
+			.name(EMBEDDING_MODEL_ONE_NAME)
+			.apiUrl("embedding-model.local")
+			.apiKey("secret-key")
+			.vectorSize(1500)
+			.type(TYPE)
+			.model(MODEL)
+			.build();
+
+		embeddingModelService.create(dto)
+			.await()
+			.indefinitely();
+	}
+
+	private void deleteEmbeddingModelOne() {
+		var embeddingModelOne = getEmbeddingModelOne();
+
+		sessionFactory.withTransaction(
+			session -> embeddingModelService.deleteById(embeddingModelOne.getId())
+		)
+		.await()
+		.indefinitely();
+	}
+
+	private EmbeddingModel getEmbeddingModelOne() {
+		return sessionFactory.withTransaction(
+				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_ONE_NAME)
+			)
+			.await()
+			.indefinitely();
 	}
 }
