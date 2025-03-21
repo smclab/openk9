@@ -66,7 +66,7 @@ class EmbeddingServiceTest {
 		assertEquals(TYPE, embeddingModelOne.getType());
 		assertEquals(MODEL, embeddingModelOne.getModel());
 
-		deleteEmbeddingModelOne();
+		removeEmbeddingModelOne();
 	}
 
 	private void createEmbeddingModelOne() {
@@ -85,19 +85,19 @@ class EmbeddingServiceTest {
 			.indefinitely();
 	}
 
-	private void deleteEmbeddingModelOne() {
-		var embeddingModelOne = getEmbeddingModelOne();
-
-		sessionFactory.withTransaction(
-			session -> embeddingModelService.deleteById(embeddingModelOne.getId())
-		)
-		.await()
-		.indefinitely();
-	}
-
 	private EmbeddingModel getEmbeddingModelOne() {
 		return sessionFactory.withTransaction(
 				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_ONE_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void removeEmbeddingModelOne() {
+		var embeddingModelOne = getEmbeddingModelOne();
+
+		sessionFactory.withTransaction(
+				session -> embeddingModelService.deleteById(embeddingModelOne.getId())
 			)
 			.await()
 			.indefinitely();
