@@ -17,6 +17,10 @@
 
 package io.openk9.datasource.model;
 
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -44,11 +48,6 @@ import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
 
 @Entity
 @Table(name = "datasource")
@@ -82,13 +81,27 @@ public class Datasource extends K9Entity {
 	private Set<Bucket> buckets = new LinkedHashSet<>();
 	@ToString.Exclude
 	@OneToOne(
-		fetch = jakarta.persistence.FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL
+		fetch = jakarta.persistence.FetchType.LAZY,
+		cascade = {
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.DETACH,
+			jakarta.persistence.CascadeType.REFRESH
+		}
 	)
 	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
 	@JsonIgnore
 	private DataIndex dataIndex;
 	@ToString.Exclude
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "datasource")
+	@OneToMany(
+		cascade = {
+			CascadeType.PERSIST,
+			CascadeType.MERGE,
+			CascadeType.DETACH,
+			CascadeType.REFRESH
+		},
+		mappedBy = "datasource"
+	)
 	@JsonIgnore
 	private Set<DataIndex> dataIndexes;
 	@Column(name = "description", length = 4096)
