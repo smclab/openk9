@@ -22,7 +22,6 @@ import static io.openk9.datasource.service.DataIndexService.DETAILS_FIELD;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -168,29 +167,29 @@ public class IndexService {
 
 			var indices = indexNames.stream()
 				.map(IndexName::value)
-				.toArray(String[]::new);
+				.toList();
 
-			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indices);
+			var exists = openSearchClient.indices()
+				.exists(req -> req.index(indices));
 
-			deleteIndexRequest
-				.indicesOptions(
-					IndicesOptions.fromMap(
-						Map.of("ignore_unavailable", true),
-						deleteIndexRequest.indicesOptions()
-					)
+			if (!exists.value()) {
+				log.warnf("indices does not exists: %s", indices);
+				return null;
+			}
+
+			var acknowledgedResponse = openSearchClient.indices()
+				.delete(req -> req
+					.index(indices)
+					.ignoreUnavailable(true)
+					.allowNoIndices(true)
 				);
 
-			var acknowledgedResponse = restHighLevelClient.indices().delete(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT
-			);
-
-			if (acknowledgedResponse.isAcknowledged()) {
+			if (acknowledgedResponse.acknowledged()) {
 				return null;
 			}
 			else {
 				throw new DeleteIndexException(String.format(
-					"Error deleting indices: %s", Arrays.toString(indices)));
+					"Error deleting indices: %s", indices));
 			}
 
 		});
