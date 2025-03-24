@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,6 @@ import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.CreateDatasourceDTO;
-import io.openk9.datasource.listener.DatasourcePurgeService;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -44,9 +42,9 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
-import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
@@ -198,30 +196,14 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 								return session.createQuery(deleteScheduler).executeUpdate();
 							})
 							// deletes dataIndices
-							.flatMap(__ -> session.find(TenantBinding.class, 1L)
-								.flatMap(tenantBinding -> Uni.createFrom()
-									.completionStage(
-										DatasourcePurgeService.fetchOrphans(
-											tenantBinding.getTenant(),
-											datasourceId,
-											Duration.ZERO
-										)
-									)
-									.flatMap(dataIndices -> Uni.createFrom()
-										.completionStage(DatasourcePurgeService.deleteIndices(
-											List.copyOf(dataIndices))
-										)
-										.flatMap(unused -> Uni.createFrom()
-											.completionStage(
-												DatasourcePurgeService.deleteDataIndices(
-													tenantBinding.getTenant(),
-													datasourceId,
-													List.copyOf(dataIndices)
-												)
-											)
-										)
-									)
-								)
+							.call(__ -> getDataIndexes(datasourceId)
+								.flatMap(dataIndices -> {
+									var dataIndexIds = dataIndices.stream()
+										.map(K9Entity::getId)
+										.collect(Collectors.toSet());
+
+									return dataIndexService.deleteAllByIds(dataIndexIds);
+								})
 							)
 							.flatMap(unused -> super.deleteById(session, datasourceId))
 							.map(integer -> datasource);
