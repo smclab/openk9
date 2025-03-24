@@ -173,6 +173,10 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return sessionFactory.withTransaction(
 			(session, transaction) ->
 				findById(session, datasourceId)
+					.call(datasource -> session.fetch(datasource.getDataIndex()))
+					.call(datasource -> session.fetch(datasource.getPluginDriver()))
+					.call(datasource -> session.fetch(datasource.getEnrichPipeline()))
+					.call(datasource -> session.fetch(datasource.getBuckets()))
 					.flatMap(datasource -> {
 						// dereferences entities on datasource
 						datasource.setDataIndex(null);
