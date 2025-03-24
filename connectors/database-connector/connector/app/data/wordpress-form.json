@@ -1,0 +1,200 @@
+{
+  "fields": [
+    {
+      "label": "Host Name",
+      "name": "hostName",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "localhost:8080",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Data Type",
+      "name": "dataType",
+      "type": "select",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "Posts",
+          "isDefault": false
+        },
+        {
+          "value": "Pages",
+          "isDefault": false
+        },
+        {
+          "value": "Comments",
+          "isDefault": false
+        },
+        {
+          "value": "Users",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Data type to extract",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Using Authentication",
+      "name": "doAuth",
+      "type": "boolean",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Username",
+      "name": "username",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Password",
+      "name": "password",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Items Per Page",
+      "name": "itemsPerPage",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 10,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Timestamp",
+      "name": "timestamp",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": 0,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Datasource Id",
+      "name": "datasourceId",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": 1,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Schedule Id",
+      "name": "scheduleId",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "1",
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Tenant Id",
+      "name": "tenantId",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "1",
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    }
+  ]
+}

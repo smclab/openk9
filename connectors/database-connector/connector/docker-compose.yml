@@ -1,0 +1,9 @@
+version: "3.5"
+services:
+    wordpress-parser:
+        image: wordpress-parser:latest
+        container_name: wordpress-parser
+        environment:
+            INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
+        ports:
+            - "5000:5000"

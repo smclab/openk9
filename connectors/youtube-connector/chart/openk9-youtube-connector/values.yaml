@@ -1,0 +1,153 @@
+# Default values for openk9-search-admin.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  registry: ""
+  name: registry.smc.it:49083/openk9/youtube-connector
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+  # Specify a imagePullPolicy
+  # Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  # ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  pullPolicy: Always
+
+  # Optionally specify an array of imagePullSecrets.
+  # Secrets must be manually created in the namespace.
+  # ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  # e.g:
+  # pullSecrets:
+  #   - myRegistryKeySecretName
+  #
+  pullSecrets:
+    - registry.smc.it
+    
+# Annotations to add to all deployed objects
+commonAnnotations: {}
+
+
+service:
+  type: ClusterIP
+  port: 5000
+
+# Existing OpenK9 services
+openk9:
+  ingestion:
+    host: openk9-ingestion
+    port: 8080
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ServiceAccount is mandatory to download image using pullSecrets
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Ingress is mandatory
+ingress:
+  enabled: false
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  host: "dev.openk9.io"
+  tls: 
+    enabled: false
+    secretName: ""
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Container's startup probe
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+# - startupProbe.enabled Enable/disable the startup probe (master nodes pod)
+# - startupProbe.initialDelaySeconds Delay before startup probe is initiated (master nodes pod)
+# - startupProbe.periodSeconds How often to perform the probe (master nodes pod)
+# - startupProbe.timeoutSeconds When the probe times out (master nodes pod)
+# - startupProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (master nodes pod)
+# - startupProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+#
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+# Container's liveness probe
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+# - livenessProbe.enabled Enable/disable the liveness probe (master-eligible nodes pod)
+# - livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (master-eligible nodes pod)
+# - livenessProbe.periodSeconds How often to perform the probe (master-eligible nodes pod)
+# - livenessProbe.timeoutSeconds When the probe times out (master-eligible nodes pod)
+# - livenessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (master-eligible nodes pod)
+# - livenessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+#
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+# Container's readiness probe
+# ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+# - readinessProbe.enabled Enable/disable the readiness probe (master-eligible nodes pod)
+# - readinessProbe.initialDelaySeconds Delay before readiness probe is initiated (master-eligible nodes pod)
+# - readinessProbe.periodSeconds How often to perform the probe (master-eligible nodes pod)
+# - readinessProbe.timeoutSeconds When the probe times out (master-eligible nodes pod)
+# - readinessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (master-eligible nodes pod)
+# - readinessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+#
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
