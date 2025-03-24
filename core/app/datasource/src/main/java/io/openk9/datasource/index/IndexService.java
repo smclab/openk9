@@ -22,10 +22,12 @@ import static io.openk9.datasource.service.DataIndexService.DETAILS_FIELD;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -155,6 +157,40 @@ public class IndexService {
 				log.errorf(e, "Error deleting index %s", indexName.value());
 
 				throw new DeleteIndexException();
+			}
+
+		});
+	}
+
+	public Uni<Void> deleteIndices(Set<IndexName> indexNames) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			var indices = indexNames.stream()
+				.map(IndexName::value)
+				.toArray(String[]::new);
+
+			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indices);
+
+			deleteIndexRequest
+				.indicesOptions(
+					IndicesOptions.fromMap(
+						Map.of("ignore_unavailable", true),
+						deleteIndexRequest.indicesOptions()
+					)
+				);
+
+			var acknowledgedResponse = restHighLevelClient.indices().delete(
+				deleteIndexRequest,
+				RequestOptions.DEFAULT
+			);
+
+			if (acknowledgedResponse.isAcknowledged()) {
+				return null;
+			}
+			else {
+				throw new DeleteIndexException(String.format(
+					"Error deleting indices: %s", Arrays.toString(indices)));
 			}
 
 		});

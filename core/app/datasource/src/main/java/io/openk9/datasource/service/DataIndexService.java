@@ -18,10 +18,12 @@
 package io.openk9.datasource.service;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -55,6 +57,7 @@ import io.openk9.datasource.web.DataIndexResource;
 import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -272,6 +275,39 @@ public class DataIndexService
 				return s.persist(dataIndex);
 			})
 			.flatMap(ignore -> deleteById(s, entityId))
+		);
+	}
+
+	public Uni<List<DataIndex>> deleteAllByIds(Set<Long> ids) {
+		var cb = sessionFactory.getCriteriaBuilder();
+		return sessionFactory.withTransaction(s -> findByIds(s, ids)
+			.call(dataIndices -> {
+				var dataIndexNames = dataIndices.stream()
+					.map(DataIndex::getIndexName)
+					.map(IndexName::new)
+					.collect(Collectors.toSet());
+				return indexService.deleteIndices(dataIndexNames);
+			})
+			.call(dataIndices -> {
+				UniJoin.Builder<DataIndex> builder = Uni.join().builder();
+
+				for (DataIndex dataIndex : dataIndices) {
+					var deleteDataindexUni = s.fetch(dataIndex.getDocTypes())
+						.flatMap(docTypes -> {
+							dataIndex.getDocTypes().clear();
+							return s.persist(dataIndex);
+						})
+						.flatMap(__ -> deleteById(s, dataIndex.getId()));
+
+					builder.add(deleteDataindexUni);
+				}
+
+				return builder
+					.joinAll()
+					.usingConcurrencyOf(1)
+					.andCollectFailures()
+					.onFailure().invoke(throwable -> log.warnf(throwable, "errore uni join"));
+			})
 		);
 	}
 

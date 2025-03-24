@@ -17,32 +17,28 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.actor.EventBusInstanceHolder;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.util.K9Entity;
-import io.quarkus.vertx.ConsumeEvent;
-import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.eventbus.Message;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
-import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.opensearch.action.support.IndicesOptions;
-import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.core.action.ActionListener;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.datasource.index.IndexName;
+import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.util.K9Entity;
+
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.Message;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 
 @ApplicationScoped
@@ -67,7 +63,7 @@ public class DatasourcePurgeService {
 		"and di.modifiedDate < :maxAgeDate";
 	private static final Logger log = Logger.getLogger(DatasourcePurgeService.class);
 	@Inject
-	RestHighLevelClient restHighLevelClient;
+	IndexService indexService;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -155,49 +151,22 @@ public class DatasourcePurgeService {
 			return Uni.createFrom().voidItem();
 		}
 
-		var first = dataIndices.iterator().next();
+		var first = dataIndices.getFirst();
 		var tenantId = first.getTenant();
 		var datasource = first.getDatasource();
 		var datasourceId = datasource.getId();
-
-		String[] names = dataIndices
-			.stream()
-			.map(DataIndex::getIndexName)
-			.toArray(String[]::new);
-
-		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
-
-		deleteIndexRequest
-			.indicesOptions(
-				IndicesOptions.fromMap(
-					Map.of("ignore_unavailable", true),
-					deleteIndexRequest.indicesOptions()
-				)
-			);
 
 		log.infof(
 			"Deleting Opensearch orphans indices for datasource %s-%s",
 			tenantId, datasourceId
 		);
 
+		var dataIndexNames = dataIndices.stream()
+			.map(DataIndex::getIndexName)
+			.map(IndexName::new)
+			.collect(Collectors.toSet());
 
-		return Uni.createFrom().emitter(emitter ->
-			restHighLevelClient.indices().deleteAsync(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT,
-				new ActionListener<AcknowledgedResponse>() {
-					@Override
-					public void onFailure(Exception e) {
-						emitter.fail(e);
-					}
-
-					@Override
-					public void onResponse(AcknowledgedResponse acknowledgedResponse) {
-						emitter.complete(acknowledgedResponse);
-					}
-				}
-			)
-		).replaceWithVoid();
+		return indexService.deleteIndices(dataIndexNames);
 	}
 
 	@ConsumeEvent(FETCH_ORPHANS)
