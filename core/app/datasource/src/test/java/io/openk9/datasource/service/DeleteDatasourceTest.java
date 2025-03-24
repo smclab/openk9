@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.service;
 
+import java.io.IOException;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch.OpenSearchClient;
 
 @QuarkusTest
 public class DeleteDatasourceTest {
@@ -49,21 +51,21 @@ public class DeleteDatasourceTest {
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
+	@Inject
+	OpenSearchClient openSearchClient;
 
 	@BeforeEach
-	void setup() {
+	void setup() throws IOException {
 
 		var enrichPipeline = enrichPipelineService.findByName(
 				"public",
 				Initializer.INIT_DATASOURCE_PIPELINE
-			)
-			.await().indefinitely();
+		).await().indefinitely();
 
 		var pluginDriver = pluginDriverService.findByName(
 				"public",
 				Initializer.INIT_DATASOURCE_PLUGIN
-			)
-			.await().indefinitely();
+		).await().indefinitely();
 
 		var docTypesByPluginDriver = pluginDriverService.getDocTypes(pluginDriver.getId())
 			.await().indefinitely()
@@ -95,6 +97,9 @@ public class DeleteDatasourceTest {
 		var dataIndex = datasourceService.getDataIndex(datasource.getId())
 			.await().indefinitely();
 
+		openSearchClient.indices().create(req -> req
+			.index(dataIndex.getIndexName()));
+
 		Scheduler scheduler = new Scheduler();
 		scheduler.setScheduleId("a-random-schedule-id");
 		scheduler.setDatasource(datasource);
@@ -124,15 +129,27 @@ public class DeleteDatasourceTest {
 
 
 	@AfterEach
-	void tearDown() {
-		var datasource = datasourceService.findByName("public", DDT_DATASOURCE_CONNECTION)
+	void tearDown() throws IOException {
+		var datasource = datasourceService
+			.findByName("public", DDT_DATASOURCE_CONNECTION)
+			.await().indefinitely();
+
+		var dataIndex = datasourceService
+			.getDataIndex(datasource.getId())
 			.await().indefinitely();
 
 		datasourceService.deleteById(datasource.getId())
 			.await().indefinitely();
 
 		// also implicit testing deleteById
+
 		Assertions.assertNull(datasourceService.findById(datasource.getId())
 			.await().indefinitely());
+
+		var indexExists = openSearchClient
+			.indices()
+			.exists(req -> req.index(dataIndex.getIndexName()));
+
+		Assertions.assertFalse(indexExists.value());
 	}
 }
