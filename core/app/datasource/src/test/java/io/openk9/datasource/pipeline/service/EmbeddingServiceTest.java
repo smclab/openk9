@@ -33,6 +33,7 @@ class EmbeddingServiceTest {
 
 	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
 	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
+	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String TYPE = "type";
 	private static final String MODEL = "model";
 
@@ -55,7 +56,7 @@ class EmbeddingServiceTest {
 	}
 
 	@Test
-	void should_create_embedding_model_one_with_type_and_model_fields() {
+	void should_create_embedding_model_one_with_type_model_jsonConfig_fields() {
 		createEmbeddingModelOne();
 
 		var embeddingModelOne = getEmbeddingModelOne();
@@ -65,6 +66,7 @@ class EmbeddingServiceTest {
 		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
 		assertEquals(TYPE, embeddingModelOne.getType());
 		assertEquals(MODEL, embeddingModelOne.getModel());
+		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		removeEmbeddingModelOne();
 	}
@@ -78,6 +80,7 @@ class EmbeddingServiceTest {
 			.vectorSize(1500)
 			.type(TYPE)
 			.model(MODEL)
+			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
 		embeddingModelService.create(dto)

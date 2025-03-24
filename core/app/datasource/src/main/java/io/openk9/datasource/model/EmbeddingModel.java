@@ -26,6 +26,8 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "embedding_model")
@@ -49,6 +51,10 @@ public class EmbeddingModel extends BaseModel {
 
 	@Column(name = "api_key")
 	private String apiKey;
+
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "json_config")
+	private String jsonConfig;
 
 	@OneToOne(mappedBy = "embeddingModel")
 	@JsonIgnore

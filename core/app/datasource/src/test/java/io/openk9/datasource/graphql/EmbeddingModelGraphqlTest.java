@@ -44,6 +44,30 @@ public class EmbeddingModelGraphqlTest {
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
 	private static final String ID = "id";
+	private static final String JSON_CONFIG = "jsonConfig";
+	private static final String JSON_CONFIG_EMPTY = "{}";
+	private static final String JSON_CONFIG_UPDATED = "{\n" +
+		"  \"object1\": {\n" +
+		"    \"id\": 1,\n" +
+		"    \"name\": \"Test Object 1\",\n" +
+		"    \"value\": \"Sample Value 1\"\n" +
+		"  },\n" +
+		"  \"object2\": {\n" +
+		"    \"id\": 2,\n" +
+		"    \"name\": \"Test Object 2\",\n" +
+		"    \"value\": \"Sample Value 2\"\n" +
+		"  },\n" +
+		"  \"configurations\": [\n" +
+		"    {\n" +
+		"      \"key\": \"config1\",\n" +
+		"      \"enabled\": true\n" +
+		"    },\n" +
+		"    {\n" +
+		"      \"key\": \"config2\",\n" +
+		"      \"enabled\": false\n" +
+		"    }\n" +
+		"  ]\n" +
+		"}";
 	private static final String MESSAGE = "message";
 	private static final String MODEL = "model";
 	private static final String MODEL_VALUE = "model";
@@ -92,7 +116,8 @@ public class EmbeddingModelGraphqlTest {
 								prop(API_KEY, SECRET_KEY),
 								prop(VECTOR_SIZE, VECTOR_SIZE_DEFAULT_VALUE),
 								prop(TYPE, TYPE_VALUE),
-								prop(MODEL, MODEL_VALUE)
+								prop(MODEL, MODEL_VALUE),
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
 							)
 						)
 					),
@@ -103,7 +128,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(TYPE),
-						field(MODEL)
+						field(MODEL),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -132,6 +158,7 @@ public class EmbeddingModelGraphqlTest {
 
 		assertEquals(TYPE_VALUE, embeddingModelOne.getType());
 		assertEquals(MODEL_VALUE, embeddingModelOne.getModel());
+		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		// remove the embeddingModelOne
 		removeEmbeddingModelOne();
@@ -148,6 +175,7 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(VECTOR_SIZE_DEFAULT_VALUE, embeddingModelTwo.getVectorSize());
 		assertEquals(TYPE_VALUE, embeddingModelTwo.getType());
 		assertEquals(MODEL_VALUE, embeddingModelTwo.getModel());
+		assertEquals(JSON_CONFIG_EMPTY, embeddingModelTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -165,7 +193,8 @@ public class EmbeddingModelGraphqlTest {
 								prop(API_KEY, SECRET_KEY_UPDATED),
 								prop(VECTOR_SIZE, VECTOR_SIZE_VALUE_UPDATED),
 								prop(TYPE, TYPE_VALUE_UPDATED),
-								prop(MODEL, MODEL_VALUE_UPDATED)
+								prop(MODEL, MODEL_VALUE_UPDATED),
+								prop(JSON_CONFIG, JSON_CONFIG_UPDATED)
 							)
 						)
 					),
@@ -176,7 +205,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(TYPE),
-						field(MODEL)
+						field(MODEL),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -208,6 +238,7 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(VECTOR_SIZE_VALUE_UPDATED, embeddingModelUpdated.getVectorSize());
 		assertEquals(TYPE_VALUE_UPDATED, embeddingModelUpdated.getType());
 		assertEquals(MODEL_VALUE_UPDATED, embeddingModelUpdated.getModel());
+		assertEquals(JSON_CONFIG_UPDATED, embeddingModelUpdated.getJsonConfig());
 	}
 
 	@Test
@@ -221,6 +252,7 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(VECTOR_SIZE_DEFAULT_VALUE, embeddingModelTwo.getVectorSize());
 		assertEquals(TYPE_VALUE, embeddingModelTwo.getType());
 		assertEquals(MODEL_VALUE, embeddingModelTwo.getModel());
+		assertEquals(JSON_CONFIG_EMPTY, embeddingModelTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -238,7 +270,8 @@ public class EmbeddingModelGraphqlTest {
 								prop(API_KEY, SECRET_KEY_UPDATED),
 								prop(VECTOR_SIZE, VECTOR_SIZE_VALUE_UPDATED),
 								prop(TYPE, TYPE_VALUE_UPDATED),
-								prop(MODEL, MODEL_VALUE_UPDATED)
+								prop(MODEL, MODEL_VALUE_UPDATED),
+								prop(JSON_CONFIG, JSON_CONFIG_UPDATED)
 							)
 						)
 					),
@@ -246,7 +279,8 @@ public class EmbeddingModelGraphqlTest {
 						field(ID),
 						field(NAME),
 						field(TYPE),
-						field(MODEL)
+						field(MODEL),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -278,6 +312,7 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(VECTOR_SIZE_VALUE_UPDATED, embeddingModelPatched.getVectorSize());
 		assertEquals(TYPE_VALUE_UPDATED, embeddingModelPatched.getType());
 		assertEquals(MODEL_VALUE_UPDATED, embeddingModelPatched.getModel());
+		assertEquals(JSON_CONFIG_UPDATED, embeddingModelPatched.getJsonConfig());
 	}
 
 	@AfterEach
@@ -294,6 +329,7 @@ public class EmbeddingModelGraphqlTest {
 			.vectorSize(VECTOR_SIZE_DEFAULT_VALUE)
 			.type(TYPE)
 			.model(MODEL)
+			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
 		embeddingModelService.create(dto)
