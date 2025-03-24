@@ -279,34 +279,42 @@ public class DataIndexService
 	}
 
 	public Uni<List<DataIndex>> deleteAllByIds(Set<Long> ids) {
-		var cb = sessionFactory.getCriteriaBuilder();
 		return sessionFactory.withTransaction(s -> findByIds(s, ids)
 			.call(dataIndices -> {
-				var dataIndexNames = dataIndices.stream()
-					.map(DataIndex::getIndexName)
-					.map(IndexName::new)
-					.collect(Collectors.toSet());
-				return indexService.deleteIndices(dataIndexNames);
-			})
-			.call(dataIndices -> {
-				UniJoin.Builder<DataIndex> builder = Uni.join().builder();
-
-				for (DataIndex dataIndex : dataIndices) {
-					var deleteDataindexUni = s.fetch(dataIndex.getDocTypes())
-						.flatMap(docTypes -> {
-							dataIndex.getDocTypes().clear();
-							return s.persist(dataIndex);
-						})
-						.flatMap(__ -> deleteById(s, dataIndex.getId()));
-
-					builder.add(deleteDataindexUni);
+				if (!dataIndices.isEmpty()) {
+					var dataIndexNames = dataIndices.stream()
+						.map(DataIndex::getIndexName)
+						.map(IndexName::new)
+						.collect(Collectors.toSet());
+					return indexService.deleteIndices(dataIndexNames);
 				}
 
-				return builder
-					.joinAll()
-					.usingConcurrencyOf(1)
-					.andCollectFailures()
-					.onFailure().invoke(throwable -> log.warnf(throwable, "errore uni join"));
+				return Uni.createFrom().voidItem();
+			})
+			.call(dataIndices -> {
+				if (!dataIndices.isEmpty()) {
+					UniJoin.Builder<DataIndex> builder = Uni.join().builder();
+
+					for (DataIndex dataIndex : dataIndices) {
+						var deleteDataindexUni = s.fetch(dataIndex.getDocTypes())
+							.flatMap(docTypes -> {
+								dataIndex.getDocTypes().clear();
+								return s.merge(dataIndex);
+							})
+							.flatMap(__ -> deleteById(s, dataIndex.getId()));
+
+						builder.add(deleteDataindexUni);
+					}
+
+					return builder
+						.joinAll()
+						.usingConcurrencyOf(1)
+						.andCollectFailures()
+						.onFailure()
+						.invoke(throwable -> log.warnf(throwable, "Error on delete indices."));
+				}
+
+				return Uni.createFrom().voidItem();
 			})
 		);
 	}
