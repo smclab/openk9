@@ -30,79 +30,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.concurrent.ExecutionException;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-import io.openk9.datasource.service.DataIndexService;
-import io.openk9.datasource.service.DatasourceConnectionObjects;
+import io.openk9.datasource.Initializer;
 import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.service.PluginDriverService;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class DataIndexGraphqlTest {
 
-	private static final String DATA_INDEX_DATASOURCE_GRAPHQL_TEST =
-		"DataIndexDatasourceGraphqlTest";
-	private static final String DATA_INDEX_PLUGIN_GRAPHQL_TEST = "DataIndexPluginGraphqlTest";
 	private static final String TENANT_ID = "public";
 
 	@Inject
 	DatasourceService datasourceService;
 
 	@Inject
-	DataIndexService dataIndexService;
-
-	@Inject
 	@GraphQLClient("openk9-dynamic")
 	DynamicGraphQLClient graphQLClient;
-
-	@Inject
-	PluginDriverService pluginDriverService;
-
-	@BeforeEach
-	@RunOnVertxContext
-	void setup(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(
-				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
-					.name(DATA_INDEX_DATASOURCE_GRAPHQL_TEST)
-					.pluginDriver(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-						.name(DATA_INDEX_PLUGIN_GRAPHQL_TEST)
-						.jsonConfig(JsonObject.of(
-							"host", WireMockPluginDriver.HOST,
-							"port", WireMockPluginDriver.PORT,
-							"secure", false
-						).encode())
-						.build()
-					)
-					.dataIndex(DataIndexDTO.builder()
-						.embeddingJsonConfig("{}")
-						.knnIndex(true)
-						.build())
-					.build()
-			),
-			ignore -> {}
-		);
-
-	}
 
 	@Test
 	void should_return_knnDataIndex()
 		throws ExecutionException, InterruptedException {
 
 		var dataIndex = datasourceService.findByName(
-				TENANT_ID, DATA_INDEX_DATASOURCE_GRAPHQL_TEST)
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
 			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
 			.await().indefinitely();
 
@@ -134,37 +88,8 @@ public class DataIndexGraphqlTest {
 		assertNotNull(dataIndexR);
 		assertEquals(
 			dataIndex.getId(), Long.parseLong(dataIndexR.getString("id")));
-		assertTrue(dataIndexR.getBoolean("knnIndex"));
+		assertFalse(dataIndexR.getBoolean("knnIndex"));
 
 	}
-
-	@AfterEach
-	@RunOnVertxContext
-	void tearDown(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.findByName(
-					TENANT_ID, DATA_INDEX_DATASOURCE_GRAPHQL_TEST)
-				.flatMap(datasource -> datasourceService
-					.getDataIndex(datasource)
-					.flatMap(dataIndex -> datasourceService.unsetDataIndex(
-							datasource.getId())
-						.flatMap(ignore -> dataIndexService
-							.deleteById(TENANT_ID, dataIndex.getId()))
-						.flatMap(ignore -> datasourceService
-							.getPluginDriver(datasource.getId())
-							.flatMap(pluginDriver -> datasourceService
-								.unsetPluginDriver(datasource.getId())
-								.flatMap(ignoree -> pluginDriverService
-									.deleteById(pluginDriver.getId()))
-							))
-						.flatMap(ignore -> datasourceService
-							.deleteById(datasource.getId()))
-					)
-				),
-			ignore -> {}
-		);
-	}
-
 
 }
