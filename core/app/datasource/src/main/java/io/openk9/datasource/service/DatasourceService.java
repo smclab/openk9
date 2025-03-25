@@ -44,7 +44,6 @@ import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.UpdateDatasourceDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
@@ -199,18 +198,10 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 								return session.createQuery(deleteScheduler).executeUpdate();
 							})
-							// deletes dataIndices
-							.call(__ -> getDataIndexes(datasourceId)
-								.flatMap(dataIndices -> {
-									var dataIndexIds = dataIndices.stream()
-										.map(K9Entity::getId)
-										.collect(Collectors.toSet());
-
-									return dataIndexService.deleteAllByIds(dataIndexIds);
-								})
-							)
+							.flatMap(unused -> dataIndexService
+								.deleteAllByDatasourceId(session, datasourceId))
 							.flatMap(unused -> super.deleteById(session, datasourceId))
-							.map(integer -> datasource);
+							.map(unused -> datasource);
 					})
 		);
 

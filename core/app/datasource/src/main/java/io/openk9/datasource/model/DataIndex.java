@@ -29,6 +29,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -55,7 +56,16 @@ import org.hibernate.type.SqlTypes;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor(staticName = "of")
+@NamedQuery(
+	name = DataIndex.DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE,
+	query = "from DataIndex di " +
+			"join di.datasource d " +
+			"join fetch di.docTypes where d.id = :datasourceId"
+)
 public class DataIndex extends K9Entity {
+
+	public static final String DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE =
+		"dataIndicesWithDocTypes";
 
 	private static final int DEFAULT_CHUNK_WINDOW_SIZE = 0;
 	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";

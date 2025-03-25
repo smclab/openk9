@@ -17,13 +17,15 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -52,6 +54,7 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.DataIndexResource;
 import io.openk9.datasource.web.dto.DataIndexByDocTypes;
@@ -278,45 +281,63 @@ public class DataIndexService
 		);
 	}
 
-	public Uni<List<DataIndex>> deleteAllByIds(Set<Long> ids) {
-		return sessionFactory.withTransaction(s -> findByIds(s, ids)
-			.call(dataIndices -> {
-				if (!dataIndices.isEmpty()) {
-					var dataIndexNames = dataIndices.stream()
-						.map(DataIndex::getIndexName)
-						.map(IndexName::new)
-						.collect(Collectors.toSet());
-					return indexService.deleteIndices(dataIndexNames);
+	public Uni<List<DataIndex>> deleteAllByDatasourceId(Mutiny.Session session, long datasourceId) {
+
+		return session.createNamedQuery(
+				DataIndex.DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE, DataIndex.class)
+			.setParameter("datasourceId", datasourceId)
+			.getResultList()
+			.flatMap(dataIndices -> {
+
+				if (dataIndices.isEmpty()) {
+					log.warnf("No dataIndex founds for datasource with id %s", datasourceId);
+
+					return Uni.createFrom().item(new ArrayList<>());
 				}
 
-				return Uni.createFrom().voidItem();
-			})
-			.call(dataIndices -> {
-				if (!dataIndices.isEmpty()) {
-					UniJoin.Builder<DataIndex> builder = Uni.join().builder();
+				UniJoin.Builder<List<DataIndex>> uniJoin = Uni.join().builder();
 
-					for (DataIndex dataIndex : dataIndices) {
-						var deleteDataindexUni = s.fetch(dataIndex.getDocTypes())
-							.flatMap(docTypes -> {
-								dataIndex.getDocTypes().clear();
-								return s.merge(dataIndex);
-							})
-							.flatMap(__ -> deleteById(s, dataIndex.getId()));
+				var iterator = dataIndices.iterator();
+				while (iterator.hasNext()) {
 
-						builder.add(deleteDataindexUni);
+					List<DataIndex> chunk = new ArrayList<>(10);
+					Set<IndexName> dataIndexNames = new HashSet<>(10);
+					do {
+						var dataIndex = iterator.next();
+
+						dataIndexNames.add(new IndexName(dataIndex.getIndexName()));
+						chunk.add(dataIndex);
 					}
+					while (iterator.hasNext() && chunk.size() <= 10);
 
-					return builder
-						.joinAll()
-						.usingConcurrencyOf(1)
-						.andCollectFailures()
-						.onFailure()
-						.invoke(throwable -> log.warnf(throwable, "Error on delete indices."));
+					var deletions = indexService.deleteIndices(dataIndexNames)
+						.flatMap(unused -> session.removeAll(chunk.toArray()))
+						.invoke(unused -> {
+							for (DataIndex dataIndex : chunk) {
+								getProcessor().onNext(K9EntityEvent.of(
+										K9EntityEvent.EventType.DELETE,
+										dataIndex
+									)
+								);
+							}
+						})
+						.map(unused -> chunk);
+
+
+					uniJoin.add(deletions);
 				}
 
-				return Uni.createFrom().voidItem();
+				return uniJoin
+					.joinAll()
+					.usingConcurrencyOf(1)
+					.andCollectFailures()
+					.map(lists -> lists
+						.stream()
+						.flatMap(Collection::stream)
+						.toList()
+					);
 			})
-		);
+			;
 	}
 
 	public Uni<Long> getCountIndexDocuments(String name) {
