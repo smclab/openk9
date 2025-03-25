@@ -3,7 +3,7 @@
 ################################################################################
 
 stages:
-  - build-image
+  - build
   - container-scanning
 
 variables:
@@ -20,7 +20,7 @@ include:
 
 ######################## BUILD EMBEDDING OPENAI ########################
 Build Embedding OpenAI:
-  stage: build-image
+  stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -60,7 +60,7 @@ Build Embedding OpenAI:
 
 ####################### BUILD EMBEDDING SENTENCE TRANSFORMER #######################
 Build Embedding ST:
-  stage: build-image
+  stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]

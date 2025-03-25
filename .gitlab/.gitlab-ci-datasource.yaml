@@ -1,5 +1,5 @@
 stages:
-  - build-image
+  - build
   - container-scanning
   - restart
 
@@ -15,7 +15,7 @@ include:
 ###############################################################
 Build Datasource image:
   extends: .build_template
-  stage: build-image
+  stage: build
   variables:
     COMPONENT: "datasource"
   script:
@@ -26,25 +26,27 @@ Build Datasource image:
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
 
-      echo "=== Lancio 'mvn package' in base al branch/tag ==="
+      echo "=== Lancio 'mvn package' in base al branch/tag MAVEL CLI OPTS: $MAVEN_OPTS  ==="
       if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
         # Build + push immagine su branch main o su tag
-        ./mvnw package $MAVEN_CLI_OPTS \
+        mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=true \
-          -Dquarkus.container-image.push=true
+          -Dquarkus.container-image.push=true \
+          $MAVEN_OPTS
 
       elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
         # Build senza push su merge request
-        ./mvnw package $MAVEN_CLI_OPTS \
+        mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=false \
-          -Dquarkus.container-image.push=false
+          -Dquarkus.container-image.push=false \
+          $MAVEN_OPTS
 
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
         # Branch feature + autore Michele => push con tag 998-SNAPSHOT
         echo "Triggered by Michele"
-        ./mvnw package $MAVEN_CLI_OPTS \
+        mvn package $MAVEN_OPTS \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=true \
           -Dquarkus.container-image.push=true \
@@ -53,12 +55,13 @@ Build Datasource image:
 
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
         # Branch feature generico => push con tag 999-SNAPSHOT
-        ./mvnw package $MAVEN_CLI_OPTS \
+        mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=true \
           -Dquarkus.container-image.push=true \
           -Dquarkus.container-image.tag=999-SNAPSHOT \
-          -P 'exclude-quarkus-test'
+          -P 'exclude-quarkus-test' \
+          $MAVEN_OPTS
       fi
   artifacts:
     paths:
@@ -77,6 +80,8 @@ Build Datasource image:
     # Caso 4: commit su feature branch con pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
+
+
 ###############################################################
 #                 CONTAINER SCANNING DATASOURCE               #
 ###############################################################
@@ -88,6 +93,8 @@ Container Scanning Datasource:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
+
+
 
 ###############################################################
 #              TRIGGER RESTART DATASOURCE APP                 #

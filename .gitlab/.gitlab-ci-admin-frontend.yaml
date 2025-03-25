@@ -3,15 +3,16 @@
 ################################################################################
 
 stages:
-  - build-image
+  - build
   - build-verifier
   - container-scanning
+  - dependency-check
   - restart
   - publish
 
-
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
+
 
 ################################################################################
 #                                    JOBS                                       #
@@ -21,7 +22,7 @@ include:
 # Fetch Version #
 #################
 Fetch version:
-  stage: build-image
+  stage: build
   image: node:16-alpine
   script:
     - cd js-packages/admin-ui
@@ -32,9 +33,9 @@ Fetch version:
       - version.env
     expire_in: 1 day
 
-######################### BUILD ADMIN FRONTEND ########################
+######################## BUILD Admin FRONTEND ########################
 Build Admin Frontend:
-  stage: build-image
+  stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
@@ -44,28 +45,28 @@ Build Admin Frontend:
     - job: Fetch version
       artifacts: true
   script:
-    # Carica la versione dall'artifact
+    # Carica la variabile VERSION dal file artifact version.env
     - source $CI_PROJECT_DIR/version.env
     - echo "=== Building Admin UI with VERSION=$VERSION ==="
-    - export NODE_OPTIONS="--max-old-space-size=4096"
-    - echo "=== Configurazione credenziali Kaniko ==="
     - mkdir -p /kaniko/.docker
+    # Configurazione credenziali Docker in /kaniko/.docker/config.json
     - |
       echo "{\"auths\":{\"$CI_REGISTRY_NAME\":{\"auth\":\"$(printf "%s:%s" \
       "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" \
       | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
 
-    - echo "=== Build e push con Kaniko ==="
+    - echo "=== Build e Push dell'immagine con Kaniko ==="
     - |
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}" \
         --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/admin-ui:$VERSION"
+        --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/admin-ui/**/*
 
-
-###################### BUILD VERIFIER (ADMIN UI) ######################
+######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
   image: node:14
@@ -74,32 +75,28 @@ Build Verifier:
     - yarn install
     - yarn build
   rules:
-    - changes:
-        - js-packages/admin-ui/**/*
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/admin-ui/**/*
 
-####################### CONTAINER SCANNING (ADMIN) #######################
+######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
-  # Dipende dalla build per assicurarsi che l'immagine esista già
-  dependencies:
-    - "Fetch version"
-    - "Build Admin Frontend"
   script:
     - source version.env
-    - echo "=== Scanning image ${CI_REGISTRY_NAME}/openk9/admin-ui:$VERSION ==="
-    - container-scanning scan --image "${CI_REGISTRY_NAME}/openk9/admin-ui:$VERSION"
+    - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
+    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-######################### TRIGGER RESTART (ADMIN) ########################
+######################## TRIGGER RESTART ########################
 Trigger Restart:
   stage: restart
   image: alpine:latest
   script:
     - apk add --no-cache curl
-    - echo "Triggering restart for Admin Frontend"
+    - echo "Triggering restart for admin Frontend"
     - |
       curl -X POST \
         -F "token=${RESTART_TRIGGER_TOKEN}" \
@@ -109,7 +106,7 @@ Trigger Restart:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-####################### PUBLISH ADMIN FRONTEND #######################
+####################### PUBLISH Admin FRONTEND #######################
 Publish Admin Frontend:
   stage: publish
   image: node:16
@@ -127,13 +124,13 @@ Publish Admin Frontend:
 
 
 ####################### DEPENDENCY CHECK #######################
-
 Dependency Check Admin UI:
   stage: dependency-check
-  needs:
-    - job: "Trigger Admin Frontend"
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
     - cd js-packages/admin-ui
     - /analyzer run
+
+
+

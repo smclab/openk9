@@ -3,7 +3,7 @@
 ################################################################################
 
 stages:
-  - build-image
+  - build
   - container-scanning
   - restart
 
@@ -23,9 +23,7 @@ Build K8S-Client image:
   extends: .build_template
   variables:
     COMPONENT: "k8s-client"
-  stage: build-image
-  #before_script:
-  #  - apt-get update && apt-get install -y maven
+  stage: build
   script:
     - cd core
     - |
@@ -34,13 +32,13 @@ Build K8S-Client image:
       echo "$VERSION" > $CI_PROJECT_DIR/.version
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
       elif [[ "$CI_MERGE_REQUEST_ID" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+        mvn package $MAVEN_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
+        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
       fi
   artifacts:
     paths:
@@ -89,6 +87,7 @@ Trigger Restart K8S-Client:
         fi
       else
         echo "Branch does not match main or pattern"
+      fi
   rules:
     # Caso 1: Quando c'è un commit su main (push su main)
     - if: '$CI_COMMIT_BRANCH == "main"'

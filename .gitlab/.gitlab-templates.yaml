@@ -3,9 +3,8 @@
 # Template generico di build che viene utilizzato da ogni componente (datasource,ingestion etc...)
 
 .build_template:
-  image: eclipse-temurin:21-jdk
-  services:
-    - docker:19.03.13-dind
+  #image: eclipse-temurin:21-jdk
+  image: maven:3.9.6-eclipse-temurin-21
   variables:
     TEST_NAME: "local/test"
     DOCKER_HOST: "tcp://localhost:2375"
@@ -20,8 +19,6 @@
     paths:
       - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
     expire_in: 2 days
-
-
 
 .container-scanning-template:
   stage: container-scanning
