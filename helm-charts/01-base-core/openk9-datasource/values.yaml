@@ -102,6 +102,10 @@ scheduling:
   ConsumerMaxRetries: '2'
   ConsumerTimeout: '10m'
 
+## pipeline configuration
+pipeline:
+  HttpTimeout: '10s'
+
 ## Database configuration
 database:
 

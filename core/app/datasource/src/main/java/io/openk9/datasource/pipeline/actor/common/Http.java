@@ -33,7 +33,7 @@ import java.time.Duration;
 
 public class Http {
 
-	public static final String HTTP_REQUEST_TIMEOUT = "openk9.pipeline.http.timeout";
+	public static final String HTTP_REQUEST_TIMEOUT = "io.openk9.pipeline.http.timeout";
 
 	public sealed interface Command {}
 	public record GET(ActorRef<Response> replyTo, String url)

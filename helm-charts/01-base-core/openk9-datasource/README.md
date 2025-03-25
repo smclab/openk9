@@ -65,7 +65,7 @@ Openk9 Datasource service is based on Quarkus Framework. Use following parameter
 
 ### Scheduling configurations
 
-Openk9 Datasource service handle scheduling for differente datasources. Following parameters allow to handle in better possible way system based on 
+Openk9 Datasource service handles scheduling for differente datasources. Following parameters allow to handle in better possible way system based on 
 loading and capabilities of system.
 
 | Name                | Description                                                                                              | Value                      |
@@ -76,6 +76,16 @@ loading and capabilities of system.
 | `scheduling.WorkersPerNode`    | Active workers for every replica       | `2`            |
 | `scheduling.ConsumerMaxRetries`  |  Maximum number of retries attempted when error occurs  | `2` |
 | `scheduling.ConsumerTimeout`      | Timeout to handle releasing of a message by a consumer after specific time | `10m`                       |
+
+### Pipeline configurations
+
+Openk9 Datasource service handles pipelines. Following parameters allow to handle in better possible way system based on response time of enrich items.
+
+
+| Name                | Description                                      | Value |
+| ------------------- |--------------------------------------------------|-------|
+| `pipeline.HttpTimeout`      | Timeout used by Http client calling enrich items | `10s` |
+
 
 ### JVM configuration
 
