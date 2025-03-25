@@ -19,6 +19,7 @@ package io.openk9.datasource.pipeline.service;
 
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.ModelTypeDTO;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -57,33 +58,40 @@ class EmbeddingServiceTest {
 
 	@Test
 	void should_create_embedding_model_one_with_type_model_jsonConfig_fields() {
-		createEmbeddingModelOne();
+		var embeddingModelCreated = createEmbeddingModelOne();
+		System.out.printf("embeddingModelCreated: %s", embeddingModelCreated.toString());
 
 		var embeddingModelOne = getEmbeddingModelOne();
+		System.out.printf("embeddingModelOne: %s", embeddingModelOne.toString());
 
 		assertNotNull(embeddingModelOne);
 
 		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
-		assertEquals(TYPE, embeddingModelOne.getType());
-		assertEquals(MODEL, embeddingModelOne.getModel());
+		assertEquals(TYPE, embeddingModelOne.getModelType().getType());
+		assertEquals(MODEL, embeddingModelOne.getModelType().getModel());
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		removeEmbeddingModelOne();
 	}
 
-	private void createEmbeddingModelOne() {
+	private EmbeddingModel createEmbeddingModelOne() {
 		var dto = EmbeddingModelDTO
 			.builder()
 			.name(EMBEDDING_MODEL_ONE_NAME)
 			.apiUrl("embedding-model.local")
 			.apiKey("secret-key")
 			.vectorSize(1500)
-			.type(TYPE)
-			.model(MODEL)
 			.jsonConfig(JSON_CONFIG_EMPTY)
+			.modelType(
+				ModelTypeDTO
+					.builder()
+					.type(TYPE)
+					.model(MODEL)
+					.build()
+			)
 			.build();
 
-		embeddingModelService.create(dto)
+		return embeddingModelService.create(dto)
 			.await()
 			.indefinitely();
 	}

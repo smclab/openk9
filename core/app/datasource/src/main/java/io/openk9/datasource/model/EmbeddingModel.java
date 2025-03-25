@@ -18,14 +18,20 @@
 package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -36,7 +42,9 @@ import org.hibernate.type.SqlTypes;
 	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
 @Data
-public class EmbeddingModel extends BaseModel {
+@AllArgsConstructor
+@NoArgsConstructor
+public class EmbeddingModel extends K9Entity {
 
 	public static final String FETCH_CURRENT = "EmbeddingModel.FetchCurrent";
 
@@ -62,6 +70,13 @@ public class EmbeddingModel extends BaseModel {
 
 	@Column(name = "vector_size")
 	private Integer vectorSize = 0;
+
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "type", column = @Column(name = "type")),
+		@AttributeOverride(name = "model", column = @Column(name = "model"))
+	})
+	private ModelType modelType;
 
 	@Transient
 	private boolean enabled = false;
