@@ -165,6 +165,31 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			});
 	}
 
+	/**
+	 * Deletes a datasource and all its associated entities through a cascading deletion process.
+	 *
+	 * <p>This method performs a comprehensive deletion that involves multiple steps:
+	 * <ul>
+	 *   <li>Retrieves the datasource by its ID</li>
+	 *   <li>Eagerly fetches associated entities (data indices, plugin driver, enrich pipeline, buckets)</li>
+	 *   <li>Dereferences these associated entities to prevent cascading</li>
+	 *   <li>Merges the datasource to update its state</li>
+	 *   <li>Deletes all schedulers associated with the datasource</li>
+	 *   <li>Deletes all data indices linked to the datasource</li>
+	 *   <li>Performs the final deletion of the datasource</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * @param datasourceId The unique identifier of the datasource to be deleted
+	 * @return A {@link Uni} that resolves to the deleted {@link Datasource} instance
+	 * @implNote <ul>
+	 * <li>Uses Hibernate Reactive for database operations</li>
+	 * <li>Performs eager fetching of associated entities to prevent lazy loading issues</li>
+	 * <li>Explicitly dereferences associated entities before deletion</li>
+	 * <li>Deletes schedulers using Criteria API for efficient bulk deletion</li>
+	 * <li>Relies on cascading services to handle deletion of related entities (e.g. dataIndices) </li>
+	 * </ul>
+	 */
 	public Uni<Datasource> deleteById(long datasourceId) {
 
 		var cb = sessionFactory.getCriteriaBuilder();
