@@ -169,19 +169,10 @@ public class IndexService {
 				.map(IndexName::value)
 				.toList();
 
-			var exists = openSearchClient.indices()
-				.exists(req -> req.index(indices));
-
-			if (!exists.value()) {
-				log.warnf("indices does not exists: %s", indices);
-				return null;
-			}
-
 			var acknowledgedResponse = openSearchClient.indices()
 				.delete(req -> req
 					.index(indices)
 					.ignoreUnavailable(true)
-					.allowNoIndices(true)
 				);
 
 			if (acknowledgedResponse.acknowledged()) {
