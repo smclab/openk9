@@ -281,6 +281,32 @@ public class DataIndexService
 		);
 	}
 
+	/**
+	 * Deletes all data indices associated with a specific datasource, processing them in controlled chunks.
+	 *
+	 * <p>This method performs a multi-step deletion process:
+	 * <ul>
+	 *   <li>Retrieves all data indices linked to the given datasource</li>
+	 *   <li>Processes deletions in chunks of up to 10 indices to manage resource consumption</li>
+	 *   <li>Concurrently deletes index entries from both the search index and the database</li>
+	 *   <li>Publishes delete events for each processed data index</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * <p>The deletion process is fault-tolerant and will continue processing remaining chunks
+	 * even if some chunk deletions fail, collecting all failures for potential logging or handling.</p>
+	 *
+	 * @param session      The Hibernate reactive session used for database operations
+	 * @param datasourceId The unique identifier of the datasource whose indices should be deleted
+	 * @return A {@link Uni} that resolves to a list of all deleted {@link DataIndex} instances
+	 * or an empty list if no indices are found for the datasource
+	 * @implNote <ul>
+	 * <li>Uses {@link UniJoin} to manage concurrent deletions with controlled concurrency</li>
+	 * <li>Logs a warning if no data indices are found for the given datasource</li>
+	 * <li>Publishes {@link K9EntityEvent} for each deleted data index</li>
+	 * <li>Limits chunk size to 10 to prevent overwhelming system resources</li>
+	 * </ul>
+	 */
 	public Uni<List<DataIndex>> deleteAllByDatasourceId(Mutiny.Session session, long datasourceId) {
 
 		return session.createNamedQuery(
@@ -300,6 +326,7 @@ public class DataIndexService
 				var iterator = dataIndices.iterator();
 				while (iterator.hasNext()) {
 
+					// create a chunk of max 10 elements
 					List<DataIndex> chunk = new ArrayList<>(10);
 					Set<IndexName> dataIndexNames = new HashSet<>(10);
 					do {
@@ -310,6 +337,7 @@ public class DataIndexService
 					}
 					while (iterator.hasNext() && chunk.size() <= 10);
 
+					// construct the uni chain to invoke for chunk deletions
 					var deletions = indexService.deleteIndices(dataIndexNames)
 						.flatMap(unused -> session.removeAll(chunk.toArray()))
 						.invoke(unused -> {
@@ -323,8 +351,9 @@ public class DataIndexService
 						})
 						.map(unused -> chunk);
 
-
 					uniJoin.add(deletions);
+
+					// create a new chunk if dataIndex iterator has other elements
 				}
 
 				return uniJoin
@@ -336,8 +365,7 @@ public class DataIndexService
 						.flatMap(Collection::stream)
 						.toList()
 					);
-			})
-			;
+			});
 	}
 
 	public Uni<Long> getCountIndexDocuments(String name) {
