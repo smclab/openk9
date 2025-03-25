@@ -17,20 +17,21 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.DocTypeTemplateMapper;
-import io.openk9.datasource.model.DocTypeTemplate;
-import io.openk9.datasource.model.DocTypeTemplate_;
-import io.openk9.datasource.model.dto.DocTypeTemplateDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
+import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.FlushMode;
 
-import java.util.List;
+import io.openk9.datasource.mapper.DocTypeTemplateMapper;
+import io.openk9.datasource.model.DocTypeTemplate;
+import io.openk9.datasource.model.DocTypeTemplate_;
+import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.FlushMode;
 
 @ApplicationScoped
 public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate, DocTypeTemplateDTO> {

@@ -17,24 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.service.DatasourceService;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import jakarta.persistence.NoResultException;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.concurrent.ExecutionException;
-
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -47,6 +29,25 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.ExecutionException;
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
+
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.service.DatasourceService;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

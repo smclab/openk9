@@ -17,28 +17,14 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
-import io.openk9.datasource.mapper.EnrichPipelineMapper;
-import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.EnrichItem_;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EnrichPipelineItem;
-import io.openk9.datasource.model.EnrichPipelineItemKey;
-import io.openk9.datasource.model.EnrichPipelineItemKey_;
-import io.openk9.datasource.model.EnrichPipelineItem_;
-import io.openk9.datasource.model.EnrichPipeline_;
-import io.openk9.datasource.model.dto.EnrichPipelineDTO;
-import io.openk9.datasource.model.util.K9Entity_;
-import io.openk9.datasource.resource.util.Filter;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -49,16 +35,31 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.mapper.EnrichPipelineMapper;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichItem_;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.EnrichPipelineItemKey;
+import io.openk9.datasource.model.EnrichPipelineItemKey_;
+import io.openk9.datasource.model.EnrichPipelineItem_;
+import io.openk9.datasource.model.EnrichPipeline_;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
+import io.openk9.datasource.model.util.K9Entity_;
+import io.openk9.datasource.resource.util.Filter;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 ;
 

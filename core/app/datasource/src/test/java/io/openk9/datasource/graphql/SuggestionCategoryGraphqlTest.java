@@ -34,13 +34,13 @@ import java.util.concurrent.ExecutionException;
 import jakarta.inject.Inject;
 import jakarta.json.JsonObject;
 
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.SuggestionCategoryService;

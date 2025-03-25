@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.LanguageDTO;
-
 import java.util.Set;
+
+import io.openk9.datasource.model.dto.base.LanguageDTO;
 
 public class Languages {
 

@@ -17,6 +17,11 @@
 
 package io.openk9.datasource.service;
 
+import java.util.HashSet;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.QueryAnalysisMapper;
@@ -24,19 +29,15 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.dto.QueryAnalysisWithListsDTO;
+import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.request.QueryAnalysisWithListsDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.HashSet;
-import java.util.Set;
 
 ;
 

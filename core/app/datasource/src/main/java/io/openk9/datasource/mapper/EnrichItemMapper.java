@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.datasource.model.dto.base.EnrichItemDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

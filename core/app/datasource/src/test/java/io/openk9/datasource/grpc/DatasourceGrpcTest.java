@@ -17,15 +17,20 @@
 
 package io.openk9.datasource.grpc;
 
-import io.grpc.StatusRuntimeException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.EnrichItemDTO;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.EnrichItemDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
+
+import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -35,10 +40,6 @@ import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
 
 @QuarkusTest
 public class DatasourceGrpcTest {

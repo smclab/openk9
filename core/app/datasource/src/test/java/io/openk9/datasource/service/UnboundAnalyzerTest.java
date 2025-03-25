@@ -17,25 +17,26 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.TokenFilter;
-import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.model.dto.CharFilterDTO;
-import io.openk9.datasource.model.dto.TokenFilterDTO;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.base.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.TokenFilterDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

@@ -19,7 +19,6 @@ package io.openk9.datasource.graphql;
 
 import java.util.List;
 import java.util.Set;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -30,8 +29,8 @@ import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
-import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.model.dto.AnalyzerWithListsDTO;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.request.AnalyzerWithListsDTO;
 import io.openk9.datasource.service.AnalyzerService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;

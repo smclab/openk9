@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

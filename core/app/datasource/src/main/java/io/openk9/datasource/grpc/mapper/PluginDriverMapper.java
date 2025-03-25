@@ -20,7 +20,8 @@ package io.openk9.datasource.grpc.mapper;
 import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.PluginDriverType;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+
 import io.vertx.core.json.JsonObject;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

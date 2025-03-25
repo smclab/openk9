@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.CreateDatasourceDTO;
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.grpc.Preset;
-import io.openk9.datasource.model.dto.PluginDriverDTO.PluginDriverDTOBuilder;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO.PluginDriverDTOBuilder;
+import io.openk9.datasource.model.dto.request.CreateDatasourceDTO;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 

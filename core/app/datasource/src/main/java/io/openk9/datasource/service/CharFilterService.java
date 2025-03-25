@@ -17,12 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.mapper.CharFilterMapper;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.CharFilter_;
-import io.openk9.datasource.model.dto.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class CharFilterService extends BaseK9EntityService<CharFilter, CharFilterDTO> {

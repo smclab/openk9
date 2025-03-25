@@ -21,7 +21,7 @@ import java.io.IOException;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.EmbeddingComponentTemplate;
-import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;

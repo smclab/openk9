@@ -17,21 +17,22 @@
 
 package io.openk9.datasource.service;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.AnnotatorMapper;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.AnnotatorDTO;
+import io.openk9.datasource.model.dto.base.AnnotatorDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.Set;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 ;
 

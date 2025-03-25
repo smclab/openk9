@@ -20,8 +20,8 @@ package io.openk9.datasource.service;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.dto.TabDTO;
-import io.openk9.datasource.model.dto.TokenTabDTO;
+import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.base.TokenTabDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Assertions;

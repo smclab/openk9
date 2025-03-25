@@ -24,7 +24,7 @@ import jakarta.validation.ValidationException;
 
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.init.Bucket;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 

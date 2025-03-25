@@ -17,8 +17,9 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
+
 import org.mapstruct.BeanMapping;
 import org.mapstruct.MapperConfig;
 import org.mapstruct.MappingConstants;

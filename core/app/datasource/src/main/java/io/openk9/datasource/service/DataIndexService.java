@@ -48,7 +48,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;

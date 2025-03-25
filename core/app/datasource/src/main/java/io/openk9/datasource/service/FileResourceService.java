@@ -17,19 +17,21 @@
 
 package io.openk9.datasource.service;
 
-import com.google.protobuf.Empty;
-import io.openk9.datasource.mapper.FileResourceMapper;
-import io.openk9.datasource.model.FileResource;
-import io.openk9.datasource.model.FileResource_;
-import io.openk9.datasource.model.dto.FileResourceDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
+import io.openk9.datasource.mapper.FileResourceMapper;
+import io.openk9.datasource.model.FileResource;
+import io.openk9.datasource.model.FileResource_;
+import io.openk9.datasource.model.dto.base.FileResourceDTO;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+
+import com.google.protobuf.Empty;
+import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 

@@ -18,17 +18,15 @@
 package io.openk9.datasource.service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;

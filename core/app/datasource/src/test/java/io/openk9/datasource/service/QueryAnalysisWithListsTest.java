@@ -17,25 +17,25 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
-import io.openk9.datasource.model.dto.QueryAnalysisWithListsDTO;
+import io.openk9.datasource.model.dto.request.QueryAnalysisWithListsDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

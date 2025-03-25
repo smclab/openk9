@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

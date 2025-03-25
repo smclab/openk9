@@ -17,15 +17,17 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.model.dto.HybridSearchPipelineDTO;
-import io.openk9.datasource.model.dto.SearchPipelineResponseDTO;
-import io.openk9.datasource.service.SearchConfigService;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+
+import io.openk9.datasource.model.dto.request.HybridSearchPipelineDTO;
+import io.openk9.datasource.model.dto.response.SearchPipelineResponseDTO;
+import io.openk9.datasource.service.SearchConfigService;
+
+import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
 @Path("/v1/search-config")

@@ -18,9 +18,9 @@
 package io.openk9.datasource.model.init;
 
 
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
-
 import java.util.Set;
+
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 
 public class QueryParserConfigs {
 

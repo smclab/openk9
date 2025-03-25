@@ -29,15 +29,15 @@ import java.util.Set;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.init.Languages;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceService;

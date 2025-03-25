@@ -17,16 +17,18 @@
 
 package io.openk9.datasource.resource;
 
-import io.openk9.datasource.model.DocTypeTemplate;
-import io.openk9.datasource.model.dto.DocTypeTemplateDTO;
-import io.openk9.datasource.resource.util.BaseK9EntityResource;
-import io.openk9.datasource.service.DocTypeTemplateService;
-import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.PermitAll;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+
+import io.openk9.datasource.model.DocTypeTemplate;
+import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
+import io.openk9.datasource.resource.util.BaseK9EntityResource;
+import io.openk9.datasource.service.DocTypeTemplateService;
+
+import io.smallrye.mutiny.Uni;
 
 @Path("/templates")
 public class TemplateResource extends

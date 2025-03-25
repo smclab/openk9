@@ -17,12 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.mapper.LanguageMapper;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.Language_;
-import io.openk9.datasource.model.dto.LanguageDTO;
+import io.openk9.datasource.model.dto.base.LanguageDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class LanguageService extends BaseK9EntityService<Language, LanguageDTO> {

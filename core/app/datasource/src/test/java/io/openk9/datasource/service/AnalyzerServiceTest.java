@@ -18,13 +18,12 @@
 package io.openk9.datasource.service;
 
 import java.util.Set;
-
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.model.dto.AnalyzerWithListsDTO;
-import io.openk9.datasource.model.dto.CharFilterDTO;
-import io.openk9.datasource.model.dto.TokenFilterDTO;
-import io.openk9.datasource.model.dto.TokenizerDTO;
+import io.openk9.datasource.model.dto.base.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.TokenFilterDTO;
+import io.openk9.datasource.model.dto.base.TokenizerDTO;
+import io.openk9.datasource.model.dto.request.AnalyzerWithListsDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;

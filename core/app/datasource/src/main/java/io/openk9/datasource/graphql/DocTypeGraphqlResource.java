@@ -17,6 +17,11 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
@@ -24,17 +29,16 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
-import io.openk9.datasource.model.dto.DocTypeDTO;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -45,9 +49,6 @@ import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.List;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped

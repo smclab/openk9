@@ -17,23 +17,24 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

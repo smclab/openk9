@@ -17,17 +17,19 @@
 
 package io.openk9.datasource.grpc;
 
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.mapper.FileResourceMapper;
-import io.openk9.datasource.model.dto.FileResourceDTO;
+import io.openk9.datasource.model.dto.base.FileResourceDTO;
 import io.openk9.datasource.service.FileResourceService;
 import io.openk9.filemanager.grpc.FileManager;
 import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
+
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 
 @GrpcService
 public class FileManagerGrpcService implements FileManager {

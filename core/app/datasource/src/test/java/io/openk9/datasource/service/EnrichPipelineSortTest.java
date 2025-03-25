@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;

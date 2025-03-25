@@ -17,22 +17,23 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.model.Translation;
-import io.openk9.datasource.model.TranslationKey;
-import io.openk9.datasource.model.dto.TranslationDTO;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.model.util.LocalizedEntity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import org.hibernate.reactive.common.Identifier;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.openk9.datasource.model.Translation;
+import io.openk9.datasource.model.TranslationKey;
+import io.openk9.datasource.model.dto.base.TranslationDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.util.LocalizedEntity;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.common.Identifier;
 
 @ApplicationScoped
 public class TranslationService extends BaseK9EntityService<Translation, TranslationDTO> {

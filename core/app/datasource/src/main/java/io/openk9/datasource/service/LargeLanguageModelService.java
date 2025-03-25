@@ -17,18 +17,20 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.LargeLanguageModelMapper;
-import io.openk9.datasource.model.LargeLanguageModel;
-import io.openk9.datasource.model.LargeLanguageModel_;
-import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
-import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.ws.rs.NotFoundException;
+
+import io.openk9.datasource.mapper.LargeLanguageModelMapper;
+import io.openk9.datasource.model.LargeLanguageModel;
+import io.openk9.datasource.model.LargeLanguageModel_;
+import io.openk9.datasource.model.TenantBinding;
+import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
+import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+
+import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped

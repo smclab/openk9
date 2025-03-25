@@ -26,8 +26,8 @@ import jakarta.inject.Inject;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;

@@ -27,10 +27,10 @@ import static org.mockito.Mockito.times;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.dto.DataIndexDTO;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.service.exception.K9Error;
 
 import io.quarkus.test.junit.QuarkusTest;

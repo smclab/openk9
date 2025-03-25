@@ -20,7 +20,7 @@ package io.openk9.datasource.mapper;
 import java.util.List;
 
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.dto.TokenTabDTO;
+import io.openk9.datasource.model.dto.base.TokenTabDTO;
 import io.openk9.datasource.web.dto.SearchTokenDto;
 
 import org.mapstruct.Mapper;

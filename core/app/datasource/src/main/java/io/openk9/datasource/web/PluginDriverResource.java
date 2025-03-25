@@ -25,7 +25,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;

@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.Sorting;
-import io.openk9.datasource.model.dto.SortingDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

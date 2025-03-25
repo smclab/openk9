@@ -21,7 +21,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.Path;
 
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.PluginDriverService;
 

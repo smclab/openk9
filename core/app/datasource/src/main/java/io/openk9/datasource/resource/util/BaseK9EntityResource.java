@@ -17,12 +17,6 @@
 
 package io.openk9.datasource.resource.util;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.K9EntityEvent;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DELETE;
@@ -35,6 +29,14 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.K9EntityEvent;
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 

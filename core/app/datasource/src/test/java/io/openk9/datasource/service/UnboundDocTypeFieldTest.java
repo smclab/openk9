@@ -17,28 +17,29 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import jakarta.persistence.NoResultException;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-import java.util.Objects;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Objects;
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
+
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

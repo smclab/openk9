@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.dto.BucketDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

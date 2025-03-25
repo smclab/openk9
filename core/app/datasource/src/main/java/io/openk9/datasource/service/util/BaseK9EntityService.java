@@ -40,7 +40,7 @@ import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.mapper.K9EntityMapper;
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.resource.util.Filter;

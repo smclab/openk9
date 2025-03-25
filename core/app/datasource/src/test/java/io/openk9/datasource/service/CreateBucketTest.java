@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.util.K9Entity;
 
 import io.quarkus.test.junit.QuarkusTest;

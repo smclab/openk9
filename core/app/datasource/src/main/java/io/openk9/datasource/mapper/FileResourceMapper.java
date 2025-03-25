@@ -18,9 +18,10 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.FileResource;
-import io.openk9.datasource.model.dto.FileResourceDTO;
+import io.openk9.datasource.model.dto.base.FileResourceDTO;
 import io.openk9.filemanager.grpc.FileResourceRequest;
 import io.openk9.filemanager.grpc.FileResourceResponse;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

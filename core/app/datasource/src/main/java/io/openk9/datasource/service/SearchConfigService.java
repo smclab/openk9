@@ -17,6 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.validation.constraints.NotNull;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.common.util.StringUtils;
@@ -26,26 +33,20 @@ import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
-import io.openk9.datasource.model.dto.HybridSearchPipelineDTO;
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
-import io.openk9.datasource.model.dto.SearchConfigDTO;
-import io.openk9.datasource.model.dto.SearchPipelineResponseDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
+import io.openk9.datasource.model.dto.request.HybridSearchPipelineDTO;
+import io.openk9.datasource.model.dto.response.SearchPipelineResponseDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.validation.constraints.NotNull;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.generic.Bodies;
 import org.opensearch.client.opensearch.generic.Requests;
-
-import java.util.Set;
 
 
 @ApplicationScoped

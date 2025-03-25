@@ -29,7 +29,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.Tuple2;

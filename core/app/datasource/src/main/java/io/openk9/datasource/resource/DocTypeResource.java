@@ -28,8 +28,8 @@ import jakarta.ws.rs.QueryParam;
 
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DocTypeDTO;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;

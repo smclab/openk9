@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.SearchConfigDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 
 public class SearchConfig {
 

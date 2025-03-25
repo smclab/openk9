@@ -28,10 +28,10 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.dto.BucketDTO;
-import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
-import io.openk9.datasource.model.dto.TabDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.base.TabDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;

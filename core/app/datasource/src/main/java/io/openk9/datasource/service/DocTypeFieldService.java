@@ -17,24 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
-import io.openk9.datasource.mapper.DocTypeFieldMapper;
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
-import org.hibernate.reactive.mutiny.Mutiny;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -42,6 +24,25 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.mapper.DocTypeFieldMapper;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {

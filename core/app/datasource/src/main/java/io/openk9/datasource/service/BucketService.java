@@ -33,7 +33,6 @@ import jakarta.ws.rs.NotFoundException;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
@@ -53,7 +52,8 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.dto.BucketDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;

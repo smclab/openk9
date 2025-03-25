@@ -29,7 +29,7 @@ import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;

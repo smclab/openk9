@@ -17,25 +17,8 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.TabWithTokenTabsDTO;
-import io.openk9.datasource.mapper.TabMapper;
-import io.openk9.datasource.model.Sorting;
-import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.Tab_;
-import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.TokenTab_;
-import io.openk9.datasource.model.dto.TabDTO;
-import io.openk9.datasource.model.dto.TranslationDTO;
-import io.openk9.datasource.model.dto.TranslationKeyDTO;
-import io.openk9.datasource.resource.util.Filter;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.groups.UniJoin;
+import java.util.List;
+import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -44,11 +27,29 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.mapper.TabMapper;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.Tab_;
+import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.TokenTab_;
+import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.base.TranslationDTO;
+import io.openk9.datasource.model.dto.base.TranslationKeyDTO;
+import io.openk9.datasource.model.dto.request.TabWithTokenTabsDTO;
+import io.openk9.datasource.resource.util.Filter;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import org.hibernate.FlushMode;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class TabService extends BaseK9EntityService<Tab, TabDTO> {

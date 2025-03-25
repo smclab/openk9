@@ -29,7 +29,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
-import io.openk9.datasource.model.dto.SchedulerDTO;
+import io.openk9.datasource.model.dto.base.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.service.util.BaseK9EntityService;

@@ -17,18 +17,21 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Sorting;
-import io.openk9.datasource.model.dto.SortingDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
 import io.openk9.datasource.service.SortingService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -38,8 +41,6 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped

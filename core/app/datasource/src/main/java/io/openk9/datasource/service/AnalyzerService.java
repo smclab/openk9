@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -40,8 +39,8 @@ import io.openk9.datasource.model.CharFilter_;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.TokenFilter_;
 import io.openk9.datasource.model.Tokenizer;
-import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.model.dto.AnalyzerWithListsDTO;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.request.AnalyzerWithListsDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 

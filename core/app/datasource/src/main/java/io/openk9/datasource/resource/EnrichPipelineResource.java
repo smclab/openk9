@@ -29,7 +29,7 @@ import jakarta.ws.rs.QueryParam;
 
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;

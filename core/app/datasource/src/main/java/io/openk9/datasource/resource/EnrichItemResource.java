@@ -21,7 +21,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.Path;
 
 import io.openk9.datasource.model.EnrichItem;
-import io.openk9.datasource.model.dto.EnrichItemDTO;
+import io.openk9.datasource.model.dto.base.EnrichItemDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.EnrichItemService;
 

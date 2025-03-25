@@ -17,19 +17,20 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.dto.AnalyzerDTO;
-import io.openk9.datasource.model.dto.DocTypeDTO;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.Set;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class DocTypeServiceTest {

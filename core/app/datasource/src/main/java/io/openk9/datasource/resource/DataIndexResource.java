@@ -28,7 +28,7 @@ import jakarta.ws.rs.QueryParam;
 
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
