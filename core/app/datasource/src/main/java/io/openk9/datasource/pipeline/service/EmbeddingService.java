@@ -79,7 +79,6 @@ public class EmbeddingService {
 				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
 
 				var apiKey = configurations.apiKey();
-				var indexName = configurations.indexName();
 				var jsonConfig = configurations.jsonConfig() != null
 					? configurations.jsonConfig()
 					: "{}";
@@ -109,8 +108,8 @@ public class EmbeddingService {
 							.build())
 						.setText(text)
 						.build())
-					.map(embeddingResponse -> EmbeddingService.mapToPayload(
-						embeddingResponse, indexName, root, windowSize)
+					.map(embeddingResponse -> EmbeddingService
+						.mapToPayload(embeddingResponse, root, windowSize)
 					);
 			})
 			.subscribeAsCompletionStage();
@@ -141,7 +140,6 @@ public class EmbeddingService {
 
 	protected static byte[] mapToPayload(
 		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
-		String indexName,
 		Map<String, Object> root,
 		int windowSize) {
 
@@ -157,17 +155,17 @@ public class EmbeddingService {
 			var vector = responseChunk.getVectorsList();
 
 			var jsonObject = mapToJsonObject(
-				indexName, root, number, total, chunkText, vector);
+				root, number, total, chunkText, vector);
 
 			var previous = getPrevious(windowSize, number, chunks)
 				.stream().map(it -> mapToJsonObject(
-					indexName, root, it.getNumber(), it.getTotal(),
+					root, it.getNumber(), it.getTotal(),
 					it.getText(), it.getVectorsList()
 				));
 
 			var next = getNext(windowSize, number, total, chunks)
 				.stream().map(it -> mapToJsonObject(
-					indexName, root, it.getNumber(), it.getTotal(),
+					root, it.getNumber(), it.getTotal(),
 					it.getText(), it.getVectorsList()
 				));
 
@@ -182,7 +180,6 @@ public class EmbeddingService {
 	}
 
 	private static JsonObject mapToJsonObject(
-		String indexName,
 		Map<String, Object> root,
 		int number,
 		int total,
@@ -195,7 +192,6 @@ public class EmbeddingService {
 		jsonObject.put("total", total);
 		jsonObject.put("chunkText", chunkText);
 		jsonObject.put("vector", vector);
-		jsonObject.put("indexName", indexName);
 
 		for (Map.Entry<String, Object> entry : root.entrySet()) {
 
