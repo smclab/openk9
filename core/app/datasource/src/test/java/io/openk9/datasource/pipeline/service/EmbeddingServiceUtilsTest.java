@@ -62,14 +62,14 @@ public class EmbeddingServiceUtilsTest {
 
 	@Test
 	void should_get_windows() {
-		var window = 3;
+		var size = 3;
 		var total = 5;
 		var integers = List.of(1, 2, 3, 4, 5);
 
 		var result = integers.stream().map(i -> {
-			var previous = EmbeddingService.getPrevious(window, i, integers);
+			var previous = EmbeddingService.getPreviousWindow(size, i, integers);
 
-			var next = EmbeddingService.getNext(window, i, total, integers);
+			var next = EmbeddingService.getNextWindow(size, i, total, integers);
 
 			return new ItemWithNeighbors(i, previous, next);
 		}).toList();

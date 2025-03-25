@@ -115,7 +115,7 @@ public class EmbeddingService {
 			.subscribeAsCompletionStage();
 	}
 
-	protected static <T> List<T> getNext(
+	protected static <T> List<T> getNextWindow(
 		int windowSize, int number, int total, List<T> chunks) {
 
 		var fromIndex = Math.max(number, 0);
@@ -124,7 +124,7 @@ public class EmbeddingService {
 		return chunks.subList(fromIndex, toIndex);
 	}
 
-	protected static <T> List<T> getPrevious(
+	protected static <T> List<T> getPreviousWindow(
 		int windowSize, int number, List<T> chunks) {
 
 		var fromIndex = Math.max(number - 1 - windowSize, 0);
@@ -149,26 +149,37 @@ public class EmbeddingService {
 
 		for (EmbeddingOuterClass.ResponseChunk responseChunk : chunks) {
 
+			// get chunk fields.
 			var number = responseChunk.getNumber();
 			var total = responseChunk.getTotal();
 			var chunkText = responseChunk.getText();
 			var vector = responseChunk.getVectorsList();
 
-			var jsonObject = mapToJsonObject(
+			// create the document from the response chunk, merge with original source.
+			var jsonObject = mapToDocumentObject(
 				root, number, total, chunkText, vector);
 
-			var previous = getPrevious(windowSize, number, chunks)
-				.stream().map(it -> mapToJsonObject(
-					root, it.getNumber(), it.getTotal(),
-					it.getText(), it.getVectorsList()
-				));
+			// create the array of the previous near chunks.
+			var previous = new JsonArray();
+			for (EmbeddingOuterClass.ResponseChunk chunk :
+				getPreviousWindow(windowSize, number, chunks)) {
 
-			var next = getNext(windowSize, number, total, chunks)
-				.stream().map(it -> mapToJsonObject(
-					root, it.getNumber(), it.getTotal(),
-					it.getText(), it.getVectorsList()
-				));
+				var chunkWindowObject = mapToChunkWindowObject(chunk.getNumber(), chunk.getText());
+				previous.add(chunkWindowObject);
 
+			}
+
+			// create the array of the next near chunks.
+			var next = new JsonArray();
+			for (EmbeddingOuterClass.ResponseChunk chunk :
+				getNextWindow(windowSize, number, total, chunks)) {
+
+				var chunkWindowObject = mapToChunkWindowObject(chunk.getNumber(), chunk.getText());
+				next.add(chunkWindowObject);
+
+			}
+
+			// add previous and next chunks to the new document.
 			jsonObject.put("previous", previous);
 			jsonObject.put("next", next);
 
@@ -179,12 +190,17 @@ public class EmbeddingService {
 		return jsonArray.toBuffer().getBytes();
 	}
 
-	private static JsonObject mapToJsonObject(
-		Map<String, Object> root,
-		int number,
-		int total,
-		String chunkText,
-		List<Float> vector) {
+	private static JsonObject mapToChunkWindowObject(int number, String text) {
+
+		var jsonObject = new JsonObject();
+		jsonObject.put("number", number);
+		jsonObject.put("chunkText", text);
+
+		return jsonObject;
+	}
+
+	private static JsonObject mapToDocumentObject(
+		Map<String, Object> root, int number, int total, String chunkText, List<Float> vector) {
 
 		var jsonObject = new JsonObject();
 
