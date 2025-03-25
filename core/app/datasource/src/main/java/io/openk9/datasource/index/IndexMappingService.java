@@ -312,7 +312,7 @@ public class IndexMappingService {
 			);
 
 			request
-				.name(indexName + "-template")
+				.name(indexName + IndexService.TEMPLATE_SUFFIX)
 				.indexTemplate(composableIndexTemplate);
 
 			return request;

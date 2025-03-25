@@ -42,11 +42,9 @@ import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
 import org.opensearch.OpenSearchStatusException;
-import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
-import org.opensearch.action.support.IndicesOptions;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
@@ -73,6 +71,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 public class IndexService {
 
 	private final static Logger log = Logger.getLogger(IndexService.class);
+	public static final String TEMPLATE_SUFFIX = "-template";
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
@@ -123,27 +122,13 @@ public class IndexService {
 	public Uni<Void> deleteIndex(IndexName indexName) {
 
 		return VertxContextSupport.executeBlocking(() -> {
-			DeleteIndexRequest deleteIndexRequest =
-				new DeleteIndexRequest(indexName.value());
-
-			deleteIndexRequest
-				.indicesOptions(
-					IndicesOptions.fromMap(
-						Map.of("ignore_unavailable", true),
-						deleteIndexRequest.indicesOptions()
-					)
-				);
-
 			try {
-				var response = restHighLevelClient.indices().delete(
-					deleteIndexRequest,
-					RequestOptions.DEFAULT
-				);
+				// delete index or throw an exception
+				var delete = openSearchClient.indices().delete(req -> req
+					.index(indexName.value())
+					.ignoreUnavailable(true));
 
-				if (response.isAcknowledged()) {
-					return null;
-				}
-				else {
+				if (!delete.acknowledged()) {
 					log.errorf(
 						"Error deleting index %s, cluster didn't acknowledge",
 						indexName.value()
@@ -151,6 +136,11 @@ public class IndexService {
 
 					throw new DeleteIndexException();
 				}
+
+				deleteIndexTemplate(indexName);
+
+				return null;
+
 			}
 			catch (Exception e) {
 				log.errorf(e, "Error deleting index %s", indexName.value());
@@ -175,14 +165,16 @@ public class IndexService {
 					.ignoreUnavailable(true)
 				);
 
-			if (acknowledgedResponse.acknowledged()) {
-				return null;
-			}
-			else {
+			if (!acknowledgedResponse.acknowledged()) {
 				throw new DeleteIndexException(String.format(
 					"Error deleting indices: %s", indices));
 			}
 
+			for (IndexName indexName : indexNames) {
+				deleteIndexTemplate(indexName);
+			}
+
+			return null;
 		});
 	}
 
@@ -305,6 +297,18 @@ public class IndexService {
 				}
 			})
 			.map(response -> response.getIndexToSettings().get(indexName).toString());
+	}
+
+	private void deleteIndexTemplate(IndexName indexName) {
+		// delete index-template (best-effort)
+		var indexTemplateName = indexName.value() + TEMPLATE_SUFFIX;
+		try {
+			openSearchClient.indices().deleteIndexTemplate(req -> req
+				.name(indexTemplateName));
+		}
+		catch (Exception e) {
+			log.warnf(e, "Error deleting index-template %s", indexTemplateName);
+		}
 	}
 
 	private static List<CatResponse> responseToCatResponses(Response response) {
