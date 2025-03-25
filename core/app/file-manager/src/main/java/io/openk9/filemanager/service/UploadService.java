@@ -86,6 +86,7 @@ public class UploadService {
 		} catch (Exception e) {
 			// Catch any other unexpected exceptions and log them
 			logger.error("Unexpected error occurred while uploading file: " + e.getMessage(), e);
+			rollbackUpload(bucketName, fileId); // Rollback MinIO file upload
 			return null;
 	}
 	}

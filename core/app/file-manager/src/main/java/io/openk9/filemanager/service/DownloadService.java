@@ -74,20 +74,10 @@ public class DownloadService {
 				return InputStream.nullInputStream(); // Could also throw a custom exception if necessary
 			}
 
-		} catch (MinioException e) {
-			// Handle MinIO specific exceptions, such as connection errors, permission issues, etc.
-			logger.error("MinIO exception while downloading file: " + e.getMessage(), e);
-			return InputStream.nullInputStream(); // Return an empty InputStream on MinIO failure
-
-		} catch (InvalidKeyException | NoSuchAlgorithmException e) {
-			// Handle specific exceptions related to authentication or encryption issues
-			logger.error("Security exception while downloading file: " + e.getMessage(), e);
-			return InputStream.nullInputStream(); // Return an empty InputStream on security-related failures
-
-		} catch (IOException e) {
-			// Handle IOExceptions, such as network issues, timeouts, etc.
-			logger.error("IO exception while downloading file: " + e.getMessage(), e);
-			return InputStream.nullInputStream(); // Return an empty InputStream on IO failures
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			// If the MinIO download fails, log the error and return null
+			logger.error("MinIO download failed: " + e.getMessage(), e);
+			return InputStream.nullInputStream(); // Return an empty InputStream on gRPC communication errors
 
 		} catch (StatusRuntimeException e) {
 			// Handle errors related to gRPC communication, such as unavailability or timeouts

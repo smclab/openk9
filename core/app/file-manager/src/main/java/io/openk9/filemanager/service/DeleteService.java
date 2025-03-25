@@ -17,8 +17,10 @@
 
 package io.openk9.filemanager.service;
 
+import io.grpc.StatusRuntimeException;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
+import io.minio.errors.MinioException;
 import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
@@ -27,10 +29,19 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 @ApplicationScoped
 public class DeleteService {
 
-	// Method to delete an object from MinIO and file resource from the database
+	/**
+	 * Deletes an object from MinIO storage and removes the corresponding file resource entry from the database.
+	 *
+	 * @param resourceId  The unique identifier of the resource to be deleted.
+	 * @param schemaName  The schema name associated with the resource.
+	 */
 	public void deleteObject(String resourceId, String schemaName) {
 
 		try {
@@ -72,9 +83,16 @@ public class DeleteService {
 			// Logging the successful removal of the file resource
 			logger.info("Removed entity with resourceId: " + resourceId);
 
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			// If the MinIO deletion fails, log the error
+			logger.error("MinIO deletion failed: " + e.getMessage(), e);
+
+		} catch (StatusRuntimeException e) {
+			// If the MinIO deletion fails, log the error
+			logger.error("gRPC error while communicating with filemanager service: " + e.getStatus().getDescription(), e);
 		} catch (Exception e) {
-			// Logging any errors that occur during the delete operation
-			logger.info("Delete failed with exception: " + e.getMessage());
+			// Catch any other unexpected exceptions and log them
+			logger.error("Unexpected error occurred while deleting file: " + e.getMessage(), e);
 		}
 	}
 
