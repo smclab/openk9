@@ -17,10 +17,9 @@
 
 package io.openk9.datasource.model.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
 
+import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,12 +34,38 @@ import org.eclipse.microprofile.graphql.Description;
 @EqualsAndHashCode(callSuper = true)
 public class EmbeddingModelDTO extends K9EntityDTO {
 
-	@NotNull
-	@Description("It is the API url of the model that you want to use to embed your text.")
+	@Nullable
+	@Description(
+		"""
+			The API URL for the embedding model's endpoint.
+			Required only when using a custom embedding service or a model hosted
+			on a private/internal network.
+			"""
+	)
 	private String apiUrl;
-	@Description("It is the API key that you have to provide in order to make the authentication.")
+	@Nullable
+	@Description(
+		"""
+			Authentication API key required for accessing the embedding model's service.
+			Necessary for providers that require authentication to use their embedding API.
+			Ensure this key is kept confidential.
+			"""
+	)
 	private String apiKey;
-	@Description("It is the size of the vectors that your model returns.")
+	@Description(
+		"""
+			Dimensionality of the embedding vectors produced by the model.
+			This critical technical parameter determines the storage and processing requirements
+			for vector representations.
+			
+			Most Common Dimensions:
+			
+			384 dimensions: Good for lightweight applications
+			768 dimensions: Standard for many BERT-based models
+			1,024 dimensions: High-performance models
+			1,536 dimensions: Ultra-high performance models
+			"""
+	)
 	private int vectorSize;
 
 }
