@@ -97,6 +97,10 @@ public class EmbeddingService {
 				var docTypeFieldJsonPath = "$." + docTypeField.getPath();
 
 				String text = documentContext.read(docTypeFieldJsonPath);
+
+				// remove the original docTypeField element, it is eventually split in chunks
+				documentContext.delete(docTypeFieldJsonPath);
+
 				var root = getRoot(documentContext);
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
