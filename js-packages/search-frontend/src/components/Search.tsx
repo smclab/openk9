@@ -24,7 +24,6 @@ type SearchProps = {
   viewColor?: boolean;
   callbackClickSearch?(): void;
   characterControl?: characterControlType;
-  selectionDispatch?: SelectionsState;
 };
 export function Search({
   configuration,
@@ -40,7 +39,6 @@ export function Search({
   actionOnClick,
   callbackClickSearch,
   characterControl,
-  selectionDispatch,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -69,12 +67,6 @@ export function Search({
     characterControl,
     actionSearch: characterControl?.actionCharacter,
   });
-  const text = selectionDispatch?.text;
-  const isCharacterControl =
-    characterControl?.disabledAction ||
-    !characterControl?.numberOfCharacters ||
-    text === "" ||
-    (text && text.length >= characterControl.numberOfCharacters);
   const { t } = useTranslation();
 
   return (
@@ -429,7 +421,6 @@ export function Search({
           <div className="openk9-search-btn-external-container">
             <button
               className="openk9-search-btn-external"
-              disabled={isCharacterControl || false}
               aria-label={t("search-on-website") || "search on website"}
               css={css`
                 min-height: 50px;

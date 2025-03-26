@@ -276,7 +276,6 @@ export function Main({
             characterControl={
               configuration?.searchConfigurable?.characterControl
             }
-            selectionDispatch={selectionsState}
           />
         </I18nextProvider>,
         configuration.searchConfigurable
