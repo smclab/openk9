@@ -481,7 +481,7 @@ function setValueSearch({
   const search = (text: string) => {
     (!characterControl?.numberOfCharacters ||
       text === "" ||
-      text.length >= characterControl.numberOfCharacters) &&
+      text.length > characterControl.numberOfCharacters) &&
       selectionsDispatch({
         type: "set-text",
         text: text,
