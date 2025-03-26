@@ -24,6 +24,7 @@ type SearchProps = {
   viewColor?: boolean;
   callbackClickSearch?(): void;
   characterControl?: characterControlType;
+  callbackChangeSearch?(text: string): void;
 };
 export function Search({
   configuration,
@@ -39,6 +40,7 @@ export function Search({
   actionOnClick,
   callbackClickSearch,
   characterControl,
+  callbackChangeSearch,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -237,6 +239,8 @@ export function Search({
               }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
+                callbackChangeSearch &&
+                  callbackChangeSearch(event.currentTarget.value);
               }}
               css={css`
                 position: relative;

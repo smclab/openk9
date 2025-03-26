@@ -276,6 +276,9 @@ export function Main({
             characterControl={
               configuration?.searchConfigurable?.characterControl
             }
+            callbackChangeSearch={
+              configuration?.searchConfigurable?.callbackChangeSearch
+            }
           />
         </I18nextProvider>,
         configuration.searchConfigurable

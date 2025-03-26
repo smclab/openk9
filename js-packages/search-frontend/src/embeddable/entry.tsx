@@ -271,6 +271,7 @@ type SearchProps = {
   characterControl?: characterControlType;
   actionOnClick?(): void;
   callbackClickSearch?(): void;
+  callbackChangeSearch?(text: string): void;
 };
 
 type FilterProps = {
