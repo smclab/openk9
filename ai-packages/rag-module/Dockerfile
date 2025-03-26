@@ -1,4 +1,6 @@
-FROM python:3.12-slim
+ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
+
+FROM python:${PYTHON_BASE_DOCKER_IMAGE}
 
 WORKDIR /rag-module/
 
