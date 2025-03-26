@@ -251,7 +251,6 @@
 					<!-- Use the defined property for the NVD API key -->
 					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
 					<nvdApiDelay>6000</nvdApiDelay>
-					<skipProvidedScope>true</skipProvidedScope>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -274,11 +273,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>${dependency-check-plugin.version}</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
