@@ -256,6 +256,12 @@ type SortableProps = {
   relevance: string;
 };
 
+export type characterControlType = {
+  actionCharacter(): void;
+  disabledAction: boolean;
+  numberOfCharacters: number;
+};
+
 type SearchProps = {
   element: Element | string | null;
   btnSearch: boolean;
@@ -263,6 +269,7 @@ type SearchProps = {
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
   customMessageSearch?: string;
+  characterControl?: characterControlType;
   actionOnClick?(): void;
   callbackClickSearch?(): void;
 };

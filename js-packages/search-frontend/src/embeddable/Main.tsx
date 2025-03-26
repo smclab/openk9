@@ -273,6 +273,10 @@ export function Main({
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
             }
+            characterControl={
+              configuration?.searchConfigurable?.characterControl
+            }
+            selectionDispatch={selectionsState}
           />
         </I18nextProvider>,
         configuration.searchConfigurable
