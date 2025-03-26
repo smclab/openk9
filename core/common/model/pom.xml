@@ -46,7 +46,11 @@
 			<groupId>io.openk9.common</groupId>
 			<artifactId>util</artifactId>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.eclipse.microprofile.openapi</groupId>
+            <artifactId>microprofile-openapi-api</artifactId>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
