@@ -1,7 +1,11 @@
+import json
 import logging
 import os
 import time
 from concurrent import futures
+from enum import Enum
+from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
+from langchain_ibm import WatsonxEmbeddings
 from logging.handlers import TimedRotatingFileHandler
 
 import grpc
@@ -9,7 +13,9 @@ from google.protobuf import json_format
 from grpc_health.v1.health import HealthServicer
 from grpc_health.v1 import health_pb2_grpc, health_pb2
 from grpc_reflection.v1alpha import reflection
+from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_openai import OpenAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 
@@ -36,8 +42,119 @@ DEFAULT_ENCODING_NAME = None
 DEFAULT_IS_SEPARATOR_REGEX = False
 
 # default text embedding parameters
-DEFAULT_OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+DEFAULT_MODEL_TYPE = "openai"
+DEFAULT_MODEL = "text-embedding-3-small"
 
+class ModelType(Enum):
+    OPENAI = "openai"
+    OLLAMA = "ollama"
+    IBM_WATSONX = "watsonx"
+    CHAT_VERTEX_AI = "chat_vertex_ai"
+
+def save_google_application_credentials(credentials, credentials_file_path='./'):
+    """
+    Save Google Application credentials to a JSON file and configure environment variables.
+
+    Serializes credentials to a JSON file and sets the GOOGLE_APPLICATION_CREDENTIALS environment
+    variable to enable automatic credential discovery by Google Cloud client libraries.
+
+    .. note::
+        The environment variable modification only affects the current process and child processes.
+
+    :param dict credentials: Dictionary containing Google Application credentials data.
+        Expected to contain service account or user credential fields.
+        Must be JSON-serializable (typically contains key/values with primitive types).
+    :param str credentials_file_path: Path to directory for credentials file (default: current directory)
+
+    :raises json.JSONDecodeError: If credentials contain non-serializable data types.
+    :raises OSError: If file writing operations fail (e.g., permission issues).
+
+    Example::
+
+        "credentials": {
+            "account": "",
+            "client_id": "client_id",
+            "client_secret": "client_secret",
+            "quota_project_id": "quota_project_id",
+            "refresh_token": "refresh_token",
+            "type": "type",
+            "universe_domain": "universe_domain"
+            }
+        save_google_cloud_credentials(credentials, "path/to/credentials/")
+    """
+    try:
+        json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
+        credential_file = f'{credentials_file_path}application_default_credentials.json'
+
+        with open(credential_file, "w", encoding="utf-8") as outfile:
+            outfile.write(json_credentials)
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file
+    except json.JSONDecodeError as e:
+        raise ValueError("Invalid JSON structure in credentials.") from e
+    except OSError as e:
+        raise OSError("Failed to write credentials file.") from e
+
+
+def initialize_embedding_model(configuration):
+    model_type = (
+        configuration["model_type"]
+        if configuration["model_type"]
+        else DEFAULT_MODEL_TYPE
+    )
+    api_url = configuration["api_url"]
+    api_key = configuration["api_key"]
+    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    match model_type:
+        case ModelType.OPENAI.value:
+            embeddings = OpenAIEmbeddings(model=model)
+        case ModelType.OLLAMA.value:
+            embeddings = OllamaEmbeddings(
+                model=model, base_url=api_url
+            )
+        case ModelType.IBM_WATSONX.value:
+            os.environ["WATSONX_APIKEY"] = api_key
+            watsonx_project_id = configuration["watsonx_project_id"]
+            embed_params = {
+                EmbedTextParamsMetaNames.TRUNCATE_INPUT_TOKENS: 3,
+                EmbedTextParamsMetaNames.RETURN_OPTIONS: {"input_text": True},
+            }
+            embeddings = WatsonxEmbeddings(
+                model_id=model,
+                url=api_url,
+                project_id=watsonx_project_id,
+                params=embed_params,
+            )
+        case ModelType.CHAT_VERTEX_AI.value:
+            configuration = {
+                "type": "chat_vertex_ai_model_garden",
+                "model": "text-embedding-005",
+                "chat_vertex_ai_model_garden": {
+                    "credentials": {
+                        "account": "",
+                        "client_id": "client_id",
+                        "client_secret": "client_secret",
+                        "quota_project_id": "project_id",
+                        "refresh_token": "",
+                        "type": "authorized_user",
+                        "universe_domain": "googleapis.com",
+                    },
+                    "endpoint_id": "us-central1-aiplatform.googleapis.com",
+                    "location": "us-central1",
+                },
+            }
+
+            chat_vertex_ai_model_garden = configuration["chat_vertex_ai_model_garden"]
+            google_credentials = chat_vertex_ai_model_garden["credentials"]
+            save_google_application_credentials(google_credentials)
+            project_id = google_credentials["quota_project_id"]
+            model = configuration["model"]
+
+            embeddings = VertexAIEmbeddings(model_name=model, project=project_id)
+        case _:
+            embeddings = OpenAIEmbeddings(model=model)
+
+    return embeddings
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
@@ -52,7 +169,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         text_splitted = []
         chunks = []
 
-        embeddings = OpenAIEmbeddings(model=DEFAULT_OPENAI_EMBEDDING_MODEL)
+        embeddings = OpenAIEmbeddings(model=DEFAULT_MODEL)
 
         if chunk_type == 1:
             chunk_size = (
