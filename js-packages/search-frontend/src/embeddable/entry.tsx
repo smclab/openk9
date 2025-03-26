@@ -258,7 +258,6 @@ type SortableProps = {
 
 export type characterControlType = {
   actionCharacter(): void;
-  disabledAction: boolean;
   numberOfCharacters: number;
 };
 

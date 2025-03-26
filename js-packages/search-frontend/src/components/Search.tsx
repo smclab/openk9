@@ -489,7 +489,8 @@ function setValueSearch({
       });
     if (
       characterControl &&
-      text.length <= characterControl.numberOfCharacters
+      text.length <= characterControl.numberOfCharacters &&
+      text !== ""
     ) {
       actionSearch && actionSearch();
     }
