@@ -293,9 +293,6 @@ public class DataIndexService
 	 * </ul>
 	 * </p>
 	 *
-	 * <p>The deletion process is fault-tolerant and will continue processing remaining chunks
-	 * even if some chunk deletions fail, collecting all failures for potential logging or handling.</p>
-	 *
 	 * @param session      The Hibernate reactive session used for database operations
 	 * @param datasourceId The unique identifier of the datasource whose indices should be deleted
 	 * @return A {@link Uni} that resolves to a list of all deleted {@link DataIndex} instances
