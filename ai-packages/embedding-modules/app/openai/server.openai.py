@@ -4,24 +4,23 @@ import os
 import time
 from concurrent import futures
 from enum import Enum
-from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
-from langchain_ibm import WatsonxEmbeddings
 from logging.handlers import TimedRotatingFileHandler
-
-import grpc
-from google.protobuf import json_format
-from grpc_health.v1.health import HealthServicer
-from grpc_health.v1 import health_pb2_grpc, health_pb2
-from grpc_reflection.v1alpha import reflection
-from langchain_google_vertexai import VertexAIEmbeddings
-from langchain_openai import OpenAIEmbeddings
-from langchain_ollama import OllamaEmbeddings
-from langchain_text_splitters import CharacterTextSplitter
-from langchain_experimental.text_splitter import SemanticChunker
 
 import embedding_pb2
 import embedding_pb2_grpc
+import grpc
 from derived_text_splitter import DerivedTextSplitter
+from google.protobuf import json_format
+from grpc_health.v1 import health_pb2, health_pb2_grpc
+from grpc_health.v1.health import HealthServicer
+from grpc_reflection.v1alpha import reflection
+from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_ibm import WatsonxEmbeddings
+from langchain_ollama import OllamaEmbeddings
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
 from text_cleaner import clean_text
 
 logger = logging.getLogger(__name__)
@@ -45,11 +44,13 @@ DEFAULT_IS_SEPARATOR_REGEX = False
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "text-embedding-3-small"
 
+
 class ModelType(Enum):
     OPENAI = "openai"
     OLLAMA = "ollama"
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
+
 
 def save_google_application_credentials(credentials, credentials_file_path='./'):
     """
@@ -155,6 +156,7 @@ def initialize_embedding_model(configuration):
             embeddings = OpenAIEmbeddings(model=model)
 
     return embeddings
+
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
