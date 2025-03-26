@@ -166,8 +166,9 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		}
 
-		var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();
-		replyTo.tell(new Writer.Success(dataPayload, heldMessage));
+		log.infof("%s: Document stored successfully", heldMessage);
+
+		replyTo.tell(new Writer.Success(heldMessage));
 
 		return this;
 	}
