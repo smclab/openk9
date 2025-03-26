@@ -17,16 +17,19 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.util.Map;
+import jakarta.enterprise.inject.spi.CDI;
+
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
 import io.openk9.datasource.processor.payload.DataPayload;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -49,8 +52,6 @@ import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.TermQueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
-
-import java.util.Map;
 
 public class IndexWriter {
 
@@ -176,8 +177,7 @@ public class IndexWriter {
 
 			}
 
-			var bytes = Json.encodeToBuffer(dataPayload).getBytes();
-			replyTo.tell(new Writer.Success(bytes, heldMessage));
+			replyTo.tell(new Writer.Success(heldMessage));
 		}
 
 		return Behaviors.same();

@@ -18,7 +18,6 @@
 package io.openk9.datasource.pipeline.stages.working;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.function.BiFunction;
 
 import io.openk9.common.util.ShardingKey;
@@ -26,22 +25,18 @@ import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
-import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
-import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
-import io.openk9.datasource.pipeline.actor.common.AggregateItem;
+import io.openk9.datasource.pipeline.actor.WriterException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.apache.pekko.actor.typed.ActorRef;
-import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
-import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
@@ -53,11 +48,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final ActorRef<Writer.Response> indexWriterAdapter;
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
-	private final ActorRef<AggregateBehavior.Response> endProcessAdapter;
-	private final List<Behavior<AggregateItem.Command>> endProcessHandlersBehaviors;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
-	private final ClusterSharding sharding;
 	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypes;
 	private long counter = 0;
 
@@ -72,9 +64,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		this.replyTo = replyTo;
 		this.processorTypes = configurations.processorTypes();
 
-		ActorSystem<Void> system = getContext().getSystem();
-		this.sharding = ClusterSharding.get(system);
-
 		this.indexWriterAdapter = getContext().messageAdapter(
 			Writer.Response.class,
 			PostWrite::new
@@ -87,12 +76,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		this.writerFactory = configurations.writerFactory();
 
-		this.endProcessAdapter = getContext().messageAdapter(
-			AggregateBehavior.Response.class,
-			EndProcessResponse::new
-		);
-
-		endProcessHandlersBehaviors = List.of();
 	}
 
 	public static Behavior<Command> create(
@@ -111,7 +94,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			.onMessage(ProcessorResponse.class, this::onProcessorResponse)
 			.onMessage(Write.class, this::onWrite)
 			.onMessage(PostWrite.class, this::onPostWrite)
-			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
 			.build();
 	}
 
@@ -119,21 +101,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var response = postWrite.response();
 
-		if (response instanceof Writer.Success success) {
+		if (response instanceof Writer.Success(HeldMessage heldMessage)) {
 
-			var payload = success.dataPayload();
-			var heldMessage = success.heldMessage();
-
-			var endProcess = getContext().spawnAnonymous(
-				EndProcess.create(endProcessHandlersBehaviors, endProcessAdapter));
-
-			endProcess.tell(new EndProcess.Start(payload, heldMessage));
+			this.replyTo.tell(new Done(heldMessage));
 
 		}
-		else if (response instanceof Writer.Failure failure) {
-
-			var heldMessage = failure.heldMessage();
-			var exception = failure.exception();
+		else if (response instanceof Writer.Failure(
+			WriterException exception,
+			HeldMessage heldMessage
+		)) {
 
 			this.replyTo.tell(new Failed(heldMessage, exception));
 
@@ -151,7 +127,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			case Processor.Success success -> getContext()
 				.getSelf()
 				.tell(new Write(success.payload(), heldMessage));
-			case Processor.Skip skip -> this.replyTo.tell(new Done(heldMessage));
+			case Processor.Skip ignored -> this.replyTo.tell(new Done(heldMessage));
 			case Processor.Failure failure -> {
 
 				var exception = failure.exception();
@@ -269,19 +245,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	) {
 	}
 
-	private Behavior<Command> onEndProcessResponse(EndProcessResponse endProcessResponse) {
-
-		if (endProcessResponse.response() instanceof EndProcess.EndProcessDone endProcessDone) {
-
-			this.replyTo.tell(new Done(endProcessDone.heldMessage()));
-
-			return Behaviors.same();
-		}
-
-		throw new AggregateBehaviorException();
-
-	}
-
 	public sealed interface Command {}
 
 	public sealed interface Response {}
@@ -310,8 +273,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private record Write(byte[] payload, HeldMessage heldMessage) implements Command {}
 
 	private record PostWrite(Writer.Response response) implements Command {}
-
-	private record EndProcessResponse(AggregateBehavior.Response response) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
 

@@ -31,10 +31,7 @@ public interface Writer {
 	record Start(byte[] dataPayload, HeldMessage heldMessage)
 		implements Command {}
 
-	record Success(
-		byte[] dataPayload,
-		HeldMessage heldMessage
-	) implements Response {}
+	record Success(HeldMessage heldMessage) implements Response {}
 
 	record Failure(WriterException exception, HeldMessage heldMessage) implements Response {}
 

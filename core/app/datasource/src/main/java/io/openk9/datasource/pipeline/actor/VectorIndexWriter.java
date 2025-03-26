@@ -32,7 +32,6 @@ import io.openk9.datasource.pipeline.stages.working.Writer;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import io.vertx.core.json.Json;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -126,7 +125,6 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		var bulkResponse = indexDocumentResponse.bulkResponse;
 		var heldMessage = indexDocumentResponse.heldMessage;
-		var embeddedChunks = indexDocumentResponse.dataPayload;
 		var throwable = indexDocumentResponse.exception;
 
 		if (bulkResponse != null) {
@@ -222,7 +220,6 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		var heldMessage = writeDocuments.heldMessage();
 		var chunks = writeDocuments.chunks();
-		var dataPayload = writeDocuments.dataPayload();
 
 		List<BulkOperation> bulkOperations = new ArrayList<>();
 
@@ -270,7 +267,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			getContext().pipeToSelf(
 				asyncClient.bulk(bulkRequest),
 				(bulkResponse, exception) -> new IndexDocumentResponse(
-					dataPayload, heldMessage, bulkResponse, (Exception) exception)
+					heldMessage, bulkResponse, (Exception) exception)
 			);
 
 		}
@@ -282,7 +279,6 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	}
 
 	private record IndexDocumentResponse(
-		byte[] dataPayload,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
