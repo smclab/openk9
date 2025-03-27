@@ -1,5 +1,5 @@
 services:
   grpc_embedding_module:
-    image: openk9-embedding-module:latest
+    image: openk9-embedding-module-openai:${OPENK9_VERSION}
     ports:
       - "5000:5000"
