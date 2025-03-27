@@ -43,7 +43,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
-
+@Path("/v1/ingestion/")
 public class IngestionEndpoint {
 
 	private static final String DETAILS_FIELD = "details";
@@ -51,7 +51,6 @@ public class IngestionEndpoint {
 	@Inject
 	FileManagerEmitter _fileManagerEmitter;
 
-	@Path("/v1/ingestion/")
 	@Operation(operationId = "ingestion")
 	@Tag(name = "Ingestion API")
 	@APIResponses(value = {
