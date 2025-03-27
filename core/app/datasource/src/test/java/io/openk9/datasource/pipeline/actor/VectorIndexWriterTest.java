@@ -86,10 +86,13 @@ class VectorIndexWriterTest {
 	}
 
 	@Test
-	void should_get_empty_as_empty_list() {
-		var empty = VectorIndexWriter.parseChunks(VectorIndexWriterTest.empty);
+	void should_throws_on_empty_string() {
 
-		Assertions.assertTrue(empty.isEmpty());
+		Assertions.assertThrows(
+			IllegalArgumentException.class,
+			() -> VectorIndexWriter.parseChunks(VectorIndexWriterTest.empty)
+		);
+
 	}
 
 
