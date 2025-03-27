@@ -1,0 +1,59 @@
+{
+	"properties": {
+	  "chunkText": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "number": {
+		"type": "integer"
+	  },
+	  "total": {
+		"type": "integer"
+	  },
+	  "indexName": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "contentId": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "vector": {
+		"type": "knn_vector",
+		"dimension": {knnVectorDimension}
+	  },
+	  "title": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "url": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  }
+	}
+}

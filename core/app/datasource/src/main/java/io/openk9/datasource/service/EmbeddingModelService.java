@@ -143,6 +143,7 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 				);
 
 				return indexMappingService.createEmbeddingComponentTemplate(
+					session,
 					embeddingComponentTemplate);
 			});
 

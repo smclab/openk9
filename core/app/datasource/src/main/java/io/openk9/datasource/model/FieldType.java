@@ -65,6 +65,7 @@ public enum FieldType {
 	SEARCH_AS_YOU_TYPE("search_as_you_type"),
 	TOKEN_COUNT("token_count"),
 	DENSE_VECTOR("dense_vector"),
+	KNN_VECTOR("knn_vector"),
 	SPARSE_VECTOR("sparse_vector"),
 	RANK_FEATURE("rank_feature"),
 	RANK_FEATURES("rank_features"),

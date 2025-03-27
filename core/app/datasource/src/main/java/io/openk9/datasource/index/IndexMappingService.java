@@ -18,6 +18,7 @@
 package io.openk9.datasource.index;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -54,7 +55,6 @@ import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
-import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
 import org.opensearch.cluster.metadata.Template;
@@ -80,6 +80,8 @@ public class IndexMappingService {
 	HttpPluginDriverClient httpPluginDriverClient;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
+	@Inject
+	io.quarkus.qute.Template embeddingComponentMappings;
 
 	/**
 	 * Create an IndexTemplate from a dataIndex and a settings map.
@@ -104,6 +106,7 @@ public class IndexMappingService {
 	/**
 	 * Create or update a component template that defines an embedding mapping.
 	 *
+	 * @param session
 	 * @param embeddingComponentTemplate The object containing the name of the component
 	 *                                   template and the dimension of the {@code knnVector}.
 	 *                                   Must not be {@code null}.
@@ -113,6 +116,7 @@ public class IndexMappingService {
 	 * the error appropriately.
 	 **/
 	public Uni<Void> createEmbeddingComponentTemplate(
+		Mutiny.Session session,
 		EmbeddingComponentTemplate embeddingComponentTemplate) {
 
 		if (log.isDebugEnabled()) {
@@ -123,8 +127,20 @@ public class IndexMappingService {
 			);
 		}
 
-		return indexService.putComponentTemplate(
-			createComponentTemplateRequest(embeddingComponentTemplate));
+		var mappings = embeddingComponentMappings.data(
+			"knnVectorDimension",
+			embeddingComponentTemplate.vectorSize()
+		).render();
+
+		var componentTemplateRequest = createComponentTemplateRequest(
+			embeddingComponentTemplate.getName(),
+			mappings
+		);
+
+		var jsonObject = (JsonObject) Json.decodeValue(mappings);
+
+		return indexService.putComponentTemplate(componentTemplateRequest)
+			.call(() -> generateDocTypeFields(session, jsonObject.getMap(), List.of()));
 	}
 
 	/**
@@ -199,65 +215,14 @@ public class IndexMappingService {
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(
-		EmbeddingComponentTemplate embeddingComponentTemplate) {
+		String componentTemplateName, String mappings) {
 
 		return PutComponentTemplateRequest.of(component -> component
-			.name(embeddingComponentTemplate.getName())
+			.name(componentTemplateName)
 			.template(template -> template
 				.settings(settings -> settings.knn(true))
 				.mappings(mapping -> mapping
-					.properties(
-						"indexName", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"contentId", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"number", p -> p
-							.integer(int_ -> int_)
-					)
-					.properties(
-						"total", p -> p
-							.integer(int_ -> int_)
-					)
-					.properties(
-						"chunkText", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"title", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"url", p -> p
-							.text(text -> text.fields(
-								"keyword",
-								Property.of(field -> field
-									.keyword(keyword -> keyword.ignoreAbove(256)))
-							))
-					)
-					.properties(
-						"vector", p -> p
-							.knnVector(knn -> knn.dimension(embeddingComponentTemplate.vectorSize()))
-					)
+					.withJson(new StringReader(mappings))
 				)
 			)
 		);
