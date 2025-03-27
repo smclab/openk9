@@ -3,8 +3,10 @@
 # Get the absolute path to the Git repository root
 GIT_REPO_ROOT=$(git rev-parse --show-toplevel)
 
+CONFIG_FILE_NAME="python_modules_info.txt"
+
 # Read centralized python_modules_info.txt file
-CONFIG_FILE="$GIT_REPO_ROOT/python_modules_info.txt"
+CONFIG_FILE="$GIT_REPO_ROOT/$CONFIG_FILE_NAME"
 if ! source "$CONFIG_FILE"; then
     echo "Failed to source python_modules_info.txt"
     exit 1
