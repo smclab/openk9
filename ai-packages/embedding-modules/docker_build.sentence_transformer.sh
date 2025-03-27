@@ -8,7 +8,7 @@ CONFIG_FILE_NAME="python_modules_info.txt"
 # Read centralized python_modules_info.txt file
 CONFIG_FILE="$GIT_REPO_ROOT/$CONFIG_FILE_NAME"
 if ! source "$CONFIG_FILE"; then
-    echo "Failed to source python_modules_info.txt"
+    echo "Failed to source $CONFIG_FILE"
     exit 1
 fi
 
