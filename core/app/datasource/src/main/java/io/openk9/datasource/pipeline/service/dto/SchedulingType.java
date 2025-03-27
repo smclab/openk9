@@ -15,9 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.datasource.pipeline.service.dto;
 
-public enum PipelineType {
+/**
+ * Defines the scheduling strategy for pipeline execution during the ingestion process.
+ * <p>
+ * Possible scheduling types include:
+ * <ul>
+ *   <li>{@code ENRICH}: Schedule enrichment pipeline execution</li>
+ *   <li>{@code EMBEDDING}: Schedule embedding vector generation</li>
+ *   <li>{@code ENRICH_EMBEDDING}: Schedule sequential enrichment and embedding generation</li>
+ * </ul>
+ */
+public enum SchedulingType {
 	ENRICH,
 	EMBEDDING,
 	ENRICH_EMBEDDING

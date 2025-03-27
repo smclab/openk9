@@ -34,7 +34,6 @@ import java.util.Set;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
-import io.openk9.datasource.model.PipelineType;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
@@ -43,6 +42,7 @@ import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.service.dto.SchedulingType;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
@@ -200,13 +200,13 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		return PekkoUtils.getInteger(config, WORKERS_PER_NODE, WORKERS_PER_NODE_DEFAULT);
 	}
 
-	private void createWorkStage(PipelineType pipelineType) {
+	private void createWorkStage(SchedulingType schedulingType) {
 		if (this.workStage != null) {
 			return;
 		}
 
 		WorkStage.Configurations workStageConfigurations =
-			switch (pipelineType) {
+			switch (schedulingType) {
 				case ENRICH -> new WorkStage.Configurations(
 					linkedList(EnrichPipeline.ENTITY_TYPE_KEY),
 					VectorIndexWriter::create
@@ -702,7 +702,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 			this.scheduler = scheduler;
 
-			var pipelineType = scheduler.getPipelineType();
+			var pipelineType = scheduler.getSchedulingType();
 
 			createWorkStage(pipelineType);
 

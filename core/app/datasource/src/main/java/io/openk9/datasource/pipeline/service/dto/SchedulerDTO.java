@@ -20,7 +20,6 @@ package io.openk9.datasource.pipeline.service.dto;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-import io.openk9.datasource.model.PipelineType;
 import io.openk9.datasource.model.Scheduler;
 
 import lombok.Data;
@@ -37,7 +36,7 @@ public class SchedulerDTO {
 	private String newDataIndexName;
 	private Scheduler.SchedulerStatus status;
 	private OffsetDateTime lastIngestionDate;
-	private PipelineType pipelineType;
+	private SchedulingType schedulingType;
 
 	public boolean isNewIndex() {
 		return getNewDataIndexId() != null;

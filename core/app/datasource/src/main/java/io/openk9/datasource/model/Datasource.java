@@ -25,8 +25,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -166,10 +164,6 @@ public class Datasource extends K9Entity {
 	@Column(name = "scheduling", nullable = false)
 	@ValidQuartzCron
 	private String scheduling = DEFAULT_SCHEDULING;
-	@Column(name = "pipeline_type")
-	@Enumerated(EnumType.STRING)
-	private PipelineType pipelineType;
-
 
 	public void setPurgeable(Boolean purgeable) {
 		this.purgeable = Objects.requireNonNullElse(purgeable, DEFAULT_PURGEABLE);
