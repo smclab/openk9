@@ -17,12 +17,16 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
+import java.util.List;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.events.DatasourceEventBus;
+import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.service.SchedulingService;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -30,8 +34,6 @@ import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
-
-import java.util.List;
 
 public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Command> {
 
@@ -132,8 +134,17 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 
 		if (list != null) {
 			for (String deletedContentId : list) {
-				DatasourceEventBus.sendDeleteEvent(
-					tenantId, datasourceId, newDataIndexName, deletedContentId);
+
+				DatasourceEventBus.sendMessage(
+					DatasourceMessage.Delete
+						.builder()
+						.tenantId(tenantId)
+						.datasourceId(datasourceId)
+						.indexName(newDataIndexName)
+						.contentId(deletedContentId)
+						.build()
+				);
+
 			}
 		}
 		else {

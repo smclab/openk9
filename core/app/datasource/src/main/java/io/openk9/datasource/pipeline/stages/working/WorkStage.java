@@ -45,7 +45,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
-	private final ActorRef<Writer.Response> indexWriterAdapter;
+	private final ActorRef<Writer.Response> writerAdapter;
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
 	private ActorRef<Writer.Command> writer;
@@ -64,7 +64,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		this.replyTo = replyTo;
 		this.processorTypes = configurations.processorTypes();
 
-		this.indexWriterAdapter = getContext().messageAdapter(
+		this.writerAdapter = getContext().messageAdapter(
 			Writer.Response.class,
 			PostWrite::new
 		);
@@ -177,15 +177,16 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		}
 		else if (dataPayload.getContentId() != null) {
 
+			// Prepares for working on this dataPayload
 			var contentId = dataPayload.getContentId();
 
 			if (this.writer == null) {
 				this.writer = getContext().spawnAnonymous(
 					this.writerFactory.apply(
-							scheduler,
-							indexWriterAdapter
-						)
-					);
+						scheduler,
+						writerAdapter
+					)
+				);
 			}
 
 			counter++;
@@ -199,6 +200,19 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				parsingDateTimeStamp,
 				contentId
 			);
+
+			// If there are no documentTypes defined,
+			// then the associated documents has to be deleted.
+
+			var documentTypes = dataPayload.getDocumentTypes();
+
+			if (documentTypes == null || documentTypes.length == 0) {
+
+				log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
+				writer.tell(new Writer.Start(null, heldMessage));
+
+				return this;
+			}
 
 			var processorChain =
 				getContext().spawnAnonymous(ProcessorChain.create(processorTypes));

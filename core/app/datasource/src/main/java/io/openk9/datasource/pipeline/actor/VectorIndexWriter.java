@@ -26,6 +26,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import jakarta.enterprise.inject.spi.CDI;
 
+import io.openk9.datasource.events.DatasourceEventBus;
+import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
@@ -56,6 +58,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	private final OpenSearchAsyncClient asyncClient;
 	private final String indexName;
 	private final ActorRef<Writer.Response> replyTo;
+	private final long datasourceId;
 
 	public VectorIndexWriter(
 		ActorContext<Writer.Command> context,
@@ -65,8 +68,8 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		super(context);
 		this.asyncClient = CDI.current().select(OpenSearchAsyncClient.class).get();
 		this.indexName = scheduler.getIndexName();
+		this.datasourceId = scheduler.getDatasourceId();
 		this.replyTo = replyTo;
-
 	}
 
 	public static Behavior<Writer.Command> create(
@@ -80,29 +83,26 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	public Receive<Writer.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(Writer.Start.class, this::onStart)
+			.onMessage(DeleteDocumentResponse.class, this::onDeleteDocumentResponse)
 			.onMessage(WriteDocuments.class, this::onWriteDocuments)
 			.onMessage(IndexDocumentResponse.class, this::onIndexDocumentResponse)
 			.build();
 	}
 
-	protected static List<Map<String, Object>> parseChunks(byte[] json) {
-		try {
-			var documentContext = JsonPath
-				.using(Configuration.defaultConfiguration())
-				.parseUtf8(json);
+	protected static List<Map<String, Object>> parseChunks(byte[] json)
+		throws IllegalArgumentException {
 
-			Object root = documentContext.read("$");
+		var documentContext = JsonPath
+			.using(Configuration.defaultConfiguration())
+			.parseUtf8(json);
 
-			if (root instanceof List) {
-				return (List<Map<String, Object>>) root;
-			}
-			else {
-				return List.of((Map<String, Object>) root);
-			}
+		Object root = documentContext.read("$");
+
+		if (root instanceof List) {
+			return (List<Map<String, Object>>) root;
 		}
-		catch (IllegalArgumentException e) {
-			log.warn("Cannot parse the json payload", e);
-			return List.of();
+		else {
+			return List.of((Map<String, Object>) root);
 		}
 	}
 
@@ -120,16 +120,54 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		);
 	}
 
+	private Behavior<Writer.Command> onDeleteDocumentResponse(
+		DeleteDocumentResponse deleteDocumentResponse) {
+
+		var heldMessage = deleteDocumentResponse.heldMessage();
+		var throwable = deleteDocumentResponse.throwable();
+
+		if (throwable != null) {
+
+			log.warnf("%s: Documents deletion failed.");
+
+			sendDatasourceEventError(heldMessage, throwable.getMessage());
+
+			replyTo.tell(
+				new Writer.Failure(new WriterException(throwable), heldMessage));
+		}
+		else {
+
+			log.infof("%s: Documents deleted.");
+
+			sendDatasourceEventDelete(heldMessage);
+
+			replyTo.tell(new Writer.Success(heldMessage));
+		}
+
+		return this;
+	}
+
 	private Behavior<Writer.Command> onIndexDocumentResponse(
 		IndexDocumentResponse indexDocumentResponse) {
 
-		var bulkResponse = indexDocumentResponse.bulkResponse;
-		var heldMessage = indexDocumentResponse.heldMessage;
-		var throwable = indexDocumentResponse.exception;
+		var bulkResponse = indexDocumentResponse.bulkResponse();
+		var heldMessage = indexDocumentResponse.heldMessage();
+		var throwable = indexDocumentResponse.throwable();
 
-		if (bulkResponse != null) {
+		if (throwable != null) {
+
+			if (log.isDebugEnabled()) {
+				log.debugf(throwable, "%s: Error on bulk request", heldMessage);
+			}
+
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
+
+		}
+		else if (bulkResponse != null) {
 
 			if (bulkResponse.errors()) {
+
+				// Aggregate all errors
 				String reasons = bulkResponse.items()
 					.stream()
 					.map(BulkResponseItem::error)
@@ -142,31 +180,27 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 						"%s: Bulk request error: %s", heldMessage, reasons);
 				}
 
+				sendDatasourceEventError(heldMessage, reasons);
+
 				replyTo.tell(new Writer.Failure(
-					new WriterException(reasons),
-					heldMessage
-				));
+					new WriterException(reasons), heldMessage));
+			}
+			else {
 
-				return this;
+				log.infof("%s: Document stored successfully", heldMessage);
+
+				sendDatasourceEventCreate(heldMessage);
+
+				replyTo.tell(new Writer.Success(heldMessage));
 			}
 
 		}
+		else {
+			log.errorf("%s: Response is null.");
 
-		if (throwable != null) {
-
-			if (log.isDebugEnabled()) {
-				log.debugf(throwable, "%s: Error on bulk request", heldMessage);
-			}
-
-			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
-
-			return this;
-
+			replyTo.tell(new Writer.Failure(
+				new WriterException("No response"), heldMessage));
 		}
-
-		log.infof("%s: Document stored successfully", heldMessage);
-
-		replyTo.tell(new Writer.Success(heldMessage));
 
 		return this;
 	}
@@ -176,39 +210,72 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		var dataPayload = start.dataPayload();
 		var heldMessage = start.heldMessage();
 
-		var chunks = parseChunks(dataPayload);
+		// If dataPayload is null, we only delete the chunks with this contentId.
 
-		if (chunks.isEmpty()) {
-			if (log.isDebugEnabled()) {
-				log.debugf(
-					"%s: There isn't any operation to send to the server.",
-					heldMessage
+		if (dataPayload == null) {
+
+			try {
+				getContext().pipeToSelf(
+					deleteChunksByContentId(heldMessage),
+					(deleteChunksResponse, throwable) ->
+						new DeleteDocumentResponse(
+							heldMessage,
+							deleteChunksResponse,
+							throwable
+						)
 				);
 			}
+			catch (IOException e) {
+				log.errorf("%s: I/O failed to search engine.", heldMessage);
 
-			replyTo.tell(new Writer.Failure(
-					new WriterException("Nothing to write"),
-					heldMessage
-				)
-			);
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+			}
 
-			return this;
 		}
 
+		// Else we try to delete and then to write chunks
+
 		try {
+
+			var chunks = parseChunks(dataPayload);
+
+			// If there are no chunks to write, send a failure to the caller
+			if (chunks.isEmpty()) {
+				if (log.isDebugEnabled()) {
+					log.debugf(
+						"%s: There isn't any chunk to write.",
+						heldMessage
+					);
+				}
+
+				replyTo.tell(new Writer.Failure(
+						new WriterException("The list of chunks to write is empty."),
+						heldMessage
+					)
+				);
+
+				return this;
+			}
+
 			getContext().pipeToSelf(
 				deleteChunksByContentId(heldMessage),
 				(deleteChunksResponse, throwable) ->
 					new WriteDocuments(
+						heldMessage,
 						deleteChunksResponse,
 						throwable,
-						chunks,
-						heldMessage,
-						dataPayload
+						chunks
 					)
 			);
 		}
+		catch (IllegalArgumentException e) {
+			log.warnf("%s: Failed to parse chunks from jsonPayload.", heldMessage);
+
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+		}
 		catch (IOException e) {
+			log.errorf("%s: I/O failed to search engine.", heldMessage);
+
 			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 		}
 
@@ -220,12 +287,22 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		var heldMessage = writeDocuments.heldMessage();
 		var chunks = writeDocuments.chunks();
+		var deletionException = writeDocuments.throwable();
+
+		if (deletionException != null) {
+			log.warnf("%s: Deletion failed.", heldMessage);
+
+			replyTo.tell(new Writer.Failure(
+				new WriterException(deletionException), heldMessage));
+
+			return this;
+		}
 
 		List<BulkOperation> bulkOperations = new ArrayList<>();
 
 		for (Map<String, Object> chunk : chunks) {
 
-			// fallback for acl mapping
+			// Handle ACL mapping, fallback if not defined.
 			try {
 
 				var acl = (Map<String, Object>) chunk.get("acl");
@@ -266,30 +343,74 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 			getContext().pipeToSelf(
 				asyncClient.bulk(bulkRequest),
-				(bulkResponse, exception) -> new IndexDocumentResponse(
-					heldMessage, bulkResponse, (Exception) exception)
+				(bulkResponse, throwable) -> new IndexDocumentResponse(
+					heldMessage, bulkResponse, throwable)
 			);
 
 		}
 		catch (IOException e) {
+			log.errorf("%s: I/O failed to search engine.", heldMessage);
+
 			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 		}
 
 		return this;
 	}
 
+	private void sendDatasourceEventCreate(HeldMessage heldMessage) {
+
+		DatasourceEventBus.sendMessage(DatasourceMessage.New.builder()
+			.datasourceId(datasourceId)
+			.contentId(heldMessage.contentId())
+			.tenantId(heldMessage.processKey().tenantId())
+			.indexName(indexName)
+			.build()
+		);
+
+	}
+
+	private void sendDatasourceEventDelete(HeldMessage heldMessage) {
+
+		DatasourceEventBus.sendMessage(DatasourceMessage.Delete
+			.builder()
+			.datasourceId(datasourceId)
+			.contentId(heldMessage.contentId())
+			.tenantId(heldMessage.processKey().tenantId())
+			.indexName(indexName)
+			.build()
+		);
+	}
+
+	private void sendDatasourceEventError(HeldMessage heldMessage, String reasons) {
+
+		DatasourceEventBus.sendMessage(DatasourceMessage.Failure
+			.builder()
+			.datasourceId(datasourceId)
+			.contentId(heldMessage.contentId())
+			.tenantId(heldMessage.processKey().tenantId())
+			.indexName(indexName)
+			.error(reasons)
+			.build()
+		);
+	}
+
+	private record DeleteDocumentResponse(
+		HeldMessage heldMessage,
+		DeleteByQueryResponse deleteByQueryResponse,
+		Throwable throwable
+	) implements Writer.Command {}
+
 	private record IndexDocumentResponse(
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
-		Exception exception
+		Throwable throwable
 	) implements Writer.Command {}
 
 	private record WriteDocuments(
+		HeldMessage heldMessage,
 		DeleteByQueryResponse deleteChunksResponse,
 		Throwable throwable,
-		List<Map<String, Object>> chunks,
-		HeldMessage heldMessage,
-		byte[] dataPayload
+		List<Map<String, Object>> chunks
 	) implements Writer.Command {}
 
 }

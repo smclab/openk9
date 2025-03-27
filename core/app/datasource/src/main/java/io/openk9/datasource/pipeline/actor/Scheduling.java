@@ -478,10 +478,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 		this.lastRequest = LocalDateTime.now();
 
 		this.workStage.tell(new WorkStage.StartWorker(
-			getScheduler(),
-			ingest.payload(),
-				ingest.replyTo()
-			)
+			getScheduler(), ingest.payload(), ingest.replyTo())
 		);
 
 		return Behaviors.same();

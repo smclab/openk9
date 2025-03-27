@@ -64,16 +64,12 @@ public class IndexWriter {
 			RestHighLevelClient restHighLevelClient =
 				CDI.current().select(RestHighLevelClient.class).get();
 
-			DatasourceEventBus eventBus =
-				CDI.current().select(DatasourceEventBus.class).get();
-
 			var oldDataIndexName = scheduler.getOldDataIndexName();
 			var newDataIndexName = scheduler.getNewDataIndexName();
 
 			return initial(
 				ctx,
 				restHighLevelClient,
-				eventBus,
 				oldDataIndexName,
 				newDataIndexName,
 				replyTo
@@ -82,9 +78,44 @@ public class IndexWriter {
 		});
 	}
 
+	private static DocWriteRequest createDocWriteRequest(
+		String indexName, byte[] dataPayload, Logger logger,
+		SearchResponse searchResponse, HeldMessage heldMessage) {
+
+		IndexRequest indexRequest = new IndexRequest(indexName);
+
+		if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
+
+			logger.info("found document for contentId: " + heldMessage.contentId());
+
+			String documentId = searchResponse.getHits().getAt(0).getId();
+
+			indexRequest.id(documentId);
+
+			if (dataPayload == null) {
+
+				logger.info("delete document for contentId: " + heldMessage.contentId());
+
+				return new DeleteRequest(indexName, documentId);
+			}
+		}
+
+		logger.info("index document for contentId: " + heldMessage.contentId());
+
+		var jsonObject = (JsonObject) Json.decodeValue(Buffer.buffer(dataPayload));
+
+		JsonObject acl =
+			jsonObject.getJsonObject("acl");
+
+		if (acl == null || acl.isEmpty()) {
+			jsonObject.put("acl", Map.of("public", true));
+		}
+
+		return indexRequest.source(jsonObject.toString(), XContentType.JSON);
+	}
+
 	private static Behavior<Writer.Command> initial(
 		ActorContext<Writer.Command> ctx, RestHighLevelClient restHighLevelClient,
-		DatasourceEventBus eventBus,
 		String oldDataIndexName,
 		String newDataIndexName,
 		ActorRef<Writer.Response> replyTo) {
@@ -103,36 +134,43 @@ public class IndexWriter {
 				ctx, restHighLevelClient, src, logger, oldDataIndexName, newDataIndexName)
 			)
 			.onMessage(BulkResponseCommand.class, brc -> onBulkResponseCommand(
-				logger, brc, eventBus, replyTo)
+				logger, brc, replyTo)
 			)
 			.build();
 	}
 
 	private static Behavior<Writer.Command> onBulkResponseCommand(
-		Logger logger, BulkResponseCommand brc, DatasourceEventBus eventBus,
-		ActorRef<Writer.Response> replyTo) {
+		Logger logger, BulkResponseCommand brc, ActorRef<Writer.Response> replyTo) {
 
-		BulkResponse response = brc.bulkResponse;
+		BulkResponse bulkResponse = brc.bulkResponse;
 		Exception throwable = brc.exception;
-		DataPayload dataPayload = brc.dataPayload();
+		DataPayload dataPayload =
+			Json.decodeValue(Buffer.buffer(brc.dataPayload()), DataPayload.class);
+
 		var heldMessage = brc.heldMessage;
 
-		if (response != null) {
+		if (throwable != null) {
+			logger.warn("Error on bulk request", throwable);
+			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
 
-			if (response.hasFailures()) {
-				String errorMessage = response.buildFailureMessage();
+			return Behaviors.same();
+		}
 
-				eventBus.sendEvent(
-					DatasourceMessage.Failure
-						.builder()
-						.ingestionId(dataPayload.getIngestionId())
-						.datasourceId(dataPayload.getDatasourceId())
-						.contentId(dataPayload.getContentId())
-						.parsingDate(dataPayload.getParsingDate())
-						.tenantId(dataPayload.getTenantId())
-						.indexName(dataPayload.getIndexName())
-						.error(errorMessage)
-						.build()
+		if (bulkResponse != null) {
+
+			if (bulkResponse.hasFailures()) {
+				String errorMessage = bulkResponse.buildFailureMessage();
+
+				DatasourceEventBus.sendMessage(DatasourceMessage.Failure
+					.builder()
+					.ingestionId(dataPayload.getIngestionId())
+					.datasourceId(dataPayload.getDatasourceId())
+					.contentId(dataPayload.getContentId())
+					.parsingDate(dataPayload.getParsingDate())
+					.tenantId(dataPayload.getTenantId())
+					.indexName(dataPayload.getIndexName())
+					.error(errorMessage)
+					.build()
 				);
 
 				logger.warn("Bulk request error: {}", errorMessage);
@@ -141,31 +179,23 @@ public class IndexWriter {
 					heldMessage
 				));
 			}
+			else {
 
-		}
+				for (BulkItemResponse itemResponse : bulkResponse) {
 
-		if (throwable != null) {
-			logger.warn("Error on bulk request", throwable);
-			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
-		}
-		else {
+					DocWriteResponse response = itemResponse.getResponse();
+					String index = response.getIndex();
+					DocWriteResponse.Result result = response.getResult();
 
-			for (BulkItemResponse item : response) {
+					DatasourceMessage.DatasourceMessageBuilder<?, ?> messageBuilder =
+						switch (result) {
+							case CREATED -> DatasourceMessage.New.builder();
+							case UPDATED -> DatasourceMessage.Update.builder();
+							case DELETED -> DatasourceMessage.Delete.builder();
+							default -> DatasourceMessage.Unknown.builder();
+						};
 
-				DocWriteResponse curResponse = item.getResponse();
-				String index = curResponse.getIndex();
-				DocWriteResponse.Result result = curResponse.getResult();
-
-				DatasourceMessage.DatasourceMessageBuilder<?, ?> builder =
-					switch (result) {
-						case CREATED -> DatasourceMessage.New.builder();
-						case UPDATED -> DatasourceMessage.Update.builder();
-						case DELETED -> DatasourceMessage.Delete.builder();
-						default -> DatasourceMessage.Unknown.builder();
-					};
-
-				eventBus.sendEvent(
-					builder
+					DatasourceEventBus.sendMessage(messageBuilder
 						.ingestionId(dataPayload.getIngestionId())
 						.datasourceId(dataPayload.getDatasourceId())
 						.contentId(dataPayload.getContentId())
@@ -173,11 +203,13 @@ public class IndexWriter {
 						.tenantId(dataPayload.getTenantId())
 						.indexName(index)
 						.build()
-				);
+					);
 
+				}
+
+				replyTo.tell(new Writer.Success(heldMessage));
 			}
 
-			replyTo.tell(new Writer.Success(heldMessage));
 		}
 
 		return Behaviors.same();
@@ -192,7 +224,7 @@ public class IndexWriter {
 		String newDataIndexName) {
 
 		Exception exception = src.exception;
-		DataPayload dataPayload = src.dataPayload;
+		byte[] dataPayload = src.dataPayload;
 		SearchResponse searchResponse = src.searchResponse;
 		var heldMessage = src.heldMessage();
 
@@ -208,7 +240,8 @@ public class IndexWriter {
 				oldDataIndexName,
 				dataPayload,
 				logger,
-				searchResponse
+				searchResponse,
+				heldMessage
 			));
 		}
 		if (newDataIndexName != null) {
@@ -216,7 +249,8 @@ public class IndexWriter {
 				newDataIndexName,
 				dataPayload,
 				logger,
-				searchResponse
+				searchResponse,
+				heldMessage
 			));
 		}
 
@@ -239,62 +273,23 @@ public class IndexWriter {
 		return Behaviors.same();
 	}
 
-	private static DocWriteRequest createDocWriteRequest(
-		String indexName, DataPayload dataPayload, Logger logger,
-		SearchResponse searchResponse) {
-
-		IndexRequest indexRequest = new IndexRequest(indexName);
-
-		if (searchResponse != null && searchResponse.getHits().getHits().length > 0) {
-
-			logger.info("found document for contentId: " + dataPayload.getContentId());
-
-			String documentId = searchResponse.getHits().getAt(0).getId();
-
-			String[] documentTypes = dataPayload.getDocumentTypes();
-
-			if (documentTypes == null || documentTypes.length == 0) {
-
-				logger.info("delete document for contentId: " + dataPayload.getContentId());
-
-				return new DeleteRequest(indexName, documentId);
-			}
-
-			indexRequest.id(documentId);
-		}
-
-		logger.info("index document for contentId: " + dataPayload.getContentId());
-
-		JsonObject jsonObject = JsonObject.mapFrom(dataPayload);
-
-		JsonObject acl =
-			jsonObject.getJsonObject("acl");
-
-		if (acl == null || acl.isEmpty()) {
-			jsonObject.put("acl", Map.of("public", true));
-		}
-
-		return indexRequest.source(jsonObject.toString(), XContentType.JSON);
-	}
-
 	private static Behavior<Writer.Command> onStart(
 		ActorContext<Writer.Command> ctx,
 		RestHighLevelClient restHighLevelClient,
 		String oldDataIndexName,
 		Writer.Start start) {
 
-		var data = start.dataPayload();
+		var dataPayload = start.dataPayload();
 		var heldMessage = start.heldMessage();
 
-		DataPayload dataPayload = Json.decodeValue(Buffer.buffer(data), DataPayload.class);
 
-		ctx.getLog().info("index writer start for content: " + dataPayload.getContentId());
+		ctx.getLog().info("index writer start for content: " + heldMessage.contentId());
 
 		if (oldDataIndexName != null) {
 			SearchRequest searchRequest = new SearchRequest(oldDataIndexName);
 
 			TermQueryBuilder termQueryBuilder =
-				QueryBuilders.termQuery("contentId.keyword", dataPayload.getContentId());
+				QueryBuilders.termQuery("contentId.keyword", heldMessage.contentId());
 
 			SearchSourceBuilder searchSourceBuilder =
 				new SearchSourceBuilder();
@@ -330,17 +325,17 @@ public class IndexWriter {
 		return Behaviors.same();
 	}
 
-	private record SearchResponseCommand(
-		DataPayload dataPayload,
+	private record BulkResponseCommand(
+		byte[] dataPayload,
 		HeldMessage heldMessage,
-		SearchResponse searchResponse,
+		BulkResponse bulkResponse,
 		Exception exception
 	) implements Writer.Command {}
 
-	private record BulkResponseCommand(
-		DataPayload dataPayload,
+	private record SearchResponseCommand(
+		byte[] dataPayload,
 		HeldMessage heldMessage,
-		BulkResponse bulkResponse,
+		SearchResponse searchResponse,
 		Exception exception
 	) implements Writer.Command {}
 
