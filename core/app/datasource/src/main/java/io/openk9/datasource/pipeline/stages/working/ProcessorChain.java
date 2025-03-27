@@ -17,9 +17,11 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
+import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 
 import org.apache.pekko.actor.typed.ActorRef;
@@ -33,7 +35,7 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 
 public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 
-	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypeKeys;
+	private final Iterator<EntityTypeKey<Processor.Command>> processorTypeKeys;
 	private final ActorRef<Processor.Response> processorResponseAdapter;
 	private final ClusterSharding sharding;
 	private SchedulerDTO scheduler;
@@ -45,7 +47,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 
 		super(context);
 
-		this.processorTypeKeys = new LinkedList<>(processorTypeKeys);
+		this.processorTypeKeys = processorTypeKeys.iterator();
 		this.processorResponseAdapter = getContext().messageAdapter(
 			Processor.Response.class, ProcessorResponse::new
 		);
@@ -76,24 +78,13 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 			case Processor.Failure failure -> replyTo.tell(failure);
 			case Processor.Skip skip -> replyTo.tell(skip);
 			case Processor.Success success -> {
-				try {
-					var processKey = success.heldMessage().processKey();
-					var processorTypeKey = this.processorTypeKeys.pop();
+				if (this.processorTypeKeys.hasNext()) {
 
-					var processor = sharding.entityRefFor(
-						processorTypeKey,
-						processKey.asString()
-					);
-
-					processor.tell(new Processor.Start(
-						success.payload(),
-						scheduler,
-						success.heldMessage(),
-						processorResponseAdapter
-					));
-
+					startNextProcessor(success.heldMessage(), success.payload());
 				}
-				catch (NoSuchElementException e) {
+				else {
+
+					// no more processors to start
 					replyTo.tell(new Processor.Success(
 						success.payload(),
 						success.scheduler(),
@@ -112,19 +103,33 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 		this.replyTo = start.replyTo();
 		var heldMessage = start.heldMessage();
 
-		var processorType = this.processorTypeKeys.pop();
+		try {
+
+			startNextProcessor(heldMessage, start.ingestPayload());
+		}
+		catch (NoSuchElementException e) {
+
+			replyTo.tell(new Processor.Failure(
+				new DataProcessException("No processor to start"), heldMessage));
+		}
+
+		return Behaviors.same();
+	}
+
+	private void startNextProcessor(HeldMessage heldMessage, byte[] start) {
+		var processKey = heldMessage.processKey();
+
+		var processorType = this.processorTypeKeys.next();
 
 		var processor = sharding.entityRefFor(
-			processorType, heldMessage.processKey().asString());
+			processorType, processKey.asString());
 
 		processor.tell(new Processor.Start(
-			start.ingestPayload(),
+			start,
 			scheduler,
 			heldMessage,
 			processorResponseAdapter
 		));
-
-		return Behaviors.same();
 	}
 
 	private record ProcessorResponse(Processor.Response response)
