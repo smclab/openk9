@@ -76,8 +76,6 @@ public class EmbeddingService {
 			.flatMap(message -> {
 				var configurations = (EmbeddingChunksConfiguration) message.body();
 
-				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
-
 				var apiKey = configurations.apiKey();
 				var jsonConfig = configurations.jsonConfig() != null
 					? configurations.jsonConfig()
@@ -102,6 +100,19 @@ public class EmbeddingService {
 				documentContext.delete(docTypeFieldJsonPath);
 
 				var root = getRoot(documentContext);
+
+				// fails if there is no text to send for text-embedding
+				if (text == null || text.isEmpty()) {
+
+					return Uni.createFrom().failure(
+						new PayloadEmbeddingFailed(String.format(
+							"The field %s has no text",
+							docTypeFieldJsonPath
+						))
+					);
+				}
+
+				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
 						.newBuilder()
@@ -150,6 +161,11 @@ public class EmbeddingService {
 		var jsonArray = new JsonArray();
 
 		var chunks = embeddingResponse.getChunksList();
+
+		if (chunks.isEmpty()) {
+			throw new PayloadEmbeddingFailed(
+				"No chunks created from this payload");
+		}
 
 		for (EmbeddingOuterClass.ResponseChunk responseChunk : chunks) {
 
