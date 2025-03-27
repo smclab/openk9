@@ -13,6 +13,7 @@ service Searcher {
   rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
   rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
+  rpc GetEmbeddingModelConfigurations(GetEmbeddingModelConfigurationsRequest) returns (GetEmbeddingModelConfigurationsResponse) {}
 }
 
 message QueryParserResponse {
@@ -94,6 +95,10 @@ message GetLLMConfigurationsRequest {
   string virtualHost = 1;
 }
 
+message GetEmbeddingModelConfigurationsRequest {
+  string virtualHost = 1;
+}
+
 message QueryAnalysisToken {
   string text = 1;
   int32 start = 2;
@@ -133,5 +138,17 @@ message GetLLMConfigurationsResponse {
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   string retrieveType = 4;
+}
+
+message ModelType {
+  string type = 1;
+  string model = 2;
+}
+
+message GetEmbeddingModelConfigurationsResponse {
+  string apiUrl = 1;
+  optional string apiKey = 2;
+  .google.protobuf.Struct jsonConfig = 3;
+  ModelType modelType = 4;
 }
 

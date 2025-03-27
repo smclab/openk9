@@ -18,28 +18,15 @@
 package io.openk9.datasource.pipeline.service;
 
 import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.EmbeddingModelDTO;
-import io.openk9.datasource.model.dto.ModelTypeDTO;
-import io.openk9.datasource.service.EmbeddingModelService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 class EmbeddingServiceTest {
-
-	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
-	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
-	private static final String JSON_CONFIG_EMPTY = "{}";
-	private static final String TYPE = "type";
-	private static final String MODEL = "model";
-
-	@Inject
-	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -54,63 +41,5 @@ class EmbeddingServiceTest {
 			.await().indefinitely();
 
 		assertNotNull(current);
-	}
-
-	@Test
-	void should_create_embedding_model_one_with_type_model_jsonConfig_fields() {
-		var embeddingModelCreated = createEmbeddingModelOne();
-		System.out.printf("embeddingModelCreated: %s", embeddingModelCreated.toString());
-
-		var embeddingModelOne = getEmbeddingModelOne();
-		System.out.printf("embeddingModelOne: %s", embeddingModelOne.toString());
-
-		assertNotNull(embeddingModelOne);
-
-		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
-		assertEquals(TYPE, embeddingModelOne.getModelType().getType());
-		assertEquals(MODEL, embeddingModelOne.getModelType().getModel());
-		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
-
-		removeEmbeddingModelOne();
-	}
-
-	private EmbeddingModel createEmbeddingModelOne() {
-		var dto = EmbeddingModelDTO
-			.builder()
-			.name(EMBEDDING_MODEL_ONE_NAME)
-			.apiUrl("embedding-model.local")
-			.apiKey("secret-key")
-			.vectorSize(1500)
-			.jsonConfig(JSON_CONFIG_EMPTY)
-			.modelType(
-				ModelTypeDTO
-					.builder()
-					.type(TYPE)
-					.model(MODEL)
-					.build()
-			)
-			.build();
-
-		return embeddingModelService.create(dto)
-			.await()
-			.indefinitely();
-	}
-
-	private EmbeddingModel getEmbeddingModelOne() {
-		return sessionFactory.withTransaction(
-				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_ONE_NAME)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void removeEmbeddingModelOne() {
-		var embeddingModelOne = getEmbeddingModelOne();
-
-		sessionFactory.withTransaction(
-				session -> embeddingModelService.deleteById(embeddingModelOne.getId())
-			)
-			.await()
-			.indefinitely();
 	}
 }

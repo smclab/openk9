@@ -18,6 +18,9 @@
 package io.openk9.datasource.service;
 
 import java.io.IOException;
+
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.dto.ModelTypeDTO;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.EmbeddingComponentTemplate;
@@ -26,9 +29,13 @@ import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 public class EmbeddingModelServiceTest {
@@ -37,10 +44,21 @@ public class EmbeddingModelServiceTest {
 	public static final int VECTOR_SIZE = 1330;
 	public static final String API_KEY = "EMST.asdfkaslf01432kl4l1";
 	public static final String URL = "http://EMST.embeddingapi.local";
+
+	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
+	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
+	private static final String JSON_CONFIG_EMPTY = "{}";
+	private static final String TYPE = "type";
+	private static final String MODEL = "model";
+
 	@Inject
 	EmbeddingModelService embeddingModelService;
+
 	@Inject
 	OpenSearchClient openSearchClient;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	@Test
 	@RunOnVertxContext
@@ -78,6 +96,62 @@ public class EmbeddingModelServiceTest {
 				}
 			}
 		);
+	}
+
+	@Test
+	void should_create_embedding_model_one_with_type_model_jsonConfig_fields() {
+		createEmbeddingModelOne();
+
+		var embeddingModelOne = getEmbeddingModelOne();
+
+		assertNotNull(embeddingModelOne);
+
+		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
+		assertEquals(TYPE, embeddingModelOne.getModelType().getType());
+		assertEquals(MODEL, embeddingModelOne.getModelType().getModel());
+		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
+
+		removeEmbeddingModelOne();
+	}
+
+	private EmbeddingModel createEmbeddingModelOne() {
+		var dto = EmbeddingModelDTO
+			.builder()
+			.name(EMBEDDING_MODEL_ONE_NAME)
+			.apiUrl("embedding-model.local")
+			.apiKey("secret-key")
+			.vectorSize(1500)
+			.jsonConfig(JSON_CONFIG_EMPTY)
+			.modelType(
+				ModelTypeDTO
+					.builder()
+					.type(TYPE)
+					.model(MODEL)
+					.build()
+			)
+			.build();
+
+		return embeddingModelService.create(dto)
+			.await()
+			.indefinitely();
+	}
+
+	private EmbeddingModel getEmbeddingModelOne() {
+		return sessionFactory.withTransaction(
+				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_ONE_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void removeEmbeddingModelOne() {
+		var embeddingModelOne = getEmbeddingModelOne();
+
+		sessionFactory.withTransaction(
+				session -> embeddingModelService.deleteById(embeddingModelOne.getId())
+			)
+			.await()
+			.indefinitely();
 	}
 
 }

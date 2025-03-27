@@ -17,24 +17,8 @@
 
 package io.openk9.datasource.searcher;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
-
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -54,12 +38,16 @@ import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
+import io.openk9.searcher.grpc.ModelType;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -74,9 +62,6 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
-
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -87,6 +72,8 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -114,6 +101,22 @@ import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
 
@@ -125,6 +128,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	GrammarProvider grammarProvider;
@@ -483,8 +489,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
 		return getTenant(request.getVirtualHost())
-			.flatMap(tenantResponse -> largeLanguageModelService
-				.fetchCurrentLLMAndBucket(tenantResponse.getSchemaName())
+			.flatMap(tenant -> largeLanguageModelService
+				.fetchCurrentLLMAndBucket(tenant.schemaName())
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
@@ -510,6 +516,29 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					return responseBuilder.build();
 				})
+			);
+	}
+
+	@Override
+	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
+		GetEmbeddingModelConfigurationsRequest request) {
+
+		return getTenant(request.getVirtualHost())
+			.flatMap(tenant -> embeddingModelService
+				.fetchCurrent(tenant.schemaName())
+				.map(embeddingModel ->
+					GetEmbeddingModelConfigurationsResponse.newBuilder()
+						.setApiUrl(embeddingModel.getApiUrl())
+						.setApiKey(embeddingModel.getApiKey())
+						.setJsonConfig(StructUtils.fromJson(embeddingModel.getJsonConfig()))
+						.setModelType(
+							ModelType.newBuilder()
+								.setType(embeddingModel.getModelType().getType())
+								.setModel(embeddingModel.getModelType().getModel())
+								.build()
+						)
+						.build()
+				)
 			);
 	}
 
