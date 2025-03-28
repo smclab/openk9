@@ -15,15 +15,6 @@
 	  "total": {
 		"type": "integer"
 	  },
-	  "indexName": {
-		"type": "text",
-		"fields": {
-		  "keyword": {
-			"ignore_above": 256,
-			"type": "keyword"
-		  }
-		}
-	  },
 	  "contentId": {
 		"type": "text",
 		"fields": {
@@ -36,24 +27,6 @@
 	  "vector": {
 		"type": "knn_vector",
 		"dimension": {knnVectorDimension}
-	  },
-	  "title": {
-		"type": "text",
-		"fields": {
-		  "keyword": {
-			"ignore_above": 256,
-			"type": "keyword"
-		  }
-		}
-	  },
-	  "url": {
-		"type": "text",
-		"fields": {
-		  "keyword": {
-			"ignore_above": 256,
-			"type": "keyword"
-		  }
-		}
 	  }
 	}
 }
