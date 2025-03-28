@@ -111,6 +111,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		return asyncClient.deleteByQuery(delete -> delete
 			.index(indexName)
+			.ignoreUnavailable(true)
 			.query(query -> query
 				.match(match -> match
 					.field("contentId.keyword")
