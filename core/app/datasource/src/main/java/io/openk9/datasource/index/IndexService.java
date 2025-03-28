@@ -44,7 +44,6 @@ import org.jboss.logging.Logger;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
@@ -59,7 +58,6 @@ import org.opensearch.client.indices.GetMappingsRequest;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
-import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
 import org.opensearch.search.aggregations.AggregationBuilders;
@@ -224,31 +222,18 @@ public class IndexService {
 
 		searchRequest.source(searchSourceBuilder);
 
-		return Uni.createFrom()
-			.emitter(sink -> restHighLevelClient.searchAsync(
-				searchRequest,
-				RequestOptions.DEFAULT,
-				new ActionListener<>() {
-					@Override
-					public void onFailure(Exception e) {
-						sink.fail(e);
-					}
 
-					@Override
-					public void onResponse(SearchResponse searchResponse) {
+		return VertxContextSupport.executeBlocking(() -> {
+			var searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
 
-						var documentTypes = searchResponse
-							.getAggregations()
-							.<Terms>get("documentTypes")
-							.getBuckets()
-							.stream()
-							.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-							.toList();
-
-						sink.complete(documentTypes);
-					}
-				}
-			));
+			return searchResponse
+				.getAggregations()
+				.<Terms>get("documentTypes")
+				.getBuckets()
+				.stream()
+				.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+				.toList();
+		});
 
 	}
 
