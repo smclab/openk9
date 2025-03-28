@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 # Define variables
 RAG_MODULE_DOCKER_IMAGE_NAME := openk9-rag-module
-CONFIG_FILE := python_modules_info.txt
+CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
 

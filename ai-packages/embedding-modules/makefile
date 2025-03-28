@@ -6,7 +6,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 # Define variables
-CONFIG_FILE := python_modules_info.txt
+CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
 
