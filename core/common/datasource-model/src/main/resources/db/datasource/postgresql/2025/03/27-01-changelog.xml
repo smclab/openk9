@@ -26,7 +26,55 @@
 
 	<changeSet id="1743067921-1" author="openk9">
 		<dropColumn tableName="datasource"
-					columnName="pipeline_type"/>
+		            columnName="pipeline_type"/>
+	</changeSet>
+
+	<changeSet id="1743067921-2" author="openk9">
+		<createTable tableName="rag_configuration">
+			<column name="id" type="BIGINT">
+				<constraints
+					nullable="false"
+					primaryKey="true"
+					primaryKeyName="rag_configuration_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="type" type="VARCHAR(255)"/>
+			<column name="prompt" type="TEXT"/>
+			<column name="rephrase_prompt" type="TEXT"/>
+			<column name="prompt_no_rag" type="TEXT"/>
+			<column name="rag_tool_description" type="TEXT"/>
+			<column name="chunk_window" type="INTEGER"/>
+			<column name="reformulate" type="BOOLEAN"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1743067921-3" author="openk9">
+		<addColumn tableName="bucket">
+			<column name="rag_configuration_id" type="BIGINT"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="1743067921-4" author="openk9">
+		<addForeignKeyConstraint
+				baseTableName="bucket"
+				baseColumnNames="rag_configuration_id"
+				constraintName="fk_bucket_rag_configuration"
+				referencedTableName="rag_configuration"
+				referencedColumnNames="id"
+		/>
+	</changeSet>
+
+	<changeSet id="1743067921-5" author="openk9">
+		<modifyDataType
+				tableName="embedding_model"
+				columnName="json_config"
+				newDataType="TEXT"
+		/>
 	</changeSet>
 
 </databaseChangeLog>
