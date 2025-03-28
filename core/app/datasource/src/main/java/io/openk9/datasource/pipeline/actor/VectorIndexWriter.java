@@ -31,6 +31,7 @@ import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
+import io.openk9.datasource.util.OpenSearchUtils;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -42,7 +43,6 @@ import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
-import org.opensearch.client.opensearch._types.ErrorCause;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
@@ -169,22 +169,21 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			if (bulkResponse.errors()) {
 
 				// Aggregate all errors
-				String reasons = bulkResponse.items()
+				String errors = bulkResponse.items()
 					.stream()
 					.map(BulkResponseItem::error)
 					.filter(Objects::nonNull)
-					.map(ErrorCause::reason)
-					.collect(Collectors.joining());
+					.map(OpenSearchUtils::getPrimaryAndFirstCauseReason)
+					.collect(Collectors.joining("\n------------------------------------\n"));
 
 				if (log.isDebugEnabled()) {
-					log.debugf(
-						"%s: Bulk request error: %s", heldMessage, reasons);
+					log.debugf("%s: Bulk request error: %s", heldMessage, errors);
 				}
 
-				sendDatasourceEventError(heldMessage, reasons);
+				sendDatasourceEventError(heldMessage, errors);
 
 				replyTo.tell(new Writer.Failure(
-					new WriterException(reasons), heldMessage));
+					new WriterException(errors), heldMessage));
 			}
 			else {
 

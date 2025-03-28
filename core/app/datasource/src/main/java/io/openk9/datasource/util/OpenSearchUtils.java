@@ -34,6 +34,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.opensearch.Version;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch._types.ErrorCause;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.cluster.ClusterModule;
 import org.opensearch.cluster.metadata.IndexMetadata;
@@ -87,10 +88,6 @@ public class OpenSearchUtils {
 		var dataPayload = mapper.map(ingestionPayload, documentTypes);
 
 		return OpenSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
-	}
-
-
-	private OpenSearchUtils() {
 	}
 
 	/**
@@ -246,6 +243,40 @@ public class OpenSearchUtils {
 		);
 
 		return mapperService;
+	}
+
+	private OpenSearchUtils() {
+	}
+
+	/**
+	 * Extracts the top-level error reason and the first causedBy reason, if present.
+	 *
+	 * @param error The initial ErrorCause.
+	 * @return A formatted string with the primary error and optionally the first cause.
+	 */
+	public static String getPrimaryAndFirstCauseReason(ErrorCause error) {
+		if (error == null) {
+			return "Unknown error (ErrorCause was null)";
+		}
+		StringBuilder reasonBuilder = new StringBuilder();
+
+		// Append top-level error type and reason
+		reasonBuilder.append("(").append(error.type()).append(") ");
+		reasonBuilder.append(error.reason() != null ? error.reason() : "No reason provided");
+
+		ErrorCause causedBy = error.causedBy();
+
+		// Check if there's a causedBy
+		if (causedBy != null) {
+			reasonBuilder.append(" -> Caused by: ");
+
+			// Append the causedBy's type and reason
+			reasonBuilder.append("(").append(causedBy.type()).append(") ");
+			reasonBuilder.append(
+				causedBy.reason() != null ? causedBy.reason() : "No reason provided");
+		}
+
+		return reasonBuilder.toString();
 	}
 
 }
