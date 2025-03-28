@@ -44,7 +44,7 @@ load_config: check_commands
 # Build Docker image
 build: load_config
 	@source "$(CONFIG_PATH)" && \
-	docker build \
+	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
 		.
