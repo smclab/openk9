@@ -18,13 +18,34 @@ include:
 #                                   JOBS                                        #
 ################################################################################
 
+
+Fetch config:
+  stage: build
+  image: node:16-alpine
+  script:
+    - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
+    # Estrae il valore PYTHON_BASE_DOCKER_IMAGE dal file di config
+    - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
+    # Scrive i risultati in un file .env
+    - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
+    - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
+  artifacts:
+    paths:
+      - config.env
+    expire_in: 1 day
+
+
 ######################## BUILD RAG IMAGE (KANIKO) ########################
 Build Rag Image:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
+  needs:
+    - job: Fetch config
+      artifacts: true
   script:
+    - source $CI_PROJECT_DIR/config.env
     - echo "=== Configurazione credenziali Kaniko ==="
     - mkdir -p /kaniko/.docker
     - |
@@ -32,23 +53,23 @@ Build Rag Image:
       > /kaniko/.docker/config.json
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
-        echo "[RAG] Build & push come :3.0.0-SNAPSHOT"
+        echo "[RAG] Build & push come :$VERSION"
         /kaniko/executor \
           --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
           --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:3.0.0-SNAPSHOT"
+          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
       elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
         echo "[RAG] Build & push come :merge-request"
         /kaniko/executor \
           --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
           --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:3.0.0-SNAPSHOT"
+          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        echo "[RAG] Feature => build & push :3.0.0-SNAPSHOT"
+        echo "[RAG] Feature => build & push :$VERSION"
         /kaniko/executor \
           --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
           --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:3.0.0-SNAPSHOT"
+          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
       fi
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -60,15 +81,16 @@ Build Rag Image:
 
 ######################## CONTAINER SCANNING RAG #########################
 Container Scanning Rag:
-  dependencies: [Build Rag Image]
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE
+  needs:
+    - job: Fetch config
+      artifacts: true
   variables:
     CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     GIT_STRATEGY: fetch
     REGISTRY_COMPONENT_NAME: "rag-module"
-    VERSION: "3.0.0-SNAPSHOT"  # Da definire meglio la versione (viene gestita sopra)
   allow_failure: true
   artifacts:
     reports:
@@ -79,7 +101,7 @@ Container Scanning Rag:
       - gl-dependency-scanning-report.json
       - "**/gl-sbom-*.cdx.json"
   before_script:
-    - export VERSION="3.0.0-SNAPSHOT"
+    - source $CI_PROJECT_DIR/config.env
     - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
     - echo "Using version $VERSION"
   script:
