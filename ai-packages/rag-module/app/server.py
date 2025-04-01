@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 from opensearchpy import OpenSearch
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
+from phoenix.otel import register
 
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils.keycloak import unauthorized_response, verify_token
@@ -25,8 +26,18 @@ GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
 CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 00 * * *")
+ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
+ARIZE_PHOENIX_ENDPOINT = os.getenv(
+    "ARIZE_PHOENIX_ENDPOINT", "http://127.0.0.1:6006/v1/traces"
+)
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
+
+tracer_provider = register(
+    project_name=ARIZE_PHOENIX_PROJECT_NAME,
+    endpoint=ARIZE_PHOENIX_ENDPOINT,
+    auto_instrument=True,
+)
 
 
 @asynccontextmanager
