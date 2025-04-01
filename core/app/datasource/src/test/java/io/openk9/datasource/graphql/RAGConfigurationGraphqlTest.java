@@ -8,14 +8,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.mutiny.ext.web.client.WebClient;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -39,6 +36,9 @@ public class RAGConfigurationGraphqlTest {
 	private static final String ENTITY_NAME_PREFIX = "RAGConfigurationGraphqlTest - ";
 	private static final int CHUNK_WINDOW_VALUE = 1500;
 	private static final int CHUNK_WINDOW_VALUE_UPDATED = 3000;
+	private static final Integer DEFAULT_CHUNK_WINDOW = 0;
+	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
+	private static final Boolean DEFAULT_REFORMULATE = false;
 	private static final String ENTITY = "entity";
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
@@ -101,28 +101,9 @@ public class RAGConfigurationGraphqlTest {
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	@Inject
-	WebClient webClient;
-
 	@BeforeEach
 	void setup() {
 		createRAGConfigurationTwo();
-	}
-
-	@Test
-	@Disabled
-	void schema() {
-
-		var res = webClient.request(
-				HttpMethod.GET,
-				8081,
-				"localhost",
-				"/api/datasource/graphql/schema.graphql"
-			)
-			.send().await().indefinitely();
-
-		System.out.printf("Schema:\n%s", res.bodyAsString());
-
 	}
 
 	@Test
@@ -188,7 +169,71 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPromptNoRag());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationOne.getChunkWindow());
-		assertTrue(ragConfigurationOne.isReformulate());
+		assertTrue(ragConfigurationOne.getReformulate());
+
+		removeRAGConfigurationOne();
+	}
+
+	@Test
+	void should_create_rag_configuration_one_with_only_name_and_type() throws ExecutionException, InterruptedException {
+
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					RAG_CONFIGURATION,
+					args(
+						arg(
+							RAG_CONFIGURATION_DTO,
+							inputObject(
+								prop(NAME, RAG_CONFIGURATION_ONE_NAME),
+								prop(TYPE, RAGType.CHAT)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME),
+						field(TYPE),
+						field(PROMPT),
+						field(REPHRASE_PROMPT),
+						field(PROMPT_NO_RAG),
+						field(RAG_TOOL_DESCRIPTION),
+						field(CHUNK_WINDOW),
+						field(REFORMULATE)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response:\n%s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+
+		assertNotNull(ragConfigurationResponse);
+		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
+
+		var ragConfigurationOne = getRagConfigurationOne();
+
+		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
+		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+
+		removeRAGConfigurationOne();
 	}
 
 	@Test
@@ -204,7 +249,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
-		assertTrue(initialRagConfigurationTwo.isReformulate());
+		assertTrue(initialRagConfigurationTwo.getReformulate());
 
 		var mutation = document(
 			operation(
@@ -268,7 +313,81 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
-		assertFalse(ragConfigurationTwo.isReformulate());
+		assertFalse(ragConfigurationTwo.getReformulate());
+	}
+
+	@Test
+	void should_patch_rag_configuration_two_with_no_fields() throws ExecutionException, InterruptedException {
+
+		// check initial state
+		var initialRagConfigurationTwo = getRagConfigurationTwo();
+
+		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
+		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
+		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
+		assertTrue(initialRagConfigurationTwo.getReformulate());
+
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					RAG_CONFIGURATION,
+					args(
+						arg(ID, initialRagConfigurationTwo.getId()),
+						arg(PATCH, true),
+						arg(
+							RAG_CONFIGURATION_DTO,
+							inputObject(
+								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
+								prop(TYPE, RAGType.CHAT)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME),
+						field(TYPE),
+						field(PROMPT),
+						field(REPHRASE_PROMPT),
+						field(PROMPT_NO_RAG),
+						field(RAG_TOOL_DESCRIPTION),
+						field(CHUNK_WINDOW),
+						field(REFORMULATE)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response:\n%s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+
+		assertNotNull(ragConfigurationResponse);
+		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
+
+		var ragConfigurationTwo = getRagConfigurationTwo();
+
+		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
+		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getPrompt());
+		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getRephrasePrompt());
+		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getPromptNoRag());
+		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getRagToolDescription());
+		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationTwo.getChunkWindow());
+		assertTrue(ragConfigurationTwo.getReformulate());
 	}
 
 	@Test
@@ -284,7 +403,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
-		assertTrue(initialRagConfigurationTwo.isReformulate());
+		assertTrue(initialRagConfigurationTwo.getReformulate());
 
 		var mutation = document(
 			operation(
@@ -348,7 +467,81 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
-		assertFalse(ragConfigurationTwo.isReformulate());
+		assertFalse(ragConfigurationTwo.getReformulate());
+	}
+
+	@Test
+	void should_update_rag_configuration_two_with_no_fields() throws ExecutionException, InterruptedException {
+
+		// check initial state
+		var initialRagConfigurationTwo = getRagConfigurationTwo();
+
+		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
+		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
+		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
+		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
+		assertTrue(initialRagConfigurationTwo.getReformulate());
+
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					RAG_CONFIGURATION,
+					args(
+						arg(ID, initialRagConfigurationTwo.getId()),
+						arg(PATCH, false),
+						arg(
+							RAG_CONFIGURATION_DTO,
+							inputObject(
+								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
+								prop(TYPE, RAGType.CHAT)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME),
+						field(TYPE),
+						field(PROMPT),
+						field(REPHRASE_PROMPT),
+						field(PROMPT_NO_RAG),
+						field(RAG_TOOL_DESCRIPTION),
+						field(CHUNK_WINDOW),
+						field(REFORMULATE)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response:\n%s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+
+		assertNotNull(ragConfigurationResponse);
+		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
+
+		var ragConfigurationTwo = getRagConfigurationTwo();
+
+		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
+		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRephrasePrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPromptNoRag());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRagToolDescription());
+		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationTwo.getChunkWindow());
+		assertEquals(DEFAULT_REFORMULATE, ragConfigurationTwo.getReformulate());
 	}
 
 	@AfterEach
@@ -394,14 +587,25 @@ public class RAGConfigurationGraphqlTest {
 			.indefinitely();
 	}
 
+	private RAGConfiguration removeRAGConfigurationOne() {
+		var ragConfiguration = getRagConfigurationOne();
+
+		return sessionFactory.withTransaction(
+				session ->
+					ragConfigurationService.deleteById(session, ragConfiguration.getId())
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private RAGConfiguration removeRAGConfigurationTwo() {
 		var ragConfiguration = getRagConfigurationTwo();
 
 		return sessionFactory.withTransaction(
-			session ->
-				ragConfigurationService.deleteById(session, ragConfiguration.getId())
-		)
-		.await()
-		.indefinitely();
+				session ->
+					ragConfigurationService.deleteById(session, ragConfiguration.getId())
+			)
+			.await()
+			.indefinitely();
 	}
 }

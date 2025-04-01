@@ -6,9 +6,11 @@ import io.openk9.datasource.model.dto.RAGConfigurationDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -17,6 +19,9 @@ public class RAGConfigurationServiceTest {
 
 	private static final String ENTITY_NAME_PREFIX = "RAGConfigurationServiceTest - ";
 	private static final int CHUNK_WINDOW = 1500;
+	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
+	private static final Boolean DEFAULT_REFORMULATE = false;
+	private static final int DEFAULT_VALUE_CHUNK_WINDOW = 0;
 	private static final String PROMPT_EXAMPLE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sit" +
 		" amet diam a lorem aliquam pellentesque. Morbi dapibus porttitor quam, id porta elit ultrices vel." +
 		" Donec eget ex rutrum, rutrum lectus eget, molestie libero. Nunc at commodo odio. Proin tempus ipsum ac" +
@@ -50,6 +55,7 @@ public class RAGConfigurationServiceTest {
 		" pellentesque neque tincidunt enim bibendum bibendum. Vestibulum ante ipsum primis in faucibus orci luctus " +
 		"et ultrices posuere cubilia curae; Morbi consequat et leo sed faucibus.";
 	private static final String RAG_CONFIGURATION_ONE_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 1 ";
+	private static final Logger log = Logger.getLogger(RAGConfigurationServiceTest.class);
 
 	@Inject
 	RAGConfigurationService ragConfigurationService;
@@ -80,7 +86,35 @@ public class RAGConfigurationServiceTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPromptNoRag());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
-		assertTrue(ragConfigurationOne.isReformulate());
+		assertTrue(ragConfigurationOne.getReformulate());
+
+		removeRAGConfigurationOne();
+	}
+
+	@Test
+	void should_create_rag_configuration_one_with_default_fields() {
+		var dto = RAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_ONE_NAME)
+			.type(RAGType.CHAT)
+			.build();
+
+		createRAGConfiguration(dto);
+
+		var ragConfigurationOne = getRAGConfigurationOne();
+
+		assertNotNull(ragConfigurationOne);
+
+		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
+
+		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+
+		removeRAGConfigurationOne();
 	}
 
 	private RAGConfiguration createRAGConfiguration(RAGConfigurationDTO dto) {
@@ -94,6 +128,17 @@ public class RAGConfigurationServiceTest {
 	private RAGConfiguration getRAGConfigurationOne() {
 		return sessionFactory.withTransaction(
 			session -> ragConfigurationService.findByName(session, RAG_CONFIGURATION_ONE_NAME)
+		)
+		.await()
+		.indefinitely();
+	}
+
+	private void removeRAGConfigurationOne() {
+		var ragConfiguration = getRAGConfigurationOne();
+
+		sessionFactory.withTransaction(
+			session ->
+				ragConfigurationService.deleteById(session, ragConfiguration.getId())
 		)
 		.await()
 		.indefinitely();
