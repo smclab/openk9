@@ -1,8 +1,3 @@
-# This scenario creates a single-instance standalone PostgreSQL
-# machine, with the most basic configuration and limited
-# resource to be fit in a local CodeReady Containers environment
-
-
 image:
   # We want latest PostgreSQL 14.x
   tag: 14
@@ -11,15 +6,25 @@ auth:
   ## @param auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user
   ##
   enablePostgresUser: true
+  ## @param auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided
+  ##
+  postgresPassword: "system"
   ## @param auth.username Name for a custom user to create
   ##
-  #username: "openk9"
+  #username: openk9
+  ## @param auth.password Password for the custom user to create. Ignored if `auth.existingSecret` is provided
+  ##
+  #password: openk9
   ## @param auth.database Name for a custom database to create
   ##
-  #database: "openk9"
+  #database: openk9
   ## @param auth.replicationUsername Name of the replication user
   ##
-# replicationUsername: repl_user
+  #replicationUsername: repl_user
+  ## @param auth.replicationPassword Password for the replication user. Ignored if `auth.existingSecret` is provided
+  ##
+  #replicationPassword: ""
+  
   ## @param auth.existingSecret Name of existing secret to use for PostgreSQL credentials. `auth.postgresPassword`, `auth.password`, and `auth.replicationPassword` will be ignored and picked up from this secret. The secret might also contains the key `ldap-password` if LDAP is enabled. `ldap.bind_password` will be ignored and picked from this secret in this case.
   ##
   existingSecret: "postgres-password"
@@ -31,18 +36,6 @@ auth:
     adminPasswordKey: postgres-password
     userPasswordKey: user-password
     replicationPasswordKey: replication-password
- 
-#auth:
-  # enable default "postgres" admin user
-#  enablePostgresUser: true
-  # password for default postgres admin user
-#  postgresPassword: "system"
-  # custom user to create
-#  username: "openk9"
-  # custom user password
-#  password: "openk9"
-  # custom database
-#  database: "openk9"
 
 architecture: standalone
 
@@ -51,22 +44,50 @@ primary:
     args: "--no-locale --encoding=UTF8"
   resources:
     limits: 
-      memory: 512Mi
-      cpu: 250m
+      memory: 2Gi
+      cpu: 1000m
     requests:
-      memory: 256Mi
-      cpu: 250m
-
-  # OpenShift doesn't like static uid/gui
+      memory: 1Gi
+      cpu: 100m
+  persistence:
+    size: 1Gi
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 20
+  readinessProbe:
+    enabled: false 
+    initialDelaySeconds: 20
   podSecurityContext:
+    enabled: true
+    fsGroup: null
+  containerSecurityContext:
     enabled: false
 
-  # OpenShift doesn't like static uid/gui
-  containerSecurityContext:
+volumePermissions:
     enabled: true
-    runAsUser: null
-
-persistence:
-  size: 2Gi
 
 
+serviceAccount:
+  create: false
+  # Rimuovi o commenta il nome del service account se non necessario
+  # name: openk9-postgresql-sa
+
+podSecurityContext:
+  enabled: true
+  fsGroup: null
+
+containerSecurityContext:
+  enabled: false
+
+
+metrics:
+  enabled: false
+
+backup:
+  enabled: false
+  cronjob:
+    podSecurityContext:
+      enabled: true
+      fsGroup: null
+    containerSecurityContext:
+      enabled: false

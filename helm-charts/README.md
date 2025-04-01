@@ -116,12 +116,24 @@ Every helm command assume you are located in root of this repository.
 ### Opensearch v2.15.0
 
 [Opensearch](https://opensearch.org/) is a fondamental element in Openk9. It is used as search engine and vector database, to enable core functionalities of Openk9.
-For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.20.0 is used.
+
+For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.20.0 is used for Kubernetes.
+
+For Openshift [Bitnami Helm Chart](https://github.com/bitnami/charts/tree/opensearch/1.8.0/bitnami/opensearch) is used to handle better system actions.
 
 To proceed add the repository containing the charts to your local helm:
 
+For Kubernetes execute:
+
 ```bash
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/
+```
+
+For OpenShift execute:
+
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 Create a secret with credentials for Opensearch:
@@ -140,13 +152,19 @@ oc -n openk9 create secret generic opensearch-password --from-literal=OPENSEARCH
 
 Install Opensearch
 
-For Kubernetes/OpenShift execute:
+For Kubernetes execute:
 
 ```bash
 helm install opensearch opensearch/opensearch --version 2.20.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
 ```
 
-To customize Opensearch installation follow [chart documentation](https://github.com/opensearch-project/helm-charts/tree/opensearch-2.20.0/charts/opensearch)
+For Openshift execute:
+
+```bash
+helm install opensearch bitnami/opensearch --version 1.8.0 -n openk9 -f 00-base-requirements/01-opensearch/local-crc.yaml
+```
+
+To customize Opensearch installation follow [official chart documentation](https://github.com/opensearch-project/helm-charts/tree/opensearch-2.20.0/charts/opensearch) for Kubernetes or [bitnami chart configuration](https://github.com/bitnami/charts/tree/opensearch/1.8.0/bitnami/opensearch) for Openshift.
 
 #### Verify installation
 
@@ -427,10 +445,16 @@ kubectl -n openk9 create secret generic keycloak-secret \
 
 Install Keycloak
 
-For Kubernetes/OpenShift execute:
+For Kubernetes execute:
 
 ```bash
 helm install keycloak --version 23.0.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-runtime.yaml
+```
+
+For Openshift execute:
+
+```bash
+helm install keycloak --version 23.0.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-crc.yaml
 ```
 
 

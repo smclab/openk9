@@ -1,10 +1,10 @@
 # In OpenShift use Route instead of Ingress
 route:
-  enabled: false
+  enabled: true
   annotations: {}
   host: tenant-manager.local 
   tls:
-    enabled: false
+    enabled: true
     secretName: openk9-tls-star-secret
 
 

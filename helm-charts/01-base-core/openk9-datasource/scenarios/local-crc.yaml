@@ -6,3 +6,8 @@ quarkus:
 ## Keycloak configuration
 keycloak:
   host: "keycloak.openk9.local"  #-TBMD
+
+
+## OpenSearch configuration
+opensearch:
+  host: "opensearch-master-hl"
