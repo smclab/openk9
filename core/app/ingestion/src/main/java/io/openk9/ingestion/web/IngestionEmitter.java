@@ -29,9 +29,6 @@ import io.openk9.ingestion.dto.IngestionPayloadWrapper;
 import io.openk9.ingestion.dto.ResourcesDTO;
 import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.exception.NoSuchQueueException;
-import io.openk9.ingestion.grpc.Binary;
-import io.openk9.ingestion.grpc.IngestionRequest;
-import io.openk9.ingestion.grpc.Resources;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
@@ -75,18 +72,6 @@ public class IngestionEmitter {
 		connect.close();
 	}
 
-	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
-
-		var queueName = ShardingKey.asString(
-			ingestionRequest.getTenantId(),
-			ingestionRequest.getScheduleId());
-
-		emit(createMessage(_of(ingestionRequest)), queueName);
-
-		return CompletableFuture.completedStage(null);
-
-	}
-
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
 		var queueName = ShardingKey.asString(
@@ -116,30 +101,6 @@ public class IngestionEmitter {
 	}
 
 	private ResourcesPayload _dtoToPayload(
-		Resources resources) {
-
-		List<Binary> binaries = resources.getBinaryList();
-
-		List<BinaryPayload> binaryPayloadList;
-
-		if (binaries == null) {
-			binaryPayloadList = List.of();
-		}
-		else {
-			binaryPayloadList =
-				binaries
-					.stream()
-					.map(binaryDTO -> BinaryPayload.of(
-						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
-					))
-					.collect(Collectors.toList());
-		}
-
-		return ResourcesPayload.of(binaryPayloadList);
-	}
-
-	private ResourcesPayload _dtoToPayload(
 		ResourcesDTO resources) {
 
 		List<BinaryDTO> binaries = null;
@@ -165,52 +126,6 @@ public class IngestionEmitter {
 		}
 
 		return ResourcesPayload.of(binaryPayloadList);
-	}
-
-	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
-		return switch (type) {
-			case DOCUMENT -> PayloadType.DOCUMENT;
-			case LAST -> PayloadType.LAST;
-			case HALT -> PayloadType.HALT;
-			case UNRECOGNIZED -> null;
-		};
-	}
-
-	private IngestionPayloadWrapper _of(IngestionRequest dto) {
-
-		Map<String, Object> datasourcePayload =
-			new JsonObject(dto.getDatasourcePayload())
-				.getMap();
-
-		Map<String, List<String>> mappingAcl =
-			dto
-				.getAclMap()
-				.entrySet()
-				.stream()
-				.collect(
-					Collectors.toMap(
-						Map.Entry::getKey,
-						e -> new ArrayList<>(e.getValue().getValueList())
-					)
-				);
-
-		return IngestionPayloadWrapper.of(
-			IngestionPayload.of(
-				UUID.randomUUID().toString(),
-				dto.getDatasourceId(),
-				dto.getContentId(),
-				dto.getParsingDate(),
-				dto.getRawContent(),
-				datasourcePayload,
-				dto.getTenantId(),
-				IngestionUtils.getDocumentTypes(datasourcePayload),
-				_dtoToPayload(dto.getResources()),
-				mappingAcl,
-				dto.getScheduleId(),
-				dto.getLast(),
-				_mapType(dto.getType())
-			)
-		);
 	}
 
 	private IngestionPayloadWrapper _of(IngestionDTO dto) {

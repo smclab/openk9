@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
@@ -26,6 +24,10 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -56,6 +58,9 @@ public class EmbeddingModel extends K9Entity {
 	@OneToOne(mappedBy = "embeddingModel")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
+
+	@Column(name = "vector_size")
+	private Integer vectorSize = 0;
 
 	@Transient
 	private boolean enabled = false;

@@ -17,31 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
-import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.DocTypeFieldService;
-import io.openk9.datasource.service.SuggestionCategoryService;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import jakarta.json.JsonObject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -54,13 +29,36 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
+
+import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
+import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.service.SuggestionCategoryService;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class SuggestionCategoryGraphqlTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SuggestionCategoryGraphqlTest - ";
 
-	private static final String BUCKET = "bucket";
 	private static final String BUCKET_NAME_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
 	private static final String DOC_TYPE_FIELD = "docTypeField";
 	private static final String DOC_TYPE_FIELD_ID = "docTypeFieldId";
@@ -78,6 +76,7 @@ public class SuggestionCategoryGraphqlTest {
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD_DTO = "suggestionCategoryWithDocTypeFieldDTO";
 	private static final String SUGGESTION_CATEGORY_WITH_DOC_TYPE_FIELD = "suggestionCategoryWithDocTypeField";
 	private static final String SUGGESTION_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
+	private static final String BUCKETS = "buckets";
 
 	@Inject
 	BucketService bucketService;
@@ -95,8 +94,7 @@ public class SuggestionCategoryGraphqlTest {
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
 
-	@Test
-	@Order(1)
+	@BeforeEach
 	void setup() {
 		Long suggestionCategoriesCount = allSuggestionCategoryCount();
 
@@ -106,16 +104,12 @@ public class SuggestionCategoryGraphqlTest {
 		createSuggestionCategoryOneWithDocTypeFieldOne();
 		createBucketOne();
 
-		//bind
-		bindBucketOneToSuggestionCategoryOne();
-
 		assertEquals(
 			suggestionCategoriesCount + 1,
 			allSuggestionCategoryCount());
 	}
 
 	@Test
-	@Order(2)
 	void should_return_doc_type_field_when_queried_from_suggestion_category()
 		throws ExecutionException, InterruptedException {
 
@@ -163,7 +157,6 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(3)
 	void should_return_bucket_when_queried_from_suggestion_category()
 		throws ExecutionException, InterruptedException {
 
@@ -181,9 +174,15 @@ public class SuggestionCategoryGraphqlTest {
 					field(ID),
 					field(NAME),
 					field(
-						BUCKET,
-						field(ID),
-						field(NAME)
+						BUCKETS,
+						field(
+							EDGES,
+							field(
+								NODE,
+								field(ID),
+								field(NAME)
+							)
+						)
 					)
 				)
 			)
@@ -203,7 +202,10 @@ public class SuggestionCategoryGraphqlTest {
 			suggestionCategoryOne.getId(),
 			Long.parseLong(suggestionCategoryR.getString(ID)));
 
-		var bucketR = suggestionCategoryR.getJsonObject(BUCKET);
+		var bucketR = suggestionCategoryR.getJsonObject(BUCKETS).getJsonArray(EDGES)
+			.getFirst()
+			.asJsonObject()
+			.getJsonObject(NODE);
 
 		assertNotNull(bucketR);
 		assertEquals(
@@ -213,8 +215,9 @@ public class SuggestionCategoryGraphqlTest {
 	}
 
 	@Test
-	@Order(4)
-	void should_patch_suggestion_category_with_doc_type_field() throws ExecutionException, InterruptedException {
+	void should_patch_suggestion_category_with_doc_type_field()
+		throws ExecutionException, InterruptedException {
+
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeFieldTwoId = getDocTypeFieldTwo().getId();
 
@@ -236,7 +239,8 @@ public class SuggestionCategoryGraphqlTest {
 							)
 						)
 					),
-					field(ENTITY,
+					field(
+						ENTITY,
 						field(ID),
 						field(NAME),
 						field(
@@ -258,18 +262,19 @@ public class SuggestionCategoryGraphqlTest {
 
 		assertEquals(
 			getDocTypeFieldTwo().getId(),
-			suggestionCategoryOnePathed.getDocTypeField().getId());
+			suggestionCategoryOnePathed.getDocTypeField().getId()
+		);
 		assertEquals(
 			DOC_TYPE_FIELD_TWO_NAME,
-			suggestionCategoryOnePathed.getDocTypeField().getName());
+			suggestionCategoryOnePathed.getDocTypeField().getName()
+		);
 	}
 
 	@Test
-	@Order(5)
 	void should_return_doc_type_field_when_queried_from_all_suggestion_categories()
 		throws ExecutionException, InterruptedException {
 
-		var docTypeFieldTwo = getDocTypeFieldTwo();
+		var docTypeFieldOne = getDocTypeFieldOne();
 
 		var query = document(
 			operation(
@@ -317,18 +322,19 @@ public class SuggestionCategoryGraphqlTest {
 
 					assertNotNull(docTypeField);
 					assertEquals(
-						docTypeFieldTwo.getId(),
+						docTypeFieldOne.getId(),
 						Long.parseLong(docTypeField.getString(ID)));
 				}
 			});
 	}
 
-	@Test
-	@Order(6)
+	@AfterEach
 	void tearDown() {
 		var docTypeFieldOne = getDocTypeFieldOne();
 		var docTypeFieldTwo = getDocTypeFieldTwo();
 		var suggestionCategoryOne = getSuggestionCategoryOne();
+
+		unbindBucketOneFromSuggestionCategoryOne();
 
 		suggestionCategoryService.unsetDocTypeField(suggestionCategoryOne.getId())
 			.await().indefinitely();
@@ -341,7 +347,11 @@ public class SuggestionCategoryGraphqlTest {
 
 		docTypeFieldService.deleteById(docTypeFieldTwo.getId())
 			.await().indefinitely();
+
+		var bucketOne = getBucketOne();
+		bucketService.deleteById(bucketOne.getId()).await().indefinitely();
 	}
+
 
 	private Long allSuggestionCategoryCount() {
 		return sessionFactory.withTransaction(
@@ -350,16 +360,6 @@ public class SuggestionCategoryGraphqlTest {
 		)
 		.await()
 		.indefinitely();
-	}
-
-	private void bindBucketOneToSuggestionCategoryOne() {
-		var suggestionCategoryOne = getSuggestionCategoryOne();
-		var bucketOne = getBucketOne();
-
-		sessionFactory.withTransaction(
-			(s, transaction) ->
-				bucketService.addSuggestionCategory(bucketOne.getId(), suggestionCategoryOne.getId())
-		);
 	}
 
 	private void createBucketOne() {
@@ -456,5 +456,18 @@ public class SuggestionCategoryGraphqlTest {
 		)
 		.await()
 		.indefinitely();
+	}
+
+	private void unbindBucketOneFromSuggestionCategoryOne() {
+		var suggestionCategoryOne = getSuggestionCategoryOne();
+		var bucketOne = getBucketOne();
+
+		sessionFactory.withTransaction(
+			(s, transaction) ->
+				bucketService.removeSuggestionCategory(
+					bucketOne.getId(),
+					suggestionCategoryOne.getId()
+				)
+		).await().indefinitely();
 	}
 }

@@ -17,7 +17,11 @@
 
 package io.quarkus.hibernate.reactive;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import jakarta.persistence.EntityManagerFactory;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -25,10 +29,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 public final class SchemaUtil {
 

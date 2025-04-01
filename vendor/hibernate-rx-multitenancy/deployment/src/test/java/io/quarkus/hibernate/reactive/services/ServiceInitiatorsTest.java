@@ -17,17 +17,17 @@
 
 package io.quarkus.hibernate.reactive.services;
 
-import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.reactive.provider.impl.ReactiveServiceInitiators;
-import org.hibernate.service.StandardServiceInitiators;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.reactive.provider.impl.ReactiveServiceInitiators;
+import org.hibernate.service.StandardServiceInitiators;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class ServiceInitiatorsTest {
 

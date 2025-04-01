@@ -1,7 +1,10 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
 stages:
-  - build-image
+  - build
   - container-scanning
-  - deploy
   - restart
 
 variables:
@@ -11,19 +14,16 @@ include:
   - local: '/.gitlab/.gitlab-templates.yaml'
 
 
+################################################################################
+#                                   JOBS                                        #
+################################################################################
 
-
-########################################################
-######################### JOBS #########################
-########################################################
-
+########################## BUILD TIKA OCR IMAGE ##########################
 Build Tika ocr:
   extends: .build_template
   variables:
     COMPONENT: "tika-ocr"
-  stage: build-image
-  before_script:
-    - apt-get update && apt-get install -y maven
+  stage: build
   script:
     - cd core
     - |
@@ -32,14 +32,14 @@ Build Tika ocr:
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
     - |
-      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then                                               
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
+        mvn package $MAVEN_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
       elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+        mvn package $MAVEN_OPTS -pl app/entity-manager -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
+        mvn package $MAVEN_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        ./mvnw package $MAVEN_CLI_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+        mvn package $MAVEN_OPTS -pl app/tika/tika-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
       fi
   artifacts:
     paths:
@@ -59,22 +59,18 @@ Build Tika ocr:
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 
-############## Container scanning ##############
-
+##################### CONTAINER SCANNING TIKA OCR #####################
 Container Scanning Tika ocr:
   dependencies: [Build Tika ocr]
   extends: .container-scanning-template
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tika-ocr"
- rules:
+  rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
 
 
-
-
-############## Restart ##############
-
+######################## TRIGGER RESTART TIKA OCR ######################
 Trigger Restart Tika ocr:
   image: alpine:latest
   stage: restart
@@ -105,4 +101,3 @@ Trigger Restart Tika ocr:
       when: never
     # Caso 4: Quando il commit è fatto su una feature branch che rispetta il pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-

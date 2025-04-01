@@ -17,8 +17,12 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,23 +35,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Ignore;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "bucket")
@@ -122,13 +122,15 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
 
-	@OneToMany(mappedBy = "bucket", cascade = {
+	@ManyToMany(cascade = {
 		jakarta.persistence.CascadeType.PERSIST,
 		jakarta.persistence.CascadeType.MERGE,
 		jakarta.persistence.CascadeType.REFRESH,
 		jakarta.persistence.CascadeType.DETACH
-	}
-	)
+	})
+	@JoinTable(name = "buckets_suggestion_categories",
+		joinColumns = @JoinColumn(name = "bucket_id"),
+		inverseJoinColumns = @JoinColumn(name = "suggestion_category_id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<SuggestionCategory> suggestionCategories
@@ -241,7 +243,6 @@ public class Bucket extends K9Entity {
 		}
 
 		suggestionCategories.add(suggestionCategory);
-		suggestionCategory.setBucket(this);
 
 		return true;
 
@@ -256,7 +257,6 @@ public class Bucket extends K9Entity {
 			SuggestionCategory suggestionCategory = iterator.next();
 			if (suggestionCategory.getId() == suggestionCategoryId) {
 				iterator.remove();
-				suggestionCategory.setBucket(null);
 				return true;
 			}
 		}

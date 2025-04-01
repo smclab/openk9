@@ -1,0 +1,37 @@
+# This scenario creates a single-instance standalone Neo4j
+# machine, with the most basic configuration and limited
+# resource to be fit in a local K3s/Minukube environment
+###############################################################
+
+core:
+  standalone: true
+  numberOfServers: 1
+  persistentVolume:
+    size: 10Gi
+  resources:
+    limits:
+      cpu: "500m"
+      memory: 6Gi
+    requests:
+      cpu: "100m"
+      memory: 512Mi
+  discoveryService:
+    instances: [0]
+
+dbms:
+    memory:
+        use_memrec: false
+        heap:
+            initial_size: 1G
+            max_size: 1G
+        pagecache:
+            size: 1G
+        transaction:
+            memory_allocation: ON_HEAP
+            max_size: 1G
+            global_max_size: 1G
+
+
+acceptLicenseAgreement: "yes"
+neo4jPassword: openk9
+defaultDatabase: "neo4j"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "adminer.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "adminer.labels" . | nindent 4 }}
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.port }}
+  selector:
+    app: adminer
+  selector: {{- include "adminer.selectorLabels" . | nindent 4 }}
+  type: {{ .Values.service.type }}

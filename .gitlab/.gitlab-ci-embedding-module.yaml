@@ -1,0 +1,180 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
+stages:
+  - build
+  - container-scanning
+
+variables:
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
+
+include:
+  - local: '/.gitlab/.gitlab-templates.yaml'
+
+
+################################################################################
+#                                   JOBS                                        #
+################################################################################
+
+Fetch config:
+  stage: build
+  image: node:16-alpine
+  script:
+    - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
+    # Estrae il valore PYTHON_BASE_DOCKER_IMAGE dal file di config
+    - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
+    # Scrive i risultati in un file .env
+    - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
+    - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
+  artifacts:
+    paths:
+      - config.env
+    expire_in: 1 day
+
+
+
+
+
+######################## BUILD EMBEDDING OPENAI ########################
+Build Embedding OpenAI:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  needs:
+    - job: Fetch config
+      artifacts: true
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    HOME: "/tmp"
+  script:
+    - source $CI_PROJECT_DIR/config.env
+    #stampa config.env
+    - cat $CI_PROJECT_DIR/config.env
+    - echo "=== Configurazione credenziali Kaniko ==="
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+      > /kaniko/.docker/config.json
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
+          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
+      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
+          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
+      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
+          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+
+
+####################### BUILD EMBEDDING SENTENCE TRANSFORMER #######################
+#Fa fetch della versione, ma ora è inutile in quanto non fa push
+Build Embedding ST:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  needs:
+    - job: Fetch config
+      artifacts: true
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    HOME: "/tmp"
+  script:
+    - source $CI_PROJECT_DIR/config.env
+    #stampa config.env
+    - cat $CI_PROJECT_DIR/config.env
+    - echo "=== Configurazione credenziali Kaniko ==="
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+      > /kaniko/.docker/config.json
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
+          --no-push \
+          --compressed-caching=false \
+          --cleanup
+      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
+          --no-push \
+          --compressed-caching=false \
+          --cleanup
+      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
+          --no-push \
+          --compressed-caching=false \
+          --cleanup
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+
+
+###################### CONTAINER SCANNING EMBEDDING OPENAI ######################
+Container Scanning Embedding OpenAI:
+  stage: container-scanning
+  image: $CS_ANALYZER_IMAGE
+  variables:
+    CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
+    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    GIT_STRATEGY: fetch
+    REGISTRY_COMPONENT_NAME: "embedding-openai"
+  allow_failure: true
+  needs:
+    - job: Fetch config
+      artifacts: true
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+      cyclonedx: "**/gl-sbom-*.cdx.json"
+    paths:
+      - gl-container-scanning-report.json
+      - gl-dependency-scanning-report.json
+      - "**/gl-sbom-*.cdx.json"
+  before_script:
+    - source $CI_PROJECT_DIR/config.env
+    - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Using version $VERSION"
+  script:
+    - gtcs scan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+##############  SCANNING: ST (commentato perché troppo pesante)  ##############
+# Container Scanning Embedding ST:
+#   extends: .container-scanning-template
+#   dependencies: [Build Embedding ST]
+#   variables:
+#     REGISTRY_COMPONENT_NAME: "embedding-st"
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main"'

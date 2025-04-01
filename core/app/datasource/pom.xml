@@ -26,9 +26,8 @@
   <artifactId>datasource</artifactId>
   <name>OpenK9 :: App :: Datasource</name>
   <properties>
-    <cron-utils.version>9.2.1</cron-utils.version>
     <pekko.management.version>1.1.0</pekko.management.version>
-    <lucene.version>9.12.0</lucene.version>
+	  <lucene.version>9.12.1</lucene.version>
     <zstd-jni.version>1.5.6-3</zstd-jni.version>
   </properties>
   <dependencies>
@@ -67,11 +66,6 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-validator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.cronutils</groupId>
-      <artifactId>cron-utils</artifactId>
-      <version>${cron-utils.version}</version>
     </dependency>
 
     <dependency>
@@ -300,39 +294,47 @@
 
     <!-- // Test dependencies -->
 
-    <dependency>
-      <groupId>org.wiremock</groupId>
-      <artifactId>wiremock</artifactId>
-      <scope>test</scope>
-      <version>3.9.2</version>
-    </dependency>
+	  <dependency>
+		  <groupId>org.wiremock</groupId>
+		  <artifactId>wiremock</artifactId>
+		  <scope>test</scope>
+		  <version>3.9.2</version>
+	  </dependency>
 
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>datasource-model</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-liquibase</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>io.quarkus</groupId>
-          <artifactId>quarkus-agroal</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-graphql-client</artifactId>
-      <scope>test</scope>
-    </dependency>
+	  <dependency>
+		  <groupId>io.openk9.common</groupId>
+		  <artifactId>datasource-model</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-liquibase</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-jdbc-postgresql</artifactId>
+		  <scope>test</scope>
+		  <exclusions>
+			  <exclusion>
+				  <groupId>io.quarkus</groupId>
+				  <artifactId>quarkus-agroal</artifactId>
+			  </exclusion>
+		  </exclusions>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-graphql-client</artifactId>
+		  <scope>test</scope>
+	  </dependency>
+
+	  <!--	in order to activate elasticsearch dev-service,
+	  		we need to add an elasticsearch extension -->
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-elasticsearch-rest-client</artifactId>
+		  <scope>test</scope>
+	  </dependency>
 
     <!-- Test dependencies // -->
 

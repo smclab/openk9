@@ -17,17 +17,65 @@
 
 package io.openk9.datasource.model.dto;
 
+import java.util.Set;
+
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.validation.json.Json;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
+
+import io.smallrye.graphql.api.Nullable;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 @NoArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DataIndexDTO extends K9EntityDTO {
+
+	@Nullable
+	@Builder.Default
+	@Description("""
+		Define if this index is a knn index, this property enables
+		vector similarity search features on this DataIndex.""")
+	private Boolean knnIndex = false;
+
+	@Nullable
+	@Description("The number of chunks before and after every chunk.")
+	private Integer chunkWindowSize;
+
+	@Nullable
+	@Description("The chunk strategy to apply.")
+	private EmbeddingOuterClass.ChunkType chunkType;
+
+	@Nullable
+	@Description(
+		"""
+			The field used during the text embedding,
+			must be a valid docTypeFieldId.
+			""")
+	private Long embeddingDocTypeFieldId;
+
+	@Json
+	@Nullable
+	@Description("The configurations used by the embedding model, if needed.")
+	private String embeddingJsonConfig;
+
+	@Nullable
+	@Description("The list of documentType ids that the dataIndex is composed of.")
+	private Set<Long> docTypeIds;
+
+	@Json
+	@Nullable
+	@Description("The settings that will be used when the associated indexTemplate is created.")
+	private String settings;
+
 }

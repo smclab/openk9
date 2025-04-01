@@ -17,16 +17,27 @@
 
 package io.openk9.datasource.pipeline.service;
 
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletionStage;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.client.grpc.common.StructUtils;
+import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.model.Scheduler_;
+import io.openk9.datasource.service.EmbeddingModelService;
+import io.openk9.datasource.util.QuarkusCacheUtil;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
+
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import io.openk9.client.grpc.common.StructUtils;
-import io.openk9.datasource.actor.EventBusInstanceHolder;
-import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.Scheduler_;
-import io.openk9.datasource.model.VectorIndex;
-import io.openk9.datasource.util.QuarkusCacheUtil;
-import io.openk9.ml.grpc.EmbeddingOuterClass;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -34,16 +45,8 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class EmbeddingService {
@@ -53,165 +56,13 @@ public class EmbeddingService {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@CacheName("bucket-resource")
 	Cache cache;
 
 	private static final Logger log = Logger.getLogger(EmbeddingService.class);
-
-	protected static Map<String, Object> getMetadataMap(
-		DocumentContext documentContext, String metadataMapping) {
-
-		var metadata = new HashMap<String, Object>() {};
-
-		if (metadataMapping == null) {
-			return metadata;
-		}
-
-		for (String expression : metadataMapping.split(";")) {
-
-			expression = expression.trim();
-			var splits = expression.split("\\.");
-
-			var key = splits[splits.length - 1];
-
-			var paths = Arrays.copyOfRange(splits, 1, splits.length - 1);
-
-			var value = documentContext.read(expression);
-
-			traverse(paths, metadata, key, value);
-
-		}
-
-		return metadata;
-	}
-
-	protected static byte[] mapToPayload(
-		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
-		String indexName, String contentId, String title, String url,
-		Map<String, Object> acl, Map<String, Object> metadataMap,
-		int windowSize) {
-
-		var jsonArray = new JsonArray();
-
-		var chunks = embeddingResponse.getChunksList();
-
-		for (EmbeddingOuterClass.ResponseChunk responseChunk : chunks) {
-
-			var number = responseChunk.getNumber();
-			var total = responseChunk.getTotal();
-			var chunkText = responseChunk.getText();
-			var vector = responseChunk.getVectorsList();
-
-			var jsonObject = mapToJsonObject(
-				indexName, contentId, title, url,
-				acl, metadataMap,
-				number, total, chunkText, vector
-			);
-
-			var previous = getPrevious(windowSize, number, chunks)
-				.stream().map(it -> mapToJsonObject(
-						indexName, contentId, title, url,
-						acl, metadataMap,
-						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
-					)
-				);
-
-			var next = getNext(windowSize, number, total, chunks)
-				.stream().map(it -> mapToJsonObject(
-						indexName, contentId, title, url,
-						acl, metadataMap,
-						it.getNumber(), it.getTotal(), it.getText(), it.getVectorsList()
-					)
-				);
-
-			jsonObject.put("previous", previous);
-			jsonObject.put("next", next);
-
-			jsonArray.add(jsonObject);
-
-		}
-
-		return jsonArray.toBuffer().getBytes();
-	}
-
-	protected static <T> List<T> getPrevious(
-		int windowSize, int number, List<T> chunks) {
-
-		var fromIndex = Math.max(number - 1 - windowSize, 0);
-		var toIndex = Math.min(number - 1 + windowSize, number - 1);
-
-		return chunks.subList(fromIndex, toIndex);
-	}
-
-	protected static <T> List<T> getNext(
-		int windowSize, int number, int total, List<T> chunks) {
-
-		var fromIndex = Math.max(number, 0);
-		var toIndex = Math.min(fromIndex + windowSize, total);
-
-		return chunks.subList(fromIndex, toIndex);
-	}
-
-	private static JsonObject mapToJsonObject(
-		String indexName,
-		String contentId,
-		String title,
-		String url,
-		Map<String, Object> acl,
-		Map<String, Object> metadataMap,
-		int number,
-		int total,
-		String chunkText,
-		List<Float> vector) {
-
-		var jsonObject = new JsonObject();
-
-		jsonObject.put("number", number);
-		jsonObject.put("total", total);
-		jsonObject.put("chunkText", chunkText);
-		jsonObject.put("vector", vector);
-		jsonObject.put("indexName", indexName);
-		jsonObject.put("contentId", contentId);
-		jsonObject.put("title", title);
-		jsonObject.put("url", url);
-
-		if (acl == null || acl.isEmpty()) {
-			jsonObject.put("acl", Map.of("public", true));
-		}
-		else {
-			jsonObject.put("acl", acl);
-		}
-
-		for (Map.Entry<String, Object> entry : metadataMap.entrySet()) {
-
-			jsonObject.put(entry.getKey(), entry.getValue());
-
-		}
-		return jsonObject;
-	}
-
-	private static void traverse(
-		String[] paths, Map<String, Object> root, String key, Object value) {
-
-		for (String path : paths) {
-
-			var nextRoot = (Map<String, Object>) root.computeIfAbsent(
-				path,
-				k -> new HashMap<String, Object>()
-			);
-
-			var nextPaths = Arrays.copyOfRange(paths, 1, paths.length);
-
-			traverse(nextPaths, nextRoot, key, value);
-
-			return;
-
-		}
-
-		root.put(key, value);
-
-	}
 
 	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
@@ -232,24 +83,22 @@ public class EmbeddingService {
 				var jsonConfig = configurations.jsonConfig() != null
 					? configurations.jsonConfig()
 					: "{}";
-				var chunkType = mapChunkType(configurations);
+				var chunkType = configurations.chunkType();
 				var windowSize = configurations.chunkWindowSize();
 
 				var documentContext = JsonPath
 					.using(Configuration.defaultConfiguration())
 					.parseUtf8(payload);
 
-				String text = documentContext.read(configurations.fieldJsonPath);
-				String title = documentContext.read(configurations.fieldTitle);
-				String url = documentContext.read(configurations.fieldUrl);
-
-				String contentId = documentContext.read("$.contentId");
-				Map<String, Object> acl = documentContext.read("$.acl");
-
-				var metadataMap = getMetadataMap(
-					documentContext,
-					configurations.metadataMapping()
+				var docTypeField = Objects.requireNonNull(
+					configurations.docTypeField(),
+					"The source field for text embedding is not specified."
 				);
+
+				var docTypeFieldJsonPath = "$." + docTypeField.getPath();
+
+				String text = documentContext.read(docTypeFieldJsonPath);
+				var root = getRoot(documentContext);
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
 						.newBuilder()
@@ -261,12 +110,100 @@ public class EmbeddingService {
 						.setText(text)
 						.build())
 					.map(embeddingResponse -> EmbeddingService.mapToPayload(
-							embeddingResponse, indexName, contentId, title, url,
-							acl, metadataMap, windowSize
-						)
+						embeddingResponse, indexName, root, windowSize)
 					);
 			})
 			.subscribeAsCompletionStage();
+	}
+
+	protected static <T> List<T> getNext(
+		int windowSize, int number, int total, List<T> chunks) {
+
+		var fromIndex = Math.max(number, 0);
+		var toIndex = Math.min(fromIndex + windowSize, total);
+
+		return chunks.subList(fromIndex, toIndex);
+	}
+
+	protected static <T> List<T> getPrevious(
+		int windowSize, int number, List<T> chunks) {
+
+		var fromIndex = Math.max(number - 1 - windowSize, 0);
+		var toIndex = Math.min(number - 1 + windowSize, number - 1);
+
+		return chunks.subList(fromIndex, toIndex);
+	}
+
+	protected static Map<String, Object> getRoot(DocumentContext documentContext) {
+
+		return documentContext.read("$");
+	}
+
+	protected static byte[] mapToPayload(
+		EmbeddingOuterClass.EmbeddingResponse embeddingResponse,
+		String indexName,
+		Map<String, Object> root,
+		int windowSize) {
+
+		var jsonArray = new JsonArray();
+
+		var chunks = embeddingResponse.getChunksList();
+
+		for (EmbeddingOuterClass.ResponseChunk responseChunk : chunks) {
+
+			var number = responseChunk.getNumber();
+			var total = responseChunk.getTotal();
+			var chunkText = responseChunk.getText();
+			var vector = responseChunk.getVectorsList();
+
+			var jsonObject = mapToJsonObject(
+				indexName, root, number, total, chunkText, vector);
+
+			var previous = getPrevious(windowSize, number, chunks)
+				.stream().map(it -> mapToJsonObject(
+					indexName, root, it.getNumber(), it.getTotal(),
+					it.getText(), it.getVectorsList()
+				));
+
+			var next = getNext(windowSize, number, total, chunks)
+				.stream().map(it -> mapToJsonObject(
+					indexName, root, it.getNumber(), it.getTotal(),
+					it.getText(), it.getVectorsList()
+				));
+
+			jsonObject.put("previous", previous);
+			jsonObject.put("next", next);
+
+			jsonArray.add(jsonObject);
+
+		}
+
+		return jsonArray.toBuffer().getBytes();
+	}
+
+	private static JsonObject mapToJsonObject(
+		String indexName,
+		Map<String, Object> root,
+		int number,
+		int total,
+		String chunkText,
+		List<Float> vector) {
+
+		var jsonObject = new JsonObject();
+
+		jsonObject.put("number", number);
+		jsonObject.put("total", total);
+		jsonObject.put("chunkText", chunkText);
+		jsonObject.put("vector", vector);
+		jsonObject.put("indexName", indexName);
+
+		for (Map.Entry<String, Object> entry : root.entrySet()) {
+
+			jsonObject.put(entry.getKey(), entry.getValue());
+
+		}
+
+		return jsonObject;
 	}
 
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
@@ -296,25 +233,28 @@ public class EmbeddingService {
 			cache,
 			new CompositeCacheKey(request),
 			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-				getEmbeddingConfiguration(request.tenantId)
+					getEmbeddingConfiguration(s, request.tenantId)
 					.onItem().ifNull().failWith(ConfigurationNotFound::new)
 					.flatMap(embeddingConfiguration -> s.createNamedQuery(
-							VectorIndex.FETCH_BY_SCHEDULE_ID, VectorIndex.class)
-						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId)
+							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+						.setPlan(s.getEntityGraph(
+							Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
+						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId())
 						.getSingleResultOrNull()
-						.onItem().ifNull().failWith(VectorIndexNotFound::new)
-						.map(vectorIndex -> new EmbeddingChunksConfiguration(
-							embeddingConfiguration.apiUrl(),
-							embeddingConfiguration.apiKey(),
-							vectorIndex.getTextEmbeddingField(),
-							vectorIndex.getTitleField(),
-							vectorIndex.getUrlField(),
-							vectorIndex.getMetadataMapping(),
-							vectorIndex.getChunkType(),
-							vectorIndex.getChunkWindowSize(),
-							vectorIndex.getJsonConfig(),
-							vectorIndex.getDataIndex().getIndexName()
-						))
+						.map(scheduler -> {
+
+							var dataIndex = scheduler.getDataIndex();
+
+							return new EmbeddingChunksConfiguration(
+								embeddingConfiguration.apiUrl(),
+								embeddingConfiguration.apiKey(),
+								dataIndex.getEmbeddingDocTypeField(),
+								dataIndex.getChunkType(),
+								dataIndex.getChunkWindowSize(),
+								dataIndex.getEmbeddingJsonConfig(),
+								dataIndex.getIndexName()
+							);
+						})
 					))
 				.onFailure(EmbeddingServiceException.class)
 				.invoke(throwable -> log.warnf(
@@ -324,20 +264,13 @@ public class EmbeddingService {
 					)
 				)
 				.onFailure()
+				.invoke(throwable -> log.error(
+					"Something went wrong when trying to get Embedding chunks configuration",
+					throwable
+				))
+				.onFailure()
 				.recoverWithNull()
 		);
-	}
-
-	private static EmbeddingOuterClass.ChunkType mapChunkType(EmbeddingChunksConfiguration configurations) {
-		return switch (configurations.chunkType()) {
-			case DEFAULT -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
-			case TEXT_SPLITTER -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TEXT_SPLITTER;
-			case TOKEN_TEXT_SPLITTER ->
-				EmbeddingOuterClass.ChunkType.CHUNK_TYPE_TOKEN_TEXT_SPLITTER;
-			case CHARACTER_TEXT_SPLITTER ->
-				EmbeddingOuterClass.ChunkType.CHUNK_TYPE_CHARACTER_TEXT_SPLITTER;
-			case SEMANTIC_SPLITTER -> EmbeddingOuterClass.ChunkType.CHUNK_TYPE_SEMANTIC_SPLITTER;
-		};
 	}
 
 	private record EmbeddingChunksConfigurationRequest(String tenantId, String scheduleId) {}
@@ -345,50 +278,56 @@ public class EmbeddingService {
 	public record EmbeddingChunksConfiguration(
 		String apiUrl,
 		String apiKey,
-		String fieldJsonPath,
-		String fieldTitle,
-		String fieldUrl,
-		String metadataMapping,
-		VectorIndex.ChunkType chunkType,
+		DocTypeField docTypeField,
+		EmbeddingOuterClass.ChunkType chunkType,
 		int chunkWindowSize,
 		String jsonConfig,
 		String indexName
 	) {}
 
-	public record EmbeddingConfiguration(
-		String apiUrl,
-		String apiKey
-	) {}
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+		return sessionFactory.withTransaction(
+			tenantId, (s, t) ->
+				getEmbeddingConfiguration(s, tenantId)
+		);
+	}
 
 	public record EmbeddedText(
 		List<Float> vector
 	) {}
 
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
+	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(
+		Mutiny.Session session,
+		String tenantId) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(tenantId),
-			sessionFactory.withTransaction(
-				tenantId, (s, t) -> s
-					.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-					.getSingleResult()
-					.map(embeddingModel -> new EmbeddingConfiguration(
-						embeddingModel.getApiUrl(),
-						embeddingModel.getApiKey()
-					))
-					.onFailure()
-					.invoke(throwable ->
-						log.warnf(
-							throwable,
-							"Cannot fetch current embedding model for tenantId %s",
-							tenantId
-						)
+			embeddingModelService.fetchCurrent(session)
+				.map(EmbeddingConfiguration::map)
+				.onFailure()
+				.invoke(throwable ->
+					log.warnf(
+						throwable,
+						"Cannot fetch current embedding model for tenantId %s",
+						tenantId
 					)
-					.onFailure()
-					.recoverWithNull()
-			)
+				)
+				.onFailure()
+				.recoverWithNull()
 		);
 
 	}
+
+	public record EmbeddingConfiguration(
+		String apiUrl,
+		String apiKey
+	) {
+
+		public static EmbeddingConfiguration map(EmbeddingModel model) {
+			return new EmbeddingConfiguration(model.getApiUrl(), model.getApiKey());
+		}
+
+	}
+
 }

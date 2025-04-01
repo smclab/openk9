@@ -16,6 +16,7 @@ from app.utils.llm import (
 
 
 def get_chain(
+    search_query,
     range_values,
     after_key,
     suggest_keyword,
@@ -29,7 +30,6 @@ def get_chain(
     virtual_host,
     question,
     reformulate,
-    rerank,
     reranker_api_url,
     opensearch_host,
     grpc_host,
@@ -39,8 +39,10 @@ def get_chain(
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
     retrieve_type = configuration["retrieve_type"]
+    rerank = configuration["rerank"]
 
     retriever = OpenSearchRetriever(
+        search_query=search_query,
         search_text=question,
         rerank=rerank,
         reranker_api_url=reranker_api_url,
@@ -77,9 +79,6 @@ def get_chain(
     for chunk in chain.stream({"question": question, "context": documents}):
         yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
-    for element in documents:
-        yield json.dumps({"chunk": dict(element.metadata), "type": "DOCUMENT"})
-
     yield json.dumps({"chunk": "", "type": "END"})
 
 
@@ -98,12 +97,10 @@ def get_chat_chain(
     search_text,
     chat_id,
     user_id,
+    chat_history,
     timestamp,
     chat_sequence_number,
-    retrieve_citations,
-    rerank,
     reranker_api_url,
-    chunk_window,
     opensearch_host,
     grpc_host,
 ):
@@ -111,9 +108,7 @@ def get_chat_chain(
 
     yield from stream_rag_conversation(
         search_text,
-        rerank,
         reranker_api_url,
-        chunk_window,
         range_values,
         after_key,
         suggest_keyword,
@@ -129,9 +124,9 @@ def get_chat_chain(
         grpc_host,
         chat_id,
         user_id,
+        chat_history,
         timestamp,
         chat_sequence_number,
-        retrieve_citations,
         configuration,
     )
 
@@ -160,12 +155,10 @@ def get_chat_chain_tool(
     search_text,
     chat_id,
     user_id,
+    chat_history,
     timestamp,
     chat_sequence_number,
-    retrieve_citations,
-    rerank,
     reranker_api_url,
-    chunk_window,
     opensearch_host,
     grpc_host,
 ):
@@ -182,9 +175,7 @@ def get_chat_chain_tool(
     if llm_with_tools_response.tool_calls:
         yield from stream_rag_conversation(
             search_text,
-            rerank,
             reranker_api_url,
-            chunk_window,
             range_values,
             after_key,
             suggest_keyword,
@@ -200,9 +191,9 @@ def get_chat_chain_tool(
             grpc_host,
             chat_id,
             user_id,
+            chat_history,
             timestamp,
             chat_sequence_number,
-            retrieve_citations,
             configuration,
         )
 

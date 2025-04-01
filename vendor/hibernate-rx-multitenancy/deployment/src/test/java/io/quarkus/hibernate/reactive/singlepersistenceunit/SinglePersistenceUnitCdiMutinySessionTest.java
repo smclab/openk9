@@ -17,15 +17,16 @@
 
 package io.quarkus.hibernate.reactive.singlepersistenceunit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.inject.Inject;
+
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class SinglePersistenceUnitCdiMutinySessionTest {
 

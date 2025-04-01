@@ -91,18 +91,18 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.17.3</quarkus-plugin.version>
+		<quarkus-plugin.version>3.19.3</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.17.3</quarkus.platform.version>
-		<quarkus.version>3.17.3</quarkus.version>
-		<quarkiverse.opensearch.version>1.13.0</quarkiverse.opensearch.version>
-		<quarkiverse.rabbitmq.version>3.2.0</quarkiverse.rabbitmq.version>
-		<hibernate.version>6.6.0.Final</hibernate.version>
+		<quarkus.platform.version>3.19.3</quarkus.platform.version>
+		<quarkus.version>3.19.3</quarkus.version>
+		<quarkiverse.opensearch.version>1.16.1</quarkiverse.opensearch.version>
+		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
+		<hibernate.version>6.6.10.Final</hibernate.version>
 		<surefire-plugin.version>3.3.1</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
 		<gpg-plugin.version>3.2.7</gpg-plugin.version>
-		<dependency-check-plugin.version>11.1.0</dependency-check-plugin.version>
+		<dependency-check-plugin.version>12.1.0</dependency-check-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
 		<pekko.version>1.1.2</pekko.version>
@@ -243,6 +243,17 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>${dependency-check-plugin.version}</version>
+				<configuration>
+					<!-- Use the defined property for the NVD API key -->
+					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+					<nvdApiDelay>6000</nvdApiDelay>
+					<skipProvidedScope>true</skipProvidedScope>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
@@ -461,34 +472,6 @@
 					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
-		</profile>
-		<profile>
-			<id>dependency-check</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<!-- Maven dependency check -->
-					<plugin>
-						<groupId>org.owasp</groupId>
-						<artifactId>dependency-check-maven</artifactId>
-						<version>${dependency-check-plugin.version}</version>
-						<executions>
-							<execution>
-								<goals>
-									<goal>aggregate</goal>
-								</goals>
-							</execution>
-						</executions>
-						<configuration>
-							<!-- Use the defined property for the NVD API key -->
-							<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
-							<nvdApiDelay>6000</nvdApiDelay>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 	</profiles>
 </project>

@@ -20,8 +20,9 @@ package io.openk9.tenantmanager.pipe.tenant.create;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory;
 import io.openk9.tenantmanager.pipe.tenant.create.factory.RealmRepresentationFactory;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
+
+import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig;
+import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfigUtil;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;

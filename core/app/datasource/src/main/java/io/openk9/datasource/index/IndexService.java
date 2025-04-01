@@ -17,17 +17,36 @@
 
 package io.openk9.datasource.index;
 
+import static io.openk9.datasource.service.DataIndexService.DETAILS_FIELD;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
+
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
+import org.opensearch.OpenSearchStatusException;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.support.IndicesOptions;
+import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
@@ -38,22 +57,182 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
+import org.opensearch.core.action.ActionListener;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 @ApplicationScoped
 public class IndexService {
 
+	private final static Logger log = Logger.getLogger(IndexService.class);
+
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	OpenSearchClient openSearchClient;
+
+	public Uni<Void> createIndexTemplate(
+		PutComposableIndexTemplateRequest request) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			IndicesClient indices = restHighLevelClient.indices();
+
+			try {
+				var response = indices.putIndexTemplate(
+					request,
+					RequestOptions.DEFAULT
+				);
+
+				if (response.isAcknowledged()) {
+					return null;
+				}
+				else {
+					var templateName = request.name();
+					log.errorf("Error creating indexTemplate %s", templateName);
+
+					throw new CannotCreateIndexTemplateException();
+				}
+			}
+			catch (OpenSearchStatusException osse) {
+				throw new WebApplicationException(jakarta.ws.rs.core.Response
+					.status(osse.status().getStatus())
+					.entity(JsonObject.of(
+						DETAILS_FIELD, osse.getMessage()))
+					.build());
+			}
+			catch (Exception e) {
+				throw new WebApplicationException(jakarta.ws.rs.core.Response
+					.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(JsonObject.of(
+						DETAILS_FIELD, e.getMessage()))
+					.build());
+			}
+
+		});
+	}
+
+	public Uni<Void> deleteIndex(IndexName indexName) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+			DeleteIndexRequest deleteIndexRequest =
+				new DeleteIndexRequest(indexName.value());
+
+			deleteIndexRequest
+				.indicesOptions(
+					IndicesOptions.fromMap(
+						Map.of("ignore_unavailable", true),
+						deleteIndexRequest.indicesOptions()
+					)
+				);
+
+			try {
+				var response = restHighLevelClient.indices().delete(
+					deleteIndexRequest,
+					RequestOptions.DEFAULT
+				);
+
+				if (response.isAcknowledged()) {
+					return null;
+				}
+				else {
+					log.errorf(
+						"Error deleting index %s, cluster didn't acknowledge",
+						indexName.value()
+					);
+
+					throw new DeleteIndexException();
+				}
+			}
+			catch (Exception e) {
+				log.errorf(e, "Error deleting index %s", indexName.value());
+
+				throw new DeleteIndexException();
+			}
+
+		});
+	}
+
+	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
+
+		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
+			new ArrayList<>(indexNames.size());
+
+		for (String indexName : indexNames) {
+			Uni<Tuple2<Boolean, String>> existIndexName =
+				indexExist(indexName)
+					.onItemOrFailure()
+					.transform((exist, t) -> {
+
+						if (t != null) {
+							log.error("Error while checking index exist", t);
+							return false;
+						}
+
+						return exist;
+
+					})
+					.map(exist -> Tuple2.of(exist, indexName));
+			existIndexNames.add(existIndexName);
+		}
+
+		return Uni.join()
+			.all(existIndexNames)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
+
+	}
+
+	public Uni<List<String>> getDocumentTypes(String indexName) {
+
+		SearchRequest searchRequest = new SearchRequest(indexName);
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.size(0);
+
+		searchSourceBuilder.aggregation(AggregationBuilders
+			.terms("documentTypes")
+			.field("documentTypes.keyword")
+			.size(1000)
+		);
+
+		searchRequest.source(searchSourceBuilder);
+
+		return Uni.createFrom()
+			.emitter(sink -> restHighLevelClient.searchAsync(
+				searchRequest,
+				RequestOptions.DEFAULT,
+				new ActionListener<>() {
+					@Override
+					public void onFailure(Exception e) {
+						sink.fail(e);
+					}
+
+					@Override
+					public void onResponse(SearchResponse searchResponse) {
+
+						var documentTypes = searchResponse
+							.getAggregations()
+							.<Terms>get("documentTypes")
+							.getBuckets()
+							.stream()
+							.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+							.toList();
+
+						sink.complete(documentTypes);
+					}
+				}
+			));
+
+	}
 
 	public Uni<Map<String, Object>> getMappings(String indexName) {
 		return Uni
@@ -215,37 +394,6 @@ public class IndexService {
 			});
 	}
 
-
-	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
-
-		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
-			new ArrayList<>(indexNames.size());
-
-		for (String indexName : indexNames) {
-			Uni<Tuple2<Boolean, String>> existIndexName =
-				indexExist(indexName)
-					.onItemOrFailure()
-					.transform((exist, t) -> {
-
-						if (t != null) {
-							logger.error("Error while checking index exist", t);
-							return false;
-						}
-
-						return exist;
-
-					})
-					.map(exist -> Tuple2.of(exist, indexName));
-			existIndexNames.add(existIndexName);
-		}
-
-		return Uni.join()
-			.all(existIndexNames)
-			.usingConcurrencyOf(1)
-			.andCollectFailures();
-
-	}
-
 	public Uni<Long> indexCount(String...indexName) {
 		return Uni
 			.createFrom()
@@ -259,7 +407,7 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((countResponse, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index count", throwable);
+					log.error("Error getting index count", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(countResponse.getCount());
@@ -279,14 +427,53 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index exist", throwable);
+					log.error("Error getting index exist", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(response);
 			});
 	}
 
-	@Inject
-	Logger logger;
+	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		var componentTemplateName = putComponentTemplateRequest.name();
+
+		var cluster = openSearchClient.cluster();
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response =
+					cluster.putComponentTemplate(putComponentTemplateRequest);
+
+				if (response.acknowledged()) {
+					if (log.isDebugEnabled()) {
+						log.debugf(
+							"componentTemplate %s successfully created.",
+							componentTemplateName
+						);
+					}
+					return Uni.createFrom().voidItem();
+				}
+				else {
+					log.errorf(
+						"Cluster didn't acknowledge the operation for componentTemplate %s",
+						componentTemplateName
+					);
+
+					return Uni.createFrom().failure(
+						new CannotCreateComponentTemplateException());
+				}
+			}
+			catch (IOException e) {
+				log.errorf(
+					e,
+					"Error when trying to create a componentTemplate %s.",
+					componentTemplateName
+				);
+
+				throw new CannotCreateComponentTemplateException();
+			}
+		}).replaceWithVoid();
+	}
 
 }

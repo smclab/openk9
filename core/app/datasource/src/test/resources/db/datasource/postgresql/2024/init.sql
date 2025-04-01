@@ -2,7 +2,40 @@
 
 -- changeset openk9:init-tenant_binding
 
-INSERT INTO "tenant_binding" ("id", "create_date", "modified_date", "virtual_host", "tenant_binding_bucket_id", "embedding_model_id", "large_language_model_id") VALUES
-(1,	'2024-11-26 00:00:00.000',	'2024-11-26 00:00:00.000', 'test.openk9.local',	NULL,	NULL,	NULL);
+INSERT INTO "tenant_binding" (
+	id,
+	virtual_host
+) VALUES (
+	1,
+	'test.openk9.local'
+);
 
-ALTER SEQUENCE hibernate_sequence RESTART WITH 100;
+-- test for changeSet with id 1739804793-2
+INSERT INTO bucket (
+    id,
+    name,
+    description
+) VALUES (
+    2,
+    'Sample Bucket',
+    'This is a sample bucket description.'
+);
+
+-- test for changeSet with id 1739804793-2
+INSERT INTO suggestion_category (
+	id,
+    name,
+    description,
+    priority,
+    multi_select,
+    bucket_id
+) VALUES (
+	3,
+    'Sample Suggestion category',
+    'This is a sample suggestion category description',
+    1,
+    true,
+    2
+);
+
+ALTER SEQUENCE hibernate_sequence RESTART WITH 10000;

@@ -1,0 +1,26 @@
+{
+	"contentId": 3062252989527342,
+	"sample": {
+		"firstName": "John",
+		"lastName": "Doe",
+		"email": "john.doe@acme.com",
+		"age": 20
+	},
+	"acl": {
+		"public": true
+	},
+	"number": 1,
+	"total": 1,
+	"vector": [
+		1.23,
+		2.235,
+		1.1234,
+		2.4341,
+		2.5353,
+		1.82344
+	],
+	"chunkText": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ",
+	"title": "Lorem Ipsum",
+	"url": "lipsum.com",
+	"indexName": "anIndexName"
+}

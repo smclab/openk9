@@ -17,22 +17,22 @@
 
 package io.quarkus.hibernate.reactive.singlepersistenceunit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import jakarta.inject.Inject;
+
 import io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.excludedpackage.ExcludedEntity;
 import io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.packageincludedthroughconfig.EntityIncludedThroughPackageConfig;
 import io.quarkus.test.QuarkusUnitTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logmanager.formatters.PatternFormatter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.util.logging.Formatter;
-import java.util.logging.Level;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class SinglePersistenceUnitPackageConfigurationTest {
 

@@ -18,6 +18,23 @@
 package io.openk9.datasource.service.util;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.validation.Validator;
+
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
@@ -30,27 +47,12 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.tuples.Tuple2;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.validation.Validator;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
 	extends GraphQLService<ENTITY>
@@ -508,7 +510,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.recoverWithUni(() -> {
 					var entity = mapper.create(dto);
 
-					return session.persist(entity)
+				return persist(session, entity)
 						.map(v -> entity)
 						.invoke(e -> processor.onNext(
 							K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e))
@@ -574,11 +576,20 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
+	public Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
+		return findThenMapAndPersist(s, id, dto, mapper::update);
+	}
+
+	protected Uni<ENTITY> findThenMapAndPersist(
+		Mutiny.Session s,
+		long id,
+		DTO dto,
+		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
+
 		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> persist(s, mapper.patch(prev, dto))
+				(prev) -> persist(s, mapperFunction.apply(prev, dto))
 					.invoke(newEntity -> processor.onNext(
 						K9EntityEvent.of(
 							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
@@ -589,18 +600,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					id + " not found"));
 	}
 
-	public Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
-		return findById(s, id)
-			.onItem().ifNotNull()
-			.transformToUni(
-				(prev) -> persist(s, mapper.update(prev, dto))
-					.invoke(newEntity -> processor.onNext(
-						K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
-			.onItem().ifNull().failWith(
-				() -> new IllegalStateException(
-					"entity: " + dto.getClass().getSimpleName() + " with id: " +
-					id + " not found"));
+	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
+		return findThenMapAndPersist(s, id, dto, mapper::patch);
 	}
 
 	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {

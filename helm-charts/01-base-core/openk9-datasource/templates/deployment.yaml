@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "common.names.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.commonAnnotations }}
+      annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 8 }}
+      {{- end }}
+      labels: {{- include "common.labels.matchLabels" . | nindent 8 }}
+    spec:
+      {{- include "common.images.renderPullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
+      securityContext: {{ toYaml .Values.podSecurityContext | indent 8 }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: {{ template "common.images.fullname" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "common.names.name" . }}-config
+          {{- /* ######## Probes ######## */}}
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /alive
+              port: management
+            {{- /*
+              scheme: {{ ternary "HTTPS" "HTTP" .Values.tls.enabled | quote }}
+            */}}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: management
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          {{- end }}
+            {{- if .Values.startupProbe.enabled }}
+            startupProbe:
+              httpGet:
+                path: /q/health/started
+                port: http
+              initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
+              periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+              timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
+              successThreshold: {{ .Values.startupProbe.successThreshold }}
+              failureThreshold: {{ .Values.startupProbe.failureThreshold }}
+            {{- end }}
+          env:
+            - name: {{ .Values.rabbitmq.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.passwordSecretName }}
+                  key: {{ .Values.rabbitmq.keyPasswordSecret }}
+            {{- if eq .Values.database.type "postgresql" }}
+            - name: {{ .Values.database.postgresql.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.postgresql.passwordSecretName }}
+                  key: {{ .Values.database.postgresql.keyPasswordSecret }}
+            {{- end }}
+            {{- if eq .Values.database.type "oracle" }}
+            - name: {{ .Values.database.oracle.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.oracle.passwordSecretName }}
+                  key: {{ .Values.database.oracle.keyPasswordSecret }}
+            {{- end }} 
+            - name: {{ .Values.opensearch.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.opensearch.passwordSecretName }}
+                  key: {{ .Values.opensearch.keyPasswordSecret }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: http
+              protocol: TCP
+            - containerPort: {{ .Values.service.debugPort }}
+              name: debug
+              protocol: TCP
+            - containerPort: {{ .Values.service.grpcPort }}
+              name: grpc
+              protocol: TCP
+            - containerPort: {{ .Values.service.managementPort }}
+              name: management
+              protocol: TCP
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+

@@ -17,6 +17,18 @@
 
 package io.openk9.datasource.grpc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.atLeast;
+
+import java.io.IOException;
+import java.util.Set;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.Initializer;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
 import io.openk9.datasource.graphql.dto.SuggestionCategoryWithDocTypeFieldDTO;
 import io.openk9.datasource.model.Bucket;
@@ -36,32 +48,24 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
+
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.core.action.ActionListener;
+import org.opensearch.client.indices.CreateIndexRequest;
+import org.opensearch.search.aggregations.AggregationBuilder;
 import org.opensearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
-
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.mock;
 
 @Slf4j
 @QuarkusTest
@@ -69,8 +73,6 @@ import static org.mockito.Mockito.mock;
 public class SearcherSuggestionsGrpcTest {
 
 
-	private static final String DEFAULT_BUCKET_NAME = "Default Bucket";
-	private static final String DEFAULT_DATASOURCE_NAME = "My New Connection";
 	private static final String ENTITY_NAME_PREFIX = "SearcherSuggestionsGrpcTest - ";
 
 	private static final String BUCKET_NAME_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
@@ -96,8 +98,8 @@ public class SearcherSuggestionsGrpcTest {
 	@GrpcClient
 	Searcher searcher;
 
-	@InjectMock
-	RestHighLevelClient client;
+	@InjectSpy(convertScopes = true)
+	RestHighLevelClient openSearchClient;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -131,33 +133,32 @@ public class SearcherSuggestionsGrpcTest {
 			allSuggestionCategoryCount());
 		assertEquals(
 			getBucketDefault().getId(),
-			getSuggestionCategoryOne().getBucket().getId());
+			getSuggestionCategoryOne().getBuckets().iterator().next().getId()
+		);
+
+		var dataIndex = datasourceService.getDataIndex(getDatasourceDefault().getId())
+			.await().indefinitely();
+
+		try {
+			var createIndexRequest = new CreateIndexRequest(dataIndex.getIndexName());
+
+			openSearchClient.indices()
+				.create(createIndexRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
+
 
 	@Test
 	@Order(2)
 	void should_aggregate_with_doc_type_field_one_only() {
 
-		SearchResponse searchResponseMock = mock(SearchResponse.class);
-		ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
-
 		BDDMockito.given(tenantManager.findTenant(notNull()))
 			.willReturn(Uni.createFrom().item(
 				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME)
 					.build()));
-
-		BDDMockito.given(
-			client.searchAsync(
-				captor.capture(),
-				any(RequestOptions.class),
-				any(ActionListener.class)))
-			.willAnswer(invocation -> {
-				ActionListener<SearchResponse> listener =
-					invocation.getArgument(2);
-
-				listener.onResponse(searchResponseMock);
-				return null;
-			});
 
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeField = suggestionCategoryOne.getDocTypeField();
@@ -167,23 +168,38 @@ public class SearcherSuggestionsGrpcTest {
 			.setSuggestionCategoryId(suggestionCategoryOne.getId())
 			.build();
 
-		var response =
-			searcher.suggestionsQueryParser(request)
-				.await()
-				.indefinitely();
+		searcher.suggestionsQueryParser(request)
+			.await()
+			.indefinitely();
 
-		var searchRequest = captor.getValue();
+		then(openSearchClient)
+			.should(atLeast(1))
+			.searchAsync(
+				argThat(
+					searchRequest -> {
+						var aggregatorFactories = searchRequest
+							.source()
+							.aggregations()
+							.getAggregatorFactories();
 
-		searchRequest.source().aggregations().getAggregatorFactories().stream()
-			.forEach(aggregationBuilder -> {
-				var sources =
-					((CompositeAggregationBuilder) aggregationBuilder).sources();
+						for (AggregationBuilder builder : aggregatorFactories) {
+							var sources =
+								((CompositeAggregationBuilder) builder).sources();
 
-				assertEquals(1, sources.size());
-				assertEquals(
-					docTypeField.getName(),
-					sources.getFirst().name());
-			});
+							assertEquals(1, sources.size());
+							assertEquals(
+								docTypeField.getName(),
+								sources.getFirst().name()
+							);
+						}
+
+						return true;
+					}
+				),
+				any(),
+				any()
+			);
+
 	}
 
 	@Test
@@ -388,7 +404,7 @@ public class SearcherSuggestionsGrpcTest {
 	private Bucket getBucketDefault() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
-					bucketService.findByName(s, DEFAULT_BUCKET_NAME)
+					bucketService.findByName(s, io.openk9.datasource.model.init.Bucket.INSTANCE.getName())
 						.call(bucket ->
 							Mutiny.fetch(bucket.getSuggestionCategories()))
 						.call(bucket ->
@@ -414,7 +430,7 @@ public class SearcherSuggestionsGrpcTest {
 	private Datasource getDatasourceDefault() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
-					datasourceService.findByName(s, DEFAULT_DATASOURCE_NAME)
+					datasourceService.findByName(s, Initializer.INIT_DATASOURCE_CONNECTION)
 			)
 			.await()
 			.indefinitely();
@@ -454,7 +470,7 @@ public class SearcherSuggestionsGrpcTest {
 						.call(suggestionCategory ->
 							Mutiny.fetch(suggestionCategory.getDocTypeField()))
 						.call(suggestionCategory ->
-							Mutiny.fetch(suggestionCategory.getBucket()))
+							Mutiny.fetch(suggestionCategory.getBuckets()))
 			)
 			.await()
 			.indefinitely();
@@ -467,7 +483,7 @@ public class SearcherSuggestionsGrpcTest {
 						.call(suggestionCategory ->
 							Mutiny.fetch(suggestionCategory.getDocTypeField()))
 						.call(suggestionCategory ->
-							Mutiny.fetch(suggestionCategory.getBucket()))
+							Mutiny.fetch(suggestionCategory.getBuckets()))
 			)
 			.await()
 			.indefinitely();
@@ -481,7 +497,7 @@ public class SearcherSuggestionsGrpcTest {
 			(s, transaction) ->
 				bucketService.removeDatasource(
 					bucket.getId(), datasource.getId())
-		);
+		).await().indefinitely();
 	}
 
 	private void unbindBucketDefaultToLanguage() {
@@ -492,7 +508,7 @@ public class SearcherSuggestionsGrpcTest {
 			(s, transaction) ->
 				bucketService.removeLanguage(
 					bucket.getId(), language.getId())
-		);
+		).await().indefinitely();
 	}
 
 	private void unbindBucketDefaultToSuggestionCategoryOne() {
@@ -503,7 +519,7 @@ public class SearcherSuggestionsGrpcTest {
 			(s, transaction) ->
 				bucketService.removeSuggestionCategory(
 					bucket.getId(), suggestionCategory.getId())
-		);
+		).await().indefinitely();
 	}
 
 	private void unbindBucketDefaultToSuggestionCategoryTwo() {
@@ -514,6 +530,6 @@ public class SearcherSuggestionsGrpcTest {
 			(s, transaction) ->
 				bucketService.removeSuggestionCategory(
 					bucket.getId(), suggestionCategory.getId())
-		);
+		).await().indefinitely();
 	}
 }

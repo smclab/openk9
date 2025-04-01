@@ -22,12 +22,10 @@ import io.openk9.datasource.util.CborSerializable;
 
 public interface Writer {
 
-
 	interface Command extends CborSerializable {}
 
 	interface Response extends CborSerializable {
 		HeldMessage heldMessage();
-
 	}
 
 	record Start(byte[] dataPayload, HeldMessage heldMessage)

@@ -17,8 +17,24 @@
 
 package io.openk9.datasource.searcher;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -58,6 +74,9 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
+
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -68,13 +87,12 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -95,22 +113,6 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -133,27 +135,27 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
+	@ConfigProperty(
+		name = "openk9.datasource.searcher-service.max-search-page-from",
+		defaultValue = "10000"
+	)
+	Integer maxSearchPageFrom;
+
+	@ConfigProperty(
+		name = "openk9.datasource.searcher-service.max-search-page-size",
+		defaultValue = "200"
+	)
+	Integer maxSearchPageSize;
+
 	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
 		var indexNames = new HashSet<String>();
 
 		var datasources = tenant.getDatasources();
 
-		if (request.hasVectorIndices() && request.getVectorIndices()) {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-				var vectorIndex = dataIndex.getVectorIndex();
+		for (Datasource datasource : datasources) {
+			var dataIndex = datasource.getDataIndex();
 
-				if (vectorIndex != null) {
-					indexNames.add(vectorIndex.getIndexName());
-				}
-			}
-		}
-		else {
-			for (Datasource datasource : datasources) {
-				var dataIndex = datasource.getDataIndex();
-
-				indexNames.add(dataIndex.getIndexName());
-			}
+			indexNames.add(dataIndex.getIndexName());
 		}
 
 		return indexNames.toArray(String[]::new);
@@ -206,7 +208,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
-	private static SearchSourceBuilder _getSearchSourceBuilder(
+	private SearchSourceBuilder _getSearchSourceBuilder(
 		QueryParserRequest request, Bucket tenant, String language) {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -214,8 +216,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		searchSourceBuilder.trackTotalHits(true);
 
 		if (request.getRangeCount() == 2) {
-			searchSourceBuilder.from(request.getRange(0));
-			searchSourceBuilder.size(request.getRange(1));
+			searchSourceBuilder.from(Math.min(
+				request.getRange(0), maxSearchPageFrom));
+
+			searchSourceBuilder.size(Math.min(
+				request.getRange(1), maxSearchPageSize));
 		}
 
 		List<DocTypeField> docTypeFieldList = Utils
@@ -231,7 +236,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
 			docTypeFieldList,
-			request.getVectorIndices(),
 			language
 		);
 
@@ -259,7 +263,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
 		List<DocTypeField> docTypeFieldList,
-		boolean vectorIndices,
 		String language) {
 
 		Set<String> includes = new HashSet<>();
@@ -325,20 +328,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 			}
 
-		}
-
-		if (vectorIndices) {
-			includes.addAll(List.of(
-				"chunkText",
-				"indexName",
-				"contentId",
-				"number",
-				"total",
-				"title",
-				"url",
-				"previous",
-				"next"
-			));
 		}
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();

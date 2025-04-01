@@ -47,12 +47,13 @@ public class SchedulerInitializerActor {
 	}
 
 	public Uni<Void> scheduleDataSource(
-		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
-		boolean reindexable, String reindexingCron) {
+			String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
+			boolean reindexable, String reindexingCron, boolean purgeable, String purging,
+			String purgeMaxAge) {
 
 		return getScheduleRef(() ->
 			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable,
-				schedulingCron, reindexable, reindexingCron));
+				schedulingCron, reindexable, reindexingCron, purgeable, purging, purgeMaxAge));
 	}
 
 	public Uni<Void> triggerDataSource(

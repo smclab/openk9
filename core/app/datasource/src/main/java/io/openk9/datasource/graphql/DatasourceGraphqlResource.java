@@ -17,25 +17,28 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
+import io.openk9.datasource.graphql.dto.CreateDatasourceDTO;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
+import io.openk9.datasource.model.dto.UpdateDatasourceDTO;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -46,27 +49,52 @@ import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
-import java.util.Set;
-
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
 public class DatasourceGraphqlResource {
 
-	@Query
-	public Uni<Connection<Datasource>> getDatasources(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return datasourceService.findConnection(
-			after, before, first, last, searchText, sortByList);
+	@Inject
+	DatasourceService datasourceService;
+
+	@Mutation
+	public Uni<Tuple2<Datasource, DataIndex>> bindDataIndexToDatasource(
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("dataIndexId") long dataIndexId) {
+		return datasourceService.setDataIndex(datasourceId, dataIndexId);
 	}
 
-	public Uni<EnrichPipeline> enrichPipeline(
-		@Source Datasource datasource) {
-		return datasourceService.getEnrichPipeline(datasource.getId());
+	@Mutation
+	public Uni<Tuple2<Datasource, EnrichPipeline>> bindEnrichPipelineToDatasource(
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("enrichPipelineId") long enrichPipelineId) {
+		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Datasource, PluginDriver>> bindPluginDriverToDatasource(
+		@Id @Name("datasourceId") long datasourceId,
+		@Id @Name("pluginDriverId") long pluginDriverId) {
+		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);
+	}
+
+	public Uni<Response<Datasource>> createDatasource(DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().create(datasourceDTO);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Datasource,PluginDriver>> createDatasourceAndAddPluginDriver(
+		DatasourceDTO datasourceDTO, @Id long id){
+
+		return datasourceService.createDatasourceAndAddPluginDriver(
+			datasourceDTO, id);
+	}
+
+	@Mutation
+	public Uni<Response<Datasource>> createDatasourceConnection(
+		CreateDatasourceDTO datasourceConnection) {
+
+		return datasourceService.createDatasourceConnection(datasourceConnection);
 	}
 
 	public Uni<DataIndex> dataIndex(@Source Datasource datasource) {
@@ -87,41 +115,6 @@ public class DatasourceGraphqlResource {
 			datasource.getId(), after, before, first, last, searchText, sortByList, notEqual);
 	}
 
-	public Uni<PluginDriver> pluginDriver(@Source Datasource datasource) {
-		return datasourceService.getPluginDriver(datasource.getId());
-	}
-
-	public Uni<Connection<Scheduler>> schedulers(
-		@Source Datasource datasource,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities")
-		@DefaultValue("false") boolean notEqual) {
-
-		return datasourceService.getSchedulerConnection(
-			datasource.getId(), after, before, first, last, searchText, sortByList, notEqual);
-	}
-
-	@Query
-	public Uni<Datasource> getDatasource(@Id long id) {
-		return datasourceService.findById(id);
-	}
-
-	public Uni<Response<Datasource>> patchDatasource(@Id long id, DatasourceDTO datasourceDTO) {
-		return datasourceService.getValidator().patch(id, datasourceDTO);
-	}
-
-	public Uni<Response<Datasource>> updateDatasource(@Id long id, DatasourceDTO datasourceDTO) {
-		return datasourceService.getValidator().update(id, datasourceDTO);
-	}
-
-	public Uni<Response<Datasource>> createDatasource(DatasourceDTO datasourceDTO) {
-		return datasourceService.getValidator().create(datasourceDTO);
-	}
-
 	@Mutation
 	public Uni<Response<Datasource>> datasource(
 		@Id Long id, DatasourceDTO datasourceDTO,
@@ -135,72 +128,6 @@ public class DatasourceGraphqlResource {
 				: updateDatasource(id, datasourceDTO);
 		}
 
-	}
-
-	@Mutation
-	public Uni<Datasource> deleteDatasource(@Id long datasourceId) {
-		return datasourceService.deleteById(datasourceId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<Datasource, DataIndex>> bindDataIndexToDatasource(
-		@Id @Name("datasourceId") long datasourceId,
-		@Id @Name("dataIndexId") long dataIndexId) {
-		return datasourceService.setDataIndex(datasourceId, dataIndexId);
-	}
-
-	@Mutation
-	public Uni<Datasource> unbindDataIndexFromDatasource(
-		@Id @Name("datasourceId") long datasourceId) {
-		return datasourceService.unsetDataIndex(datasourceId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<Datasource, EnrichPipeline>> bindEnrichPipelineToDatasource(
-		@Id @Name("datasourceId") long datasourceId,
-		@Id @Name("enrichPipelineId") long enrichPipelineId) {
-		return datasourceService.setEnrichPipeline(datasourceId, enrichPipelineId);
-	}
-
-	@Mutation
-	public Uni<Datasource> unbindEnrichPipelineToDatasource(
-		@Id @Name("datasourceId") long datasourceId) {
-		return datasourceService.unsetEnrichPipeline(datasourceId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<Datasource, PluginDriver>> bindPluginDriverToDatasource(
-		@Id @Name("datasourceId") long datasourceId,
-		@Id @Name("pluginDriverId") long pluginDriverId) {
-		return datasourceService.setPluginDriver(datasourceId, pluginDriverId);
-	}
-
-	@Mutation
-	public Uni<Datasource> unbindPluginDriverToDatasource(
-		@Id @Name("datasourceId") long datasourceId) {
-		return datasourceService.unsetPluginDriver(datasourceId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<Datasource,PluginDriver>> createDatasourceAndAddPluginDriver(
-		DatasourceDTO datasourceDTO, @Id long id){
-
-		return datasourceService.createDatasourceAndAddPluginDriver(
-			datasourceDTO, id);
-	}
-
-	@Mutation
-	public Uni<Response<Datasource>> createDatasourceConnection(
-		DatasourceConnectionDTO datasourceConnection) {
-
-		return datasourceService.createDatasourceConnection(datasourceConnection);
-	}
-
-	@Mutation
-	public Uni<Response<Datasource>> updateDatasourceConnection(
-		UpdateDatasourceConnectionDTO datasourceConnection) {
-
-		return datasourceService.updateDatasourceConnection(datasourceConnection);
 	}
 
 	@Subscription
@@ -227,7 +154,81 @@ public class DatasourceGraphqlResource {
 			.map(K9EntityEvent::getEntity);
 	}
 
-	@Inject
-	DatasourceService datasourceService;
+	@Mutation
+	public Uni<Datasource> deleteDatasource(@Id long datasourceId) {
+		return datasourceService.deleteById(datasourceId);
+	}
+
+	public Uni<EnrichPipeline> enrichPipeline(
+		@Source Datasource datasource) {
+		return datasourceService.getEnrichPipeline(datasource.getId());
+	}
+
+	@Query
+	public Uni<Datasource> getDatasource(@Id long id) {
+		return datasourceService.findById(id);
+	}
+
+	@Query
+	public Uni<Connection<Datasource>> getDatasources(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return datasourceService.findConnection(
+			after, before, first, last, searchText, sortByList);
+	}
+
+	public Uni<Response<Datasource>> patchDatasource(@Id long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().patch(id, datasourceDTO);
+	}
+
+	public Uni<PluginDriver> pluginDriver(@Source Datasource datasource) {
+		return datasourceService.getPluginDriver(datasource.getId());
+	}
+
+	public Uni<Connection<Scheduler>> schedulers(
+		@Source Datasource datasource,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities")
+		@DefaultValue("false") boolean notEqual) {
+
+		return datasourceService.getSchedulerConnection(
+			datasource.getId(), after, before, first, last, searchText, sortByList, notEqual);
+	}
+
+	@Mutation
+	public Uni<Datasource> unbindDataIndexFromDatasource(
+		@Id @Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetDataIndex(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unbindEnrichPipelineToDatasource(
+		@Id @Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetEnrichPipeline(datasourceId);
+	}
+
+	@Mutation
+	public Uni<Datasource> unbindPluginDriverToDatasource(
+		@Id @Name("datasourceId") long datasourceId) {
+		return datasourceService.unsetPluginDriver(datasourceId);
+	}
+
+	public Uni<Response<Datasource>> updateDatasource(@Id long id, DatasourceDTO datasourceDTO) {
+		return datasourceService.getValidator().update(id, datasourceDTO);
+	}
+
+	@Mutation
+	public Uni<Response<Datasource>> updateDatasourceConnection(
+		UpdateDatasourceDTO datasourceConnection) {
+
+		return datasourceService.updateDatasourceConnection(datasourceConnection);
+	}
 
 }

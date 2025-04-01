@@ -1,0 +1,20 @@
+## Quarkus configuration
+quarkus:
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.local/,"
+  kubernetes:
+    namespace: "openk9"
+
+## Keycloak configuration
+keycloak:
+  host: "keycloak.openk9.local"   #-TBMD
+
+## Ingress configuration
+ingress:
+  enabled: true
+  host: tenant-manager.openk9.local   #-TBMD
+  paths:
+    - /api/tenant-manager
+  tls:
+    enabled: true
+    secretName: openk9-tls-star-secret   #-TBMD

@@ -17,26 +17,29 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
-import io.openk9.common.util.ShardingKey;
-
 import java.util.Objects;
 
+import io.openk9.common.util.ShardingKey;
+
 public record HeldMessage(
-	ShardingKey shardingKey,
+	ShardingKey processKey,
 	long messageNumber,
-	long parsingDate
+	long parsingDate,
+	String contentId
 ) {
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {return true;}
 		if (!(o instanceof HeldMessage that)) {return false;}
 		return parsingDate == that.parsingDate && messageNumber == that.messageNumber &&
-			   Objects.equals(shardingKey, that.shardingKey);
+			   Objects.equals(processKey, that.processKey) &&
+			   Objects.equals(contentId, that.contentId);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(shardingKey, messageNumber, parsingDate);
+		return Objects.hash(
+			processKey, messageNumber, parsingDate, contentId);
 	}
 
 }

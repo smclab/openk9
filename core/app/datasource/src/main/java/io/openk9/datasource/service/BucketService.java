@@ -17,6 +17,20 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.ws.rs.NotFoundException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.graphql.dto.BucketWithListsDTO;
@@ -34,6 +48,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
@@ -44,23 +59,11 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -437,14 +440,31 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
 		return sessionFactory.withTransaction(s -> {
-			String queryString = "SELECT b from Bucket b " +
-				"WHERE b.id not in ( " +
-				"SELECT sc.bucket.id FROM SuggestionCategory sc " +
-				"WHERE sc.id = (:suggestionCategoryId))";
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
 
-			return s.createQuery(queryString, Bucket.class)
-				.setParameter("suggestionCategoryId", suggestionCategoryId)
-				.getResultList();
+			// Root for Bucket entity
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			// Subquery to find buckets already associated with the suggestion category
+			Subquery<Long> subquery = criteriaQuery.subquery(Long.class);
+			Root<SuggestionCategory> scRoot = subquery.from(SuggestionCategory.class);
+
+			// Join SuggestionCategory to Bucket via bucket field in SuggestionCategory
+			Join<SuggestionCategory, Bucket> joinBucket = scRoot.join(
+				SuggestionCategory_.buckets,
+				JoinType.INNER
+			);
+
+			// Apply the condition that the suggestion category id matches the provided id
+			subquery.select(joinBucket.get(Bucket_.id))
+				.where(cb.equal(scRoot.get(SuggestionCategory_.id), suggestionCategoryId));
+
+			// Build the main query: select buckets where their id is not in the subquery result
+			criteriaQuery.select(bucketRoot)
+				.where(cb.not(bucketRoot.get(Bucket_.id).in(subquery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
 		});
 	}
 
@@ -605,6 +625,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));
 	}
 
+	public Uni<Set<SuggestionCategory>> getSuggestionCategories(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
+
+	}
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};

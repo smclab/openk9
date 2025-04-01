@@ -17,12 +17,12 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.Map;
+
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.reactive.provider.service.NoJdbcConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import java.util.Map;
 
 public class QuarkusNoJdbcConnectionProviderInitiator
 	implements StandardServiceInitiator<ConnectionProvider> {

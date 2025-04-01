@@ -77,6 +77,9 @@ def get_llm_configuration(grpc_host, virtual_host):
     rag_tool_description = json_config.get("rag_tool_description")
     rephrase_prompt = json_config.get("rephrase_prompt")
     context_window = json_config.get("context_window")
+    retrieve_citations = json_config.get("retrieve_citations")
+    rerank = json_config.get("rerank")
+    chunk_window = json_config.get("chunk_window")
     watsonx_project_id = json_config.get("watsonx_project_id")
     chat_vertex_ai_credentials = json_config.get("credentials")
     chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
@@ -92,6 +95,9 @@ def get_llm_configuration(grpc_host, virtual_host):
         "rag_tool_description": rag_tool_description,
         "rephrase_prompt": rephrase_prompt,
         "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "chunk_window": chunk_window,
         "retrieve_type": retrieve_type,
         "watsonx_project_id": watsonx_project_id,
         "chat_vertex_ai_credentials": chat_vertex_ai_credentials,

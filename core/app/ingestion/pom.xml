@@ -33,12 +33,6 @@
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
-    </dependency>
-    <!-- API // -->
-
     <!-- file manager client -->
     <dependency>
       <groupId>io.quarkus</groupId>

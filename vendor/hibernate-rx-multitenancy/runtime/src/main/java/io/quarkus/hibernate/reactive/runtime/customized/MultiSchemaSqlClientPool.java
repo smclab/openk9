@@ -17,6 +17,8 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.concurrent.CompletionStage;
+
 import io.vertx.sqlclient.Pool;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -24,8 +26,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.reactive.pool.ReactiveConnection;
 import org.hibernate.reactive.pool.impl.SqlClientPool;
 import org.hibernate.reactive.util.impl.CompletionStages;
-
-import java.util.concurrent.CompletionStage;
 
 public class MultiSchemaSqlClientPool extends SqlClientPool {
 

@@ -4,6 +4,7 @@ import os
 from enum import Enum
 from typing import List
 
+from google.auth import default, transport
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
@@ -19,9 +20,11 @@ from pydantic import BaseModel, Field
 
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
-from app.utils.chat_history import get_chat_history, save_chat_message
-
-from google.auth import default, transport
+from app.utils.chat_history import (
+    get_chat_history,
+    get_chat_history_from_frontend,
+    save_chat_message,
+)
 
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 
@@ -42,6 +45,45 @@ class ModelType(Enum):
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
     CHAT_VERTEX_AI_MODEL_GARDEN = "chat_vertex_ai_model_garden"
+
+
+def save_google_application_credentials(credentials):
+    """
+    Save Google Application credentials to a JSON file and configure environment variables.
+
+    Serializes credentials to a JSON file and sets the GOOGLE_APPLICATION_CREDENTIALS environment
+    variable to enable automatic credential discovery by Google Cloud client libraries.
+
+    .. note::
+        The environment variable modification only affects the current process and child processes.
+
+    :param dict credentials: Dictionary containing Google Application credentials data.
+        Expected to contain service account or user credential fields.
+        Must be JSON-serializable (typically contains key/values with primitive types).
+
+    :raises json.JSONEncodeError: If credentials contain non-serializable data types
+    :raises OSError: If file writing operations fail (e.g., permission issues)
+
+    Example::
+
+        "credentials": {
+            "account": "",
+            "client_id": "client_id",
+            "client_secret": "client_secret",
+            "quota_project_id": "quota_project_id",
+            "refresh_token": "refresh_token",
+            "type": "type",
+            "universe_domain": "universe_domain"
+            }
+        save_google_cloud_credentials(credentials)
+    """
+    json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
+    credential_file_path = "application_default_credentials.json"
+
+    with open(credential_file_path, "w", encoding="utf-8") as outfile:
+        outfile.write(json_credentials)
+
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
 
 
 def initialize_language_model(configuration):
@@ -120,14 +162,9 @@ def initialize_language_model(configuration):
                 params=parameters,
             )
         case ModelType.CHAT_VERTEX_AI.value:
-            credentials = configuration["chat_vertex_ai_credentials"]
-            project_id = credentials["quota_project_id"]
-            json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
-            credential_file_path = "application_default_credentials.json"
-            with open(credential_file_path, "w", encoding="utf-8") as outfile:
-                outfile.write(json_credentials)
-
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
+            google_credentials = configuration["chat_vertex_ai_credentials"]
+            save_google_application_credentials(google_credentials)
+            project_id = google_credentials["quota_project_id"]
 
             llm = ChatVertexAI(
                 model=model,
@@ -139,7 +176,9 @@ def initialize_language_model(configuration):
             )
         case ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value:
             chat_vertex_ai_model_garden = configuration["chat_vertex_ai_model_garden"]
-            project_id = chat_vertex_ai_model_garden["project_id"]
+            google_credentials = chat_vertex_ai_model_garden["credentials"]
+            save_google_application_credentials(google_credentials)
+            project_id = google_credentials["quota_project_id"]
             endpoint_id = chat_vertex_ai_model_garden["endpoint_id"]
             location = chat_vertex_ai_model_garden["location"]
 
@@ -223,9 +262,7 @@ class Citations(BaseModel):
 
 def stream_rag_conversation(
     search_text: str,
-    rerank: bool,
     reranker_api_url: str,
-    chunk_window: bool,
     range_values: list,
     after_key: str,
     suggest_keyword: str,
@@ -241,9 +278,9 @@ def stream_rag_conversation(
     grpc_host: str,
     chat_id: str,
     user_id: str,
+    chat_history: list,
     timestamp: str,
     chat_sequence_number: int,
-    retrieve_citations: bool,
     configuration: dict,
 ):
     """
@@ -258,9 +295,7 @@ def stream_rag_conversation(
 
     Args:
         search_text (str): User's query text to process.
-        rerank (bool): Whether to enable document reranking.
         reranker_api_url (str): Endpoint URL for the reranking service.
-        chunk_window (bool): Flag to enable context window merging.
         range_values (list): Range filters for document retrieval.
         after_key (str): Pagination key for search results.
         suggest_keyword (str): Suggested keyword for query expansion.
@@ -276,15 +311,18 @@ def stream_rag_conversation(
         grpc_host (str): gRPC service endpoint for embeddings.
         chat_id (str): Unique identifier for the chat session.
         user_id (str): Unique identifier for the user.
+        chat_history (list): Chat history for not logged users.
         timestamp (str): ISO format timestamp of the request.
         chat_sequence_number (int): Sequence number in conversation history.
-        retrieve_citations (bool): Flag to enable citation extraction.
         configuration (dict): Configuration dictionary containing:
             - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
             - prompt (str): Main prompt template
             - rephrase_prompt (str): Contextualization prompt template
             - context_window (int): Model context window size
             - retrieve_type (str): Document retrieval strategy
+            - rerank (bool): Whether to enable document reranking
+            - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
+            - retrieve_citations (bool): Flag to enable citation extraction.
 
     Yields:
         Iterator[str]: JSON-encoded stream objects with following formats:
@@ -315,7 +353,10 @@ def stream_rag_conversation(
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]
     context_window = configuration["context_window"]
+    retrieve_citations = configuration["retrieve_citations"]
     retrieve_type = configuration["retrieve_type"]
+    rerank = configuration["rerank"]
+    chunk_window = configuration["chunk_window"]
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -350,7 +391,7 @@ def stream_rag_conversation(
         "user_id": user_id,
         "model_type": model_type,
         "model": model,
-        "question": search_text[:200] + "...",
+        "question": search_text[:200],
     }
     logger.info(json.dumps(info))
 
@@ -380,84 +421,91 @@ def stream_rag_conversation(
 
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
+    history_factory = (
+        get_chat_history_from_frontend if not user_id else get_chat_history
+    )
+
+    history_factory_config = (
+        [
+            ConfigurableFieldSpec(
+                id="chat_history_from_frontend",
+                annotation=str,
+                name="chat_history_from_frontend",
+                description="chat_history_from_frontend.",
+                default="",
+            ),
+        ]
+        if not user_id
+        else [
+            ConfigurableFieldSpec(
+                id="open_search_client",
+                annotation=str,
+                name="Opensearch client",
+                description="Opensearch client.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="user_id",
+                annotation=str,
+                name="User ID",
+                description="Unique identifier for the user.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="chat_id",
+                annotation=str,
+                name="Chat ID",
+                description="Unique identifier for the chat.",
+                default="",
+            ),
+        ]
+    )
+
     if (
         retrieve_citations
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
     ):
         citations_chain = qa_prompt | llm.with_structured_output(Citations)
+
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
-            get_chat_history,
+            history_factory,
             input_messages_key="input",
             history_messages_key="chat_history",
             output_messages_key="answer",
-            history_factory_config=[
-                ConfigurableFieldSpec(
-                    id="open_search_client",
-                    annotation=str,
-                    name="Opensearch client",
-                    description="Opensearch client.",
-                    default="",
-                ),
-                ConfigurableFieldSpec(
-                    id="user_id",
-                    annotation=str,
-                    name="User ID",
-                    description="Unique identifier for the user.",
-                    default="",
-                ),
-                ConfigurableFieldSpec(
-                    id="chat_id",
-                    annotation=str,
-                    name="Chat ID",
-                    description="Unique identifier for the chat.",
-                    default="",
-                ),
-            ],
+            history_factory_config=history_factory_config,
         ).assign(annotations=citations_chain)
     else:
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
-            get_chat_history,
+            history_factory,
             input_messages_key="input",
             history_messages_key="chat_history",
             output_messages_key="answer",
-            history_factory_config=[
-                ConfigurableFieldSpec(
-                    id="open_search_client",
-                    annotation=str,
-                    name="Opensearch client",
-                    description="Opensearch client.",
-                    default="",
-                ),
-                ConfigurableFieldSpec(
-                    id="user_id",
-                    annotation=str,
-                    name="User ID",
-                    description="Unique identifier for the user.",
-                    default="",
-                ),
-                ConfigurableFieldSpec(
-                    id="chat_id",
-                    annotation=str,
-                    name="Chat ID",
-                    description="Unique identifier for the chat.",
-                    default="",
-                ),
-            ],
+            history_factory_config=history_factory_config,
         )
 
-    result = conversational_rag_chain.stream(
-        {"input": search_text},
-        config={
-            "configurable": {
-                "open_search_client": open_search_client,
-                "user_id": user_id,
-                "chat_id": chat_id,
-            }
-        },
-    )
+    if not user_id:
+        result = conversational_rag_chain.stream(
+            {"input": search_text},
+            config={
+                "configurable": {
+                    "chat_history_from_frontend": chat_history,
+                }
+            },
+        )
+    else:
+        result = conversational_rag_chain.stream(
+            {"input": search_text},
+            config={
+                "configurable": {
+                    "open_search_client": open_search_client,
+                    "user_id": user_id,
+                    "chat_id": chat_id,
+                }
+            },
+        )
 
     result_answer = ""
     documents = []
@@ -487,19 +535,6 @@ def stream_rag_conversation(
             and "annotations" in chunk.keys()
         ):
             citations = chunk
-
-    if chat_sequence_number == 1:
-        conversation_title = generate_conversation_title(
-            llm, search_text, result_answer
-        )
-        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
-
-        info = {
-            "chain": "chat_chain",
-            "user_id": user_id,
-            "conversation_title": conversation_title.strip('"'),
-        }
-        logger.info(json.dumps(info))
 
     all_citations = (
         citations.get("annotations").dict()["citations"]
@@ -536,6 +571,19 @@ def stream_rag_conversation(
             }
         )
 
+    if chat_sequence_number == 1 and user_id:
+        conversation_title = generate_conversation_title(
+            llm, search_text, result_answer
+        )
+        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+
+        info = {
+            "chain": "chat_chain",
+            "user_id": user_id,
+            "conversation_title": conversation_title.strip('"'),
+        }
+        logger.info(json.dumps(info))
+
     info = {
         "chain": "chat_chain",
         "user_id": user_id,
@@ -544,16 +592,17 @@ def stream_rag_conversation(
     }
     logger.info(json.dumps(info))
 
-    save_chat_message(
-        open_search_client,
-        search_text,
-        result_answer["answer"],
-        conversation_title,
-        documents,
-        chat_id,
-        user_id,
-        timestamp,
-        chat_sequence_number,
-    )
+    if user_id:
+        save_chat_message(
+            open_search_client,
+            search_text,
+            result_answer["answer"],
+            conversation_title,
+            documents,
+            chat_id,
+            user_id,
+            timestamp,
+            chat_sequence_number,
+        )
 
     yield json.dumps({"chunk": "", "type": "END"})

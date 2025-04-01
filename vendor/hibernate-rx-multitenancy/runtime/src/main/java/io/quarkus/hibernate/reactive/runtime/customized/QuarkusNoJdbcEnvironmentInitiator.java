@@ -17,13 +17,13 @@
 
 package io.quarkus.hibernate.reactive.runtime.customized;
 
+import java.util.Map;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.reactive.provider.service.NoJdbcEnvironmentInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-
-import java.util.Map;
 
 public class QuarkusNoJdbcEnvironmentInitiator extends NoJdbcEnvironmentInitiator {
 

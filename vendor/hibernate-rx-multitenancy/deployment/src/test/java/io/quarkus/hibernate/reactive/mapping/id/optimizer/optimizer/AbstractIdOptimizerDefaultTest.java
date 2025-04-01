@@ -17,10 +17,14 @@
 
 package io.quarkus.hibernate.reactive.mapping.id.optimizer.optimizer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.quarkus.hibernate.reactive.SchemaUtil;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import jakarta.inject.Inject;
 import org.assertj.core.api.AbstractObjectAssert;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.SessionFactory;
@@ -31,10 +35,6 @@ import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.reactive.id.impl.ReactiveGeneratorWrapper;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractIdOptimizerDefaultTest {
 

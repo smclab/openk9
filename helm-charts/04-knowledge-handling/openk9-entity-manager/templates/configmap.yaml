@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+data:
+  QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
+  QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
+  
+  QUARKUS_OPENSEARCH_HOSTS: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+
+  QUARKUS_NEO4J_URI: "bolt://{{ .Values.neo4j.host }}:{{ .Values.neo4j.port }}"
+  QUARKUS_NEO4J_AUTHENTICATION_USERNAME: {{ .Values.neo4j.username | quote }}
+
+  OPENK9_ENTITY_UNIQUE_ENTITIES: 'date,organization,loc,email,document,bank,person'
+  OPENK9_ENTITY_MIN_HOPS: '1'
+  OPENK9_ENTITY_MAX_HOPS: '2'
+  OPENK9_ENTITY_SCORE_THRESHOLD: '0.8'
+  
+  HZ_NETWORK_JOIN_KUBERNETES_NAMESPACE: {{ .Release.Namespace | quote }}
+  HZ_NETWORK_JOIN_KUBERNETES_SERVICENAME: openk9-entity-manager
+
+  QUARKUS_REST_CLIENT_DATASOURCE_URL: {{ include "helper.datasourceURL" . | quote }}
+
+  JAVA_DEBUG: 'true'
+  QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
+  QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
+  QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
+  QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
+
+  # JVM Memory variable
+  JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
+
+  # Opentelemetry env
+  QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
+  QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ .Values.otel.endpoint | quote }}

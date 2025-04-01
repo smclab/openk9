@@ -1,0 +1,376 @@
+# Copyright Smc Treviso, S.r.l All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+# Default values for openk9-searcher.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## @param replicaCount Number of Datasource replicas to deploy
+##
+replicaCount: 1
+
+## @section Datasource Image parameters
+## Docker Searcher image version
+## ref: https://hub.docker.com/u/smclab
+## @param image.registry [default: REGISTRY_NAME] Datasource image registry
+## @skip image.tag Searcher image tag (immutable tags are recommended)
+## @param image.pullPolicy Searcher image pull policy
+## @param image.pullSecrets Specify docker-registry secret names as an array
+image:
+  registry: ""
+  name: smclab/openk9-searcher
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+  ## Specify a imagePullPolicy
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
+  ##
+  pullPolicy: Always
+
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ## Example:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets:
+    - docker-registry-secret
+
+## @param commonAnnotations Annotations to add to all deployed objects
+##
+commonAnnotations:
+  prometheus.io/scheme: http
+  prometheus.io/scrape: "false"
+
+## @param nameOverride String to partially override fullname template (will maintain the release name)
+##
+nameOverride: ""
+
+## @param fullnameOverride String to fully override fullname template
+##
+fullnameOverride: ""
+
+## Http Access Log configuration
+config:
+  httpAccessLog:
+    enabled: true
+    pattern: "%h %l %u %t \"%r\" %s %b %D"
+
+## JVM configuration
+jvm:
+  toolOptions: ""
+
+## Kubernetes service type
+##
+service:
+  ## @param service.type Kubernetes Service type
+  ##
+  type: ClusterIP
+  ## Service ports
+  ## @param service.port Http service port
+  port: 8080
+  ## Service ports
+  ## @param service.port Http service port
+  debugPort: 5005
+  ## Service ports
+  ## @param service.port Http service port
+  grpcPort: 9000
+
+## Quarkus configuration
+quarkus:
+## - add rel 1.6.0
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.local/,"
+  LogConsoleJson: false ## put to true to force json log format
+  LogLevel: "INFO"
+
+## Keycloak configuration
+keycloak:
+##  Puntamento Route Services
+  host: "keycloak.openk9.local"  #-TBMD
+  clientId: "openk9"
+
+## Opensearch configuration
+opensearch:
+  host: "opensearch-cluster-master-headless"
+  port: 9200
+  username: "opensearch"
+  passwordSecretName: "opensearch-password"
+  keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"
+  keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
+
+
+## Openk9 Services configuration
+openk9:
+  ## Openk9 Datasource configuration
+  datasource:
+    host: "openk9-datasource"
+  ## Openk9 Tenant Manager configuration
+  tenantManager:
+    host: "openk9-tenant-manager"
+
+search:
+  total:
+    limit: 10000
+
+## Opentelemetry configuration
+otel:
+  disabled: true
+  endpoint: ""
+
+## Searcher pods ServiceAccount
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Searcher pods
+  ##
+  create: false
+  ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
+  ##
+  annotations: {}
+  ## @param serviceAccount.name Name of the created serviceAccount
+  ## If not set and create is true, a name is generated using the fullname template
+  ##
+  name: ""
+
+## @param podAnnotations Searcher Pod annotations. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## Searcher pods' Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+## @param podSecurityContext.enabled Enable Searcher pods' Security Context
+## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
+## @param podSecurityContext.supplementalGroups Set filesystem extra groups
+## @param podSecurityContext.fsGroup Set Searcher pod's Security Context fsGroup
+##
+podSecurityContext: {}
+  # fsGroup: 2000
+
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+## @param hostAliases Deployment pod host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+##
+hostAliases: []
+
+
+## Configure the ingress resource that allows you to access the
+## Searcher installation. Set up the URL
+## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+##
+ingress:
+  ## @param ingress.enabled Enable ingress resource for Searcher console
+  ##
+  enabled: false
+  ## @param ingress.enabled Enable ingress resource for Searcher console
+  ##
+  host: openk9.local   #-TBMD
+  ## @param ingress.annotations Additional annotations for the Ingress resource.
+  ## For a full list of possible ingress annotations, please see
+  ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+  ##
+  ## e.g:
+  ## annotations:
+  ##   kubernetes.io/ingress.class: nginx
+  ##
+  annotations: {}
+  ## @param ingress.servicePort Path for the default port.
+  ##
+  servicePort: 8080
+  ## @param ingress.paths Paths for the default host.
+  ##
+  paths:
+    - /api/searcher
+  ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
+  ##
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret   #-TBMD
+
+route:
+  enabled: false
+  annotations: {}
+  host: openk9.local #-TBMD
+  path: /api/datasource
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret #-TBMD
+
+## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 2
+##     memory: 512Mi
+##   limits:
+##     cpu: 3
+##     memory: 1024Mi
+##
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilizationPercentage: 80
+  averageMemoryUtilizationPercentage: 80
+
+## @param nodeSelector Node labels for pod assignment. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+##
+nodeSelector: {}
+
+## @param tolerations Tolerations for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## @param affinity Affinity for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+
+## Configure Datasource containers' extra options for startup probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param startupProbe.enabled Enable startupProbe
+## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+## @param startupProbe.periodSeconds Period seconds for startupProbe
+## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
+## @param startupProbe.failureThreshold Failure threshold for startupProbe
+## @param startupProbe.successThreshold Success threshold for startupProbe
+##
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Datasource containers' extra options for liveness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param livenessProbe.enabled Enable livenessProbe
+## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+## @param livenessProbe.periodSeconds Period seconds for livenessProbe
+## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+## @param livenessProbe.failureThreshold Failure threshold for livenessProbe
+## @param livenessProbe.successThreshold Success threshold for livenessProbe
+##
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Datasource containers' extra options for readiness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param readinessProbe.enabled Enable readinessProbe
+## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+## @param readinessProbe.successThreshold Success threshold for readinessProbe
+##
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+
+
+metrics:
+  ## @param metrics.prometheusAuthType Authentication mode for Prometheus (`jwt` or `public`)
+  ## To allow public access without authentication for prometheus metrics set environment as follows.
+  ##
+  enabled: false
+  ## Prometheus Operator ServiceMonitor configuration
+  ##
+  serviceMonitor:
+    ## @param metrics.serviceMonitor.enabled If the operator is installed in your cluster, set to true to create a Service Monitor Entry
+    ##
+    enabled: true
+    ## @param metrics.serviceMonitor.namespace Namespace which Prometheus is running in
+    ##
+    namespace: ""
+    ## @param metrics.serviceMonitor.labels Extra labels for the ServiceMonitor
+    ##
+    labels:
+      release: prometheus-stack
+    ## @param metrics.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in Prometheus
+    ##
+    jobLabel: ""
+    ## @param metrics.serviceMonitor.path HTTP path to scrape for metrics
+    ##
+    path: /metrics
+    ## @param metrics.serviceMonitor.port port for metrics expose for Quarkus
+    ##
+    port: http
+    ## @param metrics.serviceMonitor.interval Interval at which metrics should be scraped
+    ##
+    interval: 30s
+    ## @param metrics.serviceMonitor.scrapeTimeout Specify the timeout after which the scrape is ended
+    ## e.g:
+    ## scrapeTimeout: 30s
+    scrapeTimeout: ""
+    ## @param metrics.serviceMonitor.metricRelabelings MetricRelabelConfigs to apply to samples before ingestion
+    ##
+    metricRelabelings: []
+    ## @param metrics.serviceMonitor.relabelings Metrics relabelings to add to the scrape endpoint, applied before scraping
+    ##
+    relabelings: []
+    ## @param metrics.serviceMonitor.honorLabels Specify honorLabels parameter to add the scrape endpoint
+    ##
+    honorLabels: false
+    ## @param metrics.serviceMonitor.selector Prometheus instance selector labels
+    ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
+    ##
+    selector:
+      app.kubernetes.io/instance: searcher
+    ## @param metrics.serviceMonitor.apiVersion ApiVersion for the serviceMonitor Resource (defaults to "monitoring.coreos.com/v1")
+    apiVersion: "monitoring.coreos.com/v1"
+    ## @param metrics.serviceMonitor.tlsConfig Additional TLS configuration for metrics endpoint with "https" scheme
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.TLSConfig
+    tlsConfig: {}
+
+  ## Prometheus Operator PrometheusRule configuration
+  ##
+  prometheusRule:
+    ## @param metrics.prometheusRule.enabled Create a Prometheus Operator PrometheusRule (also requires `metrics.enabled` to be `true` and `metrics.prometheusRule.rules`)
+    ##
+    enabled: false
+    ## @param metrics.prometheusRule.namespace Namespace for the PrometheusRule Resource (defaults to the Release Namespace)
+    ##
+    namespace: ""
+    ## @param metrics.prometheusRule.additionalLabels Additional labels that can be used so PrometheusRule will be discovered by Prometheus
+    ##
+    additionalLabels: {}
+    ## @param metrics.prometheusRule.rules Prometheus Rule definitions
+      # - alert: minio cluster nodes offline
+      #   annotations:
+      #     summary: "minio cluster nodes offline"
+      #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
+      #   for: 10m
+      #   expr: minio_cluster_nodes_offline_total > 0
+      #   labels:
+      #     severity: critical
+      #     group: PaaS
+    ##
+    rules: []

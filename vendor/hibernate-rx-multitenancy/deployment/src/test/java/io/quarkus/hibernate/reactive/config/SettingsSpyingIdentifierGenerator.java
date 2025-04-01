@@ -17,6 +17,13 @@
 
 package io.quarkus.hibernate.reactive.config;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -24,13 +31,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * This was the only way I found to get our hands on the settings used during metadata building.
@@ -41,7 +41,7 @@ public class SettingsSpyingIdentifierGenerator implements IdentifierGenerator {
 
     @Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry)
-	throws MappingException {
+		throws MappingException {
 		collectedSettings.add(new HashMap<>(serviceRegistry
 			.getService(ConfigurationService.class)
 			.getSettings()));
@@ -49,7 +49,7 @@ public class SettingsSpyingIdentifierGenerator implements IdentifierGenerator {
 
     @Override
 	public Serializable generate(SharedSessionContractImplementor session, Object object)
-	throws HibernateException {
+		throws HibernateException {
         throw new IllegalStateException("This should not be called");
     }
 }

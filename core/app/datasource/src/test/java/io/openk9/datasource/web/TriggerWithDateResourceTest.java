@@ -32,6 +32,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.ArgumentMatchers.nullable;
@@ -60,7 +61,7 @@ public class TriggerWithDateResourceTest {
 
 					datasourceJobStatuses.add(
 						new SchedulerService.DatasourceJobStatus(
-							0l, SchedulerService.JobStatus.ON_SCHEDULING));
+							0L, SchedulerService.JobStatus.ON_SCHEDULING));
 
 					return datasourceJobStatuses;
 				}));
@@ -77,7 +78,9 @@ public class TriggerWithDateResourceTest {
 				"}")
 			.post()
 			.then()
-			.statusCode(200);
+			.statusCode(200)
+			.body("id", equalTo(0))
+			.body("status", equalTo("ON_SCHEDULING"));
 
 		BDDMockito.then(schedulerInitializer).should()
 			.triggerJobs(nullable(String.class), argThat(dto ->

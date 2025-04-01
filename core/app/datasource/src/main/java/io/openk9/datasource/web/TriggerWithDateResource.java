@@ -41,10 +41,21 @@ import java.util.List;
 @RolesAllowed("k9-admin")
 public class TriggerWithDateResource {
 
+	/**
+	 * Triggers the scheduling or reindexing for the specified datasource and ingestion parameters.
+	 * <p>
+	 * This method accepts a {@link TriggerV2ResourceDTO} object containing the datasource ID,
+	 * reindex flag, and start ingestion date.
+	 * It retrieves the status of the schedule that is trying to be started,
+	 * and triggers the scheduled jobs if necessary.
+	 *
+	 * @param dto The {@link TriggerV2ResourceDTO} object containing the parameters for the job trigger.
+	 * @return A {@link Uni} representing the status of the triggered jobs as a {@link SchedulerService.DatasourceJobStatus}.
+	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ActivateRequestContext
-	public Uni<List<SchedulerService.DatasourceJobStatus>> trigger(TriggerV2ResourceDTO dto) {
+	public Uni<SchedulerService.DatasourceJobStatus> trigger(TriggerV2ResourceDTO dto) {
 
 		TriggerWithDateResourceDTO withDateResourceDTO =
 			TriggerWithDateResourceDTO.builder()
@@ -58,11 +69,13 @@ public class TriggerWithDateResource {
 
 		return schedulerService
 			.getStatusByDatasources(datasourceIds)
+			.onItem()
+			.transform(datasourceJobStatuses ->
+				datasourceJobStatuses.stream().findFirst().orElse(null))
 			.call(() -> schedulerInitializer
 				.get()
 				.triggerJobs(tenantId, withDateResourceDTO)
 			);
-
 	}
 
 	@Inject

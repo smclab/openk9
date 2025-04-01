@@ -17,8 +17,7 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
+import java.time.OffsetDateTime;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,11 +33,13 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToOne;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.time.OffsetDateTime;
 
 @Entity
 @Getter
@@ -48,13 +49,13 @@ import java.time.OffsetDateTime;
 	@NamedEntityGraph(
 		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
 		attributeNodes = {
-			@NamedAttributeNode(value = "datasource"),
+			@NamedAttributeNode(value = Scheduler_.DATASOURCE),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -62,7 +63,18 @@ import java.time.OffsetDateTime;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph"
+					)
+				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
 				}
 			)
 		}
@@ -71,15 +83,15 @@ import java.time.OffsetDateTime;
 		name = Scheduler.ENRICH_ITEMS_ENTITY_GRAPH,
 		attributeNodes = {
 			@NamedAttributeNode(
-				value = "datasource",
+				value = Scheduler_.DATASOURCE,
 				subgraph = "datasource-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -88,7 +100,7 @@ import java.time.OffsetDateTime;
 				name = "datasource-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipeline",
+						value = Datasource_.ENRICH_PIPELINE,
 						subgraph = "enrichPipeline-subgraph"
 					)
 				}
@@ -97,7 +109,7 @@ import java.time.OffsetDateTime;
 				name = "enrichPipeline-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipelineItems",
+						value = EnrichPipeline_.ENRICH_PIPELINE_ITEMS,
 						subgraph = "enrichPipelineItems-subgraph"
 					)
 				}
@@ -105,13 +117,23 @@ import java.time.OffsetDateTime;
 			@NamedSubgraph(
 				name = "enrichPipelineItems-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "enrichItem")
+					@NamedAttributeNode(value = EnrichPipelineItem_.ENRICH_ITEM)
 				}
 			),
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph")
+				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
 				}
 			)
 		}
@@ -172,4 +194,13 @@ public class Scheduler extends K9Entity {
 		STALE,
 		FAILURE
 	}
+
+	public DataIndex getDataIndex() {
+		if (newDataIndex == null) {
+			return oldDataIndex;
+		}
+
+		return newDataIndex;
+	}
+
 }

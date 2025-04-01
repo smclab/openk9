@@ -17,6 +17,30 @@
 
 package io.openk9.datasource.listener;
 
+import io.openk9.common.util.ShardingKey;
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.MessageGateway;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+import io.openk9.datasource.util.CborSerializable;
+import io.openk9.datasource.util.SchedulerUtil;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.BehaviorBuilder;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.StashBuffer;
+import org.apache.pekko.actor.typed.receptionist.Receptionist;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
+import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
+import org.jboss.logging.Logger;
+import scala.Option;
+
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -28,89 +52,72 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
-import io.openk9.common.util.ShardingKey;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.pipeline.actor.MessageGateway;
-import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.actor.SchedulingEntityType;
-import io.openk9.datasource.pipeline.base.BasePipeline;
-import io.openk9.datasource.pipeline.vector.VectorPipeline;
-import io.openk9.datasource.util.CborSerializable;
-
-import com.typesafe.config.Config;
-import org.apache.pekko.actor.typed.ActorRef;
-import org.apache.pekko.actor.typed.ActorSystem;
-import org.apache.pekko.actor.typed.Behavior;
-import org.apache.pekko.actor.typed.javadsl.ActorContext;
-import org.apache.pekko.actor.typed.javadsl.Behaviors;
-import org.apache.pekko.actor.typed.receptionist.Receptionist;
-import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
-import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
-import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
-import org.jboss.logging.Logger;
-import scala.Option;
-
 public class JobScheduler {
 
-	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
-	private static final String PURGE_SUFFIX = "-purge";
-	private static final String REINDEX_SUFFIX = "-reindex";
+	public sealed interface Command extends CborSerializable {}
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
 	public static Behavior<Command> create(
 		List<ScheduleDatasource> schedulatedJobs) {
 
-		return Behaviors.setup(ctx -> {
+		return Behaviors.withStash(
+			100,
+			stash -> Behaviors.setup(ctx -> {
 
-			log.info("setup job-scheduler");
+				log.info("setup job-scheduler");
 
-			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
-				QuartzSchedulerTypedExtension.get(ctx.getSystem());
+				QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
+					QuartzSchedulerTypedExtension.get(ctx.getSystem());
 
-			ActorRef<Receptionist.Listing> listingActorRef =
-				ctx.messageAdapter(
-					Receptionist.Listing.class,
-					MessageGatewaySubscription::new
+				ActorRef<Receptionist.Listing> listingActorRef =
+					ctx.messageAdapter(
+						Receptionist.Listing.class,
+						MessageGatewaySubscription::new
+					);
+
+				ctx
+					.getSystem()
+					.receptionist()
+					.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
+
+				return setup(
+					ctx,
+					stash,
+					quartzSchedulerTypedExtension,
+					new ArrayDeque<>(schedulatedJobs)
 				);
-
-			ctx
-				.getSystem()
-				.receptionist()
-				.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
-
-			return setup(
-				ctx,
-				quartzSchedulerTypedExtension,
-				new ArrayDeque<>(schedulatedJobs)
-			);
-
-
-		});
+			})
+		);
 	}
 
-	private static String getPurgeCron(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		String configPath = "io.openk9.scheduling.purge.cron";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return EVERY_DAY_AT_1_AM;
-			} else {
-				return config.getString(configPath);
-			}
-		} else {
-			return EVERY_DAY_AT_1_AM;
-		}
-
-	}
-
-	private static Behavior<Command> initial(
+	private static Behavior<Command> busy(
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		return newReceiveBuilder(
+			ctx,
+			currentBehavior,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		)
+		.onMessage(TriggerDatasource.class, jm -> onStashMessage(messageBuffer, jm))
+		.build();
+	}
+
+	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
+		return actorRef.path().address().port().isEmpty();
+	}
+
+	private static BehaviorBuilder<Command> newReceiveBuilder(
+		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
@@ -118,7 +125,9 @@ public class JobScheduler {
 		return Behaviors.receive(Command.class)
 			.onMessage(
 				MessageGatewaySubscription.class,
-				mgs -> onInitialMessageGatewaySubscription(ctx,
+				mgs -> onInitialMessageGatewaySubscription(
+					ctx,
+					messageBuffer,
 					mgs,
 					quartzSchedulerTypedExtension,
 					jobNames
@@ -129,21 +138,14 @@ public class JobScheduler {
 				cns -> onCreateNewScheduler(cns, ctx) )
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
-			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx))
 			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx))
 			.onMessage(
 				ScheduleDatasourceInternal.class,
-				sdi -> onScheduleDatasourceInternal(sdi,
+				sdi -> onScheduleDatasourceInternal(
+					sdi,
 					ctx,
-					quartzSchedulerTypedExtension,
-					messageGateway,
-					jobNames
-				)
-			)
-			.onMessage(
-				ScheduleReindexDatasourceInternal.class,
-				srdi -> onScheduleReindexDatasourceInternal(srdi,
-					ctx,
+					currentBehavior,
+					messageBuffer,
 					quartzSchedulerTypedExtension,
 					messageGateway,
 					jobNames
@@ -151,8 +153,10 @@ public class JobScheduler {
 			)
 			.onMessage(
 				UnScheduleJobInternal.class,
-				rd -> onUnscheduleJobInternal(rd,
+				rd -> onUnscheduleJobInternal(
+					rd,
 					ctx,
+					messageBuffer,
 					quartzSchedulerTypedExtension,
 					messageGateway,
 					jobNames
@@ -160,38 +164,60 @@ public class JobScheduler {
 			)
 			.onMessage(
 				TriggerDatasourceInternal.class,
-				tdi -> onTriggerDatasourceInternal(tdi, ctx)
+				tdi -> onTriggerDatasourceInternal(
+					tdi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
 			)
 			.onMessage(
 				InvokePluginDriverInternal.class,
 				ipdi -> onInvokePluginDriverInternal(ipdi, ctx)
 			)
-			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, ssi))
-			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, cit))
+			.onMessage(
+				StartSchedulerInternal.class,
+				ssi -> onStartScheduler(
+					ssi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				CopyIndexTemplate.class,
+				cit -> onCopyIndexTemplate(ctx, cit))
 			.onMessage(
 				PersistSchedulerInternal.class,
-				pndi -> onPersistSchedulerInternal(ctx, pndi)
+				pndi -> onPersistSchedulerInternal(
+					pndi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
 			)
 			.onMessage(
-				StartSchedulingWork.class,
-				rq -> onStartSchedulingWork(ctx, messageGateway, rq)
+				PersistSchedulerResponse.class,
+				res -> onPersistSchedulerResponse(
+					res,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
 			)
-			.onMessage(StartVectorPipeline.class, msg -> onStartVectorPipeline(ctx, msg))
 			.onMessage(
-				PersistVectorSchedulerInternal.class,
-				msg -> onPersistVectorSchedulerInternal(ctx, msg)
+				InvokePluginDriverResponse.class,
+				res -> onInvokePluginDriverResponse(ctx, res)
 			)
-			.onMessage(
-				RegisterVectorQueue.class,
-				msg -> onRegisterVectorQueue(ctx, messageGateway, msg)
-			)
-			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs))
-			.build();
-
-	}
-
-	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
-		return actorRef.path().address().port().isEmpty();
+			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs));
 	}
 
 	private static Behavior<Command> onAddDatasource(
@@ -203,16 +229,30 @@ public class JobScheduler {
 		ctx.getSelf().tell(
 			new ScheduleDatasourceInternal(
 				tenantName, datasourceId,
+				JobType.TRIGGER,
 				addDatasource.schedulable,
-				addDatasource.schedulingCron
+				addDatasource.schedulingCron,
+				null
 			)
 		);
 
 		ctx.getSelf().tell(
-			new ScheduleReindexDatasourceInternal(
+			new ScheduleDatasourceInternal(
 				tenantName, datasourceId,
+				JobType.REINDEX,
 				addDatasource.reindexable,
-				addDatasource.reindexingCron
+				addDatasource.reindexingCron,
+				null
+			)
+		);
+
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId,
+				JobType.PURGE,
+				addDatasource.purgeable,
+				addDatasource.purgingCron,
+				addDatasource.purgeMaxAge
 			)
 		);
 
@@ -234,23 +274,14 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onCreateNewScheduler(
-		CreateNewScheduler createNewScheduler, ActorContext<Command> ctx) {
+		CreateNewScheduler createNewScheduler,
+		ActorContext<Command> ctx) {
 
 		var triggerType = createNewScheduler.triggerType;
 		var datasource = createNewScheduler.datasource;
 		var tenantName = createNewScheduler.tenantName;
 		var startIngestionDate = createNewScheduler.startIngestionDate;
 		var throwable1 = createNewScheduler.throwable;
-
-		if (throwable1 != null) {
-
-			log.error("Scheduler cannot be created.", throwable1);
-
-			return Behaviors.same();
-
-		}
-
-		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
 
 		var scheduleId = UUID.randomUUID().toString();
 
@@ -259,6 +290,28 @@ public class JobScheduler {
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+
+		// The scheduler cannot start, so a scheduler in FAILURE state is created
+		if (throwable1 != null) {
+
+			log.errorf(
+				throwable1,
+				"The scheduler cannot start, so a scheduler with schedule-id %s " +
+					"in FAILURE state is created.",
+				scheduler.getScheduleId()
+			);
+
+			var errorDescription = SchedulerUtil.getErrorDescription(throwable1);
+
+			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+			scheduler.setErrorDescription(errorDescription);
+
+			JobSchedulerService.persistScheduler(tenantName, scheduler);
+
+			return Behaviors.same();
+		}
+
+		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
 
@@ -275,6 +328,7 @@ public class JobScheduler {
 
 			if (oldDataIndex != null) {
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+				newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
 
 				if (docTypes != null && !docTypes.isEmpty()) {
 					ctx.getSelf().tell(
@@ -288,7 +342,7 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(response, throwable) ->
-				new StartSchedulingWork(scheduler, startIngestionDate, throwable)
+				new PersistSchedulerResponse(scheduler, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
@@ -308,15 +362,18 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
 
 		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
+			Scheduling.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
 
-		schedulingRef.tell(new Scheduling.Halt(exception));
+		schedulingRef.tell(
+			new Scheduling.Halt(new InvokePluginDriverException(exception)));
 
 		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onInitialMessageGatewaySubscription(
-		ActorContext<Command> ctx, MessageGatewaySubscription mgs,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		MessageGatewaySubscription mgs,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		List<String> jobNames) {
 
@@ -327,9 +384,12 @@ public class JobScheduler {
 			.findFirst();
 
 		if (actorRefOptional.isPresent()) {
-			return initial(
-				ctx, quartzSchedulerTypedExtension,
-				actorRefOptional.get(), jobNames
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				actorRefOptional.get(),
+				jobNames
 			);
 		}
 
@@ -366,17 +426,8 @@ public class JobScheduler {
 				ctx.pipeToSelf(
 					JobSchedulerService.callHttpPluginDriverClient(
 						scheduler, lastIngestionDate),
-					(unused, throwable) -> {
-						if (throwable != null) {
-							return new HaltScheduling(
-								scheduler,
-								new InvokePluginDriverException(throwable)
-							);
-						}
-						else {
-							return new StartVectorPipeline(scheduler);
-						}
-					}
+					(unused, throwable) ->
+						new InvokePluginDriverResponse(scheduler, throwable)
 				);
 
 			}
@@ -385,8 +436,35 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
+	private static Behavior<Command> onInvokePluginDriverResponse(
+		ActorContext<Command> ctx,
+		InvokePluginDriverResponse res) {
+
+		var scheduler = res.scheduler();
+		var exception = res.exception();
+
+		if (exception != null) {
+			ctx.getSelf().tell(new HaltScheduling(scheduler, exception));
+		}
+		else {
+			var datasource = scheduler.getDatasource();
+			var tenantId = datasource.getTenant();
+			var scheduleId = scheduler.getScheduleId();
+
+			// TODO: transform to a message
+			startSchedulingActor(ctx, tenantId, scheduleId);
+		}
+
+		return Behaviors.same();
+	}
+
 	private static Behavior<Command> onPersistSchedulerInternal(
-		ActorContext<Command> ctx, PersistSchedulerInternal pndi) {
+		PersistSchedulerInternal pndi,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
 		Scheduler scheduler = pndi.scheduler;
 		var datasource = scheduler.getDatasource();
@@ -402,61 +480,66 @@ public class JobScheduler {
 				datasource
 			);
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(s, throwable) ->
-				new StartSchedulingWork(s,null, throwable)
+				new PersistSchedulerResponse(s, null, throwable)
 		);
 
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onPersistVectorSchedulerInternal(
+	private static Behavior<Command> onPersistSchedulerResponse(
+		PersistSchedulerResponse rq,
 		ActorContext<Command> ctx,
-		PersistVectorSchedulerInternal msg) {
-
-		Scheduler scheduler = msg.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-
-		Throwable exception = msg.throwable();
-
-		if (exception != null) {
-			log.errorf(
-				exception,
-				"Cannot persist the Vector Scheduler for tenant: %s and datasource: %s",
-				tenantId,
-				datasource
-			);
-
-			return Behaviors.same();
-		}
-
-		ctx.pipeToSelf(
-			JobSchedulerService.persistScheduler(tenantId, scheduler),
-			RegisterVectorQueue::new
-		);
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onRegisterVectorQueue(
-		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
-		RegisterVectorQueue msg) {
+		List<String> jobNames) {
 
-		var scheduler = msg.scheduler();
+		var scheduler = rq.scheduler();
 		var datasource = scheduler.getDatasource();
 		var tenantId = datasource.getTenant();
+		var startIngestionDate = rq.startIngestionDate;
+
+		var throwable = rq.throwable();
+
+		if (throwable != null) {
+
+			log.error("Scheduler cannot be persisted.", throwable);
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
+		}
 
 		messageGateway.tell(new MessageGateway.Register(
 			ShardingKey.asString(
 				tenantId, scheduler.getScheduleId())));
 
-		return Behaviors.same();
+		ctx.getSelf()
+			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
+
+		return unstashAndRelease(
+			ctx,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		);
 	}
 
 	private static Behavior<Command> onRemoveDatasource(
@@ -467,9 +550,12 @@ public class JobScheduler {
 
 		String jobName = tenantName + "-" + datasourceId;
 
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName + REINDEX_SUFFIX));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.TRIGGER.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.REINDEX.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.PURGE.name().toLowerCase()));
 
 		return Behaviors.same();
 
@@ -478,163 +564,114 @@ public class JobScheduler {
 	private static Behavior<Command> onScheduleDatasourceInternal(
 		ScheduleDatasourceInternal scheduleDatasourceInternal,
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
 
 		String tenantName = scheduleDatasourceInternal.tenantName();
 		long datasourceId = scheduleDatasourceInternal.datasourceId();
+		JobType jobType = scheduleDatasourceInternal.jobType();
 		String cron = scheduleDatasourceInternal.cron();
 		boolean schedulable = scheduleDatasourceInternal.schedulable();
+		String purgeMaxAge = scheduleDatasourceInternal.purgeMaxAge();
 
 		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
 			quartzSchedulerTypedExtension).defaultTimezone();
 
-		String jobName = tenantName + "-" + datasourceId;
+		String jobName = tenantName + "-" + datasourceId + "-" + jobType.name().toLowerCase();
+
+		Command command = new TriggerDatasource(tenantName, datasourceId, false, null);
+
+		switch (jobType) {
+			case JobType.TRIGGER:
+				command = new TriggerDatasource(tenantName, datasourceId, false, null);
+				break;
+
+			case REINDEX:
+				command = new TriggerDatasource(tenantName, datasourceId, true, null);
+				break;
+
+			case PURGE:
+				command = new TriggerDatasourcePurge(tenantName, datasourceId, purgeMaxAge);
+				break;
+		}
 
 		if (schedulable) {
 
-			if (jobNames.contains(jobName)) {
+			try {
+				if (jobNames.contains(jobName)) {
 
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
+					quartzSchedulerTypedExtension.updateTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
 
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName + PURGE_SUFFIX,
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					defaultTimezone
-				);
+					log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
 
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
+					return Behaviors.same();
+				}
+				else {
 
-				return Behaviors.same();
+					quartzSchedulerTypedExtension.createTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
+
+					log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
+
+					List<String> newJobNames = new ArrayList<>(jobNames);
+
+					newJobNames.add(jobName);
+
+					// return the current behavior and update the actor jobNames list
+					switch (currentBehavior) {
+						case READY -> {
+							return ready(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+						case BUSY -> {
+							return busy(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+					}
+				}
 			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, false, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName + PURGE_SUFFIX,
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					defaultTimezone
-				);
-
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-				newJobNames.add(jobName + PURGE_SUFFIX);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension,
-					messageGatewayService, newJobNames
-				);
-
+			catch (Exception e) {
+				log.errorf(e, "Error creating job \"%s\"", jobName);
+				return Behaviors.same();
 			}
 		}
 		else if (jobNames.contains(jobName)) {
 			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-			ctx.getSelf().tell(new UnScheduleJobInternal(jobName + PURGE_SUFFIX));
 			log.infof("job is not schedulable, removing job: %s", jobName);
 			return Behaviors.same();
 		}
 
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onScheduleReindexDatasourceInternal(
-		ScheduleReindexDatasourceInternal scheduleReindexDatasourceInternal,
-		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
-
-		String tenantName = scheduleReindexDatasourceInternal.tenantName();
-		long datasourceId = scheduleReindexDatasourceInternal.datasourceId();
-		String cron = scheduleReindexDatasourceInternal.cron();
-		boolean reindexable = scheduleReindexDatasourceInternal.reindexable();
-
-		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
-			quartzSchedulerTypedExtension).defaultTimezone();
-
-		String jobName = tenantName + "-" + datasourceId + REINDEX_SUFFIX;
-
-		if (reindexable) {
-
-			if (jobNames.contains(jobName)) {
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, true, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
-
-				return Behaviors.same();
-			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, true, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					defaultTimezone
-				);
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension,
-					messageGatewayService, newJobNames
-				);
-
-			}
-		}
-		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
-			log.infof("Reindex job is not schedulable, removing job: %s", jobName);
-			return Behaviors.same();
-		}
-
-		log.infof("Reindex job not created: datasourceId: %s, the datasource is not reindexable", datasourceId);
+		log.infof("Job of type %s not created: datasourceId: %s, the datasource is not schedulable",
+			jobType.name(), datasourceId);
 
 		return Behaviors.same();
 
@@ -659,8 +696,12 @@ public class JobScheduler {
 	}
 
 	private static Behavior<Command> onStartScheduler(
+		StartSchedulerInternal startSchedulerInternal,
 		ActorContext<Command> ctx,
-		StartSchedulerInternal startSchedulerInternal) {
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
 		Datasource datasource = startSchedulerInternal.datasource;
 		var tenantName = datasource.getTenant();
@@ -673,7 +714,13 @@ public class JobScheduler {
 		if (throwable1 != null) {
 			log.warnf(throwable1, "Cannot start a Scheduler.");
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
 		var triggerType = startSchedulerInternal.triggerType();
@@ -692,7 +739,13 @@ public class JobScheduler {
 				datasource.getId()
 			);
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
 		if (schedulerToCancel != null) {
@@ -713,88 +766,22 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onStartSchedulingWork(
-		ActorContext<Command> ctx,
-		ActorRef<MessageGateway.Command> messageGateway,
-		StartSchedulingWork rq) {
+	private static Behavior<Command> onStashMessage(
+		StashBuffer<Command> messageBuffer,
+		Command message) {
 
-		var scheduler = rq.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-		var startIngestionDate = rq.startIngestionDate;
-
-		var throwable = rq.throwable();
-
-		if (throwable != null) {
-
-			log.error("Scheduler cannot be persisted.", throwable);
-
-			return Behaviors.same();
-
-		}
-
-		startSchedulingActor(ctx, tenantId, scheduler.getScheduleId());
-
-		messageGateway.tell(new MessageGateway.Register(
-			ShardingKey.asString(
-				tenantId, scheduler.getScheduleId())));
-
-		ctx.getSelf()
-			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onStartVectorPipeline(
-		ActorContext<Command> ctx,
-		StartVectorPipeline msg) {
-
-		var scheduler = msg.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
-
-		var oldDataIndex = scheduler.getOldDataIndex();
-
-		if (oldDataIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var vectorIndex = oldDataIndex.getVectorIndex();
-
-		if (vectorIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var scheduleId = scheduler.getScheduleId();
-		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
-
-		var vScheduler = new Scheduler();
-		vScheduler.setScheduleId(vScheduleId);
-		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		vScheduler.setDatasource(datasource);
-		vScheduler.setOldDataIndex(oldDataIndex);
-
-		ctx.pipeToSelf(
-			JobSchedulerService.fetchEmbeddingModel(tenantId),
-			(ignore, throwable) ->
-				new PersistVectorSchedulerInternal(vScheduler, throwable)
-		);
-
+		messageBuffer.stash(message);
+		log.infof("There are %d commands waiting", messageBuffer.size());
 		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onTriggerDatasource(
-		TriggerDatasource jobMessage, ActorContext<Command> ctx) {
+		TriggerDatasource jobMessage,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
 		long datasourceId = jobMessage.datasourceId;
 		String tenantId = jobMessage.tenantName;
@@ -808,13 +795,23 @@ public class JobScheduler {
 				tenantId, datasource, reindex, startIngestionDate, throwable)
 		);
 
-		return Behaviors.same();
-
+		return busy(
+			ctx,
+			CurrentBehavior.BUSY,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		);
 	}
 
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
-		ActorContext<Command> ctx) {
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
 		var throwable = triggerDatasourceInternal.throwable();
 		String tenantId = triggerDatasourceInternal.tenantName();
@@ -826,7 +823,13 @@ public class JobScheduler {
 				tenantId
 			);
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
 		Datasource datasource = triggerDatasourceInternal.datasource();
@@ -841,7 +844,13 @@ public class JobScheduler {
 			log.warnf(
 				"datasource with id: %s has no pluginDriver", datasource.getId());
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
 		ctx.pipeToSelf(
@@ -857,15 +866,17 @@ public class JobScheduler {
 		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
 
 		String tenantName = tdp.tenantName();
-		long datasourceId = tdp.datasourceId;
+		long datasourceId = tdp.datasourceId();
+		String purgeMaxAge = tdp.purgeMaxAge();
 
-		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId));
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId, purgeMaxAge));
 
 		return Behaviors.same();
 	}
 
 	private static Behavior<Command> onUnscheduleJobInternal(
 		UnScheduleJobInternal msg, ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
@@ -882,8 +893,9 @@ public class JobScheduler {
 			newJobNames.remove(jobName);
 			log.infof("Job removed: %s", jobName);
 
-			return initial(
+			return unstashAndRelease(
 				ctx,
+				messageBuffer,
 				quartzSchedulerTypedExtension,
 				messageGateway,
 				newJobNames
@@ -895,8 +907,38 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
+		private static Behavior<Command> ready(
+			ActorContext<Command> ctx,
+			CurrentBehavior currentBehavior,
+			StashBuffer<Command> messageBuffer,
+			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+			ActorRef<MessageGateway.Command> messageGateway,
+			List<String> jobNames) {
+
+		return newReceiveBuilder(
+			ctx,
+			currentBehavior,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		)
+		.onMessage(TriggerDatasource.class,
+			jm -> onTriggerDatasource(
+				jm,
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			)
+		)
+		.build();
+	}
+
 	private static Behavior<Command> setup(
 		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		Queue<Command> lag) {
 
@@ -905,6 +947,7 @@ public class JobScheduler {
 			.onMessage(MessageGatewaySubscription.class,
 				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
 			.onMessage(Start.class, start -> {
+				// TODO: remove the lag queue and use the messageBuffer queue
 				Command command = lag.poll();
 
 				while (command != null) {
@@ -912,14 +955,16 @@ public class JobScheduler {
 					command = lag.poll();
 				}
 
-				return initial(
+				return unstashAndRelease(
 					ctx,
+					messageBuffer,
 					quartzSchedulerTypedExtension,
 					start.channelManagerRef,
 					new ArrayList<>()
 				);
 			})
 			.onAnyMessage(command -> {
+				// TODO: remove the lag queue and use the messageBuffer queue
 				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
 				newLag.add(command);
 
@@ -929,6 +974,7 @@ public class JobScheduler {
 
 				return setup(
 					ctx,
+					messageBuffer,
 					quartzSchedulerTypedExtension,
 					newLag
 				);
@@ -946,25 +992,60 @@ public class JobScheduler {
 		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
 
 		var entityRef = clusterSharding.entityRefFor(
-			SchedulingEntityType.getTypeKey(shardingKey),
+			Scheduling.ENTITY_TYPE_KEY,
 			shardingKey.asString()
 		);
 
 		entityRef.tell(Scheduling.WakeUp.INSTANCE);
 	}
 
-	public sealed interface Command extends CborSerializable {}
+	private static Behavior<Command> unstashAndRelease(
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		return messageBuffer.unstashAll(
+			ready(
+				ctx,
+				CurrentBehavior.READY,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			)
+		);
+	}
+
+	private enum CurrentBehavior {
+		READY,
+		BUSY
+	}
+
+	private enum JobType {
+		TRIGGER,
+		REINDEX,
+		PURGE
+	}
+
+	private enum SetReady implements Command {
+		INSTANCE
+	}
 
 	public record ScheduleDatasource(
 		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
-		boolean reindexable, String reindexingCron
+		boolean reindexable, String reindexingCron, boolean purgeable, String purgingCron,
+		String purgeMaxAge
 	) implements Command {}
 
 	public record TriggerDatasource(
 		String tenantName, long datasourceId, boolean reindex, OffsetDateTime startIngestionDate
 	) implements Command {}
 
-	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
+	public record TriggerDatasourcePurge(
+		String tenantName, long datasourceId, String purgeMaxAge
+	) implements Command {}
 
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
@@ -977,11 +1058,16 @@ public class JobScheduler {
 
 	private record HaltScheduling(
 		Scheduler scheduler,
-		InvokePluginDriverException exception
+		Throwable exception
 	) implements Command {}
 
 	private record InvokePluginDriverInternal(
 		Scheduler scheduler, OffsetDateTime startIngestionDate
+	) implements Command {}
+
+	private record InvokePluginDriverResponse(
+		Scheduler scheduler,
+		Throwable exception
 	) implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
@@ -990,20 +1076,14 @@ public class JobScheduler {
 		Scheduler scheduler, Throwable throwable
 	) implements Command {}
 
-	private record PersistVectorSchedulerInternal(
-		Scheduler scheduler, Throwable throwable
-	)
-		implements Command {}
-
-	private record RegisterVectorQueue(Scheduler scheduler, Throwable throwable)
-		implements Command {}
-
-	private record ScheduleDatasourceInternal(
-		String tenantName, long datasourceId, boolean schedulable, String cron
+	private record PersistSchedulerResponse(
+		Scheduler scheduler, OffsetDateTime startIngestionDate,
+		Throwable throwable
 	) implements Command {}
 
-	private record ScheduleReindexDatasourceInternal(
-		String tenantName, long datasourceId, boolean reindexable, String cron
+	private record ScheduleDatasourceInternal(
+		String tenantName, long datasourceId, JobType jobType, boolean schedulable, String cron,
+		String purgeMaxAge
 	) implements Command {}
 
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
@@ -1012,12 +1092,6 @@ public class JobScheduler {
 		Datasource datasource, OffsetDateTime startIngestionDate, TriggerType triggerType,
 		Throwable throwable
 	) implements Command {}
-
-	private record StartSchedulingWork(Scheduler scheduler, OffsetDateTime startIngestionDate,
-		Throwable throwable
-	) implements Command {}
-
-	private record StartVectorPipeline(Scheduler scheduler) implements Command {}
 
 	private record TriggerDatasourceInternal(
 		String tenantName, Datasource datasource, Boolean reindex,

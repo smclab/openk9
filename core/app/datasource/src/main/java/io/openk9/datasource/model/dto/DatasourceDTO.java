@@ -17,12 +17,11 @@
 
 package io.openk9.datasource.model.dto;
 
-import com.cronutils.model.CronType;
-import com.cronutils.validation.Cron;
+import io.openk9.datasource.model.PipelineType;
 import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.validation.ValidQuartzCron;
 import io.openk9.datasource.validation.json.Json;
-import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,21 +39,33 @@ public class DatasourceDTO extends K9EntityDTO {
 	@Json
 	@Description("Json configuration with custom fields for datasource")
 	private String jsonConfig;
-	@NotNull
+	@Description("If true set active the purge job scheduling")
+	private Boolean purgeable;
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define purging for this datasource")
+	private String purging;
+	@Description("The duration to identify orphaned Dataindex.")
+	private String purgeMaxAge;
 	@Description("If true datasource is reindexed based on defined scheduling expression")
-	@Builder.Default
-	private Boolean reindexable = false;
-	@NotNull
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define reindexing of datasource")
+	private Boolean reindexable;
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define reindexing of datasource")
 	private String reindexing;
-	@NotNull
 	@Description("If true datasource is scheduled based on defined scheduling expression")
-	@Builder.Default
-	private Boolean schedulable = false;
-	@NotNull
-	@Cron(type = CronType.QUARTZ)
-	@Description("Chron quartz expression to define scheduling of datasource")
+	private Boolean schedulable;
+	@ValidQuartzCron
+	@Description("Cron quartz expression to define scheduling of datasource")
 	private String scheduling;
+	@Description("""
+		Defines what kind of pipeline you want to run during the ingestion.
+		Possible kind are:
+			- Enrich: running the enrichPipeline defined in the Datasource;
+			- Embedding: create an embedding vector using the active EmbeddingModel
+			in the tenant. You have to define the field from what you want to
+			embed information.
+			- Enrich and Embedding: you want to run first the enrichPipeline and
+			then you want to create an embedding from a field.
+		""")
+	private PipelineType pipelineType;
 
 }

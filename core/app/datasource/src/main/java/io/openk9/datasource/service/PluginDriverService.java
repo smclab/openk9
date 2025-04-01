@@ -17,29 +17,13 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
-import io.openk9.datasource.mapper.PluginDriverMapper;
-import io.openk9.datasource.model.AclMapping;
-import io.openk9.datasource.model.AclMapping_;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
-import io.openk9.datasource.model.PluginDriverDocTypeFieldKey_;
-import io.openk9.datasource.model.PluginDriver_;
-import io.openk9.datasource.model.UserField;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.model.util.K9Entity_;
-import io.openk9.datasource.resource.util.Filter;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -51,23 +35,76 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.graphql.dto.PluginWithDocTypeDTO;
+import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
+import io.openk9.datasource.mapper.PluginDriverMapper;
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.AclMapping_;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
+import io.openk9.datasource.model.PluginDriverDocTypeFieldKey_;
+import io.openk9.datasource.model.PluginDriver_;
+import io.openk9.datasource.model.UserField;
+import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.util.K9Entity_;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.resource.util.Filter;
+import io.openk9.datasource.resource.util.Page;
+import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
+
+	private static final String DEFAULT_DOCUMENT_TYPE = "default";
+
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+	@Inject
+	IndexMappingService indexMappingService;
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
 	PluginDriverService(PluginDriverMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<PluginDriverDocTypesDTO> getDocTypes(long id) {
+		return sessionFactory.withSession(session -> findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getSample(pluginDriver.getHttpPluginDriverInfo()))
+
+			.map(IngestionPayloadMapper::getDocumentTypes)
+			.flatMap(docTypeNames -> {
+				var mutableSet = new HashSet<>(docTypeNames);
+				mutableSet.add(DEFAULT_DOCUMENT_TYPE);
+
+				return docTypeService.getDocTypeListByNames(
+					session,
+					mutableSet.toArray(String[]::new)
+				);
+			})
+			.map(PluginDriverDocTypesDTO::fromDocTypes)
+		);
 	}
 
 	@Override
@@ -75,11 +112,72 @@ public class PluginDriverService
 		return PluginDriver.class;
 	}
 
+	public Uni<PluginDriverFormDTO> getForm(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getForm(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
+	}
+
+	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getForm(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getHealth(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getHealth(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{
 			PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE
 		};
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
+
+		return super.persist(session, entity)
+			.log("PluginDriver created.")
+			.log("Creating DocumentTypes associated with pluginDriver")
+			.call(() -> indexMappingService
+				.generateDocTypeFieldsFromPluginDriverSample(
+					session, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
+				.log("DocumentTypes associated with pluginDriver created.")
+			);
+	}
+
+	@Override
+	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+		return super.merge(s, entity)
+			.log("PluginDriver updated.")
+			.log("Updating DocumentTypes associated with pluginDriver")
+			.call(() -> indexMappingService
+				.generateDocTypeFieldsFromPluginDriverSample(
+					s, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
+				.log("DocumentTypes associated with pluginDriver updated.")
+			);
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(

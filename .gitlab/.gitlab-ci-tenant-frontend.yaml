@@ -1,46 +1,98 @@
+################################################################################
+#                                   STAGES                                     #
+################################################################################
+
 stages:
-  - quality
   - build
-  - container-scanning
-  - restart
   - build-verifier
+  - container-scanning
+  - dependency-check
+  - restart
+  - publish
 
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
 
+################################################################################
+#                                    JOBS                                       #
+################################################################################
 
-# Build Docker Image
+#################
+# Fetch Version #
+#################
+Fetch version:
+  stage: build
+  image: node:16-alpine
+  script:
+    - cd js-packages/tenant-ui
+    - export VERSION=$(node -p "require('./package.json').version")
+    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
+  artifacts:
+    paths:
+      - version.env
+    expire_in: 1 day
+
+######################## BUILD TENANT FRONTEND ########################
 Build Tenant Frontend:
   stage: build
-  image: docker:24.0.2
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
   variables:
-    DOCKER_BUILDKIT: 1
-  before_script:
-    - apk add --no-cache docker
-    - dockerd &
-    - while(! docker info > /dev/null 2>&1); do echo "Waiting for Docker to start..."; sleep 1; done
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USERNAME" --password-stdin $CI_REGISTRY
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+    - job: Fetch version
+      artifacts: true
   script:
-    - docker build -t $CI_REGISTRY/tenant-ui:latest -f js-packages/tenant-ui/Dockerfile .
-    - docker push $CI_REGISTRY/tenant-ui:latest
-  after_script:
-    - kill $(cat /var/run/docker.pid)
-  rules:
-    - when: never
-    #- changes:
-    #    - js-packages/tenant-ui/**/*
+    # Carica la variabile VERSION dal file artifact version.env
+    - source $CI_PROJECT_DIR/version.env
+    - echo "=== Building Tenant UI with VERSION=$VERSION ==="
+    - mkdir -p /kaniko/.docker
+    # Configurazione credenziali Docker in /kaniko/.docker/config.json
+    - |
+      echo "{\"auths\":{\"$CI_REGISTRY_NAME\":{\"auth\":\"$(printf "%s:%s" \
+      "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" \
+      | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
 
-# Container Scanning
+    - echo "=== Build e Push dell'immagine con Kaniko ==="
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
+        --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
+  rules:
+    - changes:
+        - js-packages/tenant-ui/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+######################## BUILD VERIFIER ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:14
+  script:
+    - cd js-packages/tenant-ui
+    - yarn install
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/tenant-ui/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
-  variables:
-    SCAN_IMAGE: "$CI_REGISTRY/tenant-frontend:latest"
+  dependencies:
+    - "Fetch version"
+    - "Build Tenant Frontend"
   script:
-    - container-scanning scan --image $SCAN_IMAGE
+    - source version.env
+    - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
+    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-
-# Trigger Restart
+######################## TRIGGER RESTART ########################
 Trigger Restart:
   stage: restart
   image: alpine:latest
@@ -56,18 +108,29 @@ Trigger Restart:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-
-# Build Verifier
-Build Verifier:
-  stage: build-verifier
-  #immagine con node/npm per provare yarn install e build
+####################### PUBLISH TENANT FRONTEND #######################
+Publish Tenant Frontend:
+  stage: publish
   image: node:18
   script:
     - cd js-packages/tenant-ui
-    - yarn install    
-    - yarn build
+    - pwd
+    - whoami
+    - yarn install
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+    - npm publish --access public
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - changes:
-        - js-packages/tenant-ui/**/*
-    #quando c'è mergerequest
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+
+####################### DEPENDENCY CHECK #######################
+Dependency Check Tenant UI:
+  stage: dependency-check
+  needs:
+    - job: "Trigger Tenant Frontend"
+  extends: .dependency_check_frontend_template
+  allow_failure: true
+  script:
+    - cd js-packages/tenant-ui
+    - /analyzer run

@@ -17,6 +17,11 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
@@ -30,11 +35,10 @@ import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -44,9 +48,6 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import java.util.List;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -73,11 +74,20 @@ public class SuggestionCategoryGraphqlResource {
 			.map((__) -> Tuple2.of("ok", null));
 	}
 
-	public Uni<Bucket> bucket(
-		@Source SuggestionCategory suggestionCategory) {
+	public Uni<Connection<Bucket>> buckets(
+		@Source SuggestionCategory suggestionCategory,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false")
+		boolean notEqual) {
 
-		return suggestionCategoryService.getBucket(
-			suggestionCategory.getId());
+		return suggestionCategoryService.getBucketsConnection(
+			suggestionCategory.getId(), after, before, first, last, searchText, sortByList,
+			notEqual
+		);
 	}
 
 	public Uni<Response<SuggestionCategory>> createSuggestionCategory(SuggestionCategoryDTO suggestionCategoryDTO) {

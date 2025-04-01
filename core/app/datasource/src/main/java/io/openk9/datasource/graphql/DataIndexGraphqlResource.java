@@ -17,6 +17,10 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
@@ -24,18 +28,16 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.VectorIndex;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
-import io.openk9.datasource.service.VectorIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -44,8 +46,6 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -77,6 +77,10 @@ public class DataIndexGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<DocTypeField> getEmbeddingDocTypeField(@Source DataIndex dataIndex) {
+		return dataIndexService.getEmbeddingDocTypeField(dataIndex.getId());
+	}
+
 
 	public Uni<Long> getDocCount(@Source DataIndex dataIndex) {
 		return dataIndexService.getCountIndexDocuments(dataIndex.getIndexName());
@@ -85,9 +89,6 @@ public class DataIndexGraphqlResource {
 	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
 		return indexService.get_catIndicesFirst(dataIndex.getIndexName());
 	}
-
-	@Inject
-	VectorIndexService vectorIndexService;
 
 	@Query
 	public Uni<DataIndex> getDataIndex(@Id long id) {
@@ -148,16 +149,6 @@ public class DataIndexGraphqlResource {
 		return dataIndexService.removeDocType(dataIndexId, docTypeId);
 	}
 
-	@Mutation
-	public Uni<DataIndex> bindVectorIndex(@Id long dataIndexId, @Id long vectorIndexId) {
-		return dataIndexService.bindVectorDataIndex(dataIndexId, vectorIndexId);
-	}
-
-	@Mutation
-	public Uni<DataIndex> unbindVectorIndex(@Id long dataIndexId) {
-		return dataIndexService.unbindVectorDataIndex(dataIndexId);
-	}
-
 	@Subscription
 	public Multi<DataIndex> dataIndexCreated() {
 		return dataIndexService
@@ -184,10 +175,6 @@ public class DataIndexGraphqlResource {
 
 	@Inject
 	DataIndexService dataIndexService;
-
-	public Uni<VectorIndex> vectorIndex(@Source DataIndex dataIndex) {
-		return vectorIndexService.findByDataIndexId(dataIndex.getId());
-	}
 
 	@Inject
 	IndexService indexService;

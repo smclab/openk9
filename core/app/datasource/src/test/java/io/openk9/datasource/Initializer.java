@@ -17,41 +17,52 @@
 
 package io.openk9.datasource;
 
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.dto.DataIndexDTO;
 import io.openk9.datasource.model.dto.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.EnrichItemDTO;
 import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.TabDTO;
 import io.openk9.datasource.model.init.Bucket;
-import io.openk9.datasource.plugindriver.WireMockPluginDriver;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.CreateConnection;
+import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.LargeLanguageModelService;
+import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
-import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.Startup;
-import jakarta.inject.Inject;
+
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class Initializer {
 
 	private static final Logger log = Logger.getLogger(Initializer.class);
+	public static final String INIT_DATASOURCE_CONNECTION = "INIT_DATASOURCE_CONNECTION";
+	public static final String INIT_DATASOURCE_PLUGIN = "INIT_DATASOURCE_PLUGIN";
+	public static final String INIT_DATASOURCE_PIPELINE = "INIT_DATASOURCE_PIPELINE";
+
 	@Inject
 	BucketService bucketService;
 	@Inject
 	DatasourceService datasourceService;
-
+	@Inject
+	PluginDriverService pluginDriverService;
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	EmbeddingModelService embeddingModelService;
 	@Inject
@@ -62,7 +73,6 @@ public class Initializer {
 	LargeLanguageModelService largeLanguageModelService;
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
-
 	@Inject
 	TabService tabService;
 
@@ -153,7 +163,7 @@ public class Initializer {
 	private void bindDatasourceToBucket() {
 
 		var datasource = datasourceService
-			.findByName("public", CreateConnection.DATASOURCE_NAME)
+			.findByName("public", INIT_DATASOURCE_CONNECTION)
 			.await()
 			.indefinitely();
 
@@ -204,89 +214,52 @@ public class Initializer {
 			.build()
 		).await().indefinitely();
 
-		log.info("Create a new Connection.");
+		log.info("Create a plugin driver.");
+
+		var pluginDriver =
+			pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
+				.name(INIT_DATASOURCE_PLUGIN)
+				.build()
+			).await().indefinitely();
+
+		var docTypeIds = docTypeService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		log.info("Create a new full configured DatasourceConnection.");
 
 		datasourceService.createDatasourceConnection(
-			DatasourceConnectionDTO.builder()
-				.name(CreateConnection.DATASOURCE_NAME)
-				.description(CreateConnection.DATASOURCE_DESCRIPTION)
-				.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
-				.scheduling(CreateConnection.SCHEDULING)
-				.reindexing(CreateConnection.REINDEXING)
-				.reindexable(false)
-				.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
-					.toBuilder()
-					.jsonConfig(JsonObject.of(
-						"host", WireMockPluginDriver.HOST,
-						"port", WireMockPluginDriver.PORT,
-						"secure", false
-					).encode())
+				DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+					.name(INIT_DATASOURCE_CONNECTION)
+					.pluginDriverId(pluginDriver.getId())
+					.pipeline(PipelineWithItemsDTO.builder()
+						.name(INIT_DATASOURCE_PIPELINE)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich1.getId())
+							.weight(1)
+							.build()
+						)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich2.getId())
+							.weight(2)
+							.build()
+						)
+						.item(PipelineWithItemsDTO.ItemDTO.builder()
+							.enrichItemId(enrich3.getId())
+							.weight(3)
+							.build()
+						)
+						.build()
+					)
+					.dataIndex(DataIndexDTO.builder()
+						.knnIndex(false)
+						.docTypeIds(docTypeIds)
+						.build()
+					)
 					.build()
-				)
-				.pipeline(PipelineWithItemsDTO.builder()
-					.name(CreateConnection.PIPELINE_NAME)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich1.getId())
-						.weight(1)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich2.getId())
-						.weight(2)
-						.build()
-					)
-					.item(PipelineWithItemsDTO.ItemDTO.builder()
-						.enrichItemId(enrich3.getId())
-						.weight(3)
-						.build()
-					)
-					.build()
-				)
-				.build())
-			.await()
-			.indefinitely();
-
-		datasourceService.createDatasourceConnection(
-				DatasourceConnectionDTO.builder()
-					.name("createDatasourceConnection1")
-					.description(CreateConnection.DATASOURCE_DESCRIPTION)
-					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
-					.reindexable(false)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
-						.toBuilder()
-						.name("pluginDriverConnection1")
-						.jsonConfig(JsonObject.of(
-							"host", WireMockPluginDriver.HOST,
-							"port", WireMockPluginDriver.PORT,
-							"secure", false
-						).encode())
-						.build()
-					)
-					.build())
-			.await()
-			.indefinitely();
-
-		datasourceService.createDatasourceConnection(
-				DatasourceConnectionDTO.builder()
-					.name("createDatasourceConnection2")
-					.description(CreateConnection.DATASOURCE_DESCRIPTION)
-					.jsonConfig(CreateConnection.DATASOURCE_JSON_CONFIG)
-					.scheduling(CreateConnection.SCHEDULING)
-					.reindexing(CreateConnection.REINDEXING)
-					.reindexable(false)
-					.pluginDriver(CreateConnection.PLUGIN_DRIVER_DTO
-						.toBuilder()
-						.name("pluginDriverConnection2")
-						.jsonConfig(JsonObject.of(
-							"host", WireMockPluginDriver.HOST,
-							"port", WireMockPluginDriver.PORT,
-							"secure", false
-						).encode())
-						.build()
-					)
-					.build())
+			)
 			.await()
 			.indefinitely();
 	}
@@ -295,10 +268,12 @@ public class Initializer {
 
 		log.info("Create primary EmbeddingModel.");
 
-		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO.builder()
+		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO
+				.builder()
 				.name("Test embedding model")
 				.apiUrl("embedding-model.local")
 				.apiKey("secret-key")
+				.vectorSize(1500)
 				.build())
 			.await()
 			.indefinitely();
@@ -315,7 +290,8 @@ public class Initializer {
 
 		log.info("Create primary LLM.");
 
-		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO.builder()
+		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO
+				.builder()
 				.name("Test LLM")
 				.apiUrl("llm.local")
 				.apiKey("secret-key")
@@ -339,6 +315,7 @@ public class Initializer {
 				.name("Test embedding model disabled")
 				.apiUrl("embedding-model.disabled.local")
 				.apiKey("secret")
+				.vectorSize(1234)
 				.build())
 			.await()
 			.indefinitely();

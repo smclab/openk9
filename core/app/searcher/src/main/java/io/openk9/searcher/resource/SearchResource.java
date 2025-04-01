@@ -17,60 +17,6 @@
 
 package io.openk9.searcher.resource;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.ProtocolStringList;
-import io.openk9.searcher.client.dto.ParserSearchToken;
-import io.openk9.searcher.client.dto.SearchRequest;
-import io.openk9.searcher.client.mapper.SearcherMapper;
-import io.openk9.searcher.grpc.QueryAnalysisRequest;
-import io.openk9.searcher.grpc.QueryAnalysisResponse;
-import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
-import io.openk9.searcher.grpc.QueryAnalysisTokens;
-import io.openk9.searcher.grpc.QueryParserRequest;
-import io.openk9.searcher.grpc.QueryParserResponse;
-import io.openk9.searcher.grpc.Searcher;
-import io.openk9.searcher.grpc.Sort;
-import io.openk9.searcher.grpc.TokenType;
-import io.openk9.searcher.grpc.Value;
-import io.openk9.searcher.mapper.InternalSearcherMapper;
-import io.openk9.searcher.payload.response.Response;
-import io.openk9.searcher.payload.response.SuggestionsResponse;
-import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
-import io.quarkus.grpc.GrpcClient;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.lucene.search.TotalHits;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
-import org.jboss.logging.Logger;
-import org.opensearch.action.search.SearchResponse;
-import org.opensearch.action.search.ShardSearchFailure;
-import org.opensearch.client.ResponseListener;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.common.CheckedFunction;
-import org.opensearch.core.common.text.Text;
-import org.opensearch.core.xcontent.DeprecationHandler;
-import org.opensearch.core.xcontent.MediaTypeRegistry;
-import org.opensearch.core.xcontent.NamedXContentRegistry;
-import org.opensearch.core.xcontent.XContentParser;
-import org.opensearch.search.SearchHit;
-import org.opensearch.search.SearchHits;
-import org.opensearch.search.fetch.subphase.highlight.HighlightField;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -87,6 +33,61 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+
+import io.openk9.searcher.client.dto.SearchRequest;
+import io.openk9.searcher.client.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.QueryAnalysisRequest;
+import io.openk9.searcher.grpc.QueryAnalysisResponse;
+import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
+import io.openk9.searcher.grpc.QueryAnalysisTokens;
+import io.openk9.searcher.grpc.QueryParserRequest;
+import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.Searcher;
+import io.openk9.searcher.grpc.Sort;
+import io.openk9.searcher.grpc.TokenType;
+import io.openk9.searcher.grpc.Value;
+import io.openk9.searcher.mapper.InternalSearcherMapper;
+import io.openk9.searcher.payload.response.Response;
+import io.openk9.searcher.payload.response.SuggestionsResponse;
+import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
+
+import com.google.protobuf.ByteString;
+import com.google.protobuf.ProtocolStringList;
+import io.quarkus.grpc.GrpcClient;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.lucene.search.TotalHits;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
+import org.jboss.logging.Logger;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.action.search.ShardSearchFailure;
+import org.opensearch.client.ResponseException;
+import org.opensearch.client.ResponseListener;
+import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.common.CheckedFunction;
+import org.opensearch.core.common.text.Text;
+import org.opensearch.core.xcontent.DeprecationHandler;
+import org.opensearch.core.xcontent.MediaTypeRegistry;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentParser;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.SearchHits;
+import org.opensearch.search.fetch.subphase.highlight.HighlightField;
 
 @Path("/v1")
 @RequestScoped
@@ -96,6 +97,8 @@ public class SearchResource {
 	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
+	private static final int INTERNAL_SERVER_ERROR = 500;
+	private static final String DETAILS_FIELD = "details";
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 	@GrpcClient("searcher")
@@ -116,6 +119,8 @@ public class SearchResource {
 		headers;
 	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
 	List<String> supportedHeadersName;
+	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
+	Integer totalResultLimit;
 
 	@POST
 	@Path("/search-query")
@@ -218,14 +223,8 @@ public class SearchResource {
 					.map(this::toSearchResponse);
 			})
 			.onFailure()
-			.transform(throwable -> {
-				log.error("Search request failed", throwable);
-				return new WebApplicationException(jakarta.ws.rs.core.Response
-						.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
-						.entity(JsonObject.of(
-							"details", "Unable to serve search request"))
-					.build());
-				}
+			.transform(throwable -> new WebApplicationException(
+				getErrorResponse(throwable))
 			);
 
 	}
@@ -348,8 +347,6 @@ public class SearchResource {
 			.toQueryParserRequest(searchRequest)
 			.toBuilder();
 
-		setVectorIndices(searchRequest, requestBuilder);
-
 		Map<String, Value> extra = new HashMap<>();
 
 		for (String headerName : supportedHeadersName) {
@@ -407,26 +404,6 @@ public class SearchResource {
 
 		return sortList;
 
-	}
-
-	private static void setVectorIndices(
-		SearchRequest searchRequest,
-		QueryParserRequest.Builder requestBuilder) {
-		var searchTokens = searchRequest.getSearchQuery();
-
-		for (ParserSearchToken token : searchTokens) {
-
-			var tokenType = token.getTokenType();
-
-			if (tokenType != null
-				&& (tokenType.equalsIgnoreCase("knn")
-					|| tokenType.equalsIgnoreCase("hybrid"))) {
-
-				requestBuilder.setVectorIndices(true);
-				break;
-			}
-
-		}
 	}
 
 	private static String getHighlightName(String highlightName) {
@@ -563,6 +540,32 @@ public class SearchResource {
 
 	}
 
+	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
+
+		int statusCode = INTERNAL_SERVER_ERROR;
+		String reason = "Unable to serve search request";
+
+		if (throwable instanceof ResponseException responseException) {
+			statusCode = responseException.getResponse()
+				.getStatusLine()
+				.getStatusCode();
+		}
+
+		if (statusCode == INTERNAL_SERVER_ERROR) {
+			log.error(reason, throwable);
+		}
+		else {
+			reason = "Invalid search request";
+			log.warn(reason, throwable);
+		}
+
+		return jakarta.ws.rs.core.Response
+			.status(statusCode)
+			.entity(JsonObject
+				.of(DETAILS_FIELD, reason))
+			.build();
+	}
+
 	private <Resp> Resp parseEntity(
 		final HttpEntity entity,
 		final CheckedFunction<XContentParser, Resp, IOException> entityParser)
@@ -661,8 +664,11 @@ public class SearchResource {
 		}
 
 		TotalHits totalHits = hits.getTotalHits();
+		var totalResult = totalHits != null
+			? Math.min(totalHits.value, totalResultLimit)
+			: 0;
 
-		return new Response(result, totalHits.value);
+		return new Response(result, totalResult);
 	}
 
 	private void printShardFailures(SearchResponse searchResponse) {

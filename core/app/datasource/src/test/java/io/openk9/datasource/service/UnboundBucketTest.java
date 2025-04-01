@@ -17,6 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -25,22 +32,14 @@ import io.openk9.datasource.model.dto.BucketDTO;
 import io.openk9.datasource.model.dto.DatasourceDTO;
 import io.openk9.datasource.model.dto.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.TabDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UnboundBucketTest {
 
 	private static final String ENTITY_NAME_PREFIX = "UnboundBucketTest - ";
@@ -52,12 +51,15 @@ public class UnboundBucketTest {
 	private static final String DATASOURCE_ONE_NAME = ENTITY_NAME_PREFIX + "Datasource 1";
 	private static final String DATASOURCE_TWO_NAME = ENTITY_NAME_PREFIX + "Datasource 2";
 	private static final String DATASOURCE_THREE_NAME = ENTITY_NAME_PREFIX + "Datasource 3";
+	private static final String DATASOURCE_FOUR_NAME = ENTITY_NAME_PREFIX + "Datasource 4";
 	private static final String SUGGESTION_CATEGORY_ONE_NAME =
 		ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String SUGGESTION_CATEGORY_TWO_NAME =
 		ENTITY_NAME_PREFIX + "Suggestion category 2";
 	private static final String SUGGESTION_CATEGORY_THREE_NAME =
 		ENTITY_NAME_PREFIX + "Suggestion category 3";
+	private static final String SUGGESTION_CATEGORY_FOUR_NAME =
+		ENTITY_NAME_PREFIX + "Suggestion category 4";
 	private static final String TAB_ONE_NAME = ENTITY_NAME_PREFIX + "Tab 1";
 	private static final String TAB_TWO_NAME = ENTITY_NAME_PREFIX + "Tab 2";
 	private static final String TAB_THREE_NAME = ENTITY_NAME_PREFIX + "Tab 3";
@@ -77,9 +79,8 @@ public class UnboundBucketTest {
 	@Inject
 	TabService tabService;
 
-	@Test
-	@Order(1)
-	void should_init_test_environment() {
+	@BeforeEach
+	void setup() {
 		createBucketDefault();
 		createBucketUnbound();
 		createBucketOne();
@@ -87,10 +88,12 @@ public class UnboundBucketTest {
 		createDatasourceOne();
 		createDatasourceTwo();
 		createDatasourceThree();
+		createDatasourceFour();
 
 		createSuggestionCategoryOne();
 		createSuggestionCategoryTwo();
 		createSuggestionCategoryThree();
+		createSuggestionCategoryFour();
 
 		createTabOne();
 		createTabTwo();
@@ -122,7 +125,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(2)
 	void should_retrieve_unbound_bucket_from_datasource_two() {
 
 		var unboundBuckets = getUnboundBucketByDatasourceTwo();
@@ -144,7 +146,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(3)
 	void should_retrieve_all_bucket_from_missing_datasource() {
 		var unboundBuckets = getUnboundBucketByMissingDatasource();
 
@@ -162,7 +163,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(4)
 	void should_retrieve_unbound_bucket_from_suggestion_category_two() {
 
 		var unboundBuckets = getUnboundBucketBySuggestionCategoryTwo();
@@ -184,7 +184,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(5)
 	void should_retrieve_all_bucket_from_missing_suggestion_category() {
 		var unboundBuckets = getUnboundBucketByMissingSuggestionCategory();
 
@@ -202,7 +201,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(6)
 	void should_retrieve_unbound_bucket_from_tab_two() {
 		var bucketDefault = getBucketDefault();
 		assertFalse(bucketDefault.getTabs().isEmpty());
@@ -225,7 +223,6 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(7)
 	void should_retrieve_all_bucket_from_missing_tab() {
 		var unboundBuckets = getUnboundBucketByMissingTab();
 
@@ -243,26 +240,46 @@ public class UnboundBucketTest {
 	}
 
 	@Test
-	@Order(8)
-	void should_remove_all_entities_used() {
+	void should_retrieve_all_bucket_from_not_associated_suggestionCategory() {
+
+		var unboundBuckets = getUnboundBucketBySuggestionCategoryFour();
+
+		assertEquals(allBucketCount(), unboundBuckets.size());
+	}
+
+	@Test
+	void should_retrieve_all_bucket_from_not_associated_datasource() {
+		var unboundBuckets = getUnboundBucketByDatasourceFour();
+
+		assertEquals(allBucketCount(), unboundBuckets.size());
+	}
+
+	@AfterEach
+	void tearDown() {
+
+		unbindBucketOneToSuggestionCategoryOne();
+		unbindBucketDefaultToSuggestionCategoryTwo();
+		unbindBucketDefaultToSuggestionCategoryThree();
 
 		removeDatasourceOne();
 		removeDatasourceTwo();
 		removeDatasourceThree();
+		removeDatasourceFour();
 
 		removeSuggestionCategoryOne();
 		removeSuggestionCategoryTwo();
 		removeSuggestionCategoryThree();
+		removeSuggestionCategoryFour();
 
 		removeBucketDefault();
 		removeBucketOne();
+		removeBucketUnbound();
 
 		removeTabOne();
 		removeTabTwo();
 		removeTabThree();
 
 	}
-
 	private Long allBucketCount() {
 
 		return sessionFactory.withTransaction(
@@ -447,9 +464,9 @@ public class UnboundBucketTest {
 	private void createDatasourceOne() {
 		DatasourceDTO dto = DatasourceDTO.builder()
 			.name(DATASOURCE_ONE_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -461,12 +478,12 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
-	private void createDatasourceTwo() {
+	private void createDatasourceThree() {
 		DatasourceDTO dto = DatasourceDTO.builder()
-			.name(DATASOURCE_TWO_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.name(DATASOURCE_THREE_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -478,12 +495,29 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
-	private void createDatasourceThree() {
+	private void createDatasourceTwo() {
 		DatasourceDTO dto = DatasourceDTO.builder()
-			.name(DATASOURCE_THREE_NAME)
-			.scheduling(CreateConnection.SCHEDULING)
+			.name(DATASOURCE_TWO_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
 			.schedulable(false)
-			.reindexing(CreateConnection.REINDEXING)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
+			.reindexable(false)
+			.build();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.create(dto)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createDatasourceFour() {
+		DatasourceDTO dto = DatasourceDTO.builder()
+			.name(DATASOURCE_FOUR_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
+			.schedulable(false)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
 			.reindexable(false)
 			.build();
 
@@ -538,6 +572,22 @@ public class UnboundBucketTest {
 			)
 			.await()
 			.indefinitely();
+	}
+
+	private void createSuggestionCategoryFour() {
+		SuggestionCategoryDTO dto = SuggestionCategoryDTO.builder()
+			.name(SUGGESTION_CATEGORY_FOUR_NAME)
+			.priority(0f)
+			.multiSelect(false)
+			.build();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					suggestionCategoryService.create(dto)
+			)
+			.await()
+			.indefinitely();
+
 	}
 
 	private void createTabOne() {
@@ -663,6 +713,15 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
+	private Datasource getDatasourceFour() {
+		return sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.findByName(s, DATASOURCE_FOUR_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private List<SuggestionCategory> getSuggestionCategoryAll() {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
@@ -694,6 +753,15 @@ public class UnboundBucketTest {
 		return sessionFactory.withTransaction(
 				(s, transaction) ->
 					suggestionCategoryService.findByName(s, SUGGESTION_CATEGORY_THREE_NAME)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private SuggestionCategory getSuggestionCategoryFour() {
+		return sessionFactory.withTransaction(
+				(s, transaction) ->
+					suggestionCategoryService.findByName(s, SUGGESTION_CATEGORY_FOUR_NAME)
 			)
 			.await()
 			.indefinitely();
@@ -743,8 +811,24 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
+	private List<Bucket> getUnboundBucketByDatasourceFour() {
+		var datasourceId = getDatasourceFour().getId();
+
+		return bucketService.findUnboundBucketsByDatasource(datasourceId)
+			.await()
+			.indefinitely();
+	}
+
 	private List<Bucket> getUnboundBucketBySuggestionCategoryTwo() {
 		var suggestionCategoryId = getSuggestionCategoryTwo().getId();
+
+		return bucketService.findUnboundBucketsBySuggestionCategory(suggestionCategoryId)
+			.await()
+			.indefinitely();
+	}
+
+	private List<Bucket> getUnboundBucketBySuggestionCategoryFour() {
+		var suggestionCategoryId = getSuggestionCategoryFour().getId();
 
 		return bucketService.findUnboundBucketsBySuggestionCategory(suggestionCategoryId)
 			.await()
@@ -843,6 +927,47 @@ public class UnboundBucketTest {
 			.indefinitely();
 	}
 
+	private void removeDatasourceFour() {
+		var datasourceId = getDatasourceFour().getId();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					datasourceService.deleteById(datasourceId)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void unbindBucketDefaultToSuggestionCategoryThree() {
+		var bucketId = getBucketDefault().getId();
+		var suggestionCategoryId = getSuggestionCategoryThree().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+
+	}
+
+	private void unbindBucketDefaultToSuggestionCategoryTwo() {
+		var bucketId = getBucketDefault().getId();
+		var suggestionCategoryId = getSuggestionCategoryTwo().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+	}
+
+	private void unbindBucketOneToSuggestionCategoryOne() {
+		var bucketId = getBucketOne().getId();
+		var suggestionCategoryId = getSuggestionCategoryOne().getId();
+
+		sessionFactory.withTransaction((s, t) ->
+			bucketService.removeSuggestionCategory(bucketId, suggestionCategoryId)
+		).await().indefinitely();
+
+	}
+
+
 	private void removeSuggestionCategoryOne() {
 		var suggestionCategoryId = getSuggestionCategoryOne().getId();
 
@@ -867,6 +992,17 @@ public class UnboundBucketTest {
 
 	private void removeSuggestionCategoryThree() {
 		var suggestionCategoryId = getSuggestionCategoryThree().getId();
+
+		sessionFactory.withTransaction(
+				(s, transaction) ->
+					suggestionCategoryService.deleteById(suggestionCategoryId)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void removeSuggestionCategoryFour() {
+		var suggestionCategoryId = getSuggestionCategoryFour().getId();
 
 		sessionFactory.withTransaction(
 				(s, transaction) ->

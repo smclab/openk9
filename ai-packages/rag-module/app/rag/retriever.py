@@ -19,10 +19,11 @@ SCORE_THRESHOLD = 0.5
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
+    search_query: Optional[list] = None
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
-    chunk_window: Optional[bool] = True
+    chunk_window: Optional[int] = 0
     range_values: list
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
@@ -42,17 +43,34 @@ class OpenSearchRetriever(BaseRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
-        search_query = [
-            {
-                "entityType": "",
-                "entityName": "",
-                "tokenType": self.retrieve_type,
-                "keywordKey": "",
-                "values": [query],
-                "extra": {},
-                "filter": True,
-            }
-        ]
+
+        search_query = (
+            [
+                {
+                    "entityType": query_element.entityType,
+                    "entityName": query_element.entityName,
+                    "tokenType": query_element.tokenType,
+                    "keywordKey": query_element.keywordKey,
+                    "values": query_element.values,
+                    "extra": query_element.extra,
+                    "filter": query_element.filter,
+                }
+                for query_element in self.search_query
+            ]
+            if self.search_query
+            else [
+                {
+                    "entityType": "",
+                    "entityName": "",
+                    "tokenType": self.retrieve_type,
+                    "keywordKey": "",
+                    "values": [query],
+                    "extra": {},
+                    "filter": True,
+                }
+            ]
+        )
+
         query_data = query_parser(
             search_query=search_query,
             range_values=self.range_values,
@@ -167,7 +185,7 @@ class OpenSearchRetriever(BaseRetriever):
             )
             documents = reranked_documents
 
-        if self.chunk_window:
+        if self.chunk_window > 0:
             documents_to_merge = [
                 {
                     "document_id": doc.metadata["document_id"],
@@ -183,7 +201,7 @@ class OpenSearchRetriever(BaseRetriever):
                 for doc in documents
             ]
             merged_documents = get_context_window_merged(
-                documents_to_merge, window_size=4
+                documents_to_merge, window_size=self.chunk_window
             )
 
             for merged_document in merged_documents:

@@ -17,13 +17,22 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import jakarta.enterprise.inject.spi.CDI;
+
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
+
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import io.vertx.core.json.Json;
-import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -33,21 +42,12 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.ErrorCause;
-import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
-import org.opensearch.client.opensearch.indices.PutIndexTemplateResponse;
-import org.opensearch.client.transport.endpoints.BooleanResponse;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
@@ -55,11 +55,8 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		Logger.getLogger(VectorIndexWriter.class);
 
 	private final OpenSearchAsyncClient asyncClient;
-	private final String vectorIndexName;
+	private final String indexName;
 	private final ActorRef<Writer.Response> replyTo;
-	private final String templateName;
-	private boolean indexTemplateCreated = false;
-	private int vectorSize;
 
 	public VectorIndexWriter(
 		ActorContext<Writer.Command> context,
@@ -68,8 +65,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 
 		super(context);
 		this.asyncClient = CDI.current().select(OpenSearchAsyncClient.class).get();
-		this.vectorIndexName = scheduler.getVectorIndexName();
-		this.templateName = vectorIndexName + "-template";
+		this.indexName = scheduler.getIndexName();
 		this.replyTo = replyTo;
 
 	}
@@ -77,233 +73,61 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 	public static Behavior<Writer.Command> create(
 		SchedulerDTO scheduler, ActorRef<Writer.Response> replyTo) {
 
-		return Behaviors.setup(ctx -> new VectorIndexWriter(ctx, scheduler, replyTo));
-	}
-
-	protected static List<Object> getChunks(byte[] json) {
-		return JsonPath.using(Configuration.defaultConfiguration())
-			.parseUtf8(json)
-			.read("$.*");
-	}
-
-	protected static int getVectorSize(byte[] json) {
-		List<List<Float>> jsonPathResult = JsonPath.using(Configuration.defaultConfiguration())
-			.parseUtf8(json)
-			.read("$.[:1].vector");
-
-		return jsonPathResult.stream().mapToInt(Collection::size).findAny().orElse(0);
+		return Behaviors.setup(ctx ->
+			new VectorIndexWriter(ctx, scheduler, replyTo));
 	}
 
 	@Override
 	public Receive<Writer.Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(Writer.Start.class, this::onStart)
-			.onMessage(CheckIndexTemplate.class, this::onCheckIndexTemplate)
-			.onMessage(CheckIndexTemplateResponse.class, this::onCheckIndexTemplateResponse)
-			.onMessage(PutTemplateResponse.class, this::onPutTemplateResponse)
-			.onMessage(IndexDocument.class, this::onIndexDocument)
+			.onMessage(WriteDocuments.class, this::onWriteDocuments)
 			.onMessage(IndexDocumentResponse.class, this::onIndexDocumentResponse)
 			.build();
 	}
 
-	private Behavior<Writer.Command> onStart(Writer.Start start) {
-
-		var data = start.dataPayload();
-		var heldMessage = start.heldMessage();
-
-		getContext().getSelf().tell(new CheckIndexTemplate(data, heldMessage));
-
-		return this;
-	}
-
-	private Behavior<Writer.Command> onCheckIndexTemplate(CheckIndexTemplate checkIndexTemplate) {
-
-		var embeddedChunks = checkIndexTemplate.embeddedChunks();
-		var heldMessage = checkIndexTemplate.heldMessage();
-
-		if (indexTemplateCreated) {
-
-			getContext().getSelf().tell(new IndexDocument(
-				embeddedChunks, heldMessage)
-			);
-
-			return this;
-		}
-
+	protected static List<Map<String, Object>> parseChunks(byte[] json) {
 		try {
+			var documentContext = JsonPath
+				.using(Configuration.defaultConfiguration())
+				.parseUtf8(json);
 
-			getContext().pipeToSelf(
-				asyncClient.indices().existsIndexTemplate(req -> req.name(templateName)),
-				(r, t) -> new CheckIndexTemplateResponse(
-					embeddedChunks, heldMessage, r, t)
-			);
+			Object root = documentContext.read("$");
 
-		}
-		catch (IOException e) {
-
-			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
-
-		}
-
-		return this;
-	}
-
-	private Behavior<Writer.Command> onCheckIndexTemplateResponse(CheckIndexTemplateResponse response) {
-
-		var exists = response.exists();
-		var throwable = response.throwable();
-		var heldMessage = response.heldMessage();
-
-		if (throwable != null) {
-
-			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
-
-			return this;
-
-		}
-
-		if (exists.value()) {
-
-			this.indexTemplateCreated = true;
-
-			getContext().getSelf().tell(new IndexDocument(response.embeddedChunks(), heldMessage));
-
-		}
-		else {
-
-			this.vectorSize = getVectorSize(response.embeddedChunks());
-
-			try {
-
-				getContext().pipeToSelf(
-					asyncClient.indices().putIndexTemplate(req -> req
-						.name(templateName)
-						.indexPatterns(vectorIndexName)
-						.template(template -> template
-							.settings(settings -> settings
-								.knn(true))
-							.mappings(mapping -> mapping
-								.properties("indexName", p -> p
-									.text(text -> text.fields(
-										"keyword",
-										Property.of(field -> field
-											.keyword(keyword -> keyword.ignoreAbove(256)))
-									)))
-								.properties("contentId", p -> p
-									.text(text -> text.fields(
-										"keyword",
-										Property.of(field -> field
-											.keyword(keyword -> keyword.ignoreAbove(256)))
-									)))
-								.properties("number", p -> p
-									.integer(int_ -> int_))
-								.properties("total", p -> p
-									.integer(int_ -> int_))
-								.properties("chunkText", p -> p
-									.text(text -> text.fields(
-										"keyword",
-										Property.of(field -> field
-											.keyword(keyword -> keyword.ignoreAbove(256)))
-									)))
-								.properties("title", p -> p
-									.text(text -> text.fields(
-										"keyword",
-										Property.of(field -> field
-											.keyword(keyword -> keyword.ignoreAbove(256)))
-									)))
-								.properties("url", p -> p
-									.text(text -> text.fields(
-										"keyword",
-										Property.of(field -> field
-											.keyword(keyword -> keyword.ignoreAbove(256)))
-									)))
-								.properties("vector", p -> p
-									.knnVector(knn -> knn.dimension(this.vectorSize)))
-							)
-						)
-					),
-					(r, t) -> new PutTemplateResponse(response.embeddedChunks(), heldMessage, r, t)
-				);
-
+			if (root instanceof List) {
+				return (List<Map<String, Object>>) root;
 			}
-			catch (IOException e) {
-
-				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
-
+			else {
+				return List.of((Map<String, Object>) root);
 			}
-
 		}
-
-		return this;
+		catch (IllegalArgumentException e) {
+			log.warn("Cannot parse the json payload", e);
+			return List.of();
+		}
 	}
 
-	private Behavior<Writer.Command> onPutTemplateResponse(PutTemplateResponse putTemplateResponse) {
+	private CompletableFuture<DeleteByQueryResponse> deleteChunksByContentId(HeldMessage heldMessage)
+		throws IOException {
 
-		var embeddedChunks = putTemplateResponse.embeddedChunks();
-		var heldMessage = putTemplateResponse.heldMessage();
-		var throwable = putTemplateResponse.throwable();
-
-		if (throwable != null) {
-
-			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
-
-			return this;
-		}
-
-		getContext().getSelf().tell(new IndexDocument(embeddedChunks, heldMessage));
-
-		return this;
-	}
-
-	private Behavior<Writer.Command> onIndexDocument(IndexDocument indexDocument) {
-
-		var embeddedChunks = indexDocument.embeddedChunks();
-		var heldMessage = indexDocument.heldMessage();
-
-		var bulkOperations = new ArrayList<BulkOperation>();
-
-		for (Object chunk : getChunks(embeddedChunks)) {
-
-			var bulkOperation = new BulkOperation.Builder()
-				.index(new IndexOperation.Builder<>()
-					.index(vectorIndexName)
-					.document(chunk)
-					.build())
-				.build();
-
-			bulkOperations.add(bulkOperation);
-
-		}
-
-		var bulkRequest = new BulkRequest.Builder()
-			.index(vectorIndexName)
-			.operations(bulkOperations)
-			.build();
-
-		try {
-
-			getContext().pipeToSelf(
-				asyncClient.bulk(bulkRequest),
-				(bulkResponse, exception) -> new IndexDocumentResponse(
-					embeddedChunks, heldMessage, bulkResponse, (Exception) exception)
-			);
-
-		}
-		catch (IOException e) {
-			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
-		}
-
-		return this;
-
+		return asyncClient.deleteByQuery(delete -> delete
+			.index(indexName)
+			.query(query -> query
+				.match(match -> match
+					.field("contentId.keyword")
+					.query(fieldValue -> fieldValue
+						.stringValue(heldMessage.contentId()))
+				))
+		);
 	}
 
 	private Behavior<Writer.Command> onIndexDocumentResponse(
-		IndexDocumentResponse brc) {
+		IndexDocumentResponse indexDocumentResponse) {
 
-		var bulkResponse = brc.bulkResponse;
-		var heldMessage = brc.heldMessage;
-		var embeddedChunks = brc.embeddedChunks;
-		var throwable = brc.exception;
+		var bulkResponse = indexDocumentResponse.bulkResponse;
+		var heldMessage = indexDocumentResponse.heldMessage;
+		var embeddedChunks = indexDocumentResponse.dataPayload;
+		var throwable = indexDocumentResponse.exception;
 
 		if (bulkResponse != null) {
 
@@ -315,59 +139,160 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 					.map(ErrorCause::reason)
 					.collect(Collectors.joining());
 
-				log.warnf("Bulk request error: %s", reasons);
+				if (log.isDebugEnabled()) {
+					log.debugf(
+						"%s: Bulk request error: %s", heldMessage, reasons);
+				}
+
 				replyTo.tell(new Writer.Failure(
 					new WriterException(reasons),
 					heldMessage
 				));
+
+				return this;
 			}
 
 		}
 
 		if (throwable != null) {
-			log.warn("Error on bulk request", throwable);
+
+			if (log.isDebugEnabled()) {
+				log.debugf(throwable, "%s: Error on bulk request", heldMessage);
+			}
+
 			replyTo.tell(new Writer.Failure(new WriterException(throwable), heldMessage));
+
+			return this;
+
 		}
-		else {
-			var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();
-			replyTo.tell(new Writer.Success(dataPayload, heldMessage));
+
+		var dataPayload = Json.encodeToBuffer(embeddedChunks).getBytes();
+		replyTo.tell(new Writer.Success(dataPayload, heldMessage));
+
+		return this;
+	}
+
+	private Behavior<Writer.Command> onStart(Writer.Start start) {
+
+		var dataPayload = start.dataPayload();
+		var heldMessage = start.heldMessage();
+
+		var chunks = parseChunks(dataPayload);
+
+		if (chunks.isEmpty()) {
+			if (log.isDebugEnabled()) {
+				log.debugf(
+					"%s: There isn't any operation to send to the server.",
+					heldMessage
+				);
+			}
+
+			replyTo.tell(new Writer.Failure(
+					new WriterException("Nothing to write"),
+					heldMessage
+				)
+			);
+
+			return this;
+		}
+
+		try {
+			getContext().pipeToSelf(
+				deleteChunksByContentId(heldMessage),
+				(deleteChunksResponse, throwable) ->
+					new WriteDocuments(
+						deleteChunksResponse,
+						throwable,
+						chunks,
+						heldMessage,
+						dataPayload
+					)
+			);
+		}
+		catch (IOException e) {
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+		}
+
+		return this;
+
+	}
+
+	private Behavior<Writer.Command> onWriteDocuments(WriteDocuments writeDocuments) {
+
+		var heldMessage = writeDocuments.heldMessage();
+		var chunks = writeDocuments.chunks();
+		var dataPayload = writeDocuments.dataPayload();
+
+		List<BulkOperation> bulkOperations = new ArrayList<>();
+
+		for (Map<String, Object> chunk : chunks) {
+
+			// fallback for acl mapping
+			try {
+
+				var acl = (Map<String, Object>) chunk.get("acl");
+
+				if (acl == null || acl.isEmpty()) {
+					chunk.put("acl", Map.of("public", true));
+				}
+
+			}
+			catch (Exception e) {
+
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+
+				return this;
+			}
+
+			var bulkOperation = new BulkOperation.Builder()
+				.index(new IndexOperation.Builder<>()
+					.index(indexName)
+					.document(chunk)
+					.build())
+				.build();
+
+			bulkOperations.add(bulkOperation);
+
+			if (log.isTraceEnabled()) {
+				log.tracef("%s: Add a new bulk operation", heldMessage);
+			}
+
+		}
+
+		var bulkRequest = new BulkRequest.Builder()
+			.index(indexName)
+			.operations(bulkOperations)
+			.build();
+
+		try {
+
+			getContext().pipeToSelf(
+				asyncClient.bulk(bulkRequest),
+				(bulkResponse, exception) -> new IndexDocumentResponse(
+					dataPayload, heldMessage, bulkResponse, (Exception) exception)
+			);
+
+		}
+		catch (IOException e) {
+			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
 		}
 
 		return this;
 	}
 
-	private record CheckIndexTemplate(
-		byte[] embeddedChunks,
-		HeldMessage heldMessage
-	) implements Writer.Command {}
-
-	private record CheckIndexTemplateResponse(
-		byte[] embeddedChunks,
-		HeldMessage heldMessage,
-		BooleanResponse exists,
-		Throwable throwable
-	)
-		implements Writer.Command {}
-
-	private record PutTemplateResponse(
-		byte[] embeddedChunks,
-		HeldMessage heldMessage,
-		PutIndexTemplateResponse response,
-		Throwable throwable
-	)
-		implements Writer.Command {}
-
-	private record IndexDocument(
-		byte[] embeddedChunks,
-		HeldMessage heldMessage
-	)
-		implements Writer.Command {}
-
 	private record IndexDocumentResponse(
-		byte[] embeddedChunks,
+		byte[] dataPayload,
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
+	) implements Writer.Command {}
+
+	private record WriteDocuments(
+		DeleteByQueryResponse deleteChunksResponse,
+		Throwable throwable,
+		List<Map<String, Object>> chunks,
+		HeldMessage heldMessage,
+		byte[] dataPayload
 	) implements Writer.Command {}
 
 }

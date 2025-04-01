@@ -17,15 +17,16 @@
 
 package io.quarkus.hibernate.reactive.runtime;
 
-import io.quarkus.arc.DefaultBean;
-import io.quarkus.arc.Unremovable;
-import io.quarkus.hibernate.orm.runtime.JPAConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceUnit;
+
+import io.quarkus.arc.DefaultBean;
+import io.quarkus.arc.Unremovable;
+import io.quarkus.hibernate.orm.runtime.JPAConfig;
 import org.hibernate.reactive.common.spi.Implementor;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl;

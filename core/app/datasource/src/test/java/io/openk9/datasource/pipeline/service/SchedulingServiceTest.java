@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import io.openk9.datasource.util.SchedulerUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +35,7 @@ public class SchedulingServiceTest {
 			throwsVeryLongStackTrace(0);
 		}
 		catch (TestException e) {
-			var errorDescription = SchedulingService.getErrorDescription(e);
+			var errorDescription = SchedulerUtil.getErrorDescription(e);
 
 			Assertions.assertEquals(EXPECTED_ERROR_DESCRIPTION, errorDescription);
 		}

@@ -17,11 +17,23 @@
 
 package io.openk9.datasource.service;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.DatasourceConnectionDTO;
+import io.openk9.datasource.graphql.dto.CreateDatasourceDTO;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -30,28 +42,16 @@ import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.DatasourceDTO;
-import io.openk9.datasource.model.dto.UpdateDatasourceConnectionDTO;
-import io.openk9.datasource.model.dto.VectorIndexDTO;
+import io.openk9.datasource.model.dto.UpdateDatasourceDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class DatasourceService extends BaseK9EntityService<Datasource, DatasourceDTO> {
@@ -67,8 +67,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
-	@Inject
-	VectorIndexService vectorIndexService;
 
 	DatasourceService(DatasourceMapper mapper) {
 		this.mapper = mapper;
@@ -104,7 +102,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<Response<Datasource>> createDatasourceConnection(
-		DatasourceConnectionDTO datasourceConnection) {
+		CreateDatasourceDTO datasourceConnection) {
 
 		return Uni.createFrom().item(() -> {
 				checkExclusiveFields(datasourceConnection);
@@ -117,7 +115,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 				return datasourceConnection;
 			})
-			.flatMap(datasourceConnectionDTO -> sessionFactory.withTransaction((session, transaction) ->
+			.flatMap(createDatasourceDTO -> sessionFactory.withTransaction((session, transaction) ->
 				getOrCreatePluginDriver(session, datasourceConnection)
 					.flatMap(pluginDriver -> getOrCreateEnrichPipeline(
 							session,
@@ -130,10 +128,10 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
-							.createByDatasource(session, datasource)
-							.flatMap(dataIndex -> createVectorIndex(
-									session, dataIndex, datasourceConnection.getVectorIndexConfigurations()
-								)
+							.createDataIndex(
+								session,
+								datasource,
+								createDatasourceDTO.getDataIndex()
 							)
 							.invoke(datasource::setDataIndex)
 							.flatMap(__ -> persist(session, datasource))
@@ -372,7 +370,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<Response<Datasource>> updateDatasourceConnection(
-		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+		UpdateDatasourceDTO updateConnectionDTO) {
 
 		return Uni.createFrom()
 			.item(() -> {
@@ -380,6 +378,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 				if (datasourceId == 0L) {
 					throw new ValidationException("Request must defines datasourceId");
+				}
+
+				var dataIndexId = updateConnectionDTO.getDataIndexId();
+
+				if (dataIndexId == 0L) {
+					throw new ValidationException("Request must defines dataIndexId");
 				}
 
 				var constraintViolations = validator.validate(updateConnectionDTO);
@@ -427,13 +431,13 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	public Uni<Datasource> updateDatasourceConnection(
-		Mutiny.Session s, UpdateDatasourceConnectionDTO updateConnectionDTO) {
+		Mutiny.Session s, UpdateDatasourceDTO updateConnectionDTO) {
 
 		return findByIdWithPluginDriver(s, updateConnectionDTO.getDatasourceId())
 			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 				.invoke(datasource::setEnrichPipeline)
-				.flatMap(enrichPipeline -> updateOrCreateDataIndex(
-					s, datasource, updateConnectionDTO))
+				.map(enrichPipeline -> s.getReference(
+					DataIndex.class, updateConnectionDTO.getDataIndexId()))
 				.invoke(datasource::setDataIndex)
 				.map(__ -> mapper.update(datasource, updateConnectionDTO))
 				.chain(newState -> merge(s, newState)));
@@ -468,59 +472,39 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		);
 	}
 
-	private Uni<DataIndex> createVectorIndex(
-		Mutiny.Session session,
-		DataIndex dataIndex,
-		VectorIndexDTO.ConfigurationsDTO vectorIndexConfigurations) {
+	private void checkExclusiveFields(CreateDatasourceDTO createDatasourceDTO)
+	throws ValidationException {
 
-		if (vectorIndexConfigurations != null) {
-			VectorIndexDTO vectorIndexDTO = VectorIndexDTO.builder()
-				.name(dataIndex.getName() + "-vector-index")
-				.configurations(vectorIndexConfigurations)
-				.build();
+		var pluginDriver = createDatasourceDTO.getPluginDriver();
+		var pluginDriverId = createDatasourceDTO.getPluginDriverId();
 
-			if (dataIndex.getVectorIndex() == null) {
-				return vectorIndexService.create(
-						session, vectorIndexDTO)
-					.flatMap(vectorIndex -> dataIndexService.bindVectorDataIndex(
-						session, dataIndex.getId(), vectorIndex.getId()));
-			}
-			else {
-				return vectorIndexService.update(
-						session, dataIndex.getVectorIndex().getId(), vectorIndexDTO)
-					.map(vectorIndex -> dataIndex);
-			}
 
-		}
-		else {
-			return Uni.createFrom().item(dataIndex);
+		if (pluginDriver == null && pluginDriverId == null) {
+			throw new ValidationException(
+				"Request must defines one of pluginDriverId or pluginDriver");
 		}
 
-	}
-
-	private Uni<PluginDriver> getOrCreatePluginDriver(
-		Mutiny.Session session,
-		DatasourceConnectionDTO datasourceConnectionDTO) {
-
-		var pluginDriverDto = datasourceConnectionDTO.getPluginDriver();
-
-		if (pluginDriverDto != null) {
-			return pluginDriverService.create(session, pluginDriverDto);
+		if (pluginDriver != null && pluginDriverId != null) {
+			throw new ValidationException(
+				"Ambiguous Request: defines pluginDriver or pluginDriverId, exclusively");
 		}
-		else {
-			return pluginDriverService.findById(
-				session,
-				datasourceConnectionDTO.getPluginDriverId()
-			);
+
+		var pipeline = createDatasourceDTO.getPipeline();
+		var pipelineId = createDatasourceDTO.getPipelineId();
+
+		if (pipeline != null && pipelineId != null) {
+			throw new ValidationException(
+				"Ambiguous Request: defines pipeline or pipelineId, exclusively");
 		}
+
 	}
 
 	private Uni<EnrichPipeline> getOrCreateEnrichPipeline(
 		Mutiny.Session session,
-		DatasourceConnectionDTO datasourceConnectionDTO) {
+		CreateDatasourceDTO createDatasourceDTO) {
 
-		var pipelineDto = datasourceConnectionDTO.getPipeline();
-		var pipelineId = datasourceConnectionDTO.getPipelineId();
+		var pipelineDto = createDatasourceDTO.getPipeline();
+		var pipelineId = createDatasourceDTO.getPipelineId();
 
 		if (pipelineDto != null) {
 			return enrichPipelineService.createWithItems(session, pipelineDto);
@@ -533,9 +517,26 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		}
 	}
 
+	private Uni<PluginDriver> getOrCreatePluginDriver(
+		Mutiny.Session session,
+		CreateDatasourceDTO createDatasourceDTO) {
+
+		var pluginDriverDto = createDatasourceDTO.getPluginDriver();
+
+		if (pluginDriverDto != null) {
+			return pluginDriverService.create(session, pluginDriverDto);
+		}
+		else {
+			return pluginDriverService.findById(
+				session,
+				createDatasourceDTO.getPluginDriverId()
+			);
+		}
+	}
+
 	private Uni<EnrichPipeline> updateOrCreateEnrichPipeline(
 		Mutiny.Session session,
-		UpdateDatasourceConnectionDTO updateConnectionDTO) {
+		UpdateDatasourceDTO updateConnectionDTO) {
 
 		var pipelineId = updateConnectionDTO.getPipelineId();
 		var pipelineDto = updateConnectionDTO.getPipeline();
@@ -552,54 +553,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		}
 		else {
 			return Uni.createFrom().nullItem();
-		}
-
-	}
-
-	private Uni<DataIndex> updateOrCreateDataIndex(
-		Mutiny.Session session,
-		Datasource datasource,
-		UpdateDatasourceConnectionDTO updateConnectionDTO) {
-
-		var dataIndexId = updateConnectionDTO.getDataIndexId();
-		var vectorIndexConfigurations = updateConnectionDTO.getVectorIndexConfigurations();
-
-		if (dataIndexId <= 0L) {
-			return dataIndexService.createByDatasource(session, datasource)
-				.flatMap(dataIndex ->
-					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
-		}
-		else {
-			return dataIndexService.findByIdWithVectorIndex(session, dataIndexId)
-				.flatMap(dataIndex ->
-					createVectorIndex(session, dataIndex, vectorIndexConfigurations));
-		}
-
-	}
-
-	private void checkExclusiveFields(DatasourceConnectionDTO datasourceConnectionDTO)
-	throws ValidationException {
-
-		var pluginDriver = datasourceConnectionDTO.getPluginDriver();
-		var pluginDriverId = datasourceConnectionDTO.getPluginDriverId();
-
-
-		if (pluginDriver == null && pluginDriverId == null) {
-			throw new ValidationException(
-				"Request must defines one of pluginDriverId or pluginDriver");
-		}
-
-		if (pluginDriver != null && pluginDriverId != null) {
-			throw new ValidationException(
-				"Ambiguous Request: defines pluginDriver or pluginDriverId, exclusively");
-		}
-
-		var pipeline = datasourceConnectionDTO.getPipeline();
-		var pipelineId = datasourceConnectionDTO.getPipelineId();
-
-		if (pipeline != null && pipelineId != null) {
-			throw new ValidationException(
-				"Ambiguous Request: defines pipeline or pipelineId, exclusively");
 		}
 
 	}
