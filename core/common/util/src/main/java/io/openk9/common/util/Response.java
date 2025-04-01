@@ -17,11 +17,11 @@
 
 package io.openk9.common.util;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor(staticName = "of")
@@ -29,4 +29,13 @@ import java.util.List;
 public class Response<E> {
 	private E entity;
 	private List<FieldValidator> fieldValidators;
+
+	public static <T> Response<T> error(List<FieldValidator> fieldValidators) {
+		return Response.of(null, fieldValidators);
+	}
+
+	public static <T> Response<T> success(T entity) {
+		return Response.of(entity, null);
+	}
+
 }

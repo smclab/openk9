@@ -19,6 +19,7 @@ package io.openk9.datasource.web;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -27,11 +28,13 @@ import jakarta.ws.rs.PathParam;
 
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -90,15 +93,21 @@ public class DataIndexResource {
 
 	@Path("/create-data-index-from-doc-types/{datasourceId}")
 	@POST
+	@Deprecated(forRemoval = true)
 	public Uni<DataIndex> createDataIndexFromDocTypes(
 		@PathParam("datasourceId") long datasourceId,
 		DataIndexByDocTypes request) {
 
-		return dataIndexService.createDataIndexByDocTypes(
-			datasourceId,
-			request
-		);
+		var settings = JsonObject.mapFrom(request.getSettings()).encode();
 
+		DataIndexDTO dataIndexDto = DataIndexDTO.builder()
+			.name(request.getIndexName())
+			.docTypeIds(Set.copyOf(request.getDocTypeIds()))
+			.settings(settings)
+			.datasourceId(datasourceId)
+			.build();
+
+		return dataIndexService.create(dataIndexDto);
 	}
 
 }

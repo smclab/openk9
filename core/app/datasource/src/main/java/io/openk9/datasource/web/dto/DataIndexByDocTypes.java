@@ -20,8 +20,6 @@ package io.openk9.datasource.web.dto;
 import java.util.List;
 import java.util.Map;
 
-import io.openk9.datasource.model.dto.base.DataIndexDTO;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,7 +31,6 @@ public class DataIndexByDocTypes {
 
 	private List<Long> docTypeIds;
 	private Map<String, Object> settings;
-	private DataIndexDTO dataIndex;
-	private Long embeddingModelId;
+	private String indexName;
 
 }

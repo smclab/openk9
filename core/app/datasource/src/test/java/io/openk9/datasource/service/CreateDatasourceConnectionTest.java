@@ -122,9 +122,8 @@ class CreateDatasourceConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createDataIndex(
+					.create(
 						anySession(),
-						any(Datasource.class),
 						nullable(DataIndexDTO.class)
 					);
 
@@ -200,9 +199,9 @@ class CreateDatasourceConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createDataIndex(
+					.create(
 						anySession(),
-						any(Datasource.class), nullable(DataIndexDTO.class)
+						nullable(DataIndexDTO.class)
 					);
 			}
 		);
@@ -285,9 +284,9 @@ class CreateDatasourceConnectionTest {
 
 				then(dataIndexService)
 					.should(times(1))
-					.createDataIndex(
+					.create(
 						anySession(),
-						any(Datasource.class), nullable(DataIndexDTO.class)
+						nullable(DataIndexDTO.class)
 					);
 			}
 		);

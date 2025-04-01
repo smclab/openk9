@@ -33,11 +33,15 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
@@ -47,6 +51,7 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.exception.K9Error;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
@@ -521,6 +526,33 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	public Uni<ENTITY> upsert(String tenantId, DTO dto) {
 		return sessionFactory.withTransaction(tenantId, (s, t) -> upsert(s, dto));
+	}
+
+	protected static <T> Response<T> toResponse(T entity, Throwable throwable) {
+		if (throwable != null) {
+			return switch (throwable) {
+				case ConstraintViolationException e -> {
+					var fieldValidators = e.getConstraintViolations().stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation
+								.getPropertyPath()
+								.toString(), constraintViolation.getMessage()
+						))
+						.collect(Collectors.toList());
+
+					yield Response.error(fieldValidators);
+				}
+				case ValidationException e -> Response.error(
+					List.of(
+						FieldValidator.of("error", e.getMessage())
+					)
+				);
+				default -> throw new K9Error(throwable);
+			};
+		}
+		else {
+			return Response.success(entity);
+		}
 	}
 
 	@Override

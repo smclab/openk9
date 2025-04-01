@@ -129,40 +129,23 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 							return create(session, datasource);
 						}).flatMap(datasource -> dataIndexService
-							.createDataIndex(
+							.create(
 								session,
-								datasource,
-								createDatasourceDTO.getDataIndex()
+								createDatasourceDTO
+									.getDataIndex()
+									.withDatasourceId(datasource.getId())
 							)
 							.invoke(datasource::setDataIndex)
 							.flatMap(__ -> persist(session, datasource))
 						)
 					)
 			))
+			.onFailure()
+			.invoke(throwable -> log.errorf(
+				throwable, "datasourceConnection %s cannot be created.", datasourceConnection)
+			)
 			.onItemOrFailure()
-			.transformToUni((datasource, throwable) -> {
-				if (throwable != null) {
-					if (throwable instanceof ConstraintViolationException constraintViolations) {
-						var fieldValidators =
-							constraintViolations.getConstraintViolations().stream()
-								.map(constraintViolation -> FieldValidator.of(constraintViolation
-									.getPropertyPath()
-									.toString(), constraintViolation.getMessage()))
-								.collect(Collectors.toList());
-						return Uni.createFrom().item(Response.of(null, fieldValidators));
-					}
-					if (throwable instanceof ValidationException validationException) {
-						return Uni.createFrom().item(Response.of(
-							null,
-							List.of(FieldValidator.of("error", validationException.getMessage()))
-						));
-					}
-					return Uni.createFrom().failure(new K9Error(throwable));
-				}
-				else {
-					return Uni.createFrom().item(Response.of(datasource, null));
-				}
-			});
+			.transform(BaseK9EntityService::toResponse);
 	}
 
 	/**

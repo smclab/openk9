@@ -254,6 +254,7 @@ public class Initializer {
 						.build()
 					)
 					.dataIndex(DataIndexDTO.builder()
+						.name(INIT_DATASOURCE_CONNECTION + "-dataIndex")
 						.knnIndex(false)
 						.docTypeIds(docTypeIds)
 						.build()

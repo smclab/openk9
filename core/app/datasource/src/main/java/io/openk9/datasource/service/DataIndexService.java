@@ -20,20 +20,20 @@ package io.openk9.datasource.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
-import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.DataIndexTemplate;
 import io.openk9.datasource.index.IndexMappingService;
@@ -46,7 +46,6 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -57,7 +56,6 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.DataIndexResource;
-import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
@@ -84,42 +82,6 @@ public class DataIndexService
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
-	}
-
-	public Uni<DataIndex> createDataIndex(
-		Mutiny.Session session, long datasourceId, @Nullable DataIndexDTO dataIndexDTO) {
-
-		dataIndexDTO = requireDataIndexDTOElseGet(dataIndexDTO, datasourceId);
-
-		var settingsMap = getSettingsMap(dataIndexDTO.getSettings());
-
-		return createDataIndexTransient(session, datasourceId, dataIndexDTO)
-			.flatMap(dataIndex -> merge(session, dataIndex)
-				.call(merged -> session.find(TenantBinding.class, 1L)
-					.map(K9Entity::getTenant)
-					.call(tenantId -> embeddingModelService
-						.fetchCurrent(session)
-						.onFailure()
-						.recoverWithNull()
-						.flatMap(embeddingModel ->
-							indexMappingService.createDataIndexTemplate(
-								new DataIndexTemplate(
-									tenantId, settingsMap, merged, embeddingModel)
-							)
-						)
-					)
-				)
-			);
-
-	}
-
-	public Uni<DataIndex> createDataIndex(
-		Mutiny.Session session, Datasource datasource, @Nullable DataIndexDTO dataIndexDTO) {
-
-		var datasourceId = datasource.getId();
-
-		return createDataIndex(session, datasourceId, dataIndexDTO);
-
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
@@ -181,104 +143,86 @@ public class DataIndexService
 		});
 	}
 
-	/**
-	 * Create a new dataIndex for a datasource, the indexMapping will be created
-	 * from the docTypes fetched by their ids.
-	 *
-	 * @param datasourceId the id of the datasource related to this dataIndex
-	 * @param request
-	 * @return
-	 */
-	public Uni<DataIndex> createDataIndexByDocTypes(
-		long datasourceId, DataIndexByDocTypes request) {
+	//	@Override
+	//	public Uni<DataIndex> create(DataIndex entity) {
+	//		return create((Mutiny.Session) null, entity);
+	//	}
 
-		var dataIndexDTO = requireDataIndexDTOElseGet(
-			request.getDataIndex(), datasourceId);
-
-		var docTypeIds = request.getDocTypeIds();
-		var settings = request.getSettings();
-
-		return sessionFactory.withTransaction((s, t) ->
-			docTypeService
-				.findDocTypes(docTypeIds, s)
-				.flatMap(docTypeList -> createDataIndexTransient(
-					s, datasourceId, dataIndexDTO)
-					.flatMap(transientDataIndex -> {
-						if (docTypeList.size() != docTypeIds.size()) {
-							throw new RuntimeException(
-								"docTypeIds found: " + docTypeList.size() +
-								" docTypeIds requested: " + docTypeIds.size());
-						}
-
-						transientDataIndex.setDocTypes(
-							new LinkedHashSet<>(docTypeList));
-						transientDataIndex.setDatasource(s.getReference(
-							Datasource.class,
-							datasourceId
-						));
-
-						Uni<EmbeddingModel> knnFlowUni;
-
-						if (transientDataIndex.getKnnIndex()) {
-
-							var embeddingModelId = request.getEmbeddingModelId();
-
-							if (embeddingModelId != null && embeddingModelId > 0) {
-								knnFlowUni = embeddingModelService.findById(
-									s, embeddingModelId);
-							}
-							else {
-								knnFlowUni = embeddingModelService.fetchCurrent(s);
-							}
-
-						}
-						else {
-							knnFlowUni = Uni.createFrom().nullItem();
-						}
-
-						return knnFlowUni
-							.onFailure()
-							.transform(EmbeddingModelNotFound::new)
-							.flatMap(embeddingModel -> persist(s, transientDataIndex)
-								.flatMap(dataIndex -> indexMappingService
-									.createDataIndexTemplate(new DataIndexTemplate(
-										null, settings, dataIndex, embeddingModel))
-									.map(unused -> dataIndex)
-								)
-							);
-
-					})
-				)
-		);
-	}
-
-	private static Map<String, Object> getSettingsMap(String settingsJson) {
-
-		Map<String, Object> settingsMap = null;
-		try {
-			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);
-			settingsMap = settingsJsonObj.getMap();
-		}
-		catch (Exception exception) {
-			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
-			settingsMap = Map.of();
-		}
-
-		return settingsMap;
+	@Override
+	public Uni<DataIndex> create(DataIndexDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, dto));
 	}
 
 	@Override
-	public Uni<DataIndex> deleteById(long entityId) {
-		return sessionFactory.withTransaction(s -> findById(s, entityId)
-			.call(dataIndex -> indexService.deleteIndex(
-				new IndexName(dataIndex.getIndexName())))
-			.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
-			.flatMap(dataIndex -> {
-				dataIndex.getDocTypes().clear();
-				return s.persist(dataIndex);
-			})
-			.flatMap(ignore -> deleteById(s, entityId))
-		);
+	public Uni<DataIndex> create(
+		Mutiny.Session session, DataIndexDTO dataIndexDTO) {
+
+		if (dataIndexDTO == null) {
+			return Uni.createFrom()
+				.failure(new ValidationException("dataIndexDTO cannot be null."));
+		}
+
+		var constraintViolations = validator.validate(dataIndexDTO);
+
+		if (!constraintViolations.isEmpty()) {
+			return Uni.createFrom()
+				.failure(new ConstraintViolationException(constraintViolations));
+		}
+
+		var settingsMap = getSettingsMap(dataIndexDTO.getSettings());
+
+		return createDataIndexTransient(session, dataIndexDTO)
+			.flatMap(dataIndex -> merge(session, dataIndex)
+				.call(merged -> session.find(TenantBinding.class, 1L)
+					.map(K9Entity::getTenant)
+					.call(tenantId -> embeddingModelService
+						.fetchCurrent(session)
+						.onFailure()
+						.recoverWithNull()
+						.flatMap(embeddingModel ->
+							indexMappingService.createDataIndexTemplate(
+								new DataIndexTemplate(
+									tenantId, settingsMap, merged, embeddingModel)
+							)
+						)
+					)
+				)
+			);
+
+	}
+
+	//	@Override
+	//	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
+	//		// cannot be created from dataIndex entity, because we cannot obtain a setting map from there.
+	//
+	//		throw new UnsupportedOperationException("DataIndex could only be created from dataIndexDTO");
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> create(String tenantId, DataIndexDTO dto) {
+	//		return sessionFactory.withTransaction(
+	//			tenantId, (session, transaction) -> create(session, dto));
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> create(String tenantId, DataIndex entity) {
+	//		return create((Mutiny.Session) null, entity);
+	//	}
+
+	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
+
+		return sessionFactory.withTransaction(
+				(session, transaction) -> create(session, dataIndexDTO))
+			.onFailure()
+			.invoke(throwable -> log.errorf(
+				throwable,
+				"DataIndexDTO %s cannot be created.",
+				dataIndexDTO
+			))
+			.onItemOrFailure()
+			.transform(BaseK9EntityService::toResponse);
+
 	}
 
 	/**
@@ -365,6 +309,20 @@ public class DataIndexService
 			});
 	}
 
+	@Override
+	public Uni<DataIndex> deleteById(long entityId) {
+		return sessionFactory.withTransaction(s -> findById(s, entityId)
+			.call(dataIndex -> indexService.deleteIndex(
+				new IndexName(dataIndex.getIndexName())))
+			.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
+			.flatMap(dataIndex -> {
+				dataIndex.getDocTypes().clear();
+				return s.persist(dataIndex);
+			})
+			.flatMap(ignore -> deleteById(s, entityId))
+		);
+	}
+
 	public Uni<Long> getCountIndexDocuments(String name) {
 		return indexService.indexCount(name);
 	}
@@ -449,53 +407,59 @@ public class DataIndexService
 			));
 	}
 
-	@Override
-	public Uni<DataIndex> update(
-		Mutiny.Session session, long id, DataIndexDTO dto) {
+	//	@Override
+	//	public Uni<DataIndex> patch(long id, DataIndexDTO dto) {
+	//		return patch((Mutiny.Session) null, id, dto);
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> patch(String tenantId, long id, DataIndexDTO dto) {
+	//		return patch((Mutiny.Session) null, id, dto);
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> update(long id, DataIndexDTO dto) {
+	//		return update((Mutiny.Session) null, id, dto);
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> update(String tenantId, long id, DataIndexDTO dto) {
+	//		return update((Mutiny.Session) null, id, dto);
+	//	}
+	//
+	//	@Override
+	//	public Uni<DataIndex> update(
+	//		Mutiny.Session session, long id, DataIndexDTO dto) {
+	//		// a dataIndex cannot be updated
+	//
+	//		throw new UnsupportedOperationException("update not supported for DataIndex");
+	//	}
+	//
+	//	@Override
+	//	protected Uni<DataIndex> patch(
+	//		Mutiny.Session session, long id, DataIndexDTO dto) {
+	//		// a dataIndex cannot be updated
+	//
+	//		throw new UnsupportedOperationException("patch not supported for DataIndex");
+	//	}
 
-		return findThenMapAndPersist(
-			session, id, dto,
-			(dIdx, dIdxDto) -> updateMapperClosure(
-				session, dIdx, dIdxDto)
-		);
-	}
+	private static Map<String, Object> getSettingsMap(String settingsJson) {
 
-	@Override
-	protected Uni<DataIndex> patch(
-		Mutiny.Session session, long id, DataIndexDTO dto) {
-
-		return findThenMapAndPersist(
-			session, id, dto,
-			(dIdx, dIdxDto) -> patchMapperClosure(
-				session, dIdx, dIdxDto)
-		);
-	}
-
-	private static DataIndexDTO requireDataIndexDTOElseGet(
-		DataIndexDTO dataIndexDTO,
-		Long datasourceId) {
-		DataIndexDTO dto;
-		if (dataIndexDTO == null) {
-			dto = new DataIndexDTO();
+		Map<String, Object> settingsMap = null;
+		try {
+			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);
+			settingsMap = settingsJsonObj.getMap();
 		}
-		else {
-			dto = dataIndexDTO;
+		catch (Exception exception) {
+			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
+			settingsMap = Map.of();
 		}
 
-		if (dto.getName() == null) {
-			var dataIndexName = String.format(
-				"%s-%s",
-				datasourceId,
-				UUID.randomUUID()
-			);
-
-			dto.setName(dataIndexName);
-		}
-		return dto;
+		return settingsMap;
 	}
 
 	private Uni<DataIndex> createDataIndexTransient(
-		Mutiny.Session session, long datasourceId, DataIndexDTO dto) {
+		Mutiny.Session session, DataIndexDTO dto) {
 
 		// get docTypeIds
 		Set<Long> docTypeIds =
@@ -511,7 +475,7 @@ public class DataIndexService
 				dataIndex.setDocTypes(Set.copyOf(docTypes));
 
 				// mapping datasource
-				var datasource = session.getReference(Datasource.class, datasourceId);
+				var datasource = session.getReference(Datasource.class, dto.getDatasourceId());
 				dataIndex.setDatasource(datasource);
 
 				// mapping embeddingDocTypeField
@@ -525,35 +489,6 @@ public class DataIndexService
 
 				return dataIndex;
 			});
-	}
-
-	private DataIndex patchMapperClosure(
-		Mutiny.Session session, DataIndex prev, DataIndexDTO dto) {
-
-		var patched = mapper.patch(prev, dto);
-
-		if (dto.getEmbeddingDocTypeFieldId() != null) {
-			patched.setEmbeddingDocTypeField(session.getReference(
-				DocTypeField.class, dto.getEmbeddingDocTypeFieldId()));
-		}
-
-		return patched;
-	}
-
-	private DataIndex updateMapperClosure(
-		Mutiny.Session session, DataIndex prev, DataIndexDTO dto) {
-
-		var updated = mapper.update(prev, dto);
-
-		if (dto.getEmbeddingDocTypeFieldId() == null) {
-			updated.setEmbeddingDocTypeField(null);
-		}
-		else {
-			updated.setEmbeddingDocTypeField(session.getReference(
-				DocTypeField.class, dto.getEmbeddingDocTypeFieldId()));
-		}
-
-		return updated;
 	}
 
 }

@@ -67,6 +67,7 @@ public class DataIndex extends K9Entity {
 	public static final String DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE =
 		"dataIndicesWithDocTypes";
 
+	private static final boolean DEFAULT_KNN_INDEX = false;
 	private static final int DEFAULT_CHUNK_WINDOW_SIZE = 0;
 	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";
 	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
@@ -112,7 +113,7 @@ public class DataIndex extends K9Entity {
 
 	@Column(name = "knn_index", updatable = false)
 	@Immutable
-	private Boolean knnIndex = false;
+	private Boolean knnIndex = DEFAULT_KNN_INDEX;
 
 	@JsonIgnore
 	@ToString.Exclude

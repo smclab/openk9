@@ -107,30 +107,10 @@ public class DataIndexGraphqlResource {
 			.map(Json::encode);
 	}
 
-	public Uni<Response<DataIndex>> patchDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().patch(id, dataIndexDTO);
-	}
-
-	public Uni<Response<DataIndex>> updateDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().update(id, dataIndexDTO);
-	}
-
-	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().create(dataIndexDTO);
-	}
-
 	@Mutation
-	public Uni<Response<DataIndex>> dataIndex(
-		@Id Long id, DataIndexDTO dataIndexDTO,
-		@DefaultValue("false") boolean patch) {
+	public Uni<Response<DataIndex>> dataIndex(DataIndexDTO dataIndexDTO) {
 
-		if (id == null) {
-			return createDataIndex(dataIndexDTO);
-		} else {
-			return patch
-				? patchDataIndex(id, dataIndexDTO)
-				: updateDataIndex(id, dataIndexDTO);
-		}
+		return dataIndexService.createDataIndex(dataIndexDTO);
 
 	}
 
