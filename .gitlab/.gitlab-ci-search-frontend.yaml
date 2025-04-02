@@ -43,25 +43,23 @@ Build Search Frontend:
     - job: Fetch version
       artifacts: true
   script:
-    - source $CI_PROJECT_DIR/version.env # Carica la versione dall'artifact
+    - source $CI_PROJECT_DIR/version.env
     - echo "=== Using VERSION=$VERSION ==="
     - echo "=== Configurazione credenziali Kaniko ==="
-    - export NODE_OPTIONS="--max-old-space-size=4096" # Aumenta la memoria massima per Node
-
+    - export NODE_OPTIONS="--max-old-space-size=4096"
     - mkdir -p /kaniko/.docker
     - |
-      echo "{\"auths\":{\"$CI_REGISTRY_NAME\":{\"auth\":\"$(printf "%s:%s" \ 
-      "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" \
-      | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+      > /kaniko/.docker/config.json
     - |
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}" \
         --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-        --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
+        --destination "registry.smc.it:49083/openk9/search-frontend:$VERSION"
   rules:
-    - changes:
-        - js-packages/search-frontend/**/*
     - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/search-frontend/**/*
 
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:
