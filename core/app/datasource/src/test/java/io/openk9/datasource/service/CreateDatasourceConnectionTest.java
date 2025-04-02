@@ -18,31 +18,32 @@
 package io.openk9.datasource.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 
 import io.openk9.datasource.Initializer;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.service.exception.K9Error;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class CreateDatasourceConnectionTest {
+
+	private static final String DATASOURCE_NAME = "cdct.datasource";
+	private static final String DATA_INDEX_NAME = "cdct.dataIndex";
+	private static final String ENRICH_PIPELINE_NAME = "cdct.enrichPipeline";
 
 	@Inject
 	DatasourceService datasourceService;
@@ -56,241 +57,196 @@ class CreateDatasourceConnectionTest {
 	@InjectSpy(delegate = true)
 	DataIndexService dataIndexService;
 
-	@Test
-	@RunOnVertxContext
-	void should_create_everything_base(UniAsserter asserter) {
+	private Long pluginDriverId;
+	private Long enrichPipelineId;
 
-		asserter.assertThat(
-			() -> enrichPipelineService.createWithItems(
-				PipelineWithItemsDTO.builder()
-					.name("NEW_ENTITIES_BASE_PIPELINE")
+	@BeforeEach
+	void setup() {
+		var pluginDriver = pluginDriverService
+			.findByName("public", Initializer.INIT_DATASOURCE_PLUGIN)
+			.await()
+			.indefinitely();
+
+		this.pluginDriverId = pluginDriver.getId();
+
+		var enrichPipeline = enrichPipelineService.findByName(
+				"public",
+				Initializer.INIT_DATASOURCE_PIPELINE
+			)
+			.await()
+			.indefinitely();
+
+		this.enrichPipelineId = enrichPipeline.getId();
+
+	}
+
+	@Test
+	void should_associate_pipeline() {
+
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.pipelineId(enrichPipelineId)
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.build())
+				.build()
+		).await().indefinitely();
+
+		var enrichPipeline = datasourceService.getEnrichPipeline(response.getEntity().getId())
+			.await().indefinitely();
+
+		Assertions.assertEquals(enrichPipelineId, enrichPipeline.getId());
+
+		then(dataIndexService)
+			.should()
+			.create(
+				anySession(), argThat((DataIndexDTO dto) ->
+					dto.getName().equals(DATA_INDEX_NAME))
+			);
+
+	}
+
+	@Test
+	void should_create_with_pipeline() {
+
+		var response = datasourceService.createDatasourceConnection(
+			DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+				.name(DATASOURCE_NAME)
+				.pluginDriverId(pluginDriverId)
+				.pipeline(PipelineWithItemsDTO.builder()
+					.name(ENRICH_PIPELINE_NAME)
 					.build()
-			).flatMap(pipeline -> datasourceService.createDatasourceConnection(
-				DatasourceConnectionObjects.NEW_ENTITIES_BASE_DTO_BUILDER
-						.pipelineId(pipeline.getEntity().getId())
-						.build()
 				)
-			),
-			datasourceEntity ->
-				asserter.assertThat(
-					() -> datasourceService
-						.getDataIndex(datasourceEntity.getEntity().getId())
-						.flatMap(dataIndex -> datasourceService
-							.getPluginDriver(datasourceEntity.getEntity().getId())
-							.flatMap(pluginDriver -> datasourceService
-								.getEnrichPipeline(datasourceEntity.getEntity().getId())
-								.map(enrichPipeline -> {
-									var datasource = new Datasource();
-									datasource.setDataIndex(dataIndex);
-									datasource.setPluginDriver(pluginDriver);
-									datasource.setEnrichPipeline(enrichPipeline);
-									return datasource;
-								})
-							)
-						),
-					datasource -> {
-						Assertions.assertNotNull(datasource.getDataIndex());
-						Assertions.assertNotNull(datasource.getEnrichPipeline());
-						Assertions.assertNotNull(datasource.getPluginDriver());
-					}
-				)
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_create_everything_vector(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(
-				DatasourceConnectionObjects.NEW_ENTITIES_VECTOR_DTO),
-			response -> {
-				then(pluginDriverService)
-					.should(times(1))
-					.create(
-						anySession(),
-						any(PluginDriverDTO.class)
-					);
-
-				then(enrichPipelineService)
-					.should(times(1))
-					.createWithItems(
-						anySession(),
-						any(PipelineWithItemsDTO.class)
-					);
-
-				then(dataIndexService)
-					.should(times(1))
-					.create(
-						anySession(),
-						nullable(DataIndexDTO.class)
-					);
-
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_create_pipeline_dataIndex(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
-				.name("PRE_EXIST_PLUGIN")
+				.dataIndex(DataIndexDTO.builder()
+					.name(DATA_INDEX_NAME)
+					.build())
 				.build()
-			).flatMap(pluginDriver -> datasourceService
-				.createDatasourceConnection(
-					DatasourceConnectionObjects.PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER
-						.pluginDriverId(pluginDriver.getId())
-						.build()
+		).await().indefinitely();
+
+		var enrichPipeline = datasourceService.getEnrichPipeline(response.getEntity().getId())
+			.await().indefinitely();
+
+		Assertions.assertEquals(ENRICH_PIPELINE_NAME, enrichPipeline.getName());
+
+		then(dataIndexService)
+			.should()
+			.create(
+				anySession(), argThat((DataIndexDTO dto) ->
+					dto.getName().equals(DATA_INDEX_NAME))
+			);
+
+	}
+
+	@Test
+	void should_fail_with_K9Error_when_transaction_exception() {
+
+		Exception failure = null;
+		try {
+			datasourceService.createDatasourceConnection(
+					DatasourceConnectionObjects.DATASOURCE_CONNECTION_DTO_BUILDER()
+						.name(DATASOURCE_NAME)
+						.pluginDriverId(Long.MAX_VALUE) // not exist
+						.pipeline(PipelineWithItemsDTO.builder()
+							.name(Initializer.INIT_DATASOURCE_PIPELINE) // already exist
+							.build()
+						)
+						.dataIndex(DataIndexDTO.builder()
+							.name(DATA_INDEX_NAME)
+							.build())
+						.build())
+				.await()
+				.indefinitely();
+		}
+		catch (Exception e) {
+			failure = e;
+		}
+
+		Assertions.assertInstanceOf(K9Error.class, failure);
+
+		then(dataIndexService).shouldHaveNoInteractions();
+
+	}
+
+	@Test
+	void should_fail_with_validation_exception_when_ambiguousDto() {
+
+		var response = datasourceService
+			.createDatasourceConnection(DatasourceConnectionObjects.AMBIGUOUS_DTO)
+			.await().indefinitely();
+
+		Assertions.assertFalse(response.getFieldValidators().isEmpty());
+
+		then(dataIndexService).shouldHaveNoInteractions();
+
+	}
+
+	@Test
+	void should_fail_with_validation_exception_when_no_plugin_driver_dto() {
+
+		var response = datasourceService.createDatasourceConnection(
+				DatasourceConnectionObjects
+					.DATASOURCE_CONNECTION_DTO_BUILDER()
+					.build())
+			.await().indefinitely();
+
+		Assertions.assertFalse(response.getFieldValidators().isEmpty());
+
+		then(dataIndexService).shouldHaveNoInteractions();
+
+	}
+
+	@Test
+	void should_not_associate_any_pipeline() {
+
+		var response = pluginDriverService.findByName("public", Initializer.INIT_DATASOURCE_PLUGIN)
+			.flatMap(pluginDriver -> datasourceService
+				.createDatasourceConnection(DatasourceConnectionObjects
+					.DATASOURCE_CONNECTION_DTO_BUILDER()
+					.name(DATASOURCE_NAME)
+					.pluginDriverId(pluginDriver.getId())
+					.dataIndex(DataIndexDTO.builder()
+						.name(DATA_INDEX_NAME)
+						.build())
+					.build()
 				)
-			),
-			datasourceEntity ->
-				asserter.assertThat(
-					() -> datasourceService
-						.getDataIndex(datasourceEntity.getEntity().getId())
-						.flatMap(dataIndex -> datasourceService
-							.getPluginDriver(datasourceEntity.getEntity().getId())
-							.flatMap(pluginDriver -> datasourceService
-								.getEnrichPipeline(datasourceEntity.getEntity().getId())
-								.map(enrichPipeline -> {
-									var datasource = new Datasource();
-									datasource.setDataIndex(dataIndex);
-									datasource.setPluginDriver(pluginDriver);
-									datasource.setEnrichPipeline(enrichPipeline);
-									return datasource;
-								})
-							)
-						),
-					datasource -> {
-						Assertions.assertNotNull(datasource.getDataIndex());
-						Assertions.assertNotNull(datasource.getEnrichPipeline());
-						Assertions.assertNotNull(datasource.getPluginDriver());
-					}
-				)
-		);
+			).await().indefinitely();
 
+		Assertions.assertNull(response.getEntity().getEnrichPipeline());
+
+		then(dataIndexService).should(times(1)).create(
+			anySession(),
+			argThat((DataIndexDTO dto) ->
+				dto.getName().equals(DATA_INDEX_NAME)
+			)
+		);
 	}
 
-	@Test
-	@RunOnVertxContext
-	void should_create_plugin_and_dataIndex(UniAsserter asserter) {
+	@AfterEach
+	void tearDown() {
+		this.pluginDriverId = null;
+		this.enrichPipelineId = null;
 
-		asserter.assertThat(
-			() -> enrichPipelineService.createWithItems(PipelineWithItemsDTO.builder()
-				.name("PRE_EXIST_PIPELINE")
-				.build()
-			).flatMap(enrichPipelineResponse -> datasourceService.createDatasourceConnection(
-				DatasourceConnectionObjects.NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER
-						.pipelineId(enrichPipelineResponse.getEntity().getId())
-						.build()
-				)
-			),
-			response -> {
-				then(pluginDriverService)
-					.should(times(1))
-					.create(anySession(), any(PluginDriverDTO.class));
+		try {
+			datasourceService.findByName("public", DATASOURCE_NAME)
+				.flatMap(datasource -> datasourceService
+					.deleteById(datasource.getId()))
+				.await().indefinitely();
+		}
+		catch (NoResultException e) {
+			// datasource already does not exist
+		}
 
-				then(enrichPipelineService)
-					.should(times(1))
-					.findById(anySession(), anyLong());
-
-				then(dataIndexService)
-					.should(times(1))
-					.create(
-						anySession(),
-						nullable(DataIndexDTO.class)
-					);
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_with_K9Error_when_transaction_exception(UniAsserter asserter) {
-
-		asserter.assertFailedWith(
-			() -> datasourceService.createDatasourceConnection(
-				DatasourceConnectionObjects.NEW_ENTITIES_BASE_DTO_BUILDER
-					.name("transaction_exception_test")
-					.pipeline(PipelineWithItemsDTO.builder()
-						.name(Initializer.INIT_DATASOURCE_PIPELINE)
-						.build()
-					)
-					.build()),
-			failure -> {
-				Assertions.assertInstanceOf(K9Error.class, failure);
-
-				then(dataIndexService).shouldHaveNoInteractions();
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_with_validation_exception_when_ambiguousDto(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.AMBIGUOUS_DTO),
-			response -> {
-
-				Assertions.assertFalse(response.getFieldValidators().isEmpty());
-
-				then(pluginDriverService).shouldHaveNoInteractions();
-				then(enrichPipelineService).shouldHaveNoInteractions();
-				then(dataIndexService).shouldHaveNoInteractions();
-
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_with_validation_exception_when_no_plugin_driver_dto(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.NO_PLUGIN_NO_PIPELINE_DTO),
-			response -> {
-				Assertions.assertFalse(response.getFieldValidators().isEmpty());
-
-				then(pluginDriverService).shouldHaveNoInteractions();
-				then(enrichPipelineService).shouldHaveNoInteractions();
-				then(dataIndexService).shouldHaveNoInteractions();
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_not_associate_any_pipeline(UniAsserter asserter) {
-
-		asserter.assertThat(
-			() -> datasourceService.createDatasourceConnection(DatasourceConnectionObjects.NEW_PLUGIN_NO_PIPELINE_DTO),
-			response -> {
-				then(pluginDriverService)
-					.should(times(1))
-					.create(
-						anySession(),
-						eq(DatasourceConnectionObjects.NEW_PLUGIN_NO_PIPELINE_DTO.getPluginDriver())
-					);
-
-				then(enrichPipelineService).shouldHaveNoInteractions();
-
-				then(dataIndexService)
-					.should(times(1))
-					.create(
-						anySession(),
-						nullable(DataIndexDTO.class)
-					);
-			}
-		);
-
+		try {
+			enrichPipelineService.findByName("public", ENRICH_PIPELINE_NAME)
+				.flatMap(enrichPipeline -> enrichPipelineService
+					.deleteById("public", enrichPipeline.getId()))
+				.await().indefinitely();
+		}
+		catch (NoResultException e) {
+			// enrichPipeline already does not exist
+		}
 	}
 
 	private static Mutiny.Session anySession() {

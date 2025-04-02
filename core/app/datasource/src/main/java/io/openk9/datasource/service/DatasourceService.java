@@ -116,36 +116,42 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 				return datasourceConnection;
 			})
-			.flatMap(createDatasourceDTO -> sessionFactory.withTransaction((session, transaction) ->
-				getOrCreatePluginDriver(session, datasourceConnection)
-					.flatMap(pluginDriver -> getOrCreateEnrichPipeline(
-							session,
-							datasourceConnection
-						).flatMap(enrichPipeline -> {
-							var datasource = mapper.create(datasourceConnection);
+			.flatMap(createDatasourceDTO -> sessionFactory
+				.withTransaction((session, transaction) ->
+					getOrCreateEnrichPipeline(
+						session,
+						datasourceConnection
+					).flatMap(enrichPipeline -> {
+						var datasource = mapper.create(datasourceConnection);
 
-							datasource.setPluginDriver(pluginDriver);
-							datasource.setEnrichPipeline(enrichPipeline);
+						var pluginDriverId = datasourceConnection.getPluginDriverId();
+						var pluginDriver = session.getReference(PluginDriver.class, pluginDriverId);
 
-							return create(session, datasource);
-						}).flatMap(datasource -> dataIndexService
-							.create(
-								session,
-								createDatasourceDTO
-									.getDataIndex()
-									.withDatasourceId(datasource.getId())
-							)
-							.invoke(datasource::setDataIndex)
-							.flatMap(__ -> persist(session, datasource))
-						)
+						datasource.setPluginDriver(pluginDriver);
+						datasource.setEnrichPipeline(enrichPipeline);
+
+						return create(session, datasource);
+					}).flatMap(datasource -> {
+
+							var dataIndexDTO = createDatasourceDTO
+								.getDataIndex()
+								.withDatasourceId(datasource.getId());
+
+							return dataIndexService.create(session, dataIndexDTO)
+								.invoke(datasource::setDataIndex)
+								.flatMap(__ -> persist(session, datasource));
+						}
 					)
-			))
+
+				))
 			.onFailure()
 			.invoke(throwable -> log.errorf(
 				throwable, "datasourceConnection %s cannot be created.", datasourceConnection)
 			)
 			.onItemOrFailure()
-			.transform(BaseK9EntityService::toResponse);
+			.transform(BaseK9EntityService::toResponse)
+			.onFailure()
+			.transform(K9Error::new);
 	}
 
 	/**
@@ -536,21 +542,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	}
 
 	private void checkExclusiveFields(CreateDatasourceDTO createDatasourceDTO)
-	throws ValidationException {
-
-		var pluginDriver = createDatasourceDTO.getPluginDriver();
-		var pluginDriverId = createDatasourceDTO.getPluginDriverId();
-
-
-		if (pluginDriver == null && pluginDriverId == null) {
-			throw new ValidationException(
-				"Request must defines one of pluginDriverId or pluginDriver");
-		}
-
-		if (pluginDriver != null && pluginDriverId != null) {
-			throw new ValidationException(
-				"Ambiguous Request: defines pluginDriver or pluginDriverId, exclusively");
-		}
+		throws ValidationException {
 
 		var pipeline = createDatasourceDTO.getPipeline();
 		var pipelineId = createDatasourceDTO.getPipelineId();
@@ -577,23 +569,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		}
 		else {
 			return Uni.createFrom().nullItem();
-		}
-	}
-
-	private Uni<PluginDriver> getOrCreatePluginDriver(
-		Mutiny.Session session,
-		CreateDatasourceDTO createDatasourceDTO) {
-
-		var pluginDriverDto = createDatasourceDTO.getPluginDriver();
-
-		if (pluginDriverDto != null) {
-			return pluginDriverService.create(session, pluginDriverDto);
-		}
-		else {
-			return pluginDriverService.findById(
-				session,
-				createDatasourceDTO.getPluginDriverId()
-			);
 		}
 	}
 

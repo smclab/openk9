@@ -51,7 +51,6 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.exception.K9Error;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
@@ -543,11 +542,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 					yield Response.error(fieldValidators);
 				}
 				case ValidationException e -> Response.error(
-					List.of(
-						FieldValidator.of("error", e.getMessage())
-					)
-				);
-				default -> throw new K9Error(throwable);
+					List.of(FieldValidator.of("error", e.getMessage())));
+				default -> throw new K9EntityServiceException(throwable);
 			};
 		}
 		else {

@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto.request;
 
+import jakarta.validation.constraints.Positive;
+
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 
 import io.smallrye.graphql.api.Nullable;
@@ -42,8 +44,12 @@ public class UpdateDatasourceDTO extends DatasourceDTO {
 	@Description("Pipeline to be created and associated (optional)")
 	private PipelineWithItemsDTO pipeline;
 
-	long datasourceId;
+	@Positive
+	@Description("The datasource's id that needs to be updated")
+	private long datasourceId;
 
-	long dataIndexId;
+	@Positive
+	@Description("The dataIndex's id related to this datasource")
+	private long dataIndexId;
 
 }

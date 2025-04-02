@@ -143,10 +143,10 @@ public class DataIndexService
 		});
 	}
 
-	//	@Override
-	//	public Uni<DataIndex> create(DataIndex entity) {
-	//		return create((Mutiny.Session) null, entity);
-	//	}
+	@Override
+	public Uni<DataIndex> create(DataIndex entity) {
+		return create((Mutiny.Session) null, entity);
+	}
 
 	@Override
 	public Uni<DataIndex> create(DataIndexDTO dto) {
@@ -192,23 +192,23 @@ public class DataIndexService
 
 	}
 
-	//	@Override
-	//	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
-	//		// cannot be created from dataIndex entity, because we cannot obtain a setting map from there.
-	//
-	//		throw new UnsupportedOperationException("DataIndex could only be created from dataIndexDTO");
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> create(String tenantId, DataIndexDTO dto) {
-	//		return sessionFactory.withTransaction(
-	//			tenantId, (session, transaction) -> create(session, dto));
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> create(String tenantId, DataIndex entity) {
-	//		return create((Mutiny.Session) null, entity);
-	//	}
+	@Override
+	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
+		// cannot be created from dataIndex entity, because we cannot obtain a setting map from there.
+
+		throw new UnsupportedOperationException("DataIndex can only be created from dataIndexDTO");
+	}
+
+	@Override
+	public Uni<DataIndex> create(String tenantId, DataIndexDTO dto) {
+		return sessionFactory.withTransaction(
+			tenantId, (session, transaction) -> create(session, dto));
+	}
+
+	@Override
+	public Uni<DataIndex> create(String tenantId, DataIndex entity) {
+		return create((Mutiny.Session) null, entity);
+	}
 
 	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
 
@@ -407,41 +407,41 @@ public class DataIndexService
 			));
 	}
 
-	//	@Override
-	//	public Uni<DataIndex> patch(long id, DataIndexDTO dto) {
-	//		return patch((Mutiny.Session) null, id, dto);
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> patch(String tenantId, long id, DataIndexDTO dto) {
-	//		return patch((Mutiny.Session) null, id, dto);
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> update(long id, DataIndexDTO dto) {
-	//		return update((Mutiny.Session) null, id, dto);
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> update(String tenantId, long id, DataIndexDTO dto) {
-	//		return update((Mutiny.Session) null, id, dto);
-	//	}
-	//
-	//	@Override
-	//	public Uni<DataIndex> update(
-	//		Mutiny.Session session, long id, DataIndexDTO dto) {
-	//		// a dataIndex cannot be updated
-	//
-	//		throw new UnsupportedOperationException("update not supported for DataIndex");
-	//	}
-	//
-	//	@Override
-	//	protected Uni<DataIndex> patch(
-	//		Mutiny.Session session, long id, DataIndexDTO dto) {
-	//		// a dataIndex cannot be updated
-	//
-	//		throw new UnsupportedOperationException("patch not supported for DataIndex");
-	//	}
+	@Override
+	public Uni<DataIndex> patch(long id, DataIndexDTO dto) {
+		return patch((Mutiny.Session) null, id, dto);
+	}
+
+	@Override
+	public Uni<DataIndex> patch(String tenantId, long id, DataIndexDTO dto) {
+		return patch((Mutiny.Session) null, id, dto);
+	}
+
+	@Override
+	public Uni<DataIndex> update(long id, DataIndexDTO dto) {
+		return update((Mutiny.Session) null, id, dto);
+	}
+
+	@Override
+	public Uni<DataIndex> update(String tenantId, long id, DataIndexDTO dto) {
+		return update((Mutiny.Session) null, id, dto);
+	}
+
+	@Override
+	public Uni<DataIndex> update(
+		Mutiny.Session session, long id, DataIndexDTO dto) {
+		// a dataIndex cannot be updated
+
+		throw new UnsupportedOperationException("update not supported for DataIndex");
+	}
+
+	@Override
+	protected Uni<DataIndex> patch(
+		Mutiny.Session session, long id, DataIndexDTO dto) {
+		// a dataIndex cannot be updated
+
+		throw new UnsupportedOperationException("patch not supported for DataIndex");
+	}
 
 	private static Map<String, Object> getSettingsMap(String settingsJson) {
 

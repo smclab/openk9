@@ -35,58 +35,11 @@ public class DatasourceConnectionObjects {
 	public static final boolean SCHEDULABLE = true;
 	public static final String SCHEDULING = "0 0 * ? * * *";
 
-	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
-		NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO_BUILDER =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_DTO")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
-				.name("NEW_PLUGIN_PRE_EXIST_PIPELINE_PLUGIN")
-				.build());
-	public static final CreateDatasourceDTO NEW_PLUGIN_NO_PIPELINE_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("NEW_PLUGIN_NO_PIPELINE_DATASOURCE")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
-				.name("NEW_PLUGIN_NO_PIPELINE_PLUGIN")
-				.build())
-			.build();
-	public static final CreateDatasourceDTO NO_PLUGIN_NO_PIPELINE_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("NO_PLUGIN_NO_PIPELINE_DATASOURCE")
-			.build();
-	public static final CreateDatasourceDTO NEW_ENTITIES_VECTOR_DTO =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("NEW_ENTITIES_VECTOR_DATASOURCE")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
-				.name("NEW_ENTITIES_VECTOR_PLUGIN")
-				.build())
-			.pipeline(PipelineWithItemsDTO.builder()
-				.name("NEW_ENTITIES_VECTOR_PIPELINE")
-				.build())
-			.build();
-	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
-		NEW_ENTITIES_BASE_DTO_BUILDER =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("NEW_ENTITIES_BASE_DTO")
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
-				.name("NEW_ENTITIES_BASE_PLUGIN")
-				.build());
-	public static final CreateDatasourceDTO.CreateDatasourceDTOBuilder<?, ?>
-		PRE_EXIST_PLUGIN_NEW_PIPELINE_DTO_BUILDER =
-		DATASOURCE_CONNECTION_DTO_BUILDER()
-			.name("PRE_EXIST_PLUGIN_NEW_PIPELINE_DATASOURCE");
 	public static final CreateDatasourceDTO AMBIGUOUS_DTO =
-		CreateDatasourceDTO.builder()
+		DATASOURCE_CONNECTION_DTO_BUILDER()
 			.name("AMBIGUOUS_DATASOURCE")
 			.description(DESCRIPTION)
-			.reindexing(REINDEXING)
-			.reindexable(REINDEXABLE)
-			.schedulable(SCHEDULABLE)
-			.jsonConfig(JSON_CONFIG)
-			.scheduling(SCHEDULING)
 			.pluginDriverId(Long.MAX_VALUE)
-			.pluginDriver(PLUGIN_DRIVER_DTO_BUILDER()
-				.name("AMBIGUOUS_PLUGIN")
-				.build())
 			.pipelineId(Long.MAX_VALUE)
 			.pipeline(PipelineWithItemsDTO.builder()
 				.name("AMBIGUOUS_PIPELINE")

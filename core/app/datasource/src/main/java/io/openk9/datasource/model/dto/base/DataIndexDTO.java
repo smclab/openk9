@@ -24,30 +24,25 @@ import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import io.smallrye.graphql.api.Nullable;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.With;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@SuperBuilder
-@With
 @Getter
 @Setter
+@NoArgsConstructor
+@SuperBuilder(toBuilder = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DataIndexDTO extends K9EntityDTO {
 
 	@Positive
 	@Description("The id of the datasource associated to this dataIndex.")
-	@With
 	private long datasourceId;
 
 	@Nullable
@@ -84,5 +79,11 @@ public class DataIndexDTO extends K9EntityDTO {
 	@Nullable
 	@Description("The settings that will be used when the associated indexTemplate is created.")
 	private String settings;
+
+	public DataIndexDTO withDatasourceId(long datasourceId) {
+		return this.toBuilder()
+			.datasourceId(datasourceId)
+			.build();
+	}
 
 }

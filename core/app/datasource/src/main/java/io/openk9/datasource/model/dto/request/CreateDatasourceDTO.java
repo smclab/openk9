@@ -17,9 +17,11 @@
 
 package io.openk9.datasource.model.dto.request;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
@@ -36,24 +38,20 @@ import org.eclipse.microprofile.graphql.Description;
 @EqualsAndHashCode(callSuper = true)
 public class CreateDatasourceDTO extends DatasourceDTO {
 
-	@Nullable
-	@Description("PluginDriver to be associated (optional)")
-	private Long pluginDriverId;
+	@Positive
+	@Description("PluginDriver to be associated")
+	private long pluginDriverId;
 
 	@Nullable
 	@Description("Pipeline to be associated (optional)")
 	private Long pipelineId;
 
 	@Nullable
-	@Description("PluginDriver to be created and associated (optional)")
-	private PluginDriverDTO pluginDriver;
-
-	@Nullable
 	@Description("Pipeline to be created and associated (optional)")
 	private PipelineWithItemsDTO pipeline;
 
-	@Nullable
-	@Description("Configurations used to create the dataIndex (optional)")
+	@NotNull
+	@Description("Configurations used to create the dataIndex")
 	private DataIndexDTO dataIndex;
 
 }
