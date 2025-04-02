@@ -17,20 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.ws.rs.NotFoundException;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
@@ -44,6 +30,8 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -59,11 +47,24 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -244,6 +245,50 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					bucket.setQueryAnalysis(queryAnalysis);
 					return persist(s, bucket).map(t -> Tuple2.of(t, queryAnalysis));
 				})));
+	}
+
+	/**
+	 * Binds a specific {@link RAGConfiguration} to a {@link Bucket}.
+	 * If both exist, it associates the
+	 * {@code RAGConfiguration} with the {@code Bucket} according to the
+	 * {@link RAGType}.
+	 * </p>
+	 *
+	 * @param bucketId The ID of the {@link Bucket} to bind the
+	 * {@link RAGConfiguration} to.
+	 * @param ragConfigurationId The ID of the {@link RAGConfiguration} to bind.
+	 * @return A {@link Uni} emitting a {@link Tuple2} containing the persisted
+	 * {@link Bucket} and the bound {@link RAGConfiguration}, or an empty
+	 * {@link Uni} if either the {@link Bucket} or the
+	 * {@link RAGConfiguration} is not found. The operation is performed
+	 * within a transaction.
+	 */
+	public Uni<Tuple2<Bucket, RAGConfiguration>> bindRAGConfiguration(
+		long bucketId, long ragConfigurationId) {
+
+		return sessionFactory.withTransaction((s, tr) ->
+			findById(s, bucketId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(bucket ->
+					ragConfigurationService.findById(s, ragConfigurationId)
+						.onItem()
+						.ifNotNull()
+						.transformToUni(ragConfiguration -> {
+							switch (ragConfiguration.getType()) {
+								case CHAT -> bucket.setRagConfigurationChat(ragConfiguration);
+								case CHAT_TOOL ->
+									bucket.setRagConfigurationChatTool(ragConfiguration);
+								case SEARCH -> bucket.setRagConfigurationSearch(ragConfiguration);
+							}
+
+							return persist(s, bucket)
+								.map(bucketPersisted ->
+									Tuple2.of(bucketPersisted, ragConfiguration)
+								);
+						})
+				)
+		);
 	}
 
 	public Uni<Tuple2<Bucket, SearchConfig>> bindSearchConfig(long bucketId, long searchConfigId) {
@@ -923,6 +968,45 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			}));
 	}
 
+	/**
+	 * Unbinds a specific type of {@link RAGConfiguration} from a {@link Bucket}.
+	 * If found, it sets the corresponding {@link RAGConfiguration} field
+	 * (based on the provided{@link RAGType}) to {@code null}. The updated
+	 * {@link Bucket} is then persisted.
+	 * </p>
+	 *
+	 * @param bucketId The ID of the {@link Bucket} to unbind the
+	 * {@link RAGConfiguration} from.
+	 * @param ragType  The {@link RAGType} indicating which
+	 * {@link RAGConfiguration} to unbind (e.g., CHAT, CHAT_TOOL,
+	 * SEARCH).
+	 * @return A {@link Uni} emitting a {@link Tuple2} containing the persisted
+	 * {@link Bucket} with the specified {@link RAGConfiguration} unbound
+	 * (set to {@code null}), or an empty {@link Uni} if the {@link Bucket}
+	 * is not found. The operation is performed within a transaction. The
+	 * second element of the {@link Tuple2} will always be {@code null} as the
+	 * {@link RAGConfiguration} is being unbound.
+	 */
+	public Uni<Tuple2<Bucket, RAGConfiguration>> unbindRAGConfiguration(
+		long bucketId, RAGType ragType) {
+
+		return sessionFactory.withTransaction((s, tr) ->
+			findById(s, bucketId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(bucket -> {
+					switch (ragType) {
+						case CHAT -> bucket.setRagConfigurationChat(null);
+						case CHAT_TOOL -> bucket.setRagConfigurationChatTool(null);
+						case SEARCH -> bucket.setRagConfigurationSearch(null);
+					}
+
+					return persist(s, bucket)
+						.map(bucketUpdated -> Tuple2.of(bucketUpdated, null));
+				})
+		);
+	}
+
 	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -1119,6 +1203,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	QueryAnalysisService queryAnalysisService;
+
+	@Inject
+	RAGConfigurationService ragConfigurationService;
 
 	@Inject
 	SearchConfigService searchConfigService;

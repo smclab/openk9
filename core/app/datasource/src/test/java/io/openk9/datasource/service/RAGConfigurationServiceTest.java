@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.model.RAGConfiguration;
@@ -113,6 +130,51 @@ public class RAGConfigurationServiceTest {
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
 		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+
+		removeRAGConfigurationOne();
+	}
+
+	@Test
+	void should_not_change_rag_configuration_one_rag_type() {
+		// create the ragConfiguration to patch
+		var dto = RAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_ONE_NAME)
+			.type(RAGType.CHAT)
+			.chunkWindow(DEFAULT_VALUE_CHUNK_WINDOW)
+			.build();
+
+		createRAGConfiguration(dto);
+
+		var ragConfigurationOne = getRAGConfigurationOne();
+
+		assertNotNull(ragConfigurationOne);
+
+		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
+
+		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+
+		// patch the ragConfigurationOne
+		var dtoWithPatch = RAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_ONE_NAME)
+			.type(RAGType.SEARCH)
+			.chunkWindow(CHUNK_WINDOW)
+			.build();
+
+		ragConfigurationService.patch(ragConfigurationOne.getId(), dtoWithPatch)
+			.await()
+			.indefinitely();
+
+		ragConfigurationOne = getRAGConfigurationOne();
+
+		// checks that the ragType has not changed and that the chunkWindow has changed
+		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 
 		removeRAGConfigurationOne();
 	}

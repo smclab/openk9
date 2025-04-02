@@ -200,9 +200,19 @@ public class Bucket extends K9Entity {
 	private boolean enabled = false;
 
 	@OneToOne
-	@JoinColumn(name = "rag_configuration_id")
+	@JoinColumn(name = "rag_configuration_chat_id")
 	@JsonIgnore
-	private RAGConfiguration ragConfiguration;
+	private RAGConfiguration ragConfigurationChat;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_chat_tool_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationChatTool;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_search_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationSearch;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
