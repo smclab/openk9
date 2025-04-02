@@ -51,15 +51,9 @@ nameOverride: ""
 ##
 fullnameOverride: ""
 
-## Http Access Log configuration
-config:
-  httpAccessLog:
-    enabled: true
-    pattern: "%h %l %u %t \"%r\" %s %b %D"
 
-## JVM configuration
-jvm:
-  toolOptions: ""
+
+
 
 ## Kubernetes service type
 ##
@@ -219,7 +213,10 @@ route:
 ##     cpu: 3
 ##     memory: 1024Mi
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
 
 autoscaling:
   enabled: false

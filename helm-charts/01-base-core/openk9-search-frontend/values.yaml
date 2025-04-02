@@ -160,8 +160,12 @@ route:
 ##     cpu: 3
 ##     memory: 1024Mi
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
 
+    
 autoscaling:
   enabled: false
   minReplicas: 1
