@@ -145,7 +145,8 @@ public class DataIndexService
 
 	@Override
 	public Uni<DataIndex> create(DataIndex entity) {
-		return create((Mutiny.Session) null, entity);
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, entity));
 	}
 
 	@Override
@@ -155,8 +156,16 @@ public class DataIndexService
 	}
 
 	@Override
+	public Uni<DataIndex> create(Mutiny.Session s, DataIndexDTO dto) {
+		// cannot create a dataIndex without a datasource associated
+
+		throw new UnsupportedOperationException(
+			"Dataindex cannot be created without a datasource associated");
+	}
+
+
 	public Uni<DataIndex> create(
-		Mutiny.Session session, DataIndexDTO dataIndexDTO) {
+		Mutiny.Session session, long datasourceId, DataIndexDTO dataIndexDTO) {
 
 		if (dataIndexDTO == null) {
 			return Uni.createFrom()
@@ -170,33 +179,30 @@ public class DataIndexService
 				.failure(new ConstraintViolationException(constraintViolations));
 		}
 
-		var settingsMap = getSettingsMap(dataIndexDTO.getSettings());
-
-		return createDataIndexTransient(session, dataIndexDTO)
-			.flatMap(dataIndex -> merge(session, dataIndex)
-				.call(merged -> session.find(TenantBinding.class, 1L)
-					.map(K9Entity::getTenant)
-					.call(tenantId -> embeddingModelService
-						.fetchCurrent(session)
-						.onFailure()
-						.recoverWithNull()
-						.flatMap(embeddingModel ->
-							indexMappingService.createDataIndexTemplate(
-								new DataIndexTemplate(
-									tenantId, settingsMap, merged, embeddingModel)
-							)
-						)
-					)
-				)
-			);
+		return createDataIndexTransient(session, datasourceId, dataIndexDTO)
+			.flatMap(dataIndex -> create(session, dataIndex));
 
 	}
 
 	@Override
 	public Uni<DataIndex> create(Mutiny.Session session, DataIndex dataIndex) {
-		// cannot be created from dataIndex entity, because we cannot obtain a setting map from there.
+		var settingsMap = dataIndex.getSettingsMap();
 
-		throw new UnsupportedOperationException("DataIndex can only be created from dataIndexDTO");
+		return merge(session, dataIndex)
+			.call(merged -> session.find(TenantBinding.class, 1L)
+				.map(K9Entity::getTenant)
+				.call(tenantId -> embeddingModelService
+					.fetchCurrent(session)
+					.onFailure()
+					.recoverWithNull()
+					.flatMap(embeddingModel ->
+						indexMappingService.createDataIndexTemplate(
+							new DataIndexTemplate(
+								tenantId, settingsMap, merged, embeddingModel)
+						)
+					)
+				)
+			);
 	}
 
 	@Override
@@ -210,10 +216,10 @@ public class DataIndexService
 		return create((Mutiny.Session) null, entity);
 	}
 
-	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
+	public Uni<Response<DataIndex>> create(long datasourceId, DataIndexDTO dataIndexDTO) {
 
 		return sessionFactory.withTransaction(
-				(session, transaction) -> create(session, dataIndexDTO))
+				(session, transaction) -> create(session, datasourceId, dataIndexDTO))
 			.onFailure()
 			.invoke(throwable -> log.errorf(
 				throwable,
@@ -459,7 +465,7 @@ public class DataIndexService
 	}
 
 	private Uni<DataIndex> createDataIndexTransient(
-		Mutiny.Session session, DataIndexDTO dto) {
+		Mutiny.Session session, long datasourceId, DataIndexDTO dto) {
 
 		// get docTypeIds
 		Set<Long> docTypeIds =
@@ -475,7 +481,7 @@ public class DataIndexService
 				dataIndex.setDocTypes(Set.copyOf(docTypes));
 
 				// mapping datasource
-				var datasource = session.getReference(Datasource.class, dto.getDatasourceId());
+				var datasource = session.getReference(Datasource.class, datasourceId);
 				dataIndex.setDatasource(datasource);
 
 				// mapping embeddingDocTypeField
@@ -486,6 +492,10 @@ public class DataIndexService
 						)
 					);
 				}
+
+				// setting for opensearch indexTemplate
+				var settingsMap = getSettingsMap(dto.getSettings());
+				dataIndex.setSettingsMap(settingsMap);
 
 				return dataIndex;
 			});

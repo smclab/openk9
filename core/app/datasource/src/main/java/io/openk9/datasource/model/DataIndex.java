@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import jakarta.persistence.Column;
@@ -45,6 +46,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.eclipse.microprofile.graphql.Ignore;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -110,6 +112,11 @@ public class DataIndex extends K9Entity {
 	@Setter(AccessLevel.NONE)
 	@Getter(AccessLevel.NONE)
 	private String indexName;
+
+	@Transient
+	@JsonIgnore
+	@Ignore
+	private Map<String, Object> settingsMap;
 
 	@Column(name = "knn_index", updatable = false)
 	@Immutable

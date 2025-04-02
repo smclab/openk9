@@ -19,6 +19,7 @@ package io.openk9.datasource.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
@@ -94,17 +95,19 @@ class CreateDatasourceConnectionTest {
 				.build()
 		).await().indefinitely();
 
-		var enrichPipeline = datasourceService.getEnrichPipeline(response.getEntity().getId())
+		var datasourceId = response.getEntity().getId();
+
+		var enrichPipeline = datasourceService.getEnrichPipeline(datasourceId)
 			.await().indefinitely();
 
 		Assertions.assertEquals(enrichPipelineId, enrichPipeline.getId());
 
-		then(dataIndexService)
-			.should()
-			.create(
-				anySession(), argThat((DataIndexDTO dto) ->
+		then(dataIndexService).should().create(
+			anySession(),
+			eq(datasourceId),
+			argThat((DataIndexDTO dto) ->
 					dto.getName().equals(DATA_INDEX_NAME))
-			);
+		);
 
 	}
 
@@ -125,17 +128,18 @@ class CreateDatasourceConnectionTest {
 				.build()
 		).await().indefinitely();
 
-		var enrichPipeline = datasourceService.getEnrichPipeline(response.getEntity().getId())
+		var datasourceId = response.getEntity().getId();
+		var enrichPipeline = datasourceService.getEnrichPipeline(datasourceId)
 			.await().indefinitely();
 
 		Assertions.assertEquals(ENRICH_PIPELINE_NAME, enrichPipeline.getName());
 
-		then(dataIndexService)
-			.should()
-			.create(
-				anySession(), argThat((DataIndexDTO dto) ->
-					dto.getName().equals(DATA_INDEX_NAME))
-			);
+		then(dataIndexService).should().create(
+			anySession(),
+			eq(datasourceId),
+			argThat((DataIndexDTO dto) ->
+				dto.getName().equals(DATA_INDEX_NAME))
+		);
 
 	}
 
@@ -213,10 +217,12 @@ class CreateDatasourceConnectionTest {
 				)
 			).await().indefinitely();
 
+		var datasourceId = response.getEntity().getId();
 		Assertions.assertNull(response.getEntity().getEnrichPipeline());
 
 		then(dataIndexService).should(times(1)).create(
 			anySession(),
+			eq(datasourceId),
 			argThat((DataIndexDTO dto) ->
 				dto.getName().equals(DATA_INDEX_NAME)
 			)

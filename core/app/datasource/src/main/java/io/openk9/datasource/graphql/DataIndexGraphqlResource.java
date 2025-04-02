@@ -108,10 +108,10 @@ public class DataIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Response<DataIndex>> dataIndex(DataIndexDTO dataIndexDTO) {
+	public Uni<Response<DataIndex>> dataIndex(
+		@Id long datasourceId, DataIndexDTO dataIndexDTO) {
 
-		return dataIndexService.createDataIndex(dataIndexDTO);
-
+		return dataIndexService.create(datasourceId, dataIndexDTO);
 	}
 
 	@Mutation

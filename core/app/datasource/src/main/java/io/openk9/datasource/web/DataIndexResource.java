@@ -31,6 +31,7 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.util.K9EntityServiceException;
 import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 
 import io.smallrye.mutiny.Uni;
@@ -104,10 +105,19 @@ public class DataIndexResource {
 			.name(request.getIndexName())
 			.docTypeIds(Set.copyOf(request.getDocTypeIds()))
 			.settings(settings)
-			.datasourceId(datasourceId)
 			.build();
 
-		return dataIndexService.create(dataIndexDto);
+		return dataIndexService.create(datasourceId, dataIndexDto)
+			.map(response -> {
+				if (response.getFieldValidators() != null
+					&& !response.getFieldValidators().isEmpty()) {
+
+					throw new K9EntityServiceException("An error occurred while creating dataIndex");
+				}
+				else {
+					return response.getEntity();
+				}
+			});
 	}
 
 }

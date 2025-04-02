@@ -18,7 +18,6 @@
 package io.openk9.datasource.model.dto.base;
 
 import java.util.Set;
-import jakarta.validation.constraints.Positive;
 
 import io.openk9.datasource.validation.json.Json;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -40,10 +39,6 @@ import org.eclipse.microprofile.graphql.Description;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class DataIndexDTO extends K9EntityDTO {
-
-	@Positive
-	@Description("The id of the datasource associated to this dataIndex.")
-	private long datasourceId;
 
 	@Nullable
 	@Builder.Default
@@ -79,11 +74,5 @@ public class DataIndexDTO extends K9EntityDTO {
 	@Nullable
 	@Description("The settings that will be used when the associated indexTemplate is created.")
 	private String settings;
-
-	public DataIndexDTO withDatasourceId(long datasourceId) {
-		return this.toBuilder()
-			.datasourceId(datasourceId)
-			.build();
-	}
 
 }
