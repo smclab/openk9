@@ -3,17 +3,18 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from urllib.parse import urlparse
 
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from opensearchpy import OpenSearch
+from phoenix.otel import register
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
-from phoenix.otel import register
 
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
-from app.utils.keycloak import unauthorized_response, verify_token
+from app.utils.authentication import unauthorized_response, verify_token
 from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
@@ -855,9 +856,6 @@ async def rag_chat(
 class UserChats(BaseModel):
     """Model for retrieving user chat history."""
 
-    userId: str = Field(
-        None, description="Unique user identifier", example="user_12345"
-    )
     chatSequenceNumber: int = Field(
         1, description="Incremental conversation turn number", example=1
     )
@@ -885,22 +883,6 @@ class UserChats(BaseModel):
                 }
             },
         },
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Validation Error - Invalid request body or parameters",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": [
-                            {
-                                "loc": ["body", "searchText"],
-                                "msg": "field required",
-                                "type": "value_error.missing",
-                            }
-                        ]
-                    }
-                }
-            },
-        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
             "description": "Internal Server Error - Unexpected server-side error",
             "content": {
@@ -917,12 +899,11 @@ class UserChats(BaseModel):
                     "examples": {
                         "Basic Example": {
                             "summary": "A basic example with minimal fields",
-                            "value": {"userId": "aa71e6e9-b41e-4468-8b98-ba3cb0adfb6a"},
+                            "value": {},
                         },
                         "Advanced Example": {
                             "summary": "An advanced example with all fields",
                             "value": {
-                                "userId": "aa71e6e9-b41e-4468-8b98-ba3cb0adfb6a",
                                 "chatSequenceNumber": 1,
                                 "paginationFrom": 0,
                                 "paginationSize": 10,
@@ -943,15 +924,18 @@ async def get_user_chats(
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     ),
 ):
-    user_id = user_chats.userId
     chat_sequence_number = user_chats.chatSequenceNumber
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
     virtual_host = urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
-    if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
         unauthorized_response()
+
+    user_id = user_info["sub"]
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -1007,13 +991,13 @@ async def get_user_chats(
             },
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "description": "Validation Error - Invalid request body or parameters",
+            "description": "Validation Error - Invalid request parameters or structure",
             "content": {
                 "application/json": {
                     "example": {
                         "detail": [
                             {
-                                "loc": ["body", "searchText"],
+                                "loc": ["path", "chat_id"],
                                 "msg": "field required",
                                 "type": "value_error.missing",
                             }
@@ -1033,7 +1017,6 @@ async def get_user_chats(
     },
 )
 async def get_chat(
-    user_id: str,
     chat_id: str,
     request: Request,
     authorization: str = Header(
@@ -1045,8 +1028,12 @@ async def get_chat(
     virtual_host = urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
-    if not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
         unauthorized_response()
+
+    user_id = user_info["sub"]
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
