@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.index;
 
-import static io.openk9.datasource.service.DataIndexService.DETAILS_FIELD;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -29,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
 
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
@@ -82,6 +79,7 @@ public class IndexService {
 		return VertxContextSupport.executeBlocking(() -> {
 
 			IndicesClient indices = restHighLevelClient.indices();
+			var templateName = request.name();
 
 			try {
 				var response = indices.putIndexTemplate(
@@ -93,25 +91,28 @@ public class IndexService {
 					return null;
 				}
 				else {
-					var templateName = request.name();
-					log.errorf("Error creating indexTemplate %s", templateName);
+					log.errorf(
+						"indexTemplate %s creation is not acknowledged",
+						templateName
+					);
 
-					throw new CannotCreateIndexTemplateException();
+					throw new CannotCreateIndexTemplateException("Not acknowledged");
 				}
 			}
+			catch (CannotCreateIndexTemplateException k9Exception) {
+				throw k9Exception;
+			}
 			catch (OpenSearchStatusException osse) {
-				throw new WebApplicationException(jakarta.ws.rs.core.Response
-					.status(osse.status().getStatus())
-					.entity(JsonObject.of(
-						DETAILS_FIELD, osse.getMessage()))
-					.build());
+				log.errorf(osse, "Cannot create indexTemplate %s", templateName);
+				throw new CannotCreateIndexTemplateException(osse);
 			}
 			catch (Exception e) {
-				throw new WebApplicationException(jakarta.ws.rs.core.Response
-					.status(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(JsonObject.of(
-						DETAILS_FIELD, e.getMessage()))
-					.build());
+				log.errorf(
+					e,
+					"Error occurred when trying to create indexTemplate %s",
+					templateName
+				);
+				throw new CannotCreateIndexTemplateException(e);
 			}
 
 		});
@@ -132,7 +133,7 @@ public class IndexService {
 						indexName.value()
 					);
 
-					throw new DeleteIndexException();
+					throw new DeleteIndexException("not acknowledged");
 				}
 
 				deleteIndexTemplate(indexName);
@@ -140,10 +141,13 @@ public class IndexService {
 				return null;
 
 			}
+			catch (DeleteIndexException k9Exception) {
+				throw k9Exception;
+			}
 			catch (Exception e) {
 				log.errorf(e, "Error deleting index %s", indexName.value());
 
-				throw new DeleteIndexException();
+				throw new DeleteIndexException(e);
 			}
 
 		});
@@ -467,7 +471,8 @@ public class IndexService {
 							componentTemplateName
 						);
 					}
-					return Uni.createFrom().voidItem();
+
+					return null;
 				}
 				else {
 					log.errorf(
@@ -475,8 +480,7 @@ public class IndexService {
 						componentTemplateName
 					);
 
-					return Uni.createFrom().failure(
-						new CannotCreateComponentTemplateException());
+					throw new CannotCreateComponentTemplateException("not acknowledged");
 				}
 			}
 			catch (IOException e) {
@@ -486,9 +490,9 @@ public class IndexService {
 					componentTemplateName
 				);
 
-				throw new CannotCreateComponentTemplateException();
+				throw new CannotCreateComponentTemplateException(e);
 			}
-		}).replaceWithVoid();
+		});
 	}
 
 }
