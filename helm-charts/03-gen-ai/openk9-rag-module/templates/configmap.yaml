@@ -13,3 +13,6 @@ data:
 
   GRPC_DATASOURCE_HOST: {{ .Values.openk9.datasource.host | quote }}
   GRPC_TENANT_MANAGER_HOST: {{ .Values.openk9.tenantManager.host | quote }}
+
+  ARIZE_PHOENIX_ENDPOINT: {{ .Values.phoenix.endpoint | quote }}
+  ARIZE_PHOENIX_PROJECT_NAME: {{ .Values.phoenix.projectName | quote }}

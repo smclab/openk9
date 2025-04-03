@@ -86,6 +86,10 @@ openk9:
     tenantManager:
       host: "openk9-tenant-manager:9000"
 
+phoenix:
+  endpoint: "http://127.0.0.1:6006/v1/traces"
+  projectName: "default"
+
 ## Rag Module pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
