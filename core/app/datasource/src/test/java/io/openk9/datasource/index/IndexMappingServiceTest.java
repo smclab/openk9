@@ -17,16 +17,12 @@
 
 package io.openk9.datasource.index;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import io.openk9.datasource.TestUtils;
@@ -86,37 +82,20 @@ public class IndexMappingServiceTest {
 		docType.setDocTypeFields(new LinkedHashSet<>(List.of(title)));
 	}
 
-	public static void main(String[] args) {
-		Objects.requireNonNull(mappings);
-
-		for (DocTypeField docTypeField : IndexMappingService.toDocTypeFields(mappings.getMap())) {
-			printTree(docTypeField, "");
-		}
-	}
-
 	@Test
 	void shouldMapToDocTypeFields() {
 
-		Objects.requireNonNull(mappings);
-
-		List<DocTypeField> docTypeFields = IndexMappingService.toDocTypeFields(mappings.getMap());
-		Optional<DocTypeField> optField = docTypeFields
-			.stream()
-			.filter(f -> f.getFieldName().equals("acl"))
-			.flatMap(f -> f.getSubDocTypeFields().stream())
-			.filter(f -> f.getFieldName().equals("public"))
-			.findFirst();
-		assertTrue(optField.isPresent());
-		DocTypeField field = optField.get();
-		assertSame(FieldType.BOOLEAN, field.getFieldType());
-		assertEquals("public", field.getFieldName());
-		assertEquals("acl.public", field.getPath());
-
+		List<DocTypeField> docTypeFields =
+			IndexMappingService.toDocTypeFields(mappings.getMap());
 
 		Map<String, List<DocTypeField>> docTypeAndFieldsGroup =
 			IndexMappingService.toDocTypeAndFieldsGroup(
 				docTypeFields, List.of("web", "resources", "document"));
 
+		Set<DocType> docTypes =
+			IndexMappingService.mergeDocTypes(docTypeAndFieldsGroup, List.of(docType));
+
+		// mappings contains default (acl, documentTypes)
 		assertTrue(
 			docTypeAndFieldsGroup
 				.get("default")
@@ -126,6 +105,14 @@ public class IndexMappingServiceTest {
 				.anyMatch(f -> f.getFieldName().equals("public"))
 		);
 
+		// mappings contains default ignorable fields (rawContent, datasourceId)
+		assertTrue(
+			docTypeAndFieldsGroup
+				.get("default")
+				.stream()
+				.anyMatch(f -> f.getFieldName().equals("datasourceId"))
+		);
+
 		assertTrue(
 			docTypeAndFieldsGroup
 				.get("web")
@@ -133,9 +120,7 @@ public class IndexMappingServiceTest {
 				.anyMatch(f -> f.getFieldName().equals("title"))
 		);
 
-		Set<DocType> docTypes =
-			IndexMappingService.mergeDocTypes(docTypeAndFieldsGroup, List.of(docType));
-
+		// contains web.title, already persisted
 		assertTrue(docTypes
 			.stream()
 			.filter(dt -> dt.getName().equals("web"))
@@ -144,13 +129,22 @@ public class IndexMappingServiceTest {
 			.anyMatch(f -> f.equals(title))
 		);
 
+		// contains web.content, auto-generated
 		assertTrue(docTypes
 			.stream()
 			.filter(dt -> dt.getName().equals("web"))
 			.map(DocType::getDocTypeFields)
 			.flatMap(Collection::stream)
-			.noneMatch(f -> f.getFieldName().equals("title")
-							&& f.getDescription().equals("auto-generated"))
+			.anyMatch(f -> f.getFieldName().equals("content"))
+		);
+
+		// ignored fields does not exist
+		assertTrue(docTypes
+			.stream()
+			.filter(dt -> dt.getName().equals("default"))
+			.map(DocType::getDocTypeFields)
+			.flatMap(Collection::stream)
+			.noneMatch(f -> IndexMappingService.isIgnoredFieldPath(f.getPath()))
 		);
 
 	}

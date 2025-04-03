@@ -20,6 +20,7 @@ package io.openk9.datasource.index;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -69,8 +70,34 @@ import org.opensearch.common.settings.Settings;
 @ApplicationScoped
 public class IndexMappingService {
 
+	// all the document fields that must be ignored on write
+	private static final String[] IGNORED_FIELD_PATHS = new String[]{
+		"vector",
+		"ingestionId",
+		"datasourceId",
+		"contentId",
+		"parsingDate",
+		"rawContent",
+		"tenantId",
+		"resources",
+		"rest",
+		"indexName",
+		"last",
+		"scheduleId",
+		"oldIndexName",
+		"type",
+	};
+
 	private final static Logger log =
 		Logger.getLogger(IndexMappingService.class);
+
+	static {
+		Arrays.sort(IGNORED_FIELD_PATHS);
+	}
+
+	public static boolean isIgnoredFieldPath(String fieldPath) {
+		return Arrays.binarySearch(IGNORED_FIELD_PATHS, fieldPath) >= 0;
+	}
 
 	@Inject
 	IndexService indexService;
@@ -332,17 +359,27 @@ public class IndexMappingService {
 			List<DocTypeField> retainedFields = new ArrayList<>();
 
 			for (DocTypeField docTypeField : generatedFields) {
+				var fieldPath = DocTypeFieldUtils.fieldPath(docTypeName, docTypeField);
 				boolean retained = true;
-				for (DocTypeField existingField : persistedFields) {
 
-					if (Objects.equals(
-						existingField.getPath(),
-						DocTypeFieldUtils.fieldPath(docTypeName, docTypeField)
-					)) {
+				// does not retain an ignored field
+				for (String ignoredPath : IGNORED_FIELD_PATHS) {
+					if (Objects.equals(ignoredPath, fieldPath)) {
 						retained = false;
 						break;
 					}
 				}
+
+				// does not retain an existing field
+				for (DocTypeField existingField : persistedFields) {
+
+					var existingFieldPath = existingField.getPath();
+					if (Objects.equals(existingFieldPath, fieldPath)) {
+						retained = false;
+						break;
+					}
+				}
+
 				if (retained) {
 					retainedFields.add(docTypeField);
 				}
@@ -384,22 +421,21 @@ public class IndexMappingService {
 	}
 
 	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
-		Settings settings;
+
+		var settingsBuilder = Settings.builder();
 
 		settingsMap = settingsMap != null && !settingsMap.isEmpty()
 			? settingsMap
 			: IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
 
-		if (settingsMap.isEmpty()) {
-			settings = Settings.EMPTY;
-		}
-		else {
-			settings = Settings.builder()
-				.loadFromMap(settingsMap)
-				.build();
+		if (!settingsMap.isEmpty()) {
+			settingsBuilder.loadFromMap(settingsMap);
 		}
 
-		return settings;
+		// never apply dynamicMapping
+		settingsBuilder.put("index.mapper.dynamic", false);
+
+		return settingsBuilder.build();
 	}
 
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {

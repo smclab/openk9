@@ -56,7 +56,6 @@ class DynamicMappingDataIndexTest {
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
 
-
 		asserter.assertThat(
 			() -> sessionFactory.withTransaction((s, t) ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
@@ -84,7 +83,6 @@ class DynamicMappingDataIndexTest {
 
 			}
 		);
-
 
 	}
 
