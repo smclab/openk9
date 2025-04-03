@@ -1182,6 +1182,156 @@ async def delete_chat(
     return {"status": status.HTTP_200_OK, "message": "Chat deleted successfully."}
 
 
+class ChatMessage(BaseModel):
+    """
+    Represents the payload for updating a chat conversation title.
+
+    Attributes:
+        newTitle: The new title to assign to the chat conversation
+    """
+
+    newTitle: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="New title for the chat conversation",
+        example="Project Discussion",
+    )
+
+
+@app.patch(
+    "/api/rag/chat/{chat_id}",
+    tags=["Chat"],
+    summary="Rename a specific chat conversation",
+    description="Updates the title of a specific chat conversation using the provided new title",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Requested resource not found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "user_not_found": {"value": {"detail": "User index not found"}},
+                        "chat_not_found": {
+                            "value": {"detail": "Chat document not found"}
+                        },
+                    }
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Invalid request parameters or structure",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "chat_id"],
+                                "msg": "value is not a valid chat id",
+                                "type": "type_error.uuid",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+)
+async def rename_chat(
+    chat_id: str,
+    chat_message: ChatMessage,
+    request: Request,
+    authorization: str = Header(
+        ...,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
+):
+    virtual_host = urlparse(str(request.base_url)).hostname
+    token = authorization.replace(TOKEN_PREFIX, "")
+
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
+        unauthorized_response()
+
+    user_id = user_info["sub"]
+
+    open_search_client = OpenSearch(
+        hosts=[OPENSEARCH_HOST],
+    )
+
+    if not open_search_client.indices.exists(index=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User index not found.",
+        )
+
+    query = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"match": {"chat_id.keyword": chat_id}},
+                    {"match": {"chat_sequence_number": 1}},
+                ]
+            }
+        }
+    }
+
+    try:
+        response = open_search_client.search(index=user_id, body=query)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OpenSearch search error: {str(e)}",
+        )
+
+    hits = response["hits"]["hits"]
+    if not hits:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat document not found.",
+        )
+
+    document_id = hits[0]["_id"]
+
+    try:
+        update_response = open_search_client.update(
+            index=user_id,
+            id=document_id,
+            body={"doc": {"title": chat_message.newTitle}},
+            refresh=True,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OpenSearch update error: {str(e)}",
+        )
+
+    return {"status": status.HTTP_200_OK, "message": "Title updated successfully"}
+
+
 @app.get(
     "/health",
     summary="Check the health status of the Rag module",
