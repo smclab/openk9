@@ -987,7 +987,7 @@ async def get_user_chats(
 
 
 @app.get(
-    "/api/rag/get-chat/{user_id}/{chat_id}",
+    "/api/rag/chat/{chat_id}",
     tags=["Chat"],
     summary="Retrieve user specific chat",
     description="Fetches user complete conversation history for a specific chat_id",
