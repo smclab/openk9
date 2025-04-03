@@ -430,9 +430,6 @@ public class IndexMappingService {
 			settingsBuilder.loadFromMap(settingsMap);
 		}
 
-		// never apply dynamicMapping
-		settingsBuilder.put("index.mapper.dynamic", false);
-
 		return settingsBuilder.build();
 	}
 
