@@ -29,8 +29,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class UnboundRAGConfigurationTest {
@@ -38,10 +42,20 @@ public class UnboundRAGConfigurationTest {
 	private static final String ENTITY_NAME_PREFIX = "UnboundRAGConfigurationTest - ";
 
 	private static final String BUCKET_ONE_NAME = ENTITY_NAME_PREFIX + "Bucket 1";
-	private static final String RAG_CONFIGURATION_CHAT_ONE_NAME = ENTITY_NAME_PREFIX + "RAG Configuration chat 1";
-	private static final String RAG_CONFIGURATION_CHAT_TWO_NAME = ENTITY_NAME_PREFIX + "RAG Configuration chat 2";
-	private static final String RAG_CONFIGURATION_SEARCH_NAME = ENTITY_NAME_PREFIX + "RAG Configuration search";
-	private static final String RAG_CONFIGURATION_CHAT_TOOL_NAME = ENTITY_NAME_PREFIX + "RAG Configuration chat tool";
+	private static final String BUCKET_TWO_NAME = ENTITY_NAME_PREFIX + "Bucket 2";
+	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "RAG Configuration chat 1";
+	private static final String RAG_CHAT_TWO = ENTITY_NAME_PREFIX + "RAG Configuration chat 2";
+	private static final String RAG_CHAT_THREE = ENTITY_NAME_PREFIX + "RAG Configuration chat 3";
+	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "RAG Configuration search 1";
+	private static final String RAG_SEARCH_TWO = ENTITY_NAME_PREFIX + "RAG Configuration search 2";
+	private static final String RAG_SEARCH_THREE = ENTITY_NAME_PREFIX + "RAG Configuration search 3";
+	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 1";
+	private static final String RAG_CHAT_TOOL_TWO = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 2";
+	private static final String RAG_CHAT_TOOL_THREE = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 3";
+
+	private static int allChatCount = 0;
+	private static int allChatToolCount = 0;
+	private static int allSearchCount = 0;
 
 	@Inject
 	BucketService bucketService;
@@ -55,19 +69,31 @@ public class UnboundRAGConfigurationTest {
 	@BeforeEach
 	void setup() {
 		createBucketOne();
-		createRAGConfigurationChatOne();
-		createRAGConfigurationChatTwo();
-		createRAGConfigurationSearch();
-		createRAGConfigurationChatTool();
+		createBucketTwo();
+
+		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT);
+		createRAGConfiguration(RAG_CHAT_TWO, RAGType.CHAT);
+		createRAGConfiguration(RAG_CHAT_THREE, RAGType.CHAT);
+		allChatCount = 3;
+
+		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SEARCH);
+		createRAGConfiguration(RAG_SEARCH_TWO, RAGType.SEARCH);
+		createRAGConfiguration(RAG_SEARCH_THREE, RAGType.SEARCH);
+		allSearchCount = 3;
+
+		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_TOOL);
+		createRAGConfiguration(RAG_CHAT_TOOL_TWO, RAGType.CHAT_TOOL);
+		createRAGConfiguration(RAG_CHAT_TOOL_THREE, RAGType.CHAT_TOOL);
+		allChatToolCount = 3;
 	}
 
 	@Test
 	void should_bind_and_unbind_rag_configurations_to_bucket_one() {
 		var bucket = getBucketOne();
-		var ragConfigurationChatOne = getRAGConfigurationChatOne();
-		var ragConfigurationChatTool = getRAGConfigurationChatTool();
-		var ragConfigurationSearch = getRAGConfigurationSearch();
-		var ragConfigurationChatTwo = getRAGConfigurationChatTwo();
+		var ragConfigurationChatOne = getRAGConfiguration(RAG_CHAT_ONE);
+		var ragConfigurationChatTwo = getRAGConfiguration(RAG_CHAT_TWO);
+		var ragConfigurationChatToolOne = getRAGConfiguration(RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSearchOne = getRAGConfiguration(RAG_SEARCH_ONE);
 
 		// initial check
 		assertNull(bucket.getRagConfigurationChat());
@@ -76,14 +102,14 @@ public class UnboundRAGConfigurationTest {
 
 		// bind one RAGConfiguration for each RAGType
 		bindRAGConfigurationToBucket(bucket, ragConfigurationChatOne);
-		bindRAGConfigurationToBucket(bucket, ragConfigurationChatTool);
-		bindRAGConfigurationToBucket(bucket, ragConfigurationSearch);
+		bindRAGConfigurationToBucket(bucket, ragConfigurationChatToolOne);
+		bindRAGConfigurationToBucket(bucket, ragConfigurationSearchOne);
 
 		bucket = getBucketOne();
 
 		assertEquals(ragConfigurationChatOne.getId(), bucket.getRagConfigurationChat().getId());
-		assertEquals(ragConfigurationChatTool.getId(), bucket.getRagConfigurationChatTool().getId());
-		assertEquals(ragConfigurationSearch.getId(), bucket.getRagConfigurationSearch().getId());
+		assertEquals(ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(ragConfigurationSearchOne.getId(), bucket.getRagConfigurationSearch().getId());
 
 		// override the CHAT RAGConfiguration binding
 		bindRAGConfigurationToBucket(bucket, ragConfigurationChatTwo);
@@ -98,8 +124,8 @@ public class UnboundRAGConfigurationTest {
 		bucket = getBucketOne();
 
 		assertNull(bucket.getRagConfigurationChat());
-		assertEquals(ragConfigurationChatTool.getId(), bucket.getRagConfigurationChatTool().getId());
-		assertEquals(ragConfigurationSearch.getId(), bucket.getRagConfigurationSearch().getId());
+		assertEquals(ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(ragConfigurationSearchOne.getId(), bucket.getRagConfigurationSearch().getId());
 
 		// unbind CHAT_TOOL RAGConfiguration and check bucket
 		unbindRAGConfigurationToBucket(bucket, RAGType.CHAT_TOOL);
@@ -108,7 +134,7 @@ public class UnboundRAGConfigurationTest {
 
 		assertNull(bucket.getRagConfigurationChat());
 		assertNull(bucket.getRagConfigurationChatTool());
-		assertEquals(ragConfigurationSearch.getId(), bucket.getRagConfigurationSearch().getId());
+		assertEquals(ragConfigurationSearchOne.getId(), bucket.getRagConfigurationSearch().getId());
 
 		// unbind SEARCH RAGConfiguration and check bucket
 		unbindRAGConfigurationToBucket(bucket, RAGType.SEARCH);
@@ -120,19 +146,235 @@ public class UnboundRAGConfigurationTest {
 		assertNull(bucket.getRagConfigurationSearch());
 	}
 
-	private void bindRAGConfigurationToBucket(Bucket bucket, RAGConfiguration ragConfiguration) {
-		bucketService.bindRAGConfiguration(bucket.getId(), ragConfiguration.getId())
-			.await()
-			.indefinitely();
+	@Test
+	void should_retrieve_all_rag_configuration_chat_from_empty_bucket() {
+
+		var bucket = getBucketOne();
+		var ragConfigurationChatOne = getRAGConfiguration(RAG_CHAT_ONE);
+		var ragConfigurationChatTwo = getRAGConfiguration(RAG_CHAT_TWO);
+		var ragConfigurationChatThree = getRAGConfiguration(RAG_CHAT_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatThree));
+	}
+
+	@Test
+	void should_retrieve_all_rag_configurations_chat_excluding_the_one_associated_with_the_bucket_one(){
+
+		var bucketOne = getBucketOne();
+		var bucketTwo = getBucketTwo();
+		var ragConfigurationChatOne = getRAGConfiguration(RAG_CHAT_ONE);
+		var ragConfigurationChatTwo = getRAGConfiguration(RAG_CHAT_TWO);
+		var ragConfigurationChatThree = getRAGConfiguration(RAG_CHAT_THREE);
+
+		bindRAGConfigurationToBucket(bucketOne, ragConfigurationChatOne);
+
+		// Associates a ragConfigurationChatTwo with another Bucket.
+		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationChatTwo);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatCount - 1, unboundRAGConfigurations.size());
+		// check list elements
+		assertFalse(unboundRAGConfigurations.contains(ragConfigurationChatOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatThree));
+
+	}
+
+	@Test
+	void should_retrieve_all_rag_configuration_chat_from_missing_bucket() {
+
+		var ragConfigurationChatOne = getRAGConfiguration(RAG_CHAT_ONE);
+		var ragConfigurationChatTwo = getRAGConfiguration(RAG_CHAT_TWO);
+		var ragConfigurationChatThree = getRAGConfiguration(RAG_CHAT_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.CHAT)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatThree));
+	}
+
+	@Test
+	void should_retrieve_all_rag_configuration_search_from_empty_bucket() {
+
+		var bucket = getBucketOne();
+		var ragConfigurationSearchOne = getRAGConfiguration(RAG_SEARCH_ONE);
+		var ragConfigurationSearchTwo = getRAGConfiguration(RAG_SEARCH_TWO);
+		var ragConfigurationSearchThree = getRAGConfiguration(RAG_SEARCH_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucket.getId(), RAGType.SEARCH)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allSearchCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchThree));
+	}
+
+	@Test
+	void should_retrieve_all_rag_configurations_search_excluding_the_one_associated_with_the_bucket_one(){
+
+		var bucketOne = getBucketOne();
+		var bucketTwo = getBucketTwo();
+		var ragConfigurationSearchOne = getRAGConfiguration(RAG_SEARCH_ONE);
+		var ragConfigurationSearchTwo = getRAGConfiguration(RAG_SEARCH_TWO);
+		var ragConfigurationSearchThree = getRAGConfiguration(RAG_SEARCH_THREE);
+
+		bindRAGConfigurationToBucket(bucketOne, ragConfigurationSearchOne);
+
+		// Associates a ragConfigurationSearchTwo with another Bucket.
+		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationSearchTwo);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucketOne.getId(), RAGType.SEARCH)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allSearchCount - 1, unboundRAGConfigurations.size());
+		// check list elements
+		assertFalse(unboundRAGConfigurations.contains(ragConfigurationSearchOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchThree));
+
+	}
+
+	@Test
+	void should_retrieve_all_rag_configuration_search_from_missing_bucket() {
+
+		var ragConfigurationSearchOne = getRAGConfiguration(RAG_SEARCH_ONE);
+		var ragConfigurationSearchTwo = getRAGConfiguration(RAG_SEARCH_TWO);
+		var ragConfigurationSearchThree = getRAGConfiguration(RAG_SEARCH_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.SEARCH)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allSearchCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationSearchThree));
+	}
+
+	@Test
+	void should_retrieve_all_rag_configuration_chat_tool_from_empty_bucket() {
+
+		var bucket = getBucketOne();
+		var ragConfigurationChatToolOne = getRAGConfiguration(RAG_CHAT_TOOL_ONE);
+		var ragConfigurationChatToolTwo = getRAGConfiguration(RAG_CHAT_TOOL_TWO);
+		var ragConfigurationChatToolThree = getRAGConfiguration(RAG_CHAT_TOOL_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT_TOOL)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatToolCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolThree));
+	}
+
+	@Test
+	void should_retrieve_all_rag_configurations_chat_tool_excluding_the_one_associated_with_the_bucket_one(){
+
+		var bucketOne = getBucketOne();
+		var bucketTwo = getBucketTwo();
+		var ragConfigurationChatToolOne = getRAGConfiguration(RAG_CHAT_TOOL_ONE);
+		var ragConfigurationChatToolTwo = getRAGConfiguration(RAG_CHAT_TOOL_TWO);
+		var ragConfigurationChatToolThree = getRAGConfiguration(RAG_CHAT_TOOL_THREE);
+
+		bindRAGConfigurationToBucket(bucketOne, ragConfigurationChatToolOne);
+
+		// Associates a ragConfigurationChatToolTwo with another Bucket.
+		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationChatToolTwo);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT_TOOL)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatToolCount - 1, unboundRAGConfigurations.size());
+		// check list elements
+		assertFalse(unboundRAGConfigurations.contains(ragConfigurationChatToolOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolThree));
+
+	}
+
+	@Test
+	void should_retrieve_all_rag_configuration_chat_tool_from_missing_bucket() {
+
+		var ragConfigurationChatToolOne = getRAGConfiguration(RAG_CHAT_TOOL_ONE);
+		var ragConfigurationChatToolTwo = getRAGConfiguration(RAG_CHAT_TOOL_TWO);
+		var ragConfigurationChatToolThree = getRAGConfiguration(RAG_CHAT_TOOL_THREE);
+
+		List<RAGConfiguration> unboundRAGConfigurations =
+			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.CHAT_TOOL)
+				.await()
+				.indefinitely();
+
+		assertFalse(unboundRAGConfigurations.isEmpty());
+		assertEquals(allChatCount, unboundRAGConfigurations.size());
+		// check list elements
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolOne));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolTwo));
+		assertTrue(unboundRAGConfigurations.contains(ragConfigurationChatToolThree));
 	}
 
 	@AfterEach
 	void tearDown() {
 		removeBucketOne();
-		removeRAGConfigurationChatOne();
-		removeRAGConfigurationChatTwo();
-		removeRAGConfigurationSearch();
-		removeRAGConfigurationChatTool();
+		removeBucketTwo();
+
+		removeRAGConfiguration(RAG_CHAT_ONE);
+		removeRAGConfiguration(RAG_CHAT_TWO);
+		removeRAGConfiguration(RAG_CHAT_THREE);
+
+		removeRAGConfiguration(RAG_SEARCH_ONE);
+		removeRAGConfiguration(RAG_SEARCH_TWO);
+		removeRAGConfiguration(RAG_SEARCH_THREE);
+
+		removeRAGConfiguration(RAG_CHAT_TOOL_ONE);
+		removeRAGConfiguration(RAG_CHAT_TOOL_TWO);
+		removeRAGConfiguration(RAG_CHAT_TOOL_THREE);
+	}
+
+	private void bindRAGConfigurationToBucket(Bucket bucket, RAGConfiguration ragConfiguration) {
+		bucketService.bindRAGConfiguration(bucket.getId(), ragConfiguration.getId())
+			.await()
+			.indefinitely();
 	}
 
 	private void createBucketOne() {
@@ -156,49 +398,31 @@ public class UnboundRAGConfigurationTest {
 			.indefinitely();
 	}
 
-	private void createRAGConfigurationChatOne() {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
-			.name(RAG_CONFIGURATION_CHAT_ONE_NAME)
-			.type(RAGType.CHAT)
+	private void createBucketTwo() {
+		BucketDTO dto = BucketDTO.builder()
+			.name(BUCKET_TWO_NAME)
+			.refreshOnSuggestionCategory(false)
+			.refreshOnTab(false)
+			.refreshOnDate(false)
+			.refreshOnQuery(false)
+			.retrieveType(Bucket.RetrieveType.MATCH)
 			.build();
 
 		sessionFactory.withTransaction(
-			session -> ragConfigurationService.create(session, dto)
-		)
-		.await()
-		.indefinitely();
-	}
-
-	private void createRAGConfigurationChatTwo() {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
-			.name(RAG_CONFIGURATION_CHAT_TWO_NAME)
-			.type(RAGType.CHAT)
-			.build();
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
+				(s, transaction) ->
+					bucketService.create(dto)
+						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
+						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
+						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSearch()))
 			)
 			.await()
 			.indefinitely();
 	}
 
-	private void createRAGConfigurationChatTool() {
+	private void createRAGConfiguration(String name, RAGType type) {
 		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
-			.name(RAG_CONFIGURATION_CHAT_TOOL_NAME)
-			.type(RAGType.CHAT_TOOL)
-			.build();
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void createRAGConfigurationSearch() {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
-			.name(RAG_CONFIGURATION_SEARCH_NAME)
-			.type(RAGType.SEARCH)
+			.name(name)
+			.type(type)
 			.build();
 
 		sessionFactory.withTransaction(
@@ -217,38 +441,19 @@ public class UnboundRAGConfigurationTest {
 		.indefinitely();
 	}
 
-	private RAGConfiguration getRAGConfigurationChatOne() {
+	private Bucket getBucketTwo() {
 		return sessionFactory.withTransaction(
 			session ->
-				ragConfigurationService.findByName(session, RAG_CONFIGURATION_CHAT_ONE_NAME)
+				bucketService.findByName(session, BUCKET_TWO_NAME)
 		)
 		.await()
 		.indefinitely();
 	}
 
-	private RAGConfiguration getRAGConfigurationChatTwo() {
-		return sessionFactory.withTransaction(
-			session ->
-				ragConfigurationService.findByName(session, RAG_CONFIGURATION_CHAT_TWO_NAME)
-		)
-		.await()
-		.indefinitely();
-	}
-
-	private RAGConfiguration getRAGConfigurationSearch() {
+	private RAGConfiguration getRAGConfiguration(String name) {
 		return sessionFactory.withTransaction(
 				session ->
-					ragConfigurationService.findByName(session, RAG_CONFIGURATION_SEARCH_NAME)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private RAGConfiguration getRAGConfigurationChatTool
-		() {
-		return sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.findByName(session, RAG_CONFIGURATION_CHAT_TOOL_NAME)
+					ragConfigurationService.findByName(session, name)
 			)
 			.await()
 			.indefinitely();
@@ -265,19 +470,19 @@ public class UnboundRAGConfigurationTest {
 		.indefinitely();
 	}
 
-	private void removeRAGConfigurationChatOne() {
-		var ragConfiguration = getRAGConfigurationChatOne();
+	private void removeBucketTwo() {
+		var bucket = getBucketTwo();
 
 		sessionFactory.withTransaction(
 			session ->
-				ragConfigurationService.deleteById(session, ragConfiguration.getId())
+				bucketService.deleteById(session, bucket.getId())
 		)
 		.await()
 		.indefinitely();
 	}
 
-	private void removeRAGConfigurationChatTwo() {
-		var ragConfiguration = getRAGConfigurationChatTwo();
+	private void removeRAGConfiguration(String name) {
+		var ragConfiguration = getRAGConfiguration(name);
 
 		sessionFactory.withTransaction(
 				session ->
@@ -285,28 +490,6 @@ public class UnboundRAGConfigurationTest {
 			)
 			.await()
 			.indefinitely();
-	}
-
-	private void removeRAGConfigurationSearch() {
-		var ragConfiguration = getRAGConfigurationSearch();
-
-		sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.deleteById(session, ragConfiguration.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void removeRAGConfigurationChatTool() {
-		var ragConfiguration = getRAGConfigurationChatTool();
-
-		sessionFactory.withTransaction(
-			session ->
-				ragConfigurationService.deleteById(session, ragConfiguration.getId())
-		)
-		.await()
-		.indefinitely();
 	}
 
 	private void unbindRAGConfigurationToBucket(Bucket bucket, RAGType ragType) {

@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.RAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.smallrye.mutiny.Uni;
@@ -32,8 +33,10 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -55,7 +58,7 @@ public class RAGConfigurationGraphqlResource {
 	}
 
 	@Query
-	public Uni<Connection<RAGConfiguration>> getRAGConfigurations(
+	public Uni<Connection<RAGConfiguration>> getRagConfigurations(
 		@Description("fetching only nodes after this node (exclusive)") String after,
 		@Description("fetching only nodes before this node (exclusive)") String before,
 		@Description("fetching only the first certain number of nodes") Integer first,
@@ -64,6 +67,28 @@ public class RAGConfigurationGraphqlResource {
 
 		return service.findConnection(
 			after, before, first, last, searchText, sortByList);
+	}
+
+	@Description("""
+		Retrieves a list of RAGConfiguration entities of the specified RAGType 
+		that are not yet associated with the given Bucket.
+		
+		This query returns all RAGConfiguration instances that:
+		- Have the specified RAGType.
+		- Are not currently linked to the provided bucketId.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket for which to retrieve unbound RAGConfiguration entities.
+		- `ragType` (RAGType!): The type of RAGConfiguration to filter by.
+		
+		Returns:
+		- A list of RAGConfiguration entities that match the criteria.
+		"""
+	)
+	@Query
+	public Uni<List<RAGConfiguration>> getUnboundRAGConfigurationByBucket(
+		@Id long bucketId, @NonNull RAGType ragType) {
+		return service.findRAGConfigurationByBucket(bucketId, ragType);
 	}
 
 	@Mutation

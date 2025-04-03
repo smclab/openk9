@@ -324,7 +324,8 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
-		assertEquals(RAGType.SEARCH, ragConfigurationTwo.getType());
+		// type is an immutable field
+		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());
@@ -478,7 +479,8 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
-		assertEquals(RAGType.SEARCH, ragConfigurationTwo.getType());
+		// type is an immutable field
+		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());

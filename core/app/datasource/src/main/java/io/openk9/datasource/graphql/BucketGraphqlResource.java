@@ -118,7 +118,7 @@ public class BucketGraphqlResource {
 		  - `ragConfiguration`: The linked RAGConfiguration.
 		""")
 	@Mutation
-	public Uni<Tuple2<Bucket, RAGConfiguration>> bindRAGConfiguration(
+	public Uni<Tuple2<Bucket, RAGConfiguration>> bindRAGConfigurationToBucket(
 		@Id
 		@Description("The ID of the Bucket to bind the RAGConfiguration to.") long bucketId,
 		@Id
