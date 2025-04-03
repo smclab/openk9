@@ -1076,6 +1076,112 @@ async def get_chat(
     )
 
 
+@app.delete(
+    "/api/rag/chat/{chat_id}",
+    tags=["Chat"],
+    summary="Delete a specific chat conversation",
+    description="Permanently removes all messages and metadata associated with a specific chat_id",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized - Invalid token.",
+            "content": {
+                "application/json": {"example": {"detail": "Invalid or expired token"}}
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "description": "Forbidden - Insufficient permissions or access denied",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Access denied for this resource"}
+                }
+            },
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Requested resource not found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "user_not_found": {"value": {"detail": "User index not found"}},
+                        "chat_not_found": {
+                            "value": {"detail": "No messages found for specified chat"}
+                        },
+                    }
+                }
+            },
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Invalid request parameters or structure",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": [
+                            {
+                                "loc": ["path", "chat_id"],
+                                "msg": "value is not a valid chat id",
+                                "type": "type_error.uuid",
+                            }
+                        ]
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Internal Server Error - Unexpected server-side error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "An unexpected error occurred"}
+                }
+            },
+        },
+    },
+)
+async def delete_chat(
+    chat_id: str,
+    request: Request,
+    authorization: str = Header(
+        ...,
+        description="Bearer token in format: 'Bearer <JWT>'",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    ),
+):
+    virtual_host = urlparse(str(request.base_url)).hostname
+    token = authorization.replace(TOKEN_PREFIX, "")
+
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
+        unauthorized_response()
+
+    user_id = user_info["sub"]
+    open_search_client = OpenSearch(
+        hosts=[OPENSEARCH_HOST],
+    )
+
+    if not open_search_client.indices.exists(index=user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found.",
+        )
+
+    delete_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
+
+    try:
+        response = open_search_client.delete_by_query(index=user_id, body=delete_query)
+    except OpenSearch.exceptions.NotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found.",
+        )
+
+    if response.get("deleted", 0) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found.",
+        )
+
+    return {"status": status.HTTP_200_OK, "message": "Chat deleted successfully."}
+
+
 @app.get(
     "/health",
     summary="Check the health status of the Rag module",
@@ -1084,3 +1190,7 @@ async def get_chat(
 )
 async def get_health():
     return {"status": "UP"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5000)
