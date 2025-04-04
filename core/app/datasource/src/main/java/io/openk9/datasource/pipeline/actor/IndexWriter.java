@@ -17,7 +17,9 @@
 
 package io.openk9.datasource.pipeline.actor;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import jakarta.enterprise.inject.spi.CDI;
 
 import io.openk9.datasource.events.DatasourceEventBus;
@@ -330,13 +332,79 @@ public class IndexWriter {
 		HeldMessage heldMessage,
 		BulkResponse bulkResponse,
 		Exception exception
-	) implements Writer.Command {}
+	) implements Writer.Command {
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			BulkResponseCommand that = (BulkResponseCommand) o;
+			return Objects.deepEquals(dataPayload, that.dataPayload) && Objects.equals(
+				exception,
+				that.exception
+			) && Objects.equals(heldMessage, that.heldMessage) && Objects.equals(
+				bulkResponse,
+				that.bulkResponse
+			);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(Arrays.hashCode(dataPayload), heldMessage, bulkResponse, exception);
+		}
+
+		@Override
+		public String toString() {
+			return "BulkResponseCommand{" +
+				   "dataPayload=" + Arrays.toString(dataPayload) +
+				   ", heldMessage=" + heldMessage +
+				   ", bulkResponse=" + bulkResponse +
+				   ", exception=" + exception +
+				   '}';
+		}
+	}
 
 	private record SearchResponseCommand(
 		byte[] dataPayload,
 		HeldMessage heldMessage,
 		SearchResponse searchResponse,
 		Exception exception
-	) implements Writer.Command {}
+	) implements Writer.Command {
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			SearchResponseCommand that = (SearchResponseCommand) o;
+			return Objects.deepEquals(dataPayload, that.dataPayload) && Objects.equals(
+				exception,
+				that.exception
+			) && Objects.equals(heldMessage, that.heldMessage) && Objects.equals(
+				searchResponse,
+				that.searchResponse
+			);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(
+				Arrays.hashCode(dataPayload),
+				heldMessage,
+				searchResponse,
+				exception
+			);
+		}
+
+		@Override
+		public String toString() {
+			return "SearchResponseCommand{" +
+				   "dataPayload=" + Arrays.toString(dataPayload) +
+				   ", heldMessage=" + heldMessage +
+				   ", searchResponse=" + searchResponse +
+				   ", exception=" + exception +
+				   '}';
+		}
+
+	}
 
 }
