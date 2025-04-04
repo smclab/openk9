@@ -138,7 +138,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 						return dataIndexService.create(session, datasourceId, dataIndexDTO)
 							.invoke(datasource::setDataIndex)
-							.flatMap(__ -> persist(session, datasource));
+							.flatMap(ignored -> persist(session, datasource));
 						}
 					)
 
