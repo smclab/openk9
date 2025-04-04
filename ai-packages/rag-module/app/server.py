@@ -7,7 +7,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from pydantic import BaseModel, Field
@@ -33,6 +33,7 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 )
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
+KEYCLOAK_USER_INFO_KEY = "sub"
 
 tracer_provider = register(
     project_name=ARIZE_PHOENIX_PROJECT_NAME,
@@ -935,7 +936,7 @@ async def get_user_chats(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info["sub"]
+    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -1033,7 +1034,7 @@ async def get_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info["sub"]
+    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -1152,7 +1153,7 @@ async def delete_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info["sub"]
+    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
     )
@@ -1179,7 +1180,8 @@ async def delete_chat(
             detail="Item not found.",
         )
 
-    return {"status": status.HTTP_200_OK, "message": "Chat deleted successfully."}
+    content = {"message": "Chat deleted successfully.", "status": "success"}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
 class ChatMessage(BaseModel):
@@ -1276,7 +1278,7 @@ async def rename_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info["sub"]
+    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -1329,7 +1331,8 @@ async def rename_chat(
             detail=f"OpenSearch update error: {str(e)}",
         )
 
-    return {"status": status.HTTP_200_OK, "message": "Title updated successfully"}
+    content = {"message": "Title updated successfully.", "status": "success"}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
 @app.get(
