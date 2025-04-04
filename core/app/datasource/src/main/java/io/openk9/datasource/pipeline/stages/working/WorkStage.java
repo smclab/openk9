@@ -101,18 +101,15 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var response = postWrite.response();
 
-		if (response instanceof Writer.Success(HeldMessage heldMessage)) {
+		switch (response) {
+			case Writer.Success(HeldMessage heldMessage):
 
-			this.replyTo.tell(new Done(heldMessage));
+				this.replyTo.tell(new Done(heldMessage));
+				break;
+			case Writer.Failure(WriterException exception, HeldMessage heldMessage):
 
-		}
-		else if (response instanceof Writer.Failure(
-			WriterException exception,
-			HeldMessage heldMessage
-		)) {
-
-			this.replyTo.tell(new Failed(heldMessage, exception));
-
+				this.replyTo.tell(new Failed(heldMessage, exception));
+				break;
 		}
 
 		return Behaviors.same();

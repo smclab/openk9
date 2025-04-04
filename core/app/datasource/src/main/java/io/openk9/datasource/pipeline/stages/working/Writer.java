@@ -24,7 +24,7 @@ public interface Writer {
 
 	interface Command extends CborSerializable {}
 
-	interface Response extends CborSerializable {
+	sealed interface Response extends CborSerializable {
 		HeldMessage heldMessage();
 	}
 
