@@ -27,6 +27,40 @@
 	  "vector": {
 		"type": "knn_vector",
 		"dimension": {knnVectorDimension}
-	  }
+	  },
+	  "next": {
+		"type": "object",
+		"properties": {
+		  "chunkText": {
+			"fields": {
+			  "keyword": {
+				"type": "keyword",
+				"ignore_above": 256
+			  }
+			},
+			"type": "text"
+		  },
+		  "number": {
+			"type": "long"
+		  }
+		}
+      },
+	  "previous": {
+		"type": "object",
+		"properties": {
+		  "chunkText": {
+			"fields": {
+			  "keyword": {
+				"type": "keyword",
+				"ignore_above": 256
+			  }
+			},
+			"type": "text"
+		  },
+		  "number": {
+			"type": "long"
+		  }
+		}
+      }
 	}
 }
