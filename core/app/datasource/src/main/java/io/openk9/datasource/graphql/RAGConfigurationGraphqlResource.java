@@ -53,7 +53,7 @@ public class RAGConfigurationGraphqlResource {
 	}
 
 	@Query
-	public Uni<RAGConfiguration> getRAGConfiguration(@Id long id) {
+	public Uni<RAGConfiguration> getRagConfiguration(@Id long id) {
 		return service.findById(id);
 	}
 

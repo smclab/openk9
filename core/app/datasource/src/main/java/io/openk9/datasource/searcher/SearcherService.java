@@ -25,6 +25,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.JWT;
@@ -38,6 +39,7 @@ import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
@@ -47,6 +49,8 @@ import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
+import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
+import io.openk9.searcher.grpc.GetRAGConfigurationsResponse;
 import io.openk9.searcher.grpc.ModelType;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
@@ -55,6 +59,7 @@ import io.openk9.searcher.grpc.QueryAnalysisToken;
 import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.RAGType;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
@@ -80,6 +85,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -121,6 +127,9 @@ import java.util.stream.Collectors;
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+
+	@Inject
+	BucketService bucketService;
 
 	@Inject
 	@CacheName("searcher-service")
@@ -486,6 +495,46 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			: getI18nParent(parent);
 	}
 
+	/**
+	 * Retrieves the {@link RAGConfiguration} associated with the given {@link Bucket}
+	 * based on the specified {@link RAGType}.
+	 *
+	 * <p>This method selects the appropriate {@link RAGConfiguration} from the provided {@link Bucket}
+	 * depending on the given {@code ragType}. If the {@code ragType} is invalid, it returns an
+	 * {@link Uni} failure with {@link Status#INVALID_ARGUMENT}. If the corresponding
+	 * configuration is missing in the bucket, it returns an {@link Uni} failure with {@link Status#NOT_FOUND}.</p>
+	 *
+	 * @param bucket The {@link Bucket} from which to fetch the corresponding {@link RAGConfiguration}.
+	 * @param ragType The {@link RAGType} that specifies which {@link RAGConfiguration} to retrieve.
+	 * @return An {@link Uni} containing the {@link RAGConfiguration}, or an error if the ragType is invalid
+	 *         or if the configuration is missing.
+	 */
+	private static Uni<RAGConfiguration> getRagConfiguration(Bucket bucket, RAGType ragType) {
+
+		Uni<RAGConfiguration> ragConfigurationUni = switch (ragType) {
+			case CHAT -> Uni.createFrom().item(bucket.getRagConfigurationChat());
+			case CHAT_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
+			case SEARCH -> Uni.createFrom().item(bucket.getRagConfigurationSearch());
+			default -> Uni.createFrom().failure(
+				new StatusRuntimeException(
+					Status.INVALID_ARGUMENT
+						.withDescription(String.format("Unexpected ragType value: %s", ragType))
+				)
+			);
+		};
+
+		return ragConfigurationUni
+			.onItem().ifNull().failWith(
+				() -> new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription(
+						String.format(
+							"RAGConfiguration of type %s missing for the specified bucket.",
+							ragType.name())
+					)
+				)
+			);
+	}
+
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
 		return getTenant(request.getVirtualHost())
@@ -540,6 +589,52 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						.build()
 				)
 			);
+	}
+
+	/**
+	 * Retrieves the {@link GetRAGConfigurationsResponse} associated with a given virtual host and {@link RAGType}.
+	 *
+	 * <p>This method fetches the current {@link Bucket} based on the provided virtual host,
+	 * loads the necessary RAG configurations according to the {@link RAGType}, and returns
+	 * the corresponding {@link GetRAGConfigurationsResponse}.
+	 * If an error occurs (e.g., invalid {@link RAGType} or missing configuration), it is handled
+	 * and propagated as a gRPC {@link StatusRuntimeException}.
+	 *
+	 * <p>Error Handling:</p>
+	 * <ul>
+	 *   <li>Returns {@link Status#INVALID_ARGUMENT} if the provided RAG type is not recognized.</li>
+	 *   <li>Returns {@link Status#NOT_FOUND} if no matching RAGConfiguration exists for the given bucket.</li>
+	 * </ul>
+	 *
+	 * @param request The {@link GetRAGConfigurationsRequest} containing the virtual host
+	 *                and the RAG type for which the configuration is requested.
+	 * @return A {@link Uni} emitting a {@link GetRAGConfigurationsResponse} containing
+	 *         the requested RAG configuration details.
+	 * @throws StatusRuntimeException if the RAG type is invalid or the configuration is missing.
+	 */
+	@Override
+	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
+		GetRAGConfigurationsRequest request) {
+
+		return bucketService
+				.getCurrentBucket(request.getVirtualHost())
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSearch()))
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
+			.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
+			.map(ragConfiguration ->
+				GetRAGConfigurationsResponse.newBuilder()
+					.setName(ragConfiguration.getName())
+					.setChunkWindow(ragConfiguration.getChunkWindow())
+					.setReformulate(ragConfiguration.getReformulate())
+					.setPrompt(ragConfiguration.getPrompt())
+					.setPromptNoRag(ragConfiguration.getPromptNoRag())
+					.setRagToolDescription(ragConfiguration.getRagToolDescription())
+					.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
+					.build()
+			)
+			.onFailure(StatusRuntimeException.class)
+			.recoverWithUni(error -> Uni.createFrom().failure(error));
 	}
 
 	@Override

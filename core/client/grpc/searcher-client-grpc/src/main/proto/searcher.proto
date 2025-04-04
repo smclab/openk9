@@ -14,6 +14,7 @@ service Searcher {
   rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
   rpc GetEmbeddingModelConfigurations(GetEmbeddingModelConfigurationsRequest) returns (GetEmbeddingModelConfigurationsResponse) {}
+  rpc GetRAGConfigurations(GetRAGConfigurationsRequest) returns (GetRAGConfigurationsResponse) {}
 }
 
 message QueryParserResponse {
@@ -99,6 +100,18 @@ message GetEmbeddingModelConfigurationsRequest {
   string virtualHost = 1;
 }
 
+message GetRAGConfigurationsRequest {
+  string virtualHost = 1;
+  RAGType ragType = 2;
+}
+
+enum RAGType {
+  RAG_TYPE_UNSPECIFIED = 0;
+  CHAT = 1;
+  CHAT_TOOL = 2;
+  SEARCH = 3;
+}
+
 message QueryAnalysisToken {
   string text = 1;
   int32 start = 2;
@@ -150,5 +163,15 @@ message GetEmbeddingModelConfigurationsResponse {
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   ModelType modelType = 4;
+}
+
+message GetRAGConfigurationsResponse{
+  string name = 1;
+  int32 chunkWindow = 3;
+  bool reformulate = 4;
+  string prompt = 5;
+  string promptNoRag = 6;
+  string ragToolDescription = 7;
+  string rephrasePrompt = 8;
 }
 
