@@ -169,7 +169,7 @@ public class IndexMappingService {
 				session,
 				jsonObject.getMap(),
 				List.of(DocType.DEFAULT_NAME)
-			));
+			).flatMap(docTypes -> session.mergeAll(docTypes.toArray())));
 	}
 
 	/**
