@@ -29,7 +29,6 @@
 		"dimension": {knnVectorDimension}
 	  },
 	  "next": {
-		"type": "object",
 		"properties": {
 		  "chunkText": {
 			"fields": {
@@ -46,7 +45,6 @@
 		}
       },
 	  "previous": {
-		"type": "object",
 		"properties": {
 		  "chunkText": {
 			"fields": {
