@@ -31,6 +31,7 @@ public class K9EntityServiceException extends RuntimeException {
 	}
 
 	public K9EntityServiceException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public K9EntityServiceException(
