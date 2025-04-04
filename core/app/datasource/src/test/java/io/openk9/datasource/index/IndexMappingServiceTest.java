@@ -100,9 +100,9 @@ public class IndexMappingServiceTest {
 			docTypeAndFieldsGroup
 				.get(DocType.DEFAULT_NAME)
 				.stream()
-				.filter(f -> f.getFieldName().equals("acl"))
+				.filter(f -> "acl".equals(f.getFieldName()))
 				.flatMap(f -> f.getSubDocTypeFields().stream())
-				.anyMatch(f -> f.getFieldName().equals("public"))
+				.anyMatch(f -> "public".equals(f.getFieldName()))
 		);
 
 		// mappings contains default ignorable fields (rawContent, datasourceId)
@@ -110,20 +110,20 @@ public class IndexMappingServiceTest {
 			docTypeAndFieldsGroup
 				.get(DocType.DEFAULT_NAME)
 				.stream()
-				.anyMatch(f -> f.getFieldName().equals("datasourceId"))
+				.anyMatch(f -> "datasourceId".equals(f.getFieldName()))
 		);
 
 		assertTrue(
 			docTypeAndFieldsGroup
 				.get("web")
 				.stream()
-				.anyMatch(f -> f.getFieldName().equals("title"))
+				.anyMatch(f -> "title".equals(f.getFieldName()))
 		);
 
 		// contains web.title, already persisted
 		assertTrue(docTypes
 			.stream()
-			.filter(dt -> dt.getName().equals("web"))
+			.filter(dt -> "web".equals(dt.getName()))
 			.map(DocType::getDocTypeFields)
 			.flatMap(Collection::stream)
 			.anyMatch(f -> f.equals(title))
@@ -135,13 +135,13 @@ public class IndexMappingServiceTest {
 			.filter(dt -> dt.getName().equals("web"))
 			.map(DocType::getDocTypeFields)
 			.flatMap(Collection::stream)
-			.anyMatch(f -> f.getFieldName().equals("content"))
+			.anyMatch(f -> "content".equals(f.getFieldName()))
 		);
 
 		// ignored fields does not exist
 		assertTrue(docTypes
 			.stream()
-			.filter(dt -> dt.getName().equals(DocType.DEFAULT_NAME))
+			.filter(dt -> DocType.DEFAULT_NAME.equals(dt.getName()))
 			.map(DocType::getDocTypeFields)
 			.flatMap(Collection::stream)
 			.noneMatch(f -> IndexMappingService.isIgnoredFieldPath(f.getPath()))
