@@ -527,30 +527,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return sessionFactory.withTransaction(tenantId, (s, t) -> upsert(s, dto));
 	}
 
-	protected static <T> Response<T> toResponse(T entity, Throwable throwable) {
-		if (throwable != null) {
-			return switch (throwable) {
-				case ConstraintViolationException e -> {
-					var fieldValidators = e.getConstraintViolations().stream()
-						.map(constraintViolation -> FieldValidator.of(
-							constraintViolation
-								.getPropertyPath()
-								.toString(), constraintViolation.getMessage()
-						))
-						.collect(Collectors.toList());
-
-					yield Response.error(fieldValidators);
-				}
-				case ValidationException e -> Response.error(
-					List.of(FieldValidator.of("error", e.getMessage())));
-				default -> throw new K9EntityServiceException(throwable);
-			};
-		}
-		else {
-			return Response.success(entity);
-		}
-	}
-
 	@Override
 	protected Mutiny.SessionFactory getSessionFactory() {
 		return sessionFactory;
@@ -771,6 +747,32 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return tuple2Results.map(t ->
 			Page.of(limit, t.getItem1(), t.getItem2()));
 
+	}
+
+	protected static <T> Response<T> toResponse(T entity, Throwable throwable) {
+		if (throwable != null) {
+			return switch (throwable) {
+				case ConstraintViolationException e -> mapResponseFromConstraintViolation(e);
+				case ValidationException e -> Response.error(
+					List.of(FieldValidator.of("error", e.getMessage())));
+				default -> throw new K9EntityServiceException(throwable);
+			};
+		}
+		else {
+			return Response.success(entity);
+		}
+	}
+
+	private static <T> Response<T> mapResponseFromConstraintViolation(ConstraintViolationException e) {
+		var fieldValidators = e.getConstraintViolations().stream()
+			.map(constraintViolation -> FieldValidator.of(
+				constraintViolation
+					.getPropertyPath()
+					.toString(), constraintViolation.getMessage()
+			))
+			.collect(Collectors.toList());
+
+		return Response.error(fieldValidators);
 	}
 
 }
