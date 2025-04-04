@@ -230,7 +230,7 @@ public final class IndexMappingsUtil {
 			if (docTypeField.getParentDocTypeField() == null) {
 				DocType docType = docTypeField.getDocType();
 				String docTypeName = docType.getName();
-				if (!docTypeName.equals("default")) {
+				if (!docTypeName.equals(DocType.DEFAULT_NAME)) {
 					current = visit(MappingsKey.of(docTypeName), current);
 
 					current = visit(MappingsKey.of("properties"), current);

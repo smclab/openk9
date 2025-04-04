@@ -405,7 +405,7 @@ public class IndexMappingService {
 						|| field.getFieldName().equals(dt)
 					)
 					.findFirst()
-					.orElse("default"),
+					.orElse(DocType.DEFAULT_NAME),
 				Collectors.toList()
 			));
 
@@ -435,7 +435,7 @@ public class IndexMappingService {
 
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
 		for (String docTypeName : grouped.keySet()) {
-			if (!docTypeName.equals("default")) {
+			if (!docTypeName.equals(DocType.DEFAULT_NAME)) {
 				List<DocTypeField> groupedDocTypeFields = grouped.get(docTypeName);
 				groupedDocTypeFields
 					.stream()

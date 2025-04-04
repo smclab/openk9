@@ -98,7 +98,7 @@ public class IndexMappingServiceTest {
 		// mappings contains default (acl, documentTypes)
 		assertTrue(
 			docTypeAndFieldsGroup
-				.get("default")
+				.get(DocType.DEFAULT_NAME)
 				.stream()
 				.filter(f -> f.getFieldName().equals("acl"))
 				.flatMap(f -> f.getSubDocTypeFields().stream())
@@ -108,7 +108,7 @@ public class IndexMappingServiceTest {
 		// mappings contains default ignorable fields (rawContent, datasourceId)
 		assertTrue(
 			docTypeAndFieldsGroup
-				.get("default")
+				.get(DocType.DEFAULT_NAME)
 				.stream()
 				.anyMatch(f -> f.getFieldName().equals("datasourceId"))
 		);
@@ -141,7 +141,7 @@ public class IndexMappingServiceTest {
 		// ignored fields does not exist
 		assertTrue(docTypes
 			.stream()
-			.filter(dt -> dt.getName().equals("default"))
+			.filter(dt -> dt.getName().equals(DocType.DEFAULT_NAME))
 			.map(DocType::getDocTypeFields)
 			.flatMap(Collection::stream)
 			.noneMatch(f -> IndexMappingService.isIgnoredFieldPath(f.getPath()))
