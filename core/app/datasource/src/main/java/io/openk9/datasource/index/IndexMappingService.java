@@ -165,7 +165,11 @@ public class IndexMappingService {
 		var jsonObject = (JsonObject) Json.decodeValue(mappings);
 
 		return indexService.putComponentTemplate(componentTemplateRequest)
-			.call(() -> generateDocTypeFields(session, jsonObject.getMap(), List.of()));
+			.call(() -> generateDocTypeFields(
+				session,
+				jsonObject.getMap(),
+				List.of(DocType.DEFAULT_NAME)
+			));
 	}
 
 	/**
