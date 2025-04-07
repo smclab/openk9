@@ -17,15 +17,17 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.event.util.EventType;
-import io.openk9.datasource.model.Datasource;
-import io.openk9.datasource.model.util.K9Entity;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+
+import io.openk9.datasource.event.util.EventType;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.util.K9Entity;
+
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.Hibernate;
 
 @ApplicationScoped

@@ -17,7 +17,16 @@
 
 package io.openk9.datasource.listener;
 
-import com.google.protobuf.Empty;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
@@ -28,22 +37,14 @@ import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantResponse;
+
+import com.google.protobuf.Empty;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SchedulerInitializer {
@@ -70,16 +71,28 @@ public class SchedulerInitializer {
 	@ConsumeEvent(UPDATE_SCHEDULER)
 	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
 
-		return schedulerInitializerActor.scheduleDataSource(
-			datasource.getTenant(),
-			datasource.getId(),
-			datasource.getSchedulable(),
-			datasource.getScheduling(),
-			datasource.getReindexable(),
-			datasource.getReindexing(),
-			datasource.getPurgeable(),
-			datasource.getPurging(),
-			datasource.getPurgeMaxAge()
+		// refresh the entity if the tenant is not evaluated
+		Uni<String> tenantUni = null;
+		if (datasource.getTenant() == null) {
+			tenantUni = sessionFactory.withSession(session -> session.refresh(datasource))
+				.map(ignored -> datasource.getTenant());
+		}
+		else {
+			tenantUni = Uni.createFrom().item(datasource.getTenant());
+		}
+
+		return tenantUni.flatMap(tenant -> schedulerInitializerActor
+			.scheduleDataSource(
+				datasource.getTenant(),
+				datasource.getId(),
+				datasource.getSchedulable(),
+				datasource.getScheduling(),
+				datasource.getReindexable(),
+				datasource.getReindexing(),
+				datasource.getPurgeable(),
+				datasource.getPurging(),
+				datasource.getPurgeMaxAge()
+			)
 		);
 
 	}
