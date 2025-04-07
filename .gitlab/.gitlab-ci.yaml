@@ -28,9 +28,6 @@ variables:
 
 # QUANDO CI SONO CHANGES IN HELM CHART TRIGGERARE (però manuale)
 include:
-<<<<<<< HEAD
-  - local: "/.gitlab/.gitlab-templates.yaml"
-=======
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml'
   - local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml'
@@ -38,8 +35,6 @@ include:
   - local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml'
   - local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml'
 
-
->>>>>>> 1285-accorgimenti-vari-pipeline
 
 ################################################################################
 #                               TRIGGER DATASOURCE                             #
@@ -189,7 +184,7 @@ Trigger File-Manager:
     - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
       changes:
         - core/app/file-manager/**/*
-        - core/common/resources-common **/*
+        - core/common/resources-common/**/*
         - core/client/grpc/**/*
   trigger:
     include: "/.gitlab/.gitlab-ci-file-manager.yaml"
@@ -435,7 +430,7 @@ Trigger Rag Module:
 # Procedere a fare la build di Ebedding anche se RAG fallisce
 Trigger Embedding Module:
   stage: trigger
-  # “needs” assicura che venga eseguito dopo “Trigger Rag Module”
+  # "needs" assicura che venga eseguito dopo "Trigger Rag Module"
   needs:
     - job: "Trigger Rag Module"
   rules:
