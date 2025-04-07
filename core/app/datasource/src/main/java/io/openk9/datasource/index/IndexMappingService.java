@@ -365,11 +365,8 @@ public class IndexMappingService {
 				boolean retained = true;
 
 				// does not retain an ignored field
-				for (String ignoredPath : IGNORED_FIELD_PATHS) {
-					if (Objects.equals(ignoredPath, fieldPath)) {
-						retained = false;
-						break;
-					}
+				if (isIgnoredFieldPath(fieldPath)) {
+					continue;
 				}
 
 				// does not retain an existing field
