@@ -378,9 +378,6 @@ class SearchQueryChat(BaseModel):
     searchText: str = Field(
         ..., description="Primary search text input", example="What is OpenK9?"
     )
-    userId: Optional[str] = Field(
-        None, description="Unique user identifier", example="user_12345"
-    )
     chatHistory: Optional[list] = Field(
         None,
         description="Previous chat messages in conversation",
@@ -404,7 +401,6 @@ class SearchQueryChat(BaseModel):
                     },
                 ],
                 "chat_id": "1740389549494",
-                "user_id": "1740389552570",
                 "timestamp": "1740389552570",
                 "chat_sequence_number": 1,
             },
@@ -473,7 +469,6 @@ class SearchQueryChat(BaseModel):
                             "summary": "A basic example with minimal fields",
                             "value": {
                                 "searchText": "What is OpenK9?",
-                                "userId": "user-123",
                                 "timestamp": "1731928126578",
                                 "chatSequenceNumber": 1,
                             },
@@ -482,7 +477,6 @@ class SearchQueryChat(BaseModel):
                             "summary": "An advanced example with all fields",
                             "value": {
                                 "searchText": "What is OpenK9?",
-                                "userId": "user-123",
                                 "timestamp": "1731928126578",
                                 "chatSequenceNumber": 1,
                                 "retrieveCitations": True,
@@ -526,7 +520,6 @@ class SearchQueryChat(BaseModel):
                                             },
                                         ],
                                         "chat_id": "1740389549494",
-                                        "user_id": "1740389552570",
                                         "timestamp": "1740389552570",
                                         "chat_sequence_number": 1,
                                     },
@@ -556,7 +549,6 @@ class SearchQueryChat(BaseModel):
                                             },
                                         ],
                                         "chat_id": "1740389549494",
-                                        "user_id": "1740389552570",
                                         "timestamp": "1731928126578",
                                         "chat_sequence_number": 2,
                                     },
@@ -601,7 +593,6 @@ async def rag_chat(
     language = search_query_chat.language
     vector_indices = search_query_chat.vectorIndices
     search_text = search_query_chat.searchText
-    user_id = search_query_chat.userId
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
@@ -611,8 +602,13 @@ async def rag_chat(
         extra[OPENK9_ACL_HEADER] = openk9_acl
 
     token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
-    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
-        unauthorized_response()
+    user_id = None
+
+    if token:
+        user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+        if not user_info:
+            unauthorized_response()
+        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     chain = get_chat_chain(
         range_values,
@@ -694,7 +690,6 @@ async def rag_chat(
                             "summary": "A basic example with minimal fields",
                             "value": {
                                 "searchText": "What is OpenK9?",
-                                "userId": "user-123",
                                 "timestamp": "1731928126578",
                                 "chatSequenceNumber": 1,
                             },
@@ -703,7 +698,6 @@ async def rag_chat(
                             "summary": "An advanced example with all fields",
                             "value": {
                                 "searchText": "What is OpenK9?",
-                                "userId": "user-123",
                                 "timestamp": "1731928126578",
                                 "chatSequenceNumber": 1,
                                 "retrieveCitations": True,
@@ -747,7 +741,6 @@ async def rag_chat(
                                             },
                                         ],
                                         "chat_id": "1740389549494",
-                                        "user_id": "1740389552570",
                                         "timestamp": "1740389552570",
                                         "chat_sequence_number": 1,
                                     },
@@ -777,7 +770,6 @@ async def rag_chat(
                                             },
                                         ],
                                         "chat_id": "1740389549494",
-                                        "user_id": "1740389552570",
                                         "timestamp": "1731928126578",
                                         "chat_sequence_number": 2,
                                     },
@@ -816,7 +808,6 @@ async def rag_chat(
     language = search_query_chat.language
     vector_indices = search_query_chat.vectorIndices
     search_text = search_query_chat.searchText
-    user_id = search_query_chat.userId
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
@@ -826,8 +817,13 @@ async def rag_chat(
         extra[OPENK9_ACL_HEADER] = openk9_acl
 
     token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
-    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
-        unauthorized_response()
+    user_id = None
+
+    if token:
+        user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+        if not user_info:
+            unauthorized_response()
+        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     chain = get_chat_chain_tool(
         range_values,
