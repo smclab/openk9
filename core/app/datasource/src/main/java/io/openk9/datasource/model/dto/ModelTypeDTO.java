@@ -18,6 +18,7 @@
 package io.openk9.datasource.model.dto;
 
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,7 +32,9 @@ import org.eclipse.microprofile.graphql.Description;
 @Embeddable
 public class ModelTypeDTO {
 	@Description("It is the model type.")
+	@NotNull
 	private String type;
 	@Description("It is the specific model.")
+	@NotNull
 	private String model;
 }

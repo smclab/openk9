@@ -191,6 +191,122 @@ public class EmbeddingModelGraphqlTest {
 	}
 
 	@Test
+	void should_fail_create_embedding_model_one_with_no_modelType() throws ExecutionException, InterruptedException {
+
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					EMBEDDING_MODEL,
+					args(
+						arg(
+							EMBEDDING_MODEL_DTO,
+							inputObject(
+								prop(NAME, EMBEDDING_MODEL_ONE_NAME),
+								prop(API_URL, EMBEDDING_MODEL_LOCAL),
+								prop(API_KEY, SECRET_KEY),
+								prop(VECTOR_SIZE, VECTOR_SIZE_DEFAULT_VALUE),
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME),
+						field(API_URL),
+						field(API_KEY),
+						field(VECTOR_SIZE),
+						field(JSON_CONFIG),
+						field(MODEL_TYPE,
+							field(TYPE),
+							field(MODEL)
+						)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response: %s", response));
+
+		assertTrue(response.hasError());
+
+		var embeddingModelErrors = response.getErrors();
+
+		assertEquals(1, embeddingModelErrors.size());
+
+		String errorMessage = embeddingModelErrors.getFirst().getMessage();
+
+		assertTrue(errorMessage.contains(
+			String.format("is missing required fields '[%s]'", MODEL_TYPE)));
+	}
+
+	@Test
+	void should_fail_create_embedding_model_one_with_no_model_and_type() throws ExecutionException, InterruptedException {
+
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					EMBEDDING_MODEL,
+					args(
+						arg(
+							EMBEDDING_MODEL_DTO,
+							inputObject(
+								prop(NAME, EMBEDDING_MODEL_ONE_NAME),
+								prop(API_URL, EMBEDDING_MODEL_LOCAL),
+								prop(API_KEY, SECRET_KEY),
+								prop(VECTOR_SIZE, VECTOR_SIZE_DEFAULT_VALUE),
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY),
+								prop(
+									MODEL_TYPE,
+									inputObject()
+								)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME),
+						field(API_URL),
+						field(API_KEY),
+						field(VECTOR_SIZE),
+						field(JSON_CONFIG),
+						field(MODEL_TYPE,
+							field(TYPE),
+							field(MODEL)
+						)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		log.info(String.format("Response: %s", response));
+
+		assertTrue(response.hasError());
+
+		var embeddingModelErrors = response.getErrors();
+
+		assertEquals(1, embeddingModelErrors.size());
+
+		String errorMessage = embeddingModelErrors.getFirst().getMessage();
+
+		assertTrue(errorMessage.contains(
+			String.format("is missing required fields '[%s, %s]'", MODEL, TYPE)));
+	}
+
+	@Test
 	void should_update_embedding_model_two() throws ExecutionException, InterruptedException {
 
 		var embeddingModelTwo = getEmbeddingModelTwo();

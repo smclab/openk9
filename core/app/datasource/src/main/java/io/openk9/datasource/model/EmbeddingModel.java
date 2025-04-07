@@ -35,6 +35,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "embedding_model")
 @NamedQuery(
@@ -86,4 +88,7 @@ public class EmbeddingModel extends K9Entity {
 		this.enabled = tenantBinding != null;
 	}
 
+	public void setModelType(ModelType modelType) {
+		this.modelType = Objects.requireNonNullElse(modelType, new ModelType());
+	}
 }

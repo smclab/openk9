@@ -18,17 +18,35 @@
 package io.openk9.datasource.model;
 
 import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Embeddable
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class ModelType {
+
+	private static final String EMPTY_STRING = "";
 
 	private String model;
 
 	private String type;
+
+	public ModelType() {
+		this.model = EMPTY_STRING;
+		this.type = EMPTY_STRING;
+	}
+
+	public ModelType(String model, String type) {
+		this.model = Objects.requireNonNullElse(model, EMPTY_STRING);
+		this.type = Objects.requireNonNullElse(type, EMPTY_STRING);
+	}
+
+	public void setModel(String model) {
+		this.model = Objects.requireNonNullElse(model, EMPTY_STRING);
+	}
+
+	public void setType(String type) {
+		this.type = Objects.requireNonNullElse(type, EMPTY_STRING);
+	}
 }
