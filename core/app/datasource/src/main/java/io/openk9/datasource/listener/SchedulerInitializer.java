@@ -83,7 +83,7 @@ public class SchedulerInitializer {
 
 		return tenantUni.flatMap(tenant -> schedulerInitializerActor
 			.scheduleDataSource(
-				datasource.getTenant(),
+				tenant,
 				datasource.getId(),
 				datasource.getSchedulable(),
 				datasource.getScheduling(),
