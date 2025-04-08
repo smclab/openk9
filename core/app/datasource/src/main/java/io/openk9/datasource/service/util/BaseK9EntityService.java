@@ -42,7 +42,6 @@ import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
-import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
@@ -74,8 +73,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected Validator validator;
 	@Inject
 	Logger logger;
-	@Inject
-	ActorSystemProvider actorSystemProvider;
+
 	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();
 
@@ -483,9 +481,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.invoke(e -> processor.onNext(
 				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
 			.onItem().ifNull()
-			.failWith(() -> new IllegalStateException("entity with id: " + entityId
-													  + " for service: " +
-													  getClass().getSimpleName() + " not found"));
+			.failWith(() -> new IllegalStateException(
+				"entity with id: " + entityId
+				+ " for service: " + getClass().getSimpleName()
+				+ " not found"
+			));
 
 	}
 
@@ -512,7 +512,7 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.transformToUni((item) -> update(session, item.getId(), dto))
 			.onFailure()
 			.recoverWithUni(() -> {
-					var entity = mapper.create(dto);
+				var entity = mapper.create(dto);
 
 				return persist(session, entity)
 						.map(v -> entity)
