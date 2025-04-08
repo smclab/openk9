@@ -46,6 +46,7 @@ import io.openk9.datasource.model.dto.request.CreateDatasourceDTO;
 import io.openk9.datasource.model.dto.request.UpdateDatasourceDTO;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.quarkus.vertx.ConsumeEvent;
@@ -97,7 +98,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.transformToUni(pluginDriver -> {
 				Datasource dataSource = mapper.create(datasourceDTO);
 				dataSource.setPluginDriver(pluginDriver);
-				return persist(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
+				return create(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
 			}));
 
 	}
@@ -138,7 +139,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 						return dataIndexService.create(session, datasourceId, dataIndexDTO)
 							.invoke(datasource::setDataIndex)
-							.flatMap(ignored -> persist(session, datasource));
+							.flatMap(ignored -> create(session, datasource));
 						}
 					)
 
@@ -508,7 +509,10 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					DataIndex.class, updateConnectionDTO.getDataIndexId()))
 				.invoke(datasource::setDataIndex)
 				.map(__ -> mapper.update(datasource, updateConnectionDTO))
-				.chain(newState -> merge(s, newState)));
+				.chain(newState -> merge(s, newState)))
+			.invoke(datasource -> getProcessor().onNext(K9EntityEvent.of(
+				K9EntityEvent.EventType.UPDATE, datasource)
+			));
 	}
 
 	@ConsumeEvent(UPDATE_DATASOURCE)
@@ -535,7 +539,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 						datasource.setDataIndex(newDataIndex);
 					}
 
-					return s.persist(datasource);
+					return s.persist(datasource)
+						.invoke(unused -> getProcessor().onNext(K9EntityEvent.of(
+							K9EntityEvent.EventType.UPDATE, datasource)));
 				})
 		);
 	}
