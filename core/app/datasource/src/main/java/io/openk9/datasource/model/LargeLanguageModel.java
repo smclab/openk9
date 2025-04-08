@@ -19,7 +19,10 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
@@ -30,6 +33,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "large_language_model")
@@ -59,6 +64,19 @@ public class LargeLanguageModel extends K9Entity {
 	@Column(name = "json_config")
 	private String jsonConfig;
 
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "type", column = @Column(name = "type")),
+		@AttributeOverride(name = "model", column = @Column(name = "model"))
+	})
+	private ModelType modelType;
+
+	@Column(name = "context_window")
+	private Integer contextWindow;
+
+	@Column(name = "retrieve_citations")
+	private Boolean retrieveCitations;
+
 	@OneToOne(mappedBy = "largeLanguageModel")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
@@ -71,5 +89,8 @@ public class LargeLanguageModel extends K9Entity {
 		this.enabled = tenantBinding != null;
 	}
 
+	public void setModelType(ModelType modelType) {
+		this.modelType = Objects.requireNonNullElse(modelType, new ModelType());
+	}
 
 }

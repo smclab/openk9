@@ -391,7 +391,7 @@ public class EmbeddingModelGraphqlTest {
 	}
 
 	@Test
-	void should_patched_embedding_model_two() throws ExecutionException, InterruptedException {
+	void should_patch_embedding_model_two() throws ExecutionException, InterruptedException {
 
 		var embeddingModelTwo = getEmbeddingModelTwo();
 
