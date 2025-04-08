@@ -71,19 +71,9 @@ public class SchedulerInitializer {
 	@ConsumeEvent(UPDATE_SCHEDULER)
 	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
 
-		// refresh the entity if the tenant is not evaluated
-		Uni<String> tenantUni = null;
-		if (datasource.getTenant() == null) {
-			tenantUni = sessionFactory.withSession(session -> session.refresh(datasource))
-				.map(ignored -> datasource.getTenant());
-		}
-		else {
-			tenantUni = Uni.createFrom().item(datasource.getTenant());
-		}
-
-		return tenantUni.flatMap(tenant -> schedulerInitializerActor
+		return schedulerInitializerActor
 			.scheduleDataSource(
-				tenant,
+				datasource.getTenant(),
 				datasource.getId(),
 				datasource.getSchedulable(),
 				datasource.getScheduling(),
@@ -92,9 +82,7 @@ public class SchedulerInitializer {
 				datasource.getPurgeable(),
 				datasource.getPurging(),
 				datasource.getPurgeMaxAge()
-			)
-		);
-
+			);
 	}
 
 	@ConsumeEvent(DELETE_SCHEDULER)
