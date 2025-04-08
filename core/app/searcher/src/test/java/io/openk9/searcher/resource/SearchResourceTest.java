@@ -17,14 +17,15 @@
 
 package io.openk9.searcher.resource;
 
+import java.util.List;
+import java.util.Map;
+
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.jboss.resteasy.reactive.server.jaxrs.HttpHeadersImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
 
 class SearchResourceTest {
 
@@ -109,6 +110,23 @@ class SearchResourceTest {
 		var valueList = (List) file.get("tags");
 		var item = valueList.iterator().next();
 		Assertions.assertInstanceOf(String.class, item);
+
+	}
+
+	@Test
+	void should_get_rawToken() {
+		var s = "Bearer is-a-bearer-token";
+
+		var headersMap = Map.of(
+			"Authorization", s,
+			"anotherHeader", "anotherValue"
+		);
+
+		var headers = new HttpHeadersImpl(headersMap.entrySet());
+
+		var rawToken = SearchResource.getRawToken(headers);
+
+		Assertions.assertEquals("is-a-bearer-token", rawToken);
 
 	}
 

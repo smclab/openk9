@@ -300,6 +300,21 @@ public class SearchResource {
 
 	}
 
+	protected static String getRawToken(HttpHeaders headers) {
+		String rawToken = "";
+
+		var authorization = headers.getRequestHeader("Authorization");
+
+		if (!authorization.isEmpty()) {
+			var value = authorization.getFirst();
+			if (value != null && !value.isEmpty()) {
+				rawToken = value.trim().substring(7);
+			}
+		}
+
+		return rawToken;
+	}
+
 	private static Iterable<Integer> toList(Integer[] pos) {
 		if (pos == null || pos.length == 0) {
 			return List.of();
@@ -333,21 +348,6 @@ public class SearchResource {
 		}
 
 		return qastBuilder;
-	}
-
-	private static String getRawToken(HttpHeaders headers) {
-		String rawToken = "";
-
-		var authorization = headers.getRequestHeader("Authorization");
-
-		if (!authorization.isEmpty()) {
-			var value = authorization.getFirst();
-			if (value != null && !value.isEmpty()) {
-				rawToken = value.trim().substring(0, 7);
-			}
-		}
-
-		return rawToken;
 	}
 
 	private QueryAnalysisRequest getQueryAnalysisRequest(
