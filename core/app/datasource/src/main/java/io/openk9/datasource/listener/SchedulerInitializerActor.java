@@ -17,19 +17,20 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.actor.ActorSystemProvider;
-import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.Vertx;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.function.Supplier;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import io.openk9.datasource.actor.ActorSystemProvider;
+
+import io.quarkus.vertx.VertxContextSupport;
+import io.smallrye.mutiny.Uni;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.cluster.typed.ClusterSingleton;
 import org.apache.pekko.cluster.typed.SingletonActor;
 import org.jboss.logging.Logger;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.function.Supplier;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {
@@ -37,8 +38,7 @@ public class SchedulerInitializerActor {
 	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
 	@Inject
 	ActorSystemProvider actorSystemProvider;
-	@Inject
-	Vertx vertx;
+
 	private List<JobScheduler.ScheduleDatasource> schedulatedJobs;
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
@@ -72,10 +72,7 @@ public class SchedulerInitializerActor {
 
 	private Uni<Void> getScheduleRef(Supplier<JobScheduler.Command> commandSupplier) {
 
-		io.vertx.core.Vertx delegate = vertx.getDelegate();
-
-		return Uni.createFrom().completionStage(delegate
-			.<Void>executeBlocking(event -> {
+		return VertxContextSupport.executeBlocking(() -> {
 				try {
 					ActorRef<JobScheduler.Command> actorRef = ClusterSingleton
 						.get(actorSystemProvider.getActorSystem())
@@ -89,19 +86,21 @@ public class SchedulerInitializerActor {
 								"job-scheduler"
 							)
 						);
+
 					JobScheduler.Command command = commandSupplier.get();
+
 					if (command != null) {
 						actorRef.tell(command);
 					}
-					event.complete(null);
 				}
 				catch (Exception e) {
 					log.error("error getting job-scheduler", e);
-					event.fail(e);
+
+					throw new JobSchedulerException();
 				}
-			})
-			.toCompletionStage()
-		);
+
+			return null;
+		});
 
 	}
 }
