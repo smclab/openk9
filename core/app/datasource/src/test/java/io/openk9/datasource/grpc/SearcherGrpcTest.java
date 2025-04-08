@@ -21,6 +21,7 @@ import com.google.protobuf.Struct;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
+import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.LargeLanguageModel;
@@ -28,9 +29,9 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ModelTypeDTO;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
-import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
@@ -40,13 +41,11 @@ import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.tenantmanager.grpc.TenantManager;
-import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -54,25 +53,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 
-import static io.openk9.datasource.Initializer.EMBEDDING_MODEL_DEFAULT_PRIMARY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.times;
 
 @QuarkusTest
 public class SearcherGrpcTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SearcherGrpcTest - ";
+
+	private static final Bucket BUCKET = new Bucket();
 	private static final String BUCKET_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
+	private static final String BUCKET_TWO = ENTITY_NAME_PREFIX + "Bucket 2";
 	private static final int CHUNK_WINDOW = 1500;
-	public static final String PROMPT_TEST = "Test prompt";
-	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
-	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
-	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
+	private static final int CONTEXT_WINDOW_VALUE = 1300;
 	private static final String EMBEDDING_MODEL_ONE = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
@@ -98,19 +92,21 @@ public class SearcherGrpcTest {
 		"    }\n" +
 		"  ]\n" +
 		"}";
-	private static final String EM_MODEL = "model";
-	private static final String EM_TYPE = "type";
 	private static final int EM_VECTOR_SIZE = 1330;
-	private static final Bucket BUCKET = new Bucket();
-	private static final Bucket BUCKET_RETRIEVE_TYPE_NULL = new Bucket();
-	private static final String BLANK_STRING = "";
+	private static final LargeLanguageModel LARGE_LANGUAGE_MODEL = new LargeLanguageModel();
+	private static final String LLM_ONE_NAME = ENTITY_NAME_PREFIX + "Large language model 1 ";
 	private static final String LLM_API_KEY = "api_key";
 	private static final String LLM_API_URL = "api_url";
 	private static final String LLM_JSON_CONFIG = "{testField: \"test\"}";
+	private static final String MODEL = "model";
+	private static final String PROMPT_TEST = "Test prompt";
+	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
+	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
+	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
 	private static final boolean REFORMULATE = true;
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(LLM_JSON_CONFIG);
 	private static final String SCHEMA_NAME = "public";
-	private static final LargeLanguageModel LARGE_LANGUAGE_MODEL = new LargeLanguageModel();
+	private static final String TYPE = "type";
 	private static final String VIRTUAL_HOST = "test.openk9.local";
 	private static final Logger log = Logger.getLogger(SearcherGrpcTest.class);
 
@@ -131,7 +127,7 @@ public class SearcherGrpcTest {
 	@Inject
 	EmbeddingModelService embeddingModelService;
 
-	@InjectMock
+	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
 	@Inject
@@ -140,22 +136,24 @@ public class SearcherGrpcTest {
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	@InjectMock
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
-
 	@BeforeEach
 	void setup() {
 		// EmbeddingModel
 		createEmbeddingModelOne();
-		getEmbeddingModelOne();
 		enableEmbeddingModelOne();
 
-		// RAGConfiguration
+		// Bucket
 		createBucketOne();
+		enableBucket(getBucketOne());
+
+		// RAGConfiguration
 		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT);
 		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_TOOL);
 		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SEARCH);
+
+		// LargeLanguageModel
+		createLargeLanguageModelOne();
+		enableLargeLanguageModelOne();
 
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
@@ -165,107 +163,24 @@ public class SearcherGrpcTest {
 	@Test
 	@RunOnVertxContext
 	void should_get_llm_configurations(UniAsserter asserter) {
-
-		BDDMockito.given(tenantManager.findTenant(notNull()))
-			.willReturn(Uni.createFrom().item(
-				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
-		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
-			.willReturn(Uni.createFrom().item(
-				new BucketLargeLanguageModel(BUCKET, LARGE_LANGUAGE_MODEL)));
-
 		asserter.assertThat(
 			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
 				.setVirtualHost(VIRTUAL_HOST)
 				.build()
 			),
 			response -> {
-				BDDMockito.then(largeLanguageModelService)
-					.should(times(1))
-					.fetchCurrentLLMAndBucket(anyString());
 
 				Assertions.assertEquals(LLM_API_KEY, response.getApiKey());
 				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
 				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 				Assertions.assertEquals(
-					Bucket.RetrieveType.HYBRID.name(), response.getRetrieveType());
+					Bucket.RetrieveType.MATCH.name(), response.getRetrieveType());
+				Assertions.assertEquals(TYPE, response.getModelType().getType());
+				Assertions.assertEquals(MODEL, response.getModelType().getModel());
+				Assertions.assertEquals(CONTEXT_WINDOW_VALUE, response.getContextWindow());
+				assertTrue(response.getRetrieveCitations());
 			}
 		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_get_llm_configurations_retrieve_type_null(UniAsserter asserter) {
-
-		BDDMockito.given(tenantManager.findTenant(notNull()))
-			.willReturn(Uni.createFrom().item(
-				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
-		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
-			.willReturn(Uni.createFrom().item(
-				new BucketLargeLanguageModel(BUCKET_RETRIEVE_TYPE_NULL, LARGE_LANGUAGE_MODEL)));
-
-		asserter.assertThat(
-			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
-				.setVirtualHost(VIRTUAL_HOST)
-				.build()
-			),
-			response -> {
-				BDDMockito.then(largeLanguageModelService)
-					.should(times(1))
-					.fetchCurrentLLMAndBucket(anyString());
-
-				log.info(String.format("getLLMConfigurations response: %s", response));
-
-				Assertions.assertEquals(LLM_API_KEY, response.getApiKey());
-				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
-				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
-				Assertions.assertEquals(BLANK_STRING, response.getRetrieveType());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_on_get_llm_configurations(UniAsserter asserter) {
-
-		BDDMockito.given(tenantManager.findTenant(notNull()))
-			.willReturn(Uni.createFrom().item(
-				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
-		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
-			.willReturn(Uni.createFrom().failure(InternalServiceMockException::new));
-
-		asserter.assertFailedWith(
-			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
-				.setVirtualHost(VIRTUAL_HOST)
-				.build()
-			),
-				throwable -> failureAssertions(throwable)
-			);
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_fail_on_get_llm_configurations_llm_null(UniAsserter asserter) {
-
-		BDDMockito.given(tenantManager.findTenant(notNull()))
-			.willReturn(Uni.createFrom().item(
-				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME).build()));
-		BDDMockito.given(largeLanguageModelService.fetchCurrentLLMAndBucket(anyString()))
-			.willReturn(Uni.createFrom().item(
-				new BucketLargeLanguageModel(BUCKET, null)));
-
-		asserter.assertFailedWith(
-			() -> searcher.getLLMConfigurations(GetLLMConfigurationsRequest.newBuilder()
-				.setVirtualHost(VIRTUAL_HOST)
-				.build()
-			),
-			throwable -> {
-				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-				var exception = (StatusRuntimeException) throwable;
-
-				Assertions.assertEquals(
-					Status.Code.NOT_FOUND, exception.getStatus().getCode());
-			});
 	}
 
 	@Test
@@ -286,8 +201,8 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(
 					StructUtils.fromJson(EM_JSON_CONFIG),
 					response.getJsonConfig());
-				assertEquals(EM_TYPE, response.getModelType().getType());
-				assertEquals(EM_MODEL, response.getModelType().getModel());
+				assertEquals(TYPE, response.getModelType().getType());
+				assertEquals(MODEL, response.getModelType().getModel());
 			}
 		);
 	}
@@ -295,6 +210,27 @@ public class SearcherGrpcTest {
 	@Test
 	@RunOnVertxContext
 	void should_fail_trying_get_missing_rag_configurations(UniAsserter asserter) {
+
+		// create a Bucket without any RAGConfigurations and enables it
+		asserter.execute(() ->
+			sessionFactory.withTransaction(session ->
+				bucketService.create(
+					session,
+					BucketDTO.builder()
+						.name(BUCKET_TWO)
+						.refreshOnSuggestionCategory(false)
+						.refreshOnTab(false)
+						.refreshOnDate(false)
+						.refreshOnQuery(false)
+						.retrieveType(Bucket.RetrieveType.MATCH)
+						.build()
+				)
+				.flatMap(bucketTwo ->
+					bucketService.enableTenant(session, bucketTwo.getId())
+				)
+			)
+		);
+
 		asserter.assertFailedWith(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
@@ -396,6 +332,7 @@ public class SearcherGrpcTest {
 	@Test
 	@RunOnVertxContext
 	void should_get_rag_configurations(UniAsserter asserter) {
+
 		// enable bucketOne
 		asserter.execute(() ->
 			sessionFactory.withTransaction(session ->
@@ -485,6 +422,10 @@ public class SearcherGrpcTest {
 		enableEmbeddingModelDefaultPrimary();
 		removeEmbeddingModelOne();
 
+		// LargeLanguageModel
+		enableLargeLanguageModelDefaultPrimary();
+		removeLargeLanguageModelOne();
+
 		// enable default bucket
 		enableBucket(getBucketDefault());
 
@@ -545,8 +486,8 @@ public class SearcherGrpcTest {
 			.modelType(
 				ModelTypeDTO
 					.builder()
-					.type(EM_TYPE)
-					.model(EM_MODEL)
+					.type(TYPE)
+					.model(MODEL)
 					.build()
 			)
 			.build();
@@ -556,6 +497,31 @@ public class SearcherGrpcTest {
 		)
 		.await()
 		.indefinitely();
+	}
+
+	private LargeLanguageModel createLargeLanguageModelOne() {
+		var dto = LargeLanguageModelDTO
+			.builder()
+			.name(LLM_ONE_NAME)
+			.apiUrl(LLM_API_URL)
+			.apiKey(LLM_API_KEY)
+			.jsonConfig(LLM_JSON_CONFIG)
+			.contextWindow(CONTEXT_WINDOW_VALUE)
+			.retrieveCitations(true)
+			.modelType(
+				ModelTypeDTO
+					.builder()
+					.type(TYPE)
+					.model(MODEL)
+					.build()
+			)
+			.build();
+
+		return sessionFactory.withTransaction(
+				session -> largeLanguageModelService.create(session, dto)
+			)
+			.await()
+			.indefinitely();
 	}
 
 	private void createRAGConfiguration(String name, RAGType type) {
@@ -606,6 +572,26 @@ public class SearcherGrpcTest {
 		.indefinitely();
 	}
 
+	private void enableLargeLanguageModelDefaultPrimary() {
+		var languageModel = getLargeLanguageModelDefaultPrimary();
+
+		sessionFactory.withTransaction(
+				session -> largeLanguageModelService.enable(session, languageModel.getId())
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void enableLargeLanguageModelOne() {
+		var languageModel = getLargeLanguageModelOne();
+
+		sessionFactory.withTransaction(
+				session -> largeLanguageModelService.enable(session, languageModel.getId())
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private Bucket getBucketDefault() {
 		return sessionFactory.withTransaction(
 				session ->
@@ -628,7 +614,8 @@ public class SearcherGrpcTest {
 
 	private EmbeddingModel getEmbeddingModelDefaultPrimary() {
 		return sessionFactory.withTransaction(
-				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_DEFAULT_PRIMARY)
+				s ->
+					embeddingModelService.findByName(s, Initializer.EMBEDDING_MODEL_DEFAULT_PRIMARY)
 			)
 			.await()
 			.indefinitely();
@@ -637,6 +624,23 @@ public class SearcherGrpcTest {
 	private EmbeddingModel getEmbeddingModelOne() {
 		return sessionFactory.withTransaction(
 				s -> embeddingModelService.findByName(s, EMBEDDING_MODEL_ONE)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private LargeLanguageModel getLargeLanguageModelDefaultPrimary() {
+		return sessionFactory.withTransaction(
+				s ->
+					largeLanguageModelService.findByName(s, Initializer.LLM_DEFAULT_PRIMARY)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private LargeLanguageModel getLargeLanguageModelOne() {
+		return sessionFactory.withTransaction(
+				s -> largeLanguageModelService.findByName(s, LLM_ONE_NAME)
 			)
 			.await()
 			.indefinitely();
@@ -672,6 +676,18 @@ public class SearcherGrpcTest {
 		)
 		.await()
 		.indefinitely();
+	}
+
+	private LargeLanguageModel removeLargeLanguageModelOne() {
+		var largeLanguageModel = getLargeLanguageModelOne();
+
+		return sessionFactory.withTransaction(
+				SCHEMA_NAME,
+				(session, transaction) ->
+					largeLanguageModelService.deleteById(session, largeLanguageModel.getId())
+			)
+			.await()
+			.indefinitely();
 	}
 
 	private void removeRAGConfiguration(String name) {

@@ -553,7 +553,18 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
 						.setApiUrl(llm.getApiUrl())
-						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()))
+						.setContextWindow(llm.getContextWindow())
+						.setRetrieveCitations(llm.getRetrieveCitations());
+
+					if (llm.getModelType() != null) {
+
+						responseBuilder.setModelType(
+							ModelType.newBuilder()
+								.setType(llm.getModelType().getType())
+								.setModel(llm.getModelType().getModel())
+						);
+					}
 
 					if (llm.getApiKey() != null) {
 						responseBuilder.setApiKey(llm.getApiKey());

@@ -151,6 +151,9 @@ message GetLLMConfigurationsResponse {
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   string retrieveType = 4;
+  ModelType modelType = 5;
+  int32 contextWindow = 6;
+  bool retrieveCitations = 7;
 }
 
 message ModelType {
