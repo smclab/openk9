@@ -22,7 +22,7 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
-import io.openk9.datasource.model.dto.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;

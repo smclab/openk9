@@ -18,8 +18,8 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.model.LargeLanguageModel;
-import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
-import io.openk9.datasource.model.dto.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
+import io.openk9.datasource.model.dto.base.ModelTypeDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;

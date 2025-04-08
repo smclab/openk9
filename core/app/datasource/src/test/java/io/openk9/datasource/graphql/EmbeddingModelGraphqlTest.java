@@ -18,8 +18,8 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.EmbeddingModelDTO;
-import io.openk9.datasource.model.dto.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.ModelTypeDTO;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;

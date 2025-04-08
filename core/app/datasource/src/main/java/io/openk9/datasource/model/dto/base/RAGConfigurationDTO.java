@@ -15,26 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto;
+package io.openk9.datasource.model.dto.base;
 
-import jakarta.persistence.Embeddable;
+import io.openk9.datasource.model.RAGType;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.eclipse.microprofile.graphql.Description;
 
-@NoArgsConstructor
+@Data
 @SuperBuilder
-@Getter
-@Setter
-@Embeddable
-public class ModelTypeDTO {
-	@Description("It is the model type.")
+@NoArgsConstructor
+public class RAGConfigurationDTO extends K9EntityDTO {
+
+	private Integer chunkWindow;
+	private String prompt;
+	private String promptNoRag;
+	private String ragToolDescription;
+	private Boolean reformulate;
+	private String rephrasePrompt;
 	@NotNull
-	private String type;
-	@Description("It is the specific model.")
-	@NotNull
-	private String model;
+	private RAGType type;
 }

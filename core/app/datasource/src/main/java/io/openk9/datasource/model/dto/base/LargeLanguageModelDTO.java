@@ -17,13 +17,9 @@
 
 package io.openk9.datasource.model.dto.base;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
 import io.openk9.datasource.validation.json.Json;
 import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
-
-import io.openk9.datasource.validation.json.Json;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

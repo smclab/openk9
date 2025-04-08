@@ -18,7 +18,7 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.RAGConfiguration;
-import io.openk9.datasource.model.dto.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(

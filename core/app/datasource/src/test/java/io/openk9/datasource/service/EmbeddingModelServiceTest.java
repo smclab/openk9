@@ -20,7 +20,7 @@ package io.openk9.datasource.service;
 import java.io.IOException;
 
 import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ModelTypeDTO;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.EmbeddingComponentTemplate;
