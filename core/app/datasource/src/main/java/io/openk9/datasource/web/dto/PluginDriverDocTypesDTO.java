@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.web.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,17 +25,39 @@ import io.openk9.datasource.model.DocType;
 
 public record PluginDriverDocTypesDTO(List<PluginDriverDocType> docTypes) {
 
-	public static PluginDriverDocTypesDTO fromDocTypes(List<DocType> docTypes) {
+	public static PluginDriverDocTypesDTO join(PluginDriverDocTypesDTO... values) {
+		List<PluginDriverDocType> newList = new ArrayList<>();
+
+		for (PluginDriverDocTypesDTO value : values) {
+			newList.addAll(value.docTypes());
+		}
+
+		return new PluginDriverDocTypesDTO(newList);
+	}
+
+	public static PluginDriverDocTypesDTO selectedDocTypes(List<DocType> docTypes) {
 		return new PluginDriverDocTypesDTO(
 			docTypes.stream()
-				.map(PluginDriverDocType::fromDocType)
+				.map(PluginDriverDocType::selectedDocType)
 				.collect(Collectors.toList())
 		);
 	}
 
-	public record PluginDriverDocType(long docTypeId, String name) {
-		private static PluginDriverDocType fromDocType(DocType docType) {
-			return new PluginDriverDocType(docType.getId(), docType.getName());
+	public static PluginDriverDocTypesDTO unselectedDocTypes(List<DocType> docTypes) {
+		return new PluginDriverDocTypesDTO(
+			docTypes.stream()
+				.map(PluginDriverDocType::unselectedDocType)
+				.collect(Collectors.toList())
+		);
+	}
+
+	public record PluginDriverDocType(long docTypeId, String name, boolean selected) {
+		private static PluginDriverDocType selectedDocType(DocType docType) {
+			return new PluginDriverDocType(docType.getId(), docType.getName(), true);
+		}
+
+		private static PluginDriverDocType unselectedDocType(DocType docType) {
+			return new PluginDriverDocType(docType.getId(), docType.getName(), false);
 		}
 	}
 

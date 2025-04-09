@@ -20,9 +20,12 @@ package io.openk9.datasource.service;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -30,6 +33,19 @@ public class PluginDriverServiceTest {
 
 	@Inject
 	PluginDriverService pluginDriverService;
+
+	@Inject
+	DocTypeService docTypeService;
+
+	@BeforeEach
+	void setup() {
+
+		docTypeService.create(
+			DocTypeDTO.builder()
+				.name("unselected")
+				.build()
+		).await().indefinitely();
+	}
 
 	@Test
 	void should_return_a_PluginDriverDocTypesDTO() {
@@ -46,14 +62,32 @@ public class PluginDriverServiceTest {
 			pluginDriverDocTypesDTO.docTypes()
 				.stream()
 				.anyMatch(pluginDriverDocType ->
-					pluginDriverDocType.name().equals("default"))
+					pluginDriverDocType.name().equals("default") && pluginDriverDocType.selected())
 		);
 
 		Assertions.assertTrue(
 			pluginDriverDocTypesDTO.docTypes()
 				.stream()
 				.anyMatch(pluginDriverDocType ->
-					pluginDriverDocType.name().equals("sample"))
+					pluginDriverDocType.name().equals("sample") && pluginDriverDocType.selected())
 		);
+
+		Assertions.assertTrue(
+			pluginDriverDocTypesDTO.docTypes()
+				.stream()
+				.anyMatch(pluginDriverDocType ->
+					pluginDriverDocType.name().equals("unselected")
+					&& !pluginDriverDocType.selected()
+				)
+		);
+	}
+
+	@AfterEach
+	void tearDown() {
+
+		docTypeService.findByName("unselected")
+			.flatMap(docType -> docTypeService.deleteById(docType.getId()))
+			.await().indefinitely();
+
 	}
 }

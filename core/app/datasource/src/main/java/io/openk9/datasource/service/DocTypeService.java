@@ -216,7 +216,15 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		});
 	}
 
-	public Uni<List<DocType>> getDocTypeListByNames(
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
+		Mutiny.Session session, Collection<String> docTypeNames) {
+
+		return getDocTypesInDocTypeNames(
+			session, docTypeNames.toArray(String[]::new))
+			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
+	}
+
+	public Uni<List<DocType>> getDocTypesInDocTypeNames(
 		Mutiny.Session session, String[] docTypeNames) {
 		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
@@ -263,12 +271,25 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				session, dts));
 	}
 
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
-		Mutiny.Session session, Collection<String> docTypeNames) {
+	public Uni<List<DocType>> getDocTypesNotInDocTypeNames(
+		Mutiny.Session session, String[] docTypeNames) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-		return getDocTypeListByNames(
-			session, docTypeNames.toArray(String[]::new))
-			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
+		Class<DocType> entityClass = getEntityClass();
+
+		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
+
+		Root<DocType> from = query.from(entityClass);
+
+		query.where(
+			from.get(DocType_.name)
+				.in(List.of(docTypeNames))
+				.not()
+		);
+
+		return session
+			.createQuery(query)
+			.getResultList();
 	}
 
 	@Override
