@@ -31,7 +31,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
@@ -162,35 +161,8 @@ public class DataIndex extends K9Entity {
 			Objects.requireNonNullElse(embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
 	}
 
-	@PostLoad
 	protected void initIndexName() throws UnknownTenantException {
-		String tenantId = getTenant();
-
-		// This is a workaround needed when a new DataIndex is being created.
-		// The tenant is not identified, likely because the entity has not
-		// been persisted yet. Therefore, it is obtained from an entity that
-		// is already in the persistence context, typically, the first
-		// DocType associated with the new DataIndex, or alternatively,
-		// the Datasource associated with it.
-		if (tenantId == null) {
-			var iterator = docTypes.iterator();
-			if (iterator.hasNext()) {
-				var docType = iterator.next();
-				tenantId = docType.getTenant();
-			}
-			else {
-				var ds = getDatasource();
-				if (ds != null) {
-					tenantId = ds.getTenant();
-				}
-			}
-			if (tenantId == null) {
-				throw new UnknownTenantException(
-					String.format("Cannot identify the tenant for DataIndex: %s", getName()));
-			}
-		}
-
-		this.indexName = getIndexName(tenantId, this);
+		this.indexName = getIndexName(getTenant(), this);
 	}
 
 }

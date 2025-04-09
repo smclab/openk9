@@ -204,10 +204,6 @@
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>text-embedding</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>tenant-manager-client-grpc</artifactId>
-    </dependency>
 
     <!-- gRPC consumes // -->
 

@@ -17,9 +17,14 @@
 
 package io.openk9.datasource.searcher.parser;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,15 +32,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.opensearch.index.query.BoolQueryBuilder;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 @Data
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @Builder
 public class ParserContext {
+	private String tenantId;
 	private List<ParserSearchToken> tokenTypeGroup;
 	private BoolQueryBuilder mutableQuery;
 	private Bucket currentTenant;

@@ -537,9 +537,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
-		return getTenant(request.getVirtualHost())
-			.flatMap(tenant -> largeLanguageModelService
-				.fetchCurrentLLMAndBucket(tenant.schemaName())
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
+			.flatMap(tenantResponse -> largeLanguageModelService
+				.fetchCurrentLLMAndBucket(tenantResponse.schemaName())
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
@@ -582,7 +582,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
 		GetEmbeddingModelConfigurationsRequest request) {
 
-		return getTenant(request.getVirtualHost())
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
 			.flatMap(tenant -> embeddingModelService
 				.fetchCurrent(tenant.schemaName())
 				.map(embeddingModel -> {

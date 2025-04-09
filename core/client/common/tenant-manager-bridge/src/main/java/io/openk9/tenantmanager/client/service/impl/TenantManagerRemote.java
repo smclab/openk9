@@ -17,16 +17,24 @@
 
 package io.openk9.tenantmanager.client.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.api.tenantmanager.TenantManager;
+import io.openk9.tenantmanager.grpc.TenantListResponse;
 import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
+
+import com.google.protobuf.Empty;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.runtime.Startup;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Startup
 public class TenantManagerRemote implements TenantManager {
+
 	@Override
 	public Uni<Tenant> getTenantByVirtualHost(String virtualHost) {
 		return tenantManager.findTenant(
@@ -40,6 +48,29 @@ public class TenantManagerRemote implements TenantManager {
 				response.getClientSecret(),
 				response.getRealmName())
 			);
+	}
+
+	@Override
+	public Uni<List<Tenant>> getTenantList() {
+
+		return tenantManager.findTenantList(Empty.newBuilder().build())
+			.map(TenantListResponse::getTenantResponseList)
+			.map(tenantResponses -> {
+				List<Tenant> tenants = new ArrayList<>();
+				for (TenantResponse tenantResponse : tenantResponses) {
+					var tenant = new Tenant(
+						tenantResponse.getVirtualHost(),
+						tenantResponse.getSchemaName(),
+						tenantResponse.getClientId(),
+						tenantResponse.getClientSecret(),
+						tenantResponse.getRealmName()
+					);
+
+					tenants.add(tenant);
+				}
+
+				return tenants;
+			});
 	}
 
 	@GrpcClient("tenantmanager")

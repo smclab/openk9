@@ -17,8 +17,23 @@
 
 package io.openk9.datasource.searcher;
 
-import com.google.protobuf.ByteString;
-import io.openk9.api.tenantmanager.TenantManager;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -44,19 +59,11 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
+
+import com.google.protobuf.ByteString;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Fetch;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.common.xcontent.XContentType;
@@ -66,13 +73,6 @@ import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public abstract class BaseSearchService {
 
@@ -315,16 +315,14 @@ public abstract class BaseSearchService {
 
 	}
 
-	protected Uni<TenantManager.Tenant> getTenant(String virtualHost) {
-		return tenantRegistry.getTenantByVirtualHost(virtualHost);
-	}
 
 	protected Uni<Bucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		return getTenant(virtualHost)
-			.flatMap(tenant -> sf
-				.withTransaction(tenant.schemaName(), (s, t) -> {
+		return tenantRegistry.getTenantByVirtualHost(virtualHost)
+			.flatMap(tenantResponse -> sf
+				.withTransaction(
+					tenantResponse.schemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -339,7 +337,6 @@ public abstract class BaseSearchService {
 						.createQuery(criteriaQuery)
 						.getSingleResultOrNull();
 				}));
-
 
 	}
 
