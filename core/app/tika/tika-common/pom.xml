@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>tika</artifactId>
 		<groupId>io.openk9.app.tika</groupId>
-		<version>2.0.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -50,23 +50,11 @@
 		<dependency>
 			<groupId>io.quarkiverse.tika</groupId>
 			<artifactId>quarkus-tika</artifactId>
-			<version>1.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-arc</artifactId>
+			<version>2.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-smallrye-openapi</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-reactive</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-reactive-jackson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -80,15 +68,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
+		<!-- Jsoup Dependency -->
 		<dependency>
-			<groupId>io.quarkiverse.file-vault</groupId>
-			<artifactId>quarkus-file-vault</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkiverse.file-vault</groupId>
-			<artifactId>quarkus-file-vault-config-source</artifactId>
-			<version>2.0.0</version>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.15.3</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -24,12 +24,12 @@ import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
 import java.util.ArrayList;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class KnnQueryParser implements QueryParser {
@@ -72,6 +72,7 @@ public class KnnQueryParser implements QueryParser {
 		}
 
 		return Uni.join().all(knnQueryUnis)
+			.usingConcurrencyOf(1)
 			.andCollectFailures()
 			.invoke(knnQueries -> {
 

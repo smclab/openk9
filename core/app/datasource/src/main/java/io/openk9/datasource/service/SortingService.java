@@ -1,4 +1,25 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.service;
+
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
@@ -6,17 +27,13 @@ import io.openk9.datasource.mapper.SortingMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Sorting_;
-import io.openk9.datasource.model.dto.SortingDTO;
-import io.openk9.datasource.model.dto.TranslationDTO;
-import io.openk9.datasource.model.dto.TranslationKeyDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
+import io.openk9.datasource.model.dto.base.TranslationDTO;
+import io.openk9.datasource.model.dto.base.TranslationKeyDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.Set;
+import io.smallrye.mutiny.Uni;
 
 ;
 

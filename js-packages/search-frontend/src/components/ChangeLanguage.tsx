@@ -54,10 +54,10 @@ export function ChangeLanguage({
     control: (provided: any, state: any) => ({
       ...provided,
       borderRadius: "50px",
-      backgroundColor: "#FAFAFA",
+      backgroundColor: "white",
       border:
         !state.isFocused || !state.isHovered
-          ? "1px solid #FAFAFA"
+          ? "1px solid white"
           : "1px solid var(--openk9-embeddable-search--active-color)",
       boxShadow: "0 0 0 1px var(--openk9-embeddable-search--active-color)",
       ":hover": {
@@ -86,17 +86,17 @@ export function ChangeLanguage({
     }),
   };
 
-  const defaultValue= {
+  const defaultValue = {
     value: "",
     name: "Select Language",
-    icon: <GloboSvg/>,
-}
-const languageElement= languages?.map((language) => ({
-  value: language.value,
-  name: language.name,
-  icon: <GloboSvg />,
-}));
-  languageElement?.unshift(defaultValue)
+    icon: <GloboSvg />,
+  };
+  const languageElement = languages?.map((language) => ({
+    value: language.value,
+    name: language.name,
+    icon: <GloboSvg />,
+  }));
+  languageElement?.unshift(defaultValue as any);
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>

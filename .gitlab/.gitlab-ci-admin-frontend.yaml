@@ -1,52 +1,130 @@
-Build Latest Admin Ui Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 0
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - main
-    changes:
-      - js-packages/admin-ui/**/*
-      - .gitlab/.gitlab-ci-admin-frontend.yml
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t openk9-admin-ui:latest -f js-packages/admin-ui/Dockerfile .
-    - docker tag openk9-admin-ui:latest $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
-    - docker push $CI_REGISTRY_NAME/openk9/openk9-admin-ui:latest
+################################################################################
+#                                   STAGES                                     #
+################################################################################
 
+stages:
+  - build
+  - build-verifier
+  - container-scanning
+  - dependency-check
+  - restart
+  - publish
 
-Build Tagged Admin Ui Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - tags
-    changes:
-      - js-packages/admin-ui/**/*
-  except:
-    - schedules
-  before_script:
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+
+################################################################################
+#                                    JOBS                                       #
+################################################################################
+
+#################
+# Fetch Version #
+#################
+Fetch version:
+  stage: build
+  image: node:16-alpine
   script:
-    - docker build -t openk9-admin-ui:${CI_COMMIT_REF_NAME} -f js-packages/admin-ui/Dockerfile .
-    - docker tag openk9-admin-ui:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/openk9-admin-ui:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9openk9-admin-ui:${CI_COMMIT_REF_NAME}
+    - cd js-packages/admin-ui
+    - export VERSION=$(node -p "require('./package.json').version")
+    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
+  artifacts:
+    paths:
+      - version.env
+    expire_in: 1 day
+
+######################## BUILD Admin FRONTEND ########################
+Build Admin Frontend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+    - job: Fetch version
+      artifacts: true
+  script:
+    # Carica la variabile VERSION dal file artifact version.env
+    - source $CI_PROJECT_DIR/version.env
+    - echo "=== Building Admin UI with VERSION=$VERSION ==="
+    - mkdir -p /kaniko/.docker
+    # Configurazione credenziali Docker in /kaniko/.docker/config.json
+    - |
+      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+      > /kaniko/.docker/config.json
+
+    - echo "=== Build e Push dell'immagine con Kaniko ==="
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
+        --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/admin-ui/**/*
+
+######################## BUILD VERIFIER ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:14
+  script:
+    - cd js-packages/admin-ui
+    - yarn install
+    - yarn build
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - js-packages/admin-ui/**/*
+
+######################## CONTAINER SCANNING ########################
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  script:
+    - source version.env
+    - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
+    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+######################## TRIGGER RESTART ########################
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for admin Frontend"
+    - |
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-admin-frontend" \
+        -F "ref=main" \
+        "${RESTART_TRIGGER_URL}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+####################### PUBLISH Admin FRONTEND #######################
+Publish Admin Frontend:
+  stage: publish
+  image: node:18
+  script:
+    - cd js-packages/admin-ui
+    - pwd
+    - whoami
+    - yarn install
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+    - npm publish --access public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+
+####################### DEPENDENCY CHECK #######################
+Dependency Check Admin UI:
+  stage: dependency-check
+  extends: .dependency_check_frontend_template
+  allow_failure: true
+  script:
+    - cd js-packages/admin-ui
+    - /analyzer run

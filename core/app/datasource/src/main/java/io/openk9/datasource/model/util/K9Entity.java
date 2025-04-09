@@ -19,6 +19,11 @@ package io.openk9.datasource.model.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.common.graphql.util.relay.GraphqlId;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +31,13 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.OracleDialect;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 @Getter
@@ -42,12 +46,17 @@ import javax.persistence.MappedSuperclass;
 @RequiredArgsConstructor
 public abstract class K9Entity implements GraphqlId {
 
-
-	@Type(type = "io.openk9.datasource.type.TenantUserType")
-	// workaround to get the UserType valuated
-	@Column(name = "id", insertable = false, updatable = false)
-	@JsonIgnore
-	private String tenant;
+	@jakarta.persistence.Id
+	@GeneratedValue(
+		strategy = GenerationType.SEQUENCE,
+		generator = "hibernate_sequence"
+	)
+	@SequenceGenerator(
+		name = "hibernate_sequence",
+		allocationSize = 1
+	)
+	@org.eclipse.microprofile.graphql.Id
+	public Long id;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
@@ -59,14 +68,13 @@ public abstract class K9Entity implements GraphqlId {
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
 
-	@javax.persistence.Id
-	@GeneratedValue
-	@org.eclipse.microprofile.graphql.Id
-	public Long id;
-
-	public Long getId() {
-		return id;
-	}
+	@JsonIgnore
+	@Formula("current_schema()")
+	@DialectOverride.Formula(
+		dialect = OracleDialect.class,
+		override = @Formula("SYS_CONTEXT('USERENV','CURRENT_SCHEMA')")
+	)
+	private String tenant;
 
 	@Override
 	public boolean equals(Object o) {

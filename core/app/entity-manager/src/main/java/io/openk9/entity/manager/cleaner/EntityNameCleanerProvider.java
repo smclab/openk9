@@ -18,10 +18,9 @@
 package io.openk9.entity.manager.cleaner;
 
 import io.quarkus.arc.Unremovable;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 @Unremovable

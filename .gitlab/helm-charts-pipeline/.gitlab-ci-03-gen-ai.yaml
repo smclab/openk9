@@ -1,0 +1,51 @@
+stages:
+  - push
+
+push-openk9-rag-module-helm:
+  stage: push
+  image: alpine:latest
+  only:
+    refs:
+      - master
+  when:
+    manual
+  before_script:
+    - apk update
+    - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+    - cd 03-gen-ai && mkdir package
+    - helm package openk9-rag-module -d package
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-openk9-embedding-module-helm:
+  stage: push
+  image: alpine:latest
+  only:
+    refs:
+      - master
+  when:
+    manual
+  before_script:
+    - apk update
+    - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+    - cd 03-gen-ai && mkdir package
+    - helm package openk9-embedding-module -d package
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-talk-to-helm:
+  stage: push
+  image: alpine:latest
+  only:
+    refs:
+      - master
+  when:
+    manual
+  before_script:
+    - apk update
+    - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+    - cd 03-gen-ai && mkdir package
+    - helm package openk9-talk-to -d package
+    - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+

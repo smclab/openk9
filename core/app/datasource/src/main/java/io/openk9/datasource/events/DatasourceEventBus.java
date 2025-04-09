@@ -17,7 +17,11 @@
 
 package io.openk9.datasource.events;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.actor.EventBusInstanceHolder;
+
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
@@ -26,37 +30,23 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 @ApplicationScoped
 @Startup
 public class DatasourceEventBus {
 
 	private static final String SEND_EVENT = "DatasourceEventBus#sendEvent";
 
-	public static void sendDeleteEvent(
-		String tenantId, long datasourceId, String dataIndexName, String deletedContentId) {
-
-		DatasourceMessage.Delete deleteEvent = DatasourceMessage
-			.Delete
-			.builder()
-			.indexName(dataIndexName)
-			.datasourceId(datasourceId)
-			.tenantId(tenantId)
-			.contentId(deletedContentId)
-			.build();
-
-		EventBusInstanceHolder.getEventBus().send(SEND_EVENT, deleteEvent);
+	public static void sendMessage(DatasourceMessage message) {
+		EventBusInstanceHolder.getEventBus().send(SEND_EVENT, message);
 	}
 
 	@Inject
 	@Channel("datasource-events-requests")
-	Emitter<DatasourceMessage> quoteRequestEmitter;
+	Emitter<DatasourceMessage> emitter;
 
 	@ConsumeEvent(SEND_EVENT)
 	public void sendEvent(DatasourceMessage datasourceMessage) {
-		quoteRequestEmitter.send(
+		emitter.send(
 			Message.of(
 				datasourceMessage,
 				Metadata.of(OutgoingRabbitMQMetadata

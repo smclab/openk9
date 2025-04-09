@@ -17,22 +17,22 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 import io.openk9.datasource.util.CborSerializable;
+import jakarta.enterprise.inject.spi.CDI;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.SupervisorStrategy;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.util.Map;
-import javax.enterprise.inject.spi.CDI;
 
 public class QueueManager extends AbstractBehavior<QueueManager.Command> {
 	public static final String INSTANCE_NAME = "schedulingKey-manager";

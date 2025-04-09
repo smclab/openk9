@@ -17,43 +17,46 @@
 
 package io.openk9.datasource.listener;
 
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import com.typesafe.config.Config;
-import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.util.ActorActionListener;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.opensearch.action.support.IndicesOptions;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import static io.openk9.datasource.util.SchedulerUtil.parseDuration;
 
 public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
 	public sealed interface Command {}
-	private enum Start implements Command {INSTANCE}
-	private enum Stop implements Command {INSTANCE}
-	private enum FetchDataIndexOrphans implements Command {INSTANCE}
-	private record PrepareChunks(List<DataIndex> dataIndices) implements Command {}
-	private enum WorkNextChunk implements Command {INSTANCE}
+	private final Deque<List<DataIndex>> chunks = new ArrayDeque<>();
+	private final long datasourceId;
+	private final Duration maxAge;
+	private final String tenantName;
+	private List<DataIndex> currentChunk;
+
+	public DatasourcePurge(
+		ActorContext<Command> context, String tenantName, long datasourceId, String purgeMaxAge) {
+		super(context);
+		this.tenantName = tenantName;
+		this.datasourceId = datasourceId;
+		this.maxAge = parseDuration(purgeMaxAge);
+		getContext().getSelf().tell(Start.INSTANCE);
+	}
+
+	public static Behavior<Command> create(
+		String tenantName, long datasourceId, String purgeMaxAge) {
+
+		return Behaviors.setup(ctx ->
+			new DatasourcePurge(ctx, tenantName, datasourceId, purgeMaxAge));
+	}
 
 	@Override
 	public Receive<Command> createReceive() {
@@ -69,137 +72,55 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 			.build();
 	}
 
+	private Behavior<Command> onDeleteDataIndices() {
+
+		getContext().pipeToSelf(
+			DatasourcePurgeService.deleteDataIndices(
+				tenantName, datasourceId, currentChunk),
+			(ignore, throwable) -> WorkNextChunk.INSTANCE
+		);
+
+		return Behaviors.same();
+	}
+
 	private Behavior<Command> onDeleteEsIndices() {
-		String[] names = currentChunk
-			.stream()
-			.map(DataIndex::getIndexName)
-			.toArray(String[]::new);
 
-		DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(names);
-
-		deleteIndexRequest
-			.indicesOptions(
-				IndicesOptions.fromMap(
-					Map.of("ignore_unavailable", true),
-					deleteIndexRequest.indicesOptions()
-				)
-			);
-
-		getContext().getLog().info(
-			"Deleting Opensearch orphans indices for datasource {}-{}",
-			tenantName, datasourceId);
-
-		esClient
-			.indices()
-			.deleteAsync(
-				deleteIndexRequest,
-				RequestOptions.DEFAULT,
-				ActorActionListener.of(
-					getContext().getSelf(),
-					(res, err) -> {
-						if (err != null) {
-							return new DeleteError(new DatasourcePurgeException(err));
-						}
-						else {
-							return DeleteDataIndices.INSTANCE;
-						}
-					})
-			);
-
-		return Behaviors.same();
-	}
-	private enum DeleteDataIndices implements Command {INSTANCE}
-
-	private static final String BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP =
-		"DELETE FROM data_index_doc_types t WHERE t.data_index_id IN (:ids)";
-	private static final String BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX =
-		"UPDATE scheduler SET old_data_index_id = null WHERE old_data_index_id in (:ids)";
-	private static final String BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX =
-		"UPDATE scheduler SET new_data_index_id = null WHERE new_data_index_id in (:ids)";
-	private static final String BULK_DELETE_DATA_INDEX =
-		"DELETE FROM data_index t WHERE t.id in (:ids)";
-	private static final String JPQL_QUERY_DATA_INDEX_ORPHANS =
-		"select di " +
-		"from DataIndex di " +
-		"inner join di.datasource d on di.datasource = d and d.dataIndex <> di " +
-		"where d.id = :id " +
-		"and di.modifiedDate < :maxAgeDate";
-
-	private final String tenantName;
-	private final long datasourceId;
-	private final RestHighLevelClient esClient;
-	private final Mutiny.SessionFactory sessionFactory;
-	private final Duration maxAge;
-	private final Deque<List<DataIndex>> chunks = new ArrayDeque<>();
-	private List<DataIndex> currentChunk;
-
-	public DatasourcePurge(
-		ActorContext<Command> context, String tenantName, long datasourceId,
-		RestHighLevelClient esClient, Mutiny.SessionFactory sessionFactory) {
-		super(context);
-		this.tenantName = tenantName;
-		this.datasourceId = datasourceId;
-		this.esClient = esClient;
-		this.sessionFactory = sessionFactory;
-		this.maxAge = getMaxAge(context);
-		getContext().getSelf().tell(Start.INSTANCE);
-	}
-
-	public static Behavior<Command> create(
-		String tenantName, long datasourceId, RestHighLevelClient esClient,
-		Mutiny.SessionFactory sessionFactory) {
-
-		return Behaviors.setup(ctx ->
-			new DatasourcePurge(ctx, tenantName, datasourceId, esClient, sessionFactory));
-	}
-
-	private Behavior<Command> onWorkNextChunk() {
-		try {
-			this.currentChunk = chunks.pop();
-			getContext().getLog().info(
-				"Working on a chunk for datasource {}-{}", tenantName, datasourceId);
-			getContext().getSelf().tell(DeleteIndices.INSTANCE);
-		}
-		catch (NoSuchElementException e) {
-			getContext().getLog().info(
-				"No more chunks to work for datasource {}-{}", tenantName, datasourceId);
-			getContext().getSelf().tell(Stop.INSTANCE);
-		}
+		getContext().pipeToSelf(
+			DatasourcePurgeService.deleteIndices(currentChunk),
+			(res, err) -> {
+				if (err != null) {
+					return new DeleteError(new DatasourcePurgeException(err));
+				}
+				else {
+					return DeleteDataIndices.INSTANCE;
+				}
+			}
+		);
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onStart() {
-		getContext().getLog().info(
-			"Job DatasourcePurge started for datasource {}-{}", tenantName, datasourceId);
+	private Behavior<Command> onEsDeleteError(DeleteError ede) {
+		getContext().getLog().error("Opensearch DeleteIndexRequest went wrong.", ede.error);
 
-		getContext().getSelf().tell(FetchDataIndexOrphans.INSTANCE);
+		getContext().getSelf().tell(WorkNextChunk.INSTANCE);
 
 		return Behaviors.same();
 	}
 
 	private Behavior<Command> onFetchDataIndexOrphans() {
-		OffsetDateTime maxAgeDate = OffsetDateTime.of(
-			LocalDateTime.now().minus(maxAge), ZoneOffset.UTC);
 
-		getContext().getLog().info(
-			"Fetching DataIndex orphans for datasource {}-{}, older than {}",
-			tenantName, datasourceId, maxAgeDate);
-
-		VertxUtil.runOnContext(() -> sessionFactory.withStatelessTransaction(
-			tenantName, (s, t) -> s.createQuery(JPQL_QUERY_DATA_INDEX_ORPHANS, DataIndex.class)
-				.setParameter("id", datasourceId)
-				.setParameter("maxAgeDate", maxAgeDate
-				)
-				.getResultList()
-		).invoke(dataIndices ->
-			getContext().getSelf().tell(new PrepareChunks(dataIndices))));
+		getContext().pipeToSelf(
+			DatasourcePurgeService.fetchOrphans(tenantName, datasourceId, maxAge),
+			PrepareChunks::new
+		);
 
 		return Behaviors.same();
 	}
 
 	private Behavior<Command> onPrepareChunks(PrepareChunks prepareChunks) {
 		List<DataIndex> dataIndices = prepareChunks.dataIndices;
+		Throwable throwable = prepareChunks.throwable;
 
 		if (dataIndices != null && !dataIndices.isEmpty()) {
 			int chunkSize = 10;
@@ -232,62 +153,23 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		else {
 			getContext().getLog().info(
 				"No DataIndex orphans found for datasource {}-{}", tenantName, datasourceId);
+			if (throwable != null) {
+				getContext().getLog().error("Error fetching Dataindex orphan.", throwable);
+			}
 			getContext().getSelf().tell(Stop.INSTANCE);
 		}
 
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onEsDeleteError(DeleteError ede) {
-		getContext().getLog().error("Opensearch DeleteIndexRequest went wrong.", ede.error);
-
-		getContext().getSelf().tell(WorkNextChunk.INSTANCE);
-
-		return Behaviors.same();
-	}
-
-	private enum DeleteIndices implements Command {
-		INSTANCE
-	}
-
-	private Behavior<Command> onDeleteDataIndices() {
-
+	private Behavior<Command> onStart() {
 		getContext().getLog().info(
-			"Deleting DataIndex orphans for datasource {}-{}", tenantName, datasourceId);
+			"Job DatasourcePurge started for datasource {}-{}", tenantName, datasourceId);
 
-		Set<Long> ids = currentChunk
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		VertxUtil.runOnContext(() -> sessionFactory
-			.withTransaction(tenantName, (s, t) ->  s
-				.createNativeQuery(BULK_DELETE_DATA_INDEX_DOC_TYPE_RELATIONSHIP)
-				.setParameter("ids", ids)
-				.executeUpdate()
-				.chain(ignore -> s
-					.createNativeQuery(BULK_UPDATE_DEREFERENCE_OLD_DATAINDEX)
-					.setParameter("ids", ids)
-					.executeUpdate()
-				)
-				.chain(ignore -> s
-					.createNativeQuery(BULK_UPDATE_DEREFERENCE_NEW_DATAINDEX)
-					.setParameter("ids", ids)
-					.executeUpdate()
-				)
-				.chain(ignore -> s
-					.createNativeQuery(BULK_DELETE_DATA_INDEX)
-					.setParameter("ids", ids)
-					.executeUpdate()
-				)
-			)
-			.invoke(ignore -> getContext().getSelf().tell(WorkNextChunk.INSTANCE)));
+		getContext().getSelf().tell(FetchDataIndexOrphans.INSTANCE);
 
 		return Behaviors.same();
 	}
-
-	private record DeleteError(DatasourcePurgeException error) implements Command {}
-
 
 	private Behavior<Command> onStop() {
 		getContext().getLog().info(
@@ -295,21 +177,37 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 		return Behaviors.stopped();
 	}
 
-	private static Duration getMaxAge(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
-
-		String configPath = "io.openk9.scheduling.purge.max-age";
-
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return Duration.ofDays(2);
-			} else {
-				return config.getDuration(configPath);
-			}
-		} else {
-			return Duration.ofDays(2);
+	private Behavior<Command> onWorkNextChunk() {
+		try {
+			this.currentChunk = chunks.pop();
+			getContext().getLog().info(
+				"Working on a chunk for datasource {}-{}", tenantName, datasourceId);
+			getContext().getSelf().tell(DeleteIndices.INSTANCE);
+		}
+		catch (NoSuchElementException e) {
+			getContext().getLog().info(
+				"No more chunks to work for datasource {}-{}", tenantName, datasourceId);
+			getContext().getSelf().tell(Stop.INSTANCE);
 		}
 
+		return Behaviors.same();
 	}
 
+	private enum DeleteDataIndices implements Command {INSTANCE}
+
+	private enum DeleteIndices implements Command {
+		INSTANCE
+	}
+
+	private enum FetchDataIndexOrphans implements Command {INSTANCE}
+
+	private enum Start implements Command {INSTANCE}
+
+	private enum Stop implements Command {INSTANCE}
+
+	private enum WorkNextChunk implements Command {INSTANCE}
+
+	private record DeleteError(DatasourcePurgeException error) implements Command {}
+
+	private record PrepareChunks(List<DataIndex> dataIndices, Throwable throwable) implements Command {}
 }

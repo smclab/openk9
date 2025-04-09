@@ -17,6 +17,10 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
@@ -24,10 +28,12 @@ import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.dto.DataIndexDTO;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -40,10 +46,6 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @GraphQLApi
 @ApplicationScoped
@@ -75,6 +77,10 @@ public class DataIndexGraphqlResource {
 			notEqual);
 	}
 
+	public Uni<DocTypeField> getEmbeddingDocTypeField(@Source DataIndex dataIndex) {
+		return dataIndexService.getEmbeddingDocTypeField(dataIndex.getId());
+	}
+
 
 	public Uni<Long> getDocCount(@Source DataIndex dataIndex) {
 		return dataIndexService.getCountIndexDocuments(dataIndex.getIndexName());
@@ -101,31 +107,11 @@ public class DataIndexGraphqlResource {
 			.map(Json::encode);
 	}
 
-	public Uni<Response<DataIndex>> patchDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().patch(id, dataIndexDTO);
-	}
-
-	public Uni<Response<DataIndex>> updateDataIndex(@Id long id, DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().update(id, dataIndexDTO);
-	}
-
-	public Uni<Response<DataIndex>> createDataIndex(DataIndexDTO dataIndexDTO) {
-		return dataIndexService.getValidator().create(dataIndexDTO);
-	}
-
 	@Mutation
 	public Uni<Response<DataIndex>> dataIndex(
-		@Id Long id, DataIndexDTO dataIndexDTO,
-		@DefaultValue("false") boolean patch) {
+		@Id long datasourceId, DataIndexDTO dataIndexDTO) {
 
-		if (id == null) {
-			return createDataIndex(dataIndexDTO);
-		} else {
-			return patch
-				? patchDataIndex(id, dataIndexDTO)
-				: updateDataIndex(id, dataIndexDTO);
-		}
-
+		return dataIndexService.create(datasourceId, dataIndexDTO);
 	}
 
 	@Mutation
@@ -141,16 +127,6 @@ public class DataIndexGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.removeDocType(dataIndexId, docTypeId);
-	}
-
-	@Mutation
-	public Uni<DataIndex> bindVectorIndex(@Id long dataIndexId, @Id long vectorIndexId) {
-		return dataIndexService.bindVectorDataIndex(dataIndexId, vectorIndexId);
-	}
-
-	@Mutation
-	public Uni<DataIndex> unbindVectorIndex(@Id long dataIndexId) {
-		return dataIndexService.unbindVectorDataIndex(dataIndexId);
 	}
 
 	@Subscription

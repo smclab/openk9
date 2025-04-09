@@ -1,0 +1,16 @@
+# This scenario creates a single-instance standalone RabbitMQ
+# machine, with the most basic configuration and limited
+# resource to be fit in a local K8s/K3s/Minukube environment
+
+image:
+  tag: 2022.12.2-debian-11-r0
+
+persistence:
+    enabled: true
+    size: 10Gi
+
+auth:
+   existingSecret: minio-secret
+
+volumePermissions:
+    enabled: true

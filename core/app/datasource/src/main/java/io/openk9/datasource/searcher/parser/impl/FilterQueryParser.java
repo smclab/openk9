@@ -21,10 +21,9 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 import org.opensearch.index.query.BoolQueryBuilder;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
 
 @ApplicationScoped
 @Named("FilterQueryParser")

@@ -1,16 +1,12 @@
-import { Configuration } from "../embeddable/entry";
-import { AnalysisResponseEntry } from "./client";
-import { SelectionsAction, SelectionsState } from "./useSelections";
 import React from "react";
-import { css } from "styled-components/macro";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
-import { TokenSelect } from "../components/TokenSelect";
-import { AnalysisToken, SearchToken } from "./client";
-import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
-import { useClickAway } from "./useClickAway";
+import { css } from "styled-components/macro";
+import { TokenSelect } from "../components/TokenSelect";
+import { Configuration } from "../embeddable/entry";
 import { SearchSvg } from "../svgElement/SearchSvg";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
+import { useClickAway } from "./useClickAway";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 
 type SearchWithSuggestions = {
   configuration: Configuration;

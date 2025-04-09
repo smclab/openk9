@@ -25,8 +25,8 @@ import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
-import io.vavr.Function0;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -35,7 +35,6 @@ import org.opensearch.index.query.RangeQueryBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class DateQueryParser implements QueryParser {
@@ -55,12 +54,8 @@ public class DateQueryParser implements QueryParser {
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
-		Function0<Boolean> allFieldsWhenKeywordIsEmpty =
-			Function0
-				.of(
-					() -> queryParserConfig.getBoolean(
-						"allFieldsWhenKeywordIsEmpty", true))
-				.memoized();
+		boolean allFieldsWhenKeywordIsEmpty = queryParserConfig
+			.getBoolean("allFieldsWhenKeywordIsEmpty", true);
 
 		List<Tuple2<DocTypeField, ParserSearchToken>> collect =
 			Utils.getDocTypeFieldsFrom(currentTenant)
@@ -71,7 +66,7 @@ public class DateQueryParser implements QueryParser {
 
 						if (StringUtils.isBlank(searchToken.getKeywordKey())) {
 
-							if (allFieldsWhenKeywordIsEmpty.get()) {
+							if (allFieldsWhenKeywordIsEmpty) {
 								return Stream.of(
 									Tuple2.of(docTypeField, searchToken));
 							}

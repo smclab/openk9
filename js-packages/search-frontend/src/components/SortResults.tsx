@@ -1,28 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import SelectComponent from "./Select";
-import { SortField } from "./client";
-
-type TypeSortResultComponent = {
-  selectOptions: Options;
-  extraClass?: string;
-  labelDefault?: string;
-  language: string;
-  labelText?: string;
-  classNameLabel: string | undefined;
-  setSort: setSortResultsType;
-  sort:
-    | {
-        sort: {
-          field: string;
-          type: string;
-        };
-        isSort: boolean;
-      }
-    | undefined;
-};
 
 export type Options = Field[];
-type Field = {
+export type Field = {
   field: string;
   id: number;
   isDefault: boolean;
@@ -34,46 +14,6 @@ type Field = {
     "label.it_IT"?: string;
   };
 };
-export default function SortResults({
-  selectOptions,
-  extraClass = "",
-  labelDefault = "Select Option",
-  language,
-  labelText,
-  setSort,
-  classNameLabel,
-  sort,
-}: TypeSortResultComponent) {
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
-    const [label, types] = value.split("-");
-    if (label && types) {
-      setSort({ field: label, type: types as "asc" | "desc" });
-    } else {
-      setSort(undefined);
-    }
-  };
-
-  const index = selectOptions.findIndex((obj) => obj.isDefault === true);
-
-  if (index !== -1) {
-    const defaultValueObj = selectOptions.splice(index, 1)[0];
-    selectOptions.unshift(defaultValueObj);
-  }
-
-  return (
-    <SelectComponent
-      handleChange={handleChange}
-      language={language}
-      selectOptions={selectOptions}
-      extraClass={extraClass}
-      labelDefault={labelDefault}
-      label={labelText}
-      classLabel={classNameLabel}
-      selectedSort={sort?.sort}
-    />
-  );
-}
 
 export type setSortResultsType = (
   sortField:
@@ -84,3 +24,97 @@ export type setSortResultsType = (
     | undefined
     | null,
 ) => void;
+
+export type TypeSortResultComponent = {
+  selectOptions: Options;
+  extraClass?: string;
+  labelDefault?: string;
+  language: string;
+  labelText?: string;
+  classNameLabel?: string;
+  setSort: setSortResultsType;
+  sort?: {
+    sort: {
+      field: string;
+      type: string;
+    };
+    isSort: boolean;
+  };
+  useMockData?: boolean;
+};
+
+const mockOptions: Options = [
+  {
+    field: "name",
+    id: 1,
+    isDefault: true,
+    type: "asc",
+    label: "Name",
+    translationMap: {
+      "label.en_US": "Name",
+      "label.it_IT": "Nome",
+    },
+  },
+  {
+    field: "price",
+    id: 2,
+    isDefault: false,
+    type: "desc",
+    label: "Price",
+    translationMap: {
+      "label.en_US": "Price",
+      "label.it_IT": "Prezzo",
+    },
+  },
+];
+
+const SortResults: React.FC<TypeSortResultComponent> = ({
+  selectOptions,
+  extraClass = "",
+  labelDefault = "Select Option",
+  language,
+  labelText,
+  setSort,
+  classNameLabel,
+  sort,
+  useMockData = false,
+}) => {
+  const [options, setOptions] = useState<Options>(
+    useMockData ? mockOptions : selectOptions,
+  );
+
+  useEffect(() => {
+    if (!useMockData) {
+      setOptions(selectOptions);
+    }
+  }, [selectOptions, useMockData]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    const [field, type] = value.split("-");
+    if (field && type) {
+      setSort({ field, type: type as "asc" | "desc" });
+    } else {
+      setSort(null);
+    }
+  };
+
+  const sortedOptions = [...options].sort(
+    (a, b) => Number(b.isDefault) - Number(a.isDefault),
+  );
+
+  return (
+    <SelectComponent
+      handleChange={handleChange}
+      language={language}
+      selectOptions={sortedOptions}
+      extraClass={extraClass}
+      labelDefault={labelDefault}
+      label={labelText}
+      classLabel={classNameLabel}
+      selectedSort={sort?.sort}
+    />
+  );
+};
+
+export default SortResults;

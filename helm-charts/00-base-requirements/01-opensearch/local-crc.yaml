@@ -1,0 +1,64 @@
+# -- Sezione immagine di OpenSearch
+# Specifica quale immagine Docker utilizzare (repository, tag, ecc.).
+image:
+  registry: docker.io            # Registro Docker (public)
+  repository: bitnami/opensearch # Nome del repository su Docker Hub
+  tag: 2.19.1-debian-12-r0       # Tag (versione) dell’immagine
+  pullPolicy: IfNotPresent       # Scarica l’immagine solo se non già presente localmente
+
+# -- Disabilita la sicurezza integrata (X-Pack o sicurezza nativa di OpenSearch)
+# Se non vuoi la security di default, imposta security.enabled a false
+security:
+  enabled: false
+
+# -- Configurazione del Service principale
+# Tipo di Service e porte da esporre (REST su 9200, transport su 9300)
+service:
+  type: ClusterIP
+  ports:
+    restAPI: 9200
+    transport: 9300
+
+# -- Configurazione dei nodi "master"
+# Nel chart Bitnami, la sezione "master" può essere configurata per svolgere
+# più ruoli (master, data, ingest) se "masterOnly" è false.
+master:
+  masterOnly: false               # Non limitarti al ruolo "master", ma includi data/ingest
+  replicaCount: 3                 # Quanti Pod/repliche vuoi per questo nodo (qui solo 1)
+
+  # -- Specifica la ServiceAccount da usare per i Pod "master"
+  # Se "create: false", non verrà creata una nuova SA; userà quella esistente "root-runner"
+  # (che deve avere SCC=privileged, su OpenShift, se necessario).
+  serviceAccount:
+    create: false
+    name: "root-runner"
+    automountServiceAccountToken: true
+
+  # -- Attiva la persistenza dei dati
+  # Questa sezione assicura che i dati di OpenSearch vengano scritti su un volume persistente.
+  persistence:
+    enabled: true
+    size: 8Gi
+
+# -- Abilita la initContainer "volumePermissions" fornita da Bitnami
+# Questa initContainer esegue un chown/chmod sul volume, così il container (UID=1001)
+# può scrivere nella directory dei dati senza problemi di permessi.
+volumePermissions:
+  enabled: true
+
+# -- Sezioni "data", "ingest" e "coordinating" disabilitate
+# Significa che non verranno creati nodi specializzati data-only, ingest-only o coordinating-only.
+data:
+  replicaCount: 0
+  enabled: false
+
+ingest:
+  enabled: false
+
+coordinating:
+  replicaCount: 0
+  enabled: false
+
+# -- Abilita la initContainer "sysctlImage"
+# Questa container imposta parametri del kernel necessari (es. vm.max_map_count).
+sysctlImage:

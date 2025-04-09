@@ -17,23 +17,23 @@
 
 package io.openk9.datasource.plugindriver;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import io.openk9.datasource.TestUtils;
-import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static org.junit.jupiter.api.Assertions.fail;
+import io.openk9.datasource.TestUtils;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager {
-
 
 	public static final String HEALTH_JSON_FILE = "/plugindriver/health.json";
 	public static final String SAMPLE_JSON_FILE = "/plugindriver/sample.json";

@@ -17,16 +17,22 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.request.QueryAnalysisWithListsDTO;
 import io.openk9.datasource.service.QueryAnalysisService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -38,10 +44,6 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -129,8 +131,6 @@ public class QueryAnalysisGraphqlResource {
 		return queryAnalysisService.removeAnnotatorToQueryAnalysis(id, annotatorId);
 	}
 
-
-
 	@Mutation
 	public Uni<Response<QueryAnalysis>> queryAnalysis(
 		@Id Long id, QueryAnalysisDTO queryAnalysisDTO,
@@ -147,10 +147,24 @@ public class QueryAnalysisGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Response<QueryAnalysis>> queryAnalysisWithLists(
+		@Id Long id, QueryAnalysisWithListsDTO queryAnalysisWithListsDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createQueryAnalysis(queryAnalysisWithListsDTO);
+		} else {
+			return patch
+				? patchQueryAnalysis(id, queryAnalysisWithListsDTO)
+				: updateQueryAnalysis(id, queryAnalysisWithListsDTO);
+		}
+
+	}
+
+	@Mutation
 	public Uni<QueryAnalysis> deleteQueryAnalysis(@Id long queryAnalysisId) {
 		return queryAnalysisService.deleteById(queryAnalysisId);
 	}
-
 
 	@Subscription
 	public Multi<QueryAnalysis> queryAnalysisCreated() {

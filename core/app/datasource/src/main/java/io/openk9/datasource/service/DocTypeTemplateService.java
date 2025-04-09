@@ -1,19 +1,37 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.service;
+
+import java.util.List;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import io.openk9.datasource.mapper.DocTypeTemplateMapper;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocTypeTemplate_;
-import io.openk9.datasource.model.dto.DocTypeTemplateDTO;
+import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import java.util.List;
 
 @ApplicationScoped
 public class DocTypeTemplateService extends BaseK9EntityService<DocTypeTemplate, DocTypeTemplateDTO> {

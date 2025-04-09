@@ -101,7 +101,7 @@ export function CalendarMobile({
         css={css`
           display: flex;
           justify-content: space-beetween;
-          background: #fafafa;
+          background: white;
           padding-inline: 8px;
           align-items: center;
         `}
@@ -111,7 +111,7 @@ export function CalendarMobile({
           css={css`
             padding: 0px 16px;
             width: 100%;
-            background: #fafafa;
+            background: white;
             padding-top: 20px;
             padding-bottom: 13px;
             display: flex;
@@ -172,7 +172,7 @@ export function CalendarMobile({
             setStartDate(null);
             setEndDate(null);
           }}
-          style={{ backgroundColor: "#FAFAFA", border: "none" }}
+          style={{ backgroundColor: "white", border: "none" }}
         >
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
@@ -192,7 +192,7 @@ export function CalendarMobile({
       >
         <button
           css={css`
-            background: #fafafa;
+            background: white;
             padding: 8px 16px;
             font-size: 16px;
             font-style: normal;
@@ -210,7 +210,7 @@ export function CalendarMobile({
         </button>
         <button
           css={css`
-            background: #fafafa;
+            background: white;
             padding: 8px 16px;
             font-size: 16px;
             font-style: normal;
@@ -228,7 +228,7 @@ export function CalendarMobile({
         </button>
         <button
           css={css`
-            background: #fafafa;
+            background: white;
             padding: 8px 16px;
             font-size: 16px;
             font-style: normal;
@@ -246,7 +246,7 @@ export function CalendarMobile({
         </button>
         <button
           css={css`
-            background: #fafafa;
+            background: white;
             padding: 8px 16px;
             font-size: 16px;
             font-style: normal;

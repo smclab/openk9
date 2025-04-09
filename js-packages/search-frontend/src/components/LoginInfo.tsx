@@ -38,9 +38,9 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
         marginOfSvg="10px"
         sizeFont="16px"
         colorLabel={"black"}
-        sizeHeight={"24px"}
+        sizeHeight={"38px"}
         align={"center"}
-        padding="15px 8px"
+        padding="15px 12px"
         fontWeightLabel="700"
         action={() => {
           client.authenticate({});
@@ -56,9 +56,9 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
         marginOfSvg=""
         sizeFont="16px"
         colorLabel={"black"}
-        sizeHeight={"24px"}
+        sizeHeight={"38px"}
         align={"center"}
-        padding="15px 8px"
+        padding="15px 12px"
         fontWeightLabel="700"
         gap="0px"
         action={() => {

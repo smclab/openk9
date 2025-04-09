@@ -597,7 +597,7 @@ export function useInfiniteSuggestions(
   return suggestionCategories;
 }
 
-function NoFilters() {
+export function NoFilters() {
   const { t } = useTranslation();
 
   return (

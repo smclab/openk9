@@ -51,11 +51,12 @@ public class DataPayload {
 	private Map<String, List<String>> acl;
 	@Setter(AccessLevel.NONE)
 	@JsonIgnore
+	@Builder.Default
 	private Map<String, Object> rest = new HashMap<>();
 	private String indexName;
-	private boolean last = false;
+	private boolean last;
 	private String scheduleId;
-	private String oldIndexName = null;
+	private String oldIndexName;
 	private PayloadType type;
 
 	public static DataPayload copy(DataPayload dataPayload) {

@@ -17,26 +17,22 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
+import io.openk9.datasource.pipeline.actor.WriterException;
 import io.openk9.datasource.util.CborSerializable;
 
 public interface Writer {
 
-
 	interface Command extends CborSerializable {}
 
-	interface Response extends CborSerializable {
+	sealed interface Response extends CborSerializable {
 		HeldMessage heldMessage();
-
 	}
 
 	record Start(byte[] dataPayload, HeldMessage heldMessage)
 		implements Command {}
 
-	record Success(
-		byte[] dataPayload,
-		HeldMessage heldMessage
-	) implements Response {}
+	record Success(HeldMessage heldMessage) implements Response {}
 
-	record Failure(Exception exception, HeldMessage heldMessage) implements Response {}
+	record Failure(WriterException exception, HeldMessage heldMessage) implements Response {}
 
 }

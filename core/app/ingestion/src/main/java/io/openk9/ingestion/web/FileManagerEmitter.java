@@ -1,164 +1,177 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.ingestion.web;
 
 import io.openk9.ingestion.client.filemanager.FileManagerClient;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
-import io.openk9.ingestion.dto.IngestionPayload;
 import io.openk9.ingestion.dto.ResourcesDTO;
-import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
-import io.vertx.core.json.JsonArray;
+import io.openk9.ingestion.exception.NoSuchQueueException;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.openapi.models.parameters.Parameter;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class FileManagerEmitter {
 
-    private UnicastProcessor<IngestionDTO> processor = UnicastProcessor.create();
+	@Inject
+	IngestionEmitter emitter;
+	@Inject
+	@RestClient
+	FileManagerClient fileManagerClient;
+	@Inject
+	Logger logger;
 
-    public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
+	public Uni<Void> emit(IngestionDTO ingestionDTO) {
 
-        processor.onNext(ingestionDTO);
+		return Uni.createFrom()
+			.deferred(() -> {
 
-        return CompletableFuture.completedFuture(null);
-    }
+				if (ingestionDTO.getResources() != null
+					&& ingestionDTO.getResources().getBinaries() != null
+					&& !ingestionDTO.getResources().getBinaries().isEmpty()) {
 
-    @PostConstruct
-    private void init() {
+					logger.info("Handling binaries");
 
-        processor.subscribe().with(ingestionDTO -> {
+					String datasourceId =
+						Long.toString(ingestionDTO.getDatasourceId());
 
-            if (!(ingestionDTO.getResources() == null)) {
+					String schemaName = ingestionDTO.getTenantId();
 
-                if (!ingestionDTO.getResources().getBinaries().isEmpty()) {
+					List<BinaryDTO> binaries =
+						ingestionDTO.getResources().getBinaries();
 
+					List<Uni<BinaryDTO>> uploadUnis = new ArrayList<>();
 
-                    logger.info("Handling binaries");
+					for (BinaryDTO binaryDTO : binaries) {
 
-                    String datasourceId =
-                        Long.toString(ingestionDTO.getDatasourceId());
+						try {
 
-                    String schemaName = ingestionDTO.getTenantId();
+							String data = binaryDTO.getData();
 
-                    List<BinaryDTO> binaries =
-                        ingestionDTO.getResources().getBinaries();
+							String fileId = binaryDTO.getId();
 
-                    List<BinaryDTO> modifiedBinaries = new ArrayList<>();
+							if (!data.isEmpty()) {
 
-                    for (BinaryDTO binaryDTO : binaries) {
+								byte[] contentBytes =
+									Base64.getDecoder().decode(data);
 
-                        try {
+								InputStream inputStream =
+									new BufferedInputStream(
+										new ByteArrayInputStream(contentBytes));
 
-                            String data = binaryDTO.getData();
+								var uploadUni = fileManagerClient.upload(
+									datasourceId,
+									fileId,
+									schemaName,
+									inputStream
+								).map(resourceId -> {
 
-                            String fileId = binaryDTO.getId();
+									BinaryDTO newBinaryDTO = new BinaryDTO();
+									newBinaryDTO.setId(fileId);
+									newBinaryDTO.setName(binaryDTO.getName());
+									newBinaryDTO.setContentType(
+										binaryDTO.getContentType());
+									newBinaryDTO.setResourceId(resourceId);
 
-                            if (data.length() > 0) {
+									return newBinaryDTO;
+								}).invoke(newBinaryDTO -> {
 
-                                byte[] contentBytes =
-                                    Base64.getDecoder().decode(data);
+									if (ingestionDTO.getResources().isSplitBinaries()) {
 
-                                InputStream inputStream =
-                                    new BufferedInputStream(
-                                        new ByteArrayInputStream(contentBytes));
+										IngestionDTO newIngestionDto =
+											new IngestionDTO();
 
-                                String resourceId =
-                                    fileManagerClient.upload(
-                                        datasourceId,
-                                        fileId,
-                                        schemaName,
-                                        inputStream
-                                    );
+										ResourcesDTO newResourcesDTO =
+											new ResourcesDTO();
+										List<BinaryDTO> singeBinariesList =
+											new ArrayList<>();
+										singeBinariesList.add(newBinaryDTO);
 
-                                BinaryDTO newBinaryDTO = new BinaryDTO();
-                                newBinaryDTO.setId(fileId);
-                                newBinaryDTO.setData(null);
-                                newBinaryDTO.setName(binaryDTO.getName());
-                                newBinaryDTO.setContentType(
-                                    binaryDTO.getContentType());
-                                newBinaryDTO.setResourceId(resourceId);
+										newResourcesDTO.setBinaries(
+											singeBinariesList);
 
-                                if (ingestionDTO.getResources().isSplitBinaries()) {
+										newIngestionDto.setResources(
+											newResourcesDTO);
+										newIngestionDto.setContentId(fileId);
+										newIngestionDto.setAcl(
+											ingestionDTO.getAcl());
+										newIngestionDto.setDatasourceId(
+											ingestionDTO.getDatasourceId());
+										newIngestionDto.setScheduleId(
+											ingestionDTO.getScheduleId());
+										newIngestionDto.setParsingDate(
+											ingestionDTO.getParsingDate());
+										newIngestionDto.setRawContent("");
 
-                                    IngestionDTO newIngestionDto =
-                                        new IngestionDTO();
+										Map<String, Object> datasourcePayload =
+											new HashMap<>();
+										datasourcePayload.put(
+											"file",
+											new JsonObject()
+										);
+										newIngestionDto.setDatasourcePayload(
+											datasourcePayload);
 
-                                    ResourcesDTO newResourcesDTO =
-                                        new ResourcesDTO();
-                                    List<BinaryDTO> singeBinariesList =
-                                        new ArrayList<>();
-                                    singeBinariesList.add(newBinaryDTO);
+										emitter.emit(newIngestionDto);
+									}
+								});
 
-                                    newResourcesDTO.setBinaries(
-                                        singeBinariesList);
+								uploadUnis.add(uploadUni);
+							}
+						} catch (NoSuchQueueException e) {
+							throw e;
+						} catch (Exception e) {
+							logger.error(e.getMessage(), e);
+						}
 
-                                    newIngestionDto.setResources(
-                                        newResourcesDTO);
-                                    newIngestionDto.setContentId(fileId);
-                                    newIngestionDto.setAcl(
-                                        ingestionDTO.getAcl());
-                                    newIngestionDto.setDatasourceId(
-                                        ingestionDTO.getDatasourceId());
-                                    newIngestionDto.setScheduleId(
-                                        ingestionDTO.getScheduleId());
-                                    newIngestionDto.setParsingDate(
-                                        ingestionDTO.getParsingDate());
-                                    newIngestionDto.setRawContent("");
+					}
 
-                                    Map<String, Object> datasourcePayload =
-                                        new HashMap<>();
-                                    datasourcePayload.put(
-                                        "file",
-                                        new JsonObject());
-                                    newIngestionDto.setDatasourcePayload(
-                                        datasourcePayload);
+					return Uni.join().all(uploadUnis)
+						.usingConcurrencyOf(1)
+						.andCollectFailures()
+						.map(binaryDTOS -> {
+							ResourcesDTO resourcesDTO = new ResourcesDTO();
+							resourcesDTO.setBinaries(binaryDTOS);
+							return resourcesDTO;
+						});
 
-                                    emitter.emit(newIngestionDto);
-                                }
-                                else {
-                                    modifiedBinaries.add(newBinaryDTO);
-                                }
-                            }
-                        }
-                        catch (Exception e) {
-                            logger.error(e.getMessage(), e);
-                        }
+				}
 
-                    }
+				return Uni.createFrom().item(ingestionDTO.getResources());
+			})
+			.invoke(resourcesDTO -> {
+				ingestionDTO.setResources(resourcesDTO);
+				emitter.emit(ingestionDTO);
+			})
+			.replaceWithVoid();
 
-                    ResourcesDTO resourcesDTO = new ResourcesDTO();
-                    resourcesDTO.setBinaries(modifiedBinaries);
-                    ingestionDTO.setResources(resourcesDTO);
-
-
-                }
-
-            }
-
-            emitter.emit(ingestionDTO);
-
-        });
-    }
-
-    @Inject
-    IngestionEmitter emitter;
-
-    @Inject
-    @RestClient
-    FileManagerClient fileManagerClient;
-
-    @Inject
-    Logger logger;
+	}
 }

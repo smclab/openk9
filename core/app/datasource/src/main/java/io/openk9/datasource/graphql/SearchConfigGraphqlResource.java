@@ -17,18 +17,24 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
-import io.openk9.datasource.model.dto.SearchConfigDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.service.QueryParserConfigService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -40,11 +46,6 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.List;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped

@@ -17,16 +17,17 @@
 
 package io.openk9.datasource.model.init;
 
+import java.util.EnumMap;
+
 import io.openk9.common.util.StringUtils;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
-import io.vertx.core.json.Json;
 
-import java.util.EnumMap;
+import io.vertx.core.json.Json;
 
 public class PluginDrivers {
 

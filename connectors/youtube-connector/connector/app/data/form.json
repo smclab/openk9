@@ -1,0 +1,143 @@
+{
+  "fields": [
+    {
+      "label": "Youtube Channel Url",
+      "name": "youtubeChannelUrl",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "https://www.youtube.com/@smcit/ or https://www.youtube.com/channel/ABC123abc",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+        "label": "Subtitle Language",
+        "name": "subtitleLang",
+        "type": "list",
+        "size": 4,
+        "required": true,
+        "values": [
+          {
+            "value": "en",
+            "isDefault": true
+          },
+          {
+            "value": "it",
+            "isDefault": true
+          }
+        ],
+        "info": "",
+        "placeholder": "string",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+    {
+      "label": "Audio Format",
+      "name": "audioFormat",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "m4a",
+          "isDefault": true
+        }
+      ],
+      "placeholder": "mp4, m4a...",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Timestamp",
+      "name": "timestamp",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": 0,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Datasource Id",
+      "name": "datasourceId",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": 1,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Schedule Id",
+      "name": "scheduleId",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "1",
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Tenant Id",
+      "name": "tenantId",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "1",
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    }
+  ]
+}

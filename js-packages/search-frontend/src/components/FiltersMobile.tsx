@@ -50,7 +50,7 @@ function FiltersMobile<E>({
         css={css`
           display: flex;
           justify-content: space-beetween;
-          background: #fafafa;
+          background: white;
         `}
       >
         <div
@@ -58,7 +58,7 @@ function FiltersMobile<E>({
           css={css`
             padding: 0px 16px;
             width: 100%;
-            background: #fafafa;
+            background: white;
             padding-top: 20px;
             padding-bottom: 13px;
             display: flex;
@@ -109,7 +109,7 @@ function FiltersMobile<E>({
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
           }}
-          style={{ backgroundColor: "#FAFAFA", border: "none" }}
+          style={{ backgroundColor: "white", border: "none" }}
         >
           Chiudi <DeleteLogo heightParam={8} widthParam={8} />
         </button>

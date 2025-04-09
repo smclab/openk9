@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>client</artifactId>
 		<groupId>io.openk9.client</groupId>
-		<version>2.0.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -43,6 +43,14 @@
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-grpc</artifactId>
+		</dependency>
+		<!-- Includes the javax.annotations.Generated under Apache2 license,-->
+		<!-- see https://github.com/grpc/grpc-java/issues/6833 -->
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>annotations-api</artifactId>
+			<version>6.0.53</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>

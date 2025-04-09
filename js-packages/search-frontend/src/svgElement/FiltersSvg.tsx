@@ -1,12 +1,12 @@
 import React from "react";
 
-export function FilterSvg({ size = 26 }) {
+export function FilterSvg({ size = 18 }) {
   return (
     <svg
       className="openk-9-filter-icon title-icon"
       aria-hidden="true"
-      width="18"
-      height="18"
+      width={size}
+      height={size}
       viewBox="0 0 18 18"
       fill="none"
     >

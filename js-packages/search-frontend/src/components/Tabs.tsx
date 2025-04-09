@@ -112,6 +112,7 @@ function Tabs({
           width: 90vw;
           margin-left: 15px;
           list-style-type: none;
+          margin: 0;
         `}
       >
         <div
@@ -282,12 +283,13 @@ function Tabs({
         role="list"
         css={css`
           display: flex;
-          padding-top: 14px;
-          padding: 8px 12px;
           width: fit-content;
+          padding: 0;
           height: fit-content;
           gap: 16px;
+          margin: 0;
           list-style-type: none;
+          margin: 0;
           @media (max-width: 480px) {
             gap: 10px;
           }
@@ -307,12 +309,37 @@ function Tabs({
               key={"tabs" + index}
             >
               <button
-                className="openk9-single-tab-container"
+                className={
+                  "openk9-single-tab-container" +
+                  "openk9-single-tab " +
+                  (isSelected ? "openk9-active-tab" : "openk9-not-active")
+                }
                 key={index}
                 tabIndex={0}
                 css={css`
                   border: none;
                   background: none;
+                  padding: 0;
+                  white-space: nowrap;
+                  padding: 8px 12px;
+                  background: ${isSelected
+                    ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                    : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+                  border-radius: 8px;
+                  font: Helvetica Neue LT Std;
+                  font-style: normal;
+                  display: block;
+                  color: ${isSelected
+                    ? "var(--openk9-embeddable-search--primary-background-color)"
+                    : "var(--openk9-embeddable-tabs--primary-color)"};
+                  ${isSelected
+                    ? "var(--openk9-embeddable-search--active-color)"
+                    : "transparent"};
+                  cursor: ${isSelected ? "" : "pointer"};
+                  user-select: none;
+                  :hover {
+                    ${isSelected ? "" : "text-decoration: underline;"}
+                  }
                 `}
                 onClick={() => {
                   onSelectedTabIndexChange(index);
@@ -328,37 +355,7 @@ function Tabs({
                   if (onAction) onAction();
                 }}
               >
-                <span
-                  key={index}
-                  className={
-                    "openk9-single-tab " +
-                    (isSelected ? "openk9-active-tab" : "openk9-not-active")
-                  }
-                  css={css`
-                    white-space: nowrap;
-                    padding: 8px 12px;
-                    background: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                      : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                    border-radius: 8px;
-                    font: Helvetica Neue LT Std;
-                    font-style: normal;
-                    display: block;
-                    color: ${isSelected
-                      ? "var(--openk9-embeddable-search--primary-background-color)"
-                      : "var(--openk9-embeddable-tabs--primary-color)"};
-                    ${isSelected
-                      ? "var(--openk9-embeddable-search--active-color)"
-                      : "transparent"};
-                    cursor: ${isSelected ? "" : "pointer"};
-                    user-select: none;
-                    :hover {
-                      ${isSelected ? "" : "text-decoration: underline;"}
-                    }
-                  `}
-                >
-                  {tabTraslation.toUpperCase()}
-                </span>
+                {tabTraslation.toUpperCase()}
               </button>
             </li>
           );

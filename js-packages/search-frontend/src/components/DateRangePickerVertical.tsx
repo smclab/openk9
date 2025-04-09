@@ -52,6 +52,12 @@ export function DataRangePickerVertical({
   const [validationStart, setValidationStart] = React.useState("");
   const [validationEnd, setValidationEnd] = React.useState("");
   React.useEffect(() => {
+    if (startDate) {
+      startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
+    if (endDate) {
+      endDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+    }
     onChange({
       startDate: startDate?._d || undefined,
       endDate: endDate?._d || undefined,
@@ -142,18 +148,20 @@ export function DataRangePickerVertical({
         height: "100%",
         justifyContent: "center",
         flexDirection: "column",
+        gap: "10px",
       }}
     >
       <div className="DateRangePickerVertical-startDate-container">
         <p className="DateRangePickerVertical-date-title">
-          {translationLabel?.labelStart
-            ? translationLabel?.labelStart
-            : `Dal ${t("gg/mm/aaaa")}`}
+          {t("from")} ({t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-start-date"
           css={css`
             display: flex;
+            border: 1px solid gray;
+            border-radius: 8px;
+            gap: 20px;
           `}
         >
           <label
@@ -180,12 +188,16 @@ export function DataRangePickerVertical({
             `}
             htmlFor={"input-start-date"}
           >
-            {translationLabel?.labelStart || "input data inizio"}
+            {translationLabel?.labelStart || t("start-day")}
           </label>
           <input
             type="text"
             id={"input-start-date"}
-            placeholder={translationLabel?.placeholderStart || "Data Inizio"}
+            placeholder={
+              translationLabel?.placeholderStart ||
+              t("start-day") ||
+              "Data Inizio"
+            }
             className="input-start-calendar"
             value={dataStart}
             onChange={(event) => {
@@ -197,23 +209,12 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleStartDateChange}
             css={css`
-              border-top: 1px solid black;
-              border-left: 1px solid black;
-              border-bottom: 1px solid black;
-              min-width: 130px;
               width: 100%;
-              height: 42px;
+              border: transparent;
+              background: transparent;
             `}
           />
-          <div
-            className="openk9-calendar-button"
-            css={css`
-              border-top: 1px solid black;
-              border-bottom: 1px solid black;
-              border-left: none;
-              border-right: 1px solid black;
-            `}
-          >
+          <div className="openk9-calendar-button" css={css``}>
             <SingleDatePicker
               date={start || startDate}
               numberOfMonths={1}
@@ -240,17 +241,6 @@ export function DataRangePickerVertical({
               openDirection="up"
               phrases={customPhrasesStart}
             />
-            <style>{`
-                  .DateInput  {
-                     display: none; 
-                   }
-                   .SingleDatePickerInput_clearDate__default_2{
-                      width:88%;
-                    }
-                      .SingleDatePickerInput__withBorder {
-                        background: inherit;
-                      }
-           `}</style>
           </div>
         </div>
       </div>
@@ -260,13 +250,20 @@ export function DataRangePickerVertical({
         </p>
       )}
       <div className="DateRangePickerVertical-endDate-container">
-        <p className="DateRangePickerVertical-date-title">
-          {translationLabel?.labelEnd || `Al ${t("gg/mm/aaaa")}`}
+        <p
+          className="DateRangePickerVertical-date-title"
+          css={css`
+            font-weight: 700;
+          `}
+        >
+          Al ({t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-end-date"
           css={css`
             display: flex;
+            border: 1px solid gray;
+            border-radius: 8px;
           `}
         >
           <label
@@ -293,12 +290,14 @@ export function DataRangePickerVertical({
               white-space: nowrap;
             `}
           >
-            {translationLabel?.labelEnd}
+            {translationLabel?.labelEnd || t("end-day")}
           </label>
           <input
             id={"input-end-date"}
             type="text"
-            placeholder={translationLabel?.placeholderEnd || "Data Fine"}
+            placeholder={
+              translationLabel?.placeholderEnd || t("end-day") || "Data Fine"
+            }
             className="input-end-calendar"
             value={dataEnd}
             onChange={(event) => {
@@ -310,12 +309,9 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleEndDateChange}
             css={css`
-              border-top: 1px solid black;
-              border-left: 1px solid black;
-              border-bottom: 1px solid black;
-              min-width: 130px;
               width: 100%;
-              height: 42px;
+              border: transparent;
+              background: transparent;
             `}
           />
           <style>{`
@@ -326,15 +322,7 @@ export function DataRangePickerVertical({
                       width:88%;
                     }
          `}</style>
-          <div
-            className="openk9-calendar-button"
-            css={css`
-              border-top: 1px solid black;
-              border-bottom: 1px solid black;
-              border-left: none;
-              border-right: 1px solid black;
-            `}
-          >
+          <div className="openk9-calendar-button" css={css``}>
             <SingleDatePicker
               date={end || endDate}
               numberOfMonths={1}

@@ -17,6 +17,7 @@
 
 package io.openk9.filemanager.service;
 
+import io.grpc.StatusRuntimeException;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
@@ -24,10 +25,10 @@ import io.openk9.filemanager.grpc.FileManagerGrpc;
 import io.openk9.filemanager.grpc.FileResourceResponse;
 import io.openk9.filemanager.grpc.FindFileResourceByResourceIdRequest;
 import io.quarkus.grpc.GrpcClient;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -35,52 +36,72 @@ import java.security.NoSuchAlgorithmException;
 @ApplicationScoped
 public class DeleteService {
 
-	@Inject
-	MinioClient minioClient;
-
-
+	/**
+	 * Deletes an object from MinIO storage and removes the corresponding file resource entry from the database.
+	 *
+	 * @param resourceId  The unique identifier of the resource to be deleted.
+	 * @param schemaName  The schema name associated with the resource.
+	 */
 	public void deleteObject(String resourceId, String schemaName) {
 
 		try {
 
+			// Creating request to find file resource by resourceId and schemaName
 			FindFileResourceByResourceIdRequest findFileResourceByResourceIdRequest =
-				FindFileResourceByResourceIdRequest.newBuilder()
-					.setResourceId(resourceId)
-					.setSchemaName(schemaName).build();
+					FindFileResourceByResourceIdRequest.newBuilder()
+							.setResourceId(resourceId)  // Set the resource ID for lookup
+							.setSchemaName(schemaName)   // Set the schema name for the resource
+							.build();  // Build the request object
 
+			// Calling the GRPC service to find the file resource by resourceId
 			FileResourceResponse fileResourceResponse =
-				filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
+					filemanager.findFileResourceByResourceId(findFileResourceByResourceIdRequest);
 
+			// Extracting the datasourceId and fileId from the response
 			String datasourceId = fileResourceResponse.getDatasourceId();
 			String fileId = fileResourceResponse.getFileId();
 
-			String bucketName = "datasource" + datasourceId;
+			// Constructing the bucket name using schema name and datasource ID
+			String bucketName = schemaName + "-datasource" + datasourceId;
 
+			// Logging the removal of the object from MinIO
 			logger.info("Removing object with fileId " + fileId + " in bucket " + bucketName);
 
+			// Removing the object from the MinIO bucket using fileId
 			minioClient.removeObject(
 					RemoveObjectArgs.builder()
-							.bucket(bucketName)
-							.object(fileId)
-							.build());
+							.bucket(bucketName)  // Specify the bucket
+							.object(fileId)      // Specify the object (file) ID to remove
+							.build());           // Build the remove object request
 
+			// Logging that the object was removed from the storage
 			logger.info("Removed object with resourceId: " + resourceId);
 
+			// Deleting the file resource from the database using filemanager service
 			filemanager.deleteFileResource(findFileResourceByResourceIdRequest);
 
+			// Logging the successful removal of the file resource
 			logger.info("Removed entity with resourceId: " + resourceId);
 
+		} catch (MinioException | InvalidKeyException | IOException | NoSuchAlgorithmException e) {
+			// If the MinIO deletion fails, log the error
+			logger.error("MinIO deletion failed: " + e.getMessage(), e);
 
+		} catch (StatusRuntimeException e) {
+			// If the MinIO deletion fails, log the error
+			logger.error("gRPC error while communicating with filemanager service: " + e.getStatus().getDescription(), e);
 		} catch (Exception e) {
-
-			logger.info("Delete failed with exception: " + e.getMessage());
+			// Catch any other unexpected exceptions and log them
+			logger.error("Unexpected error occurred while deleting file: " + e.getMessage(), e);
 		}
 	}
 
-	@GrpcClient("filemanager")
-	FileManagerGrpc.FileManagerBlockingStub filemanager;
+	@GrpcClient("filemanager")  // GRPC client injection for FileManager service
+	FileManagerGrpc.FileManagerBlockingStub filemanager;  // Blocking stub for FileManager GRPC service
 
 	@Inject
-	Logger logger;
+	Logger logger;  // Injecting Logger to log messages
 
+	@Inject
+	MinioClient minioClient;  // Inject MinioClient to interact with MinIO
 }

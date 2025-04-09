@@ -76,14 +76,12 @@ export function Search({
       <div
         className="openk9--search-container"
         css={css`
-          margin-top: 12px;
           display: flex;
           align-items: center;
           gap: 10px;
           width: 100%;
           @media (max-width: 480px) {
             flex-direction: row;
-            margin-top: 15px;
           }
           .openk9-focusable:has(input:focus) {
             border: 1px solid #c22525;
@@ -96,7 +94,7 @@ export function Search({
           css={css`
             display: flex;
             align-items: center;
-            border-radius: 40px;
+            border-radius: 8px;
             width: 100%;
             max-height: 50px;
             @media (max-width: 480px) {
@@ -411,7 +409,6 @@ export function Search({
                 css={css`
                   cursor: pointer;
                   @media (max-width: 480px) {
-                    margin-top: 7px;
                     display: none;
                   }
                 `}

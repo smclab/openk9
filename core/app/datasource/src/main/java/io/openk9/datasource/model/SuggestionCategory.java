@@ -17,22 +17,21 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Set;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "suggestion_category")
@@ -54,38 +53,29 @@ public class SuggestionCategory extends K9Entity {
 	@Column(name = "multi_select", nullable = false)
 	private boolean multiSelect = false;
 
-
-	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.DETACH})
-	@JoinTable(name = "suggestion_category_doc_type_fields",
-		joinColumns = @JoinColumn(name = "suggestion_category_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "doc_type_fields_id", referencedColumnName = "id"))
+	@ManyToOne(cascade = {
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.DETACH
+		}
+	)
 	@ToString.Exclude
 	@JsonIgnore
-	private Set<DocTypeField> docTypeFields = new LinkedHashSet<>();
+	@JoinColumn(name = "doc_type_field_id")
+	private DocTypeField docTypeField;
 
 	@ToString.Exclude
-	@ManyToOne(
+	@ManyToMany(
+		mappedBy = "suggestionCategories",
 		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
 		}
 	)
 	@JsonIgnore
-	@JoinColumn(name = "bucket_id")
-	private Bucket bucket;
-
-	public void addDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.add(docTypeField);
-	}
-
-	public void removeDocTypeField(DocTypeField docTypeField) {
-		docTypeFields.remove(docTypeField);
-	}
+	private Set<Bucket> buckets;
 
 }

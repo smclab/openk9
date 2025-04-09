@@ -17,111 +17,131 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.EnrichPipelineMapper;
-import io.openk9.datasource.model.EnrichPipeline;
-import io.openk9.datasource.model.EnrichPipelineItem;
-import io.openk9.datasource.model.EnrichPipelineItemKey;
-import io.openk9.datasource.model.dto.EnrichPipelineDTO;
-import io.openk9.datasource.model.util.K9Entity;
-import io.quarkus.test.Mock;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectSpy;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
+import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EnrichPipelineServiceTest {
 
-	@InjectSpy
+	public static final String ENRICH_PIPELINE_SERVICE_TEST_NAME = "enrich_pipeline_service_test";
+
+	@Inject
 	EnrichPipelineService enrichPipelineService;
 
+	@Inject
+	EnrichItemService enrichItemService;
+
+	private List<EnrichItem> enrichItems;
 
 	@Test
-	@RunOnVertxContext
-	void should_adds_enrich_items_and_create_pipeline(UniAsserter asserter) {
+	@Order(1)
+	void should_adds_enrich_items_and_create_pipeline() {
 
-		var session = mock(Mutiny.Session.class);
+		var enrichItems = enrichItemService.findAll()
+			.await().indefinitely();
 
-		asserter.assertThat(
-			() -> enrichPipelineService.create(session, CreateConnection.PIPELINE_WITH_ITEMS_DTO),
-			response -> {
+		this.enrichItems = enrichItems;
 
-				then(enrichPipelineService)
-					.should(times(1))
-					.create(eq(session), any(EnrichPipelineDTO.class));
+		float weight = 1.0f;
 
-				then(session)
-					.should(times(1))
-					.persist(
-						argThat((EnrichPipeline pipeline) -> {
-							Assertions.assertEquals(
-								CreateConnection.PIPELINE_NAME,
-								pipeline.getName()
-							);
+		List<PipelineWithItemsDTO.ItemDTO> itemDTOS = new ArrayList<>();
 
-							var items = pipeline.getEnrichPipelineItems();
+		for (EnrichItem item : this.enrichItems) {
 
-							Assertions.assertEquals(2, items.size());
+			PipelineWithItemsDTO.ItemDTO itemDTO =
+				PipelineWithItemsDTO.ItemDTO.builder()
+					.enrichItemId(item.getId())
+					.weight(weight)
+					.build();
 
-							var orderedItemIds = items
-								.stream()
-								.map(EnrichPipelineItem::getKey)
-								.map(EnrichPipelineItemKey::getEnrichItemId)
-								.toList();
+			itemDTOS.add(itemDTO);
+			weight += 1;
 
-							Assertions.assertEquals(
-								orderedItemIds,
-								List.of(
-									CreateConnection.FIRST_ITEM_ID,
-									CreateConnection.SECOND_ITEM_ID
-								)
-							);
+		}
 
-							return true;
-						})
-					);
-
-			}
-		);
+		enrichPipelineService.createWithItems(PipelineWithItemsDTO.builder()
+			.name(ENRICH_PIPELINE_SERVICE_TEST_NAME)
+			.items(itemDTOS)
+			.build()
+		).await().indefinitely();
 
 	}
 
+	@Test
+	@Order(2)
+	void should_remove_item_from_pipeline() {
 
-	@Mock
-	public static class MockEnrichPipelineService extends EnrichPipelineService {
+		var enrichPipeline = enrichPipelineService.findByName(
+				"public",
+				ENRICH_PIPELINE_SERVICE_TEST_NAME
+			)
+			.await().indefinitely();
 
-		MockEnrichPipelineService() {
-			super(null);
+		UniJoin.Builder<Tuple2<EnrichPipeline, EnrichItem>> uniJoin =
+			Uni.join().builder();
+
+		for (EnrichItem enrichItem : this.enrichItems) {
+
+			var removeUni = enrichPipelineService.removeEnrichItem(
+				enrichPipeline.getId(), enrichItem.getId());
+
+			uniJoin.add(removeUni);
+
 		}
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends K9Entity> Uni<T> persist(Mutiny.Session s, T entity) {
-			var enrichPipeline = new EnrichPipeline();
-			enrichPipeline.setName(CreateConnection.PIPELINE_NAME);
+		var removedItems = uniJoin.joinAll()
+			.andFailFast()
+			.await()
+			.indefinitely();
 
-			return Uni.createFrom().item((T) enrichPipeline);
+		for (Tuple2<EnrichPipeline, EnrichItem> tuple2 : removedItems) {
+
+			Assertions.assertNotNull(tuple2);
+
 		}
 
-		@Inject
-		void setMapper(EnrichPipelineMapper mapper) {
-			this.mapper = mapper;
-		}
+		var enrichItems = enrichPipelineService.getEnrichItemsInEnrichPipeline(
+			enrichPipeline.getId()).await().indefinitely();
+
+		Assertions.assertEquals(0, enrichItems.size());
 
 	}
 
+	@Test
+	@Order(3)
+	void should_remove_enrich_pipeline() {
+
+		var enrichPipeline = enrichPipelineService.findByName(
+				"public",
+				ENRICH_PIPELINE_SERVICE_TEST_NAME
+			)
+			.await().indefinitely();
+
+		enrichPipelineService.deleteById(enrichPipeline.getId())
+			.await().indefinitely();
+
+		var removed = enrichPipelineService.findById(enrichPipeline.getId())
+			.await().indefinitely();
+
+		Assertions.assertNull(removed);
+
+	}
 }

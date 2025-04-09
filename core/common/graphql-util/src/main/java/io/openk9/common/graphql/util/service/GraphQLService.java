@@ -1,4 +1,39 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.common.graphql.util.service;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import io.openk9.common.graphql.util.exception.InvalidPageSizeException;
 import io.openk9.common.graphql.util.relay.Connection;
@@ -9,31 +44,29 @@ import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.openk9.common.graphql.util.relay.PageInfo;
 import io.openk9.common.graphql.util.relay.RelayUtil;
 import io.openk9.common.util.SortBy;
+
 import io.smallrye.mutiny.Uni;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.SingularAttribute;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import static java.lang.String.format;
 
 public abstract class GraphQLService<ENTITY extends GraphqlId> {
+
+	private static final Logger log = Logger.getLogger(GraphQLService.class);
+
+	private static final Set<Class<?>> NUMERIC_TYPES = Set.of(
+			Byte.class, Short.class, Integer.class, Long.class,
+			Float.class, Double.class, byte.class, short.class,
+			int.class, long.class, float.class, double.class,
+			BigDecimal.class, BigInteger.class
+	);
+
+	private static boolean isNumeric(Class<?> clazz) {
+		return NUMERIC_TYPES.contains(clazz);
+	}
 
 	public Uni<Connection<ENTITY>> findConnection(
 		String after, String before, Integer first, Integer last) {
@@ -289,7 +322,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 
 		criteriaBuilderQuery.orderBy(orders);
 
-		Mutiny.Query<T> query = s.createQuery(criteriaBuilderQuery);
+		var query = s.createQuery(criteriaBuilderQuery);
 
 		if (first != null) {
 			if (first < 0) {
@@ -392,32 +425,6 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 					"%" + searchText.toLowerCase() + "%")
 			);
 		}
-		else if (StringUtils.isNumeric(searchText)) {
-
-			Number number;
-
-			if (ClassUtils.isAssignable(javaType, Integer.class)) {
-				number = Integer.parseInt(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Long.class)) {
-				number = Long.parseLong(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Float.class)) {
-				number = Float.parseFloat(searchText);
-			}
-			else if (ClassUtils.isAssignable(javaType, Double.class)) {
-				number = Double.parseDouble(searchText);
-			}
-			else {
-				number = new BigDecimal(searchText);
-			}
-
-			searchConditions = criteriaBuilder.or(
-				searchConditions, criteriaBuilder.equal(
-					searchPath, number)
-			);
-
-		}
 		else if (javaType == Boolean.class) {
 			searchConditions = criteriaBuilder.or(
 				searchConditions, criteriaBuilder.equal(
@@ -435,7 +442,34 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				);
 			}
 			catch (IllegalArgumentException e) {
-				// ignore
+				log.debug("Error while trying to parse searchText to UUID", e);
+			}
+
+		} else if (GraphQLService.isNumeric(javaType)) {
+
+			if (StringUtils.isNumeric(searchText)) {
+				Number number;
+
+				if (ClassUtils.isAssignable(javaType, Integer.class)) {
+					number = Integer.parseInt(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Long.class)) {
+					number = Long.parseLong(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Float.class)) {
+					number = Float.parseFloat(searchText);
+				} else if (ClassUtils.isAssignable(javaType, Double.class)) {
+					number = Double.parseDouble(searchText);
+				} else {
+					number = new BigDecimal(searchText);
+				}
+
+				searchConditions = criteriaBuilder.or(
+						searchConditions, criteriaBuilder.equal(
+								searchPath, number)
+				);
+			} else {
+				log.debug(
+						"cannot parse searchtext as numeric type." +
+						" The numeric condition will be ignored.");
 			}
 
 		}
@@ -459,7 +493,5 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 	protected abstract <T> SingularAttribute<T, Long> getIdAttribute();
 
 	protected abstract Mutiny.SessionFactory getSessionFactory();
-
-	private static final Logger LOGGER = Logger.getLogger(GraphQLService.class);
 
 }

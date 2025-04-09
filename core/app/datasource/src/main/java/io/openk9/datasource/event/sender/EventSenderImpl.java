@@ -24,10 +24,10 @@ import io.openk9.datasource.event.repo.EventRepository;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.UUID;

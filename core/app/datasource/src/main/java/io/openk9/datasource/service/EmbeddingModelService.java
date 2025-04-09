@@ -17,25 +17,55 @@
 
 package io.openk9.datasource.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.ws.rs.NotFoundException;
+
+import io.openk9.datasource.index.EmbeddingComponentTemplate;
+import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.EmbeddingModelMapper;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.EmbeddingModel_;
 import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
+
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.ws.rs.NotFoundException;
 
 @ApplicationScoped
 public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, EmbeddingModelDTO> {
 
+	@Inject
+	IndexMappingService indexMappingService;
+
 	EmbeddingModelService(EmbeddingModelMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<EmbeddingModel> fetchCurrent(Mutiny.Session session) {
+		return session.createNamedQuery(
+				EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+			.getSingleResult();
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> merge(Mutiny.Session session, T entity) {
+
+		return super.merge(session, entity)
+			.call(model -> createComponentTemplate(session, (EmbeddingModel) model));
+
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
+
+		return super.persist(session, entity)
+			.call(model -> createComponentTemplate(session, (EmbeddingModel) model));
+
 	}
 
 	@Override
@@ -99,6 +129,24 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 
 	public Uni<EmbeddingModel> enable(long id) {
 		return sessionFactory.withTransaction((s, t) -> enable(s, id));
+	}
+
+	private Uni<Void> createComponentTemplate(Mutiny.Session session, EmbeddingModel entity) {
+
+		return session.find(TenantBinding.class, 1L)
+			.flatMap(tenantBinding -> {
+				var tenantId = tenantBinding.getTenant();
+				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
+					tenantId,
+					entity.getName(),
+					entity.getVectorSize()
+				);
+
+				return indexMappingService.createEmbeddingComponentTemplate(
+					session,
+					embeddingComponentTemplate);
+			});
+
 	}
 
 }

@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.AnnotatorType;
-import io.openk9.datasource.model.dto.AnnotatorDTO;
-import io.openk9.datasource.model.util.Fuzziness;
-
 import java.util.Set;
+
+import io.openk9.datasource.model.AnnotatorType;
+import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+import io.openk9.datasource.model.util.Fuzziness;
 
 public class Annotators {
 

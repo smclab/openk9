@@ -29,9 +29,9 @@ import io.openk9.entity.manager.cache.model.EntityKey;
 import io.openk9.entity.manager.model.graph.DocumentGraph;
 import io.openk9.entity.manager.service.graph.EntityGraphService;
 import io.openk9.entity.manager.util.MapUtil;
+import jakarta.enterprise.inject.spi.CDI;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.inject.spi.CDI;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;

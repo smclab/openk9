@@ -17,17 +17,19 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
+
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
 
 public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
@@ -40,6 +42,7 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 	private final ShardingKey processKey;
 	private ActorRef<Processor.Response> replyTo;
 	private HeldMessage heldMessage;
+	private SchedulerDTO scheduler;
 
 	public EmbeddingProcessor(
 		ActorContext<Processor.Command> context,
@@ -66,26 +69,11 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 			.build();
 	}
 
-	private Behavior<Processor.Command> onStart(Processor.Start start) {
-		var payload = start.ingestPayload();
-		this.heldMessage = start.heldMessage();
-		this.replyTo = start.replyTo();
-
-		this.getContext().pipeToSelf(
-			EmbeddingService.getEmbeddedPayload(
-				processKey.tenantId(), processKey.scheduleId(), payload),
-			EmbeddingResponse::new
-		);
-
-		return this;
-	}
-
-
 	private Behavior<Processor.Command> onEmbeddingResponse(EmbeddingResponse response) {
 
 		if (response.payload() != null) {
 
-			replyTo.tell(new Processor.Success(response.payload, heldMessage));
+			replyTo.tell(new Processor.Success(response.payload, scheduler, heldMessage));
 
 		}
 		else if (response.throwable() != null) {
@@ -97,11 +85,26 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		else {
 
 			replyTo.tell(new Processor.Failure(
-				new DataProcessException("Unknown error"), heldMessage));
+				new DataProcessException("Empty response"), heldMessage));
 
 		}
 
 		return Behaviors.stopped();
+	}
+
+	private Behavior<Processor.Command> onStart(Processor.Start start) {
+		var payload = start.ingestPayload();
+		this.heldMessage = start.heldMessage();
+		this.replyTo = start.replyTo();
+		this.scheduler = start.scheduler();
+
+		this.getContext().pipeToSelf(
+			EmbeddingService.getEmbeddedPayload(
+				processKey.tenantId(), processKey.scheduleId(), payload),
+			EmbeddingResponse::new
+		);
+
+		return this;
 	}
 
 	private record EmbeddingResponse(byte[] payload, Throwable throwable)

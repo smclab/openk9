@@ -17,25 +17,28 @@
 
 package io.openk9.datasource.listener;
 
-import akka.actor.typed.ActorRef;
-import akka.cluster.typed.ClusterSingleton;
-import akka.cluster.typed.SingletonActor;
 import io.openk9.datasource.actor.ActorSystemProvider;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
-import org.hibernate.reactive.mutiny.Mutiny;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.cluster.typed.ClusterSingleton;
+import org.apache.pekko.cluster.typed.SingletonActor;
 import org.jboss.logging.Logger;
-import org.opensearch.client.RestHighLevelClient;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class SchedulerInitializerActor {
 
+	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
+	@Inject
+	ActorSystemProvider actorSystemProvider;
+	@Inject
+	Vertx vertx;
 	private List<JobScheduler.ScheduleDatasource> schedulatedJobs;
 
 	public Uni<Void> initJobScheduler(List<JobScheduler.ScheduleDatasource> schedulatedJobs) {
@@ -44,21 +47,27 @@ public class SchedulerInitializerActor {
 	}
 
 	public Uni<Void> scheduleDataSource(
-		String tenantName, long datasourceId, boolean schedulable, String cron) {
+			String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
+			boolean reindexable, String reindexingCron, boolean purgeable, String purging,
+			String purgeMaxAge) {
 
 		return getScheduleRef(() ->
-			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable, cron));
-	}
-
-	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
-		return getScheduleRef(() ->
-			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
+			new JobScheduler.ScheduleDatasource(tenantName, datasourceId, schedulable,
+				schedulingCron, reindexable, reindexingCron, purgeable, purging, purgeMaxAge));
 	}
 
 	public Uni<Void> triggerDataSource(
-		String tenantName, long datasourceId, Boolean startFromFirst) {
+			String tenantName, long datasourceId, Boolean reindex,
+			OffsetDateTime startIngestionDate) {
+
 		return getScheduleRef(() ->
-			new JobScheduler.TriggerDatasource(tenantName, datasourceId, startFromFirst));
+			new JobScheduler.TriggerDatasource(
+				tenantName, datasourceId, reindex, startIngestionDate));
+	}
+	
+	public Uni<Void> unScheduleDataSource(String tenantName, long datasourceId) {
+		return getScheduleRef(() ->
+			new JobScheduler.UnScheduleDatasource(tenantName, datasourceId));
 	}
 
 	private Uni<Void> getScheduleRef(Supplier<JobScheduler.Command> commandSupplier) {
@@ -73,10 +82,9 @@ public class SchedulerInitializerActor {
 						.init(
 							SingletonActor.of(
 								JobScheduler.create(
-									httpPluginDriverClient,
-									sessionFactory,
-									restHighLevelClient,
-									schedulatedJobs
+									schedulatedJobs != null
+										? schedulatedJobs
+										: List.of()
 								),
 								"job-scheduler"
 							)
@@ -96,21 +104,4 @@ public class SchedulerInitializerActor {
 		);
 
 	}
-
-	private static final Logger log = Logger.getLogger(SchedulerInitializerActor.class);
-	
-	@Inject
-	HttpPluginDriverClient httpPluginDriverClient;
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Inject
-	ActorSystemProvider actorSystemProvider;
-
-	@Inject
-	RestHighLevelClient restHighLevelClient;
-
-	@Inject
-	Vertx vertx;
 }

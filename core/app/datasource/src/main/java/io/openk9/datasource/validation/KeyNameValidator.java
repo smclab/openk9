@@ -17,11 +17,12 @@
 
 package io.openk9.datasource.validation;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import javax.enterprise.context.ApplicationScoped;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 
 @ApplicationScoped
 public class KeyNameValidator implements ConstraintValidator<KeyName, String> {

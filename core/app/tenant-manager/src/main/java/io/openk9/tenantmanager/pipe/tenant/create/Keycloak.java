@@ -17,15 +17,16 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory;
 import io.openk9.tenantmanager.pipe.tenant.create.factory.RealmRepresentationFactory;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfig;
-import io.quarkus.keycloak.admin.client.common.KeycloakAdminClientConfigUtil;
+
+import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig;
+import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfigUtil;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -140,20 +141,20 @@ public class Keycloak {
 
 		KeycloakAdminClientConfigUtil.validate(config);
 
-		if (config.serverUrl.isEmpty()) {
+		if (config.serverUrl().isEmpty()) {
 			throw new IllegalStateException("keycloak serverUrl is empty");
 		}
 
 		KeycloakBuilder keycloakBuilder = KeycloakBuilder
 			.builder()
-			.clientId(config.clientId)
-			.clientSecret(config.clientSecret.orElse(null))
-			.grantType(config.grantType.asString())
-			.username(config.username.orElse(null))
-			.password(config.password.orElse(null))
-			.realm(config.realm)
-			.serverUrl(config.serverUrl.get())
-			.scope(config.scope.orElse(null));
+			.clientId(config.clientId())
+			.clientSecret(config.clientSecret().orElse(null))
+			.grantType(config.grantType().asString())
+			.username(config.username().orElse(null))
+			.password(config.password().orElse(null))
+			.realm(config.realm())
+			.serverUrl(config.serverUrl().get())
+			.scope(config.scope().orElse(null));
 
 		return keycloakBuilder.build();
 

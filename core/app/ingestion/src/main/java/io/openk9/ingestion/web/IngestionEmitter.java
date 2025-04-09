@@ -17,6 +17,7 @@
 
 package io.openk9.ingestion.web;
 
+import com.rabbitmq.client.Connection;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.IngestionUtils;
 import io.openk9.common.util.ingestion.PayloadType;
@@ -27,11 +28,14 @@ import io.openk9.ingestion.dto.IngestionPayload;
 import io.openk9.ingestion.dto.IngestionPayloadWrapper;
 import io.openk9.ingestion.dto.ResourcesDTO;
 import io.openk9.ingestion.dto.ResourcesPayload;
-import io.openk9.ingestion.grpc.Binary;
-import io.openk9.ingestion.grpc.IngestionRequest;
-import io.openk9.ingestion.grpc.Resources;
+import io.openk9.ingestion.exception.NoSuchQueueException;
+import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
 import io.vertx.core.json.JsonObject;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
@@ -39,15 +43,15 @@ import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class IngestionEmitter {
@@ -58,65 +62,70 @@ public class IngestionEmitter {
 	@Inject
 	Logger logger;
 
-	public CompletionStage<Void> emit(IngestionRequest ingestionRequest) {
+	@Inject
+	RabbitMQClient rabbitMQClient;
 
-		_emitter.send(createMessage(_of(ingestionRequest)));
+	private Connection connect;
 
-		return CompletableFuture.completedStage(null);
-
+	@PreDestroy
+	public void destroy() throws IOException {
+		connect.close();
 	}
 
 	public CompletionStage<Void> emit(IngestionDTO ingestionDTO) {
 
-		_emitter.send(createMessage(_of(ingestionDTO)));
+		var queueName = ShardingKey.asString(
+			ingestionDTO.getTenantId(),
+			ingestionDTO.getScheduleId());
+
+		emit(createMessage(_of(ingestionDTO)), queueName);
 
 		return CompletableFuture.completedStage(null);
 	}
 
-	private IngestionPayloadWrapper _of(IngestionRequest dto) {
-
-		Map<String, Object> datasourcePayload =
-			new JsonObject(dto.getDatasourcePayload())
-				.getMap();
-
-		Map<String, List<String>> mappingAcl =
-			dto
-				.getAclMap()
-				.entrySet()
-				.stream()
-				.collect(
-					Collectors.toMap(
-						Map.Entry::getKey,
-						e -> new ArrayList<>(e.getValue().getValueList())
-					)
-				);
-
-		return IngestionPayloadWrapper.of(
-			IngestionPayload.of(
-				UUID.randomUUID().toString(),
-				dto.getDatasourceId(),
-				dto.getContentId(),
-				dto.getParsingDate(),
-				dto.getRawContent(),
-				datasourcePayload,
-				dto.getTenantId(),
-				IngestionUtils.getDocumentTypes(datasourcePayload),
-				_dtoToPayload(dto.getResources()),
-				mappingAcl,
-				dto.getScheduleId(),
-				dto.getLast(),
-				_mapType(dto.getType())
-			)
-		);
+	@PostConstruct
+	public void init() {
+		this.connect = rabbitMQClient.connect();
 	}
 
-	private PayloadType _mapType(io.openk9.ingestion.grpc.PayloadType type) {
-		return switch (type) {
-			case DOCUMENT -> PayloadType.DOCUMENT;
-			case LAST -> PayloadType.LAST;
-			case HALT -> PayloadType.HALT;
-			case UNRECOGNIZED -> null;
-		};
+	private void emit(Message<IngestionPayloadWrapper> message, String queueName)
+		throws NoSuchQueueException {
+
+		if (checkQueueExistence(queueName)) {
+			_emitter.send(message);
+		}
+		else {
+			throw new NoSuchQueueException(
+				String.format("No such queue with name: \"%s\".", queueName));
+		}
+	}
+
+	private ResourcesPayload _dtoToPayload(
+		ResourcesDTO resources) {
+
+		List<BinaryDTO> binaries = null;
+
+		if (resources != null) {
+			binaries = resources.getBinaries();
+		}
+
+		List<BinaryPayload> binaryPayloadList;
+
+		if (binaries == null) {
+			binaryPayloadList = List.of();
+		}
+		else {
+			binaryPayloadList =
+				binaries
+					.stream()
+					.map(binaryDTO -> BinaryPayload.of(
+						binaryDTO.getId(), binaryDTO.getName(),
+						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+					))
+					.collect(Collectors.toList());
+		}
+
+		return ResourcesPayload.of(binaryPayloadList);
 	}
 
 	private IngestionPayloadWrapper _of(IngestionDTO dto) {
@@ -139,52 +148,32 @@ public class IngestionEmitter {
 		);
 	}
 
-	private ResourcesPayload _dtoToPayload(
-		Resources resources) {
+	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
+		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
 
-		List<Binary> binaries = resources.getBinaryList();
-
-		List<BinaryPayload> binaryPayloadList;
-
-		if (binaries == null) {
-			binaryPayloadList = List.of();
-		}
-		else {
-			binaryPayloadList =
-				binaries
-					.stream()
-					.map(binaryDTO -> BinaryPayload.of(
-						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
-					))
-					.collect(Collectors.toList());
-		}
-
-		return ResourcesPayload.of(binaryPayloadList);
+		return ShardingKey.asString(
+			ingestionPayload.getTenantId(),
+			ingestionPayload.getScheduleId()
+		);
 	}
 
-	private ResourcesPayload _dtoToPayload(
-		ResourcesDTO resources) {
+	private boolean checkQueueExistence(String queueName) {
+		boolean exist = false;
+		try (var channel = connect.createChannel()) {
+			channel.queueDeclarePassive(queueName);
+			exist = true;
 
-		List<BinaryDTO> binaries = resources.getBinaries();
-
-		List<BinaryPayload> binaryPayloadList;
-
-		if (binaries == null) {
-			binaryPayloadList = List.of();
 		}
-		else {
-			binaryPayloadList =
-				binaries
-					.stream()
-					.map(binaryDTO -> BinaryPayload.of(
-						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
-					))
-					.collect(Collectors.toList());
+		catch (IOException e) {
+			logger.warnf(String.format("No such queue with name: \"%s\".", queueName));
+			exist = false;
+
+		}
+		catch (TimeoutException e) {
+			logger.errorf(e, String.format("Error closing channel."));
 		}
 
-		return ResourcesPayload.of(binaryPayloadList);
+		return exist;
 	}
 
 	private Message<IngestionPayloadWrapper> createMessage(IngestionPayloadWrapper ingestionPayloadWrapper) {
@@ -197,15 +186,6 @@ public class IngestionEmitter {
 					.withDeliveryMode(2)
 					.build()
 			)
-		);
-	}
-
-	private String _toRoutingKey(IngestionPayloadWrapper ingestionPayloadWrapper) {
-		IngestionPayload ingestionPayload = ingestionPayloadWrapper.getIngestionPayload();
-
-		return ShardingKey.asString(
-			ingestionPayload.getTenantId(),
-			ingestionPayload.getScheduleId()
 		);
 	}
 

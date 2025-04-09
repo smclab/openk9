@@ -36,6 +36,7 @@ import io.openk9.entity.manager.service.graph.EntityGraphService;
 import io.openk9.entity.manager.service.index.EntityService;
 import io.openk9.entity.manager.util.FutureUtil;
 import io.openk9.entity.manager.util.MapUtil;
+import jakarta.enterprise.inject.spi.CDI;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,7 +69,6 @@ import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.enterprise.inject.spi.CDI;
 
 import static org.neo4j.cypherdsl.core.Cypher.literalOf;
 

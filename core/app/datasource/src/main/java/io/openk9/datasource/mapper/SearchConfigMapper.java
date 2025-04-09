@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.SearchConfigDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

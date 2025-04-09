@@ -17,33 +17,35 @@
 
 package io.openk9.datasource.model;
 
-import com.cronutils.model.CronType;
-import com.cronutils.validation.Cron;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
 import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidQuartzCron;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Description;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import java.time.OffsetDateTime;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "datasource")
@@ -54,81 +56,140 @@ import java.util.Set;
 @EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
-	@Column(name = "name", nullable = false, unique = true)
-	private String name;
-
-	@Column(name = "description", length = 4096)
-	private String description;
-
-	@Description("Chron quartz expression to define scheduling of datasource")
-	@Column(name = "scheduling", nullable = false)
-	@Cron(type = CronType.QUARTZ)
-	private String scheduling;
-
-	@Description("Last ingestion date of data for current datasource")
-	@Column(name = "last_ingestion_date")
-	private OffsetDateTime lastIngestionDate;
-
-	@Description("If true set datasource as schedulable")
-	@Column(name = "schedulable", nullable = false)
-	private Boolean schedulable = false;
-
-	@ToString.Exclude
-	@OneToOne(fetch = javax.persistence.FetchType.LAZY, cascade = javax.persistence.CascadeType.ALL)
-	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
-	@JsonIgnore
-	private DataIndex dataIndex;
-
-	@ToString.Exclude
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "datasource")
-	@JsonIgnore
-	private Set<DataIndex> dataIndexes;
-
-	@ToString.Exclude
-	@ManyToOne(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
-	@JoinColumn(name = "enrich_pipeline_id")
-	@JsonIgnore
-	private EnrichPipeline enrichPipeline;
-
-	@ToString.Exclude
-	@ManyToOne(
-		fetch = FetchType.LAZY,
-		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH})
-	@JoinColumn(name = "plugin_driver_id")
-	@JsonIgnore
-	private PluginDriver pluginDriver;
+	private static final Boolean DEFAULT_PURGEABLE = false;
+	private static final String DEFAULT_PURGING = "0 0 1 * * ?";
+	private static final String DEFAULT_PURGE_MAX_AGE = "2d";
+	private static final Boolean DEFAULT_REINDEXABLE = false;
+	private static final String DEFAULT_REINDEXING = "0 0 1 * * ?";
+	private static final Boolean DEFAULT_SCHEDULABLE = false;
+	private static final String DEFAULT_SCHEDULING = "0 */30 * ? * * *";
 
 	@ManyToMany(cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.DETACH,
-		javax.persistence.CascadeType.REFRESH})
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.DETACH,
+		jakarta.persistence.CascadeType.REFRESH
+	}
+	)
 	@JoinTable(name = "datasource_buckets",
 		joinColumns = @JoinColumn(name = "datasource_id", referencedColumnName = "id"),
 		inverseJoinColumns = @JoinColumn(name = "buckets_id", referencedColumnName = "id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Bucket> buckets = new LinkedHashSet<>();
-
+	@ToString.Exclude
+	@OneToOne(
+		fetch = jakarta.persistence.FetchType.LAZY,
+		cascade = {
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.DETACH,
+			jakarta.persistence.CascadeType.REFRESH
+		}
+	)
+	@JoinColumn(name = "data_index_id", referencedColumnName = "id")
+	@JsonIgnore
+	private DataIndex dataIndex;
+	@ToString.Exclude
+	@OneToMany(
+		cascade = {
+			CascadeType.PERSIST,
+			CascadeType.MERGE,
+			CascadeType.DETACH,
+			CascadeType.REFRESH
+		},
+		mappedBy = "datasource"
+	)
+	@JsonIgnore
+	private Set<DataIndex> dataIndexes;
+	@Column(name = "description", length = 4096)
+	private String description;
+	@ToString.Exclude
+	@ManyToOne(cascade = {
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
+	@JoinColumn(name = "enrich_pipeline_id")
+	@JsonIgnore
+	private EnrichPipeline enrichPipeline;
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "json_config")
+	private String jsonConfig;
+	@Description("Last ingestion date of data for current datasource")
+	@Column(name = "last_ingestion_date")
+	private OffsetDateTime lastIngestionDate;
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@ToString.Exclude
+	@ManyToOne(
+		fetch = FetchType.LAZY,
+		cascade = {
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
+		}
+	)
+	@JoinColumn(name = "plugin_driver_id")
+	@JsonIgnore
+	private PluginDriver pluginDriver;
+	@Description("If true set active the purge job scheduling")
+	@Column(name = "purgeable")
+	private Boolean purgeable = DEFAULT_PURGEABLE;
+	@Description("Chron quartz expression to define purging for this datasource")
+	@Column(name = "purging")
+	@ValidQuartzCron
+	private String purging = DEFAULT_PURGING;
+	@Description("The duration to identify orphaned Dataindex.")
+	@Column(name = "purge_max_age")
+	private String purgeMaxAge = DEFAULT_PURGE_MAX_AGE;
+	@Description("If true set datasource as reindexable")
+	@Column(name = "reindexable", nullable = false)
+	private Boolean reindexable = DEFAULT_REINDEXABLE;
+	@Description("Chron quartz expression to define reindexing of datasource")
+	@Column(name = "reindexing", nullable = false)
+	@ValidQuartzCron
+	private String reindexing = DEFAULT_REINDEXING;
+	@Description("If true set datasource as schedulable")
+	@Column(name = "schedulable", nullable = false)
+	private Boolean schedulable = DEFAULT_SCHEDULABLE;
 	@OneToMany(mappedBy = "datasource")
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Scheduler> schedulers = new LinkedHashSet<>();
+	@Description("Chron quartz expression to define scheduling of datasource")
+	@Column(name = "scheduling", nullable = false)
+	@ValidQuartzCron
+	private String scheduling = DEFAULT_SCHEDULING;
 
-	@Lob
-	@Column(name = "json_config")
-	private String jsonConfig;
+	public void setPurgeable(Boolean purgeable) {
+		this.purgeable = Objects.requireNonNullElse(purgeable, DEFAULT_PURGEABLE);
+	}
 
-	@Description("Reindex on datasource every {reindexRate} times, never if 0")
-	@Column(name = "reindex_rate")
-	private int reindexRate = 0;
+	public void setPurgeMaxAge(String purgeMaxAge) {
+		this.purgeMaxAge = Objects.requireNonNullElse(purgeMaxAge, DEFAULT_PURGE_MAX_AGE);
+	}
 
+	public void setPurging(String purging) {
+		this.purging = Objects.requireNonNullElse(purging, DEFAULT_PURGING);
+	}
+
+	public void setReindexable(Boolean reindexable) {
+		this.reindexable = Objects.requireNonNullElse(reindexable, DEFAULT_REINDEXABLE);
+	}
+
+	public void setReindexing(String reindexing) {
+		this.reindexing = Objects.requireNonNullElse(reindexing, DEFAULT_REINDEXING);
+	}
+
+	public void setSchedulable(Boolean schedulable) {
+		this.schedulable = Objects.requireNonNullElse(schedulable, DEFAULT_SCHEDULABLE);
+	}
+
+	public void setScheduling(String scheduling) {
+		this.scheduling = Objects.requireNonNullElse(scheduling, DEFAULT_SCHEDULING);
+	}
 }

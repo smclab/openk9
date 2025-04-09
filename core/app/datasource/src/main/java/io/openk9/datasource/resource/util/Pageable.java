@@ -17,12 +17,11 @@
 
 package io.openk9.datasource.resource.util;
 
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.QueryParam;
 
 @Data
 @AllArgsConstructor(staticName = "of")

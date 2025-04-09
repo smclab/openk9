@@ -17,31 +17,32 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Language;
-import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.AnnotatorDTO;
-import io.openk9.datasource.model.dto.LanguageDTO;
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
-import io.openk9.datasource.model.dto.RuleDTO;
-import io.openk9.datasource.model.init.Annotators;
-import io.openk9.datasource.model.init.Languages;
-import io.openk9.datasource.model.init.QueryParserConfigs;
-import io.openk9.datasource.model.init.Rules;
-import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+import io.openk9.datasource.model.dto.base.LanguageDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.RuleDTO;
+import io.openk9.datasource.model.init.Annotators;
+import io.openk9.datasource.model.init.Languages;
+import io.openk9.datasource.model.init.QueryParserConfigs;
+import io.openk9.datasource.model.init.Rules;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class TenantInitializerService {
@@ -134,7 +135,9 @@ public class TenantInitializerService {
 			upserts.add(annotatorService.upsert(s, annotatorDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<Language>> defaultLanguages(Mutiny.Session s) {
@@ -144,7 +147,9 @@ public class TenantInitializerService {
 			upserts.add(languageService.upsert(s, languageDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<Rule>> defaultRules(Mutiny.Session s) {
@@ -154,7 +159,9 @@ public class TenantInitializerService {
 			upserts.add(ruleService.upsert(s, ruleDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Uni<List<QueryParserConfig>> defaultQueryParserConfigs(Mutiny.Session s) {
@@ -164,7 +171,9 @@ public class TenantInitializerService {
 			upserts.add(queryParserConfigService.upsert(s, queryParserConfigDTO));
 		}
 
-		return Uni.join().all(upserts).andCollectFailures();
+		return Uni.join().all(upserts)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
 	}
 
 	private Set<Language> onlyBucketAvailableLanguages(Collection<Language> languages) {

@@ -17,7 +17,23 @@
 
 package io.openk9.datasource.searcher;
 
-import com.google.protobuf.ByteString;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
@@ -45,146 +61,91 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.tenantmanager.grpc.TenantManager;
 import io.openk9.tenantmanager.grpc.TenantRequest;
 import io.openk9.tenantmanager.grpc.TenantResponse;
+
+import com.google.protobuf.ByteString;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-import org.opensearch.common.io.stream.OutputStreamStreamOutput;
-import org.opensearch.common.xcontent.ToXContent;
-import org.opensearch.common.xcontent.XContentBuilder;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.core.common.io.stream.OutputStreamStreamOutput;
+import org.opensearch.core.xcontent.ToXContent;
+import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
 public abstract class BaseSearchService {
 
-	protected Uni<TenantResponse> getTenant(String virtualHost) {
-		return tenantManager.findTenant(TenantRequest.newBuilder()
-			.setVirtualHost(virtualHost)
-			.build());
-	}
+	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
+	@Inject
+	Instance<QueryParser> queryParserInstance;
+	@Inject
+	SearcherMapper searcherMapper;
+	@Inject
+	Mutiny.SessionFactory sf;
+	@GrpcClient("tenantmanager")
+	TenantManager tenantManager;
 
-	protected Uni<Bucket> getTenantAndFetchRelations(
-		String virtualHost, boolean suggestion, long suggestionCategoryId) {
+	public static JsonObject getQueryParserConfig(Bucket bucket, String tokenType) {
 
-		return getTenant(virtualHost)
-			.flatMap(tenantResponse -> sf
-				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
+		SearchConfig searchConfig = bucket.getSearchConfig();
 
-					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
-
-					CriteriaQuery<Bucket> criteriaQuery =
-						criteriaBuilder.createQuery(Bucket.class);
-
-					customizeCriteriaBuilder(
-						virtualHost, criteriaBuilder, criteriaQuery, suggestion,
-						suggestionCategoryId);
-
-					return s
-						.createQuery(criteriaQuery)
-						.getSingleResultOrNull();
-				}));
-
-
-	}
-
-	protected void customizeCriteriaBuilder(
-		String virtualHost, CriteriaBuilder criteriaBuilder,
-		CriteriaQuery<Bucket> criteriaQuery, boolean suggestion,
-		long suggestionCategoryId) {
-
-		Root<Bucket> tenantRoot = criteriaQuery.from(Bucket.class);
-
-		Join<Bucket, TenantBinding> tenantBindingJoin =
-			tenantRoot.join(Bucket_.tenantBinding);
-
-		tenantRoot
-			.fetch(Bucket_.searchConfig, JoinType.LEFT)
-			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
-
-		tenantRoot.fetch(Bucket_.defaultLanguage, JoinType.LEFT);
-
-		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
-
-		Predicate disjunction = criteriaBuilder.conjunction();
-
-		List<Expression<Boolean>> expressions = disjunction.getExpressions();
-
-		if (suggestion) {
-
-			Fetch<Bucket, SuggestionCategory> suggestionCategoryFetch =
-				tenantRoot.fetch(Bucket_.suggestionCategories);
-
-			Fetch<SuggestionCategory, DocTypeField> categoryDocTypeFieldFetch =
-				suggestionCategoryFetch
-					.fetch(SuggestionCategory_.docTypeFields);
-
-			categoryDocTypeFieldFetch
-				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
-
-			if (suggestionCategoryId > 0) {
-
-				expressions.add(
-					criteriaBuilder.equal(
-						((Path<SuggestionCategory>)suggestionCategoryFetch)
-							.get(SuggestionCategory_.id),
-						suggestionCategoryId)
-				);
-			}
-
+		if (searchConfig == null) {
+			return EMPTY_JSON;
 		}
 
-		Fetch<Bucket, Datasource> datasourceRoot =
-			tenantRoot.fetch(Bucket_.datasources);
+		return searchConfig
+			.getQueryParserConfigs()
+			.stream()
+			.filter(queryParserConfig -> queryParserConfig.getType().equals(
+				tokenType))
+			.findFirst()
+			.map(SearcherService::toJsonObject)
+			.orElse(EMPTY_JSON);
+	}
 
-		datasourceRoot
-			.fetch(Datasource_.pluginDriver)
-			.fetch(PluginDriver_.aclMappings, JoinType.LEFT);
+	public static JsonObject toJsonObject(QueryParserConfig queryParserConfig) {
 
-		Fetch<Datasource, DataIndex> dataIndexRoot =
-			datasourceRoot.fetch(Datasource_.dataIndex);
+		String jsonConfig = queryParserConfig.getJsonConfig();
 
-		Fetch<DataIndex, DocType> docTypeFetch =
-			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
+		if (jsonConfig == null) {
+			Logger
+				.getLogger(SearcherService.class)
+				.warn("jsonConfig is null for queryParserConfig.type: " + queryParserConfig.getType());
+			return EMPTY_JSON;
+		}
 
-		docTypeFetch
-			.fetch(DocType_.docTypeFields, JoinType.LEFT)
-			.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
+		try {
+			return new JsonObject(jsonConfig);
+		}
+		catch (DecodeException e) {
+			Logger
+				.getLogger(SearcherService.class)
+				.warn("jsonConfig is not a valid json for queryParserConfig.type: " + queryParserConfig.getType() + " jsonConfig: " + jsonConfig);
+			return EMPTY_JSON;
+		}
 
-		dataIndexRoot.fetch(DataIndex_.vectorIndex, JoinType.LEFT);
+	}
 
-		expressions.add(
-			criteriaBuilder.equal(
-				tenantBindingJoin.get(TenantBinding_.virtualHost),
-				virtualHost
-			)
-		);
+	protected static ByteString searchSourceBuilderToOutput(
+		SearchSourceBuilder searchSourceBuilder) {
+		ByteString.Output outputStream = ByteString.newOutput();
 
-		criteriaQuery.where(disjunction);
+		try (
+			XContentBuilder builder =
+				searchSourceBuilder.toXContent(
+					new XContentBuilder(
+						XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream)),
+					ToXContent.EMPTY_PARAMS)) {
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 
-		criteriaQuery.distinct(true);
-
+		return outputStream.toByteString();
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
@@ -262,7 +223,10 @@ public abstract class BaseSearchService {
 			}
 		}
 
-		return Uni.join().all(queryParserUnis).andCollectFailures().map(voids -> boolQueryBuilder);
+		return Uni.join().all(queryParserUnis)
+			.usingConcurrencyOf(1)
+			.andCollectFailures()
+			.map(voids -> boolQueryBuilder);
 	}
 
 	protected Map<String, List<ParserSearchToken>> createTokenGroup(
@@ -280,77 +244,108 @@ public abstract class BaseSearchService {
 
 	}
 
-	protected static ByteString searchSourceBuilderToOutput(
-		SearchSourceBuilder searchSourceBuilder) {
-		ByteString.Output outputStream = ByteString.newOutput();
+	protected void customizeCriteriaBuilder(
+		String virtualHost, CriteriaBuilder criteriaBuilder,
+		CriteriaQuery<Bucket> criteriaQuery, boolean suggestion,
+		long suggestionCategoryId) {
 
-		try (
-			XContentBuilder builder =
-				searchSourceBuilder.toXContent(
-					new XContentBuilder(
-						XContentType.JSON.xContent(), new OutputStreamStreamOutput(outputStream)),
-					ToXContent.EMPTY_PARAMS)) {
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
+		Root<Bucket> tenantRoot = criteriaQuery.from(Bucket.class);
+
+		Join<Bucket, TenantBinding> tenantBindingJoin =
+			tenantRoot.join(Bucket_.tenantBinding);
+
+		tenantRoot
+			.fetch(Bucket_.searchConfig, JoinType.LEFT)
+			.fetch(SearchConfig_.queryParserConfigs, JoinType.LEFT);
+
+		tenantRoot.fetch(Bucket_.defaultLanguage, JoinType.LEFT);
+
+		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
+
+		Predicate conjunction = criteriaBuilder.conjunction();
+
+		if (suggestion) {
+
+			Fetch<Bucket, SuggestionCategory> suggestionCategoryFetch =
+				tenantRoot.fetch(Bucket_.suggestionCategories);
+
+			Fetch<SuggestionCategory, DocTypeField> categoryDocTypeFieldFetch =
+				suggestionCategoryFetch
+					.fetch(SuggestionCategory_.docTypeField);
+
+			categoryDocTypeFieldFetch
+				.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
+
+			if (suggestionCategoryId > 0) {
+
+				conjunction = criteriaBuilder.and(
+					conjunction,
+					criteriaBuilder.equal(
+						((Path<SuggestionCategory>)suggestionCategoryFetch)
+							.get(SuggestionCategory_.id),
+						suggestionCategoryId)
+				);
+			}
+
 		}
 
-		return outputStream.toByteString();
+		Fetch<Bucket, Datasource> datasourceRoot =
+			tenantRoot.fetch(Bucket_.datasources);
+
+		datasourceRoot
+			.fetch(Datasource_.pluginDriver)
+			.fetch(PluginDriver_.aclMappings, JoinType.LEFT);
+
+		Fetch<Datasource, DataIndex> dataIndexRoot =
+			datasourceRoot.fetch(Datasource_.dataIndex);
+
+		Fetch<DataIndex, DocType> docTypeFetch =
+			dataIndexRoot.fetch(DataIndex_.docTypes, JoinType.LEFT);
+
+		docTypeFetch
+			.fetch(DocType_.docTypeFields, JoinType.LEFT)
+			.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
+
+		conjunction = criteriaBuilder.and(
+			conjunction,
+			criteriaBuilder.equal(
+				tenantBindingJoin.get(TenantBinding_.virtualHost),
+				virtualHost
+			)
+		);
+
+		criteriaQuery.where(conjunction);
+
 	}
 
-	public static JsonObject getQueryParserConfig(Bucket bucket, String tokenType) {
-
-		SearchConfig searchConfig = bucket.getSearchConfig();
-
-		if (searchConfig == null) {
-			return EMPTY_JSON;
-		}
-
-		return searchConfig
-			.getQueryParserConfigs()
-			.stream()
-			.filter(queryParserConfig -> queryParserConfig.getType().equals(
-				tokenType))
-			.findFirst()
-			.map(SearcherService::toJsonObject)
-			.orElse(EMPTY_JSON);
+	protected Uni<TenantResponse> getTenant(String virtualHost) {
+		return tenantManager.findTenant(TenantRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build());
 	}
 
-	public static JsonObject toJsonObject(QueryParserConfig queryParserConfig) {
+	protected Uni<Bucket> getTenantAndFetchRelations(
+		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		String jsonConfig = queryParserConfig.getJsonConfig();
+		return getTenant(virtualHost)
+			.flatMap(tenantResponse -> sf
+				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
 
-		if (jsonConfig == null) {
-			Logger
-				.getLogger(SearcherService.class)
-				.warn("jsonConfig is null for queryParserConfig.type: " + queryParserConfig.getType());
-			return EMPTY_JSON;
-		}
+					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
-		try {
-			return new JsonObject(jsonConfig);
-		}
-		catch (DecodeException e) {
-			Logger
-				.getLogger(SearcherService.class)
-				.warn("jsonConfig is not a valid json for queryParserConfig.type: " + queryParserConfig.getType() + " jsonConfig: " + jsonConfig);
-			return EMPTY_JSON;
-		}
+					CriteriaQuery<Bucket> criteriaQuery =
+						criteriaBuilder.createQuery(Bucket.class);
+
+					customizeCriteriaBuilder(
+						virtualHost, criteriaBuilder, criteriaQuery, suggestion,
+						suggestionCategoryId);
+
+					return s
+						.createQuery(criteriaQuery)
+						.getSingleResultOrNull();
+				}));
+
 
 	}
-
-	@Inject
-	Mutiny.SessionFactory sf;
-
-	@Inject
-	Instance<QueryParser> queryParserInstance;
-
-	@Inject
-	SearcherMapper searcherMapper;
-
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
-
-	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
 
 }

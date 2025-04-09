@@ -4,6 +4,8 @@ import React from "react";
 interface RangeContextType {
   range: [number, number];
   setRange: (range: [number, number]) => void;
+  numberOfResults: number;
+  setNumberOfResults: (num: number) => void;
 }
 
 const RangeContext = createContext<RangeContextType | undefined>(undefined);
@@ -14,9 +16,12 @@ interface RangeProviderProps {
 
 export const RangeProvider: React.FC<RangeProviderProps> = ({ children }) => {
   const [range, setRange] = useState<[number, number]>([0, 0]);
+  const [numberOfResults, setNumberOfResults] = React.useState<number>(0);
 
   return (
-    <RangeContext.Provider value={{ range, setRange }}>
+    <RangeContext.Provider
+      value={{ range, setRange, numberOfResults, setNumberOfResults }}
+    >
       {children}
     </RangeContext.Provider>
   );

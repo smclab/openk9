@@ -17,16 +17,16 @@
 
 package io.openk9.datasource.resource.util;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.jboss.logging.Logger;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.function.Function;
@@ -43,7 +43,7 @@ public class FilterField {
    protected String fieldName;
    protected String value;
    @org.eclipse.microprofile.graphql.DefaultValue("false")
-   protected boolean not = false;
+   protected boolean not;
 
    public Predicate generateCriteria(CriteriaBuilder builder, Path field) {
       return generateCriteria(builder, fieldName -> field);

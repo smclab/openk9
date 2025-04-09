@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  youtube-parser:
+    image: youtube-parser:latest
+    container_name: youtube-parser
+    environment:
+      INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
+    ports:
+      - "5000:5000"

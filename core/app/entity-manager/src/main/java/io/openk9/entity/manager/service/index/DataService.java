@@ -21,6 +21,8 @@ import io.openk9.entity.manager.cache.model.IngestionEntity;
 import io.openk9.entity.manager.model.index.DataEntityIndex;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -38,8 +40,6 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.util.List;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class DataService {

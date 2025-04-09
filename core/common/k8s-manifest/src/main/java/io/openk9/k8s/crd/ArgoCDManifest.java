@@ -54,7 +54,7 @@ public class ArgoCDManifest {
 		var source = new Source();
 
 		source.setChart(manifest.chart());
-		source.setTargetRevision(latestMinorPatchedVersion(manifest.version()));
+		source.setTargetRevision(manifest.version());
 
 		Objects.requireNonNull(manifest.repoURL(), "repoUrl cannot be null!");
 		source.setRepoURL(manifest.repoURL());
@@ -104,10 +104,6 @@ public class ArgoCDManifest {
 		}
 
 		return DEFAULT_PROJECT;
-	}
-
-	static String latestMinorPatchedVersion(@NonNull String version) {
-		return version.split("\\.")[0] + ".x.x";
 	}
 
 }

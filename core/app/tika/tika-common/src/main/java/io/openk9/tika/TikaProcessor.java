@@ -20,19 +20,20 @@ package io.openk9.tika;
 import io.openk9.tika.client.datasource.DatasourceClient;
 import io.openk9.tika.client.filemanager.FileManagerClient;
 import io.openk9.tika.util.Detectors;
+import io.openk9.tika.util.TextCleaner;
 import io.quarkus.tika.TikaContent;
 import io.quarkus.tika.TikaMetadata;
 import io.quarkus.tika.TikaParser;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.time.Duration;
@@ -209,16 +210,16 @@ public class TikaProcessor {
                         document.put("toOcr", false);
                     }
 
-                    String rawText = text.replaceAll("[.,]+", "")
-                        .replaceAll("_", "")
-                        .replaceAll("\\s+", " ")
-                        .replaceAll("\\n", " ")
-                        .replaceAll("\\t", " ");
+                    text = TextCleaner.cleanText(text);
 
-                    text = text.replaceAll("\\t", " ")
-                        .replaceAll("\\s+", " ");
+                    if (text.length() > maxLength && maxLength > 0) {
+                        text = text.substring(0, maxLength);
+                    }
 
                     document.put("content", text);
+                    responsePayload.put("rawContent", text);
+
+                    logger.info("Cleaned text parsed from " + name);
 
                     if (text.length() > summaryLength && summaryLength > 0) {
 
@@ -229,15 +230,6 @@ public class TikaProcessor {
 
                     if (document.getString("title") == null) {
                         document.put("title", title);
-                    }
-
-                    if (rawText.length() > maxLength && maxLength > 0) {
-
-                        responsePayload.put(
-                                "rawContent", rawText.substring(0, maxLength));
-
-                    } else {
-                        responsePayload.put("rawContent", rawText);
                     }
 
                     JsonObject resources =
@@ -268,7 +260,6 @@ public class TikaProcessor {
                 }
                 else {
                     if (!retainBinaries) {
-//                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
                         fileManagerClient.delete(resourceId, schemaName);
                         logger.info("Skipping resource with id: " + resourceId + " and name: " + name
                         + " because not supported by configuration");
@@ -276,11 +267,6 @@ public class TikaProcessor {
                 }
 
             } catch (Exception e) {
-
-//                if (!retainBinaries) {
-//                    logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-//                    fileManagerClient.delete(resourceId, schemaName);
-//                }
 
                 logger.error(e.getMessage(), e);
 
@@ -295,8 +281,6 @@ public class TikaProcessor {
 
         long estimatedTime = System.currentTimeMillis() - startTime;
         logger.info(estimatedTime);
-
-        return;
 
     }
 

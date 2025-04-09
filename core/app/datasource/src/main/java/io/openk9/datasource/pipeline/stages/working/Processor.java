@@ -17,16 +17,17 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
-import akka.actor.typed.ActorRef;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.util.CborSerializable;
+
+import org.apache.pekko.actor.typed.ActorRef;
 
 public interface Processor {
 
 	interface Command extends CborSerializable {}
 
-	interface Response extends CborSerializable {
+	sealed interface Response extends CborSerializable {
 		HeldMessage heldMessage();
 	}
 
@@ -37,8 +38,10 @@ public interface Processor {
 		ActorRef<Response> replyTo
 	) implements Command {}
 
+	record Skip(HeldMessage heldMessage) implements Response {}
+
 	record Success(
-		byte[] payload, HeldMessage heldMessage
+		byte[] payload, SchedulerDTO scheduler, HeldMessage heldMessage
 	) implements Response {}
 
 	record Failure(

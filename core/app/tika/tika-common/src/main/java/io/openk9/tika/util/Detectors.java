@@ -18,12 +18,12 @@
 package io.openk9.tika.util;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 
-import javax.enterprise.context.ApplicationScoped;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

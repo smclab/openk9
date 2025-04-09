@@ -1,55 +1,132 @@
-Build Search Frontend Docker Image:
-  image: docker:24.0.2
-  services:
-    - docker:24.0.2-dind
-  stage: build-image
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_TLS_VERIFY: 0
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  only:
-    refs:
-      - main
-    changes:
-      - js-packages/search-frontend/**/*
-      - .gitlab/.gitlab-ci-search-frontend.yml
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
-  script:
-    - docker build -t search-frontend:latest -f js-packages/search-frontend/Dockerfile .
-    - docker tag search-frontend:latest $CI_REGISTRY_NAME/openk9/search-frontend:latest
-    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:latest
+################################################################################
+#                                   STAGES                                     #
+################################################################################
+stages:
+  - build
+  - build-verifier
+  - container-scanning
+  - dependency-check
+  - restart
+  - publish
 
-Build Tagged Frontend Docker Image:
-  image: docker:19.03.13
-  services:
-    - docker:19.03.13-dind
-  stage: build-image
-  variables:
-    TEST_NAME: local/test
-    DOCKER_HOST: tcp://localhost:2375
-    DOCKER_TLS_CERTDIR: ""
-  only:
-    refs:
-      - tags
-    changes:
-      - js-packages/rest-api/**/*
-      - js-packages/search-ui-components/**/*
-      - js-packages/plugin-scripts/**/*
-      - js-packages/search-customizable-ui/**/*
-      - js-packages/search-frontend/**/*
-  except:
-    - schedules
-  before_script:
-    - sleep 5
-    - docker login -u $CI_REGISTRY_USERNAME -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_NAME
-    - apk add --update curl && rm -rf /var/cache/apk/*
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+
+################################################################################
+#                                  JOBS                                        #
+################################################################################
+
+#################
+# Fetch Version #
+#################
+Fetch version:
+  stage: build
+  image: node:16-alpine
   script:
-    - docker build -t search-frontend:${CI_COMMIT_REF_NAME} -f js-packages/search-frontend/Dockerfile .
-    - docker tag search-frontend:${CI_COMMIT_REF_NAME} $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
-    - docker push $CI_REGISTRY_NAME/openk9/search-frontend:${CI_COMMIT_REF_NAME}
+    - cd js-packages/search-frontend
+    - export VERSION=$(node -p "require('./package.json').version") # Legge la versione dal package.json
+    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Salva la versione in un file
+  artifacts:
+    paths:
+      - version.env
+    expire_in: 1 day
+
+######################## BUILD SEARCH FRONTEND ########################
+Build Search Frontend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+    - job: Fetch version
+      artifacts: true
+  script:
+    - source $CI_PROJECT_DIR/version.env
+    - echo "=== Using VERSION=$VERSION ==="
+    - echo "=== Configurazione credenziali Kaniko ==="
+    - export NODE_OPTIONS="--max-old-space-size=4096"
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+      > /kaniko/.docker/config.json
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+        --destination "registry.smc.it:49083/openk9/search-frontend:$VERSION"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/search-frontend/**/*
+
+######################## BUILD VERIFIER (NODE) ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:14
+  script:
+    - cd js-packages/search-frontend
+    - yarn install
+    - yarn build
+  rules:
+    - changes:
+        - js-packages/search-frontend/**/*
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+######################## CONTAINER SCANNING ########################
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+    - "Build Search Frontend"
+  script:
+    - source version.env # Carica la versione dall'artifact
+    - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
+    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Esegue lo scan dell'immagine
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+######################## TRIGGER RESTART ########################
+Trigger Restart:
+  stage: restart
+  image: alpine:latest
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering restart for Search Frontend"
+      # Invia una richiesta POST al trigger URL per far partire il job `restart-admin-frontend`
+    - |
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-admin-frontend" \
+        -F "ref=main" \
+        "${RESTART_TRIGGER_URL}"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+####################### PUBLISH SEARCH FRONTEND #######################
+Publish Search Frontend:
+  stage: publish
+  image: node:18
+  script:
+    - cd js-packages/search-frontend
+    - pwd
+    - whoami
+    - yarn install
+    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+    - npm publish --access public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/search-frontend/**/*
+      when: manual
+    - when: never
+
+####################### DEPENDENCY CHECK #######################
+Dependency Check Search Frontend:
+  stage: dependency-check
+  extends: .dependency_check_frontend_template
+  allow_failure: true
+  script:
+    - cd js-packages/search-frontend
+    - /analyzer run

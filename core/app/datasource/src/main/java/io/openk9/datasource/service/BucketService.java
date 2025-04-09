@@ -17,6 +17,20 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.ws.rs.NotFoundException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
@@ -33,30 +47,23 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.dto.BucketDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
-import javax.ws.rs.NotFoundException;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -64,157 +71,23 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		 this.mapper = mapper;
 	}
 
-	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
-		return sessionFactory.withTransaction(s -> findById(s, bucketId)
-			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
-	}
+	private static <T> Uni<T> consumeExistedIndexNames(
+		Function<List<String>, Uni<T>> mapper, T defaultValue,
+		List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>> listT) {
 
-	public Uni<Connection<Datasource>> getDatasourcesConnection(
-		long bucketId, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		List<String> existIndexName = new ArrayList<>();
 
-		return findJoinConnection(
-			bucketId, Bucket_.DATASOURCES, Datasource.class,
-			datasourceService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
+		for (io.smallrye.mutiny.tuples.Tuple2<Boolean, String> t2 : listT) {
+			if (t2.getItem1()) {
+				existIndexName.add(t2.getItem2());
+			}
+		}
 
-	public Uni<Page<Datasource>> getDatasources(long bucketId, Pageable pageable, Filter filter) {
-		return getDatasources(new Long[] {bucketId}, pageable, filter);
-	}
+		if (existIndexName.isEmpty()) {
+			return Uni.createFrom().item(defaultValue);
+		}
 
-	public Uni<Page<Datasource>> getDatasources(
-		long bucketId, Pageable pageable, String searchText) {
-		return getDatasources(new Long[] {bucketId}, pageable, searchText);
-	}
-
-	public Uni<Page<Datasource>> getDatasources(
-		Long[] bucketIds, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			bucketIds, Bucket_.DATASOURCES, Datasource.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
-	}
-
-	public Uni<Page<Datasource>> getDatasources(
-		Long[] bucketIds, Pageable pageable, Filter filter) {
-
-		 return findAllPaginatedJoin(
-			 bucketIds, Bucket_.DATASOURCES, Datasource.class,
-			 pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			 pageable.getBeforeId(), filter);
-	}
-
-	public Uni<Connection<Language>> getLanguagesConnection(
-		long bucketId, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			bucketId, Bucket_.AVAILABLE_LANGUAGES, Language.class,
-			languageService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
-
-	public Uni<Page<Language>> getLanguages(long bucketId, Pageable pageable, Filter filter) {
-		return getLanguages(new Long[] {bucketId}, pageable, filter);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		long bucketId, Pageable pageable, String searchText) {
-		return getLanguages(new Long[] {bucketId}, pageable, searchText);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		Long[] bucketIds, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		Long[] bucketIds, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
-	}
-
-	public Uni<Connection<Tab>> getTabs(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			id, Bucket_.TABS, Tab.class,
-			tabService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
-
-	public Uni<Connection<Sorting>> getSortings(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-
-		return findJoinConnection(
-			id, Bucket_.SORTINGS, Sorting.class,
-			sortingService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
-
-
-	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-		return findJoinConnection(
-			id, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			suggestionCategoryService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		long bucketId, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		long bucketId, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
-	}
-
-	public Uni<Language> getLanguage(Bucket bucket) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(bucket.getDefaultLanguage()));
-	}
-
-	public Uni<Language> getLanguage(long bucketId) {
-		return sessionFactory.withTransaction(s -> findById(s, bucketId)
-			.flatMap(b -> s.fetch(b.getDefaultLanguage())));
-	}
-
-	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(long bucketId, long datasourceId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> datasourceService.findById(s, datasourceId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
-					if (buckets.remove(bucket)) {
-						datasource.setBuckets(buckets);
-						return persist(s, datasource).map((newD) -> Tuple2.of(bucket, newD));
-					}
-					return Uni.createFrom().nullItem();
-				}))));
+		return mapper.apply(existIndexName);
 	}
 
 	public Uni<Tuple2<Bucket, Datasource>> addDatasource(long bucketId, long datasourceId) {
@@ -235,26 +108,24 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	}
 
-	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(long id, long tabId) {
-
-		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+	public Uni<Tuple2<Bucket, Language>> addLanguage(long bucketId, long languageId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> tabService.findById(s, tabId)
+			.transformToUni(bucket -> languageService.findById(s, languageId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tab ->
-					s.fetch(bucket.getTabs())
+				.transformToUni(language ->
+					s.fetch(bucket.getAvailableLanguages())
 						.onItem()
 						.ifNotNull()
-						.transformToUni(tabs -> {
+						.transformToUni(languages -> {
 
-							if (tabs.add(tab)) {
-
-								bucket.setTabs(tabs);
+							if (bucket.addLanguage(
+								languages, language)) {
 
 								return persist(s, bucket)
-									.map(newSC -> Tuple2.of(newSC, tab));
+									.map(newSC -> Tuple2.of(newSC, null));
 							}
 
 							return Uni.createFrom().nullItem();
@@ -262,26 +133,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						})
 				)
 			));
-	}
-
-	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(long id, long tabId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getTabs())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(tabs -> {
-
-					if (bucket.removeTab(tabs, tabId)) {
-
-						return persist(s, bucket)
-							.map(newSC -> Tuple2.of(newSC, null));
-					}
-
-					return Uni.createFrom().nullItem();
-
-				})));
 	}
 
 	public Uni<Tuple2<Bucket, Sorting>> addSortingToBucket(long id, long sortingId) {
@@ -313,26 +164,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			));
 	}
 
-	public Uni<Tuple2<Bucket, Sorting>> removeSortingFromBucket(long id, long sortingId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getSortings())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(sortings -> {
-
-					if (bucket.removeSorting(sortings, sortingId)) {
-
-						return persist(s, bucket)
-							.map(newSC -> Tuple2.of(newSC, null));
-					}
-
-					return Uni.createFrom().nullItem();
-
-				})));
-	}
-
 	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(long bucketId, long suggestionCategoryId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -360,45 +191,26 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			));
 	}
 
-	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(long id, long tabId) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getSuggestionCategories())
+			.transformToUni(bucket -> tabService.findById(s, tabId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(suggestionCategories -> {
-
-					if (bucket.removeSuggestionCategory(
-						suggestionCategories, suggestionCategoryId)) {
-
-						return persist(s, bucket)
-							.map(newSC -> Tuple2.of(newSC, null));
-					}
-
-					return Uni.createFrom().nullItem();
-
-				})));
-	}
-
-	public Uni<Tuple2<Bucket, Language>> addLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> languageService.findById(s, languageId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(language ->
-					s.fetch(bucket.getAvailableLanguages())
+				.transformToUni(tab ->
+					s.fetch(bucket.getTabs())
 						.onItem()
 						.ifNotNull()
-						.transformToUni(languages -> {
+						.transformToUni(tabs -> {
 
-							if (bucket.addLanguage(
-								languages, language)) {
+							if (tabs.add(tab)) {
+
+								bucket.setTabs(tabs);
 
 								return persist(s, bucket)
-									.map(newSC -> Tuple2.of(newSC, null));
+									.map(newSC -> Tuple2.of(newSC, tab));
 							}
 
 							return Uni.createFrom().nullItem();
@@ -408,24 +220,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			));
 	}
 
-	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
+	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
+			.transformToUni(bucket -> languageService.findById(s, languageId)
 				.onItem()
 				.ifNotNull()
-				.transformToUni(languages -> {
-
-					if (bucket.removeLanguage(
-						languages, languageId)) {
-
-						return persist(s, bucket)
-							.map(newSC -> Tuple2.of(newSC, null));
-					}
-
-					return Uni.createFrom().nullItem();
-
+				.transformToUni(language -> {
+					bucket.setDefaultLanguage(language);
+					return persist(s, bucket).map(t -> Tuple2.of(t, language));
 				})));
 	}
 
@@ -442,40 +246,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
-	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> {
-				bucket.setQueryAnalysis(null);
-				return persist(s, bucket).map(t -> Tuple2.of(t, null));
-			}));
-	}
-
-	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> languageService.findById(s, languageId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(language -> {
-					bucket.setDefaultLanguage(language);
-					return persist(s, bucket).map(t -> Tuple2.of(t, language));
-				})));
-	}
-
-	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> {
-				bucket.setDefaultLanguage(null);
-				return persist(s, bucket).map(t -> Tuple2.of(t, null));
-			}));
-	}
-
-
 	public Uni<Tuple2<Bucket, SearchConfig>> bindSearchConfig(long bucketId, long searchConfigId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -489,14 +259,108 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
-	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfig(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> {
-				bucket.setSearchConfig(null);
-				return persist(s, bucket).map(t -> Tuple2.of(t, null));
-			}));
+	public Uni<Bucket> create(BucketDTO bucketDTO) {
+		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO) {
+			var transientBucket = mapper.create(bucketWithListsDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, transientBucket)
+					.flatMap(bucket -> {
+
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
+
+						//Datasource
+						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+
+						if (datasourceIds != null && !datasourceIds.isEmpty()) {
+
+							for (long datasourceId : datasourceIds) {
+
+								builder.add(addDatasource(
+									bucket.getId(), datasourceId)
+									.replaceWithVoid()
+								);
+
+							}
+
+						}
+
+						//Suggestion Category
+						var suggestionCategoryIds =
+							bucketWithListsDTO.getSuggestionCategoryIds();
+
+
+						if (suggestionCategoryIds != null && !suggestionCategoryIds.isEmpty()) {
+
+							for (long suggestionCategoryId : suggestionCategoryIds) {
+
+								builder.add(addSuggestionCategory(
+										bucket.getId(), suggestionCategoryId
+									).replaceWithVoid()
+								);
+
+							}
+
+
+						}
+
+						//Tab
+						var tabIds = bucketWithListsDTO.getTabIds();
+
+						if (tabIds != null && !tabIds.isEmpty()) {
+
+							for (long tabId : tabIds) {
+
+								builder.add(addTabToBucket(
+									bucket.getId(), tabId)
+									.replaceWithVoid()
+								);
+							}
+
+						}
+
+						//QueryAnalysis
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+
+							var queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+
+							bucket.setQueryAnalysis(queryAnalysis);
+
+						}
+
+						//SearchConfig
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							var searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+
+							bucket.setSearchConfig(searchConfig);
+						}
+
+						//DefaultLanguage
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							var defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+
+							bucket.setDefaultLanguage(defaultLanguage);
+						}
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
+							.flatMap(__ -> s.merge(bucket));
+					}));
+		}
+
+		return super.create(bucketDTO);
+	}
+
+	public Uni<Bucket> enableTenant(long id) {
+		return sessionFactory.withTransaction((s, t) -> enableTenant(s, id));
 	}
 
 	public Uni<Bucket> enableTenant(Mutiny.Session s, long id) {
@@ -548,18 +412,91 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			});
 	}
 
-	public Uni<Bucket> enableTenant(long id) {
-		return sessionFactory.withTransaction((s, t) -> enableTenant(s, id));
+	public Uni<List<Bucket>> findUnboundBucketsByDatasource(long datasourceId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			criteriaQuery.select(bucketRoot);
+
+			var idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Bucket> bucketRootToExclude = idsToExcludeQuery.from(Bucket.class);
+
+			Join<Bucket, Datasource> tabJoinToExclude =
+				bucketRootToExclude.join(Bucket_.datasources, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(bucketRootToExclude.get(Bucket_.id))
+				.where(cb.equal(tabJoinToExclude.get(Datasource_.id), datasourceId));
+
+			criteriaQuery.where(
+				cb.not(bucketRoot.get(Bucket_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
 	}
 
-	public Uni<Long> getDocCountFromBucket(Long bucketId) {
-		return consumeExistedIndexNames(
-			bucketId, l -> consumeExistedIndexNames(indexService::indexCount, 0L, l));
+	public Uni<List<Bucket>> findUnboundBucketsBySuggestionCategory(long suggestionCategoryId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
+
+			// Root for Bucket entity
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			// Subquery to find buckets already associated with the suggestion category
+			Subquery<Long> subquery = criteriaQuery.subquery(Long.class);
+			Root<SuggestionCategory> scRoot = subquery.from(SuggestionCategory.class);
+
+			// Join SuggestionCategory to Bucket via bucket field in SuggestionCategory
+			Join<SuggestionCategory, Bucket> joinBucket = scRoot.join(
+				SuggestionCategory_.buckets,
+				JoinType.INNER
+			);
+
+			// Apply the condition that the suggestion category id matches the provided id
+			subquery.select(joinBucket.get(Bucket_.id))
+				.where(cb.equal(scRoot.get(SuggestionCategory_.id), suggestionCategoryId));
+
+			// Build the main query: select buckets where their id is not in the subquery result
+			criteriaQuery.select(bucketRoot)
+				.where(cb.not(bucketRoot.get(Bucket_.id).in(subquery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
+	}
+
+	public Uni<List<Bucket>> findUnboundBucketsByTab(long tabId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Bucket> criteriaQuery = cb.createQuery(Bucket.class);
+			Root<Bucket> bucketRoot = criteriaQuery.from(Bucket.class);
+
+			criteriaQuery.select(bucketRoot);
+
+			var idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Bucket> bucketRootToExclude = idsToExcludeQuery.from(Bucket.class);
+
+			Join<Bucket, Tab> tabJoinToExclude =
+				bucketRootToExclude.join(Bucket_.tabs, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(bucketRootToExclude.get(Bucket_.id))
+				.where(cb.equal(tabJoinToExclude.get(Tab_.id), tabId));
+
+			criteriaQuery.where(
+				cb.not(bucketRoot.get(Bucket_.id).in(idsToExcludeQuery)));
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
 	}
 
 	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
-		 return consumeExistedIndexNames(
-			 bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
+		return consumeExistedIndexNames(
+			bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
 	}
 
 	public Uni<Long> getCountIndexFromBucket(Long bucketId) {
@@ -576,6 +513,566 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		);
 	}
 
+	public Uni<Bucket> getCurrentBucket(String host) {
+		return sessionFactory.withTransaction(session -> session
+			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
+			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
+			.getSingleResult()
+		);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(long bucketId, Pageable pageable, Filter filter) {
+		return getDatasources(new Long[] {bucketId}, pageable, filter);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		long bucketId, Pageable pageable, String searchText) {
+		return getDatasources(new Long[] {bucketId}, pageable, searchText);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		Long[] bucketIds, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			bucketIds, Bucket_.DATASOURCES, Datasource.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
+	}
+
+	public Uni<Page<Datasource>> getDatasources(
+		Long[] bucketIds, Pageable pageable, Filter filter) {
+
+		 return findAllPaginatedJoin(
+			 bucketIds, Bucket_.DATASOURCES, Datasource.class,
+			 pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			 pageable.getBeforeId(), filter);
+	}
+
+	public Uni<Connection<Datasource>> getDatasourcesConnection(
+		long bucketId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			bucketId, Bucket_.DATASOURCES, Datasource.class,
+			datasourceService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	public Uni<Long> getDocCountFromBucket(Long bucketId) {
+		return consumeExistedIndexNames(
+			bucketId, l -> consumeExistedIndexNames(indexService::indexCount, 0L, l));
+	}
+
+	@Override
+	public Class<Bucket> getEntityClass() {
+		return Bucket.class;
+	}
+
+	public Uni<Language> getLanguage(Bucket bucket) {
+		return sessionFactory.withTransaction(
+			s -> s.fetch(bucket.getDefaultLanguage()));
+	}
+
+	public Uni<Language> getLanguage(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(b -> s.fetch(b.getDefaultLanguage())));
+	}
+
+	public Uni<Page<Language>> getLanguages(long bucketId, Pageable pageable, Filter filter) {
+		return getLanguages(new Long[] {bucketId}, pageable, filter);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		long bucketId, Pageable pageable, String searchText) {
+		return getLanguages(new Long[] {bucketId}, pageable, searchText);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		Long[] bucketIds, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
+	}
+
+	public Uni<Page<Language>> getLanguages(
+		Long[] bucketIds, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), filter);
+	}
+
+	public Uni<Connection<Language>> getLanguagesConnection(
+		long bucketId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			bucketId, Bucket_.AVAILABLE_LANGUAGES, Language.class,
+			languageService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
+	}
+
+	public Uni<SearchConfig> getSearchConfig(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));
+	}
+
+	public Uni<Set<SuggestionCategory>> getSuggestionCategories(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
+
+	}
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};
+	}
+
+	public Uni<Connection<Sorting>> getSortings(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Bucket_.SORTINGS, Sorting.class,
+			sortingService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+
+	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
+			suggestionCategoryService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		long bucketId, Pageable pageable, String searchText) {
+
+		return findAllPaginatedJoin(
+			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), searchText);
+	}
+
+	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
+		long bucketId, Pageable pageable, Filter filter) {
+
+		return findAllPaginatedJoin(
+			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
+			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
+			pageable.getBeforeId(), filter);
+	}
+
+	public Uni<Connection<Tab>> getTabs(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			id, Bucket_.TABS, Tab.class,
+			tabService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<Bucket> patch(long bucketId, BucketDTO bucketDTO) {
+		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO ) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, bucketId)
+					.call(bucket -> Mutiny.fetch(bucket.getDatasources()))
+					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
+					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
+					.flatMap(bucket -> {
+						var newStateBucket = mapper.patch(bucket, bucketWithListsDTO);
+
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+						builder.add(Uni.createFrom().voidItem());
+
+						//Datasource
+						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+
+						if (datasourceIds != null) {
+
+							//Iterate over the old datasources to remove the bucket from their list of buckets
+							var oldDatasources = newStateBucket.getDatasources();
+
+							for (Datasource oldDatasource : oldDatasources) {
+								builder.add(removeDatasource(
+									bucketId, oldDatasource.getId())
+									.replaceWithVoid());
+							}
+
+							for (long datasourceId : datasourceIds) {
+
+								builder.add(addDatasource(
+									bucketId, datasourceId)
+									.replaceWithVoid());
+							}
+
+						}
+
+						//Suggestion Category
+						var suggestionCategoryIds =
+							bucketWithListsDTO.getSuggestionCategoryIds();
+
+						if (suggestionCategoryIds != null) {
+
+							//Iterate over the old suggestionCategory to remove the bucket associated with them
+							var oldSuggestionCategories =
+								newStateBucket.getSuggestionCategories();
+
+							for (SuggestionCategory oldSuggestionCategory : oldSuggestionCategories) {
+
+								builder.add(removeSuggestionCategory(
+									bucketId, oldSuggestionCategory.getId())
+									.replaceWithVoid()
+								);
+
+							}
+
+							for (long suggestionCategoryId : suggestionCategoryIds) {
+
+								builder.add(addSuggestionCategory(
+									bucketId, suggestionCategoryId)
+									.replaceWithVoid()
+								);
+							}
+
+
+						}
+
+						//Tab
+						var tabIds = bucketWithListsDTO.getTabIds();
+
+						if (tabIds != null) {
+							var oldTabs = bucket.getTabs();
+
+							for (Tab oldTab : oldTabs) {
+								builder.add(removeTabFromBucket(
+									bucketId, oldTab.getId())
+									.replaceWithVoid()
+								);
+							}
+
+							for (long tabId : tabIds) {
+
+								builder.add(addTabToBucket(
+									bucketId, tabId)
+									.replaceWithVoid()
+								);
+
+							}
+
+						}
+
+						//QueryAnalysis
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							var queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+
+							bucket.setQueryAnalysis(queryAnalysis);
+							builder.add(s.persist(bucket));
+						}
+
+						//SearchConfig
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							var searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+
+							bucket.setSearchConfig(searchConfig);
+							builder.add(s.persist(bucket));
+						}
+
+						//DefaultLanguage
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							var defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+
+							bucket.setDefaultLanguage(defaultLanguage);
+							builder.add(s.persist(bucket));
+						}
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
+							.flatMap(__ -> s.merge(newStateBucket));
+					})
+			);
+		}
+
+		return super.patch(bucketId, bucketDTO);
+	}
+
+	public Uni<Tuple2<Bucket, Datasource>> removeDatasource(long bucketId, long datasourceId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> datasourceService.findById(s, datasourceId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(datasource -> s.fetch(datasource.getBuckets()).flatMap(buckets -> {
+					if (buckets.remove(bucket)) {
+						datasource.setBuckets(buckets);
+						return persist(s, datasource).map((newD) -> Tuple2.of(bucket, newD));
+					}
+					return Uni.createFrom().nullItem();
+				}))));
+	}
+
+	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(long id, long tabId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getTabs())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(tabs -> {
+
+					if (bucket.removeTab(tabs, tabId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, Sorting>> removeSortingFromBucket(long id, long sortingId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getSortings())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(sortings -> {
+
+					if (bucket.removeSorting(sortings, sortingId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getSuggestionCategories())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(suggestionCategories -> {
+
+					if (bucket.removeSuggestionCategory(
+						suggestionCategories, suggestionCategoryId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(languages -> {
+
+					if (bucket.removeLanguage(
+						languages, languageId)) {
+
+						return persist(s, bucket)
+							.map(newSC -> Tuple2.of(newSC, null));
+					}
+
+					return Uni.createFrom().nullItem();
+
+				})));
+	}
+
+	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setQueryAnalysis(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setDefaultLanguage(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfig(long bucketId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setSearchConfig(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Bucket> update(long bucketId, BucketDTO bucketDTO) {
+		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO ) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, bucketId)
+					.call(bucket -> Mutiny.fetch(bucket.getDatasources()))
+					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
+					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
+					.flatMap(bucket -> {
+						var newStateBucket = mapper.update(bucket, bucketWithListsDTO);
+
+						//UniBuilder to prevent empty unis
+						UniJoin.Builder<Void> builder = Uni.join().builder();
+
+						//Datasource
+						var datasourceIds = bucketWithListsDTO.getDatasourceIds();
+
+						//Iterate over the old datasources to remove the bucket from their list of buckets
+						var oldDatasources = newStateBucket.getDatasources();
+
+						for (Datasource oldDatasource : oldDatasources) {
+							builder.add(removeDatasource(
+								bucketId, oldDatasource.getId())
+								.replaceWithVoid());
+						}
+
+						if (datasourceIds != null) {
+							for (long datasourceId : datasourceIds) {
+
+								builder.add(addDatasource(
+									bucketId, datasourceId)
+									.replaceWithVoid());
+							}
+						}
+
+						//Suggestion Category
+						var suggestionCategoryIds =
+							bucketWithListsDTO.getSuggestionCategoryIds();
+
+						//Iterate over the old suggestionCategory to remove the bucket associated with them
+						var oldSuggestionCategories =
+							newStateBucket.getSuggestionCategories();
+
+						for (SuggestionCategory oldSuggestionCategory : oldSuggestionCategories) {
+
+							builder.add(removeSuggestionCategory(
+								bucketId, oldSuggestionCategory.getId())
+								.replaceWithVoid()
+							);
+
+						}
+
+						if (suggestionCategoryIds != null) {
+							for (long suggestionCategoryId : suggestionCategoryIds) {
+
+								builder.add(addSuggestionCategory(
+									bucketId, suggestionCategoryId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						//Tab
+						var tabIds = bucketWithListsDTO.getTabIds();
+
+						var oldTabs = bucket.getTabs();
+
+						for (Tab oldTab : oldTabs) {
+							builder.add(removeTabFromBucket(
+								bucketId, oldTab.getId())
+								.replaceWithVoid()
+							);
+						}
+
+						if (tabIds != null) {
+							for (long tabId : tabIds) {
+
+								builder.add(addTabToBucket(
+									bucketId, tabId)
+									.replaceWithVoid()
+								);
+
+							}
+						}
+
+						//QueryAnalysis
+						QueryAnalysis queryAnalysis = null;
+
+						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
+							queryAnalysis =
+								s.getReference(QueryAnalysis.class, bucketWithListsDTO.getQueryAnalysisId());
+						}
+
+						bucket.setQueryAnalysis(queryAnalysis);
+
+						//SearchConfig
+						SearchConfig searchConfig = null;
+
+						if (bucketWithListsDTO.getSearchConfigId() != null) {
+							searchConfig =
+								s.getReference(SearchConfig.class, bucketWithListsDTO.getSearchConfigId());
+						}
+
+						bucket.setSearchConfig(searchConfig);
+
+						//DefaultLanguage
+						Language defaultLanguage = null;
+
+						if (bucketWithListsDTO.getDefaultLanguageId() != null) {
+							defaultLanguage =
+								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
+						}
+
+						bucket.setDefaultLanguage(defaultLanguage);
+
+						builder.add(s.persist(bucket));
+
+						return builder.joinAll()
+							.usingConcurrencyOf(1)
+							.andCollectFailures()
+							.onFailure()
+							.invoke(throwable -> logger.error(throwable))
+							.flatMap(__ -> s.merge(newStateBucket));
+					})
+			);
+		}
+
+		return super.update(bucketId, bucketDTO);
+	}
+
 	private <T> Uni<T> consumeExistedIndexNames(
 		Long bucketId,
 		Function<
@@ -586,25 +1083,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(indexService::getExistsAndIndexNames)
 			.flatMap(mapper);
 
-	}
-
-	private static <T> Uni<T> consumeExistedIndexNames(
-		Function<List<String>, Uni<T>> mapper, T defaultValue,
-		List<io.smallrye.mutiny.tuples.Tuple2<Boolean, String>> listT) {
-
-		List<String> existIndexName = new ArrayList<>();
-
-		for (io.smallrye.mutiny.tuples.Tuple2<Boolean, String> t2 : listT) {
-			if (t2.getItem1()) {
-				existIndexName.add(t2.getItem2());
-			}
-		}
-
-		if (existIndexName.isEmpty()) {
-			return Uni.createFrom().item(defaultValue);
-		}
-
-		return mapper.apply(existIndexName);
 	}
 
 	private Uni<List<String>> getDataIndexNames(Long bucketId, Mutiny.Session s) {
@@ -627,36 +1105,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return s.createQuery(criteriaQuery).getResultList();
 	}
 
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};
-	}
-
-	@Override
-	public Class<Bucket> getEntityClass() {
-		return Bucket.class;
-	}
-
-	public Uni<Bucket> getCurrentBucket(String host) {
-		 return sessionFactory.withTransaction(session -> session
-			 .createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
-			 .setParameter(TenantBinding_.VIRTUAL_HOST, host)
-			 .getSingleResult()
-		 );
-	}
-
 	@Inject
 	DatasourceService datasourceService;
+
+	@Inject
+	IndexService indexService;
 
 	 @Inject
 	 LanguageService languageService;
 
-	 @Inject
-	IndexService indexService;
-
 	@Inject
-	SuggestionCategoryService suggestionCategoryService;
+	Logger logger;
 
 	@Inject
 	QueryAnalysisService queryAnalysisService;
@@ -665,13 +1124,12 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	SearchConfigService searchConfigService;
 
 	@Inject
-	TabService tabService;
-
-	@Inject
 	SortingService sortingService;
 
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
 
 	@Inject
-	Logger logger;
+	TabService tabService;
 
 }

@@ -14,15 +14,15 @@ const pulse = keyframes`
 `;
 
 interface CustomSkeletonProps {
-  width?: string;
-  height?: string;
-  counter?: number;
-  circle?: boolean;
-  backgroundColor?: string;
-  itereitorKey?: string;
-  containerMax?: boolean;
+  width?: string | null | undefined | null | undefined;
+  height?: string | null | undefined;
+  counter?: number | null | undefined;
+  circle?: boolean | null | undefined;
+  backgroundColor?: string | null | undefined;
+  itereitorKey?: string | null | undefined;
+  containerMax?: boolean | null | undefined;
   position?: "column" | "row";
-  gap?: string;
+  gap?: string | null | undefined;
 }
 
 const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
@@ -47,7 +47,7 @@ const CustomSkeleton: React.FC<CustomSkeletonProps> = ({
         width: ${containerMax ? "100%" : ""};
       `}
     >
-      {Array.from({ length: counter }).map((_, index) => (
+      {Array.from({ length: counter || 1 }).map((_, index) => (
         <div
           key={index}
           className="custom-skeleton"

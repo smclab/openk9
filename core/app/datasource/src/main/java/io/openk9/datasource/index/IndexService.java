@@ -17,15 +17,31 @@
 
 package io.openk9.datasource.index;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
+
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
+import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
@@ -36,22 +52,194 @@ import org.opensearch.client.core.CountRequest;
 import org.opensearch.client.core.CountResponse;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.client.indices.GetMappingsRequest;
-import org.opensearch.common.xcontent.XContentType;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
+import org.opensearch.core.xcontent.MediaType;
+import org.opensearch.core.xcontent.MediaTypeRegistry;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+import org.opensearch.search.builder.SearchSourceBuilder;
 
 @ApplicationScoped
 public class IndexService {
 
+	private final static Logger log = Logger.getLogger(IndexService.class);
+	public static final String TEMPLATE_SUFFIX = "-template";
+
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	OpenSearchClient openSearchClient;
+
+	public Uni<Void> createIndexTemplate(
+		PutComposableIndexTemplateRequest request) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			IndicesClient indices = restHighLevelClient.indices();
+			var templateName = request.name();
+
+			try {
+				var response = indices.putIndexTemplate(
+					request,
+					RequestOptions.DEFAULT
+				);
+
+				if (response.isAcknowledged()) {
+					return null;
+				}
+				else {
+					log.errorf(
+						"indexTemplate %s creation is not acknowledged",
+						templateName
+					);
+
+					throw new CannotCreateIndexTemplateException("Not acknowledged");
+				}
+			}
+			catch (CannotCreateIndexTemplateException k9Exception) {
+				throw k9Exception;
+			}
+			catch (OpenSearchStatusException osse) {
+				log.errorf(osse, "Cannot create indexTemplate %s", templateName);
+				throw new CannotCreateIndexTemplateException(osse);
+			}
+			catch (Exception e) {
+				log.errorf(
+					e,
+					"Error occurred when trying to create indexTemplate %s",
+					templateName
+				);
+				throw new CannotCreateIndexTemplateException(e);
+			}
+
+		});
+	}
+
+	public Uni<Void> deleteIndex(IndexName indexName) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				// delete index or throw an exception
+				var delete = openSearchClient.indices().delete(req -> req
+					.index(indexName.value())
+					.ignoreUnavailable(true));
+
+				if (!delete.acknowledged()) {
+					log.errorf(
+						"Error deleting index %s, cluster didn't acknowledge",
+						indexName.value()
+					);
+
+					throw new DeleteIndexException("not acknowledged");
+				}
+
+				deleteIndexTemplate(indexName);
+
+				return null;
+
+			}
+			catch (DeleteIndexException k9Exception) {
+				throw k9Exception;
+			}
+			catch (Exception e) {
+				log.errorf(e, "Error deleting index %s", indexName.value());
+
+				throw new DeleteIndexException(e);
+			}
+
+		});
+	}
+
+	public Uni<Void> deleteIndices(Set<IndexName> indexNames) {
+
+		return VertxContextSupport.executeBlocking(() -> {
+
+			var indices = indexNames.stream()
+				.map(IndexName::value)
+				.toList();
+
+			var acknowledgedResponse = openSearchClient.indices()
+				.delete(req -> req
+					.index(indices)
+					.ignoreUnavailable(true)
+				);
+
+			if (!acknowledgedResponse.acknowledged()) {
+				throw new DeleteIndexException(String.format(
+					"Error deleting indices: %s", indices));
+			}
+
+			for (IndexName indexName : indexNames) {
+				deleteIndexTemplate(indexName);
+			}
+
+			return null;
+		});
+	}
+
+	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
+
+		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
+			new ArrayList<>(indexNames.size());
+
+		for (String indexName : indexNames) {
+			Uni<Tuple2<Boolean, String>> existIndexName =
+				indexExist(indexName)
+					.onItemOrFailure()
+					.transform((exist, t) -> {
+
+						if (t != null) {
+							log.error("Error while checking index exist", t);
+							return false;
+						}
+
+						return exist;
+
+					})
+					.map(exist -> Tuple2.of(exist, indexName));
+			existIndexNames.add(existIndexName);
+		}
+
+		return Uni.join()
+			.all(existIndexNames)
+			.usingConcurrencyOf(1)
+			.andCollectFailures();
+
+	}
+
+	public Uni<List<String>> getDocumentTypes(String indexName) {
+
+		SearchRequest searchRequest = new SearchRequest(indexName);
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.size(0);
+
+		searchSourceBuilder.aggregation(AggregationBuilders
+			.terms("documentTypes")
+			.field("documentTypes.keyword")
+			.size(1000)
+		);
+
+		searchRequest.source(searchSourceBuilder);
+
+
+		return VertxContextSupport.executeBlocking(() -> {
+			var searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+			return searchResponse
+				.getAggregations()
+				.<Terms>get("documentTypes")
+				.getBuckets()
+				.stream()
+				.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+				.toList();
+		});
+
+	}
 
 	public Uni<Map<String, Object>> getMappings(String indexName) {
 		return Uni
@@ -100,6 +288,18 @@ public class IndexService {
 			.map(response -> response.getIndexToSettings().get(indexName).toString());
 	}
 
+	private void deleteIndexTemplate(IndexName indexName) {
+		// delete index-template (best-effort)
+		var indexTemplateName = indexName.value() + TEMPLATE_SUFFIX;
+		try {
+			openSearchClient.indices().deleteIndexTemplate(req -> req
+				.name(indexTemplateName));
+		}
+		catch (Exception e) {
+			log.warnf(e, "Error deleting index-template %s", indexTemplateName);
+		}
+	}
+
 	private static List<CatResponse> responseToCatResponses(Response response) {
 
 		JsonArray catResponseArr = parseEntity(response.getEntity());
@@ -128,9 +328,18 @@ public class IndexService {
 			throw new IllegalStateException(
 				"Opensearch didn't return the [Content-Type] header, unable to parse response body");
 		}
-		XContentType xContentType = XContentType.fromMediaType(entity.getContentType().getValue());
-		if (xContentType == null) {
-			throw new IllegalStateException("Unsupported Content-Type: " + entity.getContentType().getValue());
+
+		var mediaTypeValue = entity.getContentType().getValue();
+		if (mediaTypeValue != null &&
+			(mediaTypeValue = mediaTypeValue.toLowerCase(Locale.ROOT)).contains("vnd.opensearch")) {
+			mediaTypeValue = mediaTypeValue.replaceAll("vnd.opensearch\\+", "").replaceAll(
+				"\\s*;\\s*compatible-with=\\d+",
+				""
+			);
+		}
+		MediaType mediaType = MediaTypeRegistry.fromMediaType(mediaTypeValue);
+		if (mediaType == null) {
+			throw new IllegalStateException("Unsupported Content-Type: " + mediaTypeValue);
 		}
 
 		try (InputStream inputStream = entity.getContent()) {
@@ -204,36 +413,6 @@ public class IndexService {
 			});
 	}
 
-
-	public Uni<List<Tuple2<Boolean, String>>> getExistsAndIndexNames(List<String> indexNames) {
-
-		List<Uni<Tuple2<Boolean, String>>> existIndexNames =
-			new ArrayList<>(indexNames.size());
-
-		for (String indexName : indexNames) {
-			Uni<Tuple2<Boolean, String>> existIndexName =
-				indexExist(indexName)
-					.onItemOrFailure()
-					.transform((exist, t) -> {
-
-						if (t != null) {
-							logger.error("Error while checking index exist", t);
-							return false;
-						}
-
-						return exist;
-
-					})
-					.map(exist -> Tuple2.of(exist, indexName));
-			existIndexNames.add(existIndexName);
-		}
-		return Uni
-			.join()
-			.all(existIndexNames)
-			.andCollectFailures();
-
-	}
-
 	public Uni<Long> indexCount(String...indexName) {
 		return Uni
 			.createFrom()
@@ -247,7 +426,7 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((countResponse, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index count", throwable);
+					log.error("Error getting index count", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(countResponse.getCount());
@@ -255,8 +434,7 @@ public class IndexService {
 	}
 
 	public Uni<Boolean> indexExist(String name) {
-		return Uni
-			.createFrom()
+		return Uni.createFrom()
 			.<Boolean>emitter(
 				emitter -> restHighLevelClient
 					.indices()
@@ -268,14 +446,53 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
 				if (throwable != null) {
-					logger.error("Error getting index exist", throwable);
+					log.error("Error getting index exist", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(response);
 			});
 	}
 
-	@Inject
-	Logger logger;
+	public Uni<Void> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		var componentTemplateName = putComponentTemplateRequest.name();
+
+		var cluster = openSearchClient.cluster();
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				var response =
+					cluster.putComponentTemplate(putComponentTemplateRequest);
+
+				if (response.acknowledged()) {
+					if (log.isDebugEnabled()) {
+						log.debugf(
+							"componentTemplate %s successfully created.",
+							componentTemplateName
+						);
+					}
+
+					return null;
+				}
+				else {
+					log.errorf(
+						"Cluster didn't acknowledge the operation for componentTemplate %s",
+						componentTemplateName
+					);
+
+					throw new CannotCreateComponentTemplateException("not acknowledged");
+				}
+			}
+			catch (IOException e) {
+				log.errorf(
+					e,
+					"Error when trying to create a componentTemplate %s.",
+					componentTemplateName
+				);
+
+				throw new CannotCreateComponentTemplateException(e);
+			}
+		});
+	}
 
 }

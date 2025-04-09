@@ -17,26 +17,28 @@
 
 package io.openk9.datasource.resource;
 
+import java.util.List;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.dto.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
 
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import java.util.List;
+import io.smallrye.mutiny.Uni;
 
 @Path("/datasources")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class DatasourceResource extends
 	BaseK9EntityResource<DatasourceService, Datasource, DatasourceDTO> {
 

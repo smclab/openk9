@@ -17,14 +17,20 @@
 
 package io.openk9.ingestion.client.filemanager;
 
-import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
 @Path("/api/file-manager/v1")
+@ApplicationScoped
 @RegisterRestClient(configKey = "file-manager")
 public interface FileManagerClient {
 
@@ -32,6 +38,7 @@ public interface FileManagerClient {
 	@Path("/upload/{datasourceId}/{fileId}/{schemaName}")
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	@Produces(MediaType.TEXT_PLAIN)
-	String upload(@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
-				  @PathParam("schemaName") String schemaName, InputStream inputStream);
+	Uni<String> upload(
+		@PathParam("datasourceId") String datasourceId, @PathParam("fileId") String fileId,
+		@PathParam("schemaName") String schemaName, InputStream inputStream);
 }

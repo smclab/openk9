@@ -17,49 +17,93 @@
 
 package io.openk9.datasource.service;
 
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
+import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey;
 import io.openk9.datasource.model.PluginDriverDocTypeFieldKey_;
 import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.UserField;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.dto.request.PluginWithDocTypeDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
+
+	@Inject
+	DocTypeService docTypeService;
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+	@Inject
+	IndexMappingService indexMappingService;
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
 	PluginDriverService(PluginDriverMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<PluginDriverDocTypesDTO> getDocTypes(long id) {
+		return sessionFactory.withSession(session -> findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getSample(pluginDriver.getHttpPluginDriverInfo()))
+
+			.map(IngestionPayloadMapper::getDocumentTypes)
+			.flatMap(docTypeNames -> {
+				var mutableSet = new HashSet<>(docTypeNames);
+				mutableSet.add(DocType.DEFAULT_NAME);
+
+				return docTypeService.getDocTypeListByNames(
+					session,
+					mutableSet.toArray(String[]::new)
+				);
+			})
+			.map(PluginDriverDocTypesDTO::fromDocTypes)
+		);
 	}
 
 	@Override
@@ -67,11 +111,72 @@ public class PluginDriverService
 		return PluginDriver.class;
 	}
 
+	public Uni<PluginDriverFormDTO> getForm(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getForm(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
+	}
+
+	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getForm(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+		return httpPluginDriverClient.getHealth(
+			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(long id) {
+		return findById(id)
+			.flatMap(pluginDriver ->
+				httpPluginDriverClient.getHealth(
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			);
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[]{
 			PluginDriver_.NAME, PluginDriver_.DESCRIPTION, PluginDriver_.TYPE
 		};
+	}
+
+	@Override
+	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
+
+		return super.persist(session, entity)
+			.log("PluginDriver created.")
+			.log("Creating DocumentTypes associated with pluginDriver")
+			.call(() -> indexMappingService
+				.generateDocTypeFieldsFromPluginDriverSample(
+					session, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
+				.log("DocumentTypes associated with pluginDriver created.")
+			);
+	}
+
+	@Override
+	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+		return super.merge(s, entity)
+			.log("PluginDriver updated.")
+			.log("Updating DocumentTypes associated with pluginDriver")
+			.call(() -> indexMappingService
+				.generateDocTypeFieldsFromPluginDriverSample(
+					s, ((PluginDriver) entity).getHttpPluginDriverInfo())
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20)
+				.log("DocumentTypes associated with pluginDriver updated.")
+			);
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
@@ -301,6 +406,181 @@ public class PluginDriverService
 				);
 			});
 		});
+	}
+
+	public Uni<Response<PluginDriver>> createWithDocType(
+		PluginWithDocTypeDTO dto) {
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if (!constraintViolations.isEmpty()) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return createWithDocType(session, dto)
+					.flatMap(pluginDriver ->
+						Uni.createFrom().item(Response.of(pluginDriver,null)));
+			}
+		);
+	}
+
+	public Uni<PluginDriver> createWithDocType(Mutiny.Session s, PluginWithDocTypeDTO dto) {
+
+		var transientPluginDriver = mapper.create(dto);
+
+		return super.create(s, transientPluginDriver)
+			.flatMap(pluginDriver -> {
+				var aclMappings = new LinkedHashSet<AclMapping>();
+
+				for (PluginWithDocTypeDTO.DocTypeUserDTO docTypeUser
+						: dto.getDocTypeUserDTOSet()) {
+
+					var docTypeField =
+						s.getReference(DocTypeField.class, docTypeUser.getDocTypeId());
+
+					var aclMapping = new AclMapping();
+					aclMapping.setPluginDriver(pluginDriver);
+					aclMapping.setDocTypeField(docTypeField);
+					aclMapping.setUserField(docTypeUser.getUserField());
+
+					var key = PluginDriverDocTypeFieldKey.of(
+						pluginDriver.getId(), docTypeUser.getDocTypeId());
+
+					aclMapping.setKey(key);
+
+					aclMappings.add(aclMapping);
+				}
+
+				pluginDriver.setAclMappings(aclMappings);
+
+				return s
+					.persist(pluginDriver)
+					.flatMap(__ -> s.merge(pluginDriver));
+			});
+	}
+
+	public Uni<Response<PluginDriver>> patchOrUpdateWithDocType(
+		Long pluginId, PluginWithDocTypeDTO dto, boolean patch) {
+
+
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if ( !constraintViolations.isEmpty() ) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return patchOrUpdateWithDocType(session, pluginId, dto, patch)
+					.flatMap(pluginDriver ->
+						Uni.createFrom().item(Response.of(pluginDriver, null)));
+			});
+	}
+
+	public Uni<PluginDriver> patchOrUpdateWithDocType(
+		Mutiny.Session s, Long pluginId, PluginWithDocTypeDTO dto, boolean patch) {
+
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		CriteriaDelete<AclMapping> deleteAclMapping =
+			cb.createCriteriaDelete(AclMapping.class);
+		Root<AclMapping> deleteFrom =
+			deleteAclMapping.from(AclMapping.class);
+
+		var docTypeUserDTOSet = dto.getDocTypeUserDTOSet();
+
+		return findById(s, pluginId)
+			.call(plugin -> Mutiny.fetch(plugin.getAclMappings()))
+			.call(plugin -> {
+
+				var pluginIdPath =
+					deleteFrom.get(AclMapping_.pluginDriver).get(PluginDriver_.id);
+				var docTypeIdPath =
+					deleteFrom.get(AclMapping_.docTypeField).get(DocTypeField_.id);
+
+				if ( docTypeUserDTOSet == null || docTypeUserDTOSet.isEmpty() ) {
+					if ( patch ) {
+						return Uni.createFrom().item(plugin);
+					}
+					else {
+						deleteAclMapping.where(pluginIdPath.in(pluginId));
+
+						//removes aclMapping old list
+						return s.createQuery(deleteAclMapping).executeUpdate()
+							.map(v -> plugin);
+					}
+				}
+				else {
+					//retrieves docType ids to keep
+					var docTypeIdsToKeep = docTypeUserDTOSet.stream()
+						.map(PluginWithDocTypeDTO.DocTypeUserDTO::getDocTypeId)
+						.collect(Collectors.toSet());
+
+					deleteAclMapping.where(
+						cb.and(
+							pluginIdPath.in(pluginId),
+							cb.not(docTypeIdPath.in(docTypeIdsToKeep))
+						));
+
+					//removes aclMapping old list
+					return s.createQuery(deleteAclMapping).executeUpdate()
+						.map(v -> plugin);
+				}
+			})
+			.call(Mutiny::fetch)
+			.onItem().ifNotNull()
+			.transformToUni(plugin -> {
+
+				PluginDriver newStatePluginDriver;
+				var newHashSet = new HashSet<AclMapping>();
+
+				if ( patch ) {
+					newStatePluginDriver = mapper.patch(plugin, dto);
+				}
+				else {
+					newStatePluginDriver = mapper.patch(plugin, dto);
+					newStatePluginDriver.setAclMappings(newHashSet);
+				}
+
+				//set new aclMapping Set
+				if ( docTypeUserDTOSet != null ) {
+					newStatePluginDriver.setAclMappings(newHashSet);
+
+					docTypeUserDTOSet.forEach(docTypeUserDTO -> {
+						var docTypeId = docTypeUserDTO.getDocTypeId();
+						var key =
+							PluginDriverDocTypeFieldKey.of(pluginId, docTypeId);
+						var docTypeReference =
+							s.getReference(DocTypeField.class, docTypeId);
+
+						var aclMapping = new AclMapping();
+						aclMapping.setPluginDriver(plugin);
+						aclMapping.setDocTypeField(docTypeReference);
+						aclMapping.setKey(key);
+						aclMapping.setUserField(docTypeUserDTO.getUserField());
+
+						newStatePluginDriver.getAclMappings().add(aclMapping);
+					});
+				}
+
+				return s.merge(newStatePluginDriver)
+					.map(v -> newStatePluginDriver)
+					.call(s::flush);
+			});
 	}
 
 }

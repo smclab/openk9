@@ -18,11 +18,6 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.SupervisorStrategy;
-import akka.actor.typed.javadsl.AskPattern;
-import akka.actor.typed.javadsl.Behaviors;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.model.Tenant;
@@ -32,13 +27,18 @@ import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.SupervisorStrategy;
+import org.apache.pekko.actor.typed.javadsl.AskPattern;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
@@ -123,13 +123,13 @@ public class TenantManagerActorSystem {
 	@Inject
 	DatasourceLiquibaseService liquibaseService;
 
+	@Inject
+	KeycloakContext config;
+
 	@ConfigProperty(
 		name = "openk9.tenant-manager.create-tenant-timeout",
 		defaultValue = "45s"
 	)
 	Duration requestTimeout;
-
-	@Inject
-	KeycloakContext config;
 
 }

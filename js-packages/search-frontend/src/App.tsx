@@ -1,23 +1,23 @@
+import { debounce } from "lodash";
+import moment from "moment";
 import React from "react";
-import { OpenK9 } from "./embeddable/entry";
+import { useTranslation } from "react-i18next";
 import { css } from "styled-components/macro";
-import { Logo } from "./components/Logo";
-import "./index.css";
 import "./app.css";
-import { MaintenancePage } from "./components/MaintenancePage";
-import "./ScrollBar.css";
 import "./components/dataRangePicker.css";
+import { DeleteLogo } from "./components/DeleteLogo";
+import { Logo } from "./components/Logo";
+import { MaintenancePage } from "./components/MaintenancePage";
+import { OpenK9 } from "./embeddable/entry";
+import "./index.css";
+import "./ScrollBar.css";
 import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
-import moment from "moment";
-import { DeleteLogo } from "./components/DeleteLogo";
-import { useTranslation } from "react-i18next";
-import { debounce } from "lodash";
-import { PreviewSvg } from "./svgElement/PreviewSvg";
+import { FilterSvg } from "./svgElement/FiltersSvg";
 
 export const openk9 = new OpenK9({
   enabled: true,
-  searchAutoselect: false,
+  searchAutoselect: true,
   searchReplaceText: true,
   memoryResults: false,
   useGenerativeApi: true,
@@ -28,8 +28,8 @@ export function App() {
   if (serviceStatus === "down") {
     return <MaintenancePage />;
   }
-
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
+  const [numberOfResults, setNumberOfResults] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
     React.useState(false);
   const [isVisibleCalendar, setIsVisibleCalendar] = React.useState(false);
@@ -61,9 +61,14 @@ export function App() {
     setSearchText(text);
   }, 200);
 
+  const debouncedNumberOfResults = debounce((search) => {
+    setNumberOfResults(search);
+  }, 200);
+
   React.useEffect(() => {
     openk9.addEventListener("queryStateChange", (newConfig) => {
       debouncedUpdateSearch(newConfig.searchTokens);
+      debouncedNumberOfResults(newConfig.numberOfResults);
     });
   }, [openk9]);
 
@@ -97,19 +102,25 @@ export function App() {
         grid-template-rows: auto auto auto auto 1fr;
         grid-template-areas:
           "dockbar dockbar dockbar"
-          "tabs tabs tabs"
           "search search search"
+          "tabs tabs tabs"
           "filters panel panel"
           "filters result detail";
-
+        padding: 20px;
+        padding-top:0px;
+        @-moz-document url-prefix() {
+          .openk9-container-tabs {
+          margin-bottom: 30px;
+           }
+        }
         @media (max-width: 480px) {
           padding: 0;
           grid-template-columns: 1fr;
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
-            "tabs"
             "search"
+            "tabs"
             "panel"
             "result";
         }
@@ -121,8 +132,8 @@ export function App() {
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar"
-            "tabs"
             "search"
+            "tabs"
             "panel"
             "result";
         }
@@ -132,12 +143,17 @@ export function App() {
           grid-template-rows: auto auto auto auto 1fr;
           grid-template-areas:
             "dockbar dockbar"
-            "tabs tabs"
             "search search"
+            "tabs tabs"
             "filters panel"
             "filters result";
             "result";
 
+        }
+
+         @media (min-width: 1024px) and (max-width: 1280px) {
+        grid-template-columns: 1.2fr 2.3fr 1.8fr;
+        grid-template-rows: auto auto auto auto 1fr;
         }
       `}
     >
@@ -209,27 +225,11 @@ export function App() {
           />
         </div>
       </div>
-
-      <div
-        ref={(element) => openk9.updateConfiguration({ tabs: element })}
-        className="openk9-container-tabs"
-        css={css`
-          grid-area: tabs;
-          padding: 8px 16px 0;
-          margin-bottom: -16px;
-          overflow: auto;
-          height: max-content;
-          @media (max-width: 480px) {
-            display: none;
-          }
-        `}
-      />
-
       <div
         css={css`
           grid-area: search;
-          padding: 16px 0;
-
+          padding-top: 16px;
+          padding-bottom: 8px;
           @media (max-width: 480px) {
             padding-inline: 16px;
           }
@@ -259,61 +259,6 @@ export function App() {
             className="openk9-update-configuration-search"
             ref={(element) => openk9.updateConfiguration({ search: element })}
           />
-          {/* <div
-            css={css`
-              @media (max-width: 768px) {
-                display: flex;
-                gap: 20px;
-                flex-direction: row-reverse;
-                align-items: center;
-              }
-              @media (max-width: 480px) {
-                display: none;
-              }
-            `}
-            className="openk9-update-configuration-datapicker"
-            ref={(element) =>
-              openk9.updateConfiguration({
-                dataRangePicker: {
-                  element,
-                  start: startDate,
-                  end: endDate,
-                },
-              })
-            }
-          >
-            {searchText !== undefined && (
-              <button
-                onClick={() => setIsPanelVisible(!isPanelVisible)}
-                css={css`
-                  display: none;
-                  justify-self: center;
-                  background: red;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  padding: 10px;
-                  color: white;
-                  gap: 10px;
-                  cursor: pointer;
-                  @media (max-width: 768px) {
-                    display: flex;
-                    align-items: center;
-                  }
-                `}
-              >
-                {isPanelVisible ? (
-                  <>
-                    Chiudi Pannello <Logo />
-                  </>
-                ) : (
-                  <>
-                    Generate response <Logo />
-                  </>
-                )}
-              </button>
-            )}
-          </div> */}
-
           <div
             css={css`
               width: 100%;
@@ -366,7 +311,7 @@ export function App() {
                     `}
                   >
                     {startDate === null
-                      ? "Seleziona una data"
+                      ? t("choose-a-date")
                       : moment(startDate).format("DD MMM YYYY")}
                   </div>
                   {endDate !== null && (
@@ -425,39 +370,64 @@ export function App() {
               <FilterHorizontalSvg />
             </button>
             {searchText !== undefined && (
-              <button
-                onClick={() => setIsPanelVisible(!isPanelVisible)}
+              <div
                 css={css`
-                  justify-self: center;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  background: red;
-                  border: 1px solid red;
-                  border-radius: 20px;
-                  color: white;
-                  gap: 10px;
-                  cursor: pointer;
-                  display: flex;
-                  align-items: center;
+                  padding-block: 8px;
                   @media (min-width: 480px) {
                     display: none;
                   }
                 `}
               >
-                {isPanelVisible ? (
-                  <>
-                    Chiudi Pannello <Logo />
-                  </>
-                ) : (
-                  <>
-                    Genera <Logo />
-                  </>
-                )}
-              </button>
+                {/* <button
+                  onClick={() => setIsPanelVisible(!isPanelVisible)}
+                  css={css`
+                    justify-self: center;
+                    border: 1px solid red;
+                    border-radius: 20px;
+                    background: red;
+                    border: 1px solid red;
+                    border-radius: 20px;
+                    color: white;
+                    gap: 10px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    padding: 6px 10px;
+                    @media (min-width: 480px) {
+                      display: none;
+                    }
+                  `}
+                >
+                  {isPanelVisible ? (
+                    <>
+                      Chiudi <Logo />
+                    </>
+                  ) : (
+                    <>
+                      <Logo />
+                    </>
+                  )}
+                </button> */}
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      <div
+        ref={(element) => openk9.updateConfiguration({ tabs: element })}
+        className="openk9-container-tabs"
+        css={css`
+          grid-area: tabs;
+          overflow: auto;
+          padding-top: 8px;
+          padding-bottom: 16px;
+          height: max-content;
+          @media (max-width: 480px) {
+            display: none;
+          }
+        `}
+      />
 
       <div
         className="openk9-filters-mobile-container openk9-box"
@@ -477,15 +447,14 @@ export function App() {
         css={css`
           grid-area: filters;
           width: 100%;
-          background: #fafafa;
+          background: white;
           display: flex;
           flex-direction: column;
           gap: 3px;
           box-sizing: border-box;
-          height: fit-content;
           border-radius: 8px;
-
-          @media (max-width: 480px) {
+          height: calc(100vh - 193.6px);
+          @media (max-width: 768px) {
             display: none;
           }
         `}
@@ -495,12 +464,11 @@ export function App() {
           css={css`
             display: flex;
             gap: 5px;
-            padding: 8px 16px;
-            margin-top: 5px;
+            padding: 16px;
           `}
         >
           <div>
-            <PreviewSvg />
+            <FilterSvg size={14} />
           </div>
           <h2
             id="title-preview-openk9"
@@ -509,17 +477,26 @@ export function App() {
             css={css`
               font-style: normal;
               font-weight: 700;
-              font-size: 18px;
+              font-size: 16px;
               height: 18px;
               line-height: 22px;
               align-items: center;
-              color: #3f3f46;
               margin: 0;
             `}
           >
             {t("filters")}
           </h2>
         </div>
+        <div
+          css={css`
+            padding: 16px;
+          `}
+          ref={(element) =>
+            openk9.updateConfiguration({
+              dataRangePickerVertical: { element },
+            })
+          }
+        ></div>
         <div
           className="openk9-filters-container openk9-box"
           ref={(element) =>
@@ -530,12 +507,10 @@ export function App() {
           css={css`
             display: flex;
             height: max-content;
-            flex-direction: column-reverse;
-            background-color: var(
-              --openk9-embeddable-search--primary-background-color
-            );
+            background-color: inherit;
             border-radius: 8px;
-
+            overflow: auto;
+            flex-direction: column;
             @media (max-width: 480px) {
               display: none;
             }
@@ -544,18 +519,7 @@ export function App() {
               display: none;
             }
           `}
-        >
-          <div
-            css={css`
-              padding: 16px;
-            `}
-            ref={(element) =>
-              openk9.updateConfiguration({
-                dataRangePickerVertical: { element },
-              })
-            }
-          ></div>
-        </div>
+        ></div>
       </div>
 
       {searchText !== undefined && (
@@ -585,11 +549,10 @@ export function App() {
               css={css`
                 justify-self: center;
                 border: 1px solid red;
-                border-radius: 20px;
                 background: red;
                 border: 1px solid red;
-                border-radius: 20px;
-                padding: 10px;
+                border-radius: 8px;
+                padding: 8px;
                 color: white;
                 gap: 10px;
                 cursor: pointer;
@@ -612,7 +575,7 @@ export function App() {
               )}
             </button>
           </div>
-          {/* <div
+          <div
             ref={(element) =>
               openk9.updateConfiguration({
                 generateResponse: element,
@@ -622,7 +585,7 @@ export function App() {
               color: black;
               display: ${isPanelVisible ? "block" : "none"};
             `}
-          ></div> */}
+          ></div>
         </div>
       )}
 
@@ -640,9 +603,63 @@ export function App() {
           grid-area: result;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
           overflow: auto;
-          height: max-content;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          height: calc(100vh - 193.6px);
+
+          @media (max-width: 480px) {
+            padding-inline: 16px;
+            gap: 10px;
+          }
         `}
-      />
+      >
+        {
+          <div
+            css={css`
+              display: flex;
+              justify-content: space-between;
+              background-color: white;
+              align-items: center;
+              border-radius: 8px;
+              @media (max-width: 480px) {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+              }
+            `}
+          >
+            <div
+              css={css`
+                padding: 16px;
+                font-weight: 700;
+                width: 100%;
+                @media (max-width: 480px) {
+                  padding: 0;
+                  padding-bottom: 8px;
+                }
+              `}
+            >
+              {t("number-of-results")}
+              <span
+                css={css`
+                  color: var(--openk9-embeddable-search--primary-color);
+                  margin-left: 5px;
+                `}
+              >
+                {numberOfResults}
+              </span>
+            </div>
+            <div
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  sortResults: { element },
+                })
+              }
+            ></div>
+          </div>
+        }
+      </div>
 
       <div
         className="openk9-results-container openk9-box"
@@ -688,9 +705,8 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          height: fit-content;
+          height: calc(100vh - 193.6px);
           border-radius: 8px;
-          border: 1px solid var(--openk9-embeddable-search--border-color);
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
 
           @media (max-width: 480px) {

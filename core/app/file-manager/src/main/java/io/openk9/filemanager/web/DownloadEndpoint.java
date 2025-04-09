@@ -18,10 +18,13 @@
 package io.openk9.filemanager.web;
 
 import io.openk9.filemanager.service.DownloadService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 
 @Path("/v1/download")

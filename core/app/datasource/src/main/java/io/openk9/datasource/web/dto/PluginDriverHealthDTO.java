@@ -17,9 +17,8 @@
 
 package io.openk9.datasource.web.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-
-import javax.validation.constraints.NotNull;
 
 @Builder
 public record PluginDriverHealthDTO(@NotNull Status status) {

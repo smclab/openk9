@@ -17,49 +17,28 @@
 
 package io.openk9.datasource.listener;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.receptionist.Receptionist;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
-import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension;
-import com.typesafe.config.Config;
 import io.openk9.common.util.ShardingKey;
-import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.base.BasePipeline;
-import io.openk9.datasource.pipeline.vector.VectorPipeline;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
-import io.openk9.datasource.util.ActorActionListener;
 import io.openk9.datasource.util.CborSerializable;
-import io.smallrye.mutiny.Uni;
-import io.vavr.Function3;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import org.hibernate.reactive.mutiny.Mutiny;
+import io.openk9.datasource.util.SchedulerUtil;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.ActorSystem;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.BehaviorBuilder;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.StashBuffer;
+import org.apache.pekko.actor.typed.receptionist.Receptionist;
+import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
+import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
 import org.jboss.logging.Logger;
-import org.opensearch.OpenSearchStatusException;
-import org.opensearch.action.ActionListener;
-import org.opensearch.client.IndicesClient;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.client.indices.GetComposableIndexTemplateRequest;
-import org.opensearch.client.indices.GetComposableIndexTemplatesResponse;
-import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
-import org.opensearch.cluster.metadata.ComposableIndexTemplate;
-import org.opensearch.cluster.metadata.Template;
-import org.opensearch.rest.RestStatus;
 import scala.Option;
 
 import java.time.Instant;
@@ -67,7 +46,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -76,367 +54,380 @@ import java.util.UUID;
 
 public class JobScheduler {
 
+	public sealed interface Command extends CborSerializable {}
 	private static final Logger log = Logger.getLogger(JobScheduler.class);
 
-	public sealed interface Command extends CborSerializable {}
-	public record ScheduleDatasource(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
-	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
-	public record TriggerDatasource(
-		String tenantName, long datasourceId, Boolean startFromFirst) implements Command {}
-	public record TriggerDatasourcePurge(String tenantName, long datasourceId) implements Command {}
-	private record ScheduleDatasourceInternal(
-		String tenantName, long datasourceId, boolean schedulable, String cron
-	) implements Command {}
-	private record UnScheduleJobInternal(String jobName) implements Command {}
-	private record TriggerDatasourceInternal(
-		String tenantName, Datasource datasource, Boolean startFromFirst) implements Command {}
-	private record InvokePluginDriverInternal(
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler, boolean startFromFirst
-	) implements Command {}
-	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
-	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
-	private record StartSchedulerInternal(
-		String tenantName, Datasource datasource, boolean startFromFirst) implements Command {}
-	private record CopyIndexTemplate(
-		String tenantName, io.openk9.datasource.model.Scheduler scheduler) implements Command {}
+	public static Behavior<Command> create(
+		List<ScheduleDatasource> schedulatedJobs) {
 
-	private static void persistScheduler(
-		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
-		ActorRef<MessageGateway.Command> messageGateway, String tenantName, Scheduler scheduler,
-		boolean startFromFirst) {
+		return Behaviors.withStash(
+			100,
+			stash -> Behaviors.setup(ctx -> {
 
-		VertxUtil.runOnContext(() ->
-			sessionFactory
-				.withTransaction(tenantName, (s, t) ->  {
-					DataIndex oldDataIndex = scheduler.getOldDataIndex();
-					DataIndex newDataIndex = scheduler.getNewDataIndex();
+				log.info("setup job-scheduler");
 
-					if (oldDataIndex != null && newDataIndex != null) {
-						Set<DocType> docTypes = oldDataIndex.getDocTypes();
-						if (docTypes != null && !docTypes.isEmpty()) {
-							Set<DocType> refreshed = new LinkedHashSet<>();
+				QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
+					QuartzSchedulerTypedExtension.get(ctx.getSystem());
 
-							for (DocType docType : docTypes) {
-								refreshed.add(s.getReference(docType));
-							}
-							newDataIndex.setDocTypes(refreshed);
-						}
-					}
+				ActorRef<Receptionist.Listing> listingActorRef =
+					ctx.messageAdapter(
+						Receptionist.Listing.class,
+						MessageGatewaySubscription::new
+					);
 
-					return s
-							.persist(scheduler)
-							.invoke(() -> {
-								messageGateway.tell(new MessageGateway.Register(
-									ShardingKey.asString(
-										tenantName, scheduler.getScheduleId())));
+				ctx
+					.getSystem()
+					.receptionist()
+					.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
 
-								ctx.getSelf()
-									.tell(new InvokePluginDriverInternal(
-										tenantName, scheduler, startFromFirst));
-
-							});
-					}
-				)
+				return setup(
+					ctx,
+					stash,
+					quartzSchedulerTypedExtension,
+					new ArrayDeque<>(schedulatedJobs)
+				);
+			})
 		);
 	}
 
-	private static Behavior<Command> onCopyIndexTemplate(
-		ActorContext<Command> ctx, RestHighLevelClient restHighLevelClient, CopyIndexTemplate cit) {
-		Scheduler scheduler = cit.scheduler;
-		String tenantName = cit.tenantName;
+	private static Behavior<Command> busy(
+		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		String newDataIndexName = newDataIndex.getIndexName();
-
-		IndicesClient indices = restHighLevelClient.indices();
-
-		indices.getIndexTemplateAsync(
-			new GetComposableIndexTemplateRequest(oldDataIndex.getIndexName() + "-template"),
-			RequestOptions.DEFAULT, new ActionListener<>() {
-				@Override
-				public void onResponse(GetComposableIndexTemplatesResponse indexTemplate) {
-					for (ComposableIndexTemplate composableIndexTemplate : indexTemplate.getIndexTemplates().values()) {
-
-						PutComposableIndexTemplateRequest request =
-							new PutComposableIndexTemplateRequest();
-
-						Template template = composableIndexTemplate.template();
-
-						ComposableIndexTemplate newComposableIndexTemplate =
-							new ComposableIndexTemplate(
-								List.of(newDataIndexName),
-								new Template(
-									template.settings(),
-									template.mappings(),
-									template.aliases()
-								),
-								composableIndexTemplate.composedOf(),
-								composableIndexTemplate.priority(),
-								composableIndexTemplate.version(),
-								composableIndexTemplate.metadata()
-							);
-
-						request
-							.name(newDataIndexName + "-template")
-							.indexTemplate(newComposableIndexTemplate);
-
-						indices.putIndexTemplateAsync(
-							request,
-							RequestOptions.DEFAULT,
-							ActorActionListener.of(ctx.getSelf(), (r, t) -> {
-									JobSchedulerException exception = null;
-									if (t != null) {
-										exception = new JobSchedulerException(t);
-									}
-
-									return new PersistSchedulerInternal(
-										tenantName, scheduler, exception);
-								}
-							)
-						);
-					}
-				}
-
-				@Override
-				public void onFailure(Exception e) {
-					if (e instanceof OpenSearchStatusException
-						&& ((OpenSearchStatusException) e).status() == RestStatus.NOT_FOUND) {
-						log.warn("Cannot Copy Index Template", e);
-						ctx.getSelf().tell(
-							new PersistSchedulerInternal(tenantName, scheduler, null));
-					}
-					else  {
-						ctx.getSelf().tell(
-							new PersistSchedulerInternal(null, null, new JobSchedulerException(e)));
-					}
-				}
-			});
-
-		return Behaviors.same();
+		return newReceiveBuilder(
+			ctx,
+			currentBehavior,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		)
+		.onMessage(TriggerDatasource.class, jm -> onStashMessage(messageBuffer, jm))
+		.build();
 	}
 
-	private static Behavior<Command> initial(
+	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
+		return actorRef.path().address().port().isEmpty();
+	}
+
+	private static BehaviorBuilder<Command> newReceiveBuilder(
 		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
 		return Behaviors.receive(Command.class)
-			.onMessage(MessageGatewaySubscription.class, mgs -> onInitialMessageGatewaySubscription(ctx, mgs, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
+			.onMessage(
+				MessageGatewaySubscription.class,
+				mgs -> onInitialMessageGatewaySubscription(
+					ctx,
+					messageBuffer,
+					mgs,
+					quartzSchedulerTypedExtension,
+					jobNames
+				)
+			)
+			.onMessage(
+				CreateNewScheduler.class,
+				cns -> onCreateNewScheduler(cns, ctx) )
 			.onMessage(ScheduleDatasource.class, ad -> onAddDatasource(ad, ctx))
 			.onMessage(UnScheduleDatasource.class, rd -> onRemoveDatasource(rd, ctx))
-			.onMessage(TriggerDatasource.class, jm -> onTriggerDatasource(jm, ctx, sessionFactory))
-			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx, restHighLevelClient, sessionFactory))
-			.onMessage(ScheduleDatasourceInternal.class, sdi -> onScheduleDatasourceInternal(sdi, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(UnScheduleJobInternal.class, rd -> onUnscheduleJobInternal(rd, ctx, quartzSchedulerTypedExtension, httpPluginDriverClient, sessionFactory, restHighLevelClient, messageGateway, jobNames))
-			.onMessage(TriggerDatasourceInternal.class, tdi -> onTriggerDatasourceInternal(tdi, ctx, sessionFactory, messageGateway))
-			.onMessage(InvokePluginDriverInternal.class, ipdi -> onInvokePluginDriverInternal(ctx, httpPluginDriverClient, ipdi.tenantName, ipdi.scheduler, ipdi.startFromFirst))
-			.onMessage(StartSchedulerInternal.class, ssi -> onStartScheduler(ctx, sessionFactory, messageGateway, ssi))
-			.onMessage(CopyIndexTemplate.class, cit -> onCopyIndexTemplate(ctx, restHighLevelClient, cit))
-			.onMessage(PersistSchedulerInternal.class, pndi -> onPersistSchedulerInternal(ctx, sessionFactory, messageGateway, pndi))
+			.onMessage(TriggerDatasourcePurge.class, tdp -> onTriggerDatasourcePurge(tdp, ctx))
 			.onMessage(
-				StartVectorPipeline.class,
-				msg -> onStartVectorPipeline(ctx, sessionFactory, messageGateway, msg)
+				ScheduleDatasourceInternal.class,
+				sdi -> onScheduleDatasourceInternal(
+					sdi,
+					ctx,
+					currentBehavior,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
 			)
-			.onMessage(CancelScheduling.class, cs -> onCancelScheduling(ctx, cs))
-			.build();
+			.onMessage(
+				UnScheduleJobInternal.class,
+				rd -> onUnscheduleJobInternal(
+					rd,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				TriggerDatasourceInternal.class,
+				tdi -> onTriggerDatasourceInternal(
+					tdi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				InvokePluginDriverInternal.class,
+				ipdi -> onInvokePluginDriverInternal(ipdi, ctx)
+			)
+			.onMessage(
+				StartSchedulerInternal.class,
+				ssi -> onStartScheduler(
+					ssi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				CopyIndexTemplate.class,
+				cit -> onCopyIndexTemplate(ctx, cit))
+			.onMessage(
+				PersistSchedulerInternal.class,
+				pndi -> onPersistSchedulerInternal(
+					pndi,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				PersistSchedulerResponse.class,
+				res -> onPersistSchedulerResponse(
+					res,
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					messageGateway,
+					jobNames
+				)
+			)
+			.onMessage(
+				InvokePluginDriverResponse.class,
+				res -> onInvokePluginDriverResponse(ctx, res)
+			)
+			.onMessage(HaltScheduling.class, cs -> onHaltScheduling(ctx, cs));
+	}
+
+	private static Behavior<Command> onAddDatasource(
+		ScheduleDatasource addDatasource, ActorContext<Command> ctx) {
+
+		long datasourceId = addDatasource.datasourceId;
+		String tenantName = addDatasource.tenantName;
+
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId,
+				JobType.TRIGGER,
+				addDatasource.schedulable,
+				addDatasource.schedulingCron,
+				null
+			)
+		);
+
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId,
+				JobType.REINDEX,
+				addDatasource.reindexable,
+				addDatasource.reindexingCron,
+				null
+			)
+		);
+
+		ctx.getSelf().tell(
+			new ScheduleDatasourceInternal(
+				tenantName, datasourceId,
+				JobType.PURGE,
+				addDatasource.purgeable,
+				addDatasource.purgingCron,
+				addDatasource.purgeMaxAge
+			)
+		);
+
+		return Behaviors.same();
 
 	}
 
-	private static Behavior<Command> onStartVectorPipeline(
-		ActorContext<Command> ctx,
-		Mutiny.SessionFactory sessionFactory,
-		ActorRef<MessageGateway.Command> messageGateway,
-		StartVectorPipeline msg) {
+	private static Behavior<Command> onCopyIndexTemplate(
+		ActorContext<Command> ctx, CopyIndexTemplate cit) {
 
-		var tenantName = msg.tenantName();
-		var scheduler = msg.scheduler();
+		var scheduler = cit.scheduler();
 
-		var oldDataIndex = scheduler.getOldDataIndex();
-
-		if (oldDataIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no dataIndex is associated for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var vectorIndex = oldDataIndex.getVectorIndex();
-
-		if (vectorIndex == null) {
-			log.infof(
-				"VectorPipeline skipped because no vectorIndex is configured for scheduleId %s.",
-				scheduler.getScheduleId()
-			);
-
-			return Behaviors.same();
-		}
-
-		var scheduleId = scheduler.getScheduleId();
-		var vScheduleId = scheduleId + VectorPipeline.VECTOR_PIPELINE_SUFFIX;
-
-		var vScheduler = new Scheduler();
-		vScheduler.setScheduleId(vScheduleId);
-		vScheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
-		vScheduler.setDatasource(scheduler.getDatasource());
-		vScheduler.setOldDataIndex(oldDataIndex);
-
-		VertxUtil.runOnContext(() -> sessionFactory.withTransaction(tenantName, (s, t) ->
-			s.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-				.getSingleResult()
-				.flatMap(embeddingModel -> s.persist(vScheduler))
-				.invoke(() -> messageGateway.tell(new MessageGateway.Register(
-					ShardingKey.asString(tenantName, vScheduleId))))
-		));
-
+		ctx.pipeToSelf(
+			JobSchedulerService.copyIndexTemplate(scheduler),
+			(ignore, throwable) -> new PersistSchedulerInternal(scheduler, throwable)
+		);
 
 		return Behaviors.same();
 	}
 
-	public static Behavior<Command> create(
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
-		List<ScheduleDatasource> schedulatedJobs) {
+	private static Behavior<Command> onCreateNewScheduler(
+		CreateNewScheduler createNewScheduler,
+		ActorContext<Command> ctx) {
 
-		return Behaviors.setup(ctx -> {
+		var triggerType = createNewScheduler.triggerType;
+		var datasource = createNewScheduler.datasource;
+		var tenantName = createNewScheduler.tenantName;
+		var startIngestionDate = createNewScheduler.startIngestionDate;
+		var throwable1 = createNewScheduler.throwable;
 
-			log.info("setup job-scheduler");
+		var scheduleId = UUID.randomUUID().toString();
 
-			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension =
-				QuartzSchedulerTypedExtension.get(ctx.getSystem());
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(scheduleId);
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
 
-			ActorRef<Receptionist.Listing> listingActorRef =
-				ctx.messageAdapter(
-					Receptionist.Listing.class,
-					MessageGatewaySubscription::new
-				);
+		// The scheduler cannot start, so a scheduler in FAILURE state is created
+		if (throwable1 != null) {
 
-			ctx
-				.getSystem()
-				.receptionist()
-				.tell(Receptionist.subscribe(MessageGateway.SERVICE_KEY, listingActorRef));
-
-			return setup(
-				httpPluginDriverClient,
-				sessionFactory,
-				restHighLevelClient,
-				ctx,
-				quartzSchedulerTypedExtension,
-				new ArrayDeque<>(schedulatedJobs)
+			log.errorf(
+				throwable1,
+				"The scheduler cannot start, so a scheduler with schedule-id %s " +
+					"in FAILURE state is created.",
+				scheduler.getScheduleId()
 			);
 
+			var errorDescription = SchedulerUtil.getErrorDescription(throwable1);
 
-		});
+			scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+			scheduler.setErrorDescription(errorDescription);
+
+			JobSchedulerService.persistScheduler(tenantName, scheduler);
+
+			return Behaviors.same();
+		}
+
+		boolean reindex = triggerType == TriggerType.SimpleTriggerType.REINDEX;
+
+		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+
+		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
+
+		if (oldDataIndex == null || reindex) {
+
+			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
+
+			DataIndex newDataIndex = new DataIndex();
+			newDataIndex.setName(newDataIndexName);
+			newDataIndex.setDatasource(datasource);
+			scheduler.setNewDataIndex(newDataIndex);
+
+			if (oldDataIndex != null) {
+				Set<DocType> docTypes = oldDataIndex.getDocTypes();
+				newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
+
+				if (docTypes != null && !docTypes.isEmpty()) {
+					ctx.getSelf().tell(
+						new CopyIndexTemplate(scheduler));
+
+					return Behaviors.same();
+				}
+			}
+		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantName, scheduler),
+			(response, throwable) ->
+				new PersistSchedulerResponse(scheduler, startIngestionDate, throwable)
+		);
+
+		return Behaviors.same();
 	}
 
-	private static Behavior<Command> setup(
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
+	private static Behavior<Command> onHaltScheduling(
+		ActorContext<Command> ctx, HaltScheduling cs) {
+
+		Scheduler scheduler = cs.scheduler;
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+
+		var exception = cs.exception;
+
+		String scheduleId = scheduler.getScheduleId();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
+
+		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY, ShardingKey.asString(tenantId, scheduleId));
+
+		schedulingRef.tell(
+			new Scheduling.Halt(new InvokePluginDriverException(exception)));
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onInitialMessageGatewaySubscription(
 		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		MessageGatewaySubscription mgs,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		Queue<Command> lag) {
+		List<String> jobNames) {
 
-		return Behaviors
-			.receive(Command.class)
-			.onMessage(MessageGatewaySubscription.class,
-				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
-			.onMessage(Start.class, start -> {
-				Command command = lag.poll();
+		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
+			.getServiceInstances(MessageGateway.SERVICE_KEY)
+			.stream()
+			.filter(JobScheduler::isLocalActorRef)
+			.findFirst();
 
-				while (command != null) {
-					ctx.getSelf().tell(command);
-					command = lag.poll();
-				}
+		if (actorRefOptional.isPresent()) {
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				actorRefOptional.get(),
+				jobNames
+			);
+		}
 
-				return initial(
-					ctx,
-					quartzSchedulerTypedExtension,
-					httpPluginDriverClient,
-					sessionFactory,
-					restHighLevelClient,
-					start.channelManagerRef,
-					new ArrayList<>()
-				);
-			})
-			.onAnyMessage(command -> {
-				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
-				newLag.add(command);
+		return Behaviors.same();
 
-				if (log.isDebugEnabled()) {
-					log.debugf("there are %d commands waiting...", newLag.size());
-				}
-
-				return setup(
-					httpPluginDriverClient,
-					sessionFactory,
-					restHighLevelClient,
-					ctx,
-					quartzSchedulerTypedExtension,
-					newLag
-				);
-			})
-			.build();
 	}
 
 	private static Behavior<Command> onInvokePluginDriverInternal(
-		ActorContext<Command> ctx, HttpPluginDriverClient httpPluginDriverClient,
-		String tenantName, Scheduler scheduler,
-		boolean startFromFirst) {
+		InvokePluginDriverInternal ipdi, ActorContext<Command> ctx) {
+
+		var scheduler = ipdi.scheduler;
+		var startIngestionDate = ipdi.startIngestionDate;
 
 		Datasource datasource = scheduler.getDatasource();
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
 		OffsetDateTime lastIngestionDate;
 
-		if (startFromFirst || datasource.getLastIngestionDate() == null) {
+		if (scheduler.getNewDataIndex() != null
+			|| datasource.getLastIngestionDate() == null) {
+
 			lastIngestionDate = OffsetDateTime.ofInstant(
 				Instant.ofEpochMilli(0), ZoneId.systemDefault());
 		}
 		else {
-			lastIngestionDate = datasource.getLastIngestionDate();
+
+			lastIngestionDate = startIngestionDate == null ?
+				datasource.getLastIngestionDate() : startIngestionDate;
 		}
 
 		switch (pluginDriver.getType()) {
 			case HTTP: {
 
-				VertxUtil.runOnContext(() -> Uni.createFrom().item(() ->
-							Json.decodeValue(
-								pluginDriver.getJsonConfig(),
-								HttpPluginDriverInfo.class
-							)
-						)
-						.flatMap(httpPluginDriverInfo -> httpPluginDriverClient
-								.invoke(
-									httpPluginDriverInfo,
-							HttpPluginDriverContext
-								.builder()
-								.timestamp(lastIngestionDate)
-								.tenantId(tenantName)
-								.datasourceId(datasource.getId())
-								.scheduleId(scheduler.getScheduleId())
-								.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
-								.build()
-						)
-						)
-						.onItem()
-						.invoke(() -> ctx
-							.getSelf()
-							.tell(new StartVectorPipeline(tenantName, scheduler)))
-						.onFailure()
-						.invoke(throwable -> ctx
-							.getSelf()
-							.tell(new CancelScheduling(tenantName, scheduler))
-						)
+				ctx.pipeToSelf(
+					JobSchedulerService.callHttpPluginDriverClient(
+						scheduler, lastIngestionDate),
+					(unused, throwable) ->
+						new InvokePluginDriverResponse(scheduler, throwable)
 				);
 
 			}
@@ -445,31 +436,245 @@ public class JobScheduler {
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onUnscheduleJobInternal(
-		UnScheduleJobInternal msg, ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient, Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient, ActorRef<MessageGateway.Command> messageGateway,
-		List<String> jobNames) {
+	private static Behavior<Command> onInvokePluginDriverResponse(
+		ActorContext<Command> ctx,
+		InvokePluginDriverResponse res) {
 
-		String jobName = msg.jobName;
+		var scheduler = res.scheduler();
+		var exception = res.exception();
 
-		if (jobNames.contains(jobName)) {
-			quartzSchedulerTypedExtension.deleteJobSchedule(jobName);
-			quartzSchedulerTypedExtension.deleteJobSchedule(jobName + "-purge");
+		if (exception != null) {
+			ctx.getSelf().tell(new HaltScheduling(scheduler, exception));
+		}
+		else {
+			var datasource = scheduler.getDatasource();
+			var tenantId = datasource.getTenant();
+			var scheduleId = scheduler.getScheduleId();
 
-			List<String> newJobNames = new ArrayList<>(jobNames);
-			newJobNames.remove(jobName);
-			log.infof("Job removed: %s", jobName);
-
-			return initial(
-				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				sessionFactory, restHighLevelClient, messageGateway, newJobNames);
+			// TODO: transform to a message
+			startSchedulingActor(ctx, tenantId, scheduleId);
 		}
 
-		log.infof("Job not found: %s", jobName);
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onPersistSchedulerInternal(
+		PersistSchedulerInternal pndi,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		Scheduler scheduler = pndi.scheduler;
+		var datasource = scheduler.getDatasource();
+		var tenantName = datasource.getTenant();
+
+		Throwable exception = pndi.throwable();
+
+		if (exception != null) {
+			log.errorf(
+				exception,
+				"Cannot persist the Scheduler for tenant: %s and datasource: %s",
+				tenantName,
+				datasource
+			);
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
+		}
+
+		ctx.pipeToSelf(
+			JobSchedulerService.persistScheduler(tenantName, scheduler),
+			(s, throwable) ->
+				new PersistSchedulerResponse(s, null, throwable)
+		);
 
 		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onPersistSchedulerResponse(
+		PersistSchedulerResponse rq,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		var scheduler = rq.scheduler();
+		var datasource = scheduler.getDatasource();
+		var tenantId = datasource.getTenant();
+		var startIngestionDate = rq.startIngestionDate;
+
+		var throwable = rq.throwable();
+
+		if (throwable != null) {
+
+			log.error("Scheduler cannot be persisted.", throwable);
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
+		}
+
+		messageGateway.tell(new MessageGateway.Register(
+			ShardingKey.asString(
+				tenantId, scheduler.getScheduleId())));
+
+		ctx.getSelf()
+			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
+
+		return unstashAndRelease(
+			ctx,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		);
+	}
+
+	private static Behavior<Command> onRemoveDatasource(
+		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx) {
+
+		long datasourceId = removeDatasource.datasourceId;
+		String tenantName = removeDatasource.tenantName;
+
+		String jobName = tenantName + "-" + datasourceId;
+
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.TRIGGER.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.REINDEX.name().toLowerCase()));
+		ctx.getSelf().tell(
+			new UnScheduleJobInternal(jobName + "-" + JobType.PURGE.name().toLowerCase()));
+
+		return Behaviors.same();
+
+	}
+
+	private static Behavior<Command> onScheduleDatasourceInternal(
+		ScheduleDatasourceInternal scheduleDatasourceInternal,
+		ActorContext<Command> ctx,
+		CurrentBehavior currentBehavior,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
+
+		String tenantName = scheduleDatasourceInternal.tenantName();
+		long datasourceId = scheduleDatasourceInternal.datasourceId();
+		JobType jobType = scheduleDatasourceInternal.jobType();
+		String cron = scheduleDatasourceInternal.cron();
+		boolean schedulable = scheduleDatasourceInternal.schedulable();
+		String purgeMaxAge = scheduleDatasourceInternal.purgeMaxAge();
+
+		var defaultTimezone = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension).defaultTimezone();
+
+		String jobName = tenantName + "-" + datasourceId + "-" + jobType.name().toLowerCase();
+
+		Command command = new TriggerDatasource(tenantName, datasourceId, false, null);
+
+		switch (jobType) {
+			case JobType.TRIGGER:
+				command = new TriggerDatasource(tenantName, datasourceId, false, null);
+				break;
+
+			case REINDEX:
+				command = new TriggerDatasource(tenantName, datasourceId, true, null);
+				break;
+
+			case PURGE:
+				command = new TriggerDatasourcePurge(tenantName, datasourceId, purgeMaxAge);
+				break;
+		}
+
+		if (schedulable) {
+
+			try {
+				if (jobNames.contains(jobName)) {
+
+					quartzSchedulerTypedExtension.updateTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
+
+					log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
+
+					return Behaviors.same();
+				}
+				else {
+
+					quartzSchedulerTypedExtension.createTypedJobSchedule(
+						jobName,
+						ctx.getSelf(),
+						command,
+						Option.empty(),
+						cron,
+						Option.empty(),
+						defaultTimezone
+					);
+
+					log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
+
+					List<String> newJobNames = new ArrayList<>(jobNames);
+
+					newJobNames.add(jobName);
+
+					// return the current behavior and update the actor jobNames list
+					switch (currentBehavior) {
+						case READY -> {
+							return ready(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+						case BUSY -> {
+							return busy(
+								ctx,
+								currentBehavior,
+								messageBuffer,
+								quartzSchedulerTypedExtension,
+								messageGatewayService,
+								newJobNames
+							);
+						}
+					}
+				}
+			}
+			catch (Exception e) {
+				log.errorf(e, "Error creating job \"%s\"", jobName);
+				return Behaviors.same();
+			}
+		}
+		else if (jobNames.contains(jobName)) {
+			ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
+			log.infof("job is not schedulable, removing job: %s", jobName);
+			return Behaviors.same();
+		}
+
+		log.infof("Job of type %s not created: datasourceId: %s, the datasource is not schedulable",
+			jobType.name(), datasourceId);
+
+		return Behaviors.same();
+
 	}
 
 	private static Behavior<Command> onSetupMessageGatewaySubscription(
@@ -481,7 +686,7 @@ public class JobScheduler {
 			.stream()
 			.filter(JobScheduler::isLocalActorRef)
 			.findFirst()
-			.map(JobScheduler.Start::new)
+			.map(Start::new)
 			.ifPresentOrElse(
 				cmd -> ctx.getSelf().tell(cmd),
 				() -> log.error("ChannelManager not found"));
@@ -490,40 +695,146 @@ public class JobScheduler {
 
 	}
 
-	private static Behavior<Command> onInitialMessageGatewaySubscription(
-		ActorContext<Command> ctx, MessageGatewaySubscription mgs,
+	private static Behavior<Command> onStartScheduler(
+		StartSchedulerInternal startSchedulerInternal,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
 		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
-		ActorRef<MessageGateway.Command> messageGateway, List<String> jobNames) {
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
-		Optional<ActorRef<MessageGateway.Command>> actorRefOptional = mgs.listing
-			.getServiceInstances(MessageGateway.SERVICE_KEY)
-			.stream()
-			.filter(JobScheduler::isLocalActorRef)
-			.findFirst();
+		Datasource datasource = startSchedulerInternal.datasource;
+		var tenantName = datasource.getTenant();
+		Scheduler schedulerToCancel = null;
 
-		if (actorRefOptional.isPresent()) {
-			return initial(
-				ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-				sessionFactory, restHighLevelClient, actorRefOptional.get(), jobNames
+		var startIngestionDate = startSchedulerInternal.startIngestionDate;
+
+		var throwable1 = startSchedulerInternal.throwable();
+
+		if (throwable1 != null) {
+			log.warnf(throwable1, "Cannot start a Scheduler.");
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
 			);
 		}
 
-		return Behaviors.same();
+		var triggerType = startSchedulerInternal.triggerType();
 
+		if ( triggerType instanceof TriggerType.TriggerTypeReindex) {
+
+			schedulerToCancel =
+				((TriggerType.TriggerTypeReindex) triggerType).scheduler();
+
+			triggerType = ((TriggerType.TriggerTypeReindex) triggerType).triggerType();
+		}
+
+		if (triggerType == TriggerType.SimpleTriggerType.IGNORE) {
+			log.infof(
+				"A Scheduler for datasource with id %s is already running",
+				datasource.getId()
+			);
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
+		}
+
+		if (schedulerToCancel != null) {
+			ctx.pipeToSelf(
+				JobSchedulerService.cancelScheduler(tenantName, schedulerToCancel.getId()),
+				(ignore, throwable) ->
+					new CreateNewScheduler(
+						ctx, TriggerType.SimpleTriggerType.REINDEX, datasource, tenantName,
+						startIngestionDate, throwable)
+			);
+		}
+		else {
+			ctx.getSelf().tell(
+				new CreateNewScheduler(
+					ctx, triggerType, datasource, tenantName, startIngestionDate, null));
+		}
+
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onStashMessage(
+		StashBuffer<Command> messageBuffer,
+		Command message) {
+
+		messageBuffer.stash(message);
+		log.infof("There are %d commands waiting", messageBuffer.size());
+		return Behaviors.same();
+	}
+
+	private static Behavior<Command> onTriggerDatasource(
+		TriggerDatasource jobMessage,
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		long datasourceId = jobMessage.datasourceId;
+		String tenantId = jobMessage.tenantName;
+		boolean reindex = jobMessage.reindex;
+		OffsetDateTime startIngestionDate = jobMessage.startIngestionDate();
+
+		ctx.pipeToSelf(
+			JobSchedulerService.fetchDatasourceConnection(
+				tenantId, datasourceId),
+			(datasource, throwable) -> new TriggerDatasourceInternal(
+				tenantId, datasource, reindex, startIngestionDate, throwable)
+		);
+
+		return busy(
+			ctx,
+			CurrentBehavior.BUSY,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		);
 	}
 
 	private static Behavior<Command> onTriggerDatasourceInternal(
 		TriggerDatasourceInternal triggerDatasourceInternal,
 		ActorContext<Command> ctx,
-		Mutiny.SessionFactory sessionFactory,
-		ActorRef<MessageGateway.Command> messageGateway) {
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
 
-		Datasource datasource = triggerDatasourceInternal.datasource;
-		String tenantName = triggerDatasourceInternal.tenantName;
-		Boolean startFromFirst = triggerDatasourceInternal.startFromFirst;
+		var throwable = triggerDatasourceInternal.throwable();
+		String tenantId = triggerDatasourceInternal.tenantName();
+
+		if (throwable != null) {
+			log.errorf(
+				throwable,
+				"error occurred when fetching datasource on tenant %s",
+				tenantId
+			);
+
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
+		}
+
+		Datasource datasource = triggerDatasourceInternal.datasource();
+		boolean reindex = triggerDatasourceInternal.reindex();
+		OffsetDateTime offsetDateTime = triggerDatasourceInternal.startIngestionDate();
 
 		PluginDriver pluginDriver = datasource.getPluginDriver();
 
@@ -533,370 +844,260 @@ public class JobScheduler {
 			log.warnf(
 				"datasource with id: %s has no pluginDriver", datasource.getId());
 
-			return Behaviors.same();
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			);
 		}
 
-		VertxUtil.runOnContext(() ->
-			sessionFactory.withStatelessTransaction(
-				tenantName,
-				(s, t) -> s.createQuery(
-						"select s " +
-						"from Scheduler s " +
-						"where s.datasource.id = :datasourceId " +
-						"and s.status in " + Scheduler.RUNNING_STATES,
-						Scheduler.class)
-					.setParameter("datasourceId", datasource.getId())
-					.getResultList()
-					.flatMap(list -> {
-						if (list != null && !list.isEmpty()) {
-
-							for (Scheduler scheduler : list) {
-								log.warnf(
-									"A Scheduler with id %s for datasource %s is %s",
-									scheduler.getId(),
-									datasource.getId(),
-									scheduler.getStatus()
-								);
-							}
-							return Uni.createFrom().voidItem();
-						}
-
-						if (startFromFirst != null) {
-							ctx.getSelf().tell(
-								new StartSchedulerInternal(tenantName, datasource, startFromFirst));
-							return Uni.createFrom().voidItem();
-						}
-						else {
-							return isReindexRequest(s, datasource.getId())
-								.flatMap(isReindex -> {
-									ctx.getSelf().tell(new StartSchedulerInternal(
-										tenantName, datasource, isReindex));
-									return Uni.createFrom().voidItem();
-								});
-						}
-					})
-			)
+		ctx.pipeToSelf(
+			JobSchedulerService.getTriggerType(datasource, reindex),
+			(triggerType, t) ->
+				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
 		);
 
 		return Behaviors.same();
-	}
-
-	private static Uni<Boolean> isReindexRequest(Mutiny.StatelessSession s, long datasourceId) {
-		return s.createQuery(
-				"select case " +
-					"	when d.reindexRate > 0 then mod(count(s.id), d.reindexRate) " +
-					"	else -1 " +
-					"end " +
-					"from Scheduler s " +
-					"join s.datasource d " +
-					"where d.id = :datasourceId " +
-					"group by d.id, d.reindexRate", Integer.class)
-			.setParameter("datasourceId", datasourceId)
-			.getSingleResult()
-			.map(integer -> integer.equals(0));
-	}
-
-	private static Behavior<Command> onCancelScheduling(
-		ActorContext<Command> ctx, CancelScheduling cs) {
-
-		String tenantName = cs.tenantName;
-		Scheduler scheduler = cs.scheduler;
-		String scheduleId = scheduler.getScheduleId();
-
-		ClusterSharding clusterSharding = ClusterSharding.get(ctx.getSystem());
-
-		EntityRef<Scheduling.Command> schedulingRef = clusterSharding.entityRefFor(
-			BasePipeline.ENTITY_TYPE_KEY, ShardingKey.asString(tenantName, scheduleId));
-
-		schedulingRef.tell(new Scheduling.GracefulEnd(Scheduler.SchedulerStatus.FAILURE));
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onScheduleDatasourceInternal(
-		ScheduleDatasourceInternal scheduleDatasourceInternal,
-		ActorContext<Command> ctx,
-		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
-		HttpPluginDriverClient httpPluginDriverClient,
-		Mutiny.SessionFactory sessionFactory,
-		RestHighLevelClient restHighLevelClient,
-		ActorRef<MessageGateway.Command> messageGatewayService, List<String> jobNames) {
-
-		String tenantName = scheduleDatasourceInternal.tenantName();
-		long datasourceId = scheduleDatasourceInternal.datasourceId();
-		String cron = scheduleDatasourceInternal.cron();
-		boolean schedulable = scheduleDatasourceInternal.schedulable();
-
-		String jobName = tenantName + "-" + datasourceId;
-
-		if (schedulable) {
-
-			if (jobNames.contains(jobName)) {
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				quartzSchedulerTypedExtension.updateTypedJobSchedule(
-					jobName + "-purge",
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				log.infof("Job updated: %s datasourceId: %s", jobName, datasourceId);
-
-				return Behaviors.same();
-			}
-			else {
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName,
-					ctx.getSelf(),
-					new TriggerDatasource(tenantName, datasourceId, null),
-					Option.empty(),
-					cron,
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-				quartzSchedulerTypedExtension.createTypedJobSchedule(
-					jobName + "-purge",
-					ctx.getSelf(),
-					new TriggerDatasourcePurge(tenantName, datasourceId),
-					Option.empty(),
-					getPurgeCron(ctx),
-					Option.empty(),
-					quartzSchedulerTypedExtension.defaultTimezone()
-				);
-
-
-				log.infof("Job created: %s datasourceId: %s", jobName, datasourceId);
-
-				List<String> newJobNames = new ArrayList<>(jobNames);
-
-				newJobNames.add(jobName);
-
-				return initial(
-					ctx, quartzSchedulerTypedExtension, httpPluginDriverClient,
-					sessionFactory, restHighLevelClient, messageGatewayService, newJobNames);
-
-			}
-		}
-		else if (jobNames.contains(jobName)) {
-			ctx.getSelf().tell(new UnScheduleDatasource(tenantName, datasourceId));
-			log.infof("job is not schedulable, removing job: %s", jobName);
-			return Behaviors.same();
-		}
-
-		log.infof("Job not created: datasourceId: %s, the datasource is not schedulable", datasourceId);
-
-		return Behaviors.same();
-
-	}
-
-	private static Behavior<Command> onTriggerDatasource(
-		TriggerDatasource jobMessage, ActorContext<Command> ctx,
-		Mutiny.SessionFactory sessionFactory) {
-
-		long datasourceId = jobMessage.datasourceId;
-		String tenantName = jobMessage.tenantName;
-		Boolean startFromFirst = jobMessage.startFromFirst;
-
-		loadDatasourceAndCreateSelfMessage(
-			tenantName, datasourceId, sessionFactory, ctx, startFromFirst,
-			TriggerDatasourceInternal::new
-		);
-
-		return Behaviors.same();
-
 	}
 
 	private static Behavior<Command> onTriggerDatasourcePurge(
-		TriggerDatasourcePurge tdp, ActorContext<Command> ctx,
-		RestHighLevelClient esClient, Mutiny.SessionFactory sessionFactory) {
+		TriggerDatasourcePurge tdp, ActorContext<Command> ctx) {
 
 		String tenantName = tdp.tenantName();
-		long datasourceId = tdp.datasourceId;
+		long datasourceId = tdp.datasourceId();
+		String purgeMaxAge = tdp.purgeMaxAge();
 
-		ctx.spawnAnonymous(
-			DatasourcePurge.create(tenantName, datasourceId, esClient, sessionFactory));
-
-		return Behaviors.same();
-	}
-
-	private static Behavior<Command> onRemoveDatasource(
-		UnScheduleDatasource removeDatasource, ActorContext<Command> ctx) {
-
-		long datasourceId = removeDatasource.datasourceId;
-		String tenantName = removeDatasource.tenantName;
-
-		String jobName = tenantName + "-" + datasourceId;
-
-		ctx.getSelf().tell(new UnScheduleJobInternal(jobName));
+		ctx.spawnAnonymous(DatasourcePurge.create(tenantName, datasourceId, purgeMaxAge));
 
 		return Behaviors.same();
-
 	}
 
-	private static Behavior<Command> onAddDatasource(
-		ScheduleDatasource addDatasource, ActorContext<Command> ctx) {
-
-		long datasourceId = addDatasource.datasourceId;
-		String tenantName = addDatasource.tenantName;
-
-		ctx.getSelf().tell(
-			new ScheduleDatasourceInternal(
-				tenantName, datasourceId, addDatasource.schedulable,
-				addDatasource.cron
-			)
-		);
-
-		return Behaviors.same();
-
-	}
-
-	private static void loadDatasourceAndCreateSelfMessage(
-		String tenantName, long datasourceId,
-		Mutiny.SessionFactory sessionFactory,
-		ActorContext<Command> ctx, Boolean startFromFirst,
-		Function3<String, Datasource, Boolean, Command> selfMessageCreator) {
-		VertxUtil.runOnContext(() ->
-			sessionFactory.withStatelessTransaction(tenantName, (s, t) ->
-				s.createQuery(
-						"select d " +
-						"from Datasource d " +
-						"join fetch d.pluginDriver " +
-						"left join fetch d.dataIndex di " +
-						"left join fetch di.vectorIndex vi " +
-						"left join fetch di.docTypes " +
-						"where d.id = :id", Datasource.class)
-					.setParameter("id", datasourceId)
-					.getSingleResult()
-					.invoke(d -> ctx
-						.getSelf()
-						.tell(
-							selfMessageCreator
-								.apply(
-									tenantName,
-									d,
-									startFromFirst
-								)
-						)
-					)
-			)
-		);
-	}
-
-
-	private static Behavior<Command> onStartScheduler(
-		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
+	private static Behavior<Command> onUnscheduleJobInternal(
+		UnScheduleJobInternal msg, ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
 		ActorRef<MessageGateway.Command> messageGateway,
-		StartSchedulerInternal startSchedulerInternal) {
+		List<String> jobNames) {
 
-		String tenantName = startSchedulerInternal.tenantName;
-		Datasource datasource = startSchedulerInternal.datasource;
-		boolean startFromFirst = startSchedulerInternal.startFromFirst;
+		String jobName = msg.jobName;
 
-		io.openk9.datasource.model.Scheduler scheduler = new io.openk9.datasource.model.Scheduler();
-		scheduler.setScheduleId(UUID.randomUUID().toString());
-		scheduler.setDatasource(datasource);
-		scheduler.setOldDataIndex(datasource.getDataIndex());
-		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
+		var scheduler = QuartzSchedulerTypedExtension._typedToUntyped(
+			quartzSchedulerTypedExtension);
 
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+		if (jobNames.contains(jobName)) {
+			scheduler.deleteJobSchedule(jobName);
 
-		log.infof("A Scheduler with schedule-id %s is starting", scheduler.getScheduleId());
+			List<String> newJobNames = new ArrayList<>(jobNames);
+			newJobNames.remove(jobName);
+			log.infof("Job removed: %s", jobName);
 
-		if (oldDataIndex == null || startFromFirst) {
-
-			String newDataIndexName = datasource.getId() + "-data-" + scheduler.getScheduleId();
-
-			DataIndex newDataIndex = new DataIndex();
-			newDataIndex.setName(newDataIndexName);
-			newDataIndex.setDatasource(datasource);
-			scheduler.setNewDataIndex(newDataIndex);
-
-			if (oldDataIndex != null) {
-				Set<DocType> docTypes = oldDataIndex.getDocTypes();
-				if (docTypes != null && !docTypes.isEmpty()) {
-					ctx.getSelf().tell(new CopyIndexTemplate(tenantName, scheduler));
-				}
-				else {
-					persistScheduler(
-						ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
-				}
-			}
-			else {
-				persistScheduler(
-					ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
-			}
+			return unstashAndRelease(
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				newJobNames
+			);
 		}
-		else {
-			persistScheduler(
-				ctx, sessionFactory, messageGateway, tenantName, scheduler, false);
-		}
+
+		log.infof("Job not found: %s", jobName);
 
 		return Behaviors.same();
 	}
 
-	private static Behavior<Command> onPersistSchedulerInternal(
-		ActorContext<Command> ctx, Mutiny.SessionFactory sessionFactory,
-		ActorRef<MessageGateway.Command> messageGateway, PersistSchedulerInternal pndi) {
+		private static Behavior<Command> ready(
+			ActorContext<Command> ctx,
+			CurrentBehavior currentBehavior,
+			StashBuffer<Command> messageBuffer,
+			QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+			ActorRef<MessageGateway.Command> messageGateway,
+			List<String> jobNames) {
 
-		String tenantName = pndi.tenantName;
-		Scheduler scheduler = pndi.scheduler;
-		JobSchedulerException exception = pndi.exception;
-
-		if (exception != null) {
-			log.error("cannot create index-template", exception);
-			return Behaviors.same();
-		}
-
-		persistScheduler(ctx, sessionFactory, messageGateway, tenantName, scheduler, true);
-
-		return Behaviors.same();
+		return newReceiveBuilder(
+			ctx,
+			currentBehavior,
+			messageBuffer,
+			quartzSchedulerTypedExtension,
+			messageGateway,
+			jobNames
+		)
+		.onMessage(TriggerDatasource.class,
+			jm -> onTriggerDatasource(
+				jm,
+				ctx,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			)
+		)
+		.build();
 	}
 
-	private record PersistSchedulerInternal(
-		String tenantName, Scheduler scheduler, JobSchedulerException exception
+	private static Behavior<Command> setup(
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		Queue<Command> lag) {
+
+		return Behaviors
+			.receive(Command.class)
+			.onMessage(MessageGatewaySubscription.class,
+				mgs -> onSetupMessageGatewaySubscription(ctx, mgs))
+			.onMessage(Start.class, start -> {
+				// TODO: remove the lag queue and use the messageBuffer queue
+				Command command = lag.poll();
+
+				while (command != null) {
+					ctx.getSelf().tell(command);
+					command = lag.poll();
+				}
+
+				return unstashAndRelease(
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					start.channelManagerRef,
+					new ArrayList<>()
+				);
+			})
+			.onAnyMessage(command -> {
+				// TODO: remove the lag queue and use the messageBuffer queue
+				ArrayDeque<Command> newLag = new ArrayDeque<>(lag);
+				newLag.add(command);
+
+				if (log.isDebugEnabled()) {
+					log.debugf("there are %d commands waiting...", newLag.size());
+				}
+
+				return setup(
+					ctx,
+					messageBuffer,
+					quartzSchedulerTypedExtension,
+					newLag
+				);
+			})
+			.build();
+	}
+
+	private static void startSchedulingActor(
+			ActorContext<Command> ctx, String tenantName, String scheduleId) {
+
+		var shardingKey = ShardingKey.fromStrings(tenantName, scheduleId);
+
+		ActorSystem<?> actorSystem = ctx.getSystem();
+
+		ClusterSharding clusterSharding = ClusterSharding.get(actorSystem);
+
+		var entityRef = clusterSharding.entityRefFor(
+			Scheduling.ENTITY_TYPE_KEY,
+			shardingKey.asString()
+		);
+
+		entityRef.tell(Scheduling.WakeUp.INSTANCE);
+	}
+
+	private static Behavior<Command> unstashAndRelease(
+		ActorContext<Command> ctx,
+		StashBuffer<Command> messageBuffer,
+		QuartzSchedulerTypedExtension quartzSchedulerTypedExtension,
+		ActorRef<MessageGateway.Command> messageGateway,
+		List<String> jobNames) {
+
+		return messageBuffer.unstashAll(
+			ready(
+				ctx,
+				CurrentBehavior.READY,
+				messageBuffer,
+				quartzSchedulerTypedExtension,
+				messageGateway,
+				jobNames
+			)
+		);
+	}
+
+	private enum CurrentBehavior {
+		READY,
+		BUSY
+	}
+
+	private enum JobType {
+		TRIGGER,
+		REINDEX,
+		PURGE
+	}
+
+	private enum SetReady implements Command {
+		INSTANCE
+	}
+
+	public record ScheduleDatasource(
+		String tenantName, long datasourceId, boolean schedulable, String schedulingCron,
+		boolean reindexable, String reindexingCron, boolean purgeable, String purgingCron,
+		String purgeMaxAge
 	) implements Command {}
 
-	private record StartVectorPipeline(String tenantName, Scheduler scheduler) implements Command {}
+	public record TriggerDatasource(
+		String tenantName, long datasourceId, boolean reindex, OffsetDateTime startIngestionDate
+	) implements Command {}
 
-	private record CancelScheduling(String tenantName, Scheduler scheduler) implements Command {}
+	public record TriggerDatasourcePurge(
+		String tenantName, long datasourceId, String purgeMaxAge
+	) implements Command {}
 
-	private static <T> boolean isLocalActorRef(ActorRef<T> actorRef) {
-		return actorRef.path().address().port().isEmpty();
-	}
+	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
-	private static String getPurgeCron(ActorContext<?> context) {
-		Config config = context.getSystem().settings().config();
+	private record CopyIndexTemplate(Scheduler scheduler) implements Command {}
 
-		String configPath = "io.openk9.scheduling.purge.cron";
+	private record CreateNewScheduler(
+		ActorContext<Command> ctx, TriggerType triggerType, Datasource datasource,
+		String tenantName, OffsetDateTime startIngestionDate, Throwable throwable
+	) implements Command {}
 
-		if (config.hasPathOrNull(configPath)) {
-			if (config.getIsNull(configPath)) {
-				return EVERY_DAY_AT_1_AM;
-			} else {
-				return config.getString(configPath);
-			}
-		} else {
-			return EVERY_DAY_AT_1_AM;
-		}
+	private record HaltScheduling(
+		Scheduler scheduler,
+		Throwable exception
+	) implements Command {}
 
-	}
+	private record InvokePluginDriverInternal(
+		Scheduler scheduler, OffsetDateTime startIngestionDate
+	) implements Command {}
 
-	private final static String EVERY_DAY_AT_1_AM = "0 0 1 * * ?";
+	private record InvokePluginDriverResponse(
+		Scheduler scheduler,
+		Throwable exception
+	) implements Command {}
 
+	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
+
+	private record PersistSchedulerInternal(
+		Scheduler scheduler, Throwable throwable
+	) implements Command {}
+
+	private record PersistSchedulerResponse(
+		Scheduler scheduler, OffsetDateTime startIngestionDate,
+		Throwable throwable
+	) implements Command {}
+
+	private record ScheduleDatasourceInternal(
+		String tenantName, long datasourceId, JobType jobType, boolean schedulable, String cron,
+		String purgeMaxAge
+	) implements Command {}
+
+	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
+
+	private record StartSchedulerInternal(
+		Datasource datasource, OffsetDateTime startIngestionDate, TriggerType triggerType,
+		Throwable throwable
+	) implements Command {}
+
+	private record TriggerDatasourceInternal(
+		String tenantName, Datasource datasource, Boolean reindex,
+		OffsetDateTime startIngestionDate, Throwable throwable
+	) implements Command {}
+
+	private record UnScheduleJobInternal(String jobName) implements Command {}
 
 }

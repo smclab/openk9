@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
+import { Logo } from "./Logo";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -106,7 +107,6 @@ function FilterCategoryDynamic({
       css={css`
         ${isUniqueLoadMore ? "width: 50%" : null}
         @media  (max-width: 768px) {
-          width: 100%;
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
         @media (max-width: 480px) {
@@ -242,11 +242,10 @@ function FilterCategoryDynamic({
                     padding: 3px;
                     flex-grow: 1;
                     text-indent: 25px;
-                    border-radius: 4px;
+                    border-radius: 8px;
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
-                    border-radius: 20px;
-                    background: #fafafa;
+                    background: white;
                     :focus {
                       border: 1px solid
                         var(--openk9-embeddable-search--active-color);
@@ -273,6 +272,7 @@ function FilterCategoryDynamic({
               margin: 0;
             `}
           >
+            {filters.length === 0 && <NoFiltersSearch />}
             {filters.map((suggestion, index) => {
               const asSearchToken = mapSuggestionToSearchToken(
                 suggestion,
@@ -409,7 +409,7 @@ function FilterCategoryDynamic({
                   padding: 8px 16px;
                   border: 1px solid
                     var(--openk9-embeddable-search--primary-color);
-                  border-radius: 20px;
+                  border-radius: 8px;
                 `}
                 onClick={() => {
                   suggestions.fetchNextPage();
@@ -746,5 +746,28 @@ function CheckBoxSelect({
         `}
       />
     </React.Fragment>
+  );
+}
+
+export function NoFiltersSearch() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <div
+        className="openk9-filter-category-no-results-is-open"
+        css={css`
+          color: var(--openk9-embeddable-search--secondary-text-color);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+        `}
+      >
+        <Logo size={100} />
+        <h4>{t("no-filters")} </h4>
+      </div>
+    </div>
   );
 }

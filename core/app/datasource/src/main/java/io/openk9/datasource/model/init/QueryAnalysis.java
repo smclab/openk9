@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
 
 public class QueryAnalysis {
 

@@ -17,13 +17,18 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.util.K9EntityEvent;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -34,10 +39,6 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
-
-import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @GraphQLApi
 @ApplicationScoped

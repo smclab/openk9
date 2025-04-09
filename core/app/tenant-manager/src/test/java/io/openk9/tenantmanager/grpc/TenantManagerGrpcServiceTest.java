@@ -18,7 +18,6 @@
 package io.openk9.tenantmanager.grpc;
 
 import com.google.protobuf.Empty;
-import io.openk9.tenantmanager.BaseTenantManagerQuarkusTest;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -27,7 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class TenantManagerGrpcServiceTest extends BaseTenantManagerQuarkusTest {
+class TenantManagerGrpcServiceTest {
 
 	@GrpcClient
 	TenantManager client;
@@ -37,9 +36,10 @@ class TenantManagerGrpcServiceTest extends BaseTenantManagerQuarkusTest {
 	void findTenantList(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> whenTenantManagerInitialized(
-				client.findTenantList(Empty.newBuilder().build())),
-			response -> Assertions.assertTrue(response.getTenantResponseList().isEmpty())
+			() -> client.findTenantList(Empty.newBuilder().build()),
+			response -> Assertions.assertTrue(
+				response.getTenantResponseList().isEmpty()
+			)
 		);
 
 	}

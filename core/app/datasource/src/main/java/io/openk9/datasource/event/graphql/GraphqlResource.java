@@ -27,6 +27,8 @@ import io.openk9.datasource.event.repo.EventRepository;
 import io.openk9.datasource.event.util.Constants;
 import io.smallrye.graphql.execution.context.SmallRyeContext;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -45,8 +47,6 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 
 @GraphQLApi
 @RequestScoped

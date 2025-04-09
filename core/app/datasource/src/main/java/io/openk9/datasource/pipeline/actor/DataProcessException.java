@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor;
 
-public class DataProcessException extends RuntimeException {
+public class DataProcessException extends WorkStageException {
 
 	public DataProcessException() {
 	}

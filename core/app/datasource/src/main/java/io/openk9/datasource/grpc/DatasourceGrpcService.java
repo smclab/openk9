@@ -17,17 +17,18 @@
 
 package io.openk9.datasource.grpc;
 
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
 import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
-import io.openk9.datasource.model.dto.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
+
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
-
-import javax.inject.Inject;
 
 @GrpcService
 public class DatasourceGrpcService implements Datasource {

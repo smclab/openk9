@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.dto.AnnotatorDTO;
+import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

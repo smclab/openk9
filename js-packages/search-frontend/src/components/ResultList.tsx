@@ -1,21 +1,21 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { Virtuoso } from "react-virtuoso";
-import { ResultMemo } from "./Result";
-import { GenericResultItem, SearchToken, SortField } from "./client";
-import { Logo } from "./Logo";
-import { Renderers, useRenderers } from "./useRenderers";
-import { CustomVirtualScrollbar } from "./CustomScrollbar";
-import { useOpenK9Client } from "./client";
-import { useInfiniteQuery, useQuery } from "react-query";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { ResultSvg } from "../svgElement/ResultSvg";
 import { useTranslation } from "react-i18next";
-import { result } from "lodash";
-import { Options, setSortResultsType } from "./SortResults";
+import { useInfiniteQuery } from "react-query";
+import { Virtuoso } from "react-virtuoso";
+import { css } from "styled-components/macro";
 import { TemplatesProps } from "../embeddable/entry";
+import { CustomVirtualScrollbar } from "./CustomScrollbar";
+import { Logo } from "./Logo";
+import { ResultMemo } from "./Result";
+import { Options, setSortResultsType } from "./SortResults";
+import {
+  GenericResultItem,
+  SearchToken,
+  SortField,
+  useOpenK9Client,
+} from "./client";
 import { useRange } from "./useRange";
-const OverlayScrollbarsComponentDockerFix = OverlayScrollbarsComponent as any; // for some reason this component breaks build inside docker
+import { Renderers, useRenderers } from "./useRenderers";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -37,16 +37,12 @@ type ResultsProps<E> = {
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   numberOfResults: number;
-  label?: string | null | undefined;
   counterIsVisible?: boolean;
   selectOptions: Options;
-  classNameLabel?: string | undefined;
   viewButton: boolean;
   templateCustom: TemplatesProps | null;
   NoResultsCustom?: any | undefined | null;
-  BoxTitle?: any | undefined | null;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedSort: any;
   setSelectedSort: setSortResultsType;
   setIdPreview?:
     | React.Dispatch<React.SetStateAction<string>>
@@ -67,18 +63,14 @@ function Results<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
-  label,
   counterIsVisible = false,
   selectOptions,
   setIdPreview,
-  classNameLabel,
   memoryResults,
   viewButton,
   NoResultsCustom,
-  selectedSort,
   setSelectedSort,
   setViewButtonDetail,
-  BoxTitle,
   templateCustom,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
@@ -100,11 +92,9 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
-          label={label}
           counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
           selectOptions={selectOptions}
-          classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
@@ -126,11 +116,7 @@ function Results<E>({
           setSortAfterKey={setSortAfterKey}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
-          label={label}
-          counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
-          selectOptions={selectOptions}
-          classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
@@ -154,11 +140,7 @@ function Results<E>({
           language={language}
           sortAfterKey={sortAfterKey}
           numberOfResults={numberOfResults}
-          label={label}
-          counterIsVisible={counterIsVisible}
           setIdPreview={setIdPreview}
-          selectOptions={selectOptions}
-          classNameLabel={classNameLabel}
           memoryResults={memoryResults}
           viewButton={viewButton}
           setViewButtonDetail={setViewButtonDetail}
@@ -168,134 +150,6 @@ function Results<E>({
 }
 
 export const ResultsMemo = React.memo(Results);
-
-type ResultCountProps = {
-  children: number | undefined;
-  addClass?: string;
-  label?: string | undefined | null;
-  results: any;
-  counterIsVisible: boolean;
-  selectOptions: Options;
-  language: string;
-  setSortResult: setSortResultsType;
-  classNameLabel?: string | undefined;
-  selectedSort?: any;
-  setSelectedSort?: React.Dispatch<
-    React.SetStateAction<{
-      field: string;
-      type: string;
-    }>
-  >;
-};
-
-function ResultCount({
-  children,
-  addClass,
-  label,
-  results,
-  counterIsVisible,
-  selectOptions,
-  classNameLabel,
-  language,
-  selectedSort,
-  setSelectedSort,
-  setSortResult,
-}: ResultCountProps) {
-  const client = useOpenK9Client();
-  const { t } = useTranslation();
-
-  return (
-    <React.Fragment>
-      <div
-        className={`openk9-result-list-container-title box-title ${
-          addClass || ""
-        }`}
-        css={css`
-          padding: 0px 16px;
-          background: #fafafa;
-          padding-top: 20.7px;
-          padding-bottom: 12.7px;
-          display: flex;
-          margin-bottom: 8px;
-          gap: 5px;
-        `}
-      >
-        <span>
-          <ResultSvg />
-        </span>
-        <h2
-          id="resultid"
-          className="openk9-title-result"
-          css={css`
-            font-style: normal;
-            font-weight: 700;
-            font-size: 18px;
-            height: 18px;
-            line-height: 22px;
-            align-items: center;
-            color: #3f3f46;
-            margin: 0;
-          `}
-        >
-          <span className="openk9-result-list-title title">
-            {label || t("result")}
-          </span>{" "}
-          {counterIsVisible && (
-            <span
-              className="openk9-result-list-counter-number"
-              css={css`
-                color: var(--openk9-embeddable-search--active-color);
-                font-weight: 700;
-              `}
-            >
-              {results.data?.pages[0].total || 0}
-            </span>
-          )}
-        </h2>
-      </div>
-      <div
-        className="openk9-number-result-list-container-wrapper "
-        css={css`
-          padding: 8px 16px;
-          font-weight: Helvetica;
-          font-weight: 700;
-        `}
-      >
-        <div
-          className="openk9-number-result-list-container more-detail-content"
-          css={css`
-            padding: 8px 5px;
-            border: 1px solid var(--openk9-embeddable-search--border-color);
-            display: flex;
-            justify-content: space-between;
-            border-radius: 8px;
-            align-items: center;
-          `}
-        >
-          <span
-            className="openk9-number-result-list-number-of-results "
-            css={css`
-              color: var(--openk9-embeddable-search--active-color);
-              margin-left: 5px;
-            `}
-          >
-            {children?.toLocaleString("it")}
-          </span>
-          <span>
-            {/* <SortResults
-              language={language}
-              selectOptions={selectOptions}
-              setSortResult={setSortResult}
-              labelDefault=""
-              classNameLabel={classNameLabel}
-              selectedSort={selectedSort}
-            /> */}
-          </span>
-        </div>
-      </div>
-    </React.Fragment>
-  );
-}
 
 type ResulListProps<E> = {
   renderers: Renderers;
@@ -314,12 +168,10 @@ type ResulListProps<E> = {
 
 type FiniteResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
-  label: string | null | undefined;
   counterIsVisible: boolean;
   selectOptions: Options;
   language: string;
   setSortResult: setSortResultsType;
-  classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
@@ -336,12 +188,7 @@ export function FiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
-  label,
-  counterIsVisible,
   setIdPreview,
-  selectOptions,
-  setSortResult,
-  classNameLabel,
   memoryResults,
   viewButton,
   setViewButtonDetail,
@@ -372,18 +219,6 @@ export function FiniteResults<E>({
             width: 100%;
           `}
         >
-          <ResultCount
-            counterIsVisible={counterIsVisible}
-            label={label}
-            results={results}
-            language={language}
-            selectOptions={selectOptions}
-            setSortResult={setSortResult}
-            classNameLabel={classNameLabel}
-          >
-            {results.data?.pages[0].total}
-          </ResultCount>
-
           {results.data?.pages[0].result.map((result, index) => {
             return (
               <ResultMemo<E>
@@ -411,14 +246,9 @@ export function FiniteResults<E>({
 type InfiniteResultsProps<E> = ResulListProps<E> & {
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
   sortAfterKey: string;
-  label?: string | undefined | null;
-  counterIsVisible: boolean;
   setIdPreview: React.Dispatch<React.SetStateAction<string>> | undefined | null;
-  selectOptions: Options;
   language: string;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
-  setSortResult: setSortResultsType;
-  classNameLabel?: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
   noResultsCustom: React.ReactNode;
@@ -431,7 +261,6 @@ export function InfiniteResults<E>({
   onDetail,
   setDetailMobile,
   sort,
-  setSortResult,
   isMobile,
   overChangeCard = false,
   language,
@@ -439,11 +268,7 @@ export function InfiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   numberOfResults,
-  label,
-  counterIsVisible,
   setIdPreview,
-  selectOptions,
-  classNameLabel,
   memoryResults,
   noResultsCustom,
   viewButton,
@@ -458,13 +283,15 @@ export function InfiniteResults<E>({
     numberOfResults,
     memoryResults,
   );
+  const { setNumberOfResults } = useRange();
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
       setTotalResult(results.data.pages[0].total);
+      setNumberOfResults(results.data.pages[0].total);
     } else {
-      setTotalResult(0);
+      setNumberOfResults(0);
     }
-  }, [results.data, setTotalResult]);
+  }, [results.data, setTotalResult, setNumberOfResults]);
   React.useEffect(() => {
     const sak =
       results.data?.pages[results.data.pages.length - 1].result[
@@ -482,11 +309,6 @@ export function InfiniteResults<E>({
         height: 100%;
         overflow-y: auto;
         overflow-x: hidden;
-        border: 1px solid var(--openk9-embeddable-search--border-color);
-        border-radius: 8px;
-        background-color: var(
-          --openk9-embeddable-search--primary-background-color
-        );
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -515,22 +337,15 @@ export function InfiniteResults<E>({
             padding-bottom: 16px;
           `}
         >
-          <ResultCount
-            counterIsVisible={counterIsVisible}
-            label={label}
-            results={results}
-            language={language}
-            selectOptions={selectOptions}
-            setSortResult={setSortResult}
-            classNameLabel={classNameLabel}
-          >
-            {results.data?.pages[0].total}
-          </ResultCount>
           <ul
             role="list"
             css={css`
               list-style-type: none;
               padding: 0;
+              margin: 0;
+              gap: 10px;
+              display: flex;
+              flex-direction: column;
             `}
           >
             {results.data?.pages.map((page, pageIndex) => {
@@ -542,6 +357,14 @@ export function InfiniteResults<E>({
                         role="listitem"
                         aria-labelledby="resultid"
                         key={resultIndex}
+                        css={css`
+                          background: white;
+                          border: 2px solid transparent;
+                          border-radius: 8px;
+                          :hover {
+                            border: 2px solid gray;
+                          }
+                        `}
                       >
                         <ResultMemo<E>
                           renderers={renderers}
@@ -602,18 +425,6 @@ export function InfiniteResults<E>({
         </div>
       ) : (
         <React.Fragment>
-          <ResultCount
-            addClass="openk9-container-no-results"
-            label={label}
-            results={result}
-            counterIsVisible={counterIsVisible}
-            language={language}
-            selectOptions={selectOptions}
-            setSortResult={setSortResult}
-            classNameLabel={classNameLabel}
-          >
-            {results.data?.pages[0].total}
-          </ResultCount>
           {noResultsCustom ? noResultsCustom : <NoResults />}
         </React.Fragment>
       )}
@@ -623,12 +434,7 @@ export function InfiniteResults<E>({
 
 type VirtualResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
-  label?: string | undefined | null;
-  counterIsVisible: boolean;
-  selectOptions: Options;
   language: string;
-  setSortResult: setSortResultsType;
-  classNameLabel: string | undefined;
   memoryResults: boolean;
   viewButton: boolean;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
@@ -639,17 +445,12 @@ export function VirtualResults<E>({
   onDetail,
   setDetailMobile,
   sort,
-  setSortResult,
   isMobile,
   overChangeCard = false,
   language,
   sortAfterKey,
   setTotalResult,
   numberOfResults,
-  label,
-  counterIsVisible,
-  selectOptions,
-  classNameLabel,
   memoryResults,
   viewButton,
   setViewButtonDetail,
@@ -676,19 +477,6 @@ export function VirtualResults<E>({
         height: 100%;
       `}
     >
-      {thereAreResults && (
-        <ResultCount
-          label={label}
-          results={results}
-          counterIsVisible={counterIsVisible}
-          selectOptions={selectOptions}
-          setSortResult={setSortResult}
-          language={language}
-          classNameLabel={classNameLabel}
-        >
-          {results.data?.pages[0].total}
-        </ResultCount>
-      )}
       <Virtuoso
         hidden={!thereAreResults}
         style={{ flexGrow: 1 }}
@@ -754,6 +542,8 @@ function NoResults() {
         align-items: center;
         justify-content: center;
         height: 100%;
+        padding: 30px;
+        background: white;
       `}
     >
       <Logo size={128} />

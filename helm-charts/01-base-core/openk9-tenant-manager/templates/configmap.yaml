@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{ include "common.labels.standard" . | nindent 4 }}
+data:
+  # Database env variables
+  QUARKUS_DATASOURCE_REACTIVE_URL: {{- if eq .Values.database.type "oracle" }}
+    {{ .Values.database.oracle.reactiveUrl | quote }}
+  {{- else if eq .Values.database.type "postgresql" }}
+    {{ .Values.database.postgresql.reactiveUrl | quote }}
+  {{- end }}
+
+  QUARKUS_DATASOURCE_USERNAME: {{- if eq .Values.database.type "oracle" }}
+    {{ .Values.database.oracle.username | quote }}
+  {{- else if eq .Values.database.type "postgresql" }}
+    {{ .Values.database.postgresql.username | quote }}
+  {{- end }}
+
+  OPENK9_DATASOURCE_URL: {{- if eq .Values.database.type "oracle" }}
+    {{ .Values.database.oracle.reactiveUrlOpenk9 | quote }}
+  {{- else if eq .Values.database.type "postgresql" }}
+    {{ .Values.database.postgresql.reactiveUrlOpenk9 | quote }}
+  {{- end }}
+  
+  QUARKUS_DATASOURCE_REACTIVE_IDLE_TIMEOUT : {{ .Values.quarkus.ReactiveIdleTimeout | quote }}
+  QUARKUS_DATASOURCE_REACTIVE_MAX_SIZE : {{ .Values.quarkus.ReactiveMaxSize | quote }}
+  QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'none'
+  QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
+  QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
+
+  JAVA_DEBUG: "true"
+  QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
+  QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
+  QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
+  QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
+  QUARKUS_HIBERNATE_ORM_LOG_SQL: "false"
+
+  QUARKUS_OIDC_AUTH_SERVER_URL: '{{ include "helper.keycloakURL" . }}/realms/tenant-manager'
+  QUARKUS_OIDC_CLIENT_ID: {{ .Values.keycloak.clientId | quote }}
+
+  #QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloakURL" . | quote }}
+  QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloak_svcURL" . | quote }}
+  QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: {{ .Values.keycloak.username | quote }}
+  QUARKUS_LOG_LEVEL: info
+  OPENK9_TENANT_MANAGER_CREATE_TENANT_TIMEOUT: {{ .Values.timeoutDb.CreateTenantTimeout | quote }}
+
+  # JVM Memory variable
+  JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
+
+  QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
+
+  # Opentelemetry env
+  QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
+  QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ .Values.otel.endpoint | quote }}
+
+  # Liquibase env variables. Use when database is Oracle
+
+  {{- if eq .Values.database.type "oracle" -}}
+    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_LOCK_TABLE_NAME : {{ .Values.liquibase.changeLogLockTable | quote }}
+    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_TABLE_NAME : {{ .Values.liquibase.changeLogTable | quote }}
+  {{- end }}
+

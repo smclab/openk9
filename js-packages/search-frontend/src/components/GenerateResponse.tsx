@@ -4,6 +4,7 @@ import React from "react";
 import isEqual from "lodash/isEqual";
 import { recoverySearchQueryAndSort } from "./ResultList";
 import { useRange } from "./useRange";
+import Markdown from "react-markdown";
 
 export default function GenerateResponse({
   question,
@@ -21,7 +22,7 @@ export default function GenerateResponse({
   //da rimuovere quando passiamo alla search con il pulsante
   const [loadingSearch, setLoadingSearch] = React.useState(false);
 
-  const { generateResponse, message, isChatting, isLoading } =
+  const { generateResponse, message, isChatting, cancelAllResponses } =
     useGenerateResponse({
       initialMessages: [],
       setIsRequestLoading: setLoadingSearch,
@@ -39,6 +40,7 @@ export default function GenerateResponse({
       const clearSearchQuery = searchQuery.map(
         ({ isSearch, isTab, filter, goToSuggestion, count, ...rest }) => rest,
       );
+      cancelAllResponses();
       generateResponse(
         question,
         clearSearchQuery,
@@ -68,7 +70,11 @@ export default function GenerateResponse({
             {isChatting || loadingSearch ? (
               <SmallLoader />
             ) : (
-              message?.answer && <Answer>{message.answer}</Answer>
+              message?.answer && (
+                <Answer>
+                  <Markdown>{message.answer}</Markdown>
+                </Answer>
+              )
             )}
           </ContainerBox>
         </Container>
@@ -78,9 +84,9 @@ export default function GenerateResponse({
 }
 const Container = styled.div`
   background: white;
-  border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
-  padding: 20px;
+  border-bottom-left-radius: 10px;
+  padding: 16px;
 `;
 
 const ContainerBox = styled.div`
@@ -97,7 +103,6 @@ const Question = styled.div`
 const Answer = styled.div`
   font-size: 1rem;
   color: #555;
-  white-space: pre-wrap;
 `;
 
 const spVortex = keyframes`

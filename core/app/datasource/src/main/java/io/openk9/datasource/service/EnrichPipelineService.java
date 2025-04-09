@@ -17,44 +17,49 @@
 
 package io.openk9.datasource.service;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
 import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.FieldValidator;
+import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.graphql.dto.PipelineWithItemsDTO;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.EnrichPipelineItemKey;
 import io.openk9.datasource.model.EnrichPipelineItemKey_;
 import io.openk9.datasource.model.EnrichPipelineItem_;
 import io.openk9.datasource.model.EnrichPipeline_;
-import io.openk9.datasource.model.dto.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
 
 ;
 
@@ -72,42 +77,166 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 		return new String[]{EnrichPipeline_.NAME, EnrichPipeline_.DESCRIPTION};
 	}
 
-	@Override
-	public Uni<EnrichPipeline> create(Mutiny.Session s, EnrichPipelineDTO dto) {
-		if (dto instanceof PipelineWithItemsDTO pipelineWithItemsDTO) {
-			var transientPipeline = mapper.create(dto);
+	public Uni<Response<EnrichPipeline>> createWithItems(PipelineWithItemsDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
 
-			return super.create(s, transientPipeline)
-				.flatMap(pipeline -> {
-					var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
+				if ( !constraintViolations.isEmpty() ) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
 
-					for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
-						var enrichItem = s.getReference(EnrichItem.class, item.getEnrichItemId());
+					return Uni.createFrom().item(Response.of(null, fieldValidators));
+				}
+
+				return createWithItems(session, dto)
+					.flatMap(enrichPipeline ->
+						Uni.createFrom().item(Response.of(enrichPipeline,null)));
+			});
+	}
+
+	public Uni<Response<EnrichPipeline>> patchOrUpdateWithItems(
+			long id, PipelineWithItemsDTO dto, boolean patch) {
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> {
+				var constraintViolations = validator.validate(dto);
+
+				if ( !constraintViolations.isEmpty() ) {
+					var fieldValidators = constraintViolations.stream()
+						.map(constraintViolation -> FieldValidator.of(
+							constraintViolation.getPropertyPath().toString(),
+							constraintViolation.getMessage()))
+						.collect(Collectors.toList());
+
+					return Uni.createFrom().item(Response.of(null,fieldValidators));
+				}
+
+				return patchOrUpdateWithItems(session, id, dto, patch)
+					.flatMap(enrichPipeline -> 
+						Uni.createFrom().item(Response.of(enrichPipeline, null)));
+			});
+	}
+
+	public Uni<EnrichPipeline> createWithItems(
+			Mutiny.Session s, PipelineWithItemsDTO pipelineWithItemsDTO) {
+
+		var transientPipeline = mapper.create(pipelineWithItemsDTO);
+
+		return super.create(s, transientPipeline)
+			.flatMap(pipeline -> {
+				var enrichPipelineItems = new LinkedHashSet<EnrichPipelineItem>();
+
+				for (PipelineWithItemsDTO.ItemDTO item : pipelineWithItemsDTO.getItems()) {
+					var enrichItem =
+						s.getReference(EnrichItem.class, item.getEnrichItemId());
+
+					var enrichPipelineItem = new EnrichPipelineItem();
+					enrichPipelineItem.setEnrichPipeline(pipeline);
+					enrichPipelineItem.setEnrichItem(enrichItem);
+					enrichPipelineItem.setWeight(item.getWeight());
+					enrichPipelineItems.add(enrichPipelineItem);
+
+					var key = EnrichPipelineItemKey.of(
+						pipeline.getId(),
+						item.getEnrichItemId()
+					);
+
+					enrichPipelineItem.setKey(key);
+				}
+
+				pipeline.setEnrichPipelineItems(enrichPipelineItems);
+
+				return s
+					.persist(pipeline)
+					.flatMap(__ -> s.merge(pipeline));
+			});
+	}
+
+	public Uni<EnrichPipeline> patchOrUpdateWithItems(
+			Mutiny.Session s, long id, PipelineWithItemsDTO pipelineWithItemsDTO, boolean patch) {
+
+		var itemDTOSet = pipelineWithItemsDTO.getItems();
+
+		return findById(s, id)
+			.onItem().ifNotNull()
+			.call(pipeline -> {
+
+				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+				CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
+					cb.createCriteriaDelete(EnrichPipelineItem.class);
+				Root<EnrichPipelineItem> deleteFrom =
+					deletePipelineItem.from(EnrichPipelineItem.class);
+
+				var pipelineIdPath =
+					deleteFrom.get(EnrichPipelineItem_.enrichPipeline).get(EnrichPipeline_.id);
+
+				if (patch && (itemDTOSet == null || itemDTOSet.isEmpty())) {
+
+					return Uni.createFrom().voidItem();
+
+				}
+				else {
+
+					deletePipelineItem.where(pipelineIdPath.in(id));
+
+					return s.createQuery(deletePipelineItem)
+						.executeUpdate();
+
+				}
+			})
+			.call(pipeline -> {
+
+				Set<EnrichPipelineItem> items = new HashSet<>();
+
+				//set new pipeline-item Set
+				if (itemDTOSet != null) {
+
+					for (PipelineWithItemsDTO.ItemDTO itemDTO : itemDTOSet) {
+
+						var itemId = itemDTO.getEnrichItemId();
+						var key = EnrichPipelineItemKey.of(id, itemId);
+						var itemReference = s.getReference(EnrichItem.class, itemId);
 
 						var enrichPipelineItem = new EnrichPipelineItem();
 						enrichPipelineItem.setEnrichPipeline(pipeline);
-						enrichPipelineItem.setEnrichItem(enrichItem);
-						enrichPipelineItem.setWeight(item.getWeight());
-						enrichPipelineItems.add(enrichPipelineItem);
-
-						var key = EnrichPipelineItemKey.of(
-							pipeline.getId(),
-							item.getEnrichItemId()
-						);
-
+						enrichPipelineItem.setEnrichItem(itemReference);
 						enrichPipelineItem.setKey(key);
+						enrichPipelineItem.setWeight(itemDTO.getWeight());
+
+						items.add(enrichPipelineItem);
 					}
 
-					pipeline.setEnrichPipelineItems(enrichPipelineItems);
+				}
 
-					return s
-						.persist(pipeline)
-						.flatMap(__ -> s.merge(pipeline));
-				});
+				if (items.isEmpty()) {
 
-		}
+					return Uni.createFrom().voidItem();
 
-		return super.create(s, dto);
+				}
+				else {
+
+					return s.persistAll(items.toArray());
+
+				}
+
+			})
+			.flatMap(pipeline -> {
+
+				EnrichPipeline newStatePipeline;
+
+				if (patch) {
+					newStatePipeline = mapper.patch(pipeline, pipelineWithItemsDTO);
+				}
+				else {
+					newStatePipeline = mapper.update(pipeline, pipelineWithItemsDTO);
+				}
+
+				return s.merge(newStatePipeline).call(s::flush);
+			});
 	}
 
 	public Uni<Connection<EnrichItem>> getEnrichItemsConnection(
@@ -214,52 +343,35 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<EnrichPipeline> sortEnrichItems(
 		long enrichPipelineId, List<Long> enrichItemIdList) {
 
+		return sessionFactory.withTransaction(s -> {
 
-		return sessionFactory.withTransaction(s -> findById(s, enrichPipelineId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(enrichPipeline -> {
+			float weight = 0.0f;
 
-				List<Uni<EnrichItem>> enrichItemList = new ArrayList<>();
+			Set<PipelineWithItemsDTO.ItemDTO> items = new TreeSet<>();
 
-				for (Long enrichItemId : enrichItemIdList) {
-					enrichItemList.add(
-						enrichItemService.findById(enrichItemId));
-				}
+			for (Long enrichItemId : enrichItemIdList) {
 
-				return Uni
-					.combine()
-					.all()
-					.unis(enrichItemList)
-					.combinedWith(EnrichItem.class, Function.identity())
-					.flatMap(l -> s
-						.fetch(enrichPipeline.getEnrichPipelineItems())
-						.flatMap(epi -> {
+				PipelineWithItemsDTO.ItemDTO itemDto =
+					PipelineWithItemsDTO.ItemDTO
+						.builder()
+						.enrichItemId(enrichItemId)
+						.weight(weight)
+						.build();
 
-							float weight = 0.0f;
+				items.add(itemDto);
 
-							for (Long enrichItemId : enrichItemIdList) {
+				weight += 1.0f;
 
-								for (EnrichPipelineItem enrichPipelineItem : epi) {
-									if (
-										Objects.equals(
-											enrichPipelineItem.getEnrichItem().getId(),
-											enrichItemId
-										)
-									) {
-										enrichPipelineItem.setWeight(weight);
-										weight += 1.0f;
-										break;
-									}
-								}
+			}
 
-							}
+			PipelineWithItemsDTO pipelineDto = PipelineWithItemsDTO.builder()
+				.items(items)
+				.build();
 
-							return merge(s, enrichPipeline);
-						})
-					);
+			return patchOrUpdateWithItems(s, enrichPipelineId, pipelineDto, true);
+		});
 
-			}));
+
 	}
 
 	public Uni<Page<EnrichItem>> getEnrichItems(
@@ -327,36 +439,44 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	}
 
 	public Uni<Tuple2<EnrichPipeline, EnrichItem>> removeEnrichItem(
-		long enrichPipelineId,
-		long enrichItemId) {
-		return sessionFactory.withTransaction((s) -> findById(s, enrichPipelineId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(enrichPipeline ->
-				enrichItemService.findById(s, enrichItemId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(enrichItem -> s
-						.fetch(enrichPipeline.getEnrichPipelineItems())
-						.flatMap(enrichPipelineItems -> {
+		long enrichPipelineId, long enrichItemId) {
 
-							boolean removed = enrichPipelineItems.removeIf(
-								epi -> epi.getKey().getEnrichItemId() == enrichItemId
-									   && epi.getKey().getEnrichPipelineId() == enrichPipelineId);
+		return sessionFactory.withTransaction((s, t) -> s
+			.find(EnrichPipeline.class, enrichPipelineId)
+			.flatMap(enrichPipeline -> s
+				.find(EnrichItem.class, enrichItemId)
+				.flatMap(enrichItem -> {
 
-							if (removed) {
-								return s.find(
-										EnrichPipelineItem.class,
-										EnrichPipelineItemKey.of(enrichPipelineId, enrichItemId)
-									)
-									.call(s::remove)
-									.map(ep -> Tuple2.of(enrichPipeline, enrichItem));
+					CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+					CriteriaDelete<EnrichPipelineItem> deletePipelineItem =
+						cb.createCriteriaDelete(EnrichPipelineItem.class);
+					Root<EnrichPipelineItem> deleteFrom =
+						deletePipelineItem.from(EnrichPipelineItem.class);
+
+					var pipelineIdPath =
+						deleteFrom.get(EnrichPipelineItem_.enrichPipeline).get(EnrichPipeline_.id);
+
+					var itemIdPath =
+						deleteFrom.get(EnrichPipelineItem_.enrichItem).get(EnrichItem_.id);
+
+					deletePipelineItem.where(cb.and(
+						cb.equal(pipelineIdPath, enrichPipelineId),
+						cb.equal(itemIdPath, enrichItemId)
+					));
+
+					return s.createQuery(deletePipelineItem)
+						.executeUpdate()
+						.map(rows -> {
+							if (rows > 0) {
+								return Tuple2.of(enrichPipeline, enrichItem);
 							}
-							else {
-								return Uni.createFrom().nullItem();
-							}
 
-						}))));
+							return null;
+						});
+
+				})
+			)
+		);
 	}
 
 	public Uni<EnrichItem> findFirstEnrichItem(
@@ -368,8 +488,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 			"where epi.enrichPipeline.id = :enrichPipelineId " +
 			"order by epi.weight asc";
 
-		Mutiny.Query<EnrichItem> query =
-			s.createQuery(queryString, EnrichItem.class);
+		var query = s.createQuery(queryString, EnrichItem.class);
 
 		query.setParameter("enrichPipelineId", enrichPipelineId);
 
@@ -396,8 +515,7 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				"and epi_next.weight > epi.weight " +
 				"order by epi_next.weight asc";
 
-			Mutiny.Query<EnrichItem> query =
-				s.createQuery(queryString, EnrichItem.class);
+			var query = s.createQuery(queryString, EnrichItem.class);
 
 			query.setParameter("enrichPipelineId", enrichPipelineId);
 			query.setParameter("enrichItemId", enrichItemId);
@@ -408,6 +526,20 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 		});
 
+	}
+
+	public Uni<List<EnrichPipeline>> findUnboundEnrichPipelines(long itemId) {
+
+		return sessionFactory.withTransaction(s ->{
+			String queryString = "SELECT p FROM EnrichPipeline p " +
+				"WHERE p.id not in (" +
+				"SELECT pi.enrichPipeline.id FROM EnrichPipelineItem pi " +
+				"WHERE pi.enrichItem.id = (:itemId))";
+
+			return s.createQuery(queryString, EnrichPipeline.class)
+				.setParameter("itemId", itemId)
+				.getResultList();
+		});
 	}
 
 	@Override

@@ -19,9 +19,8 @@ package io.openk9.tikaocr;
 
 import io.openk9.tika.TikaProcessor;
 import io.vertx.core.json.JsonObject;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class Processor {

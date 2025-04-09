@@ -17,18 +17,17 @@
 
 package io.openk9.datasource.actor;
 
-import akka.actor.typed.ActorSystem;
 import com.typesafe.config.ConfigFactory;
 import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
 import io.quarkus.runtime.Startup;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import org.apache.pekko.actor.typed.ActorSystem;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
 
 @ApplicationScoped
 @Startup
@@ -42,7 +41,7 @@ public class ActorSystemProvider {
 	Instance<ActorSystemBehaviorInitializer> actorSystemBehaviorInitializerInstance;
 	@Inject
 	EventBus eventBus;
-	@ConfigProperty(name = "akka.cluster.file")
+	@ConfigProperty(name = "pekko.cluster.file")
 	String clusterFile;
 	private ActorSystem<?> actorSystem;
 

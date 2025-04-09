@@ -24,9 +24,9 @@ import io.openk9.datasource.grpc.CreatePluginDriverResponse;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
@@ -45,7 +45,6 @@ import static org.mockito.Mockito.times;
 @TestHTTPEndpoint(ProvisioningResource.class)
 @TestSecurity(user = "k9-admin", roles = {"admin"})
 public class ProvisioningResourceTest {
-
 
 	@InjectMock
 	@GrpcClient("appmanager")

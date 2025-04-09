@@ -1,8 +1,5 @@
 import { css } from "styled-components/macro";
-import {
-  GenericResultItem,
-  GenericResultItemFields,
-} from "../components/client";
+import { GenericResultItem } from "../components/client";
 import { get } from "lodash";
 import React from "react";
 

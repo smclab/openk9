@@ -29,6 +29,7 @@ import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,12 @@ import java.util.List;
 @WithKubernetesTestServer
 @QuarkusTest
 class AppManagerServiceTest {
+
+	@ConfigProperty(
+		name = "quarkus.kubernetes-client.request-retry-backoff-limit",
+		defaultValue = "0"
+	)
+	int maxRetry;
 
 	private static final String NAMESPACE = "k9-unit-test";
 
@@ -60,14 +67,14 @@ class AppManagerServiceTest {
 	@KubernetesTestServer
 	KubernetesServer mockServer;
 	@GrpcClient
-	AppManager client;
+	AppManager appManager;
 
 	@Test
 	@RunOnVertxContext
 	void deploySuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.applyResource(goodRequest),
+			() -> appManager.applyResource(goodRequest),
 			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich-mew")
 		);
 
@@ -81,17 +88,10 @@ class AppManagerServiceTest {
 			.post()
 			.withPath(APPLICATIONS_PATH)
 			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
-
-		mockServer.expect()
-			.put()
-			.withPath(
-				APPLICATION_INSTANCE_PATH)
-			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
+			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
-			() -> client.applyResource(goodRequest),
+			() -> appManager.applyResource(goodRequest),
 			StatusRuntimeException.class
 		);
 
@@ -102,7 +102,7 @@ class AppManagerServiceTest {
 	void deployBadRequest(UniAsserter asserter) {
 
 		asserter.assertFailedWith(
-			() -> client.applyResource(badRequest),
+			() -> appManager.applyResource(badRequest),
 			StatusRuntimeException.class
 		);
 
@@ -113,9 +113,9 @@ class AppManagerServiceTest {
 	void deleteWithResourceSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client
+			() -> appManager
 				.applyResource(goodRequest)
-				.call(() -> client.deleteResource(goodRequest)),
+				.call(() -> appManager.deleteResource(goodRequest)),
 			empty -> {}
 		);
 
@@ -126,7 +126,7 @@ class AppManagerServiceTest {
 	void deleteWithoutResourceSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequest),
 			empty -> {}
 		);
 
@@ -140,10 +140,10 @@ class AppManagerServiceTest {
 			.delete()
 			.withPath(APPLICATION_INSTANCE_PATH)
 			.andReturn(INTERNAL_SERVER_ERROR, EMPTY_ARRAY)
-			.once();
+			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
-			() -> client.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequest),
 			StatusRuntimeException.class
 		);
 
@@ -154,7 +154,7 @@ class AppManagerServiceTest {
 	void deleteBadRequest(UniAsserter asserter) {
 
 		asserter.assertFailedWith(
-			() -> client.deleteResource(badRequest),
+			() -> appManager.deleteResource(badRequest),
 			StatusRuntimeException.class
 		);
 
@@ -165,7 +165,7 @@ class AppManagerServiceTest {
 	void createIngressSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.createIngress(
+			() -> appManager.createIngress(
 				CreateIngressRequest
 					.newBuilder()
 					.setSchemaName("mew")
@@ -184,7 +184,7 @@ class AppManagerServiceTest {
 	void deleteIngressSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> client.deleteIngress(
+			() -> appManager.deleteIngress(
 				DeleteIngressRequest
 					.newBuilder()
 					.setSchemaName("mew")

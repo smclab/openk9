@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.BucketDTO;
-
 import java.util.Set;
+
+import io.openk9.datasource.model.dto.base.BucketDTO;
 
 public class Bucket {
 	public static final Set<String> LANGUAGE_NAMES = Set.of(

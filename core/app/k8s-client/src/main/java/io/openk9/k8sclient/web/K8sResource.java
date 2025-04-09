@@ -28,9 +28,21 @@ import io.openk9.k8sclient.dto.PodMetricResponse;
 import io.openk9.k8sclient.dto.PodResponse;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.sse.Sse;
+import jakarta.ws.rs.sse.SseEventSink;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.SseElementType;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -39,19 +51,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.sse.Sse;
-import javax.ws.rs.sse.SseEventSink;
 
 @Path("/k8s")
 @RolesAllowed("k9-admin")
@@ -82,7 +81,6 @@ public class K8sResource {
 
 	@GET
 	@Produces(MediaType.SERVER_SENT_EVENTS)
-	@SseElementType(MediaType.APPLICATION_JSON)
 	@Path("/pods/sse")
 	public Multi<PodResponse> getPodsSSE() {
 

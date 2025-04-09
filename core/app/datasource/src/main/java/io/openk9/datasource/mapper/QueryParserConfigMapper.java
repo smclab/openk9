@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

@@ -17,24 +17,25 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 
 @Entity
 @Table(name = "embedding_model")
 @NamedQuery(
 	name = EmbeddingModel.FETCH_CURRENT,
-	query = "select em from EmbeddingModel em join em.tenantBinding t where t is not null"
+	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
 @Getter
 @Setter
@@ -57,6 +58,9 @@ public class EmbeddingModel extends K9Entity {
 	@OneToOne(mappedBy = "embeddingModel")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
+
+	@Column(name = "vector_size")
+	private Integer vectorSize = 0;
 
 	@Transient
 	private boolean enabled = false;

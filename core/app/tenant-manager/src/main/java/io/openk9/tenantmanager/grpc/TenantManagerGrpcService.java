@@ -23,11 +23,11 @@ import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.TenantService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
 
 @GrpcService
 public class TenantManagerGrpcService implements TenantManager {

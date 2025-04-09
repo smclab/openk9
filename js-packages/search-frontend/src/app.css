@@ -10,7 +10,7 @@
   --openk9-embeddable-search--secondary-text-color: #62696e;
   --openk9-embeddable-search--primary-background-color: #ffffff;
   --openk9-embeddable-search--secondary-background-color: #eeeeee;
-  --openk9-embeddable-search--secondary-background-tab-color: #fafafa;
+  --openk9-embeddable-search--secondary-background-tab-color: white;
   --openk9-embeddable-search--primary-background-tab-color: #d54949;
   --openk9-embeddable-tabs--primary-color: #3f3f46;
   --openk9-embeddable-active-border-card--primary-color: #a1a1aa;
@@ -29,17 +29,6 @@ body {
   overflow-x: hidden !important;
 }
 
-.openk9-embeddable-search--result-container {
-  margin: 16px 16px 0px 16px;
-  border: 2px solid
-    var(--openk9-embeddable-not-active-border-card--primary-color);
-  border-radius: 4px;
-}
-
-.openk9-embeddable-search--result-container:hover {
-  border: 2px solid var(--openk9-embeddable-active-border-card--primary-color);
-}
-
 .openk9-embeddable-search--result-badge {
   padding: 8px 16px;
   background-color: var(--openk9-embeddable-search--secondary-background-color);
@@ -55,4 +44,24 @@ body {
 
 .no-scroll {
   overflow: hidden !important;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.55);
+  height: 5px;
 }

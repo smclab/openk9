@@ -17,36 +17,37 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.eclipse.microprofile.graphql.Ignore;
 
 @Entity
 @Table(name = "bucket")
@@ -59,32 +60,31 @@ import javax.persistence.Transient;
 		name = Bucket.FETCH_ANNOTATORS_NAMED_QUERY,
 		query =
 			"from Bucket b " +
-				"join fetch b." + Bucket_.TENANT_BINDING  + " tb " +
-				"join fetch b." + Bucket_.DATASOURCES + " ds " +
-				"join fetch ds." + Datasource_.DATA_INDEX + " di " +
-				"left join fetch ds." + Datasource_.PLUGIN_DRIVER + " pr " +
-				"left join fetch pr." + PluginDriver_.ACL_MAPPINGS + " am " +
-				"left join fetch am." + AclMapping_.DOC_TYPE_FIELD + " amdtf " +
-				"join fetch b." + Bucket_.QUERY_ANALYSIS + " qa " +
-				"join fetch qa." + QueryAnalysis_.RULES + " qar " +
-				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa " +
-				"left join fetch qaa." + Annotator_.EXTRA_PARAMS + " extra " +
-				"join fetch qaa." + Annotator_.DOC_TYPE_FIELD + " dtf " +
-				"left join fetch dtf." + DocTypeField_.PARENT_DOC_TYPE_FIELD + " pdtf " +
-				"left join fetch dtf." + DocTypeField_.SUB_DOC_TYPE_FIELDS + " sdtf " +
-				"join fetch qa." + QueryAnalysis_.ANNOTATORS + " qaa2 " +
-			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost " +
+			"join fetch b.tenantBinding tb " +
+			"join fetch b.datasources ds " +
+			"join fetch ds.dataIndex di " +
+			"left join fetch ds.pluginDriver pr " +
+			"left join fetch pr.aclMappings am " +
+			"left join fetch am.docTypeField amdtf " +
+			"join fetch b.queryAnalysis qa " +
+			"join fetch qa.rules qar " +
+			"join fetch qa.annotators qaa " +
+			"left join fetch qaa.extraParams extra " +
+			"left join fetch qaa.docTypeField dtf " +
+			"left join fetch dtf.parentDocTypeField pdtf " +
+			"left join fetch dtf.subDocTypeFields sdtf " +
+			"where tb.virtualHost = :virtualHost " +
 			"and (" +
-				"qaa." + Annotator_.TYPE + " in " + Annotator.DOCUMENT_TYPE_SET +
-				"or qaa2." + Annotator_.TYPE + " not in " + Annotator.DOCUMENT_TYPE_SET +
-				" )"
+			"(dtf is not null and qaa.type in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
+			"or (dtf is null and qaa.type not in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
+			" )"
 	),
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
 		query =
 			"select b " +
-			"from Bucket b join b." + Bucket_.TENANT_BINDING + " tb " +
-			"where tb." + TenantBinding_.VIRTUAL_HOST + " = :virtualHost "
+			"from Bucket b join b.tenantBinding tb " +
+			"where tb.virtualHost = :virtualHost "
 	)
 })
 public class Bucket extends K9Entity {
@@ -112,19 +112,25 @@ public class Bucket extends K9Entity {
 	private Boolean refreshOnQuery = false;
 
 	@ManyToMany(mappedBy = "buckets", cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	}
+	)
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<Datasource> datasources = new LinkedHashSet<>();
 
-	@OneToMany(mappedBy = "bucket", cascade = {
-		javax.persistence.CascadeType.PERSIST,
-		javax.persistence.CascadeType.MERGE,
-		javax.persistence.CascadeType.REFRESH,
-		javax.persistence.CascadeType.DETACH})
+	@ManyToMany(cascade = {
+		jakarta.persistence.CascadeType.PERSIST,
+		jakarta.persistence.CascadeType.MERGE,
+		jakarta.persistence.CascadeType.REFRESH,
+		jakarta.persistence.CascadeType.DETACH
+	})
+	@JoinTable(name = "buckets_suggestion_categories",
+		joinColumns = @JoinColumn(name = "bucket_id"),
+		inverseJoinColumns = @JoinColumn(name = "suggestion_category_id"))
 	@ToString.Exclude
 	@JsonIgnore
 	private Set<SuggestionCategory> suggestionCategories
@@ -133,11 +139,13 @@ public class Bucket extends K9Entity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "query_analysis_id")
 	@ToString.Exclude
+	@Ignore
 	private QueryAnalysis queryAnalysis;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "search_config_id")
 	@ToString.Exclude
+	@Ignore
 	private SearchConfig searchConfig;
 
 	@ManyToMany(cascade = {
@@ -167,10 +175,10 @@ public class Bucket extends K9Entity {
 	@ToString.Exclude
 	@ManyToMany(
 		cascade = {
-			javax.persistence.CascadeType.PERSIST,
-			javax.persistence.CascadeType.MERGE,
-			javax.persistence.CascadeType.REFRESH,
-			javax.persistence.CascadeType.DETACH
+			jakarta.persistence.CascadeType.PERSIST,
+			jakarta.persistence.CascadeType.MERGE,
+			jakarta.persistence.CascadeType.REFRESH,
+			jakarta.persistence.CascadeType.DETACH
 		}
 	)
 	@JoinTable(name = "bucket_language",
@@ -186,7 +194,7 @@ public class Bucket extends K9Entity {
 	private Language defaultLanguage;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "retrieve_type")
+	@Column(name = "retrieve_type", nullable = false)
 	private RetrieveType retrieveType;
 
 	@Transient
@@ -235,7 +243,6 @@ public class Bucket extends K9Entity {
 		}
 
 		suggestionCategories.add(suggestionCategory);
-		suggestionCategory.setBucket(this);
 
 		return true;
 
@@ -250,7 +257,6 @@ public class Bucket extends K9Entity {
 			SuggestionCategory suggestionCategory = iterator.next();
 			if (suggestionCategory.getId() == suggestionCategoryId) {
 				iterator.remove();
-				suggestionCategory.setBucket(null);
 				return true;
 			}
 		}

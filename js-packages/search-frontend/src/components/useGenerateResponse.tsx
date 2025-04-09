@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { GenerateRequest } from "./client";
+import { GenerateRequest, useOpenK9Client } from "./client";
 
 type Source = { source?: string; title?: string; url?: string };
 
@@ -25,6 +25,7 @@ const useGenerateResponse = ({
     useState<AbortController | null>(null);
   const [isChatting, setIsChatting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const client = useOpenK9Client();
 
   useEffect(() => {
     if (initialMessages.length > 0) {
@@ -112,8 +113,6 @@ const useGenerateResponse = ({
       }
       setIsLoading(true);
 
-      const url = "/api/rag/generate";
-
       const searchQueryT: GenerateRequest = {
         searchText: query,
         language,
@@ -124,16 +123,10 @@ const useGenerateResponse = ({
       };
 
       try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(searchQueryT),
-          signal: controller.signal,
+        const response = await client.getGenerateResponse({
+          searchQuery: searchQueryT,
+          controller: controller,
         });
-
         if (response.ok) {
           const reader = response.body?.getReader();
           setIsLoading(false);

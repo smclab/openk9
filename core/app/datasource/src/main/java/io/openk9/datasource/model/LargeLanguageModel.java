@@ -19,23 +19,23 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "large_language_model")
 @NamedQuery(
 	name = LargeLanguageModel.FETCH_CURRENT,
-	query = "select llm from LargeLanguageModel llm join llm.tenantBinding t where t is not null"
+	query = "from LargeLanguageModel llm where llm.tenantBinding is not null"
 )
 @Getter
 @Setter
@@ -55,7 +55,7 @@ public class LargeLanguageModel extends K9Entity {
 	@Column(name = "api_key")
 	private String apiKey;
 
-	@Lob
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
 

@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.model.init;
 
-import io.openk9.datasource.model.dto.RuleDTO;
-
 import java.util.Set;
+
+import io.openk9.datasource.model.dto.base.RuleDTO;
 
 public class Rules {
 

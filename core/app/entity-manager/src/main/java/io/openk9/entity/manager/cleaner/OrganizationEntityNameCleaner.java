@@ -17,13 +17,12 @@
 
 package io.openk9.entity.manager.cleaner;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 
 @ApplicationScoped

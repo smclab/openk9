@@ -17,32 +17,47 @@
 
 package io.openk9.datasource.entity;
 
-import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
 import org.opensearch.cluster.metadata.ComposableIndexTemplate;
-import org.opensearch.common.xcontent.DeprecationHandler;
-import org.opensearch.common.xcontent.NamedXContentRegistry;
-import org.opensearch.common.xcontent.XContentParser;
 import org.opensearch.common.xcontent.XContentType;
+import org.opensearch.core.xcontent.DeprecationHandler;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.XContentParser;
 
 import java.io.IOException;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 
 @ApplicationScoped
-@IfBuildProperty(name = "openk9.entity.index.init", stringValue = "true", enableIfMissing = true)
 public class EntityIndexInitializer {
 
 	@Inject
 	RestHighLevelClient restHighLevelClient;
 
+	@Inject
+	io.quarkus.qute.Template entitymappings;
+
+	@Inject
+	Logger logger;
+
+	@ConfigProperty(name = "io.openk9.entity.index.init", defaultValue = "true")
+	boolean indexInit;
+
 	public void init(@Observes StartupEvent event) throws IOException {
+
+		if (!indexInit) {
+
+			logger.info("Skipping entity-index-template creation.");
+
+			return;
+		}
 
 		IndicesClient indices = restHighLevelClient.indices();
 
@@ -72,10 +87,5 @@ public class EntityIndexInitializer {
 
 	}
 
-	@Inject
-	io.quarkus.qute.Template entitymappings;
-
-	@Inject
-	Logger logger;
 
 }

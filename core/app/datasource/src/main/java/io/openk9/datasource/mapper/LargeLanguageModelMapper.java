@@ -18,7 +18,8 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.LargeLanguageModel;
-import io.openk9.datasource.model.dto.LargeLanguageModelDTO;
+import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
+
 import org.mapstruct.Mapper;
 
 @Mapper(

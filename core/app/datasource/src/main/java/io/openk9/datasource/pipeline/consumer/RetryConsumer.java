@@ -17,26 +17,26 @@
 
 package io.openk9.datasource.pipeline.consumer;
 
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.AskPattern;
+import java.io.IOException;
+
+import io.openk9.datasource.actor.PekkoUtils;
+import io.openk9.datasource.pipeline.actor.QueueManager;
+import io.openk9.datasource.pipeline.actor.Scheduling;
+
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.typesafe.config.Config;
-import io.openk9.datasource.actor.AkkaUtils;
-import io.openk9.datasource.pipeline.actor.QueueManager;
-import io.openk9.datasource.pipeline.actor.Scheduling;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.jboss.logging.Logger;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class RetryConsumer extends BaseConsumer {
 
 	private static final Logger log = Logger.getLogger(RetryConsumer.class);
 	private static final String CONSUMER_MAX_RETRIES =
 		"io.openk9.scheduling.consumer.max-retries";
+	private static final String MESSAGE_RETRY_HEADER = "openk9-message-retry";
 	private final int maxRetries;
 
 	public RetryConsumer(
@@ -44,6 +44,26 @@ public class RetryConsumer extends BaseConsumer {
 
 		super(channel, context, queueBind);
 		this.maxRetries = getMaxRetries(config);
+	}
+
+	public static Integer incrementDeathCount(AMQP.BasicProperties properties) {
+		var headers = properties.getHeaders();
+		return (int) headers.compute(
+			MESSAGE_RETRY_HEADER,
+			(String k, Object v) -> {
+				if (v instanceof Integer) {
+					int count = (int) v;
+					return ++count;
+				}
+				else {
+					return 1;
+				}
+			}
+		);
+	}
+
+	private static int getMaxRetries(Config config) {
+		return PekkoUtils.getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
 	}
 
 	@Override
@@ -54,11 +74,7 @@ public class RetryConsumer extends BaseConsumer {
 			byte[] body)
 		throws IOException {
 
-		Map<String, Object> headers = properties.getHeaders();
-
-		Map<String, Object> xDeath = getXDeath(headers);
-
-		long count = (long) xDeath.getOrDefault("count", 0L);
+		int count = incrementDeathCount(properties);
 
 		if (count < maxRetries) {
 			getChannel().basicPublish(
@@ -103,16 +119,4 @@ public class RetryConsumer extends BaseConsumer {
 		}
 
 	}
-
-	@SuppressWarnings("unchecked")
-	private static Map<String, Object> getXDeath(Map<String, Object> headers) {
-		List<Map<String, Object>> list = (List<Map<String, Object>>)
-			headers.getOrDefault("x-death", List.of(Map.of()));
-		return list.iterator().next();
-	}
-
-	private static int getMaxRetries(Config config) {
-		return AkkaUtils.getProperty(config, CONSUMER_MAX_RETRIES, config::getInt, 3);
-	}
-
 }

@@ -17,24 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
-import io.openk9.datasource.mapper.DocTypeFieldMapper;
-import io.openk9.datasource.model.Analyzer;
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.DocTypeField;
-import io.openk9.datasource.model.DocTypeField_;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -42,6 +24,25 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
+import io.openk9.datasource.mapper.DocTypeFieldMapper;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.util.Tuple2;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {
@@ -151,12 +152,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				 docTypeField.add(session.fetch(docType.getDocTypeFields()));
 			 }
 
-			 return Uni
-				 .combine()
+			 return Uni.combine()
 				 .all()
 				 .unis(docTypeField)
+				 .usingConcurrencyOf(1)
 				 .collectFailures()
-				 .combinedWith(e -> (List<Set<DocTypeField>>) e)
+				 .with(e -> (List<Set<DocTypeField>>) e)
 				 .flatMap(sets -> loadAndExpandDocTypeFields(session, sets))
 				 .replaceWith(docTypes);
 		 }
@@ -199,10 +200,10 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			loadedDTFs.add(loadDocTypeField(s, typeFields));
 		}
 
-		return Uni
-			.combine()
+		return Uni.combine()
 			.all()
 			.unis(loadedDTFs)
+			.usingConcurrencyOf(1)
 			.collectFailures()
 			.discardItems()
 			.chain(() -> {
@@ -213,12 +214,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					inner.add(expandDocTypeFields(s, typeFields));
 				}
 
-				return Uni
-					.combine()
+				return Uni.combine()
 					.all()
 					.unis(inner)
+					.usingConcurrencyOf(1)
 					.collectFailures()
-					.combinedWith(e -> {
+					.with(e -> {
 						List<Set<DocTypeField>> expandInner = (List<Set<DocTypeField>>) e;
 						return expandInner.stream()
 							.flatMap(Collection::stream)
@@ -245,12 +246,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 		}
 
-		return Uni
-			.combine()
+		return Uni.combine()
 			.all()
 			.unis(subDocTypeFieldUnis)
+			.usingConcurrencyOf(1)
 			.collectFailures()
-			.combinedWith(e -> (List<Set<DocTypeField>>)e)
+			.with(e -> (List<Set<DocTypeField>>) e)
 			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));
 	}
 
@@ -275,7 +276,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			return Uni.createFrom().voidItem();
 		}
 
-		return Uni.combine().all().unis(unis).collectFailures().discardItems();
+		return Uni.combine()
+			.all()
+			.unis(unis)
+			.usingConcurrencyOf(1)
+			.collectFailures()
+			.discardItems();
 	}
 
 

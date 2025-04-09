@@ -17,6 +17,22 @@
 
 package io.openk9.datasource.web;
 
+import java.util.List;
+import java.util.stream.Stream;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -32,6 +48,7 @@ import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import lombok.AllArgsConstructor;
@@ -40,23 +57,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import javax.inject.Inject;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import java.util.List;
-import java.util.stream.Stream;
-
 @Path("/v1/date-filter")
+@Deprecated
 public class DateFilterResource {
 
 	@Context
@@ -64,8 +66,7 @@ public class DateFilterResource {
 
 	@GET
 	public Uni<List<DocTypeFieldResponseDTO>> getFields(
-		@QueryParam("translated") @DefaultValue("false") boolean translated
-	) {
+		@QueryParam("translated") @DefaultValue("false") boolean translated) {
 		return getDocTypeFieldList(request.host(), translated);
 	}
 

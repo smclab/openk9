@@ -18,9 +18,8 @@
 package io.openk9.resources;
 
 import io.quarkus.runtime.Startup;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 @Startup

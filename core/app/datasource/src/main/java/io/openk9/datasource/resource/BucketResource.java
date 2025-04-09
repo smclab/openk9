@@ -17,28 +17,30 @@
 
 package io.openk9.datasource.resource;
 
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.dto.BucketDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.resource.util.BaseK9EntityResource;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.util.Tuple2;
-import io.smallrye.mutiny.Uni;
 
-import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import io.smallrye.mutiny.Uni;
 
 @Path("/buckets")
 @RolesAllowed("k9-admin")
+@Deprecated
 public class BucketResource extends
 	BaseK9EntityResource<BucketService, Bucket, BucketDTO> {
 

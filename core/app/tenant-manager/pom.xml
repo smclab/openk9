@@ -21,55 +21,14 @@
   <parent>
     <groupId>io.openk9.app</groupId>
     <artifactId>app</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+	  <version>3.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>tenant-manager</artifactId>
   <name>OpenK9 :: App :: Tenant Manager</name>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-bom_2.13</artifactId>
-        <version>2.6.20</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
+
   <dependencies>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor-typed_2.13</artifactId>
-      <version>2.6.20</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-typed_2.13</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mutiny</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-reactive</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-grpc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-container-image-jib</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
-    </dependency>
+
+    <!-- // jpa -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-reactive</artifactId>
@@ -82,6 +41,13 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-reactive-oracle-client</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>model</artifactId>
+    </dependency>
+    <!-- jpa // -->
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-scheduler</artifactId>
@@ -90,35 +56,39 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-cache</artifactId>
     </dependency>
+
+    <!-- realm management -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-stork</artifactId>
+      <artifactId>quarkus-keycloak-admin-rest-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.smallrye.stork</groupId>
-      <artifactId>stork-service-discovery-eureka</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-keycloak-admin-client-reactive</artifactId>
-    </dependency>
+
+    <!-- authetication -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-oidc</artifactId>
     </dependency>
+
+    <!-- // API -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-graphql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>graphql-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+    </dependency>
+    <!-- API // -->
+
+    <!-- // schema migrations -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-liquibase</artifactId>
@@ -133,39 +103,42 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>datasource-model</artifactId>
+    </dependency>
+
+    <!-- schema migrations // -->
+
+    <!-- realm template -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-graphql</artifactId>
+      <artifactId>quarkus-qute</artifactId>
+    </dependency>
+
+    <!-- // standalone -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-stork</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.smallrye.stork</groupId>
+      <artifactId>stork-service-discovery-eureka</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-validator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-qute</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>graphql-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>resources-common</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.common</groupId>
-      <artifactId>model</artifactId>
-    </dependency>
+    <!-- standalone // k-->
+
+    <!-- implements -->
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>tenant-manager-client-grpc</artifactId>
     </dependency>
+
+    <!-- // consumes -->
     <dependency>
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>datasource-client-grpc</artifactId>
@@ -174,22 +147,35 @@
       <groupId>io.openk9.client.grpc</groupId>
       <artifactId>app-manager</artifactId>
     </dependency>
+    <!-- consumes // -->
+
+    <!-- // pekko framework -->
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-actor-typed_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-cluster-typed_${scala.version}</artifactId>
+    </dependency>
+    <!-- pekko framework // -->
 
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor-testkit-typed_2.13</artifactId>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.pekko</groupId>
+      <artifactId>pekko-actor-testkit-typed_${scala.version}</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.file-vault</groupId>
-      <artifactId>quarkus-file-vault</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.file-vault</groupId>
-      <artifactId>quarkus-file-vault-config-source</artifactId>
-      <version>2.0.0</version>
-    </dependency>
+
   </dependencies>
   <build>
     <plugins>

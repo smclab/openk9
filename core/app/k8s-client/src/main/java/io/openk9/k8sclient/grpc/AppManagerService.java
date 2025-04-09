@@ -32,10 +32,11 @@ import io.openk9.k8sclient.service.IngressDef;
 import io.openk9.k8sclient.service.IngressService;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.List;
-import javax.inject.Inject;
 
 @GrpcService
 public class AppManagerService implements AppManager {
@@ -74,19 +75,19 @@ public class AppManagerService implements AppManager {
 			.build();
 
 		return Uni.createFrom()
-			.emitter(emitter -> {
-				try {
-					var resource = k8sClient.resource(manifest.asResource()).createOrReplace();
-
-					emitter.complete(ApplyResponse
-						.newBuilder()
-						.setStatus(resource.getMetadata().getName())
-						.build());
-				}
-				catch (Exception e) {
-					emitter.fail(e);
-				}
-			});
+			.item(() -> k8sClient
+				.resource(manifest.asResource())
+				.createOr(ignore -> k8sClient
+					.resource(manifest.asResource())
+					.update())
+			)
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+			.map(hasMetadata -> ApplyResponse.newBuilder()
+				.setStatus(hasMetadata
+					.getMetadata()
+					.getName())
+				.build()
+			);
 	}
 
 	@Override
@@ -101,17 +102,9 @@ public class AppManagerService implements AppManager {
 			.build();
 
 		return Uni.createFrom()
-			.emitter(emitter -> {
-				try {
-					k8sClient.resource(manifest.asResource()).delete();
-
-					emitter.complete(Empty.newBuilder().build());
-				}
-				catch (Exception e) {
-					emitter.fail(e);
-				}
-			});
-
+			.item(() -> k8sClient.resource(manifest.asResource()).delete())
+			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+			.map(ignore -> Empty.newBuilder().build());
 	}
 
 	@Override
@@ -144,10 +137,12 @@ public class AppManagerService implements AppManager {
 			),
 			virtualHost,
 			List.of(
-				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
+				IngressDef.Route.of("/search", "openk9-search-frontend", 8080),
 				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
 				IngressDef.Route.of("/api/datasource", "openk9-datasource", 8080),
-				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080)
+				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080),
+				IngressDef.Route.of("/api/rag", "openk9-rag-module", 5000),
+				IngressDef.Route.of("/chat", "openk9-talk-to", 8080)
 			)
 		);
 	}

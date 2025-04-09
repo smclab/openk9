@@ -17,13 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.mapper.QueryParserConfigMapper;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.dto.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-
-import javax.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class QueryParserConfigService extends BaseK9EntityService<QueryParserConfig, QueryParserConfigDTO> {

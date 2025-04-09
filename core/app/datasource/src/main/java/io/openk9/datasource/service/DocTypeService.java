@@ -17,10 +17,27 @@
 
 package io.openk9.datasource.service;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.index.mappings.IndexMappingsUtil;
 import io.openk9.datasource.index.mappings.MappingsKey;
-import io.openk9.datasource.index.mappings.MappingsUtil;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
@@ -33,33 +50,19 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
-import io.openk9.datasource.model.dto.DocTypeDTO;
-import io.openk9.datasource.model.dto.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
+
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
@@ -255,8 +258,8 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(
 		Mutiny.Session session, Collection<Long> ids) {
-		return findByIds(Set.copyOf(ids)).chain(
-			dts -> docTypeFieldService.expandDocTypes(
+		return findByIds(session, Set.copyOf(ids))
+			.chain(dts -> docTypeFieldService.expandDocTypes(
 				session, dts));
 	}
 
@@ -279,21 +282,41 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		Subquery<Long> fieldSubquery = updateAclMapping.subquery(Long.class);
 		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
 		fieldSubquery.select(fieldSubqueryFrom.get(DocTypeField_.id));
-		fieldSubquery.where(cb.equal(fieldSubqueryFrom.get(DocTypeField_.docType), entityId));
+		fieldSubquery.where(cb.equal(
+			fieldSubqueryFrom.get(DocTypeField_.docType).get(DocType_.id),
+			entityId
+		));
 
 		updateAclMapping.where(
-			updateAclMappingFrom.get(AclMapping_.docTypeField).in(fieldSubquery));
+			updateAclMappingFrom
+				.get(AclMapping_.docTypeField)
+				.get(DocTypeField_.id)
+				.in(fieldSubquery)
+		);
+
 		updateAclMapping.set(
-			updateAclMappingFrom.get(AclMapping_.docTypeField), cb.nullLiteral(DocTypeField.class));
+			updateAclMappingFrom.get(AclMapping_.docTypeField),
+			cb.nullLiteral(DocTypeField.class)
+		);
 
 		// dereference parents and analyzer
 		CriteriaUpdate<DocTypeField> updateDocTypeField =
 			cb.createCriteriaUpdate(DocTypeField.class);
 		Root<DocTypeField> updateDocTypeFieldFrom = updateDocTypeField.from(DocTypeField.class);
+
 		updateDocTypeField.where(
-			cb.equal(updateDocTypeFieldFrom.get(DocTypeField_.docType), entityId));
+			cb.equal(
+				updateDocTypeFieldFrom
+					.get(DocTypeField_.docType)
+					.get(DocType_.id),
+				entityId
+			)
+		);
+
 		updateDocTypeField.set(
-			updateDocTypeFieldFrom.get(DocTypeField_.analyzer), cb.nullLiteral(Analyzer.class));
+			updateDocTypeFieldFrom.get(DocTypeField_.analyzer),
+			cb.nullLiteral(Analyzer.class)
+		);
 		updateDocTypeField.set(
 			updateDocTypeFieldFrom.get(DocTypeField_.parentDocTypeField),
 			cb.nullLiteral(DocTypeField.class));
@@ -302,7 +325,13 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		CriteriaDelete<DocTypeField> deleteDocTypeFields =
 			cb.createCriteriaDelete(DocTypeField.class);
 		Root<DocTypeField> deleteFrom = deleteDocTypeFields.from(DocTypeField.class);
-		deleteDocTypeFields.where(cb.equal(deleteFrom.get(DocTypeField_.docType), entityId));
+
+		deleteDocTypeFields.where(
+			cb.equal(
+				deleteFrom.get(DocTypeField_.docType).get(DocType_.id),
+				entityId
+			)
+		);
 
 		// dereference docTypeTemplate
 		CriteriaUpdate<DocType> updateDocType = cb.createCriteriaUpdate(DocType.class);
@@ -330,7 +359,14 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 			)
 			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
 			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
-			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate())
+			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate()
+				.onFailure()
+				.transform(throwable -> switch (throwable) {
+					case ConstraintViolationException c -> new K9Error(
+						"There are some DocTypeFields referenced by other entities");
+					default -> throwable;
+				})
+			)
 			.call(docType -> s.createQuery(updateDocType).executeUpdate())
 			.call(docType -> remove(s, docType))
 		);
@@ -349,12 +385,12 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
 
-		return findDocTypes(docTypeIds).map(MappingsUtil::docTypesToMappings);
+		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToMappings);
 	}
 
 	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
 
-		return findDocTypes(docTypeIds).map(MappingsUtil::docTypesToSettings);
+		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToSettings);
 	}
 
 	@Inject

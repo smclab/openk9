@@ -33,13 +33,13 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
+import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.inject.Inject;
-import javax.validation.ValidationException;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)

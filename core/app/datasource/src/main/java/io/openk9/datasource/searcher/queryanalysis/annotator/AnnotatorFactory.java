@@ -19,11 +19,11 @@ package io.openk9.datasource.searcher.queryanalysis.annotator;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.JWT;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.opensearch.client.RestHighLevelClient;
 
 import java.util.List;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 @ApplicationScoped
 public class AnnotatorFactory {

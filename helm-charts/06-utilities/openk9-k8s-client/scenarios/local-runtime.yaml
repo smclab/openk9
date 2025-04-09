@@ -1,0 +1,24 @@
+## @param image.pullSecrets Specify docker-registry secret names as an array
+image:
+  registry: ""
+  name: smclab/openk9-k8s-client
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: "2.0.0"
+
+## Quarkus configuration
+quarkus:
+  HttpCors: true
+  HttpCorsOrigin: "/https://.*.openk9.local/,"
+  kubernetes:
+    namespace: openk9
+    secretName: openk9-tls-star-secret
+
+## Keycloak configuration
+keycloak:
+  host: "keycloak.openk9.local"  #-TBMD
+  clientId: "openk9"
+
+## K8s Namespace
+k8s:
+  namespace: "openk9"
+

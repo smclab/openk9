@@ -18,12 +18,24 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.dto.DataIndexDTO;
-import org.mapstruct.Mapper;
+import io.openk9.datasource.model.dto.base.DataIndexDTO;
 
-@Mapper(
-	config = K9EntityMapper.class
-)
-public interface DataIndexMapper extends
-	K9EntityMapper<DataIndex, DataIndexDTO> {
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
+@Mapper(config = K9EntityMapper.class)
+public interface DataIndexMapper
+	extends K9EntityMapper<DataIndex, DataIndexDTO> {
+
+	@Override
+	@Mapping(target = "name", ignore = true)
+	@Mapping(target = "knnIndex", ignore = true)
+	DataIndex patch(@MappingTarget DataIndex entity, DataIndexDTO dto);
+
+	@Override
+	@Mapping(target = "name", ignore = true)
+	@Mapping(target = "knnIndex", ignore = true)
+	DataIndex update(@MappingTarget DataIndex entity, DataIndexDTO dto);
+
 }

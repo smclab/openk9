@@ -20,9 +20,9 @@ package io.openk9.common.model;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.smallrye.mutiny.Uni;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;

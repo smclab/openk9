@@ -1,0 +1,28 @@
+{{- if .Values.route.enabled }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ template "common.names.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  {{- if (or .Values.commonAnnotations .Values.route.annotations) }}
+  annotations:
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.route.annotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  host: {{ .Values.route.host | quote }}
+  path: /
+  to:
+    kind: Service
+    name: {{ template "common.names.name" . }}
+    weight: 100
+  port:
+    targetPort: "{{ .Values.service.port }}"
+  {{- if .Values.route.tls.enabled }}
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  wildcardPolicy: None
+  {{- end }}
+{{- end }}

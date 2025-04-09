@@ -18,28 +18,11 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<!--
-		Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-
-		This program is free software: you can redistribute it and/or modify
-		it under the terms of the GNU Affero General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-
-		This program is distributed in the hope that it will be useful,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU Affero General Public License for more details.
-
-		You should have received a copy of the GNU Affero General Public License
-		along with this program.  If not, see <http://www.gnu.org/licenses/>.
-	-->
-
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>io.openk9</groupId>
 	<artifactId>openk9</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>OpenK9</name>
@@ -82,9 +65,9 @@
 		<autoVersionSubmodules>true</autoVersionSubmodules>
 
 		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
-		<maven.compiler.release>17</maven.compiler.release>
-		<maven.compiler.target>17</maven.compiler.target>
-		<project.build.outputTimestamp>1714328526</project.build.outputTimestamp>
+		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.outputTimestamp>1737037567</project.build.outputTimestamp>
 
 		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
 		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
@@ -101,32 +84,38 @@
 		<surefire.argLine />
 		<!-- General Settings -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<compiler-plugin.version>3.10.1</compiler-plugin.version>
-		<dependency.version.lombok>1.18.22</dependency.version.lombok>
-		<dependency.version.mapstruct>1.5.3.Final</dependency.version.mapstruct>
+		<compiler-plugin.version>3.13.0</compiler-plugin.version>
+		<dependency.version.lombok>1.18.34</dependency.version.lombok>
+		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
-		<quarkus.package.type>fast-jar</quarkus.package.type>
+		<quarkus-plugin.version>3.19.3</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>2.16.12.Final</quarkus.platform.version>
-		<quarkus.version>${quarkus.platform.version}</quarkus.version>
-		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+		<quarkus.platform.version>3.19.3</quarkus.platform.version>
+		<quarkus.version>3.19.3</quarkus.version>
+		<quarkiverse.opensearch.version>1.16.1</quarkiverse.opensearch.version>
+		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
+		<hibernate.version>6.6.10.Final</hibernate.version>
+		<surefire-plugin.version>3.3.1</surefire-plugin.version>
+		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
+		<gpg-plugin.version>3.2.7</gpg-plugin.version>
+		<dependency-check-plugin.version>12.1.1</dependency-check-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
-		<akka.version>2.6.20</akka.version>
+		<pekko.version>1.1.2</pekko.version>
 		<scala.version>2.13</scala.version>
+		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.typesafe.akka</groupId>
-				<artifactId>akka-bom_${scala.version}</artifactId>
-				<version>${akka.version}</version>
+				<groupId>org.apache.pekko</groupId>
+				<artifactId>pekko-bom_${scala.version}</artifactId>
+				<version>${pekko.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -138,9 +127,24 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-java-client</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.quarkiverse.rabbitmqclient</groupId>
+				<artifactId>quarkus-rabbitmq-client</artifactId>
+				<version>${quarkiverse.rabbitmq.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-bom</artifactId>
-				<version>2022.0.1</version>
+				<version>${reactor-bom-version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -229,11 +233,26 @@
 				<artifactId>k8s-manifest</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>datasource-model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>${dependency-check-plugin.version}</version>
+				<configuration>
+					<!-- Use the defined property for the NVD API key -->
+					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+					<nvdApiDelay>6000</nvdApiDelay>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
@@ -244,6 +263,24 @@
 					<releaseProfiles>releases</releaseProfiles>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+				</configuration>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -251,7 +288,7 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>${compiler-plugin.version}</version>
 					<configuration>
-						<forceJavacCompilerUse>true</forceJavacCompilerUse>
+						<forceLegacyJavacApi>true</forceLegacyJavacApi>
 						<annotationProcessorPaths>
 							<path>
 								<groupId>org.projectlombok</groupId>
@@ -264,14 +301,14 @@
 								<version>${dependency.version.mapstruct}</version>
 							</path>
 							<path>
-								<groupId>org.hibernate</groupId>
+								<groupId>org.hibernate.orm</groupId>
 								<artifactId>hibernate-jpamodelgen</artifactId>
-								<version>5.6.10.Final</version>
+								<version>${hibernate.version}</version>
 							</path>
 							<path>
 								<groupId>no.entur.mapstruct.spi</groupId>
 								<artifactId>protobuf-spi-impl</artifactId> <!-- Make sure mapstruct version here is the same as below -->
-								<version>1.39</version>
+								<version>1.45</version>
 							</path>
 						</annotationProcessorPaths>
 					</configuration>
@@ -339,7 +376,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-failsafe-plugin</artifactId>
-						<version>${surefire-plugin.version}</version>
+						<version>${failsafe-plugin.version}</version>
 						<executions>
 							<execution>
 								<goals>
@@ -376,7 +413,8 @@
 				</plugins>
 			</build>
 			<properties>
-				<quarkus.package.type>native</quarkus.package.type>
+				<quarkus.native.enabled>true</quarkus.native.enabled>
+				<quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
 			</properties>
 		</profile>
 		<profile>
@@ -405,7 +443,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
+						<version>${gpg-plugin.version}</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>

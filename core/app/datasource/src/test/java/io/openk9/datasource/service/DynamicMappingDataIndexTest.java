@@ -17,105 +17,72 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.DataIndexMapper;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-import io.openk9.datasource.processor.indexwriter.IndexerEvents;
-import io.quarkus.test.Mock;
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.mockito.InjectMock;
-import io.quarkus.test.junit.mockito.InjectSpy;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
-import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
+import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
+import io.openk9.datasource.plugindriver.WireMockPluginDriver;
+
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
+import io.quarkus.test.vertx.RunOnVertxContext;
+import io.quarkus.test.vertx.UniAsserter;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)
 class DynamicMappingDataIndexTest {
 
-	@Inject
-	DataIndexService dataIndexService;
-
-	@InjectMock
-	IndexerEvents indexerEvents;
+	@InjectSpy
+	IndexMappingService indexMappingService;
 
 	@InjectSpy
 	HttpPluginDriverClient httpPluginDriverClient;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	@Test
 	@RunOnVertxContext
 	void should_create_dynamicMapping_and_docTypes(UniAsserter asserter) {
 
-		var mockedSession = Mockito.mock(Mutiny.Session.class);
-
-		given(indexerEvents.generateDocTypeFields(
-			any(Mutiny.Session.class),
-			any(DataIndex.class),
-			any(Map.class),
-			any(List.class)
-		)).willReturn(Uni.createFrom().voidItem());
-
 		asserter.assertThat(
-			() -> dataIndexService.createByDatasource(mockedSession, CreateConnection.DATASOURCE),
+			() -> sessionFactory.withTransaction((s, t) ->
+				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
+					s,
+					HttpPluginDriverInfo.builder()
+						.host(WireMockPluginDriver.HOST)
+						.port(WireMockPluginDriver.PORT)
+						.secure(false)
+						.build()
+				)
+			),
 			dataIndex -> {
 
 				then(httpPluginDriverClient)
 					.should(times(1))
 					.getSample(any());
 
-				then(indexerEvents)
+				then(indexMappingService)
 					.should(times(1))
 					.generateDocTypeFields(
 						any(Mutiny.Session.class),
-						any(DataIndex.class),
 						argThat(DynamicMappingDataIndexTest::isAnIndexMapping),
 						argThat(DynamicMappingDataIndexTest::isADocumentTypeList)
 					);
 
 			}
 		);
-
-
-	}
-
-	@Mock
-	public static class MockDataIndexService extends DataIndexService {
-
-		MockDataIndexService() {
-			super(null);
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
-			return Uni.createFrom().item((T) CreateConnection.DATAINDEX);
-		}
-
-		@Override
-		public Uni<DataIndex> findById(Mutiny.Session s, long id) {
-			return Uni.createFrom().item(CreateConnection.DATAINDEX);
-		}
-
-		@Inject
-		void setDataIndexMapper(DataIndexMapper mapper) {
-			this.mapper = mapper;
-		}
 
 	}
 

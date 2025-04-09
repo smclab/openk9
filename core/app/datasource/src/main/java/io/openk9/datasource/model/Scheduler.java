@@ -17,27 +17,29 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.OffsetDateTime;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedEntityGraphs;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedSubgraph;
+import jakarta.persistence.OneToOne;
+
 import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.time.OffsetDateTime;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedAttributeNode;
-import javax.persistence.NamedEntityGraph;
-import javax.persistence.NamedEntityGraphs;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.NamedSubgraph;
-import javax.persistence.OneToOne;
 
 @Entity
 @Getter
@@ -47,12 +49,13 @@ import javax.persistence.OneToOne;
 	@NamedEntityGraph(
 		name = Scheduler.DATA_INDEXES_ENTITY_GRAPH,
 		attributeNodes = {
+			@NamedAttributeNode(value = Scheduler_.DATASOURCE),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -60,7 +63,18 @@ import javax.persistence.OneToOne;
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph"
+					)
+				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
 				}
 			)
 		}
@@ -69,15 +83,15 @@ import javax.persistence.OneToOne;
 		name = Scheduler.ENRICH_ITEMS_ENTITY_GRAPH,
 		attributeNodes = {
 			@NamedAttributeNode(
-				value = "datasource",
+				value = Scheduler_.DATASOURCE,
 				subgraph = "datasource-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "oldDataIndex",
+				value = Scheduler_.OLD_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			),
 			@NamedAttributeNode(
-				value = "newDataIndex",
+				value = Scheduler_.NEW_DATA_INDEX,
 				subgraph = "dataIndex-subgraph"
 			)
 		},
@@ -86,7 +100,7 @@ import javax.persistence.OneToOne;
 				name = "datasource-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipeline",
+						value = Datasource_.ENRICH_PIPELINE,
 						subgraph = "enrichPipeline-subgraph"
 					)
 				}
@@ -95,7 +109,7 @@ import javax.persistence.OneToOne;
 				name = "enrichPipeline-subgraph",
 				attributeNodes = {
 					@NamedAttributeNode(
-						value = "enrichPipelineItems",
+						value = EnrichPipeline_.ENRICH_PIPELINE_ITEMS,
 						subgraph = "enrichPipelineItems-subgraph"
 					)
 				}
@@ -103,13 +117,23 @@ import javax.persistence.OneToOne;
 			@NamedSubgraph(
 				name = "enrichPipelineItems-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "enrichItem")
+					@NamedAttributeNode(value = EnrichPipelineItem_.ENRICH_ITEM)
 				}
 			),
 			@NamedSubgraph(
 				name = "dataIndex-subgraph",
 				attributeNodes = {
-					@NamedAttributeNode(value = "vectorIndex")
+					@NamedAttributeNode(
+						value = DataIndex_.EMBEDDING_DOC_TYPE_FIELD,
+						subgraph = "docTypeField-subgraph")
+				}
+			),
+			@NamedSubgraph(
+				name = "docTypeField-subgraph",
+				attributeNodes = {
+					@NamedAttributeNode(value = DocTypeField_.DOC_TYPE),
+					@NamedAttributeNode(value = DocTypeField_.ANALYZER),
+					@NamedAttributeNode(value = DocTypeField_.PARENT_DOC_TYPE_FIELD),
 				}
 			)
 		}
@@ -140,22 +164,28 @@ public class Scheduler extends K9Entity {
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private Datasource datasource;
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "old_data_index_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private DataIndex oldDataIndex;
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "new_data_index_id", referencedColumnName = "id")
 	@JsonIgnore
+	@ToString.Exclude
 	private DataIndex newDataIndex;
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
 	@Column(name = "last_ingestion_date")
 	private OffsetDateTime lastIngestionDate;
+	@Column(name = "error_description")
+	private String errorDescription;
+
 	public enum SchedulerStatus {
 		RUNNING,
 		FINISHED,
@@ -164,4 +194,13 @@ public class Scheduler extends K9Entity {
 		STALE,
 		FAILURE
 	}
+
+	public DataIndex getDataIndex() {
+		if (newDataIndex == null) {
+			return oldDataIndex;
+		}
+
+		return newDataIndex;
+	}
+
 }

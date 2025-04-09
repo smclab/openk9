@@ -17,19 +17,22 @@
 
 package io.openk9.datasource.pipeline.service.mapper;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.service.dto.SchedulingType;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "cdi")
 public interface SchedulerMapper {
@@ -41,14 +44,29 @@ public interface SchedulerMapper {
 		@Mapping(source = "oldDataIndex.indexName", target = "oldDataIndexName"),
 		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
 		@Mapping(source = "newDataIndex.indexName", target = "newDataIndexName"),
-		@Mapping(
-			source = "oldDataIndex.vectorIndex.indexName",
-			target = "vectorIndexName"
-		)
+		@Mapping(source = "datasource", target = "schedulingType")
 	})
 	SchedulerDTO map(Scheduler source);
 
 	EnrichItemDTO map(EnrichItem source);
+
+	default SchedulingType map(Datasource datasource) {
+
+		boolean isEnrich = datasource.getEnrichPipeline() != null;
+		var dataIndex = datasource.getDataIndex();
+		boolean isEmbedding = dataIndex != null && dataIndex.getKnnIndex();
+
+		if (isEnrich && isEmbedding) {
+			return SchedulingType.ENRICH_EMBEDDING;
+		}
+		else if (isEmbedding) {
+			return SchedulingType.EMBEDDING;
+		}
+		else {
+			return SchedulingType.ENRICH;
+		}
+
+	}
 
 	default Set<EnrichItemDTO> map(EnrichPipeline source) {
 		return source == null

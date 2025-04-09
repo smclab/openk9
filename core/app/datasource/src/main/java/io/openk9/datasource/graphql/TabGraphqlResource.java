@@ -1,4 +1,26 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.graphql;
+
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
@@ -7,14 +29,16 @@ import io.openk9.datasource.mapper.TokenTabMapper;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.dto.TabDTO;
-import io.openk9.datasource.model.dto.TranslationDTO;
+import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.base.TranslationDTO;
+import io.openk9.datasource.model.dto.request.TabWithTokenTabsDTO;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TokenTabService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.web.SearchTokenDto;
+import io.openk9.datasource.web.dto.SearchTokenDto;
+
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -27,10 +51,6 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -60,6 +80,12 @@ public class TabGraphqlResource {
 			tab.getId(), after, before, first, last, searchText, sortByList,
 			notEqual);
 	}
+
+	@Query
+	public Uni<List<Tab>> getUnboundTabsByTokenTab(long tokenTabId) {
+		return _tabService.findUnboundTabsByTokenTab(tokenTabId);
+	}
+
 
 	public Uni<Connection<Sorting>> sortings(
 		@Source Tab tab,
@@ -145,6 +171,21 @@ public class TabGraphqlResource {
 			return patch
 				? patchTab(id, tabDTO)
 				: updateTab(id, tabDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<Tab>> tabWithTokenTabs(
+		@Id Long id, TabWithTokenTabsDTO tabWithTokenTabsDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createTab(tabWithTokenTabsDTO);
+		} else {
+			return patch
+				? patchTab(id, tabWithTokenTabsDTO)
+				: updateTab(id, tabWithTokenTabsDTO);
 		}
 
 	}

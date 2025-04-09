@@ -17,48 +17,40 @@
 
 package io.openk9.datasource.pipeline.stages.working;
 
-import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
-import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.cluster.sharding.typed.javadsl.ClusterSharding;
-import akka.cluster.sharding.typed.javadsl.EntityRef;
-import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
+import java.util.LinkedList;
+import java.util.function.BiFunction;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.common.util.ingestion.PayloadType;
+import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
-import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;
-import io.openk9.datasource.pipeline.actor.common.AggregateItem;
+import io.openk9.datasource.pipeline.actor.WorkStageException;
+import io.openk9.datasource.pipeline.actor.WriterException;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.processor.payload.DataPayload;
-import io.quarkus.runtime.util.ExceptionUtil;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import org.apache.pekko.actor.typed.ActorRef;
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
+import org.apache.pekko.cluster.sharding.typed.javadsl.EntityTypeKey;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
-	private final ActorRef<Writer.Response> indexWriterAdapter;
+	private final ActorRef<Writer.Response> writerAdapter;
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
-	private final ActorRef<AggregateBehavior.Response> endProcessAdapter;
-	private final List<Behavior<AggregateItem.Command>> endProcessHandlersBehaviors;
 	private ActorRef<Writer.Command> writer;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
-	private final ClusterSharding sharding;
-	private final EntityTypeKey<Processor.Command> processorType;
+	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypes;
 	private long counter = 0;
 
 	public WorkStage(
@@ -70,38 +62,20 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		super(context);
 		this.shardingKey = shardingKey;
 		this.replyTo = replyTo;
-		this.processorType = configurations.processorType();
+		this.processorTypes = configurations.processorTypes();
 
-		ActorSystem<Void> system = getContext().getSystem();
-		this.sharding = ClusterSharding.get(system);
-
-		this.indexWriterAdapter = getContext().messageAdapter(
+		this.writerAdapter = getContext().messageAdapter(
 			Writer.Response.class,
 			PostWrite::new
 		);
 
 		this.dataProcessAdapter = getContext().messageAdapter(
 			Processor.Response.class,
-			PostProcess::new
+			ProcessorResponse::new
 		);
 
 		this.writerFactory = configurations.writerFactory();
 
-		this.endProcessAdapter = getContext().messageAdapter(
-			AggregateBehavior.Response.class,
-			EndProcessResponse::new
-		);
-
-		List<Behavior<AggregateItem.Command>> handlerBehaviors = new ArrayList<>();
-		for (Function<ShardingKey, Behavior<AggregateItem.Command>> handlerFactory
-			: configurations.endProcessHandlers()) {
-
-			var handlerBehavior = handlerFactory.apply(shardingKey);
-
-			handlerBehaviors.add(handlerBehavior);
-		}
-
-		endProcessHandlersBehaviors = handlerBehaviors;
 	}
 
 	public static Behavior<Command> create(
@@ -117,11 +91,9 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
 			.onMessage(StartWorker.class, this::onStartWorker)
-			.onMessage(PostProcess.class, this::onPostProcess)
+			.onMessage(ProcessorResponse.class, this::onProcessorResponse)
 			.onMessage(Write.class, this::onWrite)
 			.onMessage(PostWrite.class, this::onPostWrite)
-			.onMessage(EndProcessResponse.class, this::onEndProcessResponse)
-			.onMessage(LastForwarded.class, this::onLastForwarded)
 			.build();
 	}
 
@@ -129,26 +101,36 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 		var response = postWrite.response();
 
-		if (response instanceof Writer.Success success) {
+		switch (response) {
+			case Writer.Success(HeldMessage heldMessage):
 
-			var payload = success.dataPayload();
-			var heldMessage = success.heldMessage();
+				this.replyTo.tell(new Done(heldMessage));
+				break;
+			case Writer.Failure(WriterException exception, HeldMessage heldMessage):
 
-			var endProcess = getContext().spawnAnonymous(
-				EndProcess.create(endProcessHandlersBehaviors, endProcessAdapter));
-
-			endProcess.tell(new EndProcess.Start(payload, heldMessage));
-
+				this.replyTo.tell(new Failed(heldMessage, exception));
+				break;
 		}
-		else if (response instanceof Writer.Failure failure) {
 
-			var heldMessage = failure.heldMessage();
+		return Behaviors.same();
+	}
 
-			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(failure.exception()),
-				heldMessage
-			));
+	private Behavior<Command> onProcessorResponse(ProcessorResponse processorResponse) {
 
+		var response = processorResponse.response();
+		var heldMessage = response.heldMessage();
+
+		switch (response) {
+			case Processor.Success success -> getContext()
+				.getSelf()
+				.tell(new Write(success.payload(), heldMessage));
+			case Processor.Skip ignored -> this.replyTo.tell(new Done(heldMessage));
+			case Processor.Failure failure -> {
+
+				var exception = failure.exception();
+
+				this.replyTo.tell(new Failed(heldMessage, exception));
+			}
 		}
 
 		return Behaviors.same();
@@ -170,18 +152,38 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				shardingKey
 			);
 
-			this.replyTo.tell(new Halt(requester));
+			DataProcessException exception;
+
+			var rawContent = dataPayload.getRawContent();
+
+			if (rawContent != null
+				&& !rawContent.isEmpty()) {
+
+				exception = new DataProcessException(rawContent);
+			}
+			else {
+				exception = new DataProcessException(String.format(
+					"Halt received from the source for scheduling %s.",
+					shardingKey
+				)
+				);
+			}
+
+			this.replyTo.tell(new Halt(exception, requester));
 
 		}
 		else if (dataPayload.getContentId() != null) {
 
+			// Prepares for working on this dataPayload
+			var contentId = dataPayload.getContentId();
+
 			if (this.writer == null) {
-				this.writer = getContext()
-					.spawnAnonymous(this.writerFactory.apply(
-							scheduler,
-							indexWriterAdapter
-						)
-					);
+				this.writer = getContext().spawnAnonymous(
+					this.writerFactory.apply(
+						scheduler,
+						writerAdapter
+					)
+				);
 			}
 
 			counter++;
@@ -189,18 +191,30 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
-			EntityRef<Processor.Command> dataProcess = sharding.entityRefFor(
-				processorType,
-				processKey.asString()
-			);
-
 			var heldMessage = new HeldMessage(
 				processKey,
 				counter,
-				parsingDateTimeStamp
+				parsingDateTimeStamp,
+				contentId
 			);
 
-			dataProcess.tell(new Processor.Start(
+			// If there are no documentTypes defined,
+			// then the associated documents has to be deleted.
+
+			var documentTypes = dataPayload.getDocumentTypes();
+
+			if (documentTypes == null || documentTypes.length == 0) {
+
+				log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
+				writer.tell(new Writer.Start(null, heldMessage));
+
+				return this;
+			}
+
+			var processorChain =
+				getContext().spawnAnonymous(ProcessorChain.create(processorTypes));
+
+			processorChain.tell(new Processor.Start(
 				Json.encodeToBuffer(dataPayload).getBytes(),
 				scheduler,
 				heldMessage,
@@ -224,33 +238,6 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		return Behaviors.same();
 	}
 
-	private Behavior<Command> onPostProcess(PostProcess postProcess) {
-
-		var response = postProcess.response();
-		var heldMessage = response.heldMessage();
-
-		if (response instanceof Processor.Success success) {
-			log.infof("data process success for %s", heldMessage);
-
-			getContext().getSelf().tell(new Write(
-				success.payload(),
-				heldMessage
-			));
-
-		}
-		else if (response instanceof Processor.Failure failure) {
-
-			Exception exception = failure.exception();
-			log.errorf(exception, "data process failure for %s", heldMessage);
-
-			this.replyTo.tell(new Failed(
-				ExceptionUtil.generateStackTrace(exception), heldMessage));
-
-		}
-
-		return Behaviors.same();
-	}
-
 	private Behavior<Command> onWrite(Write write) {
 
 		var payload = write.payload();
@@ -264,38 +251,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	}
 
 	public record Configurations(
-		EntityTypeKey<Processor.Command> processorType,
-		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory,
-		Function<ShardingKey, Behavior<AggregateItem.Command>>... endProcessHandlers
+		LinkedList<EntityTypeKey<Processor.Command>> processorTypes,
+		BiFunction<SchedulerDTO, ActorRef<Writer.Response>, Behavior<Writer.Command>> writerFactory
 	) {
-
-		@SafeVarargs
-		public Configurations {
-		}
-
 	}
-
-	private Behavior<Command> onEndProcessResponse(EndProcessResponse endProcessResponse) {
-
-		if (endProcessResponse.response() instanceof EndProcess.EndProcessDone endProcessDone) {
-
-			this.replyTo.tell(new Done(endProcessDone.heldMessage()));
-
-			return Behaviors.same();
-		}
-
-		throw new AggregateBehaviorException();
-
-	}
-
-	private Behavior<Command> onLastForwarded(LastForwarded lastForwarded) {
-
-		this.replyTo.tell(new Last(lastForwarded.requester()));
-
-		return Behaviors.same();
-
-	}
-
 
 	public sealed interface Command {}
 
@@ -309,9 +268,10 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		ActorRef<Scheduling.Response> requester
 	) implements Command {}
 
-	private record PostProcess(Processor.Response response) implements Command {}
+	private record ProcessorResponse(Processor.Response response) implements Command {}
 
-	public record Halt(ActorRef<Scheduling.Response> requester) implements Response {}
+	public record Halt(DataProcessException exception, ActorRef<Scheduling.Response> requester)
+		implements Response {}
 
 	public record Last(ActorRef<Scheduling.Response> requester) implements Response {}
 
@@ -321,21 +281,13 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public record Invalid(String errorMessage, ActorRef<Scheduling.Response> requester)
 		implements Response {}
 
-	private record Write(
-		byte[] payload,
-		HeldMessage heldMessage
-	) implements Command {}
+	private record Write(byte[] payload, HeldMessage heldMessage) implements Command {}
 
-	private record PostWrite(
-		Writer.Response response
-	) implements Command {}
-
-	private record EndProcessResponse(AggregateBehavior.Response response) implements Command {}
+	private record PostWrite(Writer.Response response) implements Command {}
 
 	public record Done(HeldMessage heldMessage) implements Callback {}
 
-	public record Failed(String errorMessage, HeldMessage heldMessage) implements Callback {}
-
-	private record LastForwarded(ActorRef<Scheduling.Response> requester) implements Command {}
+	public record Failed(HeldMessage heldMessage, WorkStageException exception)
+		implements Callback {}
 
 }

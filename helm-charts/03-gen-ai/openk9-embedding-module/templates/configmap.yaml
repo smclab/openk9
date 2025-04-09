@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.name" . }}-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+data:
+  PIPELINE_RESPONSE_URL: "{{ include "helper.datasourceURL" . }}/api/datasource/pipeline/callback/"

@@ -1,0 +1,182 @@
+{
+	"fields": [
+      {
+        "label": "Sitemap Urls",
+        "name": "sitemapUrls",
+        "field": "sitemapUrls",
+        "type": "list",
+        "size": 4,
+        "required": true,
+        "values": [
+          {
+            "value": "sitemapUrl1",
+            "label": "sitemapUrl1",
+            "isDefault": false
+          },
+          {
+            "value": "sitemapUrl2",
+            "label": "sitemapUrl2",
+            "isDefault": false
+          }
+        ],
+        "info": "Sitemap Urls to read to extract pages",
+        "placeholder": "string",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Allowed Domains",
+        "name": "allowedDomains",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Allowed domain for crawling",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Allowed Paths",
+        "name": "allowedPaths",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Allowed paths for crawling",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Excluded Paths",
+        "name": "excludedPaths",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Excluded paths for crawling",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Body Tag",
+        "name": "bodyTag",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+          {
+            "value": "body",
+            "isDefault": true
+          }
+        ],
+        "info": "Tag to use to extract main web content",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Title tag",
+        "name": "titleTag",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "info": "Tag to use to extract title",
+        "values": [
+          {
+            "value": "title::text",
+            "isDefault": true
+          }
+        ],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Max Length",
+        "name": "maxLength",
+        "type": "number",
+        "size": 4,
+        "required": true,
+        "info": "Max length for main content. If negative all text is extracted",
+        "values": [
+          {
+            "value": "-1",
+            "isDefault": true
+          }
+        ],
+        "validator": {
+          "min": 0,
+          "max": 10000,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Page Count",
+        "name": "pageCount",
+        "type": "number",
+        "size": 4,
+        "required": true,
+        "info": "Number of pages extracted. If 0 all pages founded in sitemap are scraped",
+        "values": [
+          {
+            "value": "0",
+            "isDefault": true
+          }
+        ],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Page Count",
+        "name": "doExtractDocs",
+        "type": "boolean",
+        "size": 4,
+        "required": true,
+        "info": "If extract documents",
+        "values": [
+          {
+            "value": false,
+            "isDefault": true
+          }
+        ],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Document File Extensions",
+        "name": "documentFileExtensions",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "info": "File extensions allowed",
+        "values": [],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      }
+    ]
+}

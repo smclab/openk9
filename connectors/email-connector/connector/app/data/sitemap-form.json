@@ -1,0 +1,126 @@
+{
+	"fields": [
+      {
+        "label": "Mail Server",
+        "name": "mailServer",
+        "field": "mailServer",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "",
+        "placeholder": "string",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Port",
+        "name": "port",
+        "field": "port",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "",
+        "placeholder": "string",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Username",
+        "name": "username",
+        "field": "username",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Password",
+        "name": "password",
+        "field": "password",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Folder",
+        "name": "folder",
+        "field": "folder",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Index Acl",
+        "name": "indexAcl",
+        "field": "indexAcl",
+        "type": "checkbox",
+        "size": 1,
+        "required": true,
+        "values": [
+          {
+            "value": "false",
+            "label": "false",
+            "isDefault": true
+          }
+        ],
+        "info": "",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Get Attachments",
+        "name": "getAttachments",
+        "field": "getAttachments",
+        "type": "checkbox",
+        "size": 1,
+        "required": true,
+        "values": [
+          {
+            "value": "false",
+            "label": "false",
+            "isDefault": true
+          }
+        ],
+        "info": "",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      }
+    ]
+}

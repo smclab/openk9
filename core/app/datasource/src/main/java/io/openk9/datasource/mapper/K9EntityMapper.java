@@ -17,16 +17,20 @@
 
 package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.model.dto.util.K9EntityDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
+
 import org.mapstruct.BeanMapping;
 import org.mapstruct.MapperConfig;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 
 @MapperConfig(
-	componentModel = "cdi"
+	componentModel = MappingConstants.ComponentModel.CDI,
+	unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface K9EntityMapper<E extends K9Entity, DTO extends K9EntityDTO> {
 
