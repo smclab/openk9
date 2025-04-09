@@ -29,7 +29,7 @@
 		            columnName="pipeline_type"/>
 	</changeSet>
 
-	<changeSet id="1743067921-2" author="openk9">
+	<changeSet id="1743086923923-1" author="openk9">
 		<createTable tableName="rag_configuration">
 			<column name="id" type="NUMBER(38)">
 				<constraints
@@ -53,13 +53,13 @@
 		</createTable>
 	</changeSet>
 
-	<changeSet id="1743067921-3" author="openk9">
+	<changeSet id="1743086923923-2" author="openk9">
 		<addColumn tableName="bucket">
 			<column name="rag_configuration_id" type="NUMBER(38)"/>
 		</addColumn>
 	</changeSet>
 
-	<changeSet id="1743067921-4" author="openk9">
+	<changeSet id="1743086923923-3" author="openk9">
 		<addForeignKeyConstraint
 				baseTableName="bucket"
 				baseColumnNames="rag_configuration_id"
