@@ -154,7 +154,7 @@ def set_up_crawl_endpoint(request):
     follow = request["follow"]
     max_length = request["maxLength"]
     tenant_id = request["tenantId"]
-    excluded_paths = json.dumps(request["excludedPaths"])
+    excluded_paths = request["excludedPaths"]
     document_file_extensions = request["documentFileExtensions"]
     specific_tags = request["specificTags"]
     close_spider_page_count = request["pageCount"]
