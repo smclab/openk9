@@ -71,7 +71,6 @@ export function Main({
   const activeLanguage = i18next.language;
 
   //retrieving information from the configuration.
-  const classNameLabelSort = configuration.sortResults?.classNameLabel;
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
   const memoryResults = configuration.memoryResults || false;
   const numberOfResults = configuration.numberResult || 10;
@@ -139,16 +138,22 @@ export function Main({
     setSelectedTabIndex,
     tabTokens,
     sortList,
-    tabSelected,
     setSort,
   } = useTabs(configuration.overrideTabs, languageSelect);
-  const { resetSort, selectedSort, setSelectedSort } = useSortResult({
+  const { resetSort, setSelectedSort } = useSortResult({
     configuration,
     onConfigurationChange,
     setSortAfterKey,
     sortList,
     setSort,
   });
+  const {
+    dynamicFilters,
+    languageQuery,
+    whoIsDynamicResponse,
+    languages,
+    retrieveType,
+  } = recoveryDataBackEnd();
 
   const { searchQuery, spans, isQueryAnalysisComplete, completelySort } =
     useSearch({
@@ -161,6 +166,7 @@ export function Main({
       setCurrentPage,
       selectionsState,
       selectionsDispatch,
+      retrieveType,
     });
   const { isQueryAnalysisCompleteSuggestions, spansSuggestions } =
     useQueryAnalysisWithoutSearch({
@@ -179,8 +185,6 @@ export function Main({
       prevSearchQueryMobile,
       setPrevSearchQueryMobile,
     );
-  const { dynamicFilters, languageQuery, whoIsDynamicResponse, languages } =
-    recoveryDataBackEnd();
 
   //Effect
   React.useEffect(() => {
@@ -235,7 +239,8 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading;
+    languages.isLoading ||
+    retrieveType === undefined;
 
   return (
     <React.Fragment>
@@ -948,6 +953,7 @@ function useSearch({
   setCurrentPage,
   selectionsState,
   selectionsDispatch,
+  retrieveType,
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
@@ -969,6 +975,7 @@ function useSearch({
   onQueryStateChange(queryState: QueryState): void;
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
+  retrieveType?: string;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -1003,6 +1010,7 @@ function useSearch({
         token ? [{ text, start, end, token }] : [],
       ),
       selectionsState.text,
+      retrieveType || "TEXT",
     );
     if (selectionsState.text === selectionsState.textOnChange) {
       setPreviousSearchTokens(value as SearchToken[]);
@@ -1244,6 +1252,7 @@ function recoveryDataBackEnd() {
     languageQuery,
     whoIsDynamicResponse,
     languages,
+    retrieveType: whoIsDynamicResponse.data?.retrieveType,
   };
 }
 
@@ -1465,15 +1474,12 @@ function deriveSearchQuery(
   spans: AnalysisResponseEntry[],
   selection: AnalysisRequestEntry[],
   text: string | undefined,
+  tokenType: string,
 ) {
-  // console.log(spans);
-
   return spans
     .map((span) => ({ ...span, text: span.text.trim() }))
     .filter((span) => span.text)
     .map((span) => {
-      // console.log(span);
-
       const token =
         selection.find((selection) => {
           return selection.start === span.start && selection.end === span.end;
@@ -1483,7 +1489,7 @@ function deriveSearchQuery(
         (token && analysisTokenToSearchToken(token)) ??
         (text !== undefined
           ? {
-              tokenType: "TEXT",
+              tokenType,
               values: [text],
               filter: false,
             }
