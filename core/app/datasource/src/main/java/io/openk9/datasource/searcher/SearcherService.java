@@ -642,6 +642,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					.setPromptNoRag(ragConfiguration.getPromptNoRag())
 					.setRagToolDescription(ragConfiguration.getRagToolDescription())
 					.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
+					.setJsonConfig(StructUtils.fromJson(ragConfiguration.getJsonConfig()))
 					.build()
 			)
 			.onFailure(StatusRuntimeException.class)

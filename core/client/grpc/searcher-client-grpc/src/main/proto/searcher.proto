@@ -176,5 +176,6 @@ message GetRAGConfigurationsResponse{
   string promptNoRag = 6;
   string ragToolDescription = 7;
   string rephrasePrompt = 8;
+  .google.protobuf.Struct jsonConfig = 9;
 }
 

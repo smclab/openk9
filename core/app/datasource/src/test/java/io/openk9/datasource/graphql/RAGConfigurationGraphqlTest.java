@@ -44,6 +44,7 @@ import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -60,6 +61,9 @@ public class RAGConfigurationGraphqlTest {
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
 	private static final String ID = "id";
+	private static final String JSON_CONFIG = "jsonConfig";
+	private static final String JSON_CONFIG_EMPTY = "{}";
+	private static final String JSON_CONFIG_SHORT = "{\"testField\": \"test\"}";
 	private static final String MESSAGE = "message";
 	private static final String NAME = "name";
 	private static final String PATCH = "patch";
@@ -102,10 +106,10 @@ public class RAGConfigurationGraphqlTest {
 	private static final String RAG_CONFIGURATION_DTO = "ragConfigurationDTO";
 	private static final String RAG_CONFIGURATION_ONE_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 1 ";
 	private static final String RAG_CONFIGURATION_TWO_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 2 ";
-	private static final String TYPE = "type";
-	private static final String REPHRASE_PROMPT = "rephrasePrompt";
 	private static final String RAG_TOOL_DESCRIPTION = "ragToolDescription";
+	private static final String REPHRASE_PROMPT = "rephrasePrompt";
 	private static final String REFORMULATE = "reformulate";
+	private static final String TYPE = "type";
 	private static final Logger log = Logger.getLogger(RAGConfigurationGraphqlTest.class);
 
 	@Inject
@@ -142,7 +146,8 @@ public class RAGConfigurationGraphqlTest {
 								prop(PROMPT_NO_RAG, PROMPT_EXAMPLE),
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EXAMPLE),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE),
-								prop(REFORMULATE, true)
+								prop(REFORMULATE, true),
+								prop(JSON_CONFIG, JSON_CONFIG_SHORT)
 							)
 						)
 					),
@@ -155,7 +160,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -187,6 +193,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationOne.getChunkWindow());
 		assertTrue(ragConfigurationOne.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
 	}
@@ -249,6 +256,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
 		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertNull(ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
 	}
@@ -267,6 +275,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -286,7 +295,8 @@ public class RAGConfigurationGraphqlTest {
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EMPTY),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
-								prop(REFORMULATE, false)
+								prop(REFORMULATE, false),
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
 							)
 						)
 					),
@@ -299,7 +309,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -332,6 +343,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
 		assertFalse(ragConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
 	}
 
 	@Test
@@ -348,6 +360,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -374,7 +387,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -406,6 +420,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationTwo.getChunkWindow());
 		assertTrue(ragConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, ragConfigurationTwo.getJsonConfig());
 	}
 
 	@Test
@@ -422,6 +437,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -441,7 +457,8 @@ public class RAGConfigurationGraphqlTest {
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EMPTY),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
-								prop(REFORMULATE, false)
+								prop(REFORMULATE, false),
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
 							)
 						)
 					),
@@ -454,7 +471,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -487,6 +505,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
 		assertFalse(ragConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
 	}
 
 	@Test
@@ -503,6 +522,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
 			operation(
@@ -529,7 +549,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -561,6 +582,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationTwo.getChunkWindow());
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationTwo.getReformulate());
+		assertNull(ragConfigurationTwo.getJsonConfig());
 	}
 
 	@AfterEach
@@ -578,6 +600,7 @@ public class RAGConfigurationGraphqlTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW_VALUE)
 			.reformulate(true)
+			.jsonConfig(JSON_CONFIG_SHORT)
 			.build();
 
 		return sessionFactory.withTransaction(

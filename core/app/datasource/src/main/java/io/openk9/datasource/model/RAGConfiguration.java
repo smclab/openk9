@@ -47,6 +47,9 @@ public class RAGConfiguration extends K9Entity {
 	private Integer chunkWindow = DEFAULT_CHUNK_WINDOW;
 	@Column(name = "description", length = 4096)
 	private String description;
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "json_config")
+	private String jsonConfig;
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)

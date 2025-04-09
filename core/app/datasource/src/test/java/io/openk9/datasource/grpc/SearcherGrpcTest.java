@@ -40,9 +40,7 @@ import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
-import io.openk9.tenantmanager.grpc.TenantManager;
 import io.quarkus.grpc.GrpcClient;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
@@ -70,7 +68,8 @@ public class SearcherGrpcTest {
 	private static final String EMBEDDING_MODEL_ONE = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
-	private static final String EM_JSON_CONFIG = "{\n" +
+	private static final int EM_VECTOR_SIZE = 1330;
+	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
 		"    \"id\": 1,\n" +
 		"    \"name\": \"Test Object 1\",\n" +
@@ -92,19 +91,19 @@ public class SearcherGrpcTest {
 		"    }\n" +
 		"  ]\n" +
 		"}";
-	private static final int EM_VECTOR_SIZE = 1330;
+	private static final String JSON_CONFIG_SHORT = "{testField: \"test\"}";
 	private static final LargeLanguageModel LARGE_LANGUAGE_MODEL = new LargeLanguageModel();
 	private static final String LLM_ONE_NAME = ENTITY_NAME_PREFIX + "Large language model 1 ";
 	private static final String LLM_API_KEY = "api_key";
 	private static final String LLM_API_URL = "api_url";
-	private static final String LLM_JSON_CONFIG = "{testField: \"test\"}";
 	private static final String MODEL = "model";
 	private static final String PROMPT_TEST = "Test prompt";
 	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
 	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
 	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
 	private static final boolean REFORMULATE = true;
-	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(LLM_JSON_CONFIG);
+	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(JSON_CONFIG);
+	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
 	private static final String TYPE = "type";
 	private static final String VIRTUAL_HOST = "test.openk9.local";
@@ -115,7 +114,7 @@ public class SearcherGrpcTest {
 		BUCKET.setRetrieveType(Bucket.RetrieveType.HYBRID);
 		LARGE_LANGUAGE_MODEL.setApiKey(LLM_API_KEY);
 		LARGE_LANGUAGE_MODEL.setApiUrl(LLM_API_URL);
-		LARGE_LANGUAGE_MODEL.setJsonConfig(LLM_JSON_CONFIG);
+		LARGE_LANGUAGE_MODEL.setJsonConfig(JSON_CONFIG_SHORT);
 	}
 
 	@GrpcClient
@@ -172,7 +171,7 @@ public class SearcherGrpcTest {
 
 				Assertions.assertEquals(LLM_API_KEY, response.getApiKey());
 				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
-				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				Assertions.assertEquals(STRUCT_JSON_CONFIG_SHORT, response.getJsonConfig());
 				Assertions.assertEquals(
 					Bucket.RetrieveType.MATCH.name(), response.getRetrieveType());
 				Assertions.assertEquals(TYPE, response.getModelType().getType());
@@ -198,11 +197,99 @@ public class SearcherGrpcTest {
 
 				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
 				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
-				Assertions.assertEquals(
-					StructUtils.fromJson(EM_JSON_CONFIG),
-					response.getJsonConfig());
+				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 				assertEquals(TYPE, response.getModelType().getType());
 				assertEquals(MODEL, response.getModelType().getModel());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_rag_configurations(UniAsserter asserter) {
+
+		// enable bucketOne
+		asserter.execute(() ->
+			sessionFactory.withTransaction(session ->
+				bucketService.findByName(session, BUCKET_ONE)
+					.flatMap(bucketOne ->
+						bucketService.enableTenant(session, bucketOne.getId())
+					)
+			)
+		);
+
+		asserter.assertThat(
+			() -> searcher.getRAGConfigurations(
+				GetRAGConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT)
+					.build()
+			),
+			response -> {
+				log.info(String.format(
+					"getRAGConfigurations %s response: %s",
+					io.openk9.searcher.grpc.RAGType.CHAT.name(),
+					response.toString()
+				));
+
+				assertEquals(RAG_CHAT_ONE, response.getName());
+				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
+				assertEquals(PROMPT_TEST, response.getPrompt());
+				assertEquals(PROMPT_TEST, response.getPromptNoRag());
+				assertEquals(PROMPT_TEST, response.getRagToolDescription());
+				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
+				assertEquals(REFORMULATE, response.getReformulate());
+				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+			}
+		);
+
+		asserter.assertThat(
+			() -> searcher.getRAGConfigurations(
+				GetRAGConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.setRagType(io.openk9.searcher.grpc.RAGType.SEARCH)
+					.build()
+			),
+			response -> {
+				log.info(String.format(
+					"getRAGConfigurations %s response: %s",
+					io.openk9.searcher.grpc.RAGType.SEARCH.name(),
+					response.toString()
+				));
+
+				assertEquals(RAG_SEARCH_ONE, response.getName());
+				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
+				assertEquals(PROMPT_TEST, response.getPrompt());
+				assertEquals(PROMPT_TEST, response.getPromptNoRag());
+				assertEquals(PROMPT_TEST, response.getRagToolDescription());
+				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
+				assertEquals(REFORMULATE, response.getReformulate());
+				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+			}
+		);
+
+		asserter.assertThat(
+			() -> searcher.getRAGConfigurations(
+				GetRAGConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_TOOL)
+					.build()
+			),
+			response -> {
+				log.info(String.format(
+					"getRAGConfigurations %s response: %s",
+					io.openk9.searcher.grpc.RAGType.CHAT_TOOL.name(),
+					response.toString()
+				));
+
+				assertEquals(RAG_CHAT_TOOL_ONE, response.getName());
+				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
+				assertEquals(PROMPT_TEST, response.getPrompt());
+				assertEquals(PROMPT_TEST, response.getPromptNoRag());
+				assertEquals(PROMPT_TEST, response.getRagToolDescription());
+				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
+				assertEquals(REFORMULATE, response.getReformulate());
+				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 			}
 		);
 	}
@@ -329,93 +416,6 @@ public class SearcherGrpcTest {
 			});
 	}
 
-	@Test
-	@RunOnVertxContext
-	void should_get_rag_configurations(UniAsserter asserter) {
-
-		// enable bucketOne
-		asserter.execute(() ->
-			sessionFactory.withTransaction(session ->
-				bucketService.findByName(session, BUCKET_ONE)
-					.flatMap(bucketOne ->
-						bucketService.enableTenant(session, bucketOne.getId())
-					)
-			)
-		);
-
-		asserter.assertThat(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT)
-					.build()
-			),
-			response -> {
-				log.info(String.format(
-					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.CHAT.name(),
-					response.toString()
-				));
-
-				assertEquals(RAG_CHAT_ONE, response.getName());
-				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
-				assertEquals(PROMPT_TEST, response.getPrompt());
-				assertEquals(PROMPT_TEST, response.getPromptNoRag());
-				assertEquals(PROMPT_TEST, response.getRagToolDescription());
-				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
-				assertEquals(REFORMULATE, response.getReformulate());
-			}
-		);
-
-		asserter.assertThat(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.SEARCH)
-					.build()
-			),
-			response -> {
-				log.info(String.format(
-					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.SEARCH.name(),
-					response.toString()
-				));
-
-				assertEquals(RAG_SEARCH_ONE, response.getName());
-				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
-				assertEquals(PROMPT_TEST, response.getPrompt());
-				assertEquals(PROMPT_TEST, response.getPromptNoRag());
-				assertEquals(PROMPT_TEST, response.getRagToolDescription());
-				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
-				assertEquals(REFORMULATE, response.getReformulate());
-			}
-		);
-
-		asserter.assertThat(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_TOOL)
-					.build()
-			),
-			response -> {
-				log.info(String.format(
-					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.CHAT_TOOL.name(),
-					response.toString()
-				));
-
-				assertEquals(RAG_CHAT_TOOL_ONE, response.getName());
-				assertEquals(CHUNK_WINDOW, response.getChunkWindow());
-				assertEquals(PROMPT_TEST, response.getPrompt());
-				assertEquals(PROMPT_TEST, response.getPromptNoRag());
-				assertEquals(PROMPT_TEST, response.getRagToolDescription());
-				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
-				assertEquals(REFORMULATE, response.getReformulate());
-			}
-		);
-	}
-
 	@AfterEach
 	void tearDown() {
 		// EmbeddingModel
@@ -482,7 +482,7 @@ public class SearcherGrpcTest {
 			.apiUrl(EM_API_URL)
 			.apiKey(EM_API_KEY)
 			.vectorSize(EM_VECTOR_SIZE)
-			.jsonConfig(EM_JSON_CONFIG)
+			.jsonConfig(JSON_CONFIG)
 			.modelType(
 				ModelTypeDTO
 					.builder()
@@ -505,7 +505,7 @@ public class SearcherGrpcTest {
 			.name(LLM_ONE_NAME)
 			.apiUrl(LLM_API_URL)
 			.apiKey(LLM_API_KEY)
-			.jsonConfig(LLM_JSON_CONFIG)
+			.jsonConfig(JSON_CONFIG_SHORT)
 			.contextWindow(CONTEXT_WINDOW_VALUE)
 			.retrieveCitations(true)
 			.modelType(
@@ -534,6 +534,7 @@ public class SearcherGrpcTest {
 			.ragToolDescription(PROMPT_TEST)
 			.rephrasePrompt(PROMPT_TEST)
 			.reformulate(REFORMULATE)
+			.jsonConfig(JSON_CONFIG)
 			.build();
 
 		sessionFactory.withTransaction(

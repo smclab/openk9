@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -39,6 +40,7 @@ public class RAGConfigurationServiceTest {
 	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
 	private static final Boolean DEFAULT_REFORMULATE = false;
 	private static final int DEFAULT_VALUE_CHUNK_WINDOW = 0;
+	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String PROMPT_EXAMPLE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sit" +
 		" amet diam a lorem aliquam pellentesque. Morbi dapibus porttitor quam, id porta elit ultrices vel." +
 		" Donec eget ex rutrum, rutrum lectus eget, molestie libero. Nunc at commodo odio. Proin tempus ipsum ac" +
@@ -91,6 +93,7 @@ public class RAGConfigurationServiceTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW)
 			.reformulate(true)
+			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
 		createRAGConfiguration(dto);
@@ -104,6 +107,7 @@ public class RAGConfigurationServiceTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 		assertTrue(ragConfigurationOne.getReformulate());
+		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
 	}
@@ -130,6 +134,7 @@ public class RAGConfigurationServiceTest {
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
 		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertNull(ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
 	}

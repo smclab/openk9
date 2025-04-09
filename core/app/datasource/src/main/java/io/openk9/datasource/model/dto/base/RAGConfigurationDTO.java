@@ -18,21 +18,53 @@
 package io.openk9.datasource.model.dto.base;
 
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.validation.json.Json;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.eclipse.microprofile.graphql.Description;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 public class RAGConfigurationDTO extends K9EntityDTO {
 
+	@Description(
+		"""
+			Controls context window merging behavior for chunk processing:
+			0: Disables chunk merging.
+			> 0: Enables merging with specified window size.
+			"""
+	)
 	private Integer chunkWindow;
+	@Json
+	@Description("A JSON that can be used to add additional configurations to the EmbeddingModel.")
+	private String jsonConfig;
+	@Description("Main prompt template used for RAG.")
 	private String prompt;
+	@Description(
+		"""
+			Prompt template used specifically in RAG-as-tool configurations when the RAG
+			tool is available but not invoked by the LLM.
+			"""
+	)
 	private String promptNoRag;
+	@Description(
+		"""
+			Description of the RAG tool's capabilities, used in RAG-as-tool implementations
+			to help the LLM decide when to invoke it.
+			"""
+	)
 	private String ragToolDescription;
+	@Description(
+		"""
+			Boolean flag that controls whether a large language model should reformulate
+			the input prompt before processing it using rephrasePrompt.
+			"""
+	)
 	private Boolean reformulate;
+	@Description("Prompt template used if reformulate is set to true.")
 	private String rephrasePrompt;
 	@NotNull
 	private RAGType type;
