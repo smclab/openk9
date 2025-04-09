@@ -665,6 +665,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
 	}
 
+	public Uni<RAGConfiguration> getRagConfigurationChat(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationChat())));
+	}
+
+	public Uni<RAGConfiguration> getRagConfigurationChatTool(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationChatTool())));
+	}
+
+	public Uni<RAGConfiguration> getRagConfigurationSearch(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationSearch())));
+	}
+
 	public Uni<SearchConfig> getSearchConfig(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));

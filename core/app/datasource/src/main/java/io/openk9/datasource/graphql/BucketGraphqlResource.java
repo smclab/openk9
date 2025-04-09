@@ -288,6 +288,18 @@ public class BucketGraphqlResource {
 		return bucketService.getQueryAnalysis(bucket.getId());
 	}
 
+	public Uni<RAGConfiguration> ragConfigurationChat(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationChat(bucket.getId());
+	}
+
+	public Uni<RAGConfiguration> ragConfigurationChatTool(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationChatTool(bucket.getId());
+	}
+
+	public Uni<RAGConfiguration> ragConfigurationSearch(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationSearch(bucket.getId());
+	}
+
 	@Mutation
 	public Uni<Tuple2<Bucket, Datasource>> removeDatasourceFromBucket(@Id long bucketId, @Id long datasourceId) {
 		return bucketService.removeDatasource(bucketId, datasourceId);
