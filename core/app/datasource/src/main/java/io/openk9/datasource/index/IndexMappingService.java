@@ -304,7 +304,7 @@ public class IndexMappingService {
 			);
 
 			request
-				.name(indexName + IndexService.TEMPLATE_SUFFIX)
+				.name(indexName.value() + IndexService.TEMPLATE_SUFFIX)
 				.indexTemplate(composableIndexTemplate);
 
 			return request;
