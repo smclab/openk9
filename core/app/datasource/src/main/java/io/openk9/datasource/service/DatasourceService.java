@@ -33,6 +33,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -69,6 +70,8 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
+	@Inject
+	EventBus eventBus;
 
 	DatasourceService(DatasourceMapper mapper) {
 		this.mapper = mapper;
@@ -86,6 +89,106 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				tenantId, datasourceId, lastIngestionDate, newDataIndexId))
 			.map(message -> (Void) message.body())
 			.subscribeAsCompletionStage();
+	}
+
+	@Override
+	public Uni<Datasource> create(Mutiny.Session s, Datasource entity) {
+		return getCurrentTenant(s)
+			.flatMap(tenant -> super.create(s, entity)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenant.schemaName(), datasource)
+					)
+				)
+			);
+	}
+
+	@Override
+	public Uni<Datasource> deleteById(Mutiny.Session s, long datasourceId) {
+		return getCurrentTenant(s)
+			.flatMap(tenant -> super.deleteById(s, datasourceId)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.DELETE_SCHEDULER,
+						new SchedulerInitializer.DeleteSchedulerRequest(
+							tenant.schemaName(),
+							datasourceId
+						)
+					)
+				)
+			);
+	}
+
+	/**
+	 * Deletes a datasource and all its associated entities through a cascading deletion process.
+	 *
+	 * <p>This method performs a comprehensive deletion that involves multiple steps:
+	 * <ul>
+	 *   <li>Retrieves the datasource by its ID</li>
+	 *   <li>Eagerly fetches associated entities (data indices, plugin driver, enrich pipeline, buckets)</li>
+	 *   <li>Dereferences these associated entities to prevent cascading</li>
+	 *   <li>Merges the datasource to update its state</li>
+	 *   <li>Deletes all schedulers associated with the datasource</li>
+	 *   <li>Deletes all data indices linked to the datasource</li>
+	 *   <li>Performs the final deletion of the datasource</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * @param datasourceId The unique identifier of the datasource to be deleted
+	 * @return A {@link Uni} that resolves to the deleted {@link Datasource} instance
+	 * @implNote <ul>
+	 * <li>Uses Hibernate Reactive for database operations</li>
+	 * <li>Performs eager fetching of associated entities to prevent lazy loading issues</li>
+	 * <li>Explicitly dereferences associated entities before deletion</li>
+	 * <li>Deletes schedulers using Criteria API for efficient bulk deletion</li>
+	 * <li>Relies on cascading services to handle deletion of related entities (e.g. dataIndices) </li>
+	 * </ul>
+	 */
+	public Uni<Datasource> deleteById(long datasourceId) {
+
+		var cb = sessionFactory.getCriteriaBuilder();
+
+		return sessionFactory.withTransaction(
+			(session, transaction) ->
+				findById(session, datasourceId)
+					.call(datasource -> session.fetch(datasource.getDataIndex()))
+					.call(datasource -> session.fetch(datasource.getPluginDriver()))
+					.call(datasource -> session.fetch(datasource.getEnrichPipeline()))
+					.call(datasource -> session.fetch(datasource.getBuckets()))
+					.flatMap(datasource -> {
+						// dereferences entities on datasource
+						datasource.setDataIndex(null);
+						datasource.setPluginDriver(null);
+						datasource.setEnrichPipeline(null);
+						datasource.setBuckets(null);
+
+						return merge(session, datasource)
+							.flatMap(__ -> {
+								// deletes all schedulers
+								var deleteScheduler =
+									cb.createCriteriaDelete(Scheduler.class);
+								var deleteFromScheduler = deleteScheduler.from(Scheduler.class);
+
+								deleteScheduler.where(cb.equal(
+										deleteFromScheduler.get(Scheduler_.datasource),
+										datasource
+									)
+								);
+
+								return session.createQuery(deleteScheduler).executeUpdate();
+							})
+							.flatMap(unused -> dataIndexService
+								.deleteAllByDatasourceId(session, datasourceId))
+							.flatMap(unused -> deleteById(session, datasourceId))
+							.map(unused -> datasource);
+					})
+		);
+
+	}
+
+	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
 	}
 
 	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
@@ -154,71 +257,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.transform(K9Error::new);
 	}
 
-	/**
-	 * Deletes a datasource and all its associated entities through a cascading deletion process.
-	 *
-	 * <p>This method performs a comprehensive deletion that involves multiple steps:
-	 * <ul>
-	 *   <li>Retrieves the datasource by its ID</li>
-	 *   <li>Eagerly fetches associated entities (data indices, plugin driver, enrich pipeline, buckets)</li>
-	 *   <li>Dereferences these associated entities to prevent cascading</li>
-	 *   <li>Merges the datasource to update its state</li>
-	 *   <li>Deletes all schedulers associated with the datasource</li>
-	 *   <li>Deletes all data indices linked to the datasource</li>
-	 *   <li>Performs the final deletion of the datasource</li>
-	 * </ul>
-	 * </p>
-	 *
-	 * @param datasourceId The unique identifier of the datasource to be deleted
-	 * @return A {@link Uni} that resolves to the deleted {@link Datasource} instance
-	 * @implNote <ul>
-	 * <li>Uses Hibernate Reactive for database operations</li>
-	 * <li>Performs eager fetching of associated entities to prevent lazy loading issues</li>
-	 * <li>Explicitly dereferences associated entities before deletion</li>
-	 * <li>Deletes schedulers using Criteria API for efficient bulk deletion</li>
-	 * <li>Relies on cascading services to handle deletion of related entities (e.g. dataIndices) </li>
-	 * </ul>
-	 */
-	public Uni<Datasource> deleteById(long datasourceId) {
-
-		var cb = sessionFactory.getCriteriaBuilder();
-
-		return sessionFactory.withTransaction(
-			(session, transaction) ->
-				findById(session, datasourceId)
-					.call(datasource -> session.fetch(datasource.getDataIndex()))
-					.call(datasource -> session.fetch(datasource.getPluginDriver()))
-					.call(datasource -> session.fetch(datasource.getEnrichPipeline()))
-					.call(datasource -> session.fetch(datasource.getBuckets()))
-					.flatMap(datasource -> {
-						// dereferences entities on datasource
-						datasource.setDataIndex(null);
-						datasource.setPluginDriver(null);
-						datasource.setEnrichPipeline(null);
-						datasource.setBuckets(null);
-
-						return merge(session, datasource)
-							.flatMap(__ -> {
-								// deletes all schedulers
-								var deleteScheduler =
-									cb.createCriteriaDelete(Scheduler.class);
-								var deleteFromScheduler = deleteScheduler.from(Scheduler.class);
-
-								deleteScheduler.where(cb.equal(
-										deleteFromScheduler.get(Scheduler_.datasource),
-										datasource
-									)
-								);
-
-								return session.createQuery(deleteScheduler).executeUpdate();
-							})
-							.flatMap(unused -> dataIndexService
-								.deleteAllByDatasourceId(session, datasourceId))
-							.flatMap(unused -> super.deleteById(session, datasourceId))
-							.map(unused -> datasource);
-					})
-		);
-
+	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getPluginDriver())));
 	}
 
 	public Uni<Datasource> deleteById(long datasourceId, String datasourceName) {
@@ -309,22 +350,38 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		return sessionFactory.withTransaction(s -> s.fetch(datasource.getEnrichPipeline()));
 	}
 
-	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(
-			s,
-			datasourceId
-		).flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
+	@Override
+	public Uni<Datasource> update(
+		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
+
+		return getCurrentTenant(s)
+			.flatMap(tenant -> super.update(s, datasourceId, datasourceDTO)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenant.schemaName(), datasource)
+					)
+				)
+			);
 	}
 
 	public Uni<Set<DataIndex>> getDataIndexes(Datasource datasource) {
 		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndexes()));
 	}
 
-	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(
-			s,
-			datasourceId
-		).flatMap(datasource -> s.fetch(datasource.getPluginDriver())));
+	@Override
+	protected Uni<Datasource> patch(
+		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
+
+		return getCurrentTenant(s)
+			.flatMap(tenant -> super.patch(s, datasourceId, datasourceDTO)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenant.schemaName(), datasource)
+					)
+				)
+			);
 	}
 
 	public Uni<Connection<Scheduler>> getSchedulerConnection(
@@ -540,8 +597,12 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					}
 
 					return s.persist(datasource)
-						.invoke(unused -> getProcessor().onNext(K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, datasource)));
+						.invoke(unused -> eventBus.send(
+							SchedulerInitializer.UPDATE_SCHEDULER,
+							new SchedulerInitializer.SchedulerRequest(tenantId, datasource)
+						))
+						.invoke(unused -> getProcessor().onNext(
+							K9EntityEvent.of(K9EntityEvent.EventType.UPDATE, datasource)));
 				})
 		);
 	}

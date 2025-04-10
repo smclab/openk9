@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,6 +40,7 @@ import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.groups.UniJoin;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -67,11 +69,13 @@ public class SchedulerInitializer {
 	TenantRegistry tenantRegistry;
 
 	@ConsumeEvent(UPDATE_SCHEDULER)
-	public Uni<Void> createOrUpdateScheduler(Datasource datasource) {
+	public Uni<Void> createOrUpdateScheduler(SchedulerRequest schedulerRequest) {
+
+		var datasource = schedulerRequest.datasource();
 
 		return schedulerInitializerActor
 			.scheduleDataSource(
-				datasource.getTenant(),
+				schedulerRequest.tenantId(),
 				datasource.getId(),
 				datasource.getSchedulable(),
 				datasource.getScheduling(),
@@ -84,12 +88,56 @@ public class SchedulerInitializer {
 	}
 
 	@ConsumeEvent(DELETE_SCHEDULER)
-	public Uni<Void> deleteScheduler(Datasource datasource) {
+	public Uni<Void> deleteScheduler(DeleteSchedulerRequest deleteSchedulerRequest) {
 
 		return schedulerInitializerActor.unScheduleDataSource(
-			datasource.getTenant(),
-			datasource.getId()
+			deleteSchedulerRequest.tenantId(),
+			deleteSchedulerRequest.datasourceId()
 		);
+	}
+
+	private Uni<List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
+		List<TenantManager.Tenant> tenantResponses) {
+
+		if (tenantResponses == null || tenantResponses.isEmpty()) {
+			return Uni.createFrom().item(List.of());
+		}
+
+		logger.info("fetching datasources...");
+
+		UniJoin.Builder<Set<JobScheduler.ScheduleDatasource>> commandsUni =
+			Uni.join().builder();
+
+		for (TenantManager.Tenant tenant : tenantResponses) {
+			var tenantId = tenant.schemaName();
+
+			var commandsByTenantUni = datasourceService.findAll(tenantId)
+				.map(datasources -> datasources.stream()
+					.map(datasource -> toCommand(tenantId, datasource))
+					.collect(Collectors.toSet()));
+
+			commandsUni.add(commandsByTenantUni);
+		}
+
+		return commandsUni.joinAll()
+			.usingConcurrencyOf(1)
+			.andCollectFailures()
+			.map(commandsByTenant -> commandsByTenant.stream()
+				.flatMap(Collection::stream)
+				.toList());
+	}
+
+	private JobScheduler.ScheduleDatasource toCommand(String tenantId, Datasource datasource) {
+		return new JobScheduler.ScheduleDatasource(
+			tenantId,
+			datasource.getId(),
+			datasource.getSchedulable(),
+			datasource.getScheduling(),
+			datasource.getReindexable(),
+			datasource.getReindexing(),
+			datasource.getPurgeable(),
+			datasource.getPurging(),
+			datasource.getPurgeMaxAge());
 	}
 
 	@ConsumeEvent(value = INITIALIZE_SCHEDULER)
@@ -199,39 +247,14 @@ public class SchedulerInitializer {
 
 	}
 
-	private Uni<? extends List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
-		List<TenantManager.Tenant> tenantResponses) {
+	public record DeleteSchedulerRequest(
+		String tenantId,
+		long datasourceId
+	) {}
 
-		logger.info("fetching datasources...");
-
-		return Uni.join()
-			.all(tenantResponses
-				.stream()
-				.map(TenantManager.Tenant::schemaName)
-				.map(datasourceService::findAll)
-				.collect(Collectors.toList())
-			)
-			.usingConcurrencyOf(1)
-			.andCollectFailures()
-			.map(resultSets -> resultSets
-				.stream()
-				.flatMap(Collection::stream)
-				.map(this::mapScheduleDatasource)
-				.collect(Collectors.toList())
-			);
-	}
-
-	private JobScheduler.ScheduleDatasource mapScheduleDatasource(Datasource datasource) {
-		return new JobScheduler.ScheduleDatasource(
-			datasource.getTenant(),
-			datasource.getId(),
-			datasource.getSchedulable(),
-			datasource.getScheduling(),
-			datasource.getReindexable(),
-			datasource.getReindexing(),
-			datasource.getPurgeable(),
-			datasource.getPurging(),
-			datasource.getPurgeMaxAge());
-	}
+	public record SchedulerRequest(
+		String tenantId,
+		Datasource datasource
+	) {}
 
 }
