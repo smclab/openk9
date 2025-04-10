@@ -22,48 +22,48 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
-	logicalFilePath="db/datasource/2025/03/27-01-changelog.xml">
+	logicalFilePath="db/datasource/2025/04/01-01-changelog.xml"
+>
 
-	<changeSet id="1743067921-1" author="openk9">
-		<dropColumn tableName="datasource"
-		            columnName="pipeline_type"/>
-	</changeSet>
+	<changeSet id="1743515344113-1" author="openk9">
+		<renameColumn
+				tableName="bucket"
+				oldColumnName="rag_configuration_id"
+				newColumnName="rag_configuration_chat_id"
+		/>
 
-	<changeSet id="1743086923923-1" author="openk9">
-		<createTable tableName="rag_configuration">
-			<column name="id" type="NUMBER(38)">
-				<constraints
-					nullable="false"
-					primaryKey="true"
-					primaryKeyName="rag_configuration_pkey"/>
-			</column>
-			<column name="create_date" type="TIMESTAMP"/>
-			<column name="modified_date" type="TIMESTAMP"/>
-			<column name="description" type="VARCHAR2(4000)"/>
-			<column name="name" type="VARCHAR2(255)">
-				<constraints nullable="false"/>
-			</column>
-			<column name="type" type="VARCHAR2(255)"/>
-			<column name="prompt" type="CLOB"/>
-			<column name="rephrase_prompt" type="CLOB"/>
-			<column name="prompt_no_rag" type="CLOB"/>
-			<column name="rag_tool_description" type="CLOB"/>
-			<column name="chunk_window" type="NUMBER(10)"/>
-			<column name="reformulate" type="NUMBER(1)"/>
-		</createTable>
-	</changeSet>
+		<dropForeignKeyConstraint
+				baseTableName="bucket"
+				constraintName="fk_bucket_rag_configuration"
+		/>
 
-	<changeSet id="1743086923923-2" author="openk9">
-		<addColumn tableName="bucket">
-			<column name="rag_configuration_id" type="NUMBER(38)"/>
-		</addColumn>
-	</changeSet>
-
-	<changeSet id="1743086923923-3" author="openk9">
 		<addForeignKeyConstraint
 				baseTableName="bucket"
-				baseColumnNames="rag_configuration_id"
-				constraintName="fk_bucket_rag_configuration"
+				baseColumnNames="rag_configuration_chat_id"
+				constraintName="fk_bucket_rag_configuration_chat"
+				referencedTableName="rag_configuration"
+				referencedColumnNames="id"
+		/>
+	</changeSet>
+
+	<changeSet id="1743515344113-2" author="openk9">
+		<addColumn tableName="bucket">
+			<column name="rag_configuration_chat_tool_id" type="BIGINT"/>
+			<column name="rag_configuration_search_id" type="BIGINT"/>
+		</addColumn>
+
+		<addForeignKeyConstraint
+				baseTableName="bucket"
+				baseColumnNames="rag_configuration_chat_tool_id"
+				constraintName="fk_bucket_rag_configuration_chat_tool"
+				referencedTableName="rag_configuration"
+				referencedColumnNames="id"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="bucket"
+				baseColumnNames="rag_configuration_search_id"
+				constraintName="fk_bucket_rag_configuration_search"
 				referencedTableName="rag_configuration"
 				referencedColumnNames="id"
 		/>

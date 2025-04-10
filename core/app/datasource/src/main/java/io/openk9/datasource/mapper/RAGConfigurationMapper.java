@@ -15,31 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.pipeline.service;
+package io.openk9.datasource.mapper;
 
-import io.openk9.datasource.model.EmbeddingModel;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.Test;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import org.mapstruct.Mapper;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-@QuarkusTest
-class EmbeddingServiceTest {
-
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
-
-	@Test
-	void should_fetch_current_embedding_model() {
-
-		var current = sessionFactory.withTransaction(session -> session
-				.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
-				.getSingleResultOrNull()
-			)
-			.await().indefinitely();
-
-		assertNotNull(current);
-	}
+@Mapper(
+	config = K9EntityMapper.class
+)
+public interface RAGConfigurationMapper
+	extends K9EntityMapper<RAGConfiguration, RAGConfigurationDTO> {
 }

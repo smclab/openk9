@@ -96,13 +96,17 @@ public class PluginDriverService
 			.flatMap(docTypeNames -> {
 				var mutableSet = new HashSet<>(docTypeNames);
 				mutableSet.add(DocType.DEFAULT_NAME);
+				var docTypeNameValues = mutableSet.toArray(String[]::new);
 
-				return docTypeService.getDocTypeListByNames(
-					session,
-					mutableSet.toArray(String[]::new)
-				);
+				return docTypeService.getDocTypesInDocTypeNames(
+						session, docTypeNameValues)
+					.map(PluginDriverDocTypesDTO::selectedDocTypes)
+					.flatMap(selected -> docTypeService
+						.getDocTypesNotInDocTypeNames(session, docTypeNameValues)
+						.map(PluginDriverDocTypesDTO::unselectedDocTypes)
+						.map(unselected -> PluginDriverDocTypesDTO.join(selected, unselected))
+					);
 			})
-			.map(PluginDriverDocTypesDTO::fromDocTypes)
 		);
 	}
 

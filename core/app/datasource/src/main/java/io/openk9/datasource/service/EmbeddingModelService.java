@@ -17,12 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.ws.rs.NotFoundException;
-
 import io.openk9.datasource.index.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.EmbeddingModelMapper;
@@ -32,8 +26,12 @@ import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.util.BaseK9EntityService;
-
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
@@ -50,6 +48,12 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 		return session.createNamedQuery(
 				EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
 			.getSingleResult();
+	}
+
+	public Uni<EmbeddingModel> fetchCurrent(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+			.getSingleResult());
 	}
 
 	@Override

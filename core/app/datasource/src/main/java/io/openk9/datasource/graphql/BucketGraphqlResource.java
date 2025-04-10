@@ -31,6 +31,8 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -52,6 +54,7 @@ import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
@@ -97,6 +100,31 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, QueryAnalysis>> bindQueryAnalysisToBucket(
 		@Id long bucketId, @Id long queryAnalysisId) {
 		return bucketService.bindQueryAnalysis(bucketId, queryAnalysisId);
+	}
+
+	@Description("""
+		Binds an existing RAGConfiguration to a specified Bucket.
+		
+		This mutation links a RAGConfiguration to a Bucket.
+		It use the field RAGType of RAGConfiguration to specify the type of binding.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to bind the RAGConfiguration to.
+		- `ragConfigurationId` (ID!): The ID of the RAGConfiguration to be bound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket with the linked RAGConfiguration.
+		  - `ragConfiguration`: The linked RAGConfiguration.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, RAGConfiguration>> bindRAGConfigurationToBucket(
+		@Id
+		@Description("The ID of the Bucket to bind the RAGConfiguration to.") long bucketId,
+		@Id
+		@Description("The ID of the RAGConfiguration to be bound.") long ragConfigurationId) {
+
+		return bucketService.bindRAGConfiguration(bucketId, ragConfigurationId);
 	}
 
 	@Mutation
@@ -260,6 +288,18 @@ public class BucketGraphqlResource {
 		return bucketService.getQueryAnalysis(bucket.getId());
 	}
 
+	public Uni<RAGConfiguration> ragConfigurationChat(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationChat(bucket.getId());
+	}
+
+	public Uni<RAGConfiguration> ragConfigurationChatTool(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationChatTool(bucket.getId());
+	}
+
+	public Uni<RAGConfiguration> ragConfigurationSimpleGenerate(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationSimpleGenerate(bucket.getId());
+	}
+
 	@Mutation
 	public Uni<Tuple2<Bucket, Datasource>> removeDatasourceFromBucket(@Id long bucketId, @Id long datasourceId) {
 		return bucketService.removeDatasource(bucketId, datasourceId);
@@ -343,6 +383,27 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysisFromBucket(
 		@Id long bucketId) {
 		return bucketService.unbindQueryAnalysis(bucketId);
+	}
+
+	@Description("""
+		Unbinds the RAGConfiguration from a specified Bucket according to the provided ragType.
+		
+		This mutation removes the link between a RAGConfiguration and a Bucket.
+		It uses the ragType argument to specify the type of binding to remove.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket from which the RAGConfiguration will be unbound.
+		- `ragType` (RAGType!): The type of binding to remove.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket after unbinding the RAGConfiguration.
+		  - `ragConfiguration`: Always null.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, RAGConfiguration>> unbindRAGConfigurationFromBucket(
+		@Id long bucketId, @NonNull RAGType ragType) {
+		return bucketService.unbindRAGConfiguration(bucketId, ragType);
 	}
 
 	@Mutation

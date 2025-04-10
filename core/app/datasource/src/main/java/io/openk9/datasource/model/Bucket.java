@@ -17,12 +17,8 @@
 
 package io.openk9.datasource.model;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,15 +35,18 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
-
-import io.openk9.datasource.model.util.K9Entity;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.eclipse.microprofile.graphql.Ignore;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "bucket")
@@ -199,6 +198,21 @@ public class Bucket extends K9Entity {
 
 	@Transient
 	private boolean enabled = false;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_chat_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationChat;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_chat_tool_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationChatTool;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_simple_generate_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationSimpleGenerate;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {

@@ -17,30 +17,15 @@
 
 package io.openk9.datasource.searcher;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
-
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.JWT;
@@ -54,12 +39,19 @@ import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
+import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
+import io.openk9.searcher.grpc.GetRAGConfigurationsResponse;
+import io.openk9.searcher.grpc.ProviderModel;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -67,6 +59,7 @@ import io.openk9.searcher.grpc.QueryAnalysisToken;
 import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.RAGType;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
@@ -74,9 +67,6 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
-
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -87,12 +77,15 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -114,10 +107,29 @@ import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+
+	@Inject
+	BucketService bucketService;
 
 	@Inject
 	@CacheName("searcher-service")
@@ -125,6 +137,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	GrammarProvider grammarProvider;
@@ -480,11 +495,51 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			: getI18nParent(parent);
 	}
 
+	/**
+	 * Retrieves the {@link RAGConfiguration} associated with the given {@link Bucket}
+	 * based on the specified {@link RAGType}.
+	 *
+	 * <p>This method selects the appropriate {@link RAGConfiguration} from the provided {@link Bucket}
+	 * depending on the given {@code ragType}. If the {@code ragType} is invalid, it returns an
+	 * {@link Uni} failure with {@link Status#INVALID_ARGUMENT}. If the corresponding
+	 * configuration is missing in the bucket, it returns an {@link Uni} failure with {@link Status#NOT_FOUND}.</p>
+	 *
+	 * @param bucket The {@link Bucket} from which to fetch the corresponding {@link RAGConfiguration}.
+	 * @param ragType The {@link RAGType} that specifies which {@link RAGConfiguration} to retrieve.
+	 * @return An {@link Uni} containing the {@link RAGConfiguration}, or an error if the ragType is invalid
+	 *         or if the configuration is missing.
+	 */
+	private static Uni<RAGConfiguration> getRagConfiguration(Bucket bucket, RAGType ragType) {
+
+		Uni<RAGConfiguration> ragConfigurationUni = switch (ragType) {
+			case CHAT_RAG -> Uni.createFrom().item(bucket.getRagConfigurationChat());
+			case CHAT_RAG_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
+			case SIMPLE_GENERATE -> Uni.createFrom().item(bucket.getRagConfigurationSimpleGenerate());
+			default -> Uni.createFrom().failure(
+				new StatusRuntimeException(
+					Status.INVALID_ARGUMENT
+						.withDescription(String.format("Unexpected ragType value: %s", ragType))
+				)
+			);
+		};
+
+		return ragConfigurationUni
+			.onItem().ifNull().failWith(
+				() -> new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription(
+						String.format(
+							"RAGConfiguration of type %s missing for the specified bucket.",
+							ragType.name())
+					)
+				)
+			);
+	}
+
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
 		return getTenant(request.getVirtualHost())
-			.flatMap(tenantResponse -> largeLanguageModelService
-				.fetchCurrentLLMAndBucket(tenantResponse.getSchemaName())
+			.flatMap(tenant -> largeLanguageModelService
+				.fetchCurrentLLMAndBucket(tenant.schemaName())
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
@@ -498,7 +553,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
 						.setApiUrl(llm.getApiUrl())
-						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()))
+						.setContextWindow(llm.getContextWindow())
+						.setRetrieveCitations(llm.getRetrieveCitations());
+
+					if (llm.getProviderModel() != null) {
+						responseBuilder.setProviderModel(
+							ProviderModel.newBuilder()
+								.setProvider(llm.getProviderModel().getProvider())
+								.setModel(llm.getProviderModel().getModel())
+						);
+					}
 
 					if (llm.getApiKey() != null) {
 						responseBuilder.setApiKey(llm.getApiKey());
@@ -511,6 +576,82 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					return responseBuilder.build();
 				})
 			);
+	}
+
+	@Override
+	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
+		GetEmbeddingModelConfigurationsRequest request) {
+
+		return getTenant(request.getVirtualHost())
+			.flatMap(tenant -> embeddingModelService
+				.fetchCurrent(tenant.schemaName())
+				.map(embeddingModel -> {
+					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
+						.setApiUrl(embeddingModel.getApiUrl())
+						.setApiKey(embeddingModel.getApiKey())
+						.setJsonConfig(StructUtils.fromJson(embeddingModel.getJsonConfig()))
+						.setVectorSize(embeddingModel.getVectorSize());
+
+					if (embeddingModel.getProviderModel() != null) {
+						responseBuilder
+							.setProviderModel(
+								ProviderModel.newBuilder()
+									.setProvider(embeddingModel.getProviderModel().getProvider())
+									.setModel(embeddingModel.getProviderModel().getModel())
+						);
+					}
+
+						return responseBuilder.build();
+					}
+				)
+			);
+	}
+
+	/**
+	 * Retrieves the {@link GetRAGConfigurationsResponse} associated with a given virtual host and {@link RAGType}.
+	 *
+	 * <p>This method fetches the current {@link Bucket} based on the provided virtual host,
+	 * loads the necessary RAG configurations according to the {@link RAGType}, and returns
+	 * the corresponding {@link GetRAGConfigurationsResponse}.
+	 * If an error occurs (e.g., invalid {@link RAGType} or missing configuration), it is handled
+	 * and propagated as a gRPC {@link StatusRuntimeException}.
+	 *
+	 * <p>Error Handling:</p>
+	 * <ul>
+	 *   <li>Returns {@link Status#INVALID_ARGUMENT} if the provided RAG type is not recognized.</li>
+	 *   <li>Returns {@link Status#NOT_FOUND} if no matching RAGConfiguration exists for the given bucket.</li>
+	 * </ul>
+	 *
+	 * @param request The {@link GetRAGConfigurationsRequest} containing the virtual host
+	 *                and the RAG type for which the configuration is requested.
+	 * @return A {@link Uni} emitting a {@link GetRAGConfigurationsResponse} containing
+	 *         the requested RAG configuration details.
+	 * @throws StatusRuntimeException if the RAG type is invalid or the configuration is missing.
+	 */
+	@Override
+	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
+		GetRAGConfigurationsRequest request) {
+
+		return bucketService
+				.getCurrentBucket(request.getVirtualHost())
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
+			.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
+			.map(ragConfiguration ->
+				GetRAGConfigurationsResponse.newBuilder()
+					.setName(ragConfiguration.getName())
+					.setChunkWindow(ragConfiguration.getChunkWindow())
+					.setReformulate(ragConfiguration.getReformulate())
+					.setPrompt(ragConfiguration.getPrompt())
+					.setPromptNoRag(ragConfiguration.getPromptNoRag())
+					.setRagToolDescription(ragConfiguration.getRagToolDescription())
+					.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
+					.setJsonConfig(StructUtils.fromJson(ragConfiguration.getJsonConfig()))
+					.build()
+			)
+			.onFailure(StatusRuntimeException.class)
+			.recoverWithUni(error -> Uni.createFrom().failure(error));
 	}
 
 	@Override

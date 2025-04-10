@@ -17,36 +17,24 @@
 
 package io.openk9.datasource.model.dto.base;
 
-import io.openk9.datasource.validation.json.Json;
+import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotNull;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
 
-
 @NoArgsConstructor
 @SuperBuilder
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
-public class LargeLanguageModelDTO extends K9EntityDTO {
-
+@Embeddable
+public class ProviderModelDTO {
+	@Description("The model provider like: OpenAI, Meta, Mistral.")
 	@NotNull
-	@Description("It is the API url of the model that you want to use.")
-	private String apiUrl;
-	@Description("It is the API key that you have to provide in order to make the authentication.")
-	private String apiKey;
-	@Json
-	@Description("It is a JSON that can be used to add additional configurations to the LargeLanguageModel.")
-	private String jsonConfig;
+	private String provider;
+	@Description("The specific model like: GPT-4, LLaMA 2, Mistral 7B.")
 	@NotNull
-	private ProviderModelDTO providerModel;
-	@Description("It is the context window size.")
-	private Integer contextWindow;
-	@Description("It indicates whether the LargeLanguageModel retrieves citations.")
-	private Boolean retrieveCitations;
-
+	private String model;
 }
