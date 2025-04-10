@@ -53,9 +53,9 @@ public class UnboundRAGConfigurationTest {
 	private static final String RAG_CHAT_TOOL_TWO = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 2";
 	private static final String RAG_CHAT_TOOL_THREE = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 3";
 
-	private static int allChatCount = 0;
-	private static int allChatToolCount = 0;
-	private static int allSimpleGenerateCount = 0;
+	private int allChatCount = 0;
+	private int allChatToolCount = 0;
+	private int allSimpleGenerateCount = 0;
 
 	@Inject
 	BucketService bucketService;

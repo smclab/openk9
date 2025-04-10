@@ -498,12 +498,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			case CHAT_RAG -> Uni.createFrom().item(bucket.getRagConfigurationChat());
 			case CHAT_RAG_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
 			case SIMPLE_GENERATE -> Uni.createFrom().item(bucket.getRagConfigurationSimpleGenerate());
-			default -> Uni.createFrom().failure(
-				new StatusRuntimeException(
-					Status.INVALID_ARGUMENT
-						.withDescription(String.format("Unexpected ragType value: %s", ragType))
-				)
-			);
+			default -> Uni.createFrom().failure(new StatusRuntimeException(Status.INVALID_ARGUMENT
+						.withDescription(String.format("Unexpected ragType value: %s", ragType))));
 		};
 
 		return ragConfigurationUni

@@ -499,29 +499,6 @@ public class LargeLanguageModelGraphqlTest {
 		removeLargeLanguageModelTwo();
 	}
 
-	private LargeLanguageModel createLargeLanguageModelOne() {
-		var dto = LargeLanguageModelDTO.builder()
-			.name(LARGE_LANGUAGE_MODEL_ONE_NAME)
-			.apiKey(API_KEY_VALUE)
-			.apiUrl(API_URL_VALUE)
-			.jsonConfig(JSON_CONFIG_EMPTY)
-			.contextWindow(CONTEXT_WINDOW_DEFAULT_VALUE)
-			.retrieveCitations(true)
-			.providerModel(
-				ProviderModelDTO.builder()
-					.provider(PROVIDER_VALUE)
-					.model(MODEL_VALUE)
-					.build()
-			)
-			.build();
-
-		return sessionFactory.withTransaction(
-				session -> largeLanguageModelService.create(session, dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private LargeLanguageModel createLargeLanguageModelTwo() {
 		var dto = LargeLanguageModelDTO.builder()
 			.name(LARGE_LANGUAGE_MODEL_TWO_NAME)
