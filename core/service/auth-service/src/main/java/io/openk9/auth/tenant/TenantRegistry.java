@@ -20,7 +20,6 @@ package io.openk9.auth.tenant;
 import java.time.Duration;
 import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import io.openk9.api.tenantmanager.TenantManager;
@@ -30,21 +29,17 @@ import io.smallrye.mutiny.Uni;
 @ApplicationScoped
 public class TenantRegistry {
 
+	@Inject
+	TenantManager tenantManager;
+
 	public Uni<TenantManager.Tenant> getTenantByVirtualHost(String virtualHost) {
-		return tenantManager.get()
-			.getTenantByVirtualHost(virtualHost)
-			.memoize()
-			.forFixedDuration(Duration.ofMinutes(20));
+		return tenantManager.getTenantByVirtualHost(virtualHost)
+			.memoize().forFixedDuration(Duration.ofMinutes(20));
 	}
 
 	public Uni<List<TenantManager.Tenant>> getTenantList() {
-		return tenantManager.get()
-			.getTenantList()
-			.memoize()
-			.forFixedDuration(Duration.ofMinutes(20));
+		return tenantManager.getTenantList()
+			.memoize().forFixedDuration(Duration.ofMinutes(20));
 	}
-
-	@Inject
-	Instance<TenantManager> tenantManager;
 
 }
