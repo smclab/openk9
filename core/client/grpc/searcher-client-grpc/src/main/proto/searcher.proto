@@ -107,9 +107,9 @@ message GetRAGConfigurationsRequest {
 
 enum RAGType {
   RAG_TYPE_UNSPECIFIED = 0;
-  CHAT = 1;
-  CHAT_TOOL = 2;
-  SEARCH = 3;
+  CHAT_RAG = 1;
+  CHAT_RAG_TOOL = 2;
+  SIMPLE_GENERATE = 3;
 }
 
 message QueryAnalysisToken {

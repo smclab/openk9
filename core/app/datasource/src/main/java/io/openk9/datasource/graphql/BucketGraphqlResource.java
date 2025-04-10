@@ -296,8 +296,8 @@ public class BucketGraphqlResource {
 		return bucketService.getRagConfigurationChatTool(bucket.getId());
 	}
 
-	public Uni<RAGConfiguration> ragConfigurationSearch(@Source Bucket bucket) {
-		return bucketService.getRagConfigurationSearch(bucket.getId());
+	public Uni<RAGConfiguration> ragConfigurationSimpleGenerate(@Source Bucket bucket) {
+		return bucketService.getRagConfigurationSimpleGenerate(bucket.getId());
 	}
 
 	@Mutation

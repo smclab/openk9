@@ -512,9 +512,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static Uni<RAGConfiguration> getRagConfiguration(Bucket bucket, RAGType ragType) {
 
 		Uni<RAGConfiguration> ragConfigurationUni = switch (ragType) {
-			case CHAT -> Uni.createFrom().item(bucket.getRagConfigurationChat());
-			case CHAT_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
-			case SEARCH -> Uni.createFrom().item(bucket.getRagConfigurationSearch());
+			case CHAT_RAG -> Uni.createFrom().item(bucket.getRagConfigurationChat());
+			case CHAT_RAG_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
+			case SIMPLE_GENERATE -> Uni.createFrom().item(bucket.getRagConfigurationSimpleGenerate());
 			default -> Uni.createFrom().failure(
 				new StatusRuntimeException(
 					Status.INVALID_ARGUMENT
@@ -630,7 +630,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return bucketService
 				.getCurrentBucket(request.getVirtualHost())
 			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
-			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSearch()))
+			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
 			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
 			.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
 			.map(ragConfiguration ->

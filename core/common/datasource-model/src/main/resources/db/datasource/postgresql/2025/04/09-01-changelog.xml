@@ -31,4 +31,25 @@
 		</addColumn>
 	</changeSet>
 
+	<changeSet id="1744184228907-2" author="openk9">
+		<renameColumn
+			tableName="bucket"
+			oldColumnName="rag_configuration_search_id"
+			newColumnName="rag_configuration_simple_generate_id"
+		/>
+
+		<dropForeignKeyConstraint
+				baseTableName="bucket"
+				constraintName="fk_bucket_rag_configuration_search"
+		/>
+
+		<addForeignKeyConstraint
+				baseTableName="bucket"
+				baseColumnNames="rag_configuration_simple_generate_id"
+				constraintName="fk_bucket_rag_configuration_simple_generate"
+				referencedTableName="rag_configuration"
+				referencedColumnNames="id"
+		/>
+	</changeSet>
+
 </databaseChangeLog>

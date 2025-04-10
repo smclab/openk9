@@ -86,7 +86,7 @@ public class RAGConfigurationServiceTest {
 	void should_create_rag_configuration_one() {
 		var dto = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
-			.type(RAGType.CHAT)
+			.type(RAGType.CHAT_RAG)
 			.prompt(PROMPT_EXAMPLE)
 			.rephrasePrompt(PROMPT_EXAMPLE)
 			.promptNoRag(PROMPT_EXAMPLE)
@@ -100,7 +100,7 @@ public class RAGConfigurationServiceTest {
 
 		var ragConfigurationOne = getRAGConfigurationOne();
 
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPromptNoRag());
@@ -116,7 +116,7 @@ public class RAGConfigurationServiceTest {
 	void should_create_rag_configuration_one_with_default_fields() {
 		var dto = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
-			.type(RAGType.CHAT)
+			.type(RAGType.CHAT_RAG)
 			.build();
 
 		createRAGConfiguration(dto);
@@ -127,7 +127,7 @@ public class RAGConfigurationServiceTest {
 
 		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
 
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
@@ -144,7 +144,7 @@ public class RAGConfigurationServiceTest {
 		// create the ragConfiguration to patch
 		var dto = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
-			.type(RAGType.CHAT)
+			.type(RAGType.CHAT_RAG)
 			.chunkWindow(DEFAULT_VALUE_CHUNK_WINDOW)
 			.build();
 
@@ -156,7 +156,7 @@ public class RAGConfigurationServiceTest {
 
 		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
 
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
@@ -167,7 +167,7 @@ public class RAGConfigurationServiceTest {
 		// patch the ragConfigurationOne
 		var dtoWithPatch = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
-			.type(RAGType.SEARCH)
+			.type(RAGType.SIMPLE_GENERATE)
 			.chunkWindow(CHUNK_WINDOW)
 			.build();
 
@@ -178,7 +178,7 @@ public class RAGConfigurationServiceTest {
 		ragConfigurationOne = getRAGConfigurationOne();
 
 		// checks that the ragType has not changed and that the chunkWindow has changed
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 
 		removeRAGConfigurationOne();

@@ -210,9 +210,9 @@ public class Bucket extends K9Entity {
 	private RAGConfiguration ragConfigurationChatTool;
 
 	@OneToOne
-	@JoinColumn(name = "rag_configuration_search_id")
+	@JoinColumn(name = "rag_configuration_simple_generate_id")
 	@JsonIgnore
-	private RAGConfiguration ragConfigurationSearch;
+	private RAGConfiguration ragConfigurationSimpleGenerate;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {

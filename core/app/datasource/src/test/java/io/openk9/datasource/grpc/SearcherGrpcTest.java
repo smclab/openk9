@@ -146,9 +146,9 @@ public class SearcherGrpcTest {
 		enableBucket(getBucketOne());
 
 		// RAGConfiguration
-		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT);
-		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_TOOL);
-		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SEARCH);
+		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT_RAG);
+		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
+		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SIMPLE_GENERATE);
 
 		// LargeLanguageModel
 		createLargeLanguageModelOne();
@@ -222,13 +222,13 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG)
 					.build()
 			),
 			response -> {
 				log.info(String.format(
 					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.CHAT.name(),
+					io.openk9.searcher.grpc.RAGType.CHAT_RAG.name(),
 					response.toString()
 				));
 
@@ -247,13 +247,13 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.SEARCH)
+					.setRagType(io.openk9.searcher.grpc.RAGType.SIMPLE_GENERATE)
 					.build()
 			),
 			response -> {
 				log.info(String.format(
 					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.SEARCH.name(),
+					io.openk9.searcher.grpc.RAGType.SIMPLE_GENERATE.name(),
 					response.toString()
 				));
 
@@ -272,13 +272,13 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_TOOL)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG_TOOL)
 					.build()
 			),
 			response -> {
 				log.info(String.format(
 					"getRAGConfigurations %s response: %s",
-					io.openk9.searcher.grpc.RAGType.CHAT_TOOL.name(),
+					io.openk9.searcher.grpc.RAGType.CHAT_RAG_TOOL.name(),
 					response.toString()
 				));
 
@@ -322,7 +322,7 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG)
 					.build()
 			),
 			throwable -> {
@@ -338,7 +338,7 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.SEARCH)
+					.setRagType(io.openk9.searcher.grpc.RAGType.SIMPLE_GENERATE)
 					.build()
 			),
 			throwable -> {
@@ -354,7 +354,7 @@ public class SearcherGrpcTest {
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
 					.setVirtualHost(VIRTUAL_HOST)
-					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_TOOL)
+					.setRagType(io.openk9.searcher.grpc.RAGType.CHAT_RAG_TOOL)
 					.build()
 			),
 			throwable -> {
@@ -469,7 +469,7 @@ public class SearcherGrpcTest {
 					bucketService.create(dto)
 						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
 						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
-						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSearch()))
+						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
 			)
 			.await()
 			.indefinitely();

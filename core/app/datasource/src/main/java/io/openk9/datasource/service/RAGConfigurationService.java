@@ -55,9 +55,9 @@ public class RAGConfigurationService
 	 */
 	private static String getRelevantBucketField(RAGType ragType) {
 		return switch (ragType) {
-			case CHAT -> Bucket_.RAG_CONFIGURATION_CHAT;
-			case CHAT_TOOL -> Bucket_.RAG_CONFIGURATION_CHAT_TOOL;
-			case SEARCH -> Bucket_.RAG_CONFIGURATION_SEARCH;
+			case CHAT_RAG -> Bucket_.RAG_CONFIGURATION_CHAT;
+			case CHAT_RAG_TOOL -> Bucket_.RAG_CONFIGURATION_CHAT_TOOL;
+			case SIMPLE_GENERATE -> Bucket_.RAG_CONFIGURATION_SIMPLE_GENERATE;
 		};
 	}
 

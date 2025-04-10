@@ -276,10 +276,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						.ifNotNull()
 						.transformToUni(ragConfiguration -> {
 							switch (ragConfiguration.getType()) {
-								case CHAT -> bucket.setRagConfigurationChat(ragConfiguration);
-								case CHAT_TOOL ->
+								case CHAT_RAG -> bucket.setRagConfigurationChat(ragConfiguration);
+								case CHAT_RAG_TOOL ->
 									bucket.setRagConfigurationChatTool(ragConfiguration);
-								case SEARCH -> bucket.setRagConfigurationSearch(ragConfiguration);
+								case SIMPLE_GENERATE -> bucket.setRagConfigurationSimpleGenerate(ragConfiguration);
 							}
 
 							return persist(s, bucket)
@@ -675,9 +675,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationChatTool())));
 	}
 
-	public Uni<RAGConfiguration> getRagConfigurationSearch(long bucketId) {
+	public Uni<RAGConfiguration> getRagConfigurationSimpleGenerate(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
-			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationSearch())));
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationSimpleGenerate())));
 	}
 
 	public Uni<SearchConfig> getSearchConfig(long bucketId) {
@@ -1011,9 +1011,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				.ifNotNull()
 				.transformToUni(bucket -> {
 					switch (ragType) {
-						case CHAT -> bucket.setRagConfigurationChat(null);
-						case CHAT_TOOL -> bucket.setRagConfigurationChatTool(null);
-						case SEARCH -> bucket.setRagConfigurationSearch(null);
+						case CHAT_RAG -> bucket.setRagConfigurationChat(null);
+						case CHAT_RAG_TOOL -> bucket.setRagConfigurationChatTool(null);
+						case SIMPLE_GENERATE -> bucket.setRagConfigurationSimpleGenerate(null);
 					}
 
 					return persist(s, bucket)

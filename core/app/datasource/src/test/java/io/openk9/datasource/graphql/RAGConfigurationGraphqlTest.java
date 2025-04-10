@@ -50,8 +50,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 public class RAGConfigurationGraphqlTest {
 
-	private static final String CHUNK_WINDOW = "chunkWindow";
 	private static final String ENTITY_NAME_PREFIX = "RAGConfigurationGraphqlTest - ";
+
+	private static final String CHUNK_WINDOW = "chunkWindow";
 	private static final int CHUNK_WINDOW_VALUE = 1500;
 	private static final int CHUNK_WINDOW_VALUE_UPDATED = 3000;
 	private static final Integer DEFAULT_CHUNK_WINDOW = 0;
@@ -140,7 +141,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_ONE_NAME),
-								prop(TYPE, RAGType.CHAT),
+								prop(TYPE, RAGType.CHAT_RAG),
 								prop(PROMPT, PROMPT_EXAMPLE),
 								prop(REPHRASE_PROMPT, PROMPT_EXAMPLE),
 								prop(PROMPT_NO_RAG, PROMPT_EXAMPLE),
@@ -186,7 +187,7 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationOne = getRagConfigurationOne();
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getPromptNoRag());
@@ -211,7 +212,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_ONE_NAME),
-								prop(TYPE, RAGType.CHAT)
+								prop(TYPE, RAGType.CHAT_RAG)
 							)
 						)
 					),
@@ -249,7 +250,7 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationOne = getRagConfigurationOne();
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
-		assertEquals(RAGType.CHAT, ragConfigurationOne.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
@@ -268,7 +269,7 @@ public class RAGConfigurationGraphqlTest {
 		var initialRagConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
@@ -289,7 +290,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.SEARCH),
+								prop(TYPE, RAGType.SIMPLE_GENERATE),
 								prop(PROMPT, PROMPT_EMPTY),
 								prop(REPHRASE_PROMPT, PROMPT_EMPTY),
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
@@ -336,7 +337,7 @@ public class RAGConfigurationGraphqlTest {
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		// type is an immutable field
-		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());
@@ -353,7 +354,7 @@ public class RAGConfigurationGraphqlTest {
 		var initialRagConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
@@ -374,7 +375,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.CHAT)
+								prop(TYPE, RAGType.CHAT_RAG)
 							)
 						)
 					),
@@ -413,7 +414,7 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getPromptNoRag());
@@ -430,7 +431,7 @@ public class RAGConfigurationGraphqlTest {
 		var initialRagConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
@@ -451,7 +452,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.SEARCH),
+								prop(TYPE, RAGType.SIMPLE_GENERATE),
 								prop(PROMPT, PROMPT_EMPTY),
 								prop(REPHRASE_PROMPT, PROMPT_EMPTY),
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
@@ -498,7 +499,7 @@ public class RAGConfigurationGraphqlTest {
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		// type is an immutable field
-		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getPromptNoRag());
@@ -515,7 +516,7 @@ public class RAGConfigurationGraphqlTest {
 		var initialRagConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, initialRagConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRephrasePrompt());
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getPromptNoRag());
@@ -536,7 +537,7 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.CHAT)
+								prop(TYPE, RAGType.CHAT_RAG)
 							)
 						)
 					),
@@ -575,7 +576,7 @@ public class RAGConfigurationGraphqlTest {
 		var ragConfigurationTwo = getRagConfigurationTwo();
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
-		assertEquals(RAGType.CHAT, ragConfigurationTwo.getType());
+		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRephrasePrompt());
 		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPromptNoRag());
@@ -593,7 +594,7 @@ public class RAGConfigurationGraphqlTest {
 	private RAGConfiguration createRAGConfigurationTwo() {
 		var dto = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_TWO_NAME)
-			.type(RAGType.CHAT)
+			.type(RAGType.CHAT_RAG)
 			.rephrasePrompt(PROMPT_EXAMPLE)
 			.prompt(PROMPT_EXAMPLE)
 			.promptNoRag(PROMPT_EXAMPLE)

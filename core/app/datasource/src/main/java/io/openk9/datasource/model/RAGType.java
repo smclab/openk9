@@ -18,7 +18,7 @@
 package io.openk9.datasource.model;
 
 public enum RAGType {
-	CHAT,
-	CHAT_TOOL,
-	SEARCH
+	CHAT_RAG,
+	CHAT_RAG_TOOL,
+	SIMPLE_GENERATE
 }
