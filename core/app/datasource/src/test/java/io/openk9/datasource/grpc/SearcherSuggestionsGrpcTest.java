@@ -30,6 +30,7 @@ import jakarta.inject.Inject;
 
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -140,7 +141,8 @@ public class SearcherSuggestionsGrpcTest {
 			.await().indefinitely();
 
 		try {
-			var createIndexRequest = new CreateIndexRequest(dataIndex.getIndexName());
+			var indexName = DataIndex.getIndexName("public", dataIndex);
+			var createIndexRequest = new CreateIndexRequest(indexName.value());
 
 			openSearchClient.indices()
 				.create(createIndexRequest, RequestOptions.DEFAULT);
