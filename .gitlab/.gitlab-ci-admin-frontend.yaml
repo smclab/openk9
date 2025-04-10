@@ -67,7 +67,7 @@ Build Admin Frontend:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/admin-ui
     - yarn install

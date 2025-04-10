@@ -67,7 +67,7 @@ Build Tenant Frontend:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/tenant-ui
     - yarn install
