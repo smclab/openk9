@@ -107,25 +107,29 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public Uni<List<String>> getDeletedContentIds(long id) {
-		return sessionFactory.withStatelessTransaction(s -> s
+		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
+			.flatMap(tenant -> s
 				.createNamedQuery(Scheduler.FETCH_BY_ID, Scheduler.class)
 				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
 				.setParameter("schedulerId", id)
-				.getSingleResultOrNull())
-			.flatMap(this::indexesDiff);
+				.getSingleResultOrNull()
+				.flatMap(scheduler -> indexesDiff(tenant.schemaName(), scheduler))
+			)
+		);
 	}
 
 	public Uni<List<String>> getDeletedContentIds(String schedulerId) {
 		return getDeletedContentIds(null, schedulerId);
 	}
 
-	public Uni<List<String>> getDeletedContentIds(String tenant, String scheduleId) {
-		return sessionFactory.withStatelessTransaction(tenant, (s, t) -> s
+	public Uni<List<String>> getDeletedContentIds(String tenantId, String scheduleId) {
+		return sessionFactory.withTransaction(
+				tenantId, (s, t) -> s
 				.createNamedQuery(Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 				.setParameter("scheduleId", scheduleId)
 				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
 				.getSingleResultOrNull())
-			.flatMap(this::indexesDiff);
+			.flatMap(scheduler -> indexesDiff(tenantId, scheduler));
 	}
 
 	@Override
@@ -207,15 +211,15 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			});
 	}
 
-	private Uni<List<String>> indexesDiff(Scheduler scheduler) {
+	private Uni<List<String>> indexesDiff(String tenantId, Scheduler scheduler) {
 		if (scheduler == null) {
 			return Uni.createFrom().item(List.of());
 		}
 
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest.indices(
-			scheduler.getOldDataIndex().getIndexName(),
-			scheduler.getNewDataIndex().getIndexName()
+			DataIndex.getIndexName(tenantId, scheduler.getOldDataIndex()).value(),
+			DataIndex.getIndexName(tenantId, scheduler.getNewDataIndex()).value()
 		);
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();

@@ -50,6 +50,7 @@ public class SchedulerInitializer {
 	public static final String UPDATE_SCHEDULER = "update_scheduler";
 	private static final String INITIALIZE_SCHEDULER = "initialize_scheduler";
 	private static final String SPAWN_CONSUMERS = "spawn_consumers";
+
 	@Inject
 	ActorSystemProvider actorSystemProvider;
 	@Inject

@@ -130,7 +130,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 		var replyTo = sendEvents.replyTo();
 
 		Long datasourceId = scheduler.getDatasourceId();
-		String newDataIndexName = scheduler.getNewDataIndexName();
+		String newDataIndexName = scheduler.getNewIndexName();
 
 		if (list != null) {
 			for (String deletedContentId : list) {

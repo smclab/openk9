@@ -17,10 +17,15 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.searcher.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -33,20 +38,16 @@ import org.opensearch.search.suggest.SuggestBuilders;
 import org.opensearch.search.suggest.phrase.DirectCandidateGeneratorBuilder;
 import org.opensearch.search.suggest.phrase.PhraseSuggestionBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 public class BaseAutoCorrectAnnotator extends BaseAnnotator {
 
 	public BaseAutoCorrectAnnotator(
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
+		TenantWithBucket tenantWithBucket,
+		Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
 		String includeField, String searchKeyword) {
-		super(bucket, annotator, stopWords, null);
+
+		super(tenantWithBucket, annotator, stopWords);
 		this.includeField = includeField;
 		this.searchKeyword = searchKeyword;
 		this.restHighLevelClient = restHighLevelClient;
@@ -70,15 +71,7 @@ public class BaseAutoCorrectAnnotator extends BaseAnnotator {
 		SuggestBuilder suggestBuilder =
 			new SuggestBuilder().addSuggestion("suggestion", builder);
 
-		String[] indexNames =
-			bucket
-				.getDatasources()
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getIndexName)
-				.toArray(String[]::new);
-
-		SearchRequest searchRequest = new SearchRequest(indexNames);
+		SearchRequest searchRequest = new SearchRequest(tenantWithBucket.getIndexNames());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

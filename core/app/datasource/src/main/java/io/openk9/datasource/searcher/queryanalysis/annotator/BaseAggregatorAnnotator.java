@@ -17,17 +17,25 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.Supplier;
+
 import io.openk9.datasource.mapper.FuzzinessMapper;
 import io.openk9.datasource.model.AclMapping;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Tuple;
+
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -42,35 +50,28 @@ import org.opensearch.search.aggregations.Aggregations;
 import org.opensearch.search.aggregations.bucket.terms.Terms;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.Supplier;
-
 abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 	public BaseAggregatorAnnotator(
-		Bucket bucket,
+		TenantWithBucket tenantWithBucket,
 		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		String tenantId, JWT jwt,
+		List<String> stopWords,
+		RestHighLevelClient restHighLevelClient,
+		JWT jwt,
 		String...keywords) {
-		this(
-			bucket, annotator, stopWords, restHighLevelClient, tenantId, jwt,
-			List.of(keywords));
+
+		this(tenantWithBucket, annotator, stopWords, restHighLevelClient, jwt, List.of(keywords));
 	}
 
 	public BaseAggregatorAnnotator(
-		Bucket bucket,
+		TenantWithBucket tenantWithBucket,
 		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords, RestHighLevelClient restHighLevelClient,
-		String tenantId, JWT jwt,
+		List<String> stopWords,
+		RestHighLevelClient restHighLevelClient,
+		JWT jwt,
 		List<String> keywords) {
-		super(bucket, annotator, stopWords, tenantId);
+
+		super(tenantWithBucket, annotator, stopWords);
 		this.keywords = keywords;
 		this.restHighLevelClient = restHighLevelClient;
 		this.jwt = jwt;
@@ -104,6 +105,8 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		builder.must(boolQueryBuilder);
 
+		var bucket = tenantWithBucket.getBucket();
+
 		Iterator<AclMapping> iterator =
 			bucket.getDatasources()
 				.stream()
@@ -131,15 +134,8 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 
 		builder.filter(innerQuery);
 
-		String[] indexNames =
-			bucket
-				.getDatasources()
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getIndexName)
-				.toArray(String[]::new);
-
-		SearchRequest searchRequest = new SearchRequest(indexNames);
+		SearchRequest searchRequest =
+			new SearchRequest(tenantWithBucket.getIndexNames());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -176,8 +172,8 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 				for (Aggregation aggregation : aggregations) {
 
 					Terms terms = (Terms) aggregation;
-					for (Terms.Bucket bucket : terms.getBuckets()) {
-						String keyAsString = bucket.getKeyAsString();
+					for (Terms.Bucket termBucket : terms.getBuckets()) {
+						String keyAsString = termBucket.getKeyAsString();
 
 						if (token.equalsIgnoreCase(keyAsString)) {
 							return List.of(_createCategorySemantics(

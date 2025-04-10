@@ -29,6 +29,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 
@@ -36,7 +37,6 @@ import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
@@ -44,41 +44,38 @@ public class GrammarProvider {
 
 	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
 
-		Uni<Tuple2<String, Bucket>> getTenantUni = _getBucket(virtualHost);
+		return getTenantWithBucket(virtualHost)
+			.map(tenantWithBucket -> {
 
-		return getTenantUni
-			.map(t2 -> {
+				var bucket = tenantWithBucket.getBucket();
+				var tenantId = tenantWithBucket.getTenant().schemaName();
 
-				String schemaName = t2.getItem1();
-				Bucket b = t2.getItem2();
+				QueryAnalysis queryAnalysis = bucket.getQueryAnalysis();
 
-				if (b != null) {
-					QueryAnalysis queryAnalysis = b.getQueryAnalysis();
+				Set<Rule> rules = queryAnalysis.getRules();
 
-					Set<Rule> rules = queryAnalysis.getRules();
+				List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
+					_toGrammarRule(rules);
 
-					List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
-						_toGrammarRule(rules);
+				List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator>
+					mappedAnnotators =
+					_toAnnotator(tenantWithBucket, queryAnalysis, jwt);
 
-					List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList(), jwt);
+				GrammarMixin grammarMixin = GrammarMixin.of(
+					mappedRules, mappedAnnotators);
 
-					GrammarMixin grammarMixin = GrammarMixin.of(
-						mappedRules, mappedAnnotators);
-
-					return new Grammar(schemaName, List.of(grammarMixin));
-				}
-				else {
-					return new Grammar(schemaName, List.of());
-				}
+				return new Grammar(tenantId, List.of(grammarMixin));
 			});
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		String schemaName, Bucket bucket, List<String> stopWords, JWT jwt) {
-		return bucket.getQueryAnalysis().getAnnotators()
+		TenantWithBucket tenantWithBucket, QueryAnalysis queryAnalysis, JWT jwt) {
+
+		var stopWords = queryAnalysis.getStopWordsList();
+
+		return queryAnalysis.getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords, jwt))
+			.map(a -> annotatorFactory.getAnnotator(tenantWithBucket, a, stopWords, jwt))
 			.toList();
 	}
 
@@ -101,27 +98,19 @@ public class GrammarProvider {
 	@Inject
 	AnnotatorFactory annotatorFactory;
 
-	private Uni<Tuple2<String, Bucket>> _getBucket(String virtualHost) {
+	private Uni<TenantWithBucket> getTenantWithBucket(String virtualHost) {
 		return QuarkusCacheUtil.getAsync(
 			cache,
-			new CompositeCacheKey(virtualHost, "grammarProvider", "_getBucket"),
+			new CompositeCacheKey(virtualHost, "grammarProvider", "getTenantWithBucket"),
 			tenantRegistry
 				.getTenantByVirtualHost(virtualHost)
 				.flatMap(tenant -> sessionFactory
 					.withTransaction(
 						tenant.schemaName(), (s, t) -> s
-						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
-						.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
-						.getSingleResult()
-						.onItemOrFailure()
-						.transform((bucket, throwable) -> {
-							if (throwable != null) {
-								return Tuple2.of(tenant.schemaName(), null);
-							}
-							else {
-								return Tuple2.of(tenant.schemaName(), bucket);
-							}
-						})
+							.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
+							.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
+							.getSingleResult()
+							.map(bucket -> new TenantWithBucket(tenant, bucket))
 					)
 				)
 		);

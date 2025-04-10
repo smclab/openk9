@@ -15,15 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.model;
 
-import java.util.Map;
-import jakarta.annotation.Nonnull;
-
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.EmbeddingModel;
-
-public record DataIndexTemplate(
-	@Nonnull String tenantId, Map<String, Object> settings,
-	@Nonnull DataIndex dataIndex, EmbeddingModel embeddingModel
-) {}
+public record SchemaName(String value) {
+}

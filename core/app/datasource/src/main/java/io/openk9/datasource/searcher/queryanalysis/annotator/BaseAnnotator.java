@@ -17,26 +17,19 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+
 abstract class BaseAnnotator implements Annotator {
 
-	public BaseAnnotator(
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopwords, String tenantId) {
-		this.bucket = bucket;
-		this.annotator = annotator;
-		this.stopWords = stopwords;
-		this.tenantId = tenantId;
-	}
+	protected final TenantWithBucket tenantWithBucket;
 
 	protected QueryBuilder query(String field, String token) {
 		return QueryBuilders.fuzzyQuery(field, token);
@@ -85,12 +78,19 @@ abstract class BaseAnnotator implements Annotator {
 		return Integer.compare(this.weight(), o.weight());
 	}
 
-	protected final Bucket bucket;
+	public BaseAnnotator(
+		TenantWithBucket tenantWithBucket,
+		io.openk9.datasource.model.Annotator annotator,
+		List<String> stopWords) {
+
+		this.tenantWithBucket = tenantWithBucket;
+		this.annotator = annotator;
+		this.stopWords = stopWords;
+
+	}
 
 	protected final io.openk9.datasource.model.Annotator annotator;
 
 	protected final List<String> stopWords;
-
-	protected final String tenantId;
 
 }

@@ -17,25 +17,29 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.util.JWT;
-import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
-import org.opensearch.client.RestHighLevelClient;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+
+import org.opensearch.client.RestHighLevelClient;
+
 public class AggregatorAnnotator extends BaseAggregatorAnnotator {
 
 	public AggregatorAnnotator(
 		String keyword,
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords, RestHighLevelClient restHighLevelClient, JWT jwt) {
-		super(bucket, annotator, stopWords, restHighLevelClient, null, jwt,
-			keyword);
+		TenantWithBucket tenantWithBucket,
+		Annotator annotator,
+		List<String> stopWords,
+		RestHighLevelClient restHighLevelClient,
+		JWT jwt) {
+
+		super(tenantWithBucket, annotator, stopWords, restHighLevelClient, jwt, keyword);
 	}
 
 	@Override

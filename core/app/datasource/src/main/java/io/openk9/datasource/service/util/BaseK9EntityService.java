@@ -37,12 +37,15 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
+import io.openk9.api.tenantmanager.TenantManager;
+import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.datasource.mapper.K9EntityMapper;
+import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
@@ -73,6 +76,8 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	protected Validator validator;
 	@Inject
 	Logger logger;
+	@Inject
+	protected TenantRegistry tenantRegistry;
 
 	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();
@@ -328,6 +333,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 		return create(mapper.create(dto));
 
+	}
+
+	protected Uni<TenantManager.Tenant> getCurrentTenant(Mutiny.Session session) {
+		return session.find(TenantBinding.class, 1L)
+			.map(TenantBinding::getVirtualHost)
+			.flatMap(tenantRegistry::getTenantByVirtualHost);
 	}
 
 	@Override

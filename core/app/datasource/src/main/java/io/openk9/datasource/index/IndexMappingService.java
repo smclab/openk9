@@ -201,11 +201,11 @@ public class IndexMappingService {
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
 	 */
 	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
-		Mutiny.Session session, String indexName) {
+		Mutiny.Session session, IndexName indexName) {
 
-		return indexService.getMappings(indexName)
+		return indexService.getMappings(indexName.value())
 			.flatMap(mappings -> indexService
-				.getDocumentTypes(indexName)
+				.getDocumentTypes(indexName.value())
 				.flatMap(documentTypes -> generateDocTypeFields(
 					session, mappings, documentTypes)));
 	}
@@ -276,28 +276,25 @@ public class IndexMappingService {
 		ComposableIndexTemplate composableIndexTemplate = null;
 
 		try {
-			String indexName = null;
-
-			if (tenantId != null) {
-				indexName = DataIndex.getIndexName(tenantId, dataIndex);
-			}
-			else {
-				indexName = dataIndex.getIndexName();
-			}
+			IndexName indexName = DataIndex.getIndexName(tenantId, dataIndex);
 
 			List<String> componentTemplates = new ArrayList<>();
 
 			// adds the knn component template on this indexTemplate
 			if (dataIndex.getKnnIndex() && embeddingModel != null) {
 
-				var componentTemplate = EmbeddingComponentTemplate
-					.fromEmbeddingModel(embeddingModel);
+				var componentTemplate = new EmbeddingComponentTemplate(
+					tenantId,
+					embeddingModel.getName(),
+					embeddingModel.getVectorSize()
+				);
+
 				componentTemplates.add(componentTemplate.getName());
 
 			}
 
 			composableIndexTemplate = new ComposableIndexTemplate(
-				List.of(indexName),
+				List.of(indexName.value()),
 				new Template(
 					settings, new CompressedXContent(
 					Json.encode(mappings)), null

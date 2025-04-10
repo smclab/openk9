@@ -27,6 +27,7 @@ import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
@@ -265,7 +266,7 @@ public class EmbeddingService {
 			cache,
 			new CompositeCacheKey(request),
 			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-					getEmbeddingConfiguration(s, request.tenantId)
+					getEmbeddingConfiguration(s, request.tenantId())
 					.onItem().ifNull().failWith(ConfigurationNotFound::new)
 					.flatMap(embeddingConfiguration -> s.createNamedQuery(
 							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
@@ -284,7 +285,9 @@ public class EmbeddingService {
 								dataIndex.getChunkType(),
 								dataIndex.getChunkWindowSize(),
 								dataIndex.getEmbeddingJsonConfig(),
-								dataIndex.getIndexName()
+								DataIndex.getIndexName(
+										request.tenantId(), dataIndex)
+									.value()
 							);
 						})
 					))

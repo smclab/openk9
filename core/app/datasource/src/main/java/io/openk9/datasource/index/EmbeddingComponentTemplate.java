@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.index;
 
-import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.util.OpenSearchUtils;
 
 public record EmbeddingComponentTemplate(
@@ -29,15 +28,6 @@ public record EmbeddingComponentTemplate(
 		assert embeddingModelName != null && !embeddingModelName.isEmpty();
 		assert tenantId != null && !tenantId.isEmpty();
 		assert vectorSize > 0;
-	}
-
-	public static EmbeddingComponentTemplate fromEmbeddingModel(EmbeddingModel embeddingModel) {
-
-		return new EmbeddingComponentTemplate(
-			embeddingModel.getTenant(),
-			embeddingModel.getName(),
-			embeddingModel.getVectorSize()
-		);
 	}
 
 	@Override

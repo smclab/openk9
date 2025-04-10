@@ -34,6 +34,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import io.openk9.datasource.index.IndexName;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -74,11 +75,10 @@ public class DataIndex extends K9Entity {
 	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
 		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 
-	public static String getIndexName(String tenantId, DataIndex dataIndex) {
-		return OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", tenantId, dataIndex.getName())
-		);
-	}
+	@Transient
+	@Setter(AccessLevel.NONE)
+	@Getter(AccessLevel.NONE)
+	private IndexName indexName;
 
 	@Column(
 		name = "name", nullable = false, unique = true, updatable = false)
@@ -107,10 +107,10 @@ public class DataIndex extends K9Entity {
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
 
-	@Transient
-	@Setter(AccessLevel.NONE)
-	@Getter(AccessLevel.NONE)
-	private String indexName;
+	public static IndexName getIndexName(String tenantId, DataIndex dataIndex) {
+		return new IndexName(OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, dataIndex.getName())));
+	}
 
 	@Transient
 	@JsonIgnore
@@ -138,14 +138,6 @@ public class DataIndex extends K9Entity {
 	@Column(name = "embedding_json_config")
 	private String embeddingJsonConfig = DEFAULT_EMBEDDING_JSON_CONFIG;
 
-	public String getIndexName() throws UnknownTenantException {
-		if (indexName == null) {
-			initIndexName();
-		}
-
-		return indexName;
-	}
-
 	public void setChunkType(EmbeddingOuterClass.ChunkType chunkType) {
 		this.chunkType =
 			Objects.requireNonNullElse(chunkType, DEFAULT_CHUNK_TYPE);
@@ -159,10 +151,6 @@ public class DataIndex extends K9Entity {
 	public void setEmbeddingJsonConfig(String embeddingJsonConfig) {
 		this.embeddingJsonConfig =
 			Objects.requireNonNullElse(embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
-	}
-
-	protected void initIndexName() throws UnknownTenantException {
-		this.indexName = getIndexName(getTenant(), this);
 	}
 
 }

@@ -21,7 +21,6 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
@@ -161,20 +160,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		defaultValue = "200"
 	)
 	Integer maxSearchPageSize;
-
-	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
-		var indexNames = new HashSet<String>();
-
-		var datasources = tenant.getDatasources();
-
-		for (Datasource datasource : datasources) {
-			var dataIndex = datasource.getDataIndex();
-
-			indexNames.add(dataIndex.getIndexName());
-		}
-
-		return indexNames.toArray(String[]::new);
-	}
 
 	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
 		String requestLanguage = request.getLanguage();
@@ -843,22 +828,22 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
 					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
-				.flatMap(bucket -> {
+				.flatMap(tenantWithBucket -> {
 
-					if (bucket == null) {
+					if (tenantWithBucket == null) {
 						return Uni.createFrom().item(QueryParserResponse
 							.newBuilder()
 							.build()
 						);
 					}
 
+					var bucket = tenantWithBucket.getBucket();
+
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
 					String language = _getLanguage(request, bucket);
 
 					var searchSourceBuilder = _getSearchSourceBuilder(request, bucket, language);
-
-					String[] indexNames = _getIndexNames(request, bucket);
 
 					Map<String, String> queryParams;
 
@@ -885,7 +870,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							)
 							.map(searchSource -> QueryParserResponse.newBuilder()
 								.setQuery(searchSourceBuilderToOutput(searchSource))
-								.addAllIndexName(List.of(indexNames))
+								.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 								.putAllQueryParameters(queryParams)
 								.build());
 
@@ -903,7 +888,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								return QueryParserResponse
 									.newBuilder()
 									.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
-									.addAllIndexName(List.of(indexNames))
+									.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 									.putAllQueryParameters(queryParams)
 									.build();
 
@@ -932,9 +917,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					getTenantAndFetchRelations(
 						request.getVirtualHost(), true, request.getSuggestionCategoryId())
 				)
-				.flatMap(tenant -> {
+				.flatMap(tenantWithBucket -> {
 
-					if (tenant == null) {
+					if (tenantWithBucket == null) {
 						return Uni.createFrom().item(
 							SuggestionsResponse
 								.newBuilder()
@@ -942,8 +927,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						);
 					}
 
+					var bucket = tenantWithBucket.getBucket();
+
 					Set<SuggestionCategory> suggestionCategories =
-						tenant.getSuggestionCategories();
+						bucket.getSuggestionCategories();
 
 					if (suggestionCategories == null || suggestionCategories.isEmpty()) {
 						return Uni.createFrom().item(
@@ -955,10 +942,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-					String language = _getLanguage(request, tenant);
+					String language = _getLanguage(request, bucket);
 
 					return createBoolQuery(
-						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language)
+						tokenGroup, bucket, JWT.of(request.getJwt()), extraParams, language)
 						.flatMap(boolQueryBuilder -> {
 
 							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -972,7 +959,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							List<DocTypeField> docTypeFieldList =
 								Utils
-									.getDocTypeFieldsFrom(tenant)
+									.getDocTypeFieldsFrom(bucket)
 									.filter(docTypeField -> !docTypeField.isI18N())
 									.toList();
 
@@ -1079,7 +1066,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							searchSourceBuilder.from(0);
 							searchSourceBuilder.size(0);
 
-							SearchConfig searchConfig = tenant.getSearchConfig();
+							SearchConfig searchConfig = bucket.getSearchConfig();
 
 							if (searchConfig != null && searchConfig.isMinScoreSuggestions()) {
 								searchSourceBuilder.minScore(searchConfig.getMinScore());
@@ -1087,10 +1074,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							searchSourceBuilder.highlighter(null);
 
-							String[] indexNames = _getIndexNames(request, tenant);
-
 							SearchRequest searchRequest =
-								new SearchRequest(indexNames, searchSourceBuilder);
+								new SearchRequest(
+									tenantWithBucket.getIndexNames(),
+									searchSourceBuilder
+								);
 
 							Uni<SearchResponse> searchResponseUni = _search(searchRequest);
 
@@ -1150,9 +1138,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									};
 								}
 
-								for (CompositeAggregation.Bucket bucket : buckets) {
+								for (CompositeAggregation.Bucket aggregationBucket : buckets) {
 
-									Map<String, Object> keys = new HashMap<>(bucket.getKey());
+									Map<String, Object> keys = new HashMap<>(
+										aggregationBucket.getKey());
 
 									for (Map.Entry<String, Object> entry : keys.entrySet()) {
 
@@ -1166,7 +1155,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 											continue;
 										}
 
-										long docCount = bucket.getDocCount();
+										long docCount = aggregationBucket.getDocCount();
 
 										addSuggestions.accept(
 											value,

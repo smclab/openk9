@@ -21,6 +21,7 @@ import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
+
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -61,7 +62,7 @@ public class EvaluateStatus extends AbstractBehavior<AggregateItem.Command> {
 		if (scheduler.getLastIngestionDate() == null && !scheduler.isNewIndex()) {
 			log.infof(
 				"Nothing was changed during this Scheduling on %s index.",
-				scheduler.getOldDataIndexName()
+				scheduler.getOldIndexName()
 			);
 		}
 

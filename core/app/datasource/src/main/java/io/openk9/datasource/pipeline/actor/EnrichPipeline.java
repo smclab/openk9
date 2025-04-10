@@ -411,7 +411,7 @@ public class EnrichPipeline {
 
 		dataPayload.setIndexName(scheduler.getIndexName());
 
-		String oldDataIndexName = scheduler.getOldDataIndexName();
+		String oldDataIndexName = scheduler.getOldIndexName();
 		if (oldDataIndexName != null) {
 			dataPayload.setOldIndexName(oldDataIndexName);
 		}

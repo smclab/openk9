@@ -83,10 +83,11 @@ public class JobSchedulerService {
 	Mutiny.SessionFactory sessionFactory;
 
 	public static CompletableFuture<Void> callHttpPluginDriverClient(
-		Scheduler scheduler,
+		String tenantName, Scheduler scheduler,
 		OffsetDateTime lastIngestionDate) {
 
 		var request = new CallHttpPluginDriverRequest(
+			tenantName,
 			scheduler,
 			lastIngestionDate
 		);
@@ -108,10 +109,10 @@ public class JobSchedulerService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<Void> copyIndexTemplate(Scheduler scheduler) {
+	public static CompletableFuture<Void> copyIndexTemplate(String tenantId, Scheduler scheduler) {
 
 		CopyIndexTemplateRequest request =
-			new CopyIndexTemplateRequest(scheduler);
+			new CopyIndexTemplateRequest(tenantId, scheduler);
 
 		return EventBusInstanceHolder.getEventBus()
 			.<Void>request(COPY_INDEX_TEMPLATE, request)
@@ -145,9 +146,10 @@ public class JobSchedulerService {
 	}
 
 	public static CompletableFuture<TriggerType> getTriggerType(
-		Datasource datasource, boolean reindex) {
+		String tenantId, Datasource datasource, boolean reindex) {
 
-		var request = new TriggerDatasourceRequest(datasource, reindex);
+		var request = new TriggerDatasourceRequest(
+			tenantId, datasource, reindex);
 
 		return EventBusInstanceHolder.getEventBus()
 			.<TriggerType>request(TRIGGER_DATASOURCE, request)
@@ -186,11 +188,10 @@ public class JobSchedulerService {
 	@ConsumeEvent(CALL_PLUGIN_DRIVER)
 	Uni<Void> callPluginDriver(CallHttpPluginDriverRequest request) {
 
+		var tenantName = request.tenantName();
 		var scheduler = request.scheduler();
 		var lastIngestionDate = request.lastIngestionDate();
-
 		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
 		var pluginDriver = datasource.getPluginDriver();
 
 		var httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
@@ -200,7 +201,7 @@ public class JobSchedulerService {
 			HttpPluginDriverContext
 				.builder()
 				.timestamp(lastIngestionDate)
-				.tenantId(tenantId)
+				.tenantId(tenantName)
 				.datasourceId(datasource.getId())
 				.scheduleId(scheduler.getScheduleId())
 				.datasourceConfig(new JsonObject(datasource.getJsonConfig()).getMap())
@@ -228,13 +229,14 @@ public class JobSchedulerService {
 		var scheduler = request.scheduler();
 
 		DataIndex oldDataIndex = scheduler.getOldDataIndex();
+		var oldIndexName = DataIndex.getIndexName(request.tenantId(), oldDataIndex).value();
 		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		String newDataIndexName = newDataIndex.getIndexName();
+		String newIndexName = DataIndex.getIndexName(request.tenantId(), newDataIndex).value();
 
 		IndicesClient indices = restHighLevelClient.indices();
 
 		var getIndexTemplateRequest = new GetComposableIndexTemplateRequest(
-			oldDataIndex.getIndexName() + "-template");
+			oldIndexName + "-template");
 
 		return Uni.createFrom()
 			.emitter(emitter -> indices.getIndexTemplateAsync(
@@ -270,7 +272,7 @@ public class JobSchedulerService {
 
 								ComposableIndexTemplate newComposableIndexTemplate =
 									new ComposableIndexTemplate(
-										List.of(newDataIndexName),
+										List.of(newIndexName),
 										new Template(
 											template.settings(),
 											template.mappings(),
@@ -283,7 +285,7 @@ public class JobSchedulerService {
 									);
 
 								templateRequest
-									.name(newDataIndexName + "-template")
+									.name(newIndexName + "-template")
 									.indexTemplate(newComposableIndexTemplate);
 
 								indices.putIndexTemplateAsync(
@@ -354,8 +356,8 @@ public class JobSchedulerService {
 	@ConsumeEvent(TRIGGER_DATASOURCE)
 	Uni<TriggerType> triggerDatasource(TriggerDatasourceRequest request) {
 
+		var tenantId = request.tenantId();
 		var datasource = request.datasource();
-		var tenantId = datasource.getTenant();
 		var reindex = request.reindex();
 
 		return sessionFactory.withTransaction(
@@ -406,12 +408,12 @@ public class JobSchedulerService {
 	}
 
 	private record CallHttpPluginDriverRequest(
-		Scheduler scheduler, OffsetDateTime lastIngestionDate
+		String tenantName, Scheduler scheduler, OffsetDateTime lastIngestionDate
 	) {}
 
 	private record CancelSchedulerRequest(String tenantId, long schedulerId) {}
 
-	private record CopyIndexTemplateRequest(Scheduler scheduler) {}
+	private record CopyIndexTemplateRequest(String tenantId, Scheduler scheduler) {}
 
 	private record FetchDatasourceConnectionRequest(
 		String tenantId, long datasourceId
@@ -423,6 +425,8 @@ public class JobSchedulerService {
 		String tenantId, Scheduler scheduler
 	) {}
 
-	private record TriggerDatasourceRequest(Datasource datasource, Boolean reindex) {}
+	private record TriggerDatasourceRequest(
+		String tenantId, Datasource datasource, Boolean reindex
+	) {}
 
 }

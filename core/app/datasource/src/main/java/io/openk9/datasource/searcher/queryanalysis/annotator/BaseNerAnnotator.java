@@ -17,9 +17,16 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import io.openk9.datasource.mapper.FuzzinessMapper;
-import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.searcher.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -31,20 +38,15 @@ import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 public class BaseNerAnnotator extends BaseAnnotator {
 
 	public BaseNerAnnotator(
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords, String category,
-		RestHighLevelClient restHighLevelClient,
-		String tenantId) {
-		super(bucket, annotator, stopWords, tenantId);
+		TenantWithBucket tenantWithBucket,
+		Annotator annotator,
+		List<String> stopWords,
+		String category,
+		RestHighLevelClient restHighLevelClient) {
+		super(tenantWithBucket, annotator, stopWords);
 		this.category = category;
 		this.restHighLevelClient = restHighLevelClient;
 	}
@@ -79,8 +81,10 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			}
 		}
 
-		SearchRequest searchRequest = new SearchRequest(
-			tenantId + "-entity");
+		var tenant = tenantWithBucket.getTenant();
+		var tenantId = tenant.schemaName();
+
+		SearchRequest searchRequest = new SearchRequest(tenantId + "-entity");
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

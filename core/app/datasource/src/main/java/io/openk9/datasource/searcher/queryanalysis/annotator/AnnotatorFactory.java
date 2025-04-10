@@ -17,45 +17,47 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.util.JWT;
+import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.opensearch.client.RestHighLevelClient;
 
-import java.util.List;
+import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.TenantWithBucket;
+
+import org.opensearch.client.RestHighLevelClient;
 
 @ApplicationScoped
 public class AnnotatorFactory {
 
 	public Annotator getAnnotator(
-		String schemaName, Bucket bucket,
+		TenantWithBucket tenantWithBucket,
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords, JWT jwt) {
 
 		return switch (annotator.getType()) {
-			case TOKEN -> new TokenAnnotator(bucket, annotator, stopWords);
-			case KEYWORD -> new KeywordAnnotator(bucket, annotator, stopWords);
-			case STOPWORD -> new StopWordsAnnotator(bucket, annotator, stopWords);
+			case TOKEN -> new TokenAnnotator(tenantWithBucket, annotator, stopWords);
+			case KEYWORD -> new KeywordAnnotator(tenantWithBucket, annotator, stopWords);
+			case STOPWORD -> new StopWordsAnnotator(tenantWithBucket, annotator, stopWords);
 			case NER -> new BaseNerAnnotator(
-				bucket, annotator, stopWords, annotator.getFieldName(), client, schemaName);
+				tenantWithBucket, annotator, stopWords, annotator.getFieldName(), client);
 			case DOCTYPE -> new DocTypeAnnotator(
-				bucket, annotator, stopWords, client, jwt);
+				tenantWithBucket, annotator, stopWords, client, jwt);
 			case AGGREGATOR -> new AggregatorAnnotator(
 				annotator.getDocTypeField().getPath(),
-				bucket, annotator, stopWords, client, jwt);
+				tenantWithBucket, annotator, stopWords, client, jwt
+			);
 			case AUTOCOMPLETE -> new BaseAutoCompleteAnnotator(
-				bucket, annotator, stopWords, client,
+				tenantWithBucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath(), jwt);
 			case KEYWORD_AUTOCOMPLETE -> new BaseKeywordAutoCompleteAnnotator(
-				bucket, annotator, stopWords, client,
+				tenantWithBucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath(), jwt);
 			case NER_AUTOCOMPLETE -> new BaseAutoCompleteNerAnnotator(
-				bucket, annotator, stopWords, annotator.getFieldName(), client, schemaName);
+				tenantWithBucket, annotator, stopWords, annotator.getFieldName(), client);
 			case AUTOCORRECT -> new BaseAutoCorrectAnnotator(
-				bucket, annotator, stopWords, client,
+				tenantWithBucket, annotator, stopWords, client,
 				annotator.getFieldName(),
 				annotator.getDocTypeField().getPath());
 		};

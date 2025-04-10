@@ -316,13 +316,13 @@ public abstract class BaseSearchService {
 	}
 
 
-	protected Uni<Bucket> getTenantAndFetchRelations(
+	protected Uni<TenantWithBucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
 		return tenantRegistry.getTenantByVirtualHost(virtualHost)
-			.flatMap(tenantResponse -> sf
+			.flatMap(tenant -> sf
 				.withTransaction(
-					tenantResponse.schemaName(), (s, t) -> {
+					tenant.schemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -336,7 +336,10 @@ public abstract class BaseSearchService {
 					return s
 						.createQuery(criteriaQuery)
 						.getSingleResultOrNull();
-				}));
+					}
+				)
+				.map(bucket -> new TenantWithBucket(tenant, bucket))
+			);
 
 	}
 

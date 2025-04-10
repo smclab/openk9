@@ -38,15 +38,16 @@ import org.mapstruct.Mappings;
 public interface SchedulerMapper {
 
 	@Mappings({
-		@Mapping(source = "datasource.id", target = "datasourceId"),
-		@Mapping(source = "datasource.enrichPipeline", target = "enrichItems"),
-		@Mapping(source = "oldDataIndex.id", target = "oldDataIndexId"),
-		@Mapping(source = "oldDataIndex.indexName", target = "oldDataIndexName"),
-		@Mapping(source = "newDataIndex.id", target = "newDataIndexId"),
-		@Mapping(source = "newDataIndex.indexName", target = "newDataIndexName"),
-		@Mapping(source = "datasource", target = "schedulingType")
+		@Mapping(source = "scheduler.datasource.id", target = "datasourceId"),
+		@Mapping(source = "scheduler.datasource.enrichPipeline", target = "enrichItems"),
+		@Mapping(source = "scheduler.oldDataIndex.id", target = "oldDataIndexId"),
+		@Mapping(source = "scheduler.oldDataIndex.name", target = "oldDataIndexName"),
+		@Mapping(source = "scheduler.newDataIndex.id", target = "newDataIndexId"),
+		@Mapping(source = "scheduler.newDataIndex.name", target = "newDataIndexName"),
+		@Mapping(source = "scheduler.datasource", target = "schedulingType"),
+		@Mapping(source = "tenantId", target = "tenantId")
 	})
-	SchedulerDTO map(Scheduler source);
+	SchedulerDTO map(Scheduler scheduler, String tenantId);
 
 	EnrichItemDTO map(EnrichItem source);
 
