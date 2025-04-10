@@ -4,7 +4,7 @@ import { SearchDateRange } from "../embeddable/Main";
 import "./dateRangePickerVertical.css";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
-import { formatterLanguage, mappingNameLanguage } from "./CalendarModal";
+import { mappingNameLanguage } from "./CalendarModal";
 import "moment/locale/de";
 import "moment/locale/it";
 import "moment/locale/es";
@@ -161,7 +161,6 @@ export function DataRangePickerVertical({
             display: flex;
             border: 1px solid gray;
             border-radius: 8px;
-            gap: 20px;
           `}
         >
           <label
