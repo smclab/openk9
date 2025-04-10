@@ -88,7 +88,7 @@ public class RAGConfigurationGraphqlResource {
 	@Query
 	public Uni<List<RAGConfiguration>> getUnboundRAGConfigurationByBucket(
 		@Id long bucketId, @NonNull RAGType ragType) {
-		return service.findRAGConfigurationByBucket(bucketId, ragType);
+		return service.findUnboundRAGConfigurationByBucket(bucketId, ragType);
 	}
 
 	@Mutation

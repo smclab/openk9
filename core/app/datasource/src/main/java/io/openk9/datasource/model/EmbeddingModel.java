@@ -75,10 +75,10 @@ public class EmbeddingModel extends K9Entity {
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "type", column = @Column(name = "type")),
+		@AttributeOverride(name = "provider", column = @Column(name = "provider")),
 		@AttributeOverride(name = "model", column = @Column(name = "model"))
 	})
-	private ModelType modelType;
+	private ProviderModel providerModel;
 
 	@Transient
 	private boolean enabled = false;
@@ -88,7 +88,7 @@ public class EmbeddingModel extends K9Entity {
 		this.enabled = tenantBinding != null;
 	}
 
-	public void setModelType(ModelType modelType) {
-		this.modelType = Objects.requireNonNullElse(modelType, new ModelType());
+	public void setProviderModel(ProviderModel providerModel) {
+		this.providerModel = Objects.requireNonNullElse(providerModel, new ProviderModel());
 	}
 }

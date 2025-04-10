@@ -30,7 +30,7 @@ import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
-import io.openk9.datasource.model.dto.base.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
@@ -98,6 +98,7 @@ public class SearcherGrpcTest {
 	private static final String LLM_API_URL = "api_url";
 	private static final String MODEL = "model";
 	private static final String PROMPT_TEST = "Test prompt";
+	private static final String PROVIDER = "provider";
 	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
 	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
 	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
@@ -105,7 +106,6 @@ public class SearcherGrpcTest {
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(JSON_CONFIG);
 	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
-	private static final String TYPE = "type";
 	private static final String VIRTUAL_HOST = "test.openk9.local";
 	private static final Logger log = Logger.getLogger(SearcherGrpcTest.class);
 
@@ -145,14 +145,14 @@ public class SearcherGrpcTest {
 		createBucketOne();
 		enableBucket(getBucketOne());
 
+		// LargeLanguageModel
+		createLargeLanguageModelOne();
+		enableLargeLanguageModelOne();
+
 		// RAGConfiguration
 		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT_RAG);
 		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
 		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SIMPLE_GENERATE);
-
-		// LargeLanguageModel
-		createLargeLanguageModelOne();
-		enableLargeLanguageModelOne();
 
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
@@ -174,8 +174,8 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(STRUCT_JSON_CONFIG_SHORT, response.getJsonConfig());
 				Assertions.assertEquals(
 					Bucket.RetrieveType.MATCH.name(), response.getRetrieveType());
-				Assertions.assertEquals(TYPE, response.getModelType().getType());
-				Assertions.assertEquals(MODEL, response.getModelType().getModel());
+				Assertions.assertEquals(PROVIDER, response.getProviderModel().getProvider());
+				Assertions.assertEquals(MODEL, response.getProviderModel().getModel());
 				Assertions.assertEquals(CONTEXT_WINDOW_VALUE, response.getContextWindow());
 				assertTrue(response.getRetrieveCitations());
 			}
@@ -198,8 +198,9 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
 				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
 				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
-				assertEquals(TYPE, response.getModelType().getType());
-				assertEquals(MODEL, response.getModelType().getModel());
+				assertEquals(PROVIDER, response.getProviderModel().getProvider());
+				assertEquals(MODEL, response.getProviderModel().getModel());
+				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
 			}
 		);
 	}
@@ -207,17 +208,6 @@ public class SearcherGrpcTest {
 	@Test
 	@RunOnVertxContext
 	void should_get_rag_configurations(UniAsserter asserter) {
-
-		// enable bucketOne
-		asserter.execute(() ->
-			sessionFactory.withTransaction(session ->
-				bucketService.findByName(session, BUCKET_ONE)
-					.flatMap(bucketOne ->
-						bucketService.enableTenant(session, bucketOne.getId())
-					)
-			)
-		);
-
 		asserter.assertThat(
 			() -> searcher.getRAGConfigurations(
 				GetRAGConfigurationsRequest.newBuilder()
@@ -384,36 +374,6 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(
 					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
 			});
-
-		asserter.assertFailedWith(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.build()
-			),
-			throwable -> {
-				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-				var exception = (StatusRuntimeException) throwable;
-
-				Assertions.assertEquals(
-					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
-			});
-
-		asserter.assertFailedWith(
-			() -> searcher.getRAGConfigurations(
-				GetRAGConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.build()
-			),
-			throwable -> {
-				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-				var exception = (StatusRuntimeException) throwable;
-
-				Assertions.assertEquals(
-					Status.Code.INVALID_ARGUMENT, exception.getStatus().getCode());
-			});
 	}
 
 	@AfterEach
@@ -426,11 +386,11 @@ public class SearcherGrpcTest {
 		enableLargeLanguageModelDefaultPrimary();
 		removeLargeLanguageModelOne();
 
-		// enable default bucket
+		// Bucket
 		enableBucket(getBucketDefault());
+		removeBucketOne();
 
 		// RAGConfiguration
-		removeBucketOne();
 		removeRAGConfiguration(RAG_CHAT_ONE);
 		removeRAGConfiguration(RAG_SEARCH_ONE);
 		removeRAGConfiguration(RAG_CHAT_TOOL_ONE);
@@ -483,10 +443,10 @@ public class SearcherGrpcTest {
 			.apiKey(EM_API_KEY)
 			.vectorSize(EM_VECTOR_SIZE)
 			.jsonConfig(JSON_CONFIG)
-			.modelType(
-				ModelTypeDTO
+			.providerModel(
+				ProviderModelDTO
 					.builder()
-					.type(TYPE)
+					.provider(PROVIDER)
 					.model(MODEL)
 					.build()
 			)
@@ -508,10 +468,10 @@ public class SearcherGrpcTest {
 			.jsonConfig(JSON_CONFIG_SHORT)
 			.contextWindow(CONTEXT_WINDOW_VALUE)
 			.retrieveCitations(true)
-			.modelType(
-				ModelTypeDTO
+			.providerModel(
+				ProviderModelDTO
 					.builder()
-					.type(TYPE)
+					.provider(PROVIDER)
 					.model(MODEL)
 					.build()
 			)

@@ -19,7 +19,7 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
-import io.openk9.datasource.model.dto.base.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -40,7 +40,7 @@ public class LargeLanguageModelServiceTest {
 	private static final String EMPTY_STRING = "";
 	private static final String LARGE_LANGUAGE_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Large language model 1 ";
 	private static final String JSON_CONFIG_EMPTY = "{}";
-	private static final String TYPE = "type";
+	private static final String PROVIDER = "provider";
 	private static final String MODEL = "model";
 
 	@Inject
@@ -62,8 +62,8 @@ public class LargeLanguageModelServiceTest {
 		assertEquals(API_KEY, largeLanguageModelOne.getApiKey());
 		assertEquals(URL, largeLanguageModelOne.getApiUrl());
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelOne.getJsonConfig());
-		assertEquals(TYPE, largeLanguageModelOne.getModelType().getType());
-		assertEquals(MODEL, largeLanguageModelOne.getModelType().getModel());
+		assertEquals(PROVIDER, largeLanguageModelOne.getProviderModel().getProvider());
+		assertEquals(MODEL, largeLanguageModelOne.getProviderModel().getModel());
 		assertEquals(CONTEXT_WINDOW, largeLanguageModelOne.getContextWindow());
 		assertTrue(largeLanguageModelOne.getRetrieveCitations());
 
@@ -71,7 +71,7 @@ public class LargeLanguageModelServiceTest {
 	}
 
 	@Test
-	void should_create_embedding_model_one_with_missing_modelType() {
+	void should_create_embedding_model_one_with_missing_providerModel() {
 		var dto = LargeLanguageModelDTO.builder()
 			.name(LARGE_LANGUAGE_MODEL_ONE_NAME)
 			.apiKey(API_KEY)
@@ -91,8 +91,8 @@ public class LargeLanguageModelServiceTest {
 		assertEquals(API_KEY, largeLanguageModelOne.getApiKey());
 		assertEquals(URL, largeLanguageModelOne.getApiUrl());
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelOne.getJsonConfig());
-		assertEquals(EMPTY_STRING, largeLanguageModelOne.getModelType().getType());
-		assertEquals(EMPTY_STRING, largeLanguageModelOne.getModelType().getModel());
+		assertEquals(EMPTY_STRING, largeLanguageModelOne.getProviderModel().getProvider());
+		assertEquals(EMPTY_STRING, largeLanguageModelOne.getProviderModel().getModel());
 		assertEquals(CONTEXT_WINDOW, largeLanguageModelOne.getContextWindow());
 		assertTrue(largeLanguageModelOne.getRetrieveCitations());
 
@@ -100,7 +100,7 @@ public class LargeLanguageModelServiceTest {
 	}
 
 	@Test
-	void should_create_embedding_model_one_with_missing_model_type() {
+	void should_create_embedding_model_one_with_missing_model_provider() {
 		var dto = LargeLanguageModelDTO.builder()
 			.name(LARGE_LANGUAGE_MODEL_ONE_NAME)
 			.apiKey(API_KEY)
@@ -108,7 +108,7 @@ public class LargeLanguageModelServiceTest {
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.contextWindow(CONTEXT_WINDOW)
 			.retrieveCitations(true)
-			.modelType(null)
+			.providerModel(null)
 			.build();
 
 		createLargeLanguageModel(dto);
@@ -121,8 +121,8 @@ public class LargeLanguageModelServiceTest {
 		assertEquals(API_KEY, largeLanguageModelOne.getApiKey());
 		assertEquals(URL, largeLanguageModelOne.getApiUrl());
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelOne.getJsonConfig());
-		assertEquals(EMPTY_STRING, largeLanguageModelOne.getModelType().getType());
-		assertEquals(EMPTY_STRING, largeLanguageModelOne.getModelType().getModel());
+		assertEquals(EMPTY_STRING, largeLanguageModelOne.getProviderModel().getProvider());
+		assertEquals(EMPTY_STRING, largeLanguageModelOne.getProviderModel().getModel());
 		assertEquals(CONTEXT_WINDOW, largeLanguageModelOne.getContextWindow());
 		assertTrue(largeLanguageModelOne.getRetrieveCitations());
 
@@ -143,9 +143,9 @@ public class LargeLanguageModelServiceTest {
 			.apiKey(API_KEY)
 			.apiUrl(URL)
 			.jsonConfig(JSON_CONFIG_EMPTY)
-			.modelType(
-				ModelTypeDTO.builder()
-					.type(TYPE)
+			.providerModel(
+				ProviderModelDTO.builder()
+					.provider(PROVIDER)
 					.model(MODEL)
 					.build()
 			)

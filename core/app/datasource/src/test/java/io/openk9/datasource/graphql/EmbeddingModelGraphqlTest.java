@@ -19,7 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
-import io.openk9.datasource.model.dto.base.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
@@ -88,16 +88,16 @@ public class EmbeddingModelGraphqlTest {
 		"}";
 	private static final String MESSAGE = "message";
 	private static final String MODEL = "model";
-	private static final String MODEL_TYPE = "modelType";
-	private static final String MODEL_VALUE = "model";
+	private static final String MODEL_VALUE = "model_value";
 	private static final String MODEL_VALUE_UPDATED = "model_updated";
 	private static final String NAME = "name";
 	private static final String PATCH = "patch";
+	private static final String PROVIDER = "provider";
+	private static final String PROVIDER_MODEL = "providerModel";
+	private static final String PROVIDER_UPDATED = "provider_updated";
+	private static final String PROVIDER_VALUE = "provider_value";
 	private static final String SECRET_KEY = "secret-key";
 	private static final String SECRET_KEY_UPDATED = "secret-key_updated";
-	private static final String TYPE = "type";
-	private static final String TYPE_VALUE = "type";
-	private static final String TYPE_VALUE_UPDATED = "type_updated";
 	private static final String VECTOR_SIZE = "vectorSize";
 	private static final int VECTOR_SIZE_DEFAULT_VALUE = 1500;
 	private static final int VECTOR_SIZE_VALUE_UPDATED = 3000;
@@ -136,9 +136,9 @@ public class EmbeddingModelGraphqlTest {
 								prop(VECTOR_SIZE, VECTOR_SIZE_DEFAULT_VALUE),
 								prop(JSON_CONFIG, JSON_CONFIG_EMPTY),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE),
+										prop(PROVIDER, PROVIDER_VALUE),
 										prop(MODEL, MODEL_VALUE)
 									)
 								)
@@ -152,8 +152,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -179,11 +179,11 @@ public class EmbeddingModelGraphqlTest {
 
 		assertTrue(embeddingModelResponse.isNull(FIELD_VALIDATORS));
 
-		// check if the embeddingModel have the type and model fields
+		// check if the embeddingModel have the provider and model fields
 		var embeddingModelOne = getEmbeddingModelOne();
 
-		assertEquals(TYPE_VALUE, embeddingModelOne.getModelType().getType());
-		assertEquals(MODEL_VALUE, embeddingModelOne.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, embeddingModelOne.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, embeddingModelOne.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		// remove the embeddingModelOne
@@ -191,7 +191,7 @@ public class EmbeddingModelGraphqlTest {
 	}
 
 	@Test
-	void should_fail_create_embedding_model_one_with_no_modelType() throws ExecutionException, InterruptedException {
+	void should_fail_create_embedding_model_one_with_no_providerModel() throws ExecutionException, InterruptedException {
 
 		var mutation = document(
 			operation(
@@ -217,8 +217,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -243,11 +243,11 @@ public class EmbeddingModelGraphqlTest {
 		String errorMessage = embeddingModelErrors.getFirst().getMessage();
 
 		assertTrue(errorMessage.contains(
-			String.format("is missing required fields '[%s]'", MODEL_TYPE)));
+			String.format("is missing required fields '[%s]'", PROVIDER_MODEL)));
 	}
 
 	@Test
-	void should_fail_create_embedding_model_one_with_no_model_and_type() throws ExecutionException, InterruptedException {
+	void should_fail_create_embedding_model_one_with_no_model_and_provider() throws ExecutionException, InterruptedException {
 
 		var mutation = document(
 			operation(
@@ -264,7 +264,7 @@ public class EmbeddingModelGraphqlTest {
 								prop(VECTOR_SIZE, VECTOR_SIZE_DEFAULT_VALUE),
 								prop(JSON_CONFIG, JSON_CONFIG_EMPTY),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject()
 								)
 							)
@@ -277,8 +277,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -303,7 +303,7 @@ public class EmbeddingModelGraphqlTest {
 		String errorMessage = embeddingModelErrors.getFirst().getMessage();
 
 		assertTrue(errorMessage.contains(
-			String.format("is missing required fields '[%s, %s]'", MODEL, TYPE)));
+			String.format("is missing required fields '[%s, %s]'", MODEL, PROVIDER)));
 	}
 
 	@Test
@@ -315,8 +315,8 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(EMBEDDING_MODEL_LOCAL, embeddingModelTwo.getApiUrl());
 		assertEquals(SECRET_KEY, embeddingModelTwo.getApiKey());
 		assertEquals(VECTOR_SIZE_DEFAULT_VALUE, embeddingModelTwo.getVectorSize());
-		assertEquals(TYPE_VALUE, embeddingModelTwo.getModelType().getType());
-		assertEquals(MODEL_VALUE, embeddingModelTwo.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, embeddingModelTwo.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, embeddingModelTwo.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelTwo.getJsonConfig());
 
 		var mutation = document(
@@ -336,9 +336,9 @@ public class EmbeddingModelGraphqlTest {
 								prop(VECTOR_SIZE, VECTOR_SIZE_VALUE_UPDATED),
 								prop(JSON_CONFIG, JSON_CONFIG_UPDATED),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE_UPDATED),
+										prop(PROVIDER, PROVIDER_UPDATED),
 										prop(MODEL, MODEL_VALUE_UPDATED)
 									)
 								)
@@ -352,8 +352,8 @@ public class EmbeddingModelGraphqlTest {
 						field(API_KEY),
 						field(VECTOR_SIZE),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -385,8 +385,8 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(EMBEDDING_MODEL_LOCAL_UPDATED, embeddingModelUpdated.getApiUrl());
 		assertEquals(SECRET_KEY_UPDATED, embeddingModelUpdated.getApiKey());
 		assertEquals(VECTOR_SIZE_VALUE_UPDATED, embeddingModelUpdated.getVectorSize());
-		assertEquals(TYPE_VALUE_UPDATED, embeddingModelUpdated.getModelType().getType());
-		assertEquals(MODEL_VALUE_UPDATED, embeddingModelUpdated.getModelType().getModel());
+		assertEquals(PROVIDER_UPDATED, embeddingModelUpdated.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE_UPDATED, embeddingModelUpdated.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_UPDATED, embeddingModelUpdated.getJsonConfig());
 	}
 
@@ -399,8 +399,8 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(EMBEDDING_MODEL_LOCAL, embeddingModelTwo.getApiUrl());
 		assertEquals(SECRET_KEY, embeddingModelTwo.getApiKey());
 		assertEquals(VECTOR_SIZE_DEFAULT_VALUE, embeddingModelTwo.getVectorSize());
-		assertEquals(TYPE_VALUE, embeddingModelTwo.getModelType().getType());
-		assertEquals(MODEL_VALUE, embeddingModelTwo.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, embeddingModelTwo.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, embeddingModelTwo.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelTwo.getJsonConfig());
 
 		var mutation = document(
@@ -420,9 +420,9 @@ public class EmbeddingModelGraphqlTest {
 								prop(VECTOR_SIZE, VECTOR_SIZE_VALUE_UPDATED),
 								prop(JSON_CONFIG, JSON_CONFIG_UPDATED),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE_UPDATED),
+										prop(PROVIDER, PROVIDER_UPDATED),
 										prop(MODEL, MODEL_VALUE_UPDATED)
 									)
 								)
@@ -433,8 +433,8 @@ public class EmbeddingModelGraphqlTest {
 						field(ID),
 						field(NAME),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -466,8 +466,8 @@ public class EmbeddingModelGraphqlTest {
 		assertEquals(EMBEDDING_MODEL_LOCAL_UPDATED, embeddingModelPatched.getApiUrl());
 		assertEquals(SECRET_KEY_UPDATED, embeddingModelPatched.getApiKey());
 		assertEquals(VECTOR_SIZE_VALUE_UPDATED, embeddingModelPatched.getVectorSize());
-		assertEquals(TYPE_VALUE_UPDATED, embeddingModelPatched.getModelType().getType());
-		assertEquals(MODEL_VALUE_UPDATED, embeddingModelPatched.getModelType().getModel());
+		assertEquals(PROVIDER_UPDATED, embeddingModelPatched.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE_UPDATED, embeddingModelPatched.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_UPDATED, embeddingModelPatched.getJsonConfig());
 	}
 
@@ -484,11 +484,11 @@ public class EmbeddingModelGraphqlTest {
 			.apiKey(SECRET_KEY)
 			.vectorSize(VECTOR_SIZE_DEFAULT_VALUE)
 			.jsonConfig(JSON_CONFIG_EMPTY)
-			.modelType(
-				ModelTypeDTO
+			.providerModel(
+				ProviderModelDTO
 					.builder()
-					.type(TYPE)
-					.model(MODEL)
+					.provider(PROVIDER_VALUE)
+					.model(MODEL_VALUE)
 					.build()
 			)
 			.build();

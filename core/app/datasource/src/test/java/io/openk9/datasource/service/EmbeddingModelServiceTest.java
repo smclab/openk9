@@ -20,7 +20,7 @@ package io.openk9.datasource.service;
 import java.io.IOException;
 
 import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.base.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.EmbeddingComponentTemplate;
@@ -48,7 +48,7 @@ public class EmbeddingModelServiceTest {
 	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
 	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String JSON_CONFIG_EMPTY = "{}";
-	private static final String TYPE = "type";
+	private static final String PROVIDER = "provider";
 	private static final String MODEL = "model";
 
 	@Inject
@@ -99,7 +99,7 @@ public class EmbeddingModelServiceTest {
 	}
 
 	@Test
-	void should_create_embedding_model_one_with_type_model_jsonConfig_fields() {
+	void should_create_embedding_model_one_with_provider_model_jsonConfig_fields() {
 		createEmbeddingModelOne();
 
 		var embeddingModelOne = getEmbeddingModelOne();
@@ -107,8 +107,8 @@ public class EmbeddingModelServiceTest {
 		assertNotNull(embeddingModelOne);
 
 		assertEquals(EMBEDDING_MODEL_ONE_NAME, embeddingModelOne.getName());
-		assertEquals(TYPE, embeddingModelOne.getModelType().getType());
-		assertEquals(MODEL, embeddingModelOne.getModelType().getModel());
+		assertEquals(PROVIDER, embeddingModelOne.getProviderModel().getProvider());
+		assertEquals(MODEL, embeddingModelOne.getProviderModel().getModel());
 		assertEquals(JSON_CONFIG_EMPTY, embeddingModelOne.getJsonConfig());
 
 		removeEmbeddingModelOne();
@@ -122,10 +122,10 @@ public class EmbeddingModelServiceTest {
 			.apiKey("secret-key")
 			.vectorSize(1500)
 			.jsonConfig(JSON_CONFIG_EMPTY)
-			.modelType(
-				ModelTypeDTO
+			.providerModel(
+				ProviderModelDTO
 					.builder()
-					.type(TYPE)
+					.provider(PROVIDER)
 					.model(MODEL)
 					.build()
 			)

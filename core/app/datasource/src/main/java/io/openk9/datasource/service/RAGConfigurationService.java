@@ -77,7 +77,7 @@ public class RAGConfigurationService
 	 * @return A {@link Uni} containing a list of {@link RAGConfiguration} entities
 	 *         that match the criteria.
 	 */
-	public Uni<List<RAGConfiguration>> findRAGConfigurationByBucket(long bucketId, RAGType ragType) {
+	public Uni<List<RAGConfiguration>> findUnboundRAGConfigurationByBucket(long bucketId, RAGType ragType) {
 		return sessionFactory.withTransaction(s -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 

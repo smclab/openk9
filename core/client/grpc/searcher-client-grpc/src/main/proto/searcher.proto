@@ -151,13 +151,13 @@ message GetLLMConfigurationsResponse {
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   string retrieveType = 4;
-  ModelType modelType = 5;
+  ProviderModel providerModel = 5;
   int32 contextWindow = 6;
   bool retrieveCitations = 7;
 }
 
-message ModelType {
-  string type = 1;
+message ProviderModel {
+  string provider = 1;
   string model = 2;
 }
 
@@ -165,7 +165,8 @@ message GetEmbeddingModelConfigurationsResponse {
   string apiUrl = 1;
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
-  ModelType modelType = 4;
+  ProviderModel providerModel = 4;
+  int32 vectorSize = 5;
 }
 
 message GetRAGConfigurationsResponse{

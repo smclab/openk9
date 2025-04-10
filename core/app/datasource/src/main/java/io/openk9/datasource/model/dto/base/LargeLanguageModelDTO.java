@@ -18,7 +18,6 @@
 package io.openk9.datasource.model.dto.base;
 
 import io.openk9.datasource.validation.json.Json;
-import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,9 +42,8 @@ public class LargeLanguageModelDTO extends K9EntityDTO {
 	@Json
 	@Description("It is a JSON that can be used to add additional configurations to the LargeLanguageModel.")
 	private String jsonConfig;
-	@Embedded
 	@NotNull
-	private ModelTypeDTO modelType;
+	private ProviderModelDTO providerModel;
 	@Description("It is the context window size.")
 	private Integer contextWindow;
 	@Description("It indicates whether the LargeLanguageModel retrieves citations.")

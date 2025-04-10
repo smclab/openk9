@@ -19,7 +19,6 @@ package io.openk9.datasource.model.dto.base;
 
 import io.openk9.datasource.validation.json.Json;
 import io.smallrye.graphql.api.Nullable;
-import jakarta.persistence.Embedded;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,9 +55,8 @@ public class EmbeddingModelDTO extends K9EntityDTO {
 	@Json
 	@Description("A JSON that can be used to add additional configurations to the EmbeddingModel.")
 	private String jsonConfig;
-	@Embedded
 	@NotNull
-	private ModelTypeDTO modelType;
+	private ProviderModelDTO providerModel;
 	@Description(
 		"""
 			Dimensionality of the embedding vectors produced by the model.

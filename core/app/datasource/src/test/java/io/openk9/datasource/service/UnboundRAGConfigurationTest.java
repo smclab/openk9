@@ -155,7 +155,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationChatThree = getRAGConfiguration(RAG_CHAT_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT_RAG)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT_RAG)
 				.await()
 				.indefinitely();
 
@@ -182,7 +182,7 @@ public class UnboundRAGConfigurationTest {
 		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationChatTwo);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT_RAG)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT_RAG)
 				.await()
 				.indefinitely();
 
@@ -203,7 +203,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationChatThree = getRAGConfiguration(RAG_CHAT_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.CHAT_RAG)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(0L, RAGType.CHAT_RAG)
 				.await()
 				.indefinitely();
 
@@ -224,7 +224,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationSimpleGenerateThree = getRAGConfiguration(RAG_SIMPLE_GENERATE_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(
 				bucket.getId(), RAGType.SIMPLE_GENERATE)
 					.await()
 					.indefinitely();
@@ -252,7 +252,7 @@ public class UnboundRAGConfigurationTest {
 		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationSimpleGenerateTwo);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(
 				bucketOne.getId(), RAGType.SIMPLE_GENERATE)
 					.await()
 					.indefinitely();
@@ -274,7 +274,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationSimpleGenerateThree = getRAGConfiguration(RAG_SIMPLE_GENERATE_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.SIMPLE_GENERATE)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(0L, RAGType.SIMPLE_GENERATE)
 				.await()
 				.indefinitely();
 
@@ -295,7 +295,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationChatToolThree = getRAGConfiguration(RAG_CHAT_TOOL_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT_RAG_TOOL)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(bucket.getId(), RAGType.CHAT_RAG_TOOL)
 				.await()
 				.indefinitely();
 
@@ -322,7 +322,7 @@ public class UnboundRAGConfigurationTest {
 		bindRAGConfigurationToBucket(bucketTwo, ragConfigurationChatToolTwo);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT_RAG_TOOL)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(bucketOne.getId(), RAGType.CHAT_RAG_TOOL)
 				.await()
 				.indefinitely();
 
@@ -343,7 +343,7 @@ public class UnboundRAGConfigurationTest {
 		var ragConfigurationChatToolThree = getRAGConfiguration(RAG_CHAT_TOOL_THREE);
 
 		List<RAGConfiguration> unboundRAGConfigurations =
-			ragConfigurationService.findRAGConfigurationByBucket(0L, RAGType.CHAT_RAG_TOOL)
+			ragConfigurationService.findUnboundRAGConfigurationByBucket(0L, RAGType.CHAT_RAG_TOOL)
 				.await()
 				.indefinitely();
 

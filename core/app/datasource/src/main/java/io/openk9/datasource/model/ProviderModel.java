@@ -15,26 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model.dto.base;
+package io.openk9.datasource.model;
 
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-import org.eclipse.microprofile.graphql.Description;
+import lombok.Data;
 
-@NoArgsConstructor
-@SuperBuilder
-@Getter
-@Setter
+import java.util.Objects;
+
 @Embeddable
-public class ModelTypeDTO {
-	@Description("It is the model type.")
-	@NotNull
-	private String type;
-	@Description("It is the specific model.")
-	@NotNull
+@Data
+public class ProviderModel {
+
+	private static final String EMPTY_STRING = "";
+
+	private String provider;
 	private String model;
+
+	public ProviderModel() {
+		this.model = EMPTY_STRING;
+		this.provider = EMPTY_STRING;
+	}
+
+	public ProviderModel(String model, String provider) {
+		this.model = Objects.requireNonNullElse(model, EMPTY_STRING);
+		this.provider = Objects.requireNonNullElse(provider, EMPTY_STRING);
+	}
+
+	public void setModel(String model) {
+		this.model = Objects.requireNonNullElse(model, EMPTY_STRING);
+	}
+
+	public void setProvider(String provider) {
+		this.provider = Objects.requireNonNullElse(provider, EMPTY_STRING);
+	}
 }

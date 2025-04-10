@@ -19,7 +19,7 @@ package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
-import io.openk9.datasource.model.dto.base.ModelTypeDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
@@ -93,15 +93,15 @@ public class LargeLanguageModelGraphqlTest {
 		"}";
 	private static final String MESSAGE = "message";
 	private static final String MODEL = "model";
-	private static final String MODEL_TYPE = "modelType";
-	private static final String MODEL_VALUE = "model";
+	private static final String MODEL_VALUE = "model_value";
 	private static final String MODEL_VALUE_UPDATED = "model_updated";
 	private static final String NAME = "name";
 	private static final String PATCH = "patch";
+	private static final String PROVIDER = "provider";
+	private static final String PROVIDER_MODEL = "providerModel";
+	private static final String PROVIDER_VALUE = "provider_value";
+	private static final String PROVIDER_VALUE_UPDATED = "provider_updated";
 	private static final String RETRIEVE_CITATIONS = "retrieveCitations";
-	private static final String TYPE = "type";
-	private static final String TYPE_VALUE = "type";
-	private static final String TYPE_VALUE_UPDATED = "type_updated";
 
 	private static final Logger log = Logger.getLogger(LargeLanguageModelGraphqlTest.class);
 
@@ -139,9 +139,9 @@ public class LargeLanguageModelGraphqlTest {
 								prop(CONTEXT_WINDOW, CONTEXT_WINDOW_DEFAULT_VALUE),
 								prop(RETRIEVE_CITATIONS, true),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE),
+										prop(PROVIDER, PROVIDER_VALUE),
 										prop(MODEL, MODEL_VALUE)
 									)
 								)
@@ -156,8 +156,8 @@ public class LargeLanguageModelGraphqlTest {
 						field(CONTEXT_WINDOW),
 						field(RETRIEVE_CITATIONS),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -191,15 +191,15 @@ public class LargeLanguageModelGraphqlTest {
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelOne.getJsonConfig());
 		assertEquals(CONTEXT_WINDOW_DEFAULT_VALUE, largeLanguageModelOne.getContextWindow());
 		assertTrue(largeLanguageModelOne.getRetrieveCitations());
-		assertEquals(TYPE_VALUE, largeLanguageModelOne.getModelType().getType());
-		assertEquals(MODEL_VALUE, largeLanguageModelOne.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, largeLanguageModelOne.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, largeLanguageModelOne.getProviderModel().getModel());
 
 		// remove the largeLanguageModelOne
 		removeLargeLanguageModelOne();
 	}
 
 	@Test
-	void should_fail_create_large_language_model_one_with_no_modelType() throws ExecutionException, InterruptedException {
+	void should_fail_create_large_language_model_one_with_no_providerModel() throws ExecutionException, InterruptedException {
 
 		var mutation = document(
 			operation(
@@ -227,8 +227,8 @@ public class LargeLanguageModelGraphqlTest {
 						field(CONTEXT_WINDOW),
 						field(RETRIEVE_CITATIONS),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -253,11 +253,11 @@ public class LargeLanguageModelGraphqlTest {
 		String errorMessage = errors.getFirst().getMessage();
 
 		assertTrue(errorMessage.contains(
-			String.format("is missing required fields '[%s]'", MODEL_TYPE)));
+			String.format("is missing required fields '[%s]'", PROVIDER_MODEL)));
 	}
 
 	@Test
-	void should_fail_create_large_language_model_one_with_no_model_and_type() throws ExecutionException, InterruptedException {
+	void should_fail_create_large_language_model_one_with_no_model_and_provider() throws ExecutionException, InterruptedException {
 
 		var mutation = document(
 			operation(
@@ -275,7 +275,7 @@ public class LargeLanguageModelGraphqlTest {
 								prop(CONTEXT_WINDOW, CONTEXT_WINDOW_DEFAULT_VALUE),
 								prop(RETRIEVE_CITATIONS, true),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject()
 								)
 							)
@@ -289,8 +289,8 @@ public class LargeLanguageModelGraphqlTest {
 						field(CONTEXT_WINDOW),
 						field(RETRIEVE_CITATIONS),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -315,7 +315,7 @@ public class LargeLanguageModelGraphqlTest {
 		String errorMessage = errors.getFirst().getMessage();
 
 		assertTrue(errorMessage.contains(
-			String.format("is missing required fields '[%s, %s]'", MODEL, TYPE)));
+			String.format("is missing required fields '[%s, %s]'", MODEL, PROVIDER)));
 	}
 
 	@Test
@@ -329,8 +329,8 @@ public class LargeLanguageModelGraphqlTest {
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelTwo.getJsonConfig());
 		assertEquals(CONTEXT_WINDOW_DEFAULT_VALUE, largeLanguageModelTwo.getContextWindow());
 		assertTrue(largeLanguageModelTwo.getRetrieveCitations());
-		assertEquals(TYPE_VALUE, largeLanguageModelTwo.getModelType().getType());
-		assertEquals(MODEL_VALUE, largeLanguageModelTwo.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, largeLanguageModelTwo.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, largeLanguageModelTwo.getProviderModel().getModel());
 
 		var mutation = document(
 			operation(
@@ -350,9 +350,9 @@ public class LargeLanguageModelGraphqlTest {
 								prop(CONTEXT_WINDOW, CONTEXT_WINDOW_VALUE_UPDATED),
 								prop(RETRIEVE_CITATIONS, false),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE_UPDATED),
+										prop(PROVIDER, PROVIDER_VALUE_UPDATED),
 										prop(MODEL, MODEL_VALUE_UPDATED)
 									)
 								)
@@ -367,8 +367,8 @@ public class LargeLanguageModelGraphqlTest {
 						field(CONTEXT_WINDOW),
 						field(RETRIEVE_CITATIONS),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -402,8 +402,8 @@ public class LargeLanguageModelGraphqlTest {
 		assertEquals(JSON_CONFIG_UPDATED, largeLanguageModelTwoUpdated.getJsonConfig());
 		assertEquals(CONTEXT_WINDOW_VALUE_UPDATED, largeLanguageModelTwoUpdated.getContextWindow());
 		assertFalse(largeLanguageModelTwoUpdated.getRetrieveCitations());
-		assertEquals(TYPE_VALUE_UPDATED, largeLanguageModelTwoUpdated.getModelType().getType());
-		assertEquals(MODEL_VALUE_UPDATED, largeLanguageModelTwoUpdated.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE_UPDATED, largeLanguageModelTwoUpdated.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE_UPDATED, largeLanguageModelTwoUpdated.getProviderModel().getModel());
 	}
 
 	@Test
@@ -417,8 +417,8 @@ public class LargeLanguageModelGraphqlTest {
 		assertEquals(JSON_CONFIG_EMPTY, largeLanguageModelTwo.getJsonConfig());
 		assertEquals(CONTEXT_WINDOW_DEFAULT_VALUE, largeLanguageModelTwo.getContextWindow());
 		assertTrue(largeLanguageModelTwo.getRetrieveCitations());
-		assertEquals(TYPE_VALUE, largeLanguageModelTwo.getModelType().getType());
-		assertEquals(MODEL_VALUE, largeLanguageModelTwo.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE, largeLanguageModelTwo.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE, largeLanguageModelTwo.getProviderModel().getModel());
 
 		var mutation = document(
 			operation(
@@ -438,9 +438,9 @@ public class LargeLanguageModelGraphqlTest {
 								prop(CONTEXT_WINDOW, CONTEXT_WINDOW_VALUE_UPDATED),
 								prop(RETRIEVE_CITATIONS, false),
 								prop(
-									MODEL_TYPE,
+									PROVIDER_MODEL,
 									inputObject(
-										prop(TYPE, TYPE_VALUE_UPDATED),
+										prop(PROVIDER, PROVIDER_VALUE_UPDATED),
 										prop(MODEL, MODEL_VALUE_UPDATED)
 									)
 								)
@@ -455,8 +455,8 @@ public class LargeLanguageModelGraphqlTest {
 						field(CONTEXT_WINDOW),
 						field(RETRIEVE_CITATIONS),
 						field(JSON_CONFIG),
-						field(MODEL_TYPE,
-							field(TYPE),
+						field(PROVIDER_MODEL,
+							field(PROVIDER),
 							field(MODEL)
 						)
 					),
@@ -490,8 +490,8 @@ public class LargeLanguageModelGraphqlTest {
 		assertEquals(JSON_CONFIG_UPDATED, largeLanguageModelTwoUpdated.getJsonConfig());
 		assertEquals(CONTEXT_WINDOW_VALUE_UPDATED, largeLanguageModelTwoUpdated.getContextWindow());
 		assertFalse(largeLanguageModelTwoUpdated.getRetrieveCitations());
-		assertEquals(TYPE_VALUE_UPDATED, largeLanguageModelTwoUpdated.getModelType().getType());
-		assertEquals(MODEL_VALUE_UPDATED, largeLanguageModelTwoUpdated.getModelType().getModel());
+		assertEquals(PROVIDER_VALUE_UPDATED, largeLanguageModelTwoUpdated.getProviderModel().getProvider());
+		assertEquals(MODEL_VALUE_UPDATED, largeLanguageModelTwoUpdated.getProviderModel().getModel());
 	}
 
 	@AfterEach
@@ -507,9 +507,9 @@ public class LargeLanguageModelGraphqlTest {
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.contextWindow(CONTEXT_WINDOW_DEFAULT_VALUE)
 			.retrieveCitations(true)
-			.modelType(
-				ModelTypeDTO.builder()
-					.type(TYPE_VALUE)
+			.providerModel(
+				ProviderModelDTO.builder()
+					.provider(PROVIDER_VALUE)
 					.model(MODEL_VALUE)
 					.build()
 			)
@@ -528,9 +528,9 @@ public class LargeLanguageModelGraphqlTest {
 			.apiKey(API_KEY_VALUE)
 			.apiUrl(API_URL_VALUE)
 			.jsonConfig(JSON_CONFIG_EMPTY)
-			.modelType(
-				ModelTypeDTO.builder()
-					.type(TYPE_VALUE)
+			.providerModel(
+				ProviderModelDTO.builder()
+					.provider(PROVIDER_VALUE)
 					.model(MODEL_VALUE)
 					.build()
 			)

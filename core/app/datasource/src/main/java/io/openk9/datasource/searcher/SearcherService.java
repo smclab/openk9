@@ -51,7 +51,7 @@ import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsResponse;
-import io.openk9.searcher.grpc.ModelType;
+import io.openk9.searcher.grpc.ProviderModel;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -557,12 +557,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						.setContextWindow(llm.getContextWindow())
 						.setRetrieveCitations(llm.getRetrieveCitations());
 
-					if (llm.getModelType() != null) {
-
-						responseBuilder.setModelType(
-							ModelType.newBuilder()
-								.setType(llm.getModelType().getType())
-								.setModel(llm.getModelType().getModel())
+					if (llm.getProviderModel() != null) {
+						responseBuilder.setProviderModel(
+							ProviderModel.newBuilder()
+								.setProvider(llm.getProviderModel().getProvider())
+								.setModel(llm.getProviderModel().getModel())
 						);
 					}
 
@@ -586,18 +585,24 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return getTenant(request.getVirtualHost())
 			.flatMap(tenant -> embeddingModelService
 				.fetchCurrent(tenant.schemaName())
-				.map(embeddingModel ->
-					GetEmbeddingModelConfigurationsResponse.newBuilder()
+				.map(embeddingModel -> {
+					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
 						.setApiUrl(embeddingModel.getApiUrl())
 						.setApiKey(embeddingModel.getApiKey())
 						.setJsonConfig(StructUtils.fromJson(embeddingModel.getJsonConfig()))
-						.setModelType(
-							ModelType.newBuilder()
-								.setType(embeddingModel.getModelType().getType())
-								.setModel(embeddingModel.getModelType().getModel())
-								.build()
-						)
-						.build()
+						.setVectorSize(embeddingModel.getVectorSize());
+
+					if (embeddingModel.getProviderModel() != null) {
+						responseBuilder
+							.setProviderModel(
+								ProviderModel.newBuilder()
+									.setProvider(embeddingModel.getProviderModel().getProvider())
+									.setModel(embeddingModel.getProviderModel().getModel())
+						);
+					}
+
+						return responseBuilder.build();
+					}
 				)
 			);
 	}
