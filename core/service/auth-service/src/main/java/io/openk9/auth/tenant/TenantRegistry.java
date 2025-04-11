@@ -17,7 +17,6 @@
 
 package io.openk9.auth.tenant;
 
-import java.time.Duration;
 import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,13 +32,11 @@ public class TenantRegistry {
 	TenantManager tenantManager;
 
 	public Uni<TenantManager.Tenant> getTenantByVirtualHost(String virtualHost) {
-		return tenantManager.getTenantByVirtualHost(virtualHost)
-			.memoize().forFixedDuration(Duration.ofMinutes(20));
+		return tenantManager.getTenantByVirtualHost(virtualHost);
 	}
 
 	public Uni<List<TenantManager.Tenant>> getTenantList() {
-		return tenantManager.getTenantList()
-			.memoize().forFixedDuration(Duration.ofMinutes(20));
+		return tenantManager.getTenantList();
 	}
 
 }
