@@ -87,7 +87,7 @@ Container Scanning:
   script:
     - source version.env
     - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
-    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+    - gtcs scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
