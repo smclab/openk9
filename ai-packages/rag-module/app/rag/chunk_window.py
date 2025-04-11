@@ -20,7 +20,7 @@ def get_context_window_merged(chunks, window_size: int = 2):
     """Enlarge context with prev and next context and merge them if once enlarged they overlap"""
     document_chunks_map = defaultdict(list)
     for chunk in chunks:
-        document_chunks_map[chunk["title"]].append(chunk)
+        document_chunks_map[chunk["document_id"]].append(chunk)
 
     documents = []
     for document_chunks in document_chunks_map.values():
