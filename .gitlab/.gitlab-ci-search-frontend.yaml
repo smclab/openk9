@@ -79,6 +79,7 @@ Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
+    - "Fetch version"
     - "Build Search Frontend"
   script:
     - source version.env # Carica la versione dall'artifact

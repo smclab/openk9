@@ -81,6 +81,9 @@ Build Verifier:
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+    - "Fetch version"
+    - "Build Admin Frontend"
   script:
     - source version.env
     - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
