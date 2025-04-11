@@ -204,6 +204,7 @@ class OpenSearchRetriever(BaseRetriever):
                 documents_to_merge, window_size=self.chunk_window
             )
 
+            documents = []
             for merged_document in merged_documents:
                 page_content = merged_document["content"]
                 source = merged_document["source"]
@@ -211,8 +212,6 @@ class OpenSearchRetriever(BaseRetriever):
                 url = merged_document["url"]
                 document_id = merged_document["document_id"]
                 score = merged_document["score"]
-
-                documents = []
 
                 document = Document(
                     page_content,
