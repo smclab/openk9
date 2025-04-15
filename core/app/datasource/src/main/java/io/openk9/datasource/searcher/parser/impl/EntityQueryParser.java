@@ -17,26 +17,27 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.searcher.SearcherService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class EntityQueryParser implements QueryParser {
@@ -138,7 +139,7 @@ public class EntityQueryParser implements QueryParser {
 							.build())
 					.toList();
 
-			Bucket currentTenant = parserContext.getCurrentTenant();
+			Bucket currentTenant = parserContext.getBucket();
 
 			JsonObject textQueryParserConfig =
 				SearcherService.getQueryParserConfig(
@@ -148,7 +149,7 @@ public class EntityQueryParser implements QueryParser {
 				ParserContext
 					.builder()
 					.mutableQuery(mutableQuery)
-					.currentTenant(parserContext.getCurrentTenant())
+					.bucket(parserContext.getBucket())
 					.tokenTypeGroup(textParserSearchTokenList)
 					.queryParserConfig(textQueryParserConfig)
 					.language(language)

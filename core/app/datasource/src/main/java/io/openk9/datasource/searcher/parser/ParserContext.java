@@ -40,7 +40,7 @@ public class ParserContext {
 	private String tenantId;
 	private List<ParserSearchToken> tokenTypeGroup;
 	private BoolQueryBuilder mutableQuery;
-	private Bucket currentTenant;
+	private Bucket bucket;
 	private JsonObject queryParserConfig;
 	private JWT jwt;
 	private Map<String, List<String>> extraParams;

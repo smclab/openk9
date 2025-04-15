@@ -17,16 +17,17 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.Iterator;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import org.opensearch.index.query.QueryBuilders;
 
-import java.util.Iterator;
-import java.util.Set;
+import io.smallrye.mutiny.Uni;
+import org.opensearch.index.query.QueryBuilders;
 
 @ApplicationScoped
 public class DatasourceIdQueryParser implements QueryParser {
@@ -39,7 +40,7 @@ public class DatasourceIdQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
-		Bucket currentTenant = parserContext.getCurrentTenant();
+		Bucket currentTenant = parserContext.getBucket();
 
 		Set<Datasource> datasources = currentTenant.getDatasources();
 

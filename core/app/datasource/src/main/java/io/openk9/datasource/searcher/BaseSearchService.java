@@ -169,7 +169,7 @@ public abstract class BaseSearchService {
 								.builder()
 								.tokenTypeGroup(parserSearchTokens)
 								.mutableQuery(boolQueryBuilder)
-								.currentTenant(bucket)
+								.bucket(bucket)
 								.queryParserConfig(getQueryParserConfig(bucket, tokenType))
 								.jwt(jwt)
 								.extraParams(extraParams)
@@ -206,7 +206,7 @@ public abstract class BaseSearchService {
 						.builder()
 						.tokenTypeGroup(parserSearchTokens)
 						.mutableQuery(boolQueryBuilder)
-						.currentTenant(bucket)
+						.bucket(bucket)
 						.queryParserConfig(
 							getQueryParserConfig(
 								bucket, queryParser.getType()))
