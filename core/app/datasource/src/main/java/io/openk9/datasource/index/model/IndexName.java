@@ -15,41 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.searcher;
-
-import java.util.HashSet;
+package io.openk9.datasource.index.model;
 
 import io.openk9.api.tenantmanager.TenantManager;
-import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.util.OpenSearchUtils;
 
-import lombok.Getter;
+public record IndexName(String value) {
 
-@Getter
-public class TenantWithBucket {
+	public static IndexName from(TenantManager.Tenant tenant, String dataIndexName) {
+		return from(tenant.schemaName(), dataIndexName);
+	}
 
-	private final TenantManager.Tenant tenant;
-	private final Bucket bucket;
-	private final String[] indexNames;
+	public static IndexName from(TenantManager.Tenant tenant, DataIndex dataIndex) {
+		return from(tenant.schemaName(), dataIndex.getName());
+	}
 
-	public TenantWithBucket(TenantManager.Tenant tenant, Bucket bucket) {
+	public static IndexName from(String tenantId, DataIndex dataIndex) {
+		return from(tenantId, dataIndex.getName());
+	}
 
-		this.tenant = tenant;
-		this.bucket = bucket;
+	public static IndexName from(String tenantId, String dataIndexName) {
+		return new IndexName(OpenSearchUtils.indexNameSanitizer(
+			String.format("%s-%s", tenantId, dataIndexName)));
+	}
 
-		var tenantId = this.tenant.schemaName();
-		var datasources = this.bucket.getDatasources();
-
-		var indexNames = new HashSet<String>();
-		for (Datasource datasource : datasources) {
-			var dataIndex = datasource.getDataIndex();
-
-			indexNames.add(DataIndex.getIndexName(tenantId, dataIndex).value());
-		}
-
-		this.indexNames = indexNames.toArray(String[]::new);
-
+	@Override
+	public String toString() {
+		return value();
 	}
 
 }

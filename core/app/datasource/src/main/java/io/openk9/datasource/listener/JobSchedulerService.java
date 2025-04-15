@@ -26,6 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
@@ -43,7 +44,6 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.IndicesClient;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.GetComposableIndexTemplateRequest;
@@ -228,12 +228,13 @@ public class JobSchedulerService {
 
 		var scheduler = request.scheduler();
 
-		DataIndex oldDataIndex = scheduler.getOldDataIndex();
-		var oldIndexName = DataIndex.getIndexName(request.tenantId(), oldDataIndex).value();
-		DataIndex newDataIndex = scheduler.getNewDataIndex();
-		String newIndexName = DataIndex.getIndexName(request.tenantId(), newDataIndex).value();
+		var oldDataIndex = scheduler.getOldDataIndex();
+		var newDataIndex = scheduler.getNewDataIndex();
 
-		IndicesClient indices = restHighLevelClient.indices();
+		var oldIndexName = IndexName.from(request.tenantId(), oldDataIndex).toString();
+		var newIndexName = IndexName.from(request.tenantId(), newDataIndex).toString();
+
+		var indices = restHighLevelClient.indices();
 
 		var getIndexTemplateRequest = new GetComposableIndexTemplateRequest(
 			oldIndexName + "-template");

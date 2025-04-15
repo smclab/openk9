@@ -36,6 +36,7 @@ import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.index.mappings.IndexMappingsUtil;
 import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
@@ -202,9 +203,9 @@ public class IndexMappingService {
 	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
 		Mutiny.Session session, IndexName indexName) {
 
-		return indexService.getMappings(indexName.value())
+		return indexService.getMappings(indexName)
 			.flatMap(mappings -> indexService
-				.getDocumentTypes(indexName.value())
+				.getDocumentTypes(indexName)
 				.flatMap(documentTypes -> generateDocTypeFields(
 					session, mappings, documentTypes)));
 	}
@@ -275,7 +276,7 @@ public class IndexMappingService {
 		ComposableIndexTemplate composableIndexTemplate = null;
 
 		try {
-			IndexName indexName = DataIndex.getIndexName(tenantId, dataIndex);
+			IndexName indexName = IndexName.from(tenantId, dataIndex);
 
 			List<String> componentTemplates = new ArrayList<>();
 
@@ -293,7 +294,7 @@ public class IndexMappingService {
 			}
 
 			composableIndexTemplate = new ComposableIndexTemplate(
-				List.of(indexName.value()),
+				List.of(indexName.toString()),
 				new Template(
 					settings, new CompressedXContent(
 					Json.encode(mappings)), null
@@ -303,7 +304,7 @@ public class IndexMappingService {
 			);
 
 			request
-				.name(indexName.value() + IndexService.TEMPLATE_SUFFIX)
+				.name(indexName + IndexService.TEMPLATE_SUFFIX)
 				.indexTemplate(composableIndexTemplate);
 
 			return request;

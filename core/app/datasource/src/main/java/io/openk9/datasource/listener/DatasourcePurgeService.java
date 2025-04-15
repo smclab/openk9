@@ -30,6 +30,7 @@ import jakarta.inject.Inject;
 
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.util.K9Entity;
 
@@ -163,7 +164,7 @@ public class DatasourcePurgeService {
 		);
 
 		var dataIndexNames = dataIndices.stream()
-			.map(dataIndex -> DataIndex.getIndexName(
+			.map(dataIndex -> IndexName.from(
 				request.tenantId(), dataIndex))
 			.collect(Collectors.toSet());
 

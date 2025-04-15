@@ -37,8 +37,8 @@ import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.DataIndexTemplate;
 import io.openk9.datasource.index.IndexMappingService;
-import io.openk9.datasource.index.IndexName;
 import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.DataIndexMapper;
 import io.openk9.datasource.model.DataIndex;
@@ -121,8 +121,6 @@ public class DataIndexService
 		return sessionFactory.withTransaction(session -> getCurrentTenant(session)
 			.flatMap(tenant -> {
 
-				var tenantId = tenant.schemaName();
-
 				// select d.dataIndex from Datasource d where d.id = :datasourceId
 				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 				CriteriaQuery<DataIndex> query = cb.createQuery(DataIndex.class);
@@ -136,7 +134,7 @@ public class DataIndexService
 					.flatMap(dataIndex -> indexMappingService
 						.generateDocTypeFieldsFromIndexName(
 							session,
-							DataIndex.getIndexName(tenantId, dataIndex)
+							IndexName.from(tenant, dataIndex)
 						)
 						.flatMap(docTypes -> {
 							dataIndex.setDocTypes(docTypes);
@@ -280,8 +278,6 @@ public class DataIndexService
 					return Uni.createFrom().item(new ArrayList<>());
 				}
 
-				var tenantId = tenant.schemaName();
-
 				UniJoin.Builder<List<DataIndex>> uniJoin = Uni.join().builder();
 
 				var iterator = dataIndices.iterator();
@@ -293,7 +289,7 @@ public class DataIndexService
 					do {
 						var dataIndex = iterator.next();
 
-						dataIndexNames.add(DataIndex.getIndexName(tenantId, dataIndex));
+						dataIndexNames.add(IndexName.from(tenant, dataIndex));
 						chunk.add(dataIndex);
 					}
 					while (iterator.hasNext() && chunk.size() <= 10);
@@ -334,7 +330,7 @@ public class DataIndexService
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
 			.flatMap(tenant -> findById(s, entityId)
 				.call(dataIndex -> indexService.deleteIndex(
-					DataIndex.getIndexName(tenant.schemaName(), dataIndex)))
+					IndexName.from(tenant, dataIndex)))
 				.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
 				.flatMap(dataIndex -> {
 					dataIndex.getDocTypes().clear();
@@ -347,8 +343,10 @@ public class DataIndexService
 	public Uni<Long> getCountIndexDocuments(long dataIndexId) {
 		return sessionFactory.withTransaction((s) -> getCurrentTenant(s)
 			.flatMap(tenant -> findById(s, dataIndexId)
-				.flatMap(dataIndex -> indexService.indexCount(DataIndex
-					.getIndexName(tenant.schemaName(), dataIndex).value())))
+				.flatMap(dataIndex -> indexService
+					.indexCount(IndexName.from(tenant, dataIndex).toString())
+				)
+			)
 		);
 	}
 
@@ -408,10 +406,7 @@ public class DataIndexService
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
 			.flatMap(tenant -> findById(s, dataIndexId)
 				.flatMap(dataIndex -> indexService
-					.getMappings(DataIndex
-						.getIndexName(tenant.schemaName(), dataIndex)
-						.value()
-					)
+					.getMappings(IndexName.from(tenant, dataIndex))
 				)
 			)
 		).map(Json::encode);
@@ -422,14 +417,11 @@ public class DataIndexService
 		return new String[]{DataIndex_.NAME, DataIndex_.DESCRIPTION};
 	}
 
-	public Uni<String> getSettings(long dataIndexid) {
+	public Uni<String> getSettings(long dataIndexId) {
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
-			.flatMap(tenant -> findById(s, dataIndexid)
-				.flatMap(dataIndex -> indexService.getSettings(DataIndex
-						.getIndexName(tenant.schemaName(), dataIndex)
-						.value()
-					)
-				)
+			.flatMap(tenant -> findById(s, dataIndexId)
+				.flatMap(dataIndex -> indexService
+					.getSettings(IndexName.from(tenant, dataIndex)))
 			)
 		);
 	}

@@ -25,6 +25,7 @@ import jakarta.inject.Inject;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
@@ -218,8 +219,8 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest.indices(
-			DataIndex.getIndexName(tenantId, scheduler.getOldDataIndex()).value(),
-			DataIndex.getIndexName(tenantId, scheduler.getNewDataIndex()).value()
+			IndexName.from(tenantId, scheduler.getOldDataIndex()).toString(),
+			IndexName.from(tenantId, scheduler.getNewDataIndex()).toString()
 		);
 
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();

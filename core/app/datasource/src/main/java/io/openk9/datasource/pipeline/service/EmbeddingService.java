@@ -27,7 +27,6 @@ import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
@@ -284,10 +283,7 @@ public class EmbeddingService {
 								dataIndex.getEmbeddingDocTypeField(),
 								dataIndex.getChunkType(),
 								dataIndex.getChunkWindowSize(),
-								dataIndex.getEmbeddingJsonConfig(),
-								DataIndex.getIndexName(
-										request.tenantId(), dataIndex)
-									.value()
+								dataIndex.getEmbeddingJsonConfig()
 							);
 						})
 					))
@@ -316,8 +312,7 @@ public class EmbeddingService {
 		DocTypeField docTypeField,
 		EmbeddingOuterClass.ChunkType chunkType,
 		int chunkWindowSize,
-		String jsonConfig,
-		String indexName
+		String jsonConfig
 	) {}
 
 	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {

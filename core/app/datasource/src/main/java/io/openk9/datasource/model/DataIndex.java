@@ -34,9 +34,8 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import io.openk9.datasource.index.IndexName;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -106,11 +105,6 @@ public class DataIndex extends K9Entity {
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "datasource_id", referencedColumnName = "id")
 	private Datasource datasource;
-
-	public static IndexName getIndexName(String tenantId, DataIndex dataIndex) {
-		return new IndexName(OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", tenantId, dataIndex.getName())));
-	}
 
 	@Transient
 	@JsonIgnore

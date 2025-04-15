@@ -36,7 +36,6 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.Json;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -96,14 +95,12 @@ public class DataIndexGraphqlResource {
 
 	public Uni<String> mappings(@Source DataIndex dataIndex) {
 		return dataIndexService
-			.getMappings(dataIndex.getId())
-			.map(Json::encode);
+			.getMappings(dataIndex.getId());
 	}
 
 	public Uni<String> settings(@Source DataIndex dataIndex) {
 		return dataIndexService
-			.getSettings(dataIndex.getId())
-			.map(Json::encode);
+			.getSettings(dataIndex.getId());
 	}
 
 	@Mutation
