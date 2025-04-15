@@ -34,12 +34,10 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -73,11 +71,6 @@ public class DataIndex extends K9Entity {
 	private static final String DEFAULT_EMBEDDING_JSON_CONFIG = "{}";
 	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
 		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
-
-	@Transient
-	@Setter(AccessLevel.NONE)
-	@Getter(AccessLevel.NONE)
-	private IndexName indexName;
 
 	@Column(
 		name = "name", nullable = false, unique = true, updatable = false)
