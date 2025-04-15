@@ -41,7 +41,6 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -308,14 +307,6 @@ public class IndexMappingService {
 				.indexTemplate(composableIndexTemplate);
 
 			return request;
-		}
-		catch (UnknownTenantException e) {
-			throw new WebApplicationException(Response
-				.status(Response.Status.INTERNAL_SERVER_ERROR)
-				.entity(JsonObject.of(
-					DataIndexService.DETAILS_FIELD, "cannot obtain a proper index name"
-				))
-				.build());
 		}
 		catch (IOException e) {
 			throw new WebApplicationException(Response
