@@ -1,11 +1,15 @@
 import json
+from enum import Enum
 
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
-from app.external_services.grpc.grpc_client import get_llm_configuration
+from app.external_services.grpc.grpc_client import (
+    get_llm_configuration,
+    get_rag_configuration,
+)
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import save_chat_message
 from app.utils.llm import (
@@ -13,6 +17,13 @@ from app.utils.llm import (
     initialize_language_model,
     stream_rag_conversation,
 )
+
+
+class RagType(Enum):
+    RAG_TYPE_UNSPECIFIED = "RAG_TYPE_UNSPECIFIED"
+    CHAT_RAG = "CHAT_RAG"
+    CHAT_RAG_TOOL = "CHAT_RAG_TOOL"
+    SIMPLE_GENERATE = "SIMPLE_GENERATE"
 
 
 def get_chain(
@@ -34,6 +45,14 @@ def get_chain(
     opensearch_host,
     grpc_host,
 ):
+
+    print(grpc_host)
+    print(virtual_host)
+    print(RagType.SIMPLE_GENERATE.value)
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
+    )
+    print(rag_configuration)
     configuration = get_llm_configuration(grpc_host, virtual_host)
     prompt_template = configuration["prompt"]
     rephrase_prompt_template = configuration["rephrase_prompt"]

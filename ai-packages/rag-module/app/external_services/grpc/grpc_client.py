@@ -57,6 +57,19 @@ def query_parser(
     return response
 
 
+def get_rag_configuration(grpc_host, virtual_host, rag_type):
+    """Get rag configuration from grpc."""
+    with grpc.insecure_channel(grpc_host) as channel:
+        stub = searcher_pb2_grpc.SearcherStub(channel)
+        response = stub.GetRAGConfigurations(
+            searcher_pb2.GetRAGConfigurationsRequest(
+                virtualHost=virtual_host, ragType=rag_type
+            )
+        )
+
+    print(response)
+
+
 def get_llm_configuration(grpc_host, virtual_host):
     """Get llm configuration from grpc."""
     with grpc.insecure_channel(grpc_host) as channel:
