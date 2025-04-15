@@ -20,6 +20,7 @@ package io.openk9.datasource.listener;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -271,8 +272,11 @@ public class JobSchedulerService {
 
 								Template template = composableIndexTemplate.template();
 
-								ComposableIndexTemplate newComposableIndexTemplate =
-									new ComposableIndexTemplate(
+								Objects.requireNonNull(template, "template attribute is null");
+
+								templateRequest
+									.name(newIndexName + "-template")
+									.indexTemplate(new ComposableIndexTemplate(
 										List.of(newIndexName),
 										new Template(
 											template.settings(),
@@ -283,11 +287,7 @@ public class JobSchedulerService {
 										composableIndexTemplate.priority(),
 										composableIndexTemplate.version(),
 										composableIndexTemplate.metadata()
-									);
-
-								templateRequest
-									.name(newIndexName + "-template")
-									.indexTemplate(newComposableIndexTemplate);
+									));
 
 								indices.putIndexTemplateAsync(
 									templateRequest,

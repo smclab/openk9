@@ -15,32 +15,51 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.index.model;
 
-public record EmbeddingComponentTemplate(
-	String tenantId, String embeddingModelName, int vectorSize
-) {
+public class MappingsKey {
+	private final String key;
+	private final String hashKey;
 
-	public EmbeddingComponentTemplate {
+	public static MappingsKey of(String key) {
+		return new MappingsKey(key);
+	}
 
-		assert embeddingModelName != null && !embeddingModelName.isEmpty();
-		assert tenantId != null && !tenantId.isEmpty();
-		assert vectorSize > 0;
+	public static MappingsKey of(String key, String hashKey) {
+		return new MappingsKey(key, hashKey);
+	}
+
+	public MappingsKey(String key) {
+		this(key, key);
+	}
+
+	public MappingsKey(String key, String hashKey) {
+		this.key = key;
+		this.hashKey = hashKey;
+	}
+
+	public String getKey() {
+		return key;
 	}
 
 	@Override
-	public String embeddingModelName() {
-		throw new UnsupportedOperationException();
-	}
-
-	public String getName() {
-		return OpenSearchUtils.nameSanitizer(
-			String.format("%s-%s", tenantId, embeddingModelName));
+	public int hashCode() {
+		return hashKey.hashCode();
 	}
 
 	@Override
-	public String tenantId() {
-		throw new UnsupportedOperationException();
+	public boolean equals(Object obj) {
+		if (obj instanceof MappingsKey) {
+			return hashKey.equals(((MappingsKey) obj).hashKey);
+		}
+		else {
+			return false;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return key;
 	}
 
 }

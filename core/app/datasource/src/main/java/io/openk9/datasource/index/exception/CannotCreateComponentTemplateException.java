@@ -15,11 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.index.exception;
 
-import io.openk9.datasource.service.exception.K9Error;
-
-public class CannotCreateComponentTemplateException extends K9Error {
+public class CannotCreateComponentTemplateException extends IndexMappingException {
 
 	public CannotCreateComponentTemplateException() {
 		super("unknown error");

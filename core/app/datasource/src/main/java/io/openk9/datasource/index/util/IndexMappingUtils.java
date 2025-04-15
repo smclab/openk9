@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index.mappings;
+package io.openk9.datasource.index.util;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
@@ -38,9 +39,9 @@ import io.openk9.datasource.searcher.util.Utils;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
-public final class IndexMappingsUtil {
+public final class IndexMappingUtils {
 
-	private IndexMappingsUtil() {
+	private IndexMappingUtils() {
 	}
 
 	public static Map<MappingsKey, Object> docTypesToMappings(Collection<DocType> docTypes) {
@@ -51,7 +52,7 @@ public final class IndexMappingsUtil {
 			.collect(
 				Collectors.collectingAndThen(
 					Collectors.toCollection(LinkedList::new),
-					IndexMappingsUtil::docTypeFieldsToMappings
+					IndexMappingUtils::docTypeFieldsToMappings
 				)
 			);
 	}

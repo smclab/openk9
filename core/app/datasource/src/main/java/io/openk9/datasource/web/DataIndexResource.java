@@ -27,7 +27,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
 import io.openk9.datasource.index.IndexMappingService;
-import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;

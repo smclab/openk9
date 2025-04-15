@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index.mappings;
+package io.openk9.datasource.index.util;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
@@ -32,12 +33,12 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class IndexMappingsUtilTest {
+class IndexMappingUtilsTest {
 
 	@Test
 	void docTypesToMappings() {
 		Map<MappingsKey, Object> result =
-			IndexMappingsUtil.docTypesToMappings(List.of(defaultDocType, webDocType));
+			IndexMappingUtils.docTypesToMappings(List.of(defaultDocType, webDocType));
 		Assertions.assertEquals(expectedJson, JsonObject.mapFrom(result));
 	}
 

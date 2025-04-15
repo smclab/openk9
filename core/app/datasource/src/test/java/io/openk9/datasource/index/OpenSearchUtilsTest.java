@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.stream.Stream;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 

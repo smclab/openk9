@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.index.util;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 
+import io.openk9.datasource.index.exception.IndexMappingException;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 
@@ -79,7 +80,8 @@ public class OpenSearchUtils {
 	private static final Set<Character> FORBIDDEN_CHARACTERS = Set.of(
 		':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
 
-	public static JsonObject getDynamicMapping(byte[] payload) {
+	public static JsonObject getDynamicMapping(byte[] payload)
+		throws IOException {
 
 		try (MapperService mapperService = createMapperService()) {
 
@@ -102,20 +104,22 @@ public class OpenSearchUtils {
 			).getJsonObject(DOCUMENT_TYPE);
 
 		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	public static JsonObject getDynamicMapping(
 		IngestionPayload ingestionPayload,
 		IngestionPayloadMapper mapper) {
 
-		var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+		try {
+			var documentTypes = IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
 
-		var dataPayload = mapper.map(ingestionPayload, documentTypes);
+			var dataPayload = mapper.map(ingestionPayload, documentTypes);
 
-		return OpenSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
+			return OpenSearchUtils.getDynamicMapping(Json.encodeToBuffer(dataPayload).getBytes());
+		}
+		catch (Exception e) {
+			throw new IndexMappingException(e);
+		}
 	}
 
 	/**

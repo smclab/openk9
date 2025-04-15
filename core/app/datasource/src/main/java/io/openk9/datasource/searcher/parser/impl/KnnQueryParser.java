@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.index.OpenSearchUtils;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;

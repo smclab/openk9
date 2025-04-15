@@ -18,7 +18,7 @@
 package io.openk9.datasource.index.model;
 
 import io.openk9.api.tenantmanager.TenantManager;
-import io.openk9.datasource.index.OpenSearchUtils;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.model.DataIndex;
 
 public record IndexName(String value) {

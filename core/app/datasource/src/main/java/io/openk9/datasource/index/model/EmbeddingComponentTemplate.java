@@ -15,15 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.index.model;
 
-import java.util.Map;
-import jakarta.annotation.Nonnull;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.EmbeddingModel;
+public record EmbeddingComponentTemplate(
+	String tenantId, String embeddingModelName, int vectorSize
+) {
 
-public record DataIndexTemplate(
-	@Nonnull String tenantId, Map<String, Object> settings,
-	@Nonnull DataIndex dataIndex, EmbeddingModel embeddingModel
-) {}
+	public EmbeddingComponentTemplate {
+
+		assert embeddingModelName != null && !embeddingModelName.isEmpty();
+		assert tenantId != null && !tenantId.isEmpty();
+		assert vectorSize > 0;
+	}
+
+	@Override
+	public String embeddingModelName() {
+		throw new UnsupportedOperationException();
+	}
+
+	public String getName() {
+		return OpenSearchUtils.nameSanitizer(
+			String.format("%s-%s", tenantId, embeddingModelName));
+	}
+
+	@Override
+	public String tenantId() {
+		throw new UnsupportedOperationException();
+	}
+
+}

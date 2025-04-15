@@ -17,14 +17,16 @@
 
 package io.openk9.datasource.service;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.openk9.datasource.model.EmbeddingModel;
-import io.openk9.datasource.model.dto.base.ProviderModelDTO;
+import java.io.IOException;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.index.EmbeddingComponentTemplate;
+import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
@@ -33,9 +35,6 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 public class EmbeddingModelServiceTest {

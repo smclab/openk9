@@ -34,9 +34,12 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-import io.openk9.datasource.index.mappings.IndexMappingsUtil;
-import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.model.DataIndexTemplate;
+import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.model.IndexName;
+import io.openk9.datasource.index.model.MappingsKey;
+import io.openk9.datasource.index.util.IndexMappingUtils;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
@@ -183,7 +186,7 @@ public class IndexMappingService {
 	 * mapping configurations as values, ready to be used in OpenSearch index templates
 	 */
 	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
-		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToMappings);
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToMappings);
 	}
 
 	/**
@@ -198,7 +201,7 @@ public class IndexMappingService {
 	 * corresponding setting values as Objects, ready to be used in OpenSearch index templates
 	 */
 	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
-		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToSettings);
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToSettings);
 	}
 
 	/**
@@ -295,7 +298,7 @@ public class IndexMappingService {
 		var embeddingModel = indexTemplateRequest.embeddingModel();
 
 		Map<MappingsKey, Object> mappings =
-			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
+			IndexMappingUtils.docTypesToMappings(dataIndex.getDocTypes());
 
 		var settings = getSettings(indexSettings, dataIndex);
 
@@ -443,7 +446,7 @@ public class IndexMappingService {
 
 		settingsMap = settingsMap != null && !settingsMap.isEmpty()
 			? settingsMap
-			: IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+			: IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes());
 
 		if (!settingsMap.isEmpty()) {
 			settingsBuilder.loadFromMap(settingsMap);

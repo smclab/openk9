@@ -15,25 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.index;
+package io.openk9.datasource.index.model;
 
-import io.openk9.datasource.service.exception.K9Error;
+import java.util.Map;
+import jakarta.annotation.Nonnull;
 
-public class DeleteIndexException extends K9Error {
+import io.openk9.datasource.model.DataIndex;
+import io.openk9.datasource.model.EmbeddingModel;
 
-	public DeleteIndexException() {
-		super("unknown error");
-	}
-
-	public DeleteIndexException(String message) {
-		super(message);
-	}
-
-	public DeleteIndexException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public DeleteIndexException(Throwable cause) {
-		super(cause);
-	}
-}
+public record DataIndexTemplate(
+	@Nonnull String tenantId, Map<String, Object> settings,
+	@Nonnull DataIndex dataIndex, EmbeddingModel embeddingModel
+) {}

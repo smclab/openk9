@@ -28,6 +28,9 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.index.exception.CannotCreateComponentTemplateException;
+import io.openk9.datasource.index.exception.CannotCreateIndexTemplateException;
+import io.openk9.datasource.index.exception.DeleteIndexException;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
