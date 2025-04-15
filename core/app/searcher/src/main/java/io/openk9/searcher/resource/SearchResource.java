@@ -71,6 +71,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
@@ -115,6 +117,9 @@ public class SearchResource {
 	List<String> supportedHeadersName;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken; // it is injected to force authentication.
 
 	@POST
 	@Path("/search-query")
