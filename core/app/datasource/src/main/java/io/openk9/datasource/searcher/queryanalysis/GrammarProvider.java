@@ -29,7 +29,7 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
-import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 

@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 
 class TokenAnnotator extends BaseAnnotator {

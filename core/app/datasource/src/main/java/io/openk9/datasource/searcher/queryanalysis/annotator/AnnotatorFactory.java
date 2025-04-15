@@ -22,7 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.model.util.JWT;
-import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 
 import org.opensearch.client.RestHighLevelClient;
 

@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 
 import org.opensearch.index.query.QueryBuilder;

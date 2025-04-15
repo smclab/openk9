@@ -28,7 +28,7 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
-import io.openk9.datasource.searcher.TenantWithBucket;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 

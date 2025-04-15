@@ -15,14 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.searcher;
+package io.openk9.datasource.searcher.model;
 
 import java.util.HashSet;
 
 import io.openk9.api.tenantmanager.TenantManager;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 
 import lombok.Getter;
