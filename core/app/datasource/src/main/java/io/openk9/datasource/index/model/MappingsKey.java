@@ -17,7 +17,13 @@
 
 package io.openk9.datasource.index.model;
 
-public class MappingsKey {
+import java.util.Objects;
+
+import lombok.Getter;
+
+public final class MappingsKey {
+
+	@Getter
 	private final String key;
 	private final String hashKey;
 
@@ -38,23 +44,19 @@ public class MappingsKey {
 		this.hashKey = hashKey;
 	}
 
-	public String getKey() {
-		return key;
-	}
-
 	@Override
 	public int hashCode() {
-		return hashKey.hashCode();
+		return Objects.hashCode(this.hashKey);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof MappingsKey) {
-			return hashKey.equals(((MappingsKey) obj).hashKey);
+	public boolean equals(Object other) {
+
+		if (other instanceof MappingsKey mappingsKey) {
+			return Objects.equals(this.hashKey, mappingsKey.hashKey);
 		}
-		else {
-			return false;
-		}
+
+		return false;
 	}
 
 	@Override
