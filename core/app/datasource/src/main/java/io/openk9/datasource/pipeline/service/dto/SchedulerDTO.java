@@ -50,9 +50,9 @@ public class SchedulerDTO {
 
 	public String getIndexName() {
 
-		String newDataIndexName = getNewIndexName();
+		String newIndexName = getNewIndexName();
 
-		return newDataIndexName != null ? newDataIndexName : getOldIndexName();
+		return newIndexName != null ? newIndexName : getOldIndexName();
 	}
 
 	public String getNewIndexName() {

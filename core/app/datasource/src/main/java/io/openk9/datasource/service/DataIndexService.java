@@ -85,7 +85,7 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
 		long dataIndexId, long docTypeId) {
-		return sessionFactory.withTransaction((s) -> findById(s, dataIndexId)
+		return sessionFactory.withTransaction(s -> findById(s, dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->
@@ -341,7 +341,7 @@ public class DataIndexService
 	}
 
 	public Uni<Long> getCountIndexDocuments(long dataIndexId) {
-		return sessionFactory.withTransaction((s) -> getCurrentTenant(s)
+		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
 			.flatMap(tenant -> findById(s, dataIndexId)
 				.flatMap(dataIndex -> indexService
 					.indexCount(IndexName.from(tenant, dataIndex).toString())
@@ -428,7 +428,7 @@ public class DataIndexService
 
 	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
 		long dataIndexId, long docTypeId) {
-		return sessionFactory.withTransaction((s) -> findById(s, dataIndexId)
+		return sessionFactory.withTransaction(s -> findById(s, dataIndexId)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(dataIndex ->

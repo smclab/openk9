@@ -41,14 +41,14 @@ public class TenantWithBucket {
 		var tenantId = this.tenant.schemaName();
 		var datasources = this.bucket.getDatasources();
 
-		var indexNames = new HashSet<String>();
+		var indexNameSet = new HashSet<String>();
 		for (Datasource datasource : datasources) {
 			var dataIndex = datasource.getDataIndex();
 
-			indexNames.add(IndexName.from(tenantId, dataIndex).toString());
+			indexNameSet.add(IndexName.from(tenantId, dataIndex).toString());
 		}
 
-		this.indexNames = indexNames.toArray(String[]::new);
+		this.indexNames = indexNameSet.toArray(String[]::new);
 
 	}
 

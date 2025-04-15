@@ -141,7 +141,7 @@ public class SearcherSuggestionsGrpcTest {
 			.await().indefinitely();
 
 		try {
-			var indexName = IndexName.from("public", dataIndex);
+			var indexName = IndexName.from(SCHEMA_NAME, dataIndex);
 			var createIndexRequest = new CreateIndexRequest(indexName.toString());
 
 			openSearchClient.indices()
