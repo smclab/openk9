@@ -62,23 +62,15 @@ public class HttpPluginDriverClient {
 			httpMethod = HttpPluginDriverInfo.Method.POST;
 		}
 
-		String host = httpPluginDriverInfo.getHost();
+		String baseUri = httpPluginDriverInfo.getBaseUri();
 
-		if (host == null) {
-			host = "localhost";
-		}
-
-		Integer port = httpPluginDriverInfo.getPort();
-
-		if (port == null || port < 1 || port > 65535) {
-			port = 8080;
+		if (baseUri == null) {
+			baseUri = "localhost:8080";
 		}
 
 		return webClient.request(
 				httpMethod.getHttpMethod(),
-				port,
-				host,
-				path
+				baseUri + path
 			)
 			.ssl(httpPluginDriverInfo.isSecure())
 			.sendJson(httpPluginDriverContext)
@@ -111,9 +103,7 @@ public class HttpPluginDriverClient {
 		return webClient
 			.request(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				HEALTH_PATH
+				pluginDriverInfo.getBaseUri() + HEALTH_PATH
 			)
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
@@ -132,9 +122,7 @@ public class HttpPluginDriverClient {
 		return webClient
 			.request(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				SAMPLE_PATH
+				pluginDriverInfo.getBaseUri() + SAMPLE_PATH
 			)
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
@@ -147,9 +135,7 @@ public class HttpPluginDriverClient {
 		return webClient
 			.request(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				FORM_PATH
+				pluginDriverInfo.getBaseUri() + FORM_PATH
 			)
 			.ssl(pluginDriverInfo.isSecure())
 			.send()

@@ -33,8 +33,7 @@ import java.util.Map;
 @Builder
 public class HttpPluginDriverInfo {
 	private boolean secure;
-	private String host;
-	private Integer port;
+	private String baseUri;
 	private String path;
 	private Method method;
 	private Map<String, Object> body;

@@ -76,8 +76,7 @@ public class PluginDrivers {
 		static final Liferay INSTANCE = new Liferay();
 
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY) + ":5000")
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -108,8 +107,8 @@ public class PluginDrivers {
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
 
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
@@ -121,8 +120,7 @@ public class PluginDrivers {
 	private static final class Crawler implements PluginDriverPreset {
 		static final Crawler INSTANCE = new Crawler();
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER) + ":5000")
 			.secure(false)
 			.path("/startUrlsCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -152,8 +150,8 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
@@ -173,8 +171,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.EMAIL) + ":5000")
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -196,8 +193,8 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
@@ -217,8 +214,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.GITLAB) + ":5000")
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -240,8 +236,8 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
@@ -261,8 +257,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP) + ":5000")
 			.secure(false)
 			.path("/startSitemapCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -284,8 +279,8 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
@@ -306,8 +301,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.host(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
-			.port(5000)
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE) + ":5000")
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -329,8 +323,8 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withHost(StringUtils.withSuffix(
-				JSON_CONFIG.getHost(),
+			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
+				JSON_CONFIG.getBaseUri(),
 				tenant
 			));
 
