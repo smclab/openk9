@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.util;
+package io.openk9.datasource.index;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -79,6 +79,34 @@ public class OpenSearchUtils {
 	private static final Set<Character> FORBIDDEN_CHARACTERS = Set.of(
 		':', '#', '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',');
 
+	public static JsonObject getDynamicMapping(byte[] payload) {
+
+		try (MapperService mapperService = createMapperService()) {
+
+			DocumentMapper documentMapper = mapperService
+				.documentMapperWithAutoCreate()
+				.getDocumentMapper();
+
+			ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
+
+			Mapping mapping = documentMapper.mapping();
+			if (mapping != null) {
+				doc.addDynamicMappingsUpdate(mapping);
+			}
+
+			return ((JsonObject) Json
+				.decodeValue(doc
+					.dynamicMappingsUpdate()
+					.toString()
+				)
+			).getJsonObject(DOCUMENT_TYPE);
+
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static JsonObject getDynamicMapping(
 		IngestionPayload ingestionPayload,
 		IngestionPayloadMapper mapper) {
@@ -91,13 +119,45 @@ public class OpenSearchUtils {
 	}
 
 	/**
-	 * Take a candidate indexName and removes illegal first characters
+	 * Extracts the top-level error reason and the first causedBy reason, if present.
+	 *
+	 * @param error The initial ErrorCause.
+	 * @return A formatted string with the primary error and optionally the first cause.
+	 */
+	public static String getPrimaryAndFirstCauseReason(ErrorCause error) {
+		if (error == null) {
+			return "Unknown error (ErrorCause was null)";
+		}
+		StringBuilder reasonBuilder = new StringBuilder();
+
+		// Append top-level error type and reason
+		reasonBuilder.append("(").append(error.type()).append(") ");
+		reasonBuilder.append(error.reason() != null ? error.reason() : "No reason provided");
+
+		ErrorCause causedBy = error.causedBy();
+
+		// Check if there's a causedBy
+		if (causedBy != null) {
+			reasonBuilder.append(" -> Caused by: ");
+
+			// Append the causedBy's type and reason
+			reasonBuilder.append("(").append(causedBy.type()).append(") ");
+			reasonBuilder.append(
+				causedBy.reason() != null ? causedBy.reason() : "No reason provided");
+		}
+
+		return reasonBuilder.toString();
+	}
+
+
+	/**
+	 * Take a candidate name and removes illegal first characters
 	 * then replace all forbidden characters (include uppercase).
 	 *
 	 * @param name the candidate name
-	 * @return the sanitized name
+	 * @return the sanitized name that could be used in OpenSearch
 	 */
-	public static String indexNameSanitizer(String name) {
+	public static String nameSanitizer(String name) {
 		Objects.requireNonNull(name);
 
 		var n = name.length();
@@ -136,45 +196,6 @@ public class OpenSearchUtils {
 			generator.close();
 
 			return QueryBuilders.wrapperQuery(os.toByteArray());
-
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static SourceToParse sourceToParse(byte[] payload) {
-
-		return new SourceToParse(
-			IGNORE_INDEX,
-			DOCUMENT_TYPE,
-			new BytesArray(payload),
-			XContentType.JSON
-		);
-
-	}
-
-	public static JsonObject getDynamicMapping(byte[] payload) {
-
-		try (MapperService mapperService = createMapperService()) {
-
-			DocumentMapper documentMapper = mapperService
-				.documentMapperWithAutoCreate()
-				.getDocumentMapper();
-
-			ParsedDocument doc = documentMapper.parse(sourceToParse(payload));
-
-			Mapping mapping = documentMapper.mapping();
-			if (mapping != null) {
-				doc.addDynamicMappingsUpdate(mapping);
-			}
-
-			return ((JsonObject) Json
-				.decodeValue(doc
-					.dynamicMappingsUpdate()
-					.toString()
-				)
-			).getJsonObject(DOCUMENT_TYPE);
 
 		}
 		catch (IOException e) {
@@ -245,38 +266,18 @@ public class OpenSearchUtils {
 		return mapperService;
 	}
 
-	private OpenSearchUtils() {
+	private static SourceToParse sourceToParse(byte[] payload) {
+
+		return new SourceToParse(
+			IGNORE_INDEX,
+			DOCUMENT_TYPE,
+			new BytesArray(payload),
+			XContentType.JSON
+		);
+
 	}
 
-	/**
-	 * Extracts the top-level error reason and the first causedBy reason, if present.
-	 *
-	 * @param error The initial ErrorCause.
-	 * @return A formatted string with the primary error and optionally the first cause.
-	 */
-	public static String getPrimaryAndFirstCauseReason(ErrorCause error) {
-		if (error == null) {
-			return "Unknown error (ErrorCause was null)";
-		}
-		StringBuilder reasonBuilder = new StringBuilder();
-
-		// Append top-level error type and reason
-		reasonBuilder.append("(").append(error.type()).append(") ");
-		reasonBuilder.append(error.reason() != null ? error.reason() : "No reason provided");
-
-		ErrorCause causedBy = error.causedBy();
-
-		// Check if there's a causedBy
-		if (causedBy != null) {
-			reasonBuilder.append(" -> Caused by: ");
-
-			// Append the causedBy's type and reason
-			reasonBuilder.append("(").append(causedBy.type()).append(") ");
-			reasonBuilder.append(
-				causedBy.reason() != null ? causedBy.reason() : "No reason provided");
-		}
-
-		return reasonBuilder.toString();
+	private OpenSearchUtils() {
 	}
 
 }

@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.index;
 
-import io.openk9.datasource.util.OpenSearchUtils;
-
 public record EmbeddingComponentTemplate(
 	String tenantId, String embeddingModelName, int vectorSize
 ) {
@@ -36,7 +34,7 @@ public record EmbeddingComponentTemplate(
 	}
 
 	public String getName() {
-		return OpenSearchUtils.indexNameSanitizer(
+		return OpenSearchUtils.nameSanitizer(
 			String.format("%s-%s", tenantId, embeddingModelName));
 	}
 

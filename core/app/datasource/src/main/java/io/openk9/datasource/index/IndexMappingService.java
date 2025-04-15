@@ -48,7 +48,6 @@ import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
-import io.openk9.datasource.util.OpenSearchUtils;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;

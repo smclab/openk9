@@ -18,8 +18,8 @@
 package io.openk9.datasource.index.model;
 
 import io.openk9.api.tenantmanager.TenantManager;
+import io.openk9.datasource.index.OpenSearchUtils;
 import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.util.OpenSearchUtils;
 
 public record IndexName(String value) {
 
@@ -36,7 +36,7 @@ public record IndexName(String value) {
 	}
 
 	public static IndexName from(String tenantId, String dataIndexName) {
-		return new IndexName(OpenSearchUtils.indexNameSanitizer(
+		return new IndexName(OpenSearchUtils.nameSanitizer(
 			String.format("%s-%s", tenantId, dataIndexName)));
 	}
 

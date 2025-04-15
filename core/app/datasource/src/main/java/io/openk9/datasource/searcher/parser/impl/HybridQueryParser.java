@@ -20,9 +20,9 @@ package io.openk9.datasource.searcher.parser.impl;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.index.OpenSearchUtils;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
-import io.openk9.datasource.util.OpenSearchUtils;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;

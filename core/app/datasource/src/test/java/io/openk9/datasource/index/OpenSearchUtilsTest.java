@@ -15,11 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.util;
+package io.openk9.datasource.index;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.stream.Stream;
 
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
@@ -27,12 +34,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OpenSearchUtilsTest {
 
@@ -45,7 +46,7 @@ class OpenSearchUtilsTest {
 	@ParameterizedTest
 	@MethodSource("indexNames")
 	void should_sanitize_indexName(String actual, String expected) {
-		assertEquals(expected, OpenSearchUtils.indexNameSanitizer(actual));
+		assertEquals(expected, OpenSearchUtils.nameSanitizer(actual));
 	}
 
 	private static Stream<Arguments> indexNames() {
