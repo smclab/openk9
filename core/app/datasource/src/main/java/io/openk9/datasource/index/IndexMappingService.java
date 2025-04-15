@@ -172,6 +172,36 @@ public class IndexMappingService {
 	}
 
 	/**
+	 * Retrieves mappings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and transforms
+	 * them into a structured mapping configuration suitable for OpenSearch index templates.
+	 * The mappings define how document fields should be stored and indexed in OpenSearch.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with MappingsKey objects as keys and their corresponding
+	 * mapping configurations as values, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToMappings);
+	}
+
+	/**
+	 * Retrieves index settings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and extracts
+	 * their associated settings configuration. The settings define various OpenSearch index
+	 * properties such as number of shards, replicas, analysis settings, etc.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with setting names as String keys and their
+	 * corresponding setting values as Objects, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToSettings);
+	}
+
+	/**
 	 * Generates DocType and fields from provided mappings and document types.
 	 *
 	 * @param session       The Hibernate reactive session used for database operations

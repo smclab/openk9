@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,8 +35,6 @@ import jakarta.persistence.criteria.Subquery;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.index.mappings.IndexMappingsUtil;
-import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
@@ -402,16 +399,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
 
 		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
-	}
-
-	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
-
-		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToMappings);
-	}
-
-	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
-
-		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToSettings);
 	}
 
 	@Inject

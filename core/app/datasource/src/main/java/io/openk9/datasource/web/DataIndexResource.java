@@ -26,6 +26,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
+import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
@@ -50,6 +51,8 @@ public class DataIndexResource {
 	DocTypeService docTypeService;
 	@Inject
 	DataIndexService dataIndexService;
+	@Inject
+	IndexMappingService indexMappingService;
 
 	@Data
 	@AllArgsConstructor
@@ -81,7 +84,7 @@ public class DataIndexResource {
 	public Uni<Map<MappingsKey, Object>> getMappings(
 		GetMappingsOrSettingsFromDocTypesRequest request) {
 
-		return docTypeService.getMappingsFromDocTypes(request.getDocTypeIds());
+		return indexMappingService.getMappingsFromDocTypes(request.getDocTypeIds());
 	}
 
 	@Path("/get-settings-from-doc-types")
@@ -89,7 +92,7 @@ public class DataIndexResource {
 	public Uni<Map<String, Object>> getSettings(
 		GetMappingsOrSettingsFromDocTypesRequest request) {
 
-		return docTypeService.getSettingsFromDocTypes(request.getDocTypeIds());
+		return indexMappingService.getSettingsFromDocTypes(request.getDocTypeIds());
 	}
 
 	@Path("/create-data-index-from-doc-types/{datasourceId}")
