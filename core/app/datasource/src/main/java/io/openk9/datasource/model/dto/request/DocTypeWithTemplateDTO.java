@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto.request;
 
+import jakarta.validation.constraints.Positive;
+
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 
 import lombok.AllArgsConstructor;
@@ -37,6 +39,7 @@ import org.eclipse.microprofile.graphql.Description;
 @ToString(callSuper = true)
 public class DocTypeWithTemplateDTO extends DocTypeDTO {
 
+	@Positive
 	@Description("Rendering template to be associated. (optional)")
 	private Long docTypeTemplateId;
 
