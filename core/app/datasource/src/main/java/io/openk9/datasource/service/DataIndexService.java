@@ -147,7 +147,12 @@ public class DataIndexService
 	}
 
 	public Uni<CatResponse> catIndex(Long id) {
-		return null;
+		return sessionFactory.withTransaction((session, transaction) ->
+			getCurrentTenant(session)
+				.flatMap(tenant -> findById(session, id).flatMap(
+					dataIndex -> indexService.get_catIndicesFirst(
+						IndexName.from(tenant, dataIndex).toString())))
+		);
 	}
 
 	@Override

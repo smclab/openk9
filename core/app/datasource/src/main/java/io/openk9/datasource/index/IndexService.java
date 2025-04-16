@@ -399,6 +399,15 @@ public class IndexService {
 			);
 	}
 
+	public Uni<CatResponse> get_catIndicesFirst(String indexName) {
+		return get_catIndices(indexName).map(catResponses -> {
+			if (catResponses.isEmpty()) {
+				return null;
+			}
+			return catResponses.get(0);
+		});
+	}
+
 	public Uni<List<String>> getOnlyExistsIndexNames(List<String> indexNames) {
 		return getExistsAndIndexNames(indexNames)
 			.onItem()
