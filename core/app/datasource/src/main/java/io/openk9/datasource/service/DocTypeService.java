@@ -456,10 +456,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
 
 			// set docTypeTemplate only when docTypeTemplateId is not null
-			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+			var docTypeTemplateId = docTypeWithTemplateDTO.getDocTypeTemplateId();
+			if (docTypeTemplateId != null) {
 				var docTypeTemplate = session.getReference(
 					DocTypeTemplate.class,
-					docTypeWithTemplateDTO.getDocTypeTemplateId()
+					docTypeTemplateId
 				);
 
 				docType.setDocTypeTemplate(docTypeTemplate);
@@ -477,10 +478,11 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
 
 			// set docTypeTemplate only when docTypeTemplateId is not null
-			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+			var docTypeTemplateId = docTypeWithTemplateDTO.getDocTypeTemplateId();
+			if (docTypeTemplateId != null) {
 				var docTypeTemplate = session.getReference(
 					DocTypeTemplate.class,
-					docTypeWithTemplateDTO.getDocTypeTemplateId()
+					docTypeTemplateId
 				);
 
 				docType.setDocTypeTemplate(docTypeTemplate);
@@ -498,7 +500,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
 
-			// set docTypeTemplate always
+			// always set docTypeTemplate
 			DocTypeTemplate docTypeTemplate = null;
 			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
 				docTypeTemplate = session.getReference(
