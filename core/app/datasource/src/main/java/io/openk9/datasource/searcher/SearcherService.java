@@ -618,26 +618,28 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
 		GetRAGConfigurationsRequest request) {
 
-		return bucketService
-				.getCurrentBucket(request.getVirtualHost())
-			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
-			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
-			.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
-			.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
-			.map(ragConfiguration ->
-				GetRAGConfigurationsResponse.newBuilder()
-					.setName(ragConfiguration.getName())
-					.setChunkWindow(ragConfiguration.getChunkWindow())
-					.setReformulate(ragConfiguration.getReformulate())
-					.setPrompt(ragConfiguration.getPrompt())
-					.setPromptNoRag(ragConfiguration.getPromptNoRag())
-					.setRagToolDescription(ragConfiguration.getRagToolDescription())
-					.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
-					.setJsonConfig(StructUtils.fromJson(ragConfiguration.getJsonConfig()))
-					.build()
-			)
-			.onFailure(StatusRuntimeException.class)
-			.recoverWithUni(error -> Uni.createFrom().failure(error));
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
+			.flatMap(tenant ->
+				bucketService.getCurrentBucket(tenant.virtualHost())
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
+					.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
+					.map(ragConfiguration ->
+						GetRAGConfigurationsResponse.newBuilder()
+							.setName(ragConfiguration.getName())
+							.setChunkWindow(ragConfiguration.getChunkWindow())
+							.setReformulate(ragConfiguration.getReformulate())
+							.setPrompt(ragConfiguration.getPrompt())
+							.setPromptNoRag(ragConfiguration.getPromptNoRag())
+							.setRagToolDescription(ragConfiguration.getRagToolDescription())
+							.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
+							.setJsonConfig(StructUtils.fromJson(ragConfiguration.getJsonConfig()))
+							.build()
+					)
+					.onFailure(StatusRuntimeException.class)
+					.recoverWithUni(error -> Uni.createFrom().failure(error))
+			);
 	}
 
 	@Override
