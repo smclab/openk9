@@ -79,6 +79,13 @@ import java.util.Set;
 			" )"
 	),
 	@NamedQuery(
+		name = Bucket.CURRENT_BY_VIRTUAL_HOST_NAMED_QUERY,
+		query =
+			"select b " +
+			"from Bucket b join b.tenantBinding tb " +
+			"where tb.virtualHost = :virtualHost "
+	),
+	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
 		query = "from Bucket b where b.tenantBinding is not null"
 	)
@@ -88,6 +95,8 @@ public class Bucket extends K9Entity {
 	public static final String FETCH_ANNOTATORS_NAMED_QUERY = "Bucket.fetchAnnotators";
 
 	public static final String CURRENT_NAMED_QUERY = "Bucket.current";
+
+	public static final String CURRENT_BY_VIRTUAL_HOST_NAMED_QUERY = "Bucket.currentByVirtualHost";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
