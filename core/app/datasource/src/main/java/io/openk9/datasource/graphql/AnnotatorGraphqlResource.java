@@ -27,6 +27,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+import io.openk9.datasource.model.dto.request.AnnotatorWithDocTypeFieldDTO;
 import io.openk9.datasource.service.AnnotatorService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
@@ -130,7 +131,14 @@ public class AnnotatorGraphqlResource {
 				? patchAnnotator(id, annotatorDTO)
 				: updateAnnotator(id, annotatorDTO);
 		}
+	}
 
+	@Mutation
+	public Uni<Response<Annotator>> annotatorWithDocTypeField(
+		@Id Long id, AnnotatorWithDocTypeFieldDTO annotatorDTO,
+		@DefaultValue("false") boolean patch) {
+
+		return annotator(id, annotatorDTO, patch);
 	}
 
 	@Mutation

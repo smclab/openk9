@@ -28,6 +28,7 @@ import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+import io.openk9.datasource.model.dto.request.AnnotatorWithDocTypeFieldDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
@@ -50,6 +51,19 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Annotator_.NAME, Annotator_.FUZINESS, Annotator_.TYPE, Annotator_.DESCRIPTION};
+	}
+
+	@Override
+	public Uni<Annotator> create(AnnotatorDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			create(session, dto));
+	}
+
+	@Override
+	public Uni<Annotator> create(Mutiny.Session session, AnnotatorDTO dto) {
+		var annotator = createMapper(session, dto);
+
+		return super.create(session, annotator);
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsNotInAnnotator(
@@ -120,6 +134,96 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 						return persist(s, annotator);
 					})
 			);
+	}
+
+	@Override
+	public Uni<Annotator> patch(long id, AnnotatorDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			patch(session, id, dto));
+	}
+
+	@Override
+	protected Uni<Annotator> patch(Mutiny.Session session, long id, AnnotatorDTO dto) {
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(annotator, annotatorDTO) -> patchMapper(
+				session, annotator, annotatorDTO)
+		);
+	}
+
+	@Override
+	public Uni<Annotator> update(long id, AnnotatorDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			update(session, id, dto));
+	}
+
+	@Override
+	public Uni<Annotator> update(Mutiny.Session session, long id, AnnotatorDTO dto) {
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(annotator, annotatorDTO) -> updateMapper(session, annotator, annotatorDTO)
+		);
+	}
+
+	private Annotator createMapper(Mutiny.Session session, AnnotatorDTO dto) {
+		var annotator = mapper.create(dto);
+
+		if (dto instanceof AnnotatorWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			// set docTypeField only when is present
+			var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+			if (docTypeFieldId != null) {
+				var docTypeField = session.getReference(DocTypeField.class, docTypeFieldId);
+				annotator.setDocTypeField(docTypeField);
+			}
+
+		}
+
+		return annotator;
+	}
+
+	private Annotator patchMapper(
+		Mutiny.Session session, Annotator annotator,
+		AnnotatorDTO annotatorDTO) {
+
+		mapper.patch(annotator, annotatorDTO);
+
+		if (annotatorDTO instanceof AnnotatorWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			// set docTypeField only when is present
+			var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+			if (docTypeFieldId != null) {
+				var docTypeField = session.getReference(DocTypeField.class, docTypeFieldId);
+				annotator.setDocTypeField(docTypeField);
+			}
+		}
+
+		return annotator;
+	}
+
+	private Annotator updateMapper(
+		Mutiny.Session session, Annotator annotator,
+		AnnotatorDTO annotatorDTO) {
+
+		mapper.update(annotator, annotatorDTO);
+
+		if (annotatorDTO instanceof AnnotatorWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			// always set docTypeField
+			DocTypeField docTypeField = null;
+			var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+			if (docTypeFieldId != null) {
+				docTypeField = session.getReference(DocTypeField.class, docTypeFieldId);
+			}
+
+			annotator.setDocTypeField(docTypeField);
+		}
+
+		return annotator;
 	}
 
 	private static Uni<Annotator> fetchExtraParams(Mutiny.Session s, Annotator annotator) {
