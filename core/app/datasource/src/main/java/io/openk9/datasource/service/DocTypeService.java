@@ -74,6 +74,12 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	@Override
+	public Uni<DocType> create(DocTypeDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, dto));
+	}
+
+	@Override
 	public Uni<DocType> create(Mutiny.Session session, DocTypeDTO dto) {
 		var entity = createMapper(session, dto);
 
@@ -410,13 +416,27 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	}
 
 	@Override
+	public Uni<DocType> patch(long id, DocTypeDTO dto) {
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> patch(session, id, dto));
+	}
+
+	@Override
 	public Uni<DocType> patch(Mutiny.Session session, long id, DocTypeDTO dto) {
+
 		return findThenMapAndPersist(
 			session,
 			id,
 			dto,
 			(docType, docTypeDTO) -> patchMapper(session, docType, docTypeDTO)
 		);
+	}
+
+	@Override
+	public Uni<DocType> update(long id, DocTypeDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> update(session, id, dto));
 	}
 
 	@Override
