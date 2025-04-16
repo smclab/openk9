@@ -620,7 +620,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
 			.flatMap(tenant ->
-				bucketService.getCurrentBucket(tenant.virtualHost())
+				bucketService.getCurrentBucketByTenantId(tenant.schemaName())
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))

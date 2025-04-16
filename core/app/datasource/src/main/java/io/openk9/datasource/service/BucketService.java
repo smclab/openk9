@@ -560,8 +560,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	public Uni<Bucket> getCurrentBucket(String host) {
 		return sessionFactory.withTransaction(session -> session
-			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
+			.createNamedQuery(Bucket.CURRENT_BY_VIRTUAL_HOST_NAMED_QUERY, Bucket.class)
 			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
+			.getSingleResult()
+		);
+	}
+
+	public Uni<Bucket> getCurrentBucketByTenantId(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
 			.getSingleResult()
 		);
 	}
