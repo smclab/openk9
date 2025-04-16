@@ -31,6 +31,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.DocTypeWithTemplateDTO;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityEvent;
@@ -153,6 +154,22 @@ public class DocTypeGraphqlResource {
 			return patch
 				? patchDocType(id, docTypeDTO)
 				: updateDocType(id, docTypeDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Response<DocType>> docTypeWithTemplate(
+		@Id Long id, DocTypeWithTemplateDTO docTypeWithTemplateDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createDocType(docTypeWithTemplateDTO);
+		}
+		else {
+			return patch
+				? patchDocType(id, docTypeWithTemplateDTO)
+				: updateDocType(id, docTypeWithTemplateDTO);
 		}
 
 	}

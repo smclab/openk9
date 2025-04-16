@@ -49,6 +49,7 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.DocTypeWithTemplateDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -70,6 +71,13 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {DocType_.NAME, DocType_.DESCRIPTION};
+	}
+
+	@Override
+	public Uni<DocType> create(Mutiny.Session session, DocTypeDTO dto) {
+		var entity = createMapper(session, dto);
+
+		return super.create(session, entity);
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
@@ -399,6 +407,90 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
 
 		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
+	}
+
+	@Override
+	public Uni<DocType> patch(Mutiny.Session session, long id, DocTypeDTO dto) {
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(docType, docTypeDTO) -> patchMapper(session, docType, docTypeDTO)
+		);
+	}
+
+	@Override
+	public Uni<DocType> update(Mutiny.Session session, long id, DocTypeDTO dto) {
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(docType, docTypeDTO) -> updateMapper(session, docType, docTypeDTO)
+		);
+	}
+
+	private DocType createMapper(Mutiny.Session session, DocTypeDTO docTypeDTO) {
+
+		var docType = mapper.create(docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// set docTypeTemplate only when docTypeTemplateId is not null
+			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+				var docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeWithTemplateDTO.getDocTypeTemplateId()
+				);
+
+				docType.setDocTypeTemplate(docTypeTemplate);
+			}
+
+		}
+
+		return docType;
+	}
+
+	private DocType patchMapper(Mutiny.Session session, DocType docType, DocTypeDTO docTypeDTO) {
+
+		mapper.patch(docType, docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// set docTypeTemplate only when docTypeTemplateId is not null
+			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+				var docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeWithTemplateDTO.getDocTypeTemplateId()
+				);
+
+				docType.setDocTypeTemplate(docTypeTemplate);
+			}
+
+
+		}
+
+		return docType;
+	}
+
+	private DocType updateMapper(Mutiny.Session session, DocType docType, DocTypeDTO docTypeDTO) {
+
+		mapper.update(docType, docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// set docTypeTemplate always
+			DocTypeTemplate docTypeTemplate = null;
+			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+				docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeWithTemplateDTO.getDocTypeTemplateId()
+				);
+			}
+
+			docType.setDocTypeTemplate(docTypeTemplate);
+		}
+
+		return docType;
 	}
 
 	@Inject
