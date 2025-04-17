@@ -18,6 +18,25 @@
 package io.openk9.datasource.web;
 
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -48,31 +67,13 @@ import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
+
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Fetch;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -364,8 +365,6 @@ public class BucketResource {
 			Fetch<Tab, TokenTab> tokenTabFetch = tabsJoin.fetch(Tab_.tokenTabs, JoinType.LEFT);
 
 			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
-
-			tokenTabFetch.fetch(TokenTab_.extraParams, JoinType.LEFT);
 
 			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
 
