@@ -260,6 +260,20 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
+            btnSearch={true}
+            viewColor={configuration.showSyntax}
+          />
+        </I18nextProvider>,
+        configuration.searchWithButton,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <Search
+            configuration={configuration}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
             btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
             htmlKey={configuration.searchConfigurable?.htmlKey}
             viewColor={configuration.showSyntax}
@@ -793,6 +807,33 @@ export function Main({
               dynamicFilters={
                 dynamicFilters.data?.handleDynamicFilters || false
               }
+              isVisibleFilters={true}
+              setIsVisibleFilters={undefined}
+              language={languageSelect}
+              sortAfterKey={sortAfterKey}
+              isDynamicElement={dynamicData}
+              numberResultOfFilters={numberResultOfFilters}
+              memoryResults={memoryResults}
+              filtersMobileBasicCallback={
+                configuration.filtersMobileBasicCallback
+              }
+            />
+          )}
+        </I18nextProvider>,
+        configuration.filtersMobileBasic,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          {isSearchLoading ? null : (
+            <FiltersMobileMemo
+              searchQuery={searchQuery}
+              onConfigurationChange={onConfigurationChange}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              selectionsDispatch={selectionsDispatch}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
               isVisibleFilters={configuration.filtersMobile?.isVisible || false}
               setIsVisibleFilters={configuration.filtersMobile?.setIsVisible}
               language={languageSelect}
@@ -887,6 +928,23 @@ export function Main({
         configuration.dataRangePickerVertical?.element !== undefined
           ? configuration.dataRangePickerVertical?.element
           : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePickerVertical
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
+            readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
+            translationLabel={
+              configuration.dataRangePickerVertical?.internationalLabel
+            }
+          />
+        </I18nextProvider>,
+        configuration.calendarVertical,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

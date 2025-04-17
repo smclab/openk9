@@ -383,6 +383,7 @@ export type Configuration = {
     filters?: boolean | null;
     tabs?: boolean | null;
   } | null;
+  filtersMobileBasicCallback: () => void | null | undefined;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
   memoryResults: boolean | null | undefined;
@@ -407,15 +408,18 @@ export type Configuration = {
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
+  calendarVertical: Element | string | null;
   changeLanguage: Element | string | null;
   detailMobile: Element | string | null;
   details: Element | string | null;
   filters: Element | string | null;
+  filtersMobileBasic: Element | string | null;
   generateResponse: Element | string | null;
   login: Element | string | null;
   queryStringValues: queryStringValues;
   results: Element | string | null;
   search: Element | string | null;
+  searchWithButton: Element | string | null;
   sortable: Element | string | null;
   tabs: Element | string | null;
   totalResult: Element | string | null;
@@ -458,6 +462,7 @@ const defaultConfiguration: Configuration = {
   callbackClient: () => null,
   calendar: null,
   calendarMobile: null,
+  calendarVertical: null,
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
@@ -473,6 +478,8 @@ const defaultConfiguration: Configuration = {
   filtersHorizontal: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
+  filtersMobileBasic: null,
+  filtersMobileBasicCallback: () => null,
   filterTokens: [],
   generateResponse: null,
   icons: null,
@@ -489,6 +496,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   resultsDisplayMode: { type: "infinite" },
   search: null,
+  searchWithButton: null,
   select: null,
   searchAutoselect: true,
   searchConfigurable: null,
