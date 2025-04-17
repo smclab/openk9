@@ -39,7 +39,6 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.resource.util.Filter;
@@ -558,15 +557,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		);
 	}
 
-	public Uni<Bucket> getCurrentBucket(String host) {
+	public Uni<Bucket> getCurrentBucket() {
 		return sessionFactory.withTransaction(session -> session
-			.createNamedQuery(Bucket.CURRENT_BY_VIRTUAL_HOST_NAMED_QUERY, Bucket.class)
-			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
+			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
 			.getSingleResult()
 		);
 	}
 
-	public Uni<Bucket> getCurrentBucketByTenantId(String tenantId) {
+	public Uni<Bucket> getCurrentBucket(String tenantId) {
 		return sessionFactory.withTransaction(tenantId, (s, t) -> s
 			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
 			.getSingleResult()

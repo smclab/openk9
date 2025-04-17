@@ -240,7 +240,7 @@ public class BucketGraphqlResource {
 
 	@Query
 	public  Uni<Bucket> getEnabledBucket() {
-		return bucketService.getCurrentBucket(request.host());
+		return bucketService.getCurrentBucket();
 	}
 
 	public Uni<Long> getIndexCount(@Source Bucket bucket){

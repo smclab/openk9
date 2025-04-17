@@ -160,13 +160,13 @@ public class BucketResource {
 		return QuarkusCacheUtil.getAsync(
 			cache,
 			new CompositeCacheKey(request.host(), "getCurrentBucket"),
-			_getCurrentBucket(request.host())
+			_getCurrentBucket()
 		);
 	}
 
-	private Uni<CurrentBucket> _getCurrentBucket(String host) {
+	private Uni<CurrentBucket> _getCurrentBucket() {
 		return bucketService
-			.getCurrentBucket(host)
+			.getCurrentBucket()
 			.map(mapper::toCurrentBucket);
 	}
 
