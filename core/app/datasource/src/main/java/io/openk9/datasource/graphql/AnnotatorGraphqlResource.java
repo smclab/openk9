@@ -170,20 +170,6 @@ public class AnnotatorGraphqlResource {
 			.map(K9EntityEvent::getEntity);
 	}
 
-	public Uni<Set<Annotator.AnnotatorExtraParam>> extraParams(@Source Annotator annotator) {
-		return annotatorService.getExtraParams(annotator);
-	}
-
-	@Mutation
-	public Uni<Annotator> addAnnotatorExtraParam(@Id long id, String key, String value) {
-		return annotatorService.addExtraParam(id, key, value);
-	}
-
-	@Mutation
-	public Uni<Annotator> removeExtraParam(@Id int id, String key) {
-		return annotatorService.removeExtraParam(id, key);
-	}
-
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 

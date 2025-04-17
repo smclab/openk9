@@ -47,11 +47,6 @@ import org.eclipse.microprofile.graphql.Source;
 public class TokenTabGraphqlResource {
 
 	@Mutation
-	public Uni<TokenTab> addExtraParam(@Id long id, String key, String value) {
-		return tokenTabService.addExtraParam(id, key, value);
-	}
-
-	@Mutation
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(
 		@Id long tokenTabId, @Id long docTypeFieldId) {
 		return tokenTabService.bindDocTypeFieldToTokenTab(tokenTabId, docTypeFieldId);
@@ -82,10 +77,6 @@ public class TokenTabGraphqlResource {
 			tokenTab.getId(), after, before, first, last, searchText, sortByList);
 	}
 
-	public Uni<Set<TokenTab.ExtraParam>> extraParams(@Source TokenTab tokenTab) {
-		return tokenTabService.getExtraParams(tokenTab);
-	}
-
 	@Query
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsNotInTokenTab(
 		@Id long tokenTabId,
@@ -113,11 +104,6 @@ public class TokenTabGraphqlResource {
 		String searchText, Set<SortBy> sortByList) {
 		return tokenTabService.findConnection(
 			after, before, first, last, searchText, sortByList);
-	}
-
-	@Mutation
-	public Uni<TokenTab> removeExtraParam(@Id int id, String key) {
-		return tokenTabService.removeExtraParam(id, key);
 	}
 
 	public Uni<Response<TokenTab>> tokenTab(@Id long id, TokenTabDTO tokenTabDTO) {

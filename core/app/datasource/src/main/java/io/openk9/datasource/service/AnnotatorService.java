@@ -105,37 +105,6 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 				})));
 	}
 
-	public Uni<Set<Annotator.AnnotatorExtraParam>> getExtraParams(Annotator annotator) {
-		return sessionFactory.withTransaction((s, t) -> s
-				.merge(annotator)
-				.flatMap(merged -> s.fetch(merged.getExtraParams())))
-			.map(Annotator::getExtraParamsSet);
-	}
-
-	public Uni<Annotator> addExtraParam(long id, String key, String value) {
-		return getSessionFactory()
-			.withTransaction(s ->
-				findById(s, id)
-					.flatMap(annotator -> fetchExtraParams(s, annotator))
-					.flatMap(annotator -> {
-						annotator.addExtraParam(key, value);
-						return persist(s, annotator);
-					})
-			);
-	}
-
-	public Uni<Annotator> removeExtraParam(int id, String key) {
-		return getSessionFactory()
-			.withTransaction(s ->
-				findById(s, id)
-					.flatMap(annotator -> fetchExtraParams(s, annotator))
-					.flatMap(annotator -> {
-						annotator.removeExtraParam(key);
-						return persist(s, annotator);
-					})
-			);
-	}
-
 	@Override
 	public Uni<Annotator> patch(long id, AnnotatorDTO dto) {
 		return sessionFactory.withTransaction((session, transaction) ->
@@ -224,15 +193,6 @@ public class AnnotatorService extends BaseK9EntityService<Annotator, AnnotatorDT
 		}
 
 		return annotator;
-	}
-
-	private static Uni<Annotator> fetchExtraParams(Mutiny.Session s, Annotator annotator) {
-		return s
-			.fetch(annotator.getExtraParams())
-			.flatMap(extraParams -> {
-				annotator.setExtraParams(extraParams);
-				return Uni.createFrom().item(annotator);
-			});
 	}
 
 	@Inject

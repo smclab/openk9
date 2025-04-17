@@ -17,31 +17,27 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.Fuzziness;
-import io.openk9.datasource.model.util.K9Entity;
-import jakarta.persistence.CollectionTable;
+import java.util.Objects;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.model.util.Fuzziness;
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "annotator")
@@ -62,25 +58,16 @@ public class Annotator extends K9Entity {
 	private Fuzziness fuziness;
 	@Column(name = "size")
 	private Integer size;
-	@OneToOne(
-		fetch = FetchType.LAZY
-	)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "doc_type_field_id")
 	@JsonIgnore
 	@ToString.Exclude
 	private DocTypeField docTypeField;
 	@Column(name = "field_name", nullable = false)
 	private String fieldName;
-
-	@ElementCollection
-	@CollectionTable(
-		name = "annotator_extra_params",
-		joinColumns = @JoinColumn(name = "annotator_id")
-	)
-	@MapKeyColumn(name = "key")
-	@Column(name = "value")
-	@JsonIgnore
-	private Map<String, String> extraParams = new HashMap<>();
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "extra_params")
+	private String extraParams;
 
 	@Override
 	public boolean equals(Object o) {
@@ -102,23 +89,5 @@ public class Annotator extends K9Entity {
 
 	public static final String DOCUMENT_TYPE_SET =
 		"('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')";
-
-	public void addExtraParam(String key, String value) {
-		extraParams.put(key, value);
-	}
-
-	public void removeExtraParam(String key) {
-		extraParams.remove(key);
-	}
-
-	public static Set<Annotator.AnnotatorExtraParam> getExtraParamsSet(
-		Map<String, String> extraParams) {
-		return extraParams
-			.entrySet()
-			.stream().map(e -> new Annotator.AnnotatorExtraParam(e.getKey(), e.getValue()))
-			.collect(Collectors.toSet());
-	}
-
-	public record AnnotatorExtraParam(String key, String value) {}
 
 }

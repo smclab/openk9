@@ -23,6 +23,7 @@ import jakarta.validation.constraints.NotNull;
 
 import io.openk9.datasource.model.AnnotatorType;
 import io.openk9.datasource.model.util.Fuzziness;
+import io.openk9.datasource.validation.json.Json;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -43,4 +44,6 @@ public class AnnotatorDTO extends K9EntityDTO {
 	@NotNull
 	@NotEmpty
 	private String fieldName;
+	@Json
+	private String extraParams;
 }
