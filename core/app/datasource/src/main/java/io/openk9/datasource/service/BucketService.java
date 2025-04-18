@@ -391,6 +391,41 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setDefaultLanguage(defaultLanguage);
 						}
 
+						//RAGConfigurations
+						//RAGConfigurationChat
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							var ragConfigurationChat =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChat()
+								);
+
+							bucket.setRagConfigurationChat(ragConfigurationChat);
+						}
+
+						//RAGConfigurationChatTool
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							var ragConfigurationChatTool =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChatTool()
+								);
+
+							bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+						}
+
+						//RAGConfigurationSimpleGenerate
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							var ragConfigurationSimpleGenerate =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+								);
+
+							bucket.
+								setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -867,6 +902,41 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//RAGConfigurations
+						//RAGConfigurationChat
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							var ragConfigurationChat = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationChat()
+							);
+
+							bucket.setRagConfigurationChat(ragConfigurationChat);
+							builder.add(s.persist(bucket));
+						}
+
+						//RAGConfigurationChatTool
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							var ragConfigurationChatTool = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationChatTool()
+							);
+
+							bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+							builder.add(s.persist(bucket));
+						}
+
+						//RAGConfigurationSimpleGenerate
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							var ragConfigurationSimpleGenerate = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+							);
+
+							bucket.
+								setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1161,6 +1231,46 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						bucket.setDefaultLanguage(defaultLanguage);
+
+						//RAGConfigurations
+						//RAGConfigurationChat
+						RAGConfiguration ragConfigurationChat = null;
+
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							ragConfigurationChat =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChat()
+								);
+						}
+
+						bucket.setRagConfigurationChat(ragConfigurationChat);
+
+						//RAGConfigurationChatTool
+						RAGConfiguration ragConfigurationChatTool = null;
+
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							ragConfigurationChatTool =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChatTool()
+								);
+						}
+
+						bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+
+						//RAGConfigurationSimpleGenerate
+						RAGConfiguration ragConfigurationSimpleGenerate = null;
+
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							ragConfigurationSimpleGenerate =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+								);
+						}
+
+						bucket.setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
 
 						builder.add(s.persist(bucket));
 
