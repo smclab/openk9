@@ -53,11 +53,11 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 		List<ParserSearchToken> tokenTypeGroup =
 			parserContext.getTokenTypeGroup();
 
-		Bucket currentTenant = parserContext.getBucket();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		for (ParserSearchToken searchToken : tokenTypeGroup) {
 			_termSearchAsYouTypeQueryValues(
-				searchToken, mutableQuery, currentTenant.getDatasources());
+				searchToken, mutableQuery, bucket.getDatasources());
 		}
 
 		return Uni.createFrom().voidItem();

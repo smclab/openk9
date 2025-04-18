@@ -40,9 +40,9 @@ public class DatasourceIdQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
-		Bucket currentTenant = parserContext.getBucket();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
-		Set<Datasource> datasources = currentTenant.getDatasources();
+		Set<Datasource> datasources = bucket.getDatasources();
 
 		Iterator<Datasource> iterator = datasources.iterator();
 

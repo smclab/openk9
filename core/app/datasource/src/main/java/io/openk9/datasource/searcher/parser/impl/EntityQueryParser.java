@@ -139,17 +139,17 @@ public class EntityQueryParser implements QueryParser {
 							.build())
 					.toList();
 
-			Bucket currentTenant = parserContext.getBucket();
+			Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 			JsonObject textQueryParserConfig =
 				SearcherService.getQueryParserConfig(
-					currentTenant, textQueryParser.getType());
+					bucket, textQueryParser.getType());
 
 			return textQueryParser.apply(
 				ParserContext
 					.builder()
 					.mutableQuery(mutableQuery)
-					.bucket(parserContext.getBucket())
+					.tenantWithBucket(parserContext.getTenantWithBucket())
 					.tokenTypeGroup(textParserSearchTokenList)
 					.queryParserConfig(textQueryParserConfig)
 					.language(language)
