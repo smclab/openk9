@@ -38,7 +38,6 @@ logger.addHandler(handler)
 
 # env variables
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
-print(f'GRPC_DATASOURCE_HOST: {GRPC_DATASOURCE_HOST}')
 
 # default text splitters parameters
 DEFAULT_CHUNK_SIZE = 100
@@ -185,8 +184,10 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         peer = context.peer()
         virtual_host = peer.split(":")[1]
+        logger.info(f"virtual_host: {virtual_host}")
         # TODO remove line
         virtual_host = "k9-ai.openk9.io"
+        logger.info(f"virtual_host: {virtual_host}")
 
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
