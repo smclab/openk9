@@ -494,8 +494,17 @@ class SearchQueryChat(BaseModel):
                                 "language": "en",
                             },
                         },
-                        "Example for not logged users": {
-                            "summary": "An example for not logged users",
+                        "Example for not logged users, first question": {
+                            "summary": "An example for not logged users, first question",
+                            "value": {
+                                "searchText": "Che cos’è la garanzia Infortuni del Conducente?",
+                                "chatSequenceNumber": 1,
+                                "timestamp": "1731928126578",
+                                "chatHistory": [],
+                            },
+                        },
+                        "Example for not logged users, third question": {
+                            "summary": "An example for not logged users, third question",
                             "value": {
                                 "searchText": "quanto vale?",
                                 "chatSequenceNumber": 3,
@@ -715,8 +724,17 @@ async def rag_chat(
                                 "language": "en",
                             },
                         },
-                        "Example for not logged users": {
-                            "summary": "An example for not logged users",
+                        "Example for not logged users, first question": {
+                            "summary": "An example for not logged users, first question",
+                            "value": {
+                                "searchText": "Che cos’è la garanzia Infortuni del Conducente?",
+                                "chatSequenceNumber": 1,
+                                "timestamp": "1731928126578",
+                                "chatHistory": [],
+                            },
+                        },
+                        "Example for not logged users, third question": {
+                            "summary": "An example for not logged users, third question",
                             "value": {
                                 "searchText": "quanto vale?",
                                 "chatSequenceNumber": 3,
