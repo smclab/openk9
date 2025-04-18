@@ -196,23 +196,16 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         model = embedding_model_configuration.providerModel.model
         vector_size = embedding_model_configuration.vectorSize
         json_config = json_format.MessageToDict(embedding_model_configuration.jsonConfig)
-
-        chunk_size = (
-            int(json_config.get("size"))
-            if "size" in json_config
-            else DEFAULT_CHUNK_SIZE
-        )
-        chunk_overlap = (
-            int(json_config.get("overlap"))
-            if "overlap" in json_config
-            else DEFAULT_CHUNK_OVERLAP
-        )
+        watsonx_project_id = json_config.get("watsonx_project_id")
+        chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
 
         configuration = {
             "api_key": api_key,
             "api_url": api_url,
             "model_type": model_type,
             "model": model,
+            "watsonx_project_id": watsonx_project_id,
+            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden
         }
 
         embeddings = initialize_embedding_model(configuration)
@@ -225,6 +218,16 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         chunks = []
 
         if chunk_type == 1:
+            chunk_size = (
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
+                else DEFAULT_CHUNK_SIZE
+            )
+            chunk_overlap = (
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
+                else DEFAULT_CHUNK_OVERLAP
+            )
             text_splitter = DerivedTextSplitter(
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
@@ -232,24 +235,34 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 2:
+            chunk_size = (
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
+                else DEFAULT_CHUNK_SIZE
+            )
+            chunk_overlap = (
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
+                else DEFAULT_CHUNK_OVERLAP
+            )
             chunk_separator = (
-                json_config.get("separator")
-                if "separator" in json_config
+                chunk_json_config["separator"]
+                if "separator" in chunk_json_config
                 else DEFAULT_SEPARATOR
             )
             chunk_model_name = (
-                json_config.get("model_name")
-                if "model_name" in json_config
+                chunk_json_config["model_name"]
+                if "model_name" in chunk_json_config
                 else DEFAULT_MODEL_NAME
             )
             chunk_encoding = (
-                json_config.get("encoding")
-                if "encoding" in json_config
+                chunk_json_config["encoding"]
+                if "encoding" in chunk_json_config
                 else DEFAULT_ENCODING_NAME
             )
             chunk_is_separator_regex = (
                 chunk_json_config["is_separator_regex"]
-                if "is_separator_regex" in json_config
+                if "is_separator_regex" in chunk_json_config
                 else DEFAULT_IS_SEPARATOR_REGEX
             )
             text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
@@ -263,14 +276,24 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 3 or chunk_type == 0:
+            chunk_size = (
+                int(chunk_json_config["size"])
+                if "size" in chunk_json_config
+                else DEFAULT_CHUNK_SIZE
+            )
+            chunk_overlap = (
+                int(chunk_json_config["overlap"])
+                if "overlap" in chunk_json_config
+                else DEFAULT_CHUNK_OVERLAP
+            )
             chunk_separator = (
-                json_config.get("separator")
-                if "separator" in json_config
+                chunk_json_config["separator"]
+                if "separator" in chunk_json_config
                 else DEFAULT_SEPARATOR
             )
             chunk_is_separator_regex = (
                 chunk_json_config["is_separator_regex"]
-                if "is_separator_regex" in json_config
+                if "is_separator_regex" in chunk_json_config
                 else DEFAULT_IS_SEPARATOR_REGEX
             )
             text_splitter = CharacterTextSplitter(
@@ -283,7 +306,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 4:
-            text_splitter = SemanticChunker(embeddings)
+            text_splitter = SemanticChunker(self.embeddings)
             text_splitted = text_splitter.split_text(text)
 
         total_chunks = len(text_splitted)
@@ -293,7 +316,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "number": index,
                 "total": total_chunks,
                 "text": chunk_text,
-                "vectors": embeddings.embed_query(chunk_text),
+                "vectors": self.embeddings.embed_query(chunk_text),
             }
             chunks.append(chunk)
 
