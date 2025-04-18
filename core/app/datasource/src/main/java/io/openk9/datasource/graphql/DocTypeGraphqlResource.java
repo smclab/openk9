@@ -175,8 +175,13 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DocType> deleteDocType(@Id long docTypeId) {
-		return docTypeService.deleteById(docTypeId);
+	@Description("""
+		Deletes a DocType entity by its ID after validating the provided name matches the entity.
+		Requires both the docTypeId and docTypeName (as a confirmation mechanism) to prevent
+		accidental deletions.
+		""")
+	public Uni<DocType> deleteDocType(@Id long docTypeId, String docTypeName) {
+		return docTypeService.deleteById(docTypeId, docTypeName);
 	}
 
 	@Mutation
