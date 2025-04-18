@@ -17,6 +17,27 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -29,31 +50,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.inject.Inject;
-
-import io.openk9.datasource.Initializer;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
-import io.openk9.datasource.model.util.K9Entity;
-
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateBucketTest {
 
-	private static final String CREATE_BUCKET_TEST_NAME = "CreateBucketTest";
+	private static final String ENTITY_NAME_PREFIX = "CreateBucketTest - ";
+
+	private static final String BUCKET_ONE_NAME = ENTITY_NAME_PREFIX + "Bucket 1";
+	private static final String BUCKET_TWO_NAME = ENTITY_NAME_PREFIX + "Bucket 2";
+	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
+	private static final String RAG_CHAT_TWO = ENTITY_NAME_PREFIX + "Rag configuration CHAT 2";
+	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
+	private static final String RAG_CHAT_TOOL_TWO = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 2";
+	private static final String RAG_SIMPLE_GENERATE_ONE = ENTITY_NAME_PREFIX + "Rag configuration SIMPLE_GENERATE 1";
+	private static final String RAG_SIMPLE_GENERATE_TWO = ENTITY_NAME_PREFIX + "Rag configuration SIMPLE_GENERATE 2";
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -63,6 +73,9 @@ public class CreateBucketTest {
 
 	@Inject
 	DatasourceService datasourceService;
+
+	@Inject
+	RAGConfigurationService ragConfigurationService;
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
@@ -77,6 +90,24 @@ public class CreateBucketTest {
 	@Test
 	@Order(1)
 	void should_create_bucket_with_lists() {
+
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_CHAT_ONE, RAGType.CHAT_RAG);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE,
+			RAGType.SIMPLE_GENERATE);
+
+		var ragConfigurationChat =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+		var ragConfigurationChatTool =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimple =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -97,7 +128,7 @@ public class CreateBucketTest {
 			.collect(Collectors.toSet());
 
 		var bucket = bucketService.create(BucketWithListsDTO.builder()
-			.name(CREATE_BUCKET_TEST_NAME)
+			.name(BUCKET_ONE_NAME)
 			.refreshOnDate(true)
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
@@ -106,6 +137,9 @@ public class CreateBucketTest {
 			.datasourceIds(datasourceIds)
 			.suggestionCategoryIds(suggestionCategorieIds)
 			.tabIds(tabIds)
+			.ragConfigurationChat(ragConfigurationChat.getId())
+			.ragConfigurationChatTool(ragConfigurationChatTool.getId())
+			.ragConfigurationSimpleGenerate(ragConfigurationSimple.getId())
 			.build()
 		).await().indefinitely();
 
@@ -118,7 +152,7 @@ public class CreateBucketTest {
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 		).await().indefinitely();
 
-		assertEquals(CREATE_BUCKET_TEST_NAME, createdBucket.getName());
+		assertEquals(BUCKET_ONE_NAME, createdBucket.getName());
 		assertEquals(datasourceIds.size(), createdBucket.getDatasources().size());
 
 		var dataSources = createdBucket.getDatasources().iterator();
@@ -127,30 +161,76 @@ public class CreateBucketTest {
 		assertEquals(suggestionCategorieIds.size(), createdBucket.getSuggestionCategories().size());
 		assertEquals(tabIds.size(), createdBucket.getTabs().size());
 
+		// RAGConfiguration check
+		assertEquals(ragConfigurationChat.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatTool.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimple.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
 	}
 
 	@Test
 	@Order(2)
 	void should_patch_bucket_with_lists() {
 
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_CHAT_TWO, RAGType.CHAT_RAG);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO,
+			RAGType.SIMPLE_GENERATE);
+
+		// Retrieve ragConfigurations one
+		var ragConfigurationChatOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+		var ragConfigurationChatToolOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimpleOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+
+		// Retrieve ragConfigurations two
+		var ragConfigurationChatTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
+		var ragConfigurationChatToolTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
+		var ragConfigurationSimpleTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
+
 		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+			bucketService.findByName(s, BUCKET_ONE_NAME)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 		).await().indefinitely();
 
+		// RAGConfiguration initial check
+		assertEquals(ragConfigurationChatOne.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimpleOne.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
+
 		bucketService.patch(bucket.getId(), BucketWithListsDTO.builder()
-			.name(CREATE_BUCKET_TEST_NAME)
+			.name(BUCKET_ONE_NAME)
 			.refreshOnDate(true)
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
 			.retrieveType(Bucket.RetrieveType.MATCH)
 			.tabIds(Set.of())
+			.ragConfigurationChat(ragConfigurationChatTwo.getId())
+			.ragConfigurationChatTool(ragConfigurationChatToolTwo.getId())
+			.ragConfigurationSimpleGenerate(ragConfigurationSimpleTwo.getId())
 			.build()
 		).await().indefinitely();
 
 		var patched = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+			bucketService.findByName(s, BUCKET_ONE_NAME)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 		).await().indefinitely();
 
@@ -158,16 +238,51 @@ public class CreateBucketTest {
 
 		assertTrue(patched.getTabs().isEmpty());
 
+		// RAGConfiguration patched bucket check
+		assertEquals(ragConfigurationChatTwo.getId(), patched.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatToolTwo.getId(), patched.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimpleTwo.getId(), patched.getRagConfigurationSimpleGenerate().getId());
 	}
 
 	@Test
 	@Order(3)
 	void should_update_bucket_with_lists() {
 
+		// Retrieve ragConfigurations one
+		var ragConfigurationChatOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+		var ragConfigurationChatToolOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimpleOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+
+		// Retrieve ragConfigurations two
+		var ragConfigurationChatTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
+		var ragConfigurationChatToolTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
+		var ragConfigurationSimpleTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
+
 		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+			bucketService.findByName(s, BUCKET_ONE_NAME)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 		).await().indefinitely();
+
+		// RAGConfiguration initial check
+		assertEquals(ragConfigurationChatTwo.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatToolTwo.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimpleTwo.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
 
 		var suggestionCategoryIds = suggestionCategoryService
 			.findAll()
@@ -177,18 +292,21 @@ public class CreateBucketTest {
 			.collect(Collectors.toSet());
 
 		bucketService.update(bucket.getId(), BucketWithListsDTO.builder()
-			.name(CREATE_BUCKET_TEST_NAME)
+			.name(BUCKET_ONE_NAME)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
 			.refreshOnTab(false)
 			.refreshOnSuggestionCategory(true)
 			.suggestionCategoryIds(suggestionCategoryIds)
 			.retrieveType(Bucket.RetrieveType.KNN)
+			.ragConfigurationChat(ragConfigurationChatOne.getId())
+			.ragConfigurationChatTool(ragConfigurationChatToolOne.getId())
+			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
 			.build()
 		).await().indefinitely();
 
 		var updated = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+			bucketService.findByName(s, BUCKET_ONE_NAME)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 				.call(entity -> Mutiny.fetch(entity.getSuggestionCategories()))
 				.call(entity -> Mutiny.fetch(entity.getDatasources()))
@@ -200,18 +318,54 @@ public class CreateBucketTest {
 		assertFalse(updated.getRefreshOnDate());
 		assertEquals(Bucket.RetrieveType.KNN, updated.getRetrieveType());
 
+
+		// RAGConfiguration updated bucket check
+		assertEquals(ragConfigurationChatOne.getId(), updated.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatToolOne.getId(), updated.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimpleOne.getId(), updated.getRagConfigurationSimpleGenerate().getId());
 	}
 
 	@Test
 	@Order(4)
 	void should_patch_bucket_with_lists_via_graphql() {
 
+		// Retrieve ragConfigurations one
+		var ragConfigurationChatOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+		var ragConfigurationChatToolOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimpleOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+
+		// Retrieve ragConfigurations two
+		var ragConfigurationChatTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
+		var ragConfigurationChatToolTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
+		var ragConfigurationSimpleTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
+
 		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, CREATE_BUCKET_TEST_NAME)
+			bucketService.findByName(s, BUCKET_ONE_NAME)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 				.call(entity -> Mutiny.fetch(entity.getSuggestionCategories()))
 				.call(entity -> Mutiny.fetch(entity.getDatasources()))
 		).await().indefinitely();
+
+		// RAGConfiguration initial check
+		assertEquals(ragConfigurationChatOne.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(
+			ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
+		assertEquals(
+			ragConfigurationSimpleOne.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -236,7 +390,7 @@ public class CreateBucketTest {
 						arg(
 							"bucketWithListsDTO",
 							inputObject(
-								prop("name", CREATE_BUCKET_TEST_NAME),
+								prop("name", BUCKET_ONE_NAME),
 								prop("refreshOnDate", true),
 								prop("refreshOnQuery", true),
 								prop("refreshOnTab", true),
@@ -248,7 +402,16 @@ public class CreateBucketTest {
 									.collect(Collectors.toSet())
 								),
 								prop("datasourceIds", datasourceIds),
-								prop("tabIds", List.of())
+								prop("tabIds", List.of()),
+								prop("ragConfigurationChat", ragConfigurationChatTwo.getId()),
+								prop(
+									"ragConfigurationChatTool",
+									ragConfigurationChatToolTwo.getId()
+								),
+								prop(
+									"ragConfigurationSimpleGenerate",
+									ragConfigurationSimpleTwo.getId()
+								)
 							)
 						)
 					),
@@ -285,6 +448,19 @@ public class CreateBucketTest {
 			assertFalse(jsonObject.isNull("entity"));
 			assertTrue(jsonObject.isNull("fieldValidators"));
 
+			var patched = sessionFactory.withTransaction((s, t) ->
+				bucketService.findByName(s, BUCKET_ONE_NAME)
+					.call(entity -> Mutiny.fetch(entity.getTabs()))
+			).await().indefinitely();
+
+			// RAGConfiguration patched bucket check
+			assertEquals(
+				ragConfigurationChatTwo.getId(), patched.getRagConfigurationChat().getId());
+			assertEquals(
+				ragConfigurationChatToolTwo.getId(), patched.getRagConfigurationChatTool().getId());
+			assertEquals(
+				ragConfigurationSimpleTwo.getId(),
+				patched.getRagConfigurationSimpleGenerate().getId());
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -294,6 +470,17 @@ public class CreateBucketTest {
 
 	@Test
 	void should_create_bucket_with_lists_via_graphql() {
+
+		// Retrieve ragConfigurations one
+		var ragConfigurationChatOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+		var ragConfigurationChatToolOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimpleOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -322,18 +509,24 @@ public class CreateBucketTest {
 						arg(
 							"bucketWithListsDTO",
 							inputObject(
-								prop("name", "Create Bucket Test via gql"),
+								prop("name", BUCKET_TWO_NAME),
 								prop("refreshOnDate", true),
 								prop("refreshOnQuery", true),
 								prop("refreshOnTab", true),
 								prop("refreshOnSuggestionCategory", true),
-								prop("retrieveType", gqlEnum("MATCH"))
-								,
-								prop("datasourceIds", datasourceIds)
-								,
-								prop("tabIds", tabIds)
-								,
-								prop("suggestionCategoryIds", suggestionCategorieIds)
+								prop("retrieveType", gqlEnum("MATCH")),
+								prop("datasourceIds", datasourceIds),
+								prop("tabIds", tabIds),
+								prop("suggestionCategoryIds", suggestionCategorieIds),
+								prop("ragConfigurationChat", ragConfigurationChatOne.getId()),
+								prop(
+									"ragConfigurationChatTool",
+									ragConfigurationChatToolOne.getId()
+								),
+								prop(
+									"ragConfigurationSimpleGenerate",
+									ragConfigurationSimpleOne.getId()
+								)
 							)
 						)
 					),
@@ -361,6 +554,20 @@ public class CreateBucketTest {
 
 			assertFalse(jsonObject.isNull("entity"));
 			assertTrue(jsonObject.isNull("fieldValidators"));
+
+			var patched = sessionFactory.withTransaction((s, t) ->
+				bucketService.findByName(s, BUCKET_TWO_NAME)
+					.call(entity -> Mutiny.fetch(entity.getTabs()))
+			).await().indefinitely();
+
+			// RAGConfiguration patched bucket check
+			assertEquals(
+				ragConfigurationChatOne.getId(), patched.getRagConfigurationChat().getId());
+			assertEquals(
+				ragConfigurationChatToolOne.getId(), patched.getRagConfigurationChatTool().getId());
+			assertEquals(
+				ragConfigurationSimpleOne.getId(),
+				patched.getRagConfigurationSimpleGenerate().getId());
 
 		}
 		catch (Exception e) {
