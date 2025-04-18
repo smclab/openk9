@@ -184,6 +184,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         peer = context.peer()
         virtual_host = peer.split(":")[1]
+        logger.info(f"virtual_host: {virtual_host}")
 
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
