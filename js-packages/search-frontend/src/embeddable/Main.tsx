@@ -896,6 +896,55 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          {isSearchLoading ? null : (
+            <FiltersMobileLiveChangeMemo
+              searchQuery={searchQuery}
+              addExtraClass={
+                configuration.mobileFiltersBasicLiveChange?.addExtraClass ||
+                undefined
+              }
+              onAddFilterToken={addFilterToken}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              sortAfterKey={sortAfterKey}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              skeletonCategoryCustom={skeletonCustom.suggestion}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              configuration={configuration}
+              whoIsDynamic={dynamicData}
+              isVisibleFilters={true}
+              setIsVisibleFilters={undefined}
+              tabs={tabs}
+              onSelectedTabIndexChange={setSelectedTabIndex}
+              selectedTabIndex={selectedTabIndex}
+              viewTabs={
+                configuration.mobileFiltersBasicLiveChange?.viewTabs ?? false
+              }
+              language={languageSelect}
+              isCollapsable={true}
+              numberOfResults={numberOfResults}
+              selectionsDispatch={selectionsDispatch}
+              memoryResults={memoryResults}
+              haveSearch={true}
+              callbackClose={
+                configuration?.mobileFiltersBasicLiveChange
+                  ?.closeFiltersMobileLiveChangeCallback
+              }
+              callbackApply={
+                configuration?.mobileFiltersBasicLiveChange
+                  ?.applyfiltersMobileLiveChangeCallback
+              }
+            />
+          )}
+        </I18nextProvider>,
+        configuration.filtersMobileLiveChangeBasic,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <DataRangePicker
             onChange={setDateRange}
             calendarDate={dateRange}

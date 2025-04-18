@@ -52,11 +52,15 @@ export type FiltersMobileProps<E> = {
   skeletonCategoryCustom: React.ReactNode | null;
   memoryResults: boolean;
   haveSearch: boolean | null | undefined;
+  callbackClose?: () => void;
+  callbackApply?: () => void;
+  addExtraClass?: string;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
   searchQuery,
   sort,
+  addExtraClass,
   onAddFilterToken,
   onRemoveFilterToken,
   onConfigurationChange,
@@ -78,6 +82,8 @@ function FiltersMobileLiveChange<E>({
   selectionsDispatch,
   memoryResults,
   haveSearch,
+  callbackClose,
+  callbackApply,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -92,7 +98,9 @@ function FiltersMobileLiveChange<E>({
   const componet = (
     <React.Fragment>
       <div
-        className="openk9-filter-list-container-first-title container-openk9-filter-mobile-live-change live-change"
+        className={
+          "openk9-filter-list-container-first-title container-openk9-filter-mobile-live-change live-change "
+        }
         css={css`
           display: flex;
           justify-content: space-beetween;
@@ -156,6 +164,7 @@ function FiltersMobileLiveChange<E>({
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            if (callbackClose) callbackClose();
           }}
           style={{ backgroundColor: "white", border: "none" }}
         >
@@ -258,6 +267,7 @@ function FiltersMobileLiveChange<E>({
           onClick={() => {
             onConfigurationChange({ filterTokens: [] });
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            callbackClose && callbackClose();
             if (selectionsDispatch)
               selectionsDispatch({ type: "reset-filters" });
           }}
@@ -303,6 +313,7 @@ function FiltersMobileLiveChange<E>({
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            callbackApply && callbackApply();
           }}
         >
           <div>
@@ -319,7 +330,10 @@ function FiltersMobileLiveChange<E>({
   if (!isVisibleFilters) return null;
 
   return (
-    <div className="modal-detail-container-external" ref={trapFocus}>
+    <div
+      className={"modal-detail-container-external " + addExtraClass}
+      ref={trapFocus}
+    >
       <ModalDetail padding="0px" background="white" content={componet} />
     </div>
   );

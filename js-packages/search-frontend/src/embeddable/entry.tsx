@@ -384,6 +384,15 @@ export type Configuration = {
     tabs?: boolean | null;
   } | null;
   filtersMobileBasicCallback: () => void | null | undefined;
+  mobileFiltersBasicLiveChange:
+    | {
+        closeFiltersMobileLiveChangeCallback?: () => void | null | undefined;
+        applyfiltersMobileLiveChangeCallback?: () => void | null | undefined;
+        viewTabs?: boolean | null | undefined;
+        addExtraClass?: string | null | undefined;
+      }
+    | null
+    | undefined;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
   memoryResults: boolean | null | undefined;
@@ -434,6 +443,7 @@ export type Configuration = {
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
+  filtersMobileLiveChangeBasic: Element | string | null;
   resultList: ResultListProps | null;
   resultListPagination: ResulListPaginationProps | null;
   resultsDisplayMode: ResultsDisplayMode;
@@ -478,6 +488,8 @@ const defaultConfiguration: Configuration = {
   filtersHorizontal: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
+  filtersMobileLiveChangeBasic: null,
+  mobileFiltersBasicLiveChange: null,
   filtersMobileBasic: null,
   filtersMobileBasicCallback: () => null,
   filterTokens: [],
