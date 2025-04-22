@@ -11,6 +11,7 @@ import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -20,6 +21,41 @@ import io.openk9.datasource.service.TabService;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 public class EntitiesUtils {
+
+	/**
+	 * Cleans the state of the given {@link Bucket} by resetting its configurable values.
+	 *
+	 * <p>This method updates the specified {@code bucket} by:
+	 * <ul>
+	 *   <li>Setting default values for mandatory fields:</li>
+	 *   <ul>
+	 *     <li>Disables all refresh flags ({@code refreshOnDate}, {@code refreshOnQuery}, etc.).</li>
+	 *     <li>Sets the {@code retrieveType} to {@link Bucket.RetrieveType#MATCH}.</li>
+	 *   </ul>
+	 *   <li>Implicitly unsetting or nullifying any optional configuration not explicitly included in the update DTO.</li>
+	 * </ul>
+	 *
+	 * <p>This operation is synchronous and blocks until the update is complete.</p>
+	 *
+	 * @param bucketService The {@link BucketService} used to perform the update.
+	 * @param bucket The {@link Bucket} whose configuration needs to be cleaned.
+	 *
+	 * @throws RuntimeException if the update fails or if the operation is interrupted.
+	 *
+	 * <h3>Error Handling</h3>
+	 * Any exception raised during the update is propagated as a runtime exception.
+	 */
+	public static void cleanBucket(BucketService bucketService, Bucket bucket) {
+		bucketService.update(bucket.getId(), BucketWithListsDTO.builder()
+			.name(bucket.getName())
+			.refreshOnDate(false)
+			.refreshOnQuery(false)
+			.refreshOnTab(false)
+			.refreshOnSuggestionCategory(false)
+			.retrieveType(Bucket.RetrieveType.MATCH)
+			.build()
+		).await().indefinitely();
+	}
 
 	public static void createBucket(
 		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {

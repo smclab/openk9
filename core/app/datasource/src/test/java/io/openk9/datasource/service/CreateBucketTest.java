@@ -24,34 +24,20 @@ import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static io.smallrye.graphql.client.core.Argument.arg;
-import static io.smallrye.graphql.client.core.Argument.args;
-import static io.smallrye.graphql.client.core.Document.document;
-import static io.smallrye.graphql.client.core.Enum.gqlEnum;
-import static io.smallrye.graphql.client.core.Field.field;
-import static io.smallrye.graphql.client.core.InputObject.inputObject;
-import static io.smallrye.graphql.client.core.InputObjectField.prop;
-import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CreateBucketTest {
 
 	private static final String ENTITY_NAME_PREFIX = "CreateBucketTest - ";
@@ -75,7 +61,7 @@ public class CreateBucketTest {
 	DatasourceService datasourceService;
 
 	@Inject
-	RAGConfigurationService ragConfigurationService;
+	RAGConfigurationService ragService;
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
@@ -83,31 +69,80 @@ public class CreateBucketTest {
 	@Inject
 	TabService tabService;
 
-	@Inject
-	@GraphQLClient("openk9-dynamic")
-	DynamicGraphQLClient graphQLClient;
+	@BeforeEach
+	void setup() {
+		// Retrieves lists
+		var datasourceIds = datasourceService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var suggestionCategorieIds = suggestionCategoryService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		var tabIds = tabService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
+		// Creates RAGConfigurations
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_CHAT_ONE, RAGType.CHAT_RAG);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_CHAT_TWO, RAGType.CHAT_RAG);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE, RAGType.SIMPLE_GENERATE);
+		EntitiesUtils.createRAGConfiguration(
+			sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO, RAGType.SIMPLE_GENERATE);
+
+		// Retrieves RAGConfigurations one
+		var ragConfigurationChatOne =
+			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+		var ragConfigurationChatToolOne =
+			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+		var ragConfigurationSimpleOne =
+			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+
+		// Creates Bucket two
+		BucketWithListsDTO dtoBucketTwo = BucketWithListsDTO.builder()
+			.name(BUCKET_TWO_NAME)
+			.refreshOnDate(true)
+			.refreshOnQuery(true)
+			.refreshOnTab(true)
+			.refreshOnSuggestionCategory(true)
+			.retrieveType(Bucket.RetrieveType.MATCH)
+			.datasourceIds(datasourceIds)
+			.suggestionCategoryIds(suggestionCategorieIds)
+			.tabIds(tabIds)
+			.ragConfigurationChat(ragConfigurationChatOne.getId())
+			.ragConfigurationChatTool(ragConfigurationChatToolOne.getId())
+			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
+			.build();
+
+		EntitiesUtils.createBucket(sessionFactory, bucketService, dtoBucketTwo);
+	}
 
 	@Test
-	@Order(1)
 	void should_create_bucket_with_lists() {
-
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_CHAT_ONE, RAGType.CHAT_RAG);
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE,
-			RAGType.SIMPLE_GENERATE);
 
 		var ragConfigurationChat =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+				sessionFactory, ragService, RAG_CHAT_ONE);
 		var ragConfigurationChatTool =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
 		var ragConfigurationSimple =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -167,56 +202,49 @@ public class CreateBucketTest {
 			ragConfigurationChatTool.getId(), bucket.getRagConfigurationChatTool().getId());
 		assertEquals(
 			ragConfigurationSimple.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
+
+		// Removes bucketOne
+		EntitiesUtils.cleanBucket(bucketService, bucket);
+		EntitiesUtils.removeBucket(sessionFactory, bucketService, bucket.getName());
 	}
 
 	@Test
-	@Order(2)
 	void should_patch_bucket_with_lists() {
-
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_CHAT_TWO, RAGType.CHAT_RAG);
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
-		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO,
-			RAGType.SIMPLE_GENERATE);
 
 		// Retrieve ragConfigurations one
 		var ragConfigurationChatOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+				sessionFactory, ragService, RAG_CHAT_ONE);
 		var ragConfigurationChatToolOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
 		var ragConfigurationSimpleOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
 
 		// Retrieve ragConfigurations two
 		var ragConfigurationChatTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
+				sessionFactory, ragService, RAG_CHAT_TWO);
 		var ragConfigurationChatToolTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
+				sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
 		var ragConfigurationSimpleTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
+				sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
 
-		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, BUCKET_ONE_NAME)
-				.call(entity -> Mutiny.fetch(entity.getTabs()))
-		).await().indefinitely();
+		var bucketTwo = getBucketAndFetch(BUCKET_TWO_NAME);
 
 		// RAGConfiguration initial check
-		assertEquals(ragConfigurationChatOne.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(ragConfigurationChatOne.getId(), bucketTwo.getRagConfigurationChat().getId());
 		assertEquals(
-			ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
+			ragConfigurationChatToolOne.getId(), bucketTwo.getRagConfigurationChatTool().getId());
 		assertEquals(
-			ragConfigurationSimpleOne.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
+			ragConfigurationSimpleOne.getId(),
+			bucketTwo.getRagConfigurationSimpleGenerate().getId());
 
-		bucketService.patch(bucket.getId(), BucketWithListsDTO.builder()
-			.name(BUCKET_ONE_NAME)
+		bucketService.patch(bucketTwo.getId(), BucketWithListsDTO.builder()
+			.name(bucketTwo.getName())
 			.refreshOnDate(true)
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
@@ -229,16 +257,13 @@ public class CreateBucketTest {
 			.build()
 		).await().indefinitely();
 
-		var patched = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, BUCKET_ONE_NAME)
-				.call(entity -> Mutiny.fetch(entity.getTabs()))
-		).await().indefinitely();
+		var patched = getBucketAndFetch(bucketTwo.getName());
 
-		assertFalse(bucket.getTabs().isEmpty());
+		assertFalse(bucketTwo.getTabs().isEmpty());
 
 		assertTrue(patched.getTabs().isEmpty());
 
-		// RAGConfiguration patched bucket check
+		// RAGConfiguration patched bucketTwo check
 		assertEquals(ragConfigurationChatTwo.getId(), patched.getRagConfigurationChat().getId());
 		assertEquals(
 			ragConfigurationChatToolTwo.getId(), patched.getRagConfigurationChatTool().getId());
@@ -247,42 +272,39 @@ public class CreateBucketTest {
 	}
 
 	@Test
-	@Order(3)
 	void should_update_bucket_with_lists() {
 
 		// Retrieve ragConfigurations one
 		var ragConfigurationChatOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
+				sessionFactory, ragService, RAG_CHAT_ONE);
 		var ragConfigurationChatToolOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
+				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
 		var ragConfigurationSimpleOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
 
 		// Retrieve ragConfigurations two
 		var ragConfigurationChatTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
+				sessionFactory, ragService, RAG_CHAT_TWO);
 		var ragConfigurationChatToolTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
+				sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
 		var ragConfigurationSimpleTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
+				sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
 
-		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, BUCKET_ONE_NAME)
-				.call(entity -> Mutiny.fetch(entity.getTabs()))
-		).await().indefinitely();
+		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
 
 		// RAGConfiguration initial check
-		assertEquals(ragConfigurationChatTwo.getId(), bucket.getRagConfigurationChat().getId());
+		assertEquals(ragConfigurationChatOne.getId(), bucketTwo.getRagConfigurationChat().getId());
 		assertEquals(
-			ragConfigurationChatToolTwo.getId(), bucket.getRagConfigurationChatTool().getId());
+			ragConfigurationChatToolOne.getId(), bucketTwo.getRagConfigurationChatTool().getId());
 		assertEquals(
-			ragConfigurationSimpleTwo.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
+			ragConfigurationSimpleOne.getId(),
+			bucketTwo.getRagConfigurationSimpleGenerate().getId());
 
 		var suggestionCategoryIds = suggestionCategoryService
 			.findAll()
@@ -291,26 +313,21 @@ public class CreateBucketTest {
 			.map(K9Entity::getId)
 			.collect(Collectors.toSet());
 
-		bucketService.update(bucket.getId(), BucketWithListsDTO.builder()
-			.name(BUCKET_ONE_NAME)
+		bucketService.update(bucketTwo.getId(), BucketWithListsDTO.builder()
+			.name(bucketTwo.getName())
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
 			.refreshOnTab(false)
 			.refreshOnSuggestionCategory(true)
 			.suggestionCategoryIds(suggestionCategoryIds)
 			.retrieveType(Bucket.RetrieveType.KNN)
-			.ragConfigurationChat(ragConfigurationChatOne.getId())
-			.ragConfigurationChatTool(ragConfigurationChatToolOne.getId())
-			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
+			.ragConfigurationChat(ragConfigurationChatTwo.getId())
+			.ragConfigurationChatTool(ragConfigurationChatToolTwo.getId())
+			.ragConfigurationSimpleGenerate(ragConfigurationSimpleTwo.getId())
 			.build()
 		).await().indefinitely();
 
-		var updated = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, BUCKET_ONE_NAME)
-				.call(entity -> Mutiny.fetch(entity.getTabs()))
-				.call(entity -> Mutiny.fetch(entity.getSuggestionCategories()))
-				.call(entity -> Mutiny.fetch(entity.getDatasources()))
-		).await().indefinitely();
+		var updated = getBucketAndFetch(bucketTwo.getName());
 
 		assertTrue(updated.getTabs().isEmpty());
 		assertEquals(suggestionCategoryIds.size(), updated.getSuggestionCategories().size());
@@ -319,261 +336,37 @@ public class CreateBucketTest {
 		assertEquals(Bucket.RetrieveType.KNN, updated.getRetrieveType());
 
 
-		// RAGConfiguration updated bucket check
-		assertEquals(ragConfigurationChatOne.getId(), updated.getRagConfigurationChat().getId());
+		// RAGConfiguration updated bucketTwo check
+		assertEquals(ragConfigurationChatTwo.getId(), updated.getRagConfigurationChat().getId());
 		assertEquals(
-			ragConfigurationChatToolOne.getId(), updated.getRagConfigurationChatTool().getId());
+			ragConfigurationChatToolTwo.getId(), updated.getRagConfigurationChatTool().getId());
 		assertEquals(
-			ragConfigurationSimpleOne.getId(), updated.getRagConfigurationSimpleGenerate().getId());
+			ragConfigurationSimpleTwo.getId(), updated.getRagConfigurationSimpleGenerate().getId());
 	}
 
-	@Test
-	@Order(4)
-	void should_patch_bucket_with_lists_via_graphql() {
+	@AfterEach
+	void tearDown() {
+		// Removes Bucket two
+		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
+		EntitiesUtils.cleanBucket(bucketService, bucketTwo);
+		EntitiesUtils.removeBucket(sessionFactory, bucketService, bucketTwo.getName());
 
-		// Retrieve ragConfigurations one
-		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
-		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
-		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
+		// Removes RAGConfigurations
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TWO);
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+	}
 
-		// Retrieve ragConfigurations two
-		var ragConfigurationChatTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TWO);
-		var ragConfigurationChatToolTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_TWO);
-		var ragConfigurationSimpleTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_TWO);
-
-		var bucket = sessionFactory.withTransaction((s, t) ->
-			bucketService.findByName(s, BUCKET_ONE_NAME)
+	private Bucket getBucketAndFetch(String bucketName) {
+		return sessionFactory.withTransaction((s, t) ->
+			bucketService.findByName(s, bucketName)
 				.call(entity -> Mutiny.fetch(entity.getTabs()))
 				.call(entity -> Mutiny.fetch(entity.getSuggestionCategories()))
 				.call(entity -> Mutiny.fetch(entity.getDatasources()))
 		).await().indefinitely();
-
-		// RAGConfiguration initial check
-		assertEquals(ragConfigurationChatOne.getId(), bucket.getRagConfigurationChat().getId());
-		assertEquals(
-			ragConfigurationChatToolOne.getId(), bucket.getRagConfigurationChatTool().getId());
-		assertEquals(
-			ragConfigurationSimpleOne.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
-
-		var datasourceIds = datasourceService.findAll()
-			.await().indefinitely()
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		var suggestionCategorieIds = suggestionCategoryService.findAll()
-			.await().indefinitely()
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		var query = document(
-			operation(
-				OperationType.MUTATION,
-				field(
-					"bucketWithLists",
-					args(
-						arg("id", bucket.getId()),
-						arg("patch", true),
-						arg(
-							"bucketWithListsDTO",
-							inputObject(
-								prop("name", BUCKET_ONE_NAME),
-								prop("refreshOnDate", true),
-								prop("refreshOnQuery", true),
-								prop("refreshOnTab", true),
-								prop("refreshOnSuggestionCategory", true),
-								prop("retrieveType", gqlEnum("MATCH")),
-								prop("suggestionCategoryIds", suggestionCategorieIds
-									.stream()
-									.limit(1)
-									.collect(Collectors.toSet())
-								),
-								prop("datasourceIds", datasourceIds),
-								prop("tabIds", List.of()),
-								prop("ragConfigurationChat", ragConfigurationChatTwo.getId()),
-								prop(
-									"ragConfigurationChatTool",
-									ragConfigurationChatToolTwo.getId()
-								),
-								prop(
-									"ragConfigurationSimpleGenerate",
-									ragConfigurationSimpleTwo.getId()
-								)
-							)
-						)
-					),
-					field(
-						"entity",
-						field("id"),
-						field("name"),
-						field(
-							"suggestionCategories",
-							field(
-								"edges",
-								field(
-									"node",
-									field("id")
-								)
-							)
-						)
-					),
-					field(
-						"fieldValidators",
-						field("field"),
-						field("message")
-					)
-				)
-			)
-		);
-
-		try {
-
-			var response = graphQLClient.executeSync(query);
-
-			var jsonObject = response.getData().getJsonObject("bucketWithLists");
-
-			assertFalse(jsonObject.isNull("entity"));
-			assertTrue(jsonObject.isNull("fieldValidators"));
-
-			var patched = sessionFactory.withTransaction((s, t) ->
-				bucketService.findByName(s, BUCKET_ONE_NAME)
-					.call(entity -> Mutiny.fetch(entity.getTabs()))
-			).await().indefinitely();
-
-			// RAGConfiguration patched bucket check
-			assertEquals(
-				ragConfigurationChatTwo.getId(), patched.getRagConfigurationChat().getId());
-			assertEquals(
-				ragConfigurationChatToolTwo.getId(), patched.getRagConfigurationChatTool().getId());
-			assertEquals(
-				ragConfigurationSimpleTwo.getId(),
-				patched.getRagConfigurationSimpleGenerate().getId());
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-
-	}
-
-	@Test
-	void should_create_bucket_with_lists_via_graphql() {
-
-		// Retrieve ragConfigurations one
-		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_ONE);
-		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_CHAT_TOOL_ONE);
-		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragConfigurationService, RAG_SIMPLE_GENERATE_ONE);
-
-		var datasourceIds = datasourceService.findAll()
-			.await().indefinitely()
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		var suggestionCategorieIds = suggestionCategoryService.findAll()
-			.await().indefinitely()
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		var tabIds = tabService.findAll()
-			.await().indefinitely()
-			.stream()
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
-
-		var query = document(
-			operation(
-				OperationType.MUTATION,
-				field(
-					"bucketWithLists",
-					args(
-						arg(
-							"bucketWithListsDTO",
-							inputObject(
-								prop("name", BUCKET_TWO_NAME),
-								prop("refreshOnDate", true),
-								prop("refreshOnQuery", true),
-								prop("refreshOnTab", true),
-								prop("refreshOnSuggestionCategory", true),
-								prop("retrieveType", gqlEnum("MATCH")),
-								prop("datasourceIds", datasourceIds),
-								prop("tabIds", tabIds),
-								prop("suggestionCategoryIds", suggestionCategorieIds),
-								prop("ragConfigurationChat", ragConfigurationChatOne.getId()),
-								prop(
-									"ragConfigurationChatTool",
-									ragConfigurationChatToolOne.getId()
-								),
-								prop(
-									"ragConfigurationSimpleGenerate",
-									ragConfigurationSimpleOne.getId()
-								)
-							)
-						)
-					),
-					field(
-						"entity",
-						field("id"),
-						field("name")
-					),
-					field(
-						"fieldValidators",
-						field("field"),
-						field("message")
-					)
-				)
-			)
-		);
-
-		try {
-
-			var response = graphQLClient.executeSync(query);
-
-			System.out.println(response);
-
-			var jsonObject = response.getData().getJsonObject("bucketWithLists");
-
-			assertFalse(jsonObject.isNull("entity"));
-			assertTrue(jsonObject.isNull("fieldValidators"));
-
-			var patched = sessionFactory.withTransaction((s, t) ->
-				bucketService.findByName(s, BUCKET_TWO_NAME)
-					.call(entity -> Mutiny.fetch(entity.getTabs()))
-			).await().indefinitely();
-
-			// RAGConfiguration patched bucket check
-			assertEquals(
-				ragConfigurationChatOne.getId(), patched.getRagConfigurationChat().getId());
-			assertEquals(
-				ragConfigurationChatToolOne.getId(), patched.getRagConfigurationChatTool().getId());
-			assertEquals(
-				ragConfigurationSimpleOne.getId(),
-				patched.getRagConfigurationSimpleGenerate().getId());
-
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-
 	}
 }
 
