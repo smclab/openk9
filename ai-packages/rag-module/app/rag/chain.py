@@ -46,9 +46,6 @@ def get_chain(
     grpc_host,
 ):
 
-    print(grpc_host)
-    print(virtual_host)
-    print(RagType.SIMPLE_GENERATE.value)
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
     )
@@ -123,6 +120,10 @@ def get_chat_chain(
     opensearch_host,
     grpc_host,
 ):
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.CHAT_RAG.value
+    )
+    print(rag_configuration)
     configuration = get_llm_configuration(grpc_host, virtual_host)
 
     yield from stream_rag_conversation(
@@ -181,6 +182,10 @@ def get_chat_chain_tool(
     opensearch_host,
     grpc_host,
 ):
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.CHAT_RAG_TOOL.value
+    )
+    print(rag_configuration)
     configuration = get_llm_configuration(grpc_host, virtual_host)
     rag_tool_description = configuration["rag_tool_description"]
 
