@@ -1,5 +1,5 @@
 [project]
-name = "openai_embedding_module"
+name = "base_embedding_module"
 version = "3.0.0-SNAPSHOT"
 description = "OpenK9 embedding module"
 authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
