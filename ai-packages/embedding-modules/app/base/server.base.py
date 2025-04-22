@@ -12,7 +12,6 @@ import grpc
 from derived_text_splitter import DerivedTextSplitter
 from dotenv import load_dotenv
 from google.protobuf import json_format
-from grpc_client import get_embedding_model_configuration
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
@@ -136,14 +135,10 @@ def initialize_embedding_model(configuration):
         An instance of an embedding model corresponding to the specified model type.
 
     """
-    api_key = configuration["api_key"]
-    api_url = configuration["api_url"]
-    model_type = (
-        configuration["model_type"]
-        if configuration["model_type"]
-        else DEFAULT_MODEL_TYPE
-    )
-    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
+    api_key = configuration.get("api_key")
+    api_url = configuration.get("api_url")
+    model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
+    model = configuration.get("model", DEFAULT_MODEL)
 
     match model_type:
         case ModelType.OPENAI.value:
@@ -153,7 +148,7 @@ def initialize_embedding_model(configuration):
             embeddings = OllamaEmbeddings(model=model, base_url=api_url)
         case ModelType.IBM_WATSONX.value:
             os.environ["WATSONX_APIKEY"] = api_key
-            watsonx_project_id = configuration["watsonx_project_id"]
+            watsonx_project_id = configuration.get("watsonx_project_id")
             embed_params = {
                 EmbedTextParamsMetaNames.TRUNCATE_INPUT_TOKENS: 3,
                 EmbedTextParamsMetaNames.RETURN_OPTIONS: {"input_text": True},
@@ -165,11 +160,11 @@ def initialize_embedding_model(configuration):
                 params=embed_params,
             )
         case ModelType.CHAT_VERTEX_AI.value:
-            chat_vertex_ai_model_garden = configuration["chat_vertex_ai_model_garden"]
-            google_credentials = chat_vertex_ai_model_garden["credentials"]
+            chat_vertex_ai_model_garden = configuration.get("chat_vertex_ai_model_garden")
+            google_credentials = chat_vertex_ai_model_garden.get("credentials")
             save_google_application_credentials(google_credentials)
-            project_id = google_credentials["quota_project_id"]
-            model = configuration["model"]
+            project_id = google_credentials.get("quota_project_id")
+            model = configuration.get("model")
 
             embeddings = VertexAIEmbeddings(model_name=model, project=project_id)
         case _:
@@ -182,52 +177,37 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
         start = time.time()
 
-        peer = context.peer()
-        virtual_host = peer.split(":")[1]
-        logger.info(f"virtual_host: {virtual_host}")
-
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
-        )
-
-        api_key = embedding_model_configuration.apiKey
-        api_url = embedding_model_configuration.apiUrl
-        model_type = embedding_model_configuration.providerModel.provider
-        model = embedding_model_configuration.providerModel.model
-        vector_size = embedding_model_configuration.vectorSize
-        json_config = json_format.MessageToDict(embedding_model_configuration.jsonConfig)
-        watsonx_project_id = json_config.get("watsonx_project_id")
-        chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
-
-        configuration = {
-            "api_key": api_key,
-            "api_url": api_url,
-            "model_type": model_type,
-            "model": model,
-            "watsonx_project_id": watsonx_project_id,
-            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden
-        }
-
-        embeddings = initialize_embedding_model(configuration)
-
         chunk = request.chunk
         chunk_type = chunk.type
         chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
+        embedding_model = request.embeddingModel
+        model_type = embedding_model.providerModel.provider
+        model = embedding_model.providerModel.model
+        api_key = embedding_model.apiKey
+        embedding_model_json_config = json_format.MessageToDict(
+            embedding_model.jsonConfig
+        )
+
+        configuration = {
+            "api_key": api_key,
+            "api_url": embedding_model_json_config.get("api_url"),
+            "model_type": model_type,
+            "model": model,
+            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
+            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
+                "chat_vertex_ai_model_garden"
+            ),
+        }
+        embeddings = initialize_embedding_model(configuration)
+
         text = clean_text(request.text)
         text_splitted = []
         chunks = []
 
         if chunk_type == 1:
-            chunk_size = (
-                int(chunk_json_config["size"])
-                if "size" in chunk_json_config
-                else DEFAULT_CHUNK_SIZE
-            )
-            chunk_overlap = (
-                int(chunk_json_config["overlap"])
-                if "overlap" in chunk_json_config
-                else DEFAULT_CHUNK_OVERLAP
-            )
+            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
+            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
+
             text_splitter = DerivedTextSplitter(
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
@@ -235,36 +215,12 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 2:
-            chunk_size = (
-                int(chunk_json_config["size"])
-                if "size" in chunk_json_config
-                else DEFAULT_CHUNK_SIZE
-            )
-            chunk_overlap = (
-                int(chunk_json_config["overlap"])
-                if "overlap" in chunk_json_config
-                else DEFAULT_CHUNK_OVERLAP
-            )
-            chunk_separator = (
-                chunk_json_config["separator"]
-                if "separator" in chunk_json_config
-                else DEFAULT_SEPARATOR
-            )
-            chunk_model_name = (
-                chunk_json_config["model_name"]
-                if "model_name" in chunk_json_config
-                else DEFAULT_MODEL_NAME
-            )
-            chunk_encoding = (
-                chunk_json_config["encoding"]
-                if "encoding" in chunk_json_config
-                else DEFAULT_ENCODING_NAME
-            )
-            chunk_is_separator_regex = (
-                chunk_json_config["is_separator_regex"]
-                if "is_separator_regex" in chunk_json_config
-                else DEFAULT_IS_SEPARATOR_REGEX
-            )
+            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
+            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
+            chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
+            chunk_model_name = chunk_json_config.get("model_name", DEFAULT_MODEL_NAME)
+            chunk_encoding = chunk_json_config.get("encoding", DEFAULT_ENCODING_NAME)
+            chunk_is_separator_regex = chunk_json_config.get("is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX)
             text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
                 separator=chunk_separator,
                 chunk_size=chunk_size,
@@ -276,26 +232,10 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 3 or chunk_type == 0:
-            chunk_size = (
-                int(chunk_json_config["size"])
-                if "size" in chunk_json_config
-                else DEFAULT_CHUNK_SIZE
-            )
-            chunk_overlap = (
-                int(chunk_json_config["overlap"])
-                if "overlap" in chunk_json_config
-                else DEFAULT_CHUNK_OVERLAP
-            )
-            chunk_separator = (
-                chunk_json_config["separator"]
-                if "separator" in chunk_json_config
-                else DEFAULT_SEPARATOR
-            )
-            chunk_is_separator_regex = (
-                chunk_json_config["is_separator_regex"]
-                if "is_separator_regex" in chunk_json_config
-                else DEFAULT_IS_SEPARATOR_REGEX
-            )
+            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
+            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
+            chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
+            chunk_is_separator_regex = chunk_json_config.get("is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX)
             text_splitter = CharacterTextSplitter(
                 separator=chunk_separator,
                 chunk_size=chunk_size,
@@ -306,7 +246,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             text_splitted = text_splitter.split_text(text)
 
         elif chunk_type == 4:
-            text_splitter = SemanticChunker(self.embeddings)
+            text_splitter = SemanticChunker(embeddings)
             text_splitted = text_splitter.split_text(text)
 
         total_chunks = len(text_splitted)
@@ -316,7 +256,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "number": index,
                 "total": total_chunks,
                 "text": chunk_text,
-                "vectors": self.embeddings.embed_query(chunk_text),
+                "vectors": embeddings.embed_query(chunk_text),
             }
             chunks.append(chunk)
 
@@ -351,7 +291,7 @@ def serve():
     reflection.enable_server_reflection(service_names, server)
 
     # Start the server
-    server.add_insecure_port("127.0.0.1:5000")
+    server.add_insecure_port("[::]:5000")
     server.start()
     logger.info("Server started")
 
