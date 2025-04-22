@@ -68,6 +68,20 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         )
 
     print(response)
+    reformulate = response.reformulate
+    prompt = response.prompt
+    rephrase_prompt = response.rephrasePrompt
+    json_config = json_format.MessageToDict(response.jsonConfig)
+    rerank = json_config.get("rerank")
+
+    configuration = {
+        "reformulate": reformulate,
+        "prompt": prompt,
+        "rephrase_prompt": rephrase_prompt,
+        "rerank": rerank,
+    }
+
+    return configuration
 
 
 def get_llm_configuration(grpc_host, virtual_host):
