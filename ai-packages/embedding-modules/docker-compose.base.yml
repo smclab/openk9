@@ -1,6 +1,5 @@
 services:
   grpc_embedding_module:
     image: openk9-embedding-module-base:${OPENK9_VERSION}
-    env_file: .env
     ports:
       - "5000:5000"

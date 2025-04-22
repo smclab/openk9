@@ -10,7 +10,6 @@ import embedding_pb2
 import embedding_pb2_grpc
 import grpc
 from derived_text_splitter import DerivedTextSplitter
-from dotenv import load_dotenv
 from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
@@ -24,7 +23,6 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from text_cleaner import clean_text
 
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -34,9 +32,6 @@ handler = TimedRotatingFileHandler(
 )
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-# env variables
-GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 
 # default text splitters parameters
 DEFAULT_CHUNK_SIZE = 100
