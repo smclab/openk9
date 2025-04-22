@@ -25,23 +25,27 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n4app/external_services/grpc/embedding/embedding.proto\x12\tembedding\x1a\x1cgoogle/protobuf/struct.proto\"m\n\x0cRequestChunk\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x14.embedding.ChunkTypeH\x00\x88\x01\x01\x12+\n\njsonConfig\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x07\n\x05_type\"M\n\rResponseChunk\x12\x0e\n\x06number\x18\x01 \x01(\x05\x12\r\n\x05total\x18\x02 \x01(\x05\x12\x0c\n\x04text\x18\x03 \x01(\t\x12\x0f\n\x07vectors\x18\x04 \x03(\x02\"j\n\x10\x45mbeddingRequest\x12&\n\x05\x63hunk\x18\x01 \x01(\x0b\x32\x17.embedding.RequestChunk\x12\x14\n\x07\x61pi_key\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x0c\n\x04text\x18\x03 \x01(\tB\n\n\x08_api_key\"=\n\x11\x45mbeddingResponse\x12(\n\x06\x63hunks\x18\x01 \x03(\x0b\x32\x18.embedding.ResponseChunk*\xaf\x01\n\tChunkType\x12\x16\n\x12\x43HUNK_TYPE_DEFAULT\x10\x00\x12\x1c\n\x18\x43HUNK_TYPE_TEXT_SPLITTER\x10\x01\x12\"\n\x1e\x43HUNK_TYPE_TOKEN_TEXT_SPLITTER\x10\x02\x12&\n\"CHUNK_TYPE_CHARACTER_TEXT_SPLITTER\x10\x03\x12 \n\x1c\x43HUNK_TYPE_SEMANTIC_SPLITTER\x10\x04\x32U\n\tEmbedding\x12H\n\x0bGetMessages\x12\x1b.embedding.EmbeddingRequest\x1a\x1c.embedding.EmbeddingResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n4app/external_services/grpc/embedding/embedding.proto\x12\tembedding\x1a\x1cgoogle/protobuf/struct.proto\"m\n\x0cRequestChunk\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x14.embedding.ChunkTypeH\x00\x88\x01\x01\x12+\n\njsonConfig\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x07\n\x05_type\"0\n\rProviderModel\x12\x10\n\x08provider\x18\x01 \x01(\t\x12\r\n\x05model\x18\x02 \x01(\t\"\x8e\x01\n\x0e\x45mbeddingModel\x12\x13\n\x06\x61piKey\x18\x01 \x01(\tH\x00\x88\x01\x01\x12/\n\rproviderModel\x18\x02 \x01(\x0b\x32\x18.embedding.ProviderModel\x12+\n\njsonConfig\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructB\t\n\x07_apiKey\"M\n\rResponseChunk\x12\x0e\n\x06number\x18\x01 \x01(\x05\x12\r\n\x05total\x18\x02 \x01(\x05\x12\x0c\n\x04text\x18\x03 \x01(\t\x12\x0f\n\x07vectors\x18\x04 \x03(\x02\"{\n\x10\x45mbeddingRequest\x12&\n\x05\x63hunk\x18\x01 \x01(\x0b\x32\x17.embedding.RequestChunk\x12\x31\n\x0e\x65mbeddingModel\x18\x02 \x01(\x0b\x32\x19.embedding.EmbeddingModel\x12\x0c\n\x04text\x18\x03 \x01(\t\"=\n\x11\x45mbeddingResponse\x12(\n\x06\x63hunks\x18\x01 \x03(\x0b\x32\x18.embedding.ResponseChunk*\xaf\x01\n\tChunkType\x12\x16\n\x12\x43HUNK_TYPE_DEFAULT\x10\x00\x12\x1c\n\x18\x43HUNK_TYPE_TEXT_SPLITTER\x10\x01\x12\"\n\x1e\x43HUNK_TYPE_TOKEN_TEXT_SPLITTER\x10\x02\x12&\n\"CHUNK_TYPE_CHARACTER_TEXT_SPLITTER\x10\x03\x12 \n\x1c\x43HUNK_TYPE_SEMANTIC_SPLITTER\x10\x04\x32U\n\tEmbedding\x12H\n\x0bGetMessages\x12\x1b.embedding.EmbeddingRequest\x1a\x1c.embedding.EmbeddingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'app.external_services.grpc.embedding.embedding_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_CHUNKTYPE']._serialized_start=459
-  _globals['_CHUNKTYPE']._serialized_end=634
+  _globals['_CHUNKTYPE']._serialized_start=671
+  _globals['_CHUNKTYPE']._serialized_end=846
   _globals['_REQUESTCHUNK']._serialized_start=97
   _globals['_REQUESTCHUNK']._serialized_end=206
-  _globals['_RESPONSECHUNK']._serialized_start=208
-  _globals['_RESPONSECHUNK']._serialized_end=285
-  _globals['_EMBEDDINGREQUEST']._serialized_start=287
-  _globals['_EMBEDDINGREQUEST']._serialized_end=393
-  _globals['_EMBEDDINGRESPONSE']._serialized_start=395
-  _globals['_EMBEDDINGRESPONSE']._serialized_end=456
-  _globals['_EMBEDDING']._serialized_start=636
-  _globals['_EMBEDDING']._serialized_end=721
+  _globals['_PROVIDERMODEL']._serialized_start=208
+  _globals['_PROVIDERMODEL']._serialized_end=256
+  _globals['_EMBEDDINGMODEL']._serialized_start=259
+  _globals['_EMBEDDINGMODEL']._serialized_end=401
+  _globals['_RESPONSECHUNK']._serialized_start=403
+  _globals['_RESPONSECHUNK']._serialized_end=480
+  _globals['_EMBEDDINGREQUEST']._serialized_start=482
+  _globals['_EMBEDDINGREQUEST']._serialized_end=605
+  _globals['_EMBEDDINGRESPONSE']._serialized_start=607
+  _globals['_EMBEDDINGRESPONSE']._serialized_end=668
+  _globals['_EMBEDDING']._serialized_start=848
+  _globals['_EMBEDDING']._serialized_end=933
 # @@protoc_insertion_point(module_scope)
