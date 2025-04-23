@@ -344,19 +344,15 @@ def stream_rag_conversation(
         - Response streaming implemented using generator pattern
         - Document processing includes deduplication and citation mapping
     """
-    model_type = (
-        configuration["model_type"]
-        if configuration["model_type"]
-        else DEFAULT_MODEL_TYPE
-    )
-    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
-    prompt_template = configuration["prompt"]
-    rephrase_prompt_template = configuration["rephrase_prompt"]
-    context_window = configuration["context_window"]
-    retrieve_citations = configuration["retrieve_citations"]
-    retrieve_type = configuration["retrieve_type"]
-    rerank = configuration["rerank"]
-    chunk_window = configuration["chunk_window"]
+    model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
+    model = configuration.get("model", DEFAULT_MODEL)
+    prompt_template = configuration.get("prompt_template")
+    rephrase_prompt_template = configuration.get("rephrase_prompt_template")
+    context_window = configuration.get("context_window")
+    retrieve_citations = configuration.get("retrieve_citations")
+    retrieve_type = configuration.get("retrieve_type")
+    rerank = configuration.get("rerank")
+    chunk_window = configuration.get("chunk_window")
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -592,17 +588,17 @@ def stream_rag_conversation(
     }
     logger.info(json.dumps(info))
 
-    if user_id:
-        save_chat_message(
-            open_search_client,
-            search_text,
-            result_answer["answer"],
-            conversation_title,
-            documents,
-            chat_id,
-            user_id,
-            timestamp,
-            chat_sequence_number,
-        )
+    # if user_id:
+    #     save_chat_message(
+    #         open_search_client,
+    #         search_text,
+    #         result_answer["answer"],
+    #         conversation_title,
+    #         documents,
+    #         chat_id,
+    #         user_id,
+    #         timestamp,
+    #         chat_sequence_number,
+    #     )
 
     yield json.dumps({"chunk": "", "type": "END"})
