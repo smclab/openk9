@@ -146,6 +146,12 @@ public class DataIndexService
 			}));
 	}
 
+	public Uni<Datasource> datasource(Long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(dataIndex -> s.fetch(dataIndex.getDatasource()))
+		);
+	}
+
 	public Uni<CatResponse> catIndex(Long id) {
 		return sessionFactory.withTransaction((session, transaction) ->
 			getCurrentTenant(session)

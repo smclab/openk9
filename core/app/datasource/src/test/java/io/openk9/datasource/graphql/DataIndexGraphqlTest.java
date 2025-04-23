@@ -37,11 +37,18 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import jakarta.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class DataIndexGraphqlTest {
 
+	private static final String DATA_INDEX = "dataIndex";
+	private static final String DATASOURCE = "datasource";
+	private static final String ID = "id";
+	private static final String KNN_INDEX = "knnIndex";
+	private static final String NAME = "name";
+	private static final String RESPONSE = "response";
 	private static final String TENANT_ID = "public";
 
 	@Inject
@@ -64,31 +71,79 @@ public class DataIndexGraphqlTest {
 			operation(
 				OperationType.QUERY,
 				field(
-					"dataIndex",
+					DATA_INDEX,
 					args(
-						arg("id", dataIndex.getId())
+						arg(ID, dataIndex.getId())
 					),
-					field("id"),
-					field("name"),
-					field("knnIndex")
+					field(ID),
+					field(NAME),
+					field(KNN_INDEX)
 				)
 			)
 		);
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println("response");
+		System.out.println(RESPONSE);
 		System.out.println(response);
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var dataIndexR = response.getData().getJsonObject("dataIndex");
+		var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
 
 		assertNotNull(dataIndexR);
 		assertEquals(
-			dataIndex.getId(), Long.parseLong(dataIndexR.getString("id")));
-		assertFalse(dataIndexR.getBoolean("knnIndex"));
+			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
+		assertFalse(dataIndexR.getBoolean(KNN_INDEX));
+
+	}
+
+	@Test
+	void should_retrieve_datasource()
+		throws ExecutionException, InterruptedException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDEX,
+					args(
+						arg(ID, dataIndex.getId())
+					),
+					field(ID),
+					field(NAME),
+					field(
+						DATASOURCE,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		System.out.println(RESPONSE);
+		System.out.println(response);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
+
+		assertNotNull(dataIndexR);
+		assertEquals(
+			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
+
+		var datasourceR = dataIndexR.getJsonObject(DATASOURCE);
+
+		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
 
 	}
 

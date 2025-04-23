@@ -18,6 +18,8 @@
 package io.openk9.datasource.graphql;
 
 import java.util.Set;
+
+import io.openk9.datasource.model.Datasource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -79,9 +81,12 @@ public class DataIndexGraphqlResource {
 		return dataIndexService.getEmbeddingDocTypeField(dataIndex.getId());
 	}
 
-
 	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
 		return dataIndexService.catIndex(dataIndex.getId());
+	}
+
+	public Uni<Datasource> getDatasource(@Source DataIndex dataIndex){
+		return dataIndexService.datasource(dataIndex.getId());
 	}
 
 	public Uni<Long> getDocCount(@Source DataIndex dataIndex) {
