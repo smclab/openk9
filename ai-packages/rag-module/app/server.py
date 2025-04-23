@@ -77,7 +77,7 @@ app = FastAPI(
     ],
     contact={
         "name": "OpenK9 Support",
-        "email": "smc.roma@smc.it",
+        "email": "dev@openk9.io",
     },
     license_info={
         "name": "GNU Affero General Public License v3.0",
