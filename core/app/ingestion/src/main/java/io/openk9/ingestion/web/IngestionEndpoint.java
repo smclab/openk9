@@ -79,15 +79,15 @@ public class IngestionEndpoint {
 							schema = @Schema(implementation = IngestionDTO.class),
 							examples = {
 									@ExampleObject(
-											name = "simple",
+											name = "Simple ingestion payload",
 											value = IngestionDtoExamples.INGESTION_SIMPLE_DTO
 									),
 									@ExampleObject(
-											name = "resources",
+											name = "Ingestion payload passing resources and binaries",
 											value = IngestionDtoExamples.INGESTION_WITH_RESOURCES_DTO
 									),
 									@ExampleObject(
-											name = "acl",
+											name = "Ingestion payload passing access control list on data",
 											value = IngestionDtoExamples.INGESTION_WITH_ACL_DTO
 									)
 							}

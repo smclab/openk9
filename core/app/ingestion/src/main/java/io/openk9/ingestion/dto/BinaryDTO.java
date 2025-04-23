@@ -22,6 +22,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 @Data
 @Builder
@@ -29,9 +30,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 @RegisterForReflection
 public class BinaryDTO {
+	@Schema(format = "uuid",
+			description = "Unique string that identifies by datasource the binary inside Openk9.")
 	private String id;
+	@Schema(description = "Name associated with binary resource.")
 	private String name;
+	@Schema(description = "Content Type of the binary resource.")
 	private String contentType;
+	@Schema(format = "byte",
+			description = "Base64 encoded string of binary resource.")
 	private String data;
+	@Schema(format = "uuid",
+			description = "Unique id that identifies the binary inside Openk9.")
 	private String resourceId;
 }

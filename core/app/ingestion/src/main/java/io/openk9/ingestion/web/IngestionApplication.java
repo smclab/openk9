@@ -22,7 +22,9 @@ import jakarta.ws.rs.core.Application;
 import org.eclipse.microprofile.openapi.annotations.Components;
 import org.eclipse.microprofile.openapi.annotations.ExternalDocumentation;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
+import org.eclipse.microprofile.openapi.annotations.info.Contact;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -30,9 +32,17 @@ import io.openk9.common.model.dto.Problem;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "ingestion service",
-                version = "1.0.0",
-                summary = "an api provided"
+                title = "Ingestion Service",
+                version = "3.0.0-SNAPSHOT",
+                description = "API to ingest data from external sources inside Openk9.",
+                license = @License(
+                        name = "GNU Affero General Public License v3.0",
+                        url = "https://github.com/smclab/openk9/blob/main/LICENSE"
+                ),
+                contact = @Contact(
+                        name = "OpenK9 Support",
+                        email = "dev@openk9.io"
+                )
         ),
         components = @Components(
                 responses = {
