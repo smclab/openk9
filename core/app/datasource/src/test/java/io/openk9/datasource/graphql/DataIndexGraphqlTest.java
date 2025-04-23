@@ -17,6 +17,17 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.service.DatasourceService;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.ExecutionException;
+
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -27,27 +38,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.ExecutionException;
-import jakarta.inject.Inject;
-
-import io.openk9.datasource.Initializer;
-import io.openk9.datasource.service.DatasourceService;
-
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.json.JsonObject;
-import org.junit.jupiter.api.Test;
-
 @QuarkusTest
 public class DataIndexGraphqlTest {
 
 	private static final String DATA_INDEX = "dataIndex";
+	private static final String DATA_INDICES = "dataIndices";
 	private static final String DATASOURCE = "datasource";
+	private static final String EDGES = "edges";
 	private static final String ID = "id";
 	private static final String KNN_INDEX = "knnIndex";
 	private static final String NAME = "name";
+	private static final String NODE = "node";
 	private static final String RESPONSE = "response";
 	private static final String TENANT_ID = "public";
 
@@ -142,6 +143,59 @@ public class DataIndexGraphqlTest {
 			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
 
 		var datasourceR = dataIndexR.getJsonObject(DATASOURCE);
+
+		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
+
+	}
+
+	@Test
+	void should_get_all_dataindices_and_retrieve_datasource()
+		throws ExecutionException, InterruptedException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDICES,
+					field(EDGES,
+						field(NODE,
+							field(ID),
+							field(NAME),
+							field(
+								DATASOURCE,
+								field(ID),
+								field(NAME)
+							)
+						)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		System.out.println(RESPONSE);
+		System.out.println(response);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var dataIndicesR = response.getData().getJsonObject(DATA_INDICES);
+		assertNotNull(dataIndicesR);
+
+		var edges = dataIndicesR.getJsonArray(EDGES);
+		assertFalse(edges.isEmpty());
+
+		var firstNode = edges.getFirst().asJsonObject().getJsonObject(NODE);
+		assertEquals(
+			dataIndex.getId(), Long.parseLong(firstNode.getString(ID)));
+
+		var datasourceR = firstNode.getJsonObject(DATASOURCE);
 
 		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
 
