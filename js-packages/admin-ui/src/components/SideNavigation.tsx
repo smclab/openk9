@@ -76,6 +76,13 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                   label="Document Type Templates"
                   path="/document-type-templates"
                 />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Data indices"
+                  path="/data-indices"
+                />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Analyzers" path="/analyzers" />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Tokenizers" path="/tokenizers" />
                 <SideNavigationItem

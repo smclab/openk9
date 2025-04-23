@@ -94,10 +94,10 @@ import { BucketLanguage } from "./components/BucketLanguage";
 import { DocTypeFieldsSearch } from "./components/DocTypeFieldsSearch";
 import { EmbeddingModels } from "./components/EmbeddingModels";
 import { LargeLanguageModels } from "./components/LargeLanguageModels";
-import { EmbeddingModel } from "./components/EmbeddingModel";
-import { LargeLanguageModelE } from "./components/LargeLanguageModel";
 import { EmbeddingModelCreate } from "./components/EmbeddingModelCreate";
 import { LargeLanguageModel } from "./components/LargeLanguageModelCreate";
+import DataIndices from "./components/DataIndices";
+import DataIndice from "./dataindice";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -488,7 +488,10 @@ export default function App() {
                     </Route>
                     <Route path="embedding-models" element={<EmbeddingModels />} />
                     <Route path="embedding-models/new" element={<EmbeddingModelCreate />} />
-                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModelCreate />} />
+                    <Route path="embedding-models/:embeddingModelsId" element={<EmbeddingModelCreate />} />ù
+                    <Route path="data-indices" element={<DataIndices />} />
+                    <Route path="data-indices/new" element={<DataIndice />} />
+                    <Route path="data-indices/:dataIndiceId" element={<DataIndice />} />
                     <Route path="large-languages-models" element={<LargeLanguageModels />} />
                     <Route path="large-languages-models/new" element={<LargeLanguageModel />} />
                     <Route path="large-languages-models/:largeLanguageModelId" element={<LargeLanguageModel />} />

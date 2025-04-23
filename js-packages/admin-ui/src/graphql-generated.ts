@@ -230,6 +230,18 @@ export type BucketDtoInput = {
   refreshOnTab: Scalars['Boolean'];
 };
 
+export type BucketWithListsDtoInput = {
+  datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  refreshOnDate: Scalars['Boolean'];
+  refreshOnQuery: Scalars['Boolean'];
+  refreshOnSuggestionCategory: Scalars['Boolean'];
+  refreshOnTab: Scalars['Boolean'];
+  suggestionCategoryIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  tabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+};
+
 export type CatResponse = {
   __typename?: 'CatResponse';
   docsCount?: Maybe<Scalars['String']>;
@@ -518,6 +530,7 @@ export type DataIndex = {
   docCount?: Maybe<Scalars['BigInteger']>;
   docTypes?: Maybe<Connection_DocType>;
   id?: Maybe<Scalars['ID']>;
+  indexName?: Maybe<Scalars['String']>;
   mappings?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
@@ -1092,6 +1105,11 @@ export type DocTypeTemplateDtoInput = {
   templateType: TemplateType;
 };
 
+export type DocTypeUserDtoInput = {
+  docTypeId: Scalars['BigInteger'];
+  userField?: InputMaybe<UserField>;
+};
+
 /** An edge in a connection */
 export type Edge_Analyzer = {
   /** cursor marks a unique position or index into the connection */
@@ -1609,6 +1627,7 @@ export type Mutation = {
   bindTokenizerToAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
   bindVectorIndex?: Maybe<DataIndex>;
   bucket?: Maybe<Response_Bucket>;
+  bucketWithLists?: Maybe<Response_Bucket>;
   charFilter?: Maybe<Response_CharFilter>;
   createDatasourceAndAddPluginDriver?: Maybe<Tuple2_Datasource_PluginDriver>;
   createDatasourceConnection?: Maybe<Response_Datasource>;
@@ -1651,10 +1670,12 @@ export type Mutation = {
   enableLargeLanguageModel?: Maybe<LargeLanguageModel>;
   enrichItem?: Maybe<Response_EnrichItem>;
   enrichPipeline?: Maybe<Response_EnrichPipeline>;
+  enrichPipelineWithEnrichItems?: Maybe<Response_EnrichPipeline>;
   language?: Maybe<Response_Language>;
   largeLanguageModel?: Maybe<Response_LargeLanguageModel>;
   multiSelect?: Maybe<SuggestionCategory>;
   pluginDriver?: Maybe<Response_PluginDriver>;
+  pluginDriverWithDocType?: Maybe<Response_PluginDriver>;
   queryAnalysis?: Maybe<Response_QueryAnalysis>;
   queryParserConfig?: Maybe<Response_QueryParserConfig>;
   removeAnnotatorFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Annotator>;
@@ -1666,7 +1687,7 @@ export type Mutation = {
   removeDocTypeFieldFromSuggestionCategory?: Maybe<Tuple2_SuggestionCategory_DocTypeField>;
   removeDocTypeFromDataIndex?: Maybe<Tuple2_DataIndex_DocType>;
   removeEnrichItemFromEnrichPipeline?: Maybe<Tuple2_EnrichPipeline_EnrichItem>;
-  removeExtraParam?: Maybe<TokenTab>;
+  removeExtraParam?: Maybe<Annotator>;
   removeLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   removeQueryParserConfig?: Maybe<Tuple2_SearchConfig_BigInteger>;
   removeRuleFromQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Rule>;
@@ -1682,7 +1703,9 @@ export type Mutation = {
   sortEnrichItems?: Maybe<EnrichPipeline>;
   sorting?: Maybe<Response_Sorting>;
   suggestionCategory?: Maybe<Response_SuggestionCategory>;
+  suggestionCategoryWithDocTypeField?: Maybe<Response_SuggestionCategory>;
   tab?: Maybe<Response_Tab>;
+  tabWithTokenTabs?: Maybe<Response_Tab>;
   tokenFilter?: Maybe<Response_TokenFilter>;
   tokenTab?: Maybe<Response_TokenTab>;
   tokenizer?: Maybe<Response_Tokenizer>;
@@ -1699,6 +1722,7 @@ export type Mutation = {
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
   unbindTokenizerFromAnalyzer?: Maybe<Tuple2_Analyzer_Tokenizer>;
   unbindVectorIndex?: Maybe<DataIndex>;
+  updateDatasourceConnection?: Maybe<Response_Datasource>;
   userField?: Maybe<AclMapping>;
   vectorIndex?: Maybe<Response_VectorIndex>;
 };
@@ -1973,6 +1997,14 @@ export type MutationBindVectorIndexArgs = {
 /** Mutation root */
 export type MutationBucketArgs = {
   bucketDTO?: InputMaybe<BucketDtoInput>;
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
+export type MutationBucketWithListsArgs = {
+  bucketWithListsDTO?: InputMaybe<BucketWithListsDtoInput>;
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
 };
@@ -2260,6 +2292,14 @@ export type MutationEnrichPipelineArgs = {
 
 
 /** Mutation root */
+export type MutationEnrichPipelineWithEnrichItemsArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  pipelineWithItemsDTO?: InputMaybe<PipelineWithItemsDtoInput>;
+};
+
+
+/** Mutation root */
 export type MutationLanguageArgs = {
   id?: InputMaybe<Scalars['ID']>;
   languageDTO?: InputMaybe<LanguageDtoInput>;
@@ -2287,6 +2327,14 @@ export type MutationPluginDriverArgs = {
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
   pluginDriverDTO?: InputMaybe<PluginDriverDtoInput>;
+};
+
+
+/** Mutation root */
+export type MutationPluginDriverWithDocTypeArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  pluginWithDocTypeDTO?: InputMaybe<PluginWithDocTypeDtoInput>;
 };
 
 
@@ -2485,10 +2533,26 @@ export type MutationSuggestionCategoryArgs = {
 
 
 /** Mutation root */
+export type MutationSuggestionCategoryWithDocTypeFieldArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  suggestionCategoryWithDocTypeFieldDTO?: InputMaybe<SuggestionCategoryWithDocTypeFieldDtoInput>;
+};
+
+
+/** Mutation root */
 export type MutationTabArgs = {
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
   tabDTO?: InputMaybe<TabDtoInput>;
+};
+
+
+/** Mutation root */
+export type MutationTabWithTokenTabsArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  tabWithTokenTabsDTO?: InputMaybe<TabWithTokenTabsDtoInput>;
 };
 
 
@@ -2594,6 +2658,12 @@ export type MutationUnbindTokenizerFromAnalyzerArgs = {
 /** Mutation root */
 export type MutationUnbindVectorIndexArgs = {
   dataIndexId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationUpdateDatasourceConnectionArgs = {
+  datasourceConnection?: InputMaybe<UpdateDatasourceConnectionDtoInput>;
 };
 
 
@@ -2708,6 +2778,15 @@ export enum PluginDriverType {
   Http = 'HTTP'
 }
 
+export type PluginWithDocTypeDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  docTypeUserDTOSet?: InputMaybe<Array<InputMaybe<DocTypeUserDtoInput>>>;
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  provisioning?: InputMaybe<Provisioning>;
+  type: PluginDriverType;
+};
+
 export enum Provisioning {
   System = 'SYSTEM',
   User = 'USER'
@@ -2784,6 +2863,13 @@ export type Query = {
   tokenizers?: Maybe<Connection_Tokenizer>;
   totalSortings?: Maybe<Connection_Sorting>;
   totalTokenTabs?: Maybe<Connection_TokenTab>;
+  unboundAnalyzersByCharFilter?: Maybe<Array<Maybe<Analyzer>>>;
+  unboundAnalyzersByTokenFilter?: Maybe<Array<Maybe<Analyzer>>>;
+  unboundBucketsByDatasource?: Maybe<Array<Maybe<Bucket>>>;
+  unboundBucketsBySuggestionCategory?: Maybe<Array<Maybe<Bucket>>>;
+  unboundBucketsByTab?: Maybe<Array<Maybe<Bucket>>>;
+  unboundEnrichPipelines?: Maybe<Array<Maybe<EnrichPipeline>>>;
+  unboundTabsByTokenTab?: Maybe<Array<Maybe<Tab>>>;
   vectorIndex?: Maybe<VectorIndex>;
   vectorIndices?: Maybe<Connection_VectorIndex>;
 };
@@ -3376,6 +3462,48 @@ export type QueryTotalTokenTabsArgs = {
 
 
 /** Query root */
+export type QueryUnboundAnalyzersByCharFilterArgs = {
+  charFilterId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundAnalyzersByTokenFilterArgs = {
+  tokenFilterId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundBucketsByDatasourceArgs = {
+  datasourceId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundBucketsBySuggestionCategoryArgs = {
+  suggestionCategoryId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundBucketsByTabArgs = {
+  tabId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundEnrichPipelinesArgs = {
+  itemId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundTabsByTokenTabArgs = {
+  tokenTabId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
 export type QueryVectorIndexArgs = {
   id: Scalars['ID'];
 };
@@ -3641,6 +3769,7 @@ export type Scheduler = {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   datasource?: Maybe<Datasource>;
+  errorDescription?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['ID']>;
   /** ISO-8601 */
   lastIngestionDate?: Maybe<Scalars['DateTime']>;
@@ -3848,6 +3977,14 @@ export type SuggestionCategoryDtoInput = {
   priority: Scalars['Float'];
 };
 
+export type SuggestionCategoryWithDocTypeFieldDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  docTypeFieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  multiSelect: Scalars['Boolean'];
+  name: Scalars['String'];
+  priority: Scalars['Float'];
+};
+
 export type Tab = {
   __typename?: 'Tab';
   /** ISO-8601 */
@@ -3901,6 +4038,13 @@ export type TabDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   priority: Scalars['Int'];
+};
+
+export type TabWithTokenTabsDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  priority: Scalars['Int'];
+  tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
 };
 
 export enum TemplateType {
@@ -4177,6 +4321,31 @@ export type Tuple2_TokenTab_DocTypeField = {
   right?: Maybe<DocTypeField>;
 };
 
+export type UpdateDatasourceConnectionDtoInput = {
+  dataIndexId: Scalars['BigInteger'];
+  datasourceId: Scalars['BigInteger'];
+  description?: InputMaybe<Scalars['String']>;
+  /** Json configuration with custom fields for datasource */
+  jsonConfig?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  /** Pipeline to be created and associated (optional) */
+  pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
+  /** Pipeline to be associated (optional) */
+  pipelineId?: InputMaybe<Scalars['BigInteger']>;
+  /** PluginDriver to be created and associated (optional) */
+  pluginDriver?: InputMaybe<PluginDriverDtoInput>;
+  /** PluginDriver to be associated (optional) */
+  pluginDriverId?: InputMaybe<Scalars['BigInteger']>;
+  /** Reindex on datasource every {reindexRate} times, never if 0 */
+  reindexRate: Scalars['Int'];
+  /** If true datasource is scheduled based on defined scheduling expression */
+  schedulable: Scalars['Boolean'];
+  /** Chron quartz expression to define scheduling of datasource */
+  scheduling: Scalars['String'];
+  /** Configurations used for indexing vectors (optional) */
+  vectorIndexConfigurations?: InputMaybe<ConfigurationsDtoInput>;
+};
+
 export enum UserField {
   Email = 'EMAIL',
   Name = 'NAME',
@@ -4195,6 +4364,7 @@ export type VectorIndex = {
   dataIndex?: Maybe<DataIndex>;
   description?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['ID']>;
+  indexName?: Maybe<Scalars['String']>;
   jsonConfig?: Maybe<Scalars['String']>;
   metadataMapping?: Maybe<Scalars['String']>;
   /** ISO-8601 */
@@ -4675,6 +4845,14 @@ export type DataIndexInformationQueryVariables = Exact<{ [key: string]: never; }
 
 
 export type DataIndexInformationQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null } | null> | null } | null } | null } | null> | null } | null };
+
+export type DataIndicesQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type DataIndicesQuery = { __typename?: 'Query', dataIndices?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DataSourceQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -5810,6 +5988,29 @@ export type DeleteTokenizerMutationVariables = Exact<{
 
 
 export type DeleteTokenizerMutation = { __typename?: 'Mutation', deleteTokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null } | null };
+
+export type DataIndexQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, docTypes?: { __typename: 'DefaultConnection_DocType', edges?: Array<{ __typename: 'DefaultEdge_DocType', node?: { __typename: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+
+export type VectorIndicesQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type VectorIndicesQuery = { __typename?: 'Query', vectorIndices?: { __typename?: 'DefaultConnection_VectorIndex', edges?: Array<{ __typename?: 'DefaultEdge_VectorIndex', node?: { __typename?: 'VectorIndex', name?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, jsonConfig?: string | null, textEmbeddingField?: string | null, titleField?: string | null, urlField?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type VectorIndicesAssociationQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type VectorIndicesAssociationQuery = { __typename?: 'Query', vectorIndices?: { __typename?: 'DefaultConnection_VectorIndex', edges?: Array<{ __typename?: 'DefaultEdge_VectorIndex', node?: { __typename?: 'VectorIndex', name?: string | null, id?: string | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type CreateSitemapDataSourceMutationVariables = Exact<{
   name: Scalars['String'];
@@ -8299,6 +8500,52 @@ export function useDataIndexInformationLazyQuery(baseOptions?: Apollo.LazyQueryH
 export type DataIndexInformationQueryHookResult = ReturnType<typeof useDataIndexInformationQuery>;
 export type DataIndexInformationLazyQueryHookResult = ReturnType<typeof useDataIndexInformationLazyQuery>;
 export type DataIndexInformationQueryResult = Apollo.QueryResult<DataIndexInformationQuery, DataIndexInformationQueryVariables>;
+export const DataIndicesDocument = gql`
+    query DataIndices($searchText: String, $cursor: String) {
+  dataIndices(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useDataIndicesQuery__
+ *
+ * To run a query within a React component, call `useDataIndicesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDataIndicesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDataIndicesQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useDataIndicesQuery(baseOptions?: Apollo.QueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
+      }
+export function useDataIndicesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
+        }
+export type DataIndicesQueryHookResult = ReturnType<typeof useDataIndicesQuery>;
+export type DataIndicesLazyQueryHookResult = ReturnType<typeof useDataIndicesLazyQuery>;
+export type DataIndicesQueryResult = Apollo.QueryResult<DataIndicesQuery, DataIndicesQueryVariables>;
 export const DataSourceDocument = gql`
     query DataSource($id: ID!, $searchText: String) {
   datasource(id: $id) {
@@ -14173,6 +14420,152 @@ export function useDeleteTokenizerMutation(baseOptions?: Apollo.MutationHookOpti
 export type DeleteTokenizerMutationHookResult = ReturnType<typeof useDeleteTokenizerMutation>;
 export type DeleteTokenizerMutationResult = Apollo.MutationResult<DeleteTokenizerMutation>;
 export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
+export const DataIndexDocument = gql`
+    query DataIndex($id: ID!) {
+  dataIndex(id: $id) {
+    name
+    description
+    settings
+    docTypes {
+      edges {
+        node {
+          id
+          name
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+  }
+}
+    `;
+
+/**
+ * __useDataIndexQuery__
+ *
+ * To run a query within a React component, call `useDataIndexQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDataIndexQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDataIndexQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDataIndexQuery(baseOptions: Apollo.QueryHookOptions<DataIndexQuery, DataIndexQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
+      }
+export function useDataIndexLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexQuery, DataIndexQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
+        }
+export type DataIndexQueryHookResult = ReturnType<typeof useDataIndexQuery>;
+export type DataIndexLazyQueryHookResult = ReturnType<typeof useDataIndexLazyQuery>;
+export type DataIndexQueryResult = Apollo.QueryResult<DataIndexQuery, DataIndexQueryVariables>;
+export const VectorIndicesDocument = gql`
+    query VectorIndices($searchText: String, $cursor: String) {
+  vectorIndices(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        name
+        chunkType
+        chunkWindowSize
+        jsonConfig
+        textEmbeddingField
+        titleField
+        urlField
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useVectorIndicesQuery__
+ *
+ * To run a query within a React component, call `useVectorIndicesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVectorIndicesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useVectorIndicesQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useVectorIndicesQuery(baseOptions?: Apollo.QueryHookOptions<VectorIndicesQuery, VectorIndicesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<VectorIndicesQuery, VectorIndicesQueryVariables>(VectorIndicesDocument, options);
+      }
+export function useVectorIndicesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VectorIndicesQuery, VectorIndicesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<VectorIndicesQuery, VectorIndicesQueryVariables>(VectorIndicesDocument, options);
+        }
+export type VectorIndicesQueryHookResult = ReturnType<typeof useVectorIndicesQuery>;
+export type VectorIndicesLazyQueryHookResult = ReturnType<typeof useVectorIndicesLazyQuery>;
+export type VectorIndicesQueryResult = Apollo.QueryResult<VectorIndicesQuery, VectorIndicesQueryVariables>;
+export const VectorIndicesAssociationDocument = gql`
+    query VectorIndicesAssociation($searchText: String, $cursor: String) {
+  vectorIndices(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        name
+        id
+        dataIndex {
+          id
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useVectorIndicesAssociationQuery__
+ *
+ * To run a query within a React component, call `useVectorIndicesAssociationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVectorIndicesAssociationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useVectorIndicesAssociationQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useVectorIndicesAssociationQuery(baseOptions?: Apollo.QueryHookOptions<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>(VectorIndicesAssociationDocument, options);
+      }
+export function useVectorIndicesAssociationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>(VectorIndicesAssociationDocument, options);
+        }
+export type VectorIndicesAssociationQueryHookResult = ReturnType<typeof useVectorIndicesAssociationQuery>;
+export type VectorIndicesAssociationLazyQueryHookResult = ReturnType<typeof useVectorIndicesAssociationLazyQuery>;
+export type VectorIndicesAssociationQueryResult = Apollo.QueryResult<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>;
 export const CreateSitemapDataSourceDocument = gql`
     mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
@@ -14311,4 +14704,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2024-08-08T12:33:20+02:00
+// Generated on 2025-04-23T11:34:20+02:00

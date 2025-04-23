@@ -191,8 +191,18 @@ export function TextInput({
           value={value}
           onChange={(event) => onChange(event.currentTarget.value)}
           disabled={disabled}
+          style={
+            disabled
+              ? {
+                  backgroundColor: "#f5f5f5",
+                  color: "#a1a1a1",
+                  borderColor: "#dcdcdc",
+                  cursor: "not-allowed",
+                }
+              : {}
+          }
         ></input>
-        {value !== "" && (
+        {value !== "" && !disabled && (
           <ClayButtonWithIcon
             aria-label=""
             symbol="times"

@@ -1,37 +1,19 @@
+import { gql } from "@apollo/client";
+import ClayButton from "@clayui/button";
+import { ClayInput } from "@clayui/form";
+import ClayList from "@clayui/list";
+import ClayModal, { useModal } from "@clayui/modal";
 import React from "react";
-import { QueryResult, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
+import { Virtuoso } from "react-virtuoso";
 import {
-  useForm,
-  fromFieldValidators,
-  TextInput,
-  TextArea,
-  SearchSelect,
-  MainTitle,
-  BooleanInput,
-  CustomButtom,
-  ContainerFluid,
-  QueryHook,
-  MutationHook,
-  CustomFormGroup,
-  InformationField,
-  ClayListComponents,
-  StyleToggle,
-} from "./Form";
-import { useToast } from "./ToastProvider";
-import {
-  BucketLanguagesQuery,
-  Exact,
-  InputMaybe,
   useBindLanguageToBucketMutation,
   useBindQueryAnalysisToBucketMutation,
   useBindSearchConfigToBucketMutation,
   useBucketLanguagesQuery,
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
-  useLanguageQuery,
   useLanguageValueQuery,
-  useLanguagesOptionsQuery,
   useQueryAnalysisOptionsQuery,
   useQueryAnalysisValueQuery,
   useSearchConfigOptionsQuery,
@@ -41,12 +23,25 @@ import {
   useUnbindSearchConfigFromBucketMutation,
 } from "../graphql-generated";
 import { BucketsQuery } from "./Buckets";
+import {
+  BooleanInput,
+  ClayListComponents,
+  ContainerFluid,
+  CustomButtom,
+  CustomFormGroup,
+  InformationField,
+  MainTitle,
+  MutationHook,
+  QueryHook,
+  SearchSelect,
+  StyleToggle,
+  TextArea,
+  TextInput,
+  fromFieldValidators,
+  useForm,
+} from "./Form";
+import { useToast } from "./ToastProvider";
 import useDebounced from "./useDebounced";
-import ClayModal, { useModal } from "@clayui/modal";
-import { ClayInput, ClayToggle } from "@clayui/form";
-import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
-import { Virtuoso } from "react-virtuoso";
-import ClayList from "@clayui/list";
 
 const BucketQuery = gql`
   query Bucket($id: ID!) {
@@ -217,29 +212,18 @@ export function Bucket() {
         {bucketId !== "new" && (
           <div className="custom-panel panel" style={{ border: "1px solid #0000001a" }}>
             <div className="panel-body">
-              <div className="panel-heading" style={{marginTop: "20px" }}>
-                <div className="panel-title title" style={{paddingBottom:"20px"}}>{"Refresh on ..."}</div>
+              <div className="panel-heading" style={{ marginTop: "20px" }}>
+                <div className="panel-title title" style={{ paddingBottom: "20px" }}>
+                  {"Refresh on ..."}
+                </div>
               </div>
               <div className="my-custom-panel-body">
-                <div style={{ paddingBottom: "20px" }}>
-                </div>
+                <div style={{ paddingBottom: "20px" }}></div>
                 <style type="text/css">{StyleToggle}</style>
-                <BooleanInput
-                  label="Refresh on date"
-                  {...form.inputProps("refreshOnDate")}
-                />
-                <BooleanInput
-                  label="Refresh on query"
-                  {...form.inputProps("refreshOnQuery")}
-                />
-                <BooleanInput
-                  label="Refresh on suggestion category"
-                  {...form.inputProps("refreshOnSuggestionCategory")}
-                />
-                <BooleanInput
-                  label="Refresh on Tab"
-                  {...form.inputProps("refreshOnTab")}
-                />
+                <BooleanInput label="Refresh on date" {...form.inputProps("refreshOnDate")} />
+                <BooleanInput label="Refresh on query" {...form.inputProps("refreshOnQuery")} />
+                <BooleanInput label="Refresh on suggestion category" {...form.inputProps("refreshOnSuggestionCategory")} />
+                <BooleanInput label="Refresh on Tab" {...form.inputProps("refreshOnTab")} />
               </div>
             </div>
           </div>
@@ -252,7 +236,7 @@ export function Bucket() {
   );
 }
 
-export const queryAnalysisConfigOptions=gql`
+export const queryAnalysisConfigOptions = gql`
   query QueryAnalysisOptions($searchText: String, $cursor: String) {
     options: queryAnalyses(searchText: $searchText, first: 5, after: $cursor) {
       edges {
@@ -303,7 +287,7 @@ gql`
   }
 `;
 
-export const searchConfigOptions=gql`
+export const searchConfigOptions = gql`
   query SearchConfigOptions($searchText: String, $cursor: String) {
     options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
       edges {
