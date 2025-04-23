@@ -77,18 +77,17 @@ export default function DataIndice() {
             validationMessages={[]}
             value={dataIndex?.settings || ""}
           ></CodeInput>
-          {/* <SearchSelect
-            label="Vector Indice"
-            value={dataIndex.?.id}
-            useValueQuery={useQueryAnalysisValueQuery}
-            useOptionsQuery={useQueryAnalysisOptionsQuery}
-            useChangeMutation={useBindQueryAnalysisToBucketMutation}
-            mapValueToMutationVariables={(queryAnalysis) => ({ bucketId, queryAnalysis })}
-            useRemoveMutation={useUnbindQueryAnalysisFromBucketMutation}
-            mapValueToRemoveMutationVariables={() => ({ bucketId })}
-            invalidate={() => bucketQuery.refetch()}
-            description={"Query Analysis configuration for current bucket"}
-          /> */}
+          <SearchSelect
+            value={vectorIndicesAssociation.dataIndex?.id}
+            associatedVectorIndex={vectorIndicesAssociation.dataIndex}
+            unassociatedVectorIndices={vectorIndicesAssociation.unassociatedVectorIndices.map((edge) => edge || {})}
+            onAssociate={(id) => {
+              console.log(`Associating with ID: ${id}`);
+            }}
+            onDisassociate={() => {
+              console.log("Disassociating current value");
+            }}
+          />
         </div>
       </ContainerFluid>
     </React.Fragment>
@@ -174,4 +173,133 @@ export function useFindDataIndexById(id: string) {
   const unassociatedVectorIndices = data?.vectorIndices?.edges?.filter((edge) => !edge?.node?.dataIndex)?.map((edge) => edge?.node) || [];
 
   return { dataIndex: foundNode?.node || null, unassociatedVectorIndices, loading, error };
+}
+
+export function SearchSelect({
+  value,
+  associatedVectorIndex,
+  unassociatedVectorIndices,
+  onAssociate,
+  onDisassociate,
+}: {
+  value: string | null | undefined;
+  associatedVectorIndex: { id?: string | null; name?: string | null } | null;
+  unassociatedVectorIndices: Array<{ id?: string | null; name?: string | null; description?: string | null }>;
+  onAssociate: (id: string) => void;
+  onDisassociate: () => void;
+}) {
+  const { observer, onOpenChange, open } = useModal();
+
+  return (
+    <React.Fragment>
+      <CustomFormGroup>
+        <label>Association with vectorization</label>
+        <ClayInput.Group>
+          <ClayInput.GroupItem>
+            <ClayInput
+              type="text"
+              className="form-control"
+              style={{ backgroundColor: "#f1f2f5" }}
+              readOnly
+              disabled={!associatedVectorIndex}
+              value={associatedVectorIndex?.name ?? ""}
+            />
+          </ClayInput.GroupItem>
+          <ClayInput.GroupItem append shrink>
+            <ClayButton.Group>
+              <ClayButton
+                displayType="secondary"
+                style={{
+                  border: "1px solid #393B4A",
+                  borderRadius: "3px",
+                }}
+                onClick={() => onOpenChange(true)}
+              >
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Change
+                </span>
+              </ClayButton>
+              <ClayButton
+                displayType="secondary"
+                disabled={!associatedVectorIndex}
+                style={{ marginLeft: "10px", border: "1px solid #393B4A", borderRadius: "3px" }}
+                onClick={() => {
+                  console.log("Disassociation log: Removing association");
+                  onDisassociate();
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "Helvetica",
+                    fontStyle: "normal",
+                    fontWeight: "700",
+                    fontSize: "15px",
+                    color: "#393B4A",
+                  }}
+                >
+                  Remove
+                </span>
+              </ClayButton>
+            </ClayButton.Group>
+          </ClayInput.GroupItem>
+        </ClayInput.Group>
+      </CustomFormGroup>
+      {open && (
+        <ClayModal observer={observer}>
+          <ClayModal.Header>Vectorization</ClayModal.Header>
+          <ClayModal.Body>
+            <Virtuoso
+              totalCount={unassociatedVectorIndices.length}
+              style={{ height: "400px" }}
+              itemContent={(index) => {
+                const row = unassociatedVectorIndices[index];
+                return (
+                  <React.Fragment>
+                    <ClayList.ItemField expand>
+                      <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
+                      <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
+                    </ClayList.ItemField>
+                    <ClayList.ItemField>
+                      <ClayList.QuickActionMenu>
+                        <ClayList.QuickActionMenu.Item
+                          onClick={() => {
+                            if (row?.id) {
+                              console.log(`Association log: Associating with ${row.name}`);
+                              onAssociate(row.id);
+                              onOpenChange(false);
+                            }
+                          }}
+                          symbol="plus"
+                        />
+                      </ClayList.QuickActionMenu>
+                    </ClayList.ItemField>
+                  </React.Fragment>
+                );
+              }}
+            />
+          </ClayModal.Body>
+          <ClayModal.Footer
+            first={
+              <ClayButton
+                displayType="secondary"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
+                Cancel
+              </ClayButton>
+            }
+          />
+        </ClayModal>
+      )}
+    </React.Fragment>
+  );
 }
