@@ -17,21 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
@@ -55,13 +40,27 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.DataIndexResource;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @ApplicationScoped
 public class DataIndexService
@@ -75,12 +74,27 @@ public class DataIndexService
 	@Inject
 	EmbeddingModelService embeddingModelService;
 	@Inject
-	IndexService indexService;
-	@Inject
 	IndexMappingService indexMappingService;
+	@Inject
+	IndexService indexService;
 
 	DataIndexService(DataIndexMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	private static Map<String, Object> getSettingsMap(String settingsJson) {
+
+		Map<String, Object> settingsMap = null;
+		try {
+			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);
+			settingsMap = settingsJsonObj.getMap();
+		}
+		catch (Exception exception) {
+			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
+			settingsMap = Map.of();
+		}
+
+		return settingsMap;
 	}
 
 	public Uni<Tuple2<DataIndex, DocType>> addDocType(
@@ -144,12 +158,6 @@ public class DataIndexService
 					.replaceWithVoid();
 
 			}));
-	}
-
-	public Uni<Datasource> datasource(Long id) {
-		return sessionFactory.withTransaction((s, t) -> findById(s, id)
-			.flatMap(dataIndex -> s.fetch(dataIndex.getDatasource()))
-		);
 	}
 
 	public Uni<CatResponse> catIndex(Long id) {
@@ -250,6 +258,12 @@ public class DataIndexService
 			.onItemOrFailure()
 			.transform(BaseK9EntityService::toResponse);
 
+	}
+
+	public Uni<Datasource> datasource(Long id) {
+		return sessionFactory.withTransaction((s, t) -> findById(s, id)
+			.flatMap(dataIndex -> s.fetch(dataIndex.getDatasource()))
+		);
 	}
 
 	/**
@@ -437,6 +451,16 @@ public class DataIndexService
 		);
 	}
 
+	@Override
+	public Uni<DataIndex> patch(long id, DataIndexDTO dto) {
+		return patch((Mutiny.Session) null, id, dto);
+	}
+
+	@Override
+	public Uni<DataIndex> patch(String tenantId, long id, DataIndexDTO dto) {
+		return patch((Mutiny.Session) null, id, dto);
+	}
+
 	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
 		long dataIndexId, long docTypeId) {
 		return sessionFactory.withTransaction(s -> findById(s, dataIndexId)
@@ -461,16 +485,6 @@ public class DataIndexService
 	}
 
 	@Override
-	public Uni<DataIndex> patch(long id, DataIndexDTO dto) {
-		return patch((Mutiny.Session) null, id, dto);
-	}
-
-	@Override
-	public Uni<DataIndex> patch(String tenantId, long id, DataIndexDTO dto) {
-		return patch((Mutiny.Session) null, id, dto);
-	}
-
-	@Override
 	public Uni<DataIndex> update(long id, DataIndexDTO dto) {
 		return update((Mutiny.Session) null, id, dto);
 	}
@@ -486,29 +500,6 @@ public class DataIndexService
 		// a dataIndex cannot be updated
 
 		throw new UnsupportedOperationException("update not supported for DataIndex");
-	}
-
-	@Override
-	protected Uni<DataIndex> patch(
-		Mutiny.Session session, long id, DataIndexDTO dto) {
-		// a dataIndex cannot be updated
-
-		throw new UnsupportedOperationException("patch not supported for DataIndex");
-	}
-
-	private static Map<String, Object> getSettingsMap(String settingsJson) {
-
-		Map<String, Object> settingsMap = null;
-		try {
-			var settingsJsonObj = (JsonObject) Json.decodeValue(settingsJson);
-			settingsMap = settingsJsonObj.getMap();
-		}
-		catch (Exception exception) {
-			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
-			settingsMap = Map.of();
-		}
-
-		return settingsMap;
 	}
 
 	private Uni<DataIndex> createDataIndexTransient(
@@ -546,6 +537,14 @@ public class DataIndexService
 
 				return dataIndex;
 			});
+	}
+
+	@Override
+	protected Uni<DataIndex> patch(
+		Mutiny.Session session, long id, DataIndexDTO dto) {
+		// a dataIndex cannot be updated
+
+		throw new UnsupportedOperationException("patch not supported for DataIndex");
 	}
 
 }
