@@ -4381,6 +4381,31 @@ export type VectorIndexDtoInput = {
   name: Scalars['String'];
 };
 
+export type VectorIndexQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type VectorIndexQuery = { __typename?: 'Query', vectorIndex?: { __typename?: 'VectorIndex', id?: string | null, name?: string | null, description?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, jsonConfig?: string | null, textEmbeddingField?: string | null, titleField?: string | null, urlField?: string | null } | null };
+
+export type CreateOrUpdateVectorIndexMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  configurations: ConfigurationsDtoInput;
+}>;
+
+
+export type CreateOrUpdateVectorIndexMutation = { __typename?: 'Mutation', vectorIndex?: { __typename?: 'Response_VectorIndex', entity?: { __typename?: 'VectorIndex', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type VectorIndicesListQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type VectorIndicesListQuery = { __typename?: 'Query', vectorIndices?: { __typename?: 'DefaultConnection_VectorIndex', edges?: Array<{ __typename?: 'DefaultEdge_VectorIndex', node?: { __typename?: 'VectorIndex', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
 export type AnalyzerQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -6049,6 +6074,142 @@ export type CreateYouTubeDataSourceMutationVariables = Exact<{
 export type CreateYouTubeDataSourceMutation = { __typename?: 'Mutation', datasource?: { __typename?: 'Response_Datasource', entity?: { __typename?: 'Datasource', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 
+export const VectorIndexDocument = gql`
+    query VectorIndex($id: ID!) {
+  vectorIndex(id: $id) {
+    id
+    name
+    description
+    name
+    chunkType
+    chunkWindowSize
+    jsonConfig
+    textEmbeddingField
+    titleField
+    urlField
+  }
+}
+    `;
+
+/**
+ * __useVectorIndexQuery__
+ *
+ * To run a query within a React component, call `useVectorIndexQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVectorIndexQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useVectorIndexQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useVectorIndexQuery(baseOptions: Apollo.QueryHookOptions<VectorIndexQuery, VectorIndexQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<VectorIndexQuery, VectorIndexQueryVariables>(VectorIndexDocument, options);
+      }
+export function useVectorIndexLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VectorIndexQuery, VectorIndexQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<VectorIndexQuery, VectorIndexQueryVariables>(VectorIndexDocument, options);
+        }
+export type VectorIndexQueryHookResult = ReturnType<typeof useVectorIndexQuery>;
+export type VectorIndexLazyQueryHookResult = ReturnType<typeof useVectorIndexLazyQuery>;
+export type VectorIndexQueryResult = Apollo.QueryResult<VectorIndexQuery, VectorIndexQueryVariables>;
+export const CreateOrUpdateVectorIndexDocument = gql`
+    mutation CreateOrUpdateVectorIndex($id: ID, $name: String!, $description: String, $configurations: ConfigurationsDTOInput!) {
+  vectorIndex(
+    id: $id
+    vectorIndexDTO: {name: $name, description: $description, configurations: $configurations}
+  ) {
+    entity {
+      id
+      name
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateVectorIndexMutationFn = Apollo.MutationFunction<CreateOrUpdateVectorIndexMutation, CreateOrUpdateVectorIndexMutationVariables>;
+
+/**
+ * __useCreateOrUpdateVectorIndexMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateVectorIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateVectorIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateVectorIndexMutation, { data, loading, error }] = useCreateOrUpdateVectorIndexMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      name: // value for 'name'
+ *      description: // value for 'description'
+ *      configurations: // value for 'configurations'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateVectorIndexMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateVectorIndexMutation, CreateOrUpdateVectorIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateVectorIndexMutation, CreateOrUpdateVectorIndexMutationVariables>(CreateOrUpdateVectorIndexDocument, options);
+      }
+export type CreateOrUpdateVectorIndexMutationHookResult = ReturnType<typeof useCreateOrUpdateVectorIndexMutation>;
+export type CreateOrUpdateVectorIndexMutationResult = Apollo.MutationResult<CreateOrUpdateVectorIndexMutation>;
+export type CreateOrUpdateVectorIndexMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateVectorIndexMutation, CreateOrUpdateVectorIndexMutationVariables>;
+export const VectorIndicesListDocument = gql`
+    query vectorIndicesList($searchText: String, $cursor: String) {
+  vectorIndices(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        description
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useVectorIndicesListQuery__
+ *
+ * To run a query within a React component, call `useVectorIndicesListQuery` and pass it any options that fit your needs.
+ * When your component renders, `useVectorIndicesListQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useVectorIndicesListQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useVectorIndicesListQuery(baseOptions?: Apollo.QueryHookOptions<VectorIndicesListQuery, VectorIndicesListQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<VectorIndicesListQuery, VectorIndicesListQueryVariables>(VectorIndicesListDocument, options);
+      }
+export function useVectorIndicesListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<VectorIndicesListQuery, VectorIndicesListQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<VectorIndicesListQuery, VectorIndicesListQueryVariables>(VectorIndicesListDocument, options);
+        }
+export type VectorIndicesListQueryHookResult = ReturnType<typeof useVectorIndicesListQuery>;
+export type VectorIndicesListLazyQueryHookResult = ReturnType<typeof useVectorIndicesListLazyQuery>;
+export type VectorIndicesListQueryResult = Apollo.QueryResult<VectorIndicesListQuery, VectorIndicesListQueryVariables>;
 export const AnalyzerDocument = gql`
     query Analyzer($id: ID!) {
   analyzer(id: $id) {
@@ -14704,4 +14865,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2025-04-23T11:34:20+02:00
+// Generated on 2025-04-23T14:43:02+02:00

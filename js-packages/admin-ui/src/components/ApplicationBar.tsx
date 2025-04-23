@@ -76,6 +76,9 @@ export function ApplicationBar({ isSideMenuOpen, onSideMenuToggle }: { isSideMen
               <Route path="data-indices" element={"Data indices"} />
               <Route path="data-indice" element={"Data indice"} />
               <Route path="data-indices/*" element={"Data indices"} />
+              <Route path="vector-indices" element={"Vector indices"} />
+              <Route path="vector-indice" element={"Vector indice"} />
+              <Route path="vector-indices/*" element={"Vector indices"} />
               <Route path="document-type-templates" element={"Document Type Templates"} />
               <Route path="document-type-templates/*" element={"Document Type Template"} />
               <Route path="languages" element={"Languages"} />

@@ -83,6 +83,13 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
                   label="Data indices"
                   path="/data-indices"
                 />
+                <SideNavigationItem
+                  IsChildren={true}
+                  setSelect={setSelect}
+                  elementSelect={select}
+                  label="Vector indices"
+                  path="/vector-indices"
+                />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Analyzers" path="/analyzers" />
                 <SideNavigationItem IsChildren={true} setSelect={setSelect} elementSelect={select} label="Tokenizers" path="/tokenizers" />
                 <SideNavigationItem

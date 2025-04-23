@@ -97,7 +97,9 @@ import { LargeLanguageModels } from "./components/LargeLanguageModels";
 import { EmbeddingModelCreate } from "./components/EmbeddingModelCreate";
 import { LargeLanguageModel } from "./components/LargeLanguageModelCreate";
 import DataIndices from "./components/DataIndices";
-import DataIndice from "./dataindice";
+import DataIndice from "./components/dataindice";
+import Vectorizations from "./Vectorizations";
+import { VectorIndex } from "./Vectorization";
 
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
@@ -492,6 +494,9 @@ export default function App() {
                     <Route path="data-indices" element={<DataIndices />} />
                     <Route path="data-indices/new" element={<DataIndice />} />
                     <Route path="data-indices/:dataIndiceId" element={<DataIndice />} />
+                    <Route path="vector-indices" element={<Vectorizations />} />
+                    <Route path="vector-indices/new" element={<VectorIndex />} />
+                    <Route path="vector-indices/:vectorIndexId" element={<VectorIndex />} />
                     <Route path="large-languages-models" element={<LargeLanguageModels />} />
                     <Route path="large-languages-models/new" element={<LargeLanguageModel />} />
                     <Route path="large-languages-models/:largeLanguageModelId" element={<LargeLanguageModel />} />

@@ -1,21 +1,13 @@
 import { gql } from "@apollo/client";
 import React from "react";
 import { useParams } from "react-router-dom";
-import { CodeInput } from "./components/CodeInput";
-import {
-  ClayListComponents,
-  ContainerFluid,
-  CustomFormGroup,
-  InformationField,
-  MutationHook,
-  QueryHook,
-  TextInput,
-} from "./components/Form";
-import { useToast } from "./components/ToastProvider";
-import { useDataIndexQuery, useVectorIndicesAssociationQuery } from "./graphql-generated";
+import { CodeInput } from "./CodeInput";
+import { ClayListComponents, ContainerFluid, CustomFormGroup, InformationField, MutationHook, QueryHook, TextInput } from "./Form";
+import { useToast } from "./ToastProvider";
+import { useDataIndexQuery, useVectorIndicesAssociationQuery } from "../graphql-generated";
 import { ClayInput } from "@clayui/form";
 import ClayModal, { useModal } from "@clayui/modal";
-import useDebounced from "./components/useDebounced";
+import useDebounced from "./useDebounced";
 import ClayButton from "@clayui/button";
 import { Virtuoso } from "react-virtuoso";
 import ClayList from "@clayui/list";
