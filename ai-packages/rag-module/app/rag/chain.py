@@ -49,13 +49,37 @@ def get_chain(
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
     )
-    print(rag_configuration)
-    configuration = get_llm_configuration(grpc_host, virtual_host)
-    prompt_template = configuration["prompt"]
-    rephrase_prompt_template = configuration["rephrase_prompt"]
-    context_window = configuration["context_window"]
-    retrieve_type = configuration["retrieve_type"]
-    rerank = configuration["rerank"]
+
+    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {question}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
+    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = "gpt-4o-mini"
+    context_window = llm_configuration.get("context_window")
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "retrieve_type": retrieve_type,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
@@ -80,6 +104,7 @@ def get_chain(
     )
 
     documents = retriever.invoke(question)
+    print(documents)
     llm = initialize_language_model(configuration)
     prompt = ChatPromptTemplate.from_template(prompt_template)
     parser = StrOutputParser()
@@ -123,8 +148,44 @@ def get_chat_chain(
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.CHAT_RAG.value
     )
-    print(rag_configuration)
-    configuration = get_llm_configuration(grpc_host, virtual_host)
+    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
+    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+    chunk_window = rag_configuration.get("chunk_window")
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = llm_configuration.get("model")
+    # TODO remove line
+    model = "gpt-4o-mini"
+    context_window = llm_configuration.get("context_window")
+    # TODO remove line
+    context_window = 50000
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "prompt_template": prompt_template,
+        "rephrase_prompt_template": rephrase_prompt_template,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "chunk_window": chunk_window,
+        "retrieve_type": retrieve_type,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     yield from stream_rag_conversation(
         search_text,
@@ -185,9 +246,44 @@ def get_chat_chain_tool(
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.CHAT_RAG_TOOL.value
     )
-    print(rag_configuration)
-    configuration = get_llm_configuration(grpc_host, virtual_host)
-    rag_tool_description = configuration["rag_tool_description"]
+    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
+    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+    chunk_window = rag_configuration.get("chunk_window")
+    rag_tool_description = rag_configuration.get("rag_tool_description")
+    prompt_no_rag = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. ### QUESTION: {question} [/INST]"
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = llm_configuration.get("model")
+    context_window = llm_configuration.get("context_window")
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "prompt_template": prompt_template,
+        "rephrase_prompt_template": rephrase_prompt_template,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "chunk_window": chunk_window,
+        "retrieve_type": retrieve_type,
+        "rag_tool_description": rag_tool_description,
+        "prompt_no_rag": prompt_no_rag,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     llm = initialize_language_model(configuration)
 
@@ -222,7 +318,7 @@ def get_chat_chain_tool(
         )
 
     else:
-        prompt_template = configuration["prompt_no_rag"]
+        prompt_template = prompt_no_rag
         prompt = ChatPromptTemplate.from_template(prompt_template)
         parser = StrOutputParser()
         chain = prompt | llm | parser
