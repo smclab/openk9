@@ -52,7 +52,7 @@ public class IngestionEndpoint {
 	FileManagerEmitter _fileManagerEmitter;
 
 	@Operation(operationId = "ingestion")
-	@Tag(name = "Ingestion API")
+	@Tag(name = "Ingestion API", description = "Permits to ingest data and associated resources inside Openk9 and perform elaboration and indexing.")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
