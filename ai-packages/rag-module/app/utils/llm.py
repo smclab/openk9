@@ -138,7 +138,7 @@ def initialize_language_model(configuration):
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     match model_type:
         case ModelType.OPENAI.value:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+            llm = ChatOpenAI(model=model, openai_api_key=api_key, stream_usage=True)
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
             llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
