@@ -1,11 +1,24 @@
 import { gql } from "@apollo/client";
-import { useVectorIndicesListQuery } from "./graphql-generated";
+import { useDeleteVectorIndexMutation, useVectorIndicesListQuery } from "./graphql-generated";
 import { formatName, Table } from "./components/Table";
 import React from "react";
+import { useToast } from "./components/ToastProvider";
 
 export default function Vectorizations() {
   const dataIndicesQuery = useVectorIndicesListQuery({});
+  const showToast = useToast();
 
+  const [deletevectorizationMutate] = useDeleteVectorIndexMutation({
+    refetchQueries: [DataIndicesQuery],
+    onCompleted(data) {
+      if (data.deleteVectorIndex?.name) {
+        showToast({ displayType: "success", title: "Vector index deleted", content: data.deleteVectorIndex.name ?? "" });
+      }
+    },
+    onError(error) {
+      showToast({ displayType: "danger", title: "Vector error", content: error.message ?? "" });
+    },
+  });
   return (
     <React.Fragment>
       <Table
@@ -15,8 +28,9 @@ export default function Vectorizations() {
         }}
         label=""
         onCreatePath="new"
-        haveActions={false}
-        onDelete={() => {}}
+        onDelete={(vectorization) => {
+          if (vectorization?.id) deletevectorizationMutate({ variables: { vectorIndexId: vectorization.id } });
+        }}
         columns={[
           { header: "Name", content: (vectorization) => formatName(vectorization) },
           { header: "Description", content: (vectorization) => vectorization?.description },
@@ -40,6 +54,14 @@ export const DataIndicesQuery = gql`
         hasNextPage
         endCursor
       }
+    }
+  }
+`;
+
+export const deleteVectorization = gql`
+  mutation deleteVectorIndex($vectorIndexId: ID!) {
+    deleteVectorIndex(vectorIndexId: $vectorIndexId) {
+      name
     }
   }
 `;

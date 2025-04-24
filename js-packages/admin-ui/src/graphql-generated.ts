@@ -4406,6 +4406,13 @@ export type VectorIndicesListQueryVariables = Exact<{
 
 export type VectorIndicesListQuery = { __typename?: 'Query', vectorIndices?: { __typename?: 'DefaultConnection_VectorIndex', edges?: Array<{ __typename?: 'DefaultEdge_VectorIndex', node?: { __typename?: 'VectorIndex', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
+export type DeleteVectorIndexMutationVariables = Exact<{
+  vectorIndexId: Scalars['ID'];
+}>;
+
+
+export type DeleteVectorIndexMutation = { __typename?: 'Mutation', deleteVectorIndex?: { __typename?: 'VectorIndex', name?: string | null } | null };
+
 export type AnalyzerQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
@@ -6225,6 +6232,39 @@ export function useVectorIndicesListLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type VectorIndicesListQueryHookResult = ReturnType<typeof useVectorIndicesListQuery>;
 export type VectorIndicesListLazyQueryHookResult = ReturnType<typeof useVectorIndicesListLazyQuery>;
 export type VectorIndicesListQueryResult = Apollo.QueryResult<VectorIndicesListQuery, VectorIndicesListQueryVariables>;
+export const DeleteVectorIndexDocument = gql`
+    mutation deleteVectorIndex($vectorIndexId: ID!) {
+  deleteVectorIndex(vectorIndexId: $vectorIndexId) {
+    name
+  }
+}
+    `;
+export type DeleteVectorIndexMutationFn = Apollo.MutationFunction<DeleteVectorIndexMutation, DeleteVectorIndexMutationVariables>;
+
+/**
+ * __useDeleteVectorIndexMutation__
+ *
+ * To run a mutation, you first call `useDeleteVectorIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteVectorIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteVectorIndexMutation, { data, loading, error }] = useDeleteVectorIndexMutation({
+ *   variables: {
+ *      vectorIndexId: // value for 'vectorIndexId'
+ *   },
+ * });
+ */
+export function useDeleteVectorIndexMutation(baseOptions?: Apollo.MutationHookOptions<DeleteVectorIndexMutation, DeleteVectorIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteVectorIndexMutation, DeleteVectorIndexMutationVariables>(DeleteVectorIndexDocument, options);
+      }
+export type DeleteVectorIndexMutationHookResult = ReturnType<typeof useDeleteVectorIndexMutation>;
+export type DeleteVectorIndexMutationResult = Apollo.MutationResult<DeleteVectorIndexMutation>;
+export type DeleteVectorIndexMutationOptions = Apollo.BaseMutationOptions<DeleteVectorIndexMutation, DeleteVectorIndexMutationVariables>;
 export const AnalyzerDocument = gql`
     query Analyzer($id: ID!) {
   analyzer(id: $id) {
@@ -14948,4 +14988,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2025-04-23T17:02:29+02:00
+// Generated on 2025-04-24T10:46:14+02:00
