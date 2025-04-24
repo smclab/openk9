@@ -14,7 +14,8 @@ export default function DataIndices() {
           field: (data) => data?.dataIndices,
         }}
         label="Data indices"
-        onCreatePath="new"
+        onCreatePath=""
+        viewAdd={false}
         haveActions={false}
         onDelete={() => {}}
         columns={[

@@ -6019,7 +6019,7 @@ export type DataIndexQueryVariables = Exact<{
 }>;
 
 
-export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, docTypes?: { __typename: 'DefaultConnection_DocType', edges?: Array<{ __typename: 'DefaultEdge_DocType', node?: { __typename: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, settings?: string | null, docTypes?: { __typename: 'DefaultConnection_DocType', edges?: Array<{ __typename: 'DefaultEdge_DocType', node?: { __typename: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type VectorIndicesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -6036,6 +6036,21 @@ export type VectorIndicesAssociationQueryVariables = Exact<{
 
 
 export type VectorIndicesAssociationQuery = { __typename?: 'Query', vectorIndices?: { __typename?: 'DefaultConnection_VectorIndex', edges?: Array<{ __typename?: 'DefaultEdge_VectorIndex', node?: { __typename?: 'VectorIndex', name?: string | null, id?: string | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type BindVectorIndexMutationVariables = Exact<{
+  vectorIndexId: Scalars['ID'];
+  dataIndexId: Scalars['ID'];
+}>;
+
+
+export type BindVectorIndexMutation = { __typename?: 'Mutation', bindVectorIndex?: { __typename?: 'DataIndex', id?: string | null } | null };
+
+export type UnBindVectorIndexMutationVariables = Exact<{
+  dataIndexId: Scalars['ID'];
+}>;
+
+
+export type UnBindVectorIndexMutation = { __typename?: 'Mutation', unbindVectorIndex?: { __typename?: 'DataIndex', id?: string | null } | null };
 
 export type CreateSitemapDataSourceMutationVariables = Exact<{
   name: Scalars['String'];
@@ -14584,6 +14599,7 @@ export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTo
 export const DataIndexDocument = gql`
     query DataIndex($id: ID!) {
   dataIndex(id: $id) {
+    id
     name
     description
     settings
@@ -14727,6 +14743,73 @@ export function useVectorIndicesAssociationLazyQuery(baseOptions?: Apollo.LazyQu
 export type VectorIndicesAssociationQueryHookResult = ReturnType<typeof useVectorIndicesAssociationQuery>;
 export type VectorIndicesAssociationLazyQueryHookResult = ReturnType<typeof useVectorIndicesAssociationLazyQuery>;
 export type VectorIndicesAssociationQueryResult = Apollo.QueryResult<VectorIndicesAssociationQuery, VectorIndicesAssociationQueryVariables>;
+export const BindVectorIndexDocument = gql`
+    mutation BindVectorIndex($vectorIndexId: ID!, $dataIndexId: ID!) {
+  bindVectorIndex(vectorIndexId: $vectorIndexId, dataIndexId: $dataIndexId) {
+    id
+  }
+}
+    `;
+export type BindVectorIndexMutationFn = Apollo.MutationFunction<BindVectorIndexMutation, BindVectorIndexMutationVariables>;
+
+/**
+ * __useBindVectorIndexMutation__
+ *
+ * To run a mutation, you first call `useBindVectorIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBindVectorIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bindVectorIndexMutation, { data, loading, error }] = useBindVectorIndexMutation({
+ *   variables: {
+ *      vectorIndexId: // value for 'vectorIndexId'
+ *      dataIndexId: // value for 'dataIndexId'
+ *   },
+ * });
+ */
+export function useBindVectorIndexMutation(baseOptions?: Apollo.MutationHookOptions<BindVectorIndexMutation, BindVectorIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BindVectorIndexMutation, BindVectorIndexMutationVariables>(BindVectorIndexDocument, options);
+      }
+export type BindVectorIndexMutationHookResult = ReturnType<typeof useBindVectorIndexMutation>;
+export type BindVectorIndexMutationResult = Apollo.MutationResult<BindVectorIndexMutation>;
+export type BindVectorIndexMutationOptions = Apollo.BaseMutationOptions<BindVectorIndexMutation, BindVectorIndexMutationVariables>;
+export const UnBindVectorIndexDocument = gql`
+    mutation unBindVectorIndex($dataIndexId: ID!) {
+  unbindVectorIndex(dataIndexId: $dataIndexId) {
+    id
+  }
+}
+    `;
+export type UnBindVectorIndexMutationFn = Apollo.MutationFunction<UnBindVectorIndexMutation, UnBindVectorIndexMutationVariables>;
+
+/**
+ * __useUnBindVectorIndexMutation__
+ *
+ * To run a mutation, you first call `useUnBindVectorIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnBindVectorIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unBindVectorIndexMutation, { data, loading, error }] = useUnBindVectorIndexMutation({
+ *   variables: {
+ *      dataIndexId: // value for 'dataIndexId'
+ *   },
+ * });
+ */
+export function useUnBindVectorIndexMutation(baseOptions?: Apollo.MutationHookOptions<UnBindVectorIndexMutation, UnBindVectorIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnBindVectorIndexMutation, UnBindVectorIndexMutationVariables>(UnBindVectorIndexDocument, options);
+      }
+export type UnBindVectorIndexMutationHookResult = ReturnType<typeof useUnBindVectorIndexMutation>;
+export type UnBindVectorIndexMutationResult = Apollo.MutationResult<UnBindVectorIndexMutation>;
+export type UnBindVectorIndexMutationOptions = Apollo.BaseMutationOptions<UnBindVectorIndexMutation, UnBindVectorIndexMutationVariables>;
 export const CreateSitemapDataSourceDocument = gql`
     mutation CreateSitemapDataSource($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $reindexRate: Int!) {
   datasource(
@@ -14865,4 +14948,4 @@ export function useCreateYouTubeDataSourceMutation(baseOptions?: Apollo.Mutation
 export type CreateYouTubeDataSourceMutationHookResult = ReturnType<typeof useCreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationResult = Apollo.MutationResult<CreateYouTubeDataSourceMutation>;
 export type CreateYouTubeDataSourceMutationOptions = Apollo.BaseMutationOptions<CreateYouTubeDataSourceMutation, CreateYouTubeDataSourceMutationVariables>;
-// Generated on 2025-04-23T14:43:02+02:00
+// Generated on 2025-04-23T17:02:29+02:00

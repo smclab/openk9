@@ -1,25 +1,36 @@
-import { gql } from "@apollo/client";
+import { gql, QueryResult } from "@apollo/client";
+import ClayButton from "@clayui/button";
+import { ClayInput } from "@clayui/form";
+import ClayList from "@clayui/list";
+import ClayModal, { useModal } from "@clayui/modal";
 import React from "react";
 import { useParams } from "react-router-dom";
-import { CodeInput } from "./CodeInput";
-import { ClayListComponents, ContainerFluid, CustomFormGroup, InformationField, MutationHook, QueryHook, TextInput } from "./Form";
-import { useToast } from "./ToastProvider";
-import { useDataIndexQuery, useVectorIndicesAssociationQuery } from "../graphql-generated";
-import { ClayInput } from "@clayui/form";
-import ClayModal, { useModal } from "@clayui/modal";
-import useDebounced from "./useDebounced";
-import ClayButton from "@clayui/button";
 import { Virtuoso } from "react-virtuoso";
-import ClayList from "@clayui/list";
+import {
+  Exact,
+  InputMaybe,
+  Scalars,
+  useBindVectorIndexMutation,
+  useDataIndexQuery,
+  useUnBindVectorIndexMutation,
+  useVectorIndicesAssociationQuery,
+} from "../graphql-generated";
+import { CodeInput } from "./CodeInput";
+import { ContainerFluid, CustomFormGroup, TextInput } from "./Form";
 
 export default function DataIndice() {
   const { dataIndiceId = "new" } = useParams();
-  const showToast = useToast();
   const dataIndicesQuery = useDataIndexQuery({
     variables: { id: dataIndiceId as string },
     errorPolicy: "ignore",
   });
-  const vectorIndicesAssociation = useFindDataIndexById(dataIndiceId as string);
+  const vectorQuery = useVectorIndicesAssociationQuery({
+    variables: { searchText: "", cursor: null },
+    fetchPolicy: "cache-and-network",
+  });
+  const vectorIndicesAssociation = useFindDataIndexById(dataIndiceId as string, vectorQuery);
+  const [changeMutate] = useBindVectorIndexMutation({});
+  const [removeMutate] = useUnBindVectorIndexMutation({});
 
   if (!dataIndiceId && dataIndicesQuery.loading && vectorIndicesAssociation.loading) return null;
   const dataIndex = dataIndicesQuery.data?.dataIndex;
@@ -72,12 +83,35 @@ export default function DataIndice() {
           <SearchSelect
             value={vectorIndicesAssociation.dataIndex?.id}
             associatedVectorIndex={vectorIndicesAssociation.dataIndex}
-            unassociatedVectorIndices={vectorIndicesAssociation.unassociatedVectorIndices.map((edge) => edge || {})}
+            unassociatedVectorIndices={vectorIndicesAssociation.unassociatedVectorIndices.map((edge: any) => edge || {})}
             onAssociate={(id) => {
-              console.log(`Associating with ID: ${id}`);
+              dataIndex?.id &&
+                removeMutate({
+                  variables: {
+                    dataIndexId: dataIndex.id,
+                  },
+                }).then(() => {
+                  dataIndex?.id &&
+                    changeMutate({
+                      variables: {
+                        vectorIndexId: id,
+                        dataIndexId: dataIndex?.id,
+                      },
+                    }).then(() => {
+                      vectorQuery.refetch();
+                    });
+                });
             }}
             onDisassociate={() => {
-              console.log("Disassociating current value");
+              dataIndex?.id &&
+                removeMutate({
+                  variables: {
+                    dataIndexId: dataIndex.id,
+                  },
+                  refetchQueries: [VectorIndicesAssociationQuery],
+                }).then(() => {
+                  vectorQuery.refetch();
+                });
             }}
           />
         </div>
@@ -89,6 +123,7 @@ export default function DataIndice() {
 const DataIndexQuery = gql`
   query DataIndex($id: ID!) {
     dataIndex(id: $id) {
+      id
       name
       description
       settings
@@ -149,11 +184,33 @@ const VectorIndicesAssociationQuery = gql`
   }
 `;
 
-export function useFindDataIndexById(id: string) {
-  const { data, loading, error } = useVectorIndicesAssociationQuery({
-    variables: { searchText: "", cursor: null },
-    fetchPolicy: "cache-and-network",
-  });
+gql`
+  mutation BindVectorIndex($vectorIndexId: ID!, $dataIndexId: ID!) {
+    bindVectorIndex(vectorIndexId: $vectorIndexId, dataIndexId: $dataIndexId) {
+      id
+    }
+  }
+`;
+
+gql`
+  mutation unBindVectorIndex($dataIndexId: ID!) {
+    unbindVectorIndex(dataIndexId: $dataIndexId) {
+      id
+    }
+  }
+`;
+
+export function useFindDataIndexById(
+  id: string,
+  vectorQuery: QueryResult<
+    any,
+    Exact<{
+      searchText?: InputMaybe<Scalars["String"]>;
+      cursor?: InputMaybe<Scalars["String"]>;
+    }>
+  >
+) {
+  const { data, loading, error } = vectorQuery;
 
   if (loading) return { dataIndex: null, unassociatedVectorIndices: [], loading, error };
   if (error) {
@@ -161,8 +218,9 @@ export function useFindDataIndexById(id: string) {
     return { dataIndex: null, unassociatedVectorIndices: [], loading, error };
   }
 
-  const foundNode = data?.vectorIndices?.edges?.find((edge) => edge?.node?.dataIndex?.id === id);
-  const unassociatedVectorIndices = data?.vectorIndices?.edges?.filter((edge) => !edge?.node?.dataIndex)?.map((edge) => edge?.node) || [];
+  const foundNode = data?.vectorIndices?.edges?.find((edge: any) => edge?.node?.dataIndex?.id === id);
+  const unassociatedVectorIndices =
+    data?.vectorIndices?.edges?.filter((edge: any) => !edge?.node?.dataIndex)?.map((edge: any) => edge?.node) || [];
 
   return { dataIndex: foundNode?.node || null, unassociatedVectorIndices, loading, error };
 }
@@ -221,10 +279,8 @@ export function SearchSelect({
               </ClayButton>
               <ClayButton
                 displayType="secondary"
-                disabled={!associatedVectorIndex}
                 style={{ marginLeft: "10px", border: "1px solid #393B4A", borderRadius: "3px" }}
                 onClick={() => {
-                  console.log("Disassociation log: Removing association");
                   onDisassociate();
                 }}
               >
@@ -254,26 +310,29 @@ export function SearchSelect({
               itemContent={(index) => {
                 const row = unassociatedVectorIndices[index];
                 return (
-                  <React.Fragment>
+                  <ClayList.Item flex>
                     <ClayList.ItemField expand>
                       <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
                       <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
                     </ClayList.ItemField>
                     <ClayList.ItemField>
-                      <ClayList.QuickActionMenu>
-                        <ClayList.QuickActionMenu.Item
-                          onClick={() => {
-                            if (row?.id) {
-                              console.log(`Association log: Associating with ${row.name}`);
-                              onAssociate(row.id);
-                              onOpenChange(false);
-                            }
-                          }}
-                          symbol="plus"
-                        />
-                      </ClayList.QuickActionMenu>
+                      <ClayButton
+                        displayType="unstyled"
+                        onClick={() => {
+                          if (row?.id) {
+                            onAssociate(row.id);
+                            onOpenChange(false);
+                          }
+                        }}
+                      >
+                        <span className="inline-item inline-item-after">
+                          <svg className="lexicon-icon lexicon-icon-play" focusable="false" role="presentation" viewBox="0 0 512 512">
+                            <path d="M96 52v408l320-204L96 52z" fill="currentColor" />
+                          </svg>
+                        </span>
+                      </ClayButton>
                     </ClayList.ItemField>
-                  </React.Fragment>
+                  </ClayList.Item>
                 );
               }}
             />
