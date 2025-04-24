@@ -32,6 +32,8 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import org.jboss.logging.Logger;
 
+import java.util.Objects;
+
 @ApplicationScoped
 public class HttpPluginDriverClient {
 
@@ -71,10 +73,8 @@ public class HttpPluginDriverClient {
 
 		return webClient.requestAbs(
 				httpMethod.getHttpMethod(),
-				HTTP + baseUri + path
+				createAbsUri(httpPluginDriverInfo.isSecure(), baseUri, path)
 			)
-			// override the ssl configuration
-			.ssl(httpPluginDriverInfo.isSecure())
 			.sendJson(httpPluginDriverContext)
 			.flatMap(this::validateResponse);
 	}
@@ -105,10 +105,11 @@ public class HttpPluginDriverClient {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
-				HTTP + pluginDriverInfo.getBaseUri() + HEALTH_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					HEALTH_PATH)
 			)
-			// override the ssl configuration
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
@@ -125,10 +126,11 @@ public class HttpPluginDriverClient {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
-				HTTP + pluginDriverInfo.getBaseUri() + SAMPLE_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					SAMPLE_PATH)
 			)
-			// override the ssl configuration
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(IngestionPayload.class))
@@ -139,14 +141,23 @@ public class HttpPluginDriverClient {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
-				HTTP + pluginDriverInfo.getBaseUri() + FORM_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					FORM_PATH)
 			)
-			// override the ssl configuration
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(PluginDriverFormDTO.class))
 			.flatMap(this::validateDto);
+	}
+
+	private String createAbsUri(boolean isSecure, String baseUri, String path) {
+		return new StringBuilder()
+			.append(isSecure ? "https://" : "http://")
+			.append(Objects.requireNonNullElse(baseUri, ""))
+			.append(Objects.requireNonNullElse(path, ""))
+			.toString();
 	}
 
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
