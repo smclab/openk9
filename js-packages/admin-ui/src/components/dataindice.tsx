@@ -279,6 +279,7 @@ export function SearchSelect({
               </ClayButton>
               <ClayButton
                 displayType="secondary"
+                disabled={!associatedVectorIndex?.name}
                 style={{ marginLeft: "10px", border: "1px solid #393B4A", borderRadius: "3px" }}
                 onClick={() => {
                   onDisassociate();
@@ -303,39 +304,45 @@ export function SearchSelect({
       {open && (
         <ClayModal observer={observer}>
           <ClayModal.Header>Vectorization</ClayModal.Header>
-          <ClayModal.Body>
-            <Virtuoso
-              totalCount={unassociatedVectorIndices.length}
-              style={{ height: "400px" }}
-              itemContent={(index) => {
-                const row = unassociatedVectorIndices[index];
-                return (
-                  <ClayList.Item flex>
-                    <ClayList.ItemField expand>
-                      <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
-                      <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
-                    </ClayList.ItemField>
-                    <ClayList.ItemField>
-                      <ClayButton
-                        displayType="unstyled"
-                        onClick={() => {
-                          if (row?.id) {
-                            onAssociate(row.id);
-                            onOpenChange(false);
-                          }
-                        }}
-                      >
-                        <span className="inline-item inline-item-after">
-                          <svg className="lexicon-icon lexicon-icon-play" focusable="false" role="presentation" viewBox="0 0 512 512">
-                            <path d="M96 52v408l320-204L96 52z" fill="currentColor" />
-                          </svg>
-                        </span>
-                      </ClayButton>
-                    </ClayList.ItemField>
-                  </ClayList.Item>
-                );
-              }}
-            />
+          <ClayModal.Body style={{ height: "400px" }}>
+            {unassociatedVectorIndices.length === 0 ? (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}>
+                <p style={{ textAlign: "center", color: "#6c757d" }}>No entities available for association.</p>
+              </div>
+            ) : (
+              <Virtuoso
+                totalCount={unassociatedVectorIndices.length}
+                style={{ height: "400px" }}
+                itemContent={(index) => {
+                  const row = unassociatedVectorIndices[index];
+                  return (
+                    <ClayList.Item flex>
+                      <ClayList.ItemField expand>
+                        <ClayList.ItemTitle>{row?.name || "..."}</ClayList.ItemTitle>
+                        <ClayList.ItemText>{row?.description || "..."}</ClayList.ItemText>
+                      </ClayList.ItemField>
+                      <ClayList.ItemField>
+                        <ClayButton
+                          displayType="unstyled"
+                          onClick={() => {
+                            if (row?.id) {
+                              onAssociate(row.id);
+                              onOpenChange(false);
+                            }
+                          }}
+                        >
+                          <span className="inline-item inline-item-after">
+                            <svg className="lexicon-icon lexicon-icon-play" focusable="false" role="presentation" viewBox="0 0 512 512">
+                              <path d="M96 52v408l320-204L96 52z" fill="currentColor" />
+                            </svg>
+                          </span>
+                        </ClayButton>
+                      </ClayList.ItemField>
+                    </ClayList.Item>
+                  );
+                }}
+              />
+            )}
           </ClayModal.Body>
           <ClayModal.Footer
             first={
