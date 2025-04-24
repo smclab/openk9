@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 public class HttpPluginDriverClient {
 
 	public static final String HEALTH_PATH = "/health";
+	public static final String HTTP = "http://";
 	public static final String SAMPLE_PATH = "/sample";
 	public static final String FORM_PATH = "/form";
 	public static final String INVOKE_PATH = "/invoke";
@@ -68,10 +69,11 @@ public class HttpPluginDriverClient {
 			baseUri = "localhost:8080";
 		}
 
-		return webClient.request(
+		return webClient.requestAbs(
 				httpMethod.getHttpMethod(),
-				baseUri + path
+				HTTP + baseUri + path
 			)
+			// override the ssl configuration
 			.ssl(httpPluginDriverInfo.isSecure())
 			.sendJson(httpPluginDriverContext)
 			.flatMap(this::validateResponse);
@@ -101,10 +103,11 @@ public class HttpPluginDriverClient {
 
 	public Uni<PluginDriverHealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getBaseUri() + HEALTH_PATH
+				HTTP + pluginDriverInfo.getBaseUri() + HEALTH_PATH
 			)
+			// override the ssl configuration
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
@@ -120,10 +123,11 @@ public class HttpPluginDriverClient {
 
 	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getBaseUri() + SAMPLE_PATH
+				HTTP + pluginDriverInfo.getBaseUri() + SAMPLE_PATH
 			)
+			// override the ssl configuration
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
@@ -133,10 +137,11 @@ public class HttpPluginDriverClient {
 
 	public Uni<PluginDriverFormDTO> getForm(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getBaseUri() + FORM_PATH
+				HTTP + pluginDriverInfo.getBaseUri() + FORM_PATH
 			)
+			// override the ssl configuration
 			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
