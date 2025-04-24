@@ -59,6 +59,16 @@ import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
+import io.openk9.searcher.resource.SearchRequestExamples;
+
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
@@ -122,6 +132,49 @@ public class SearchResource {
 	@Claim(standard = Claims.raw_token)
 	String rawToken; // it is injected to force authentication.
 
+	@Operation(operationId = "search-query")
+	@Tag(name = "Search Query API", description = "Transform Openk9 Search Request in equivalent Opensearch query")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Ingestion successful",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = SearchRequestExamples.SEARCH_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+			content = {
+					@Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = SearchRequest.class),
+							examples = {
+									@ExampleObject(
+											name = "text search",
+											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "hybrid search",
+											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "knn search",
+											value = SearchRequestExamples.KNN_SEARCH_REQUEST
+									)
+							}
+					)
+			}
+	)
 	@POST
 	@Path("/search-query")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -157,6 +210,49 @@ public class SearchResource {
 
 	}
 
+	@Operation(operationId = "search")
+	@Tag(name = "Search API", description = "Execute search on indexed data. Returns list of matching results ordered by score.")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Ingestion successful",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = SearchRequestExamples.SEARCH_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+			content = {
+					@Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = SearchRequest.class),
+							examples = {
+									@ExampleObject(
+											name = "text search",
+											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "hybrid search",
+											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "knn search",
+											value = SearchRequestExamples.KNN_SEARCH_REQUEST
+									)
+							}
+					)
+			}
+	)
 	@POST
 	@Path("/search")
 	@Produces(MediaType.APPLICATION_JSON)
