@@ -157,6 +157,112 @@ public class SearchRequestExamples {
                 \t],
                 \t"total": 3
                 }""";
-
+    public static final String SEARCH_REQUEST_FOR_SUGGESTIONS =
+            """
+            {
+                "searchQuery": [
+                  {
+                    "tokenType": "TEXT",
+                    "values": [
+                      "smc"
+                    ],
+                    "filter": false,
+                    "isSearch": true
+                  }
+                ],
+                "range": [
+                  0,
+                  9
+                ],
+                "suggestionCategoryId": 364,
+                "suggestKeyword": "",
+                "order": "asc",
+                "language": "it_IT"
+              }""";
+    public static final String SEARCH_REQUEST_FOR_SUGGESTIONS_WITH_PREFIX_FILTER =
+            """
+            {
+              "searchQuery": [
+              {
+                    "tokenType": "TEXT",
+                    "values": [
+                      "smc"
+                    ],
+                    "filter": false,
+                    "isSearch": true
+                  }
+              ],
+              "range": [
+                0,
+                20
+              ],
+              "suggestionCategoryId": 364,
+              "suggestKeyword": "poli",
+              "order": "desc",
+              "language": "it_IT"
+            }""";
+    public static final String SUGGESTIONS_RESPONSE =
+            """
+            {
+                 "result": [
+                     {
+                         "tokenType": "FILTER",
+                         "value": " Attività commerciale",
+                         "suggestionCategoryId": 364,
+                         "count": 46,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " benessere",
+                         "suggestionCategoryId": 364,
+                         "count": 13,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " divertimento",
+                         "suggestionCategoryId": 364,
+                         "count": 2,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " politica",
+                         "suggestionCategoryId": 364,
+                         "count": 6,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " religione",
+                         "suggestionCategoryId": 364,
+                         "count": 1,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " scienza",
+                         "suggestionCategoryId": 364,
+                         "count": 4,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " sport",
+                         "suggestionCategoryId": 364,
+                         "count": 9,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     },
+                     {
+                         "tokenType": "FILTER",
+                         "value": " stile e bellezza",
+                         "suggestionCategoryId": 364,
+                         "count": 4,
+                         "keywordKey": "news.topic.i18n.it_IT.keyword"
+                     }
+                 ],
+                 "afterKey": "eyJuZXdzLnRvcGljLmkxOG4uaXRfSVQua2V5d29yZCI6IiBzdGlsZSBlIGJlbGxlenphIn0="
+             }""";
 }
 

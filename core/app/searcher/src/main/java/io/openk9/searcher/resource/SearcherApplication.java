@@ -17,6 +17,7 @@
 
 package io.openk9.searcher.resource;
 
+import jakarta.ws.rs.core.Application;
 import org.eclipse.microprofile.openapi.annotations.Components;
 import org.eclipse.microprofile.openapi.annotations.ExternalDocumentation;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
@@ -32,7 +33,7 @@ import io.openk9.common.model.dto.Problem;
         info = @Info(
                 title = "Searcher Service",
                 version = "3.0.0-SNAPSHOT",
-                description = "API to ingest data from external sources inside Openk9.",
+                description = "API to search on indexed data, as well as get filter options or use autocomplete.",
                 license = @License(
                         name = "GNU Affero General Public License v3.0",
                         url = "https://github.com/smclab/openk9/blob/main/LICENSE"
@@ -101,5 +102,5 @@ import io.openk9.common.model.dto.Problem;
         )
 )
 
-public class SearcherApplication {
+public class SearcherApplication extends Application {
 }
