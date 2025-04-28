@@ -15,7 +15,7 @@ push-file-manager-helm:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 02-file-handling && mkdir package
+    - cd helm-charts/02-file-handling && mkdir package
     - helm package openk9-file-manager -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -31,7 +31,7 @@ push-tika-helm:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 02-file-handling && mkdir package
+    - cd helm-charts/02-file-handling && mkdir package
     - helm package openk9-tika -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -48,7 +48,7 @@ push-tika-ocr-helm:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 02-file-handling && mkdir package
+    - cd helm-charts/02-file-handling && mkdir package
     - helm package openk9-tika-ocr -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -65,6 +65,6 @@ push-resources-validator-helm:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 02-file-handling && mkdir package
+    - cd helm-charts/02-file-handling && mkdir package
     - helm package openk9-resources-validator -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

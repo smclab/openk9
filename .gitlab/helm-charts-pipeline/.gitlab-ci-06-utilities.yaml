@@ -13,6 +13,6 @@ push-openk9-k8s-client-helm:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 06-utilities && mkdir package
+    - cd helm-charts/06-utilities && mkdir package
     - helm package openk9-k8s-client -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
