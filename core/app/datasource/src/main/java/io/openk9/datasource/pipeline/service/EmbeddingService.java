@@ -54,6 +54,8 @@ public class EmbeddingService {
 	private static final String GET_EMBEDDING_CHUNKS_CONFIGURATION =
 		"EmbeddingService#getEmbeddingChunksConfiguration";
 
+	private static final Logger log = Logger.getLogger(EmbeddingService.class);
+
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 	@Inject
@@ -61,8 +63,6 @@ public class EmbeddingService {
 
 	@CacheName("bucket-resource")
 	Cache cache;
-
-	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
 	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
@@ -240,13 +240,17 @@ public class EmbeddingService {
 
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
 
-		return getEmbeddingConfiguration(tenantId)
+		return getEmbeddingModel(tenantId)
 			.onItem().ifNull().failWith(ConfigurationNotFound::new)
-			.flatMap(configuration -> {
-				var client = EmbeddingStubRegistry.getStub(configuration.apiUrl());
+			.flatMap(embeddingModel -> {
+
+				var apiUrl = embeddingModel.getApiUrl();
+				var apiKey = embeddingModel.getApiKey();
+
+				var client = EmbeddingStubRegistry.getStub(apiUrl);
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
 					.setText(text)
-					.setApiKey(configuration.apiKey())
+					.setApiKey(apiKey)
 					.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
 						.setType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
 						.build())
@@ -265,9 +269,9 @@ public class EmbeddingService {
 			cache,
 			new CompositeCacheKey(request),
 			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-					getEmbeddingConfiguration(s, request.tenantId())
+					getEmbeddingModel(s, request.tenantId())
 					.onItem().ifNull().failWith(ConfigurationNotFound::new)
-					.flatMap(embeddingConfiguration -> s.createNamedQuery(
+						.flatMap(embeddingModel -> s.createNamedQuery(
 							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
 						.setPlan(s.getEntityGraph(
 							Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
@@ -275,11 +279,14 @@ public class EmbeddingService {
 						.getSingleResultOrNull()
 						.map(scheduler -> {
 
+							var apiUrl = embeddingModel.getApiUrl();
+							var apiKey = embeddingModel.getApiKey();
+
 							var dataIndex = scheduler.getDataIndex();
 
 							return new EmbeddingChunksConfiguration(
-								embeddingConfiguration.apiUrl(),
-								embeddingConfiguration.apiKey(),
+								apiUrl,
+								apiKey,
 								dataIndex.getEmbeddingDocTypeField(),
 								dataIndex.getChunkType(),
 								dataIndex.getChunkWindowSize(),
@@ -304,29 +311,18 @@ public class EmbeddingService {
 		);
 	}
 
-	private record EmbeddingChunksConfigurationRequest(String tenantId, String scheduleId) {}
-
-	public record EmbeddingChunksConfiguration(
-		String apiUrl,
-		String apiKey,
-		DocTypeField docTypeField,
-		EmbeddingOuterClass.ChunkType chunkType,
-		int chunkWindowSize,
-		String jsonConfig
-	) {}
-
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
-		return sessionFactory.withTransaction(
-			tenantId, (s, t) ->
-				getEmbeddingConfiguration(s, tenantId)
+	private Uni<EmbeddingModel> getEmbeddingModel(String tenantId) {
+		return QuarkusCacheUtil.getAsync(
+			cache,
+			new CompositeCacheKey(tenantId),
+			sessionFactory.withTransaction(
+				tenantId,
+				(s, t) -> getEmbeddingModel(s, tenantId)
+			)
 		);
 	}
 
-	public record EmbeddedText(
-		List<Float> vector
-	) {}
-
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(
+	private Uni<EmbeddingModel> getEmbeddingModel(
 		Mutiny.Session session,
 		String tenantId) {
 
@@ -334,7 +330,6 @@ public class EmbeddingService {
 			cache,
 			new CompositeCacheKey(tenantId),
 			embeddingModelService.fetchCurrent(session)
-				.map(EmbeddingConfiguration::map)
 				.onFailure()
 				.invoke(throwable ->
 					log.warnf(
@@ -349,15 +344,20 @@ public class EmbeddingService {
 
 	}
 
-	public record EmbeddingConfiguration(
+	public record EmbeddedText(
+		List<Float> vector
+	) {}
+
+	private record EmbeddingChunksConfiguration(
 		String apiUrl,
-		String apiKey
-	) {
+		String apiKey,
+		DocTypeField docTypeField,
+		EmbeddingOuterClass.ChunkType chunkType,
+		int chunkWindowSize,
+		String jsonConfig
+	) {}
 
-		public static EmbeddingConfiguration map(EmbeddingModel model) {
-			return new EmbeddingConfiguration(model.getApiUrl(), model.getApiKey());
-		}
+	private record EmbeddingChunksConfigurationRequest(String tenantId, String scheduleId) {}
 
-	}
 
 }
