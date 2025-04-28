@@ -113,11 +113,11 @@ So clone this repository before start to install.
 
 Every helm command assume you are located in root of this repository.
 
-### Opensearch v2.15.0
+### Opensearch v2.19.1
 
 [Opensearch](https://opensearch.org/) is a fondamental element in Openk9. It is used as search engine and vector database, to enable core functionalities of Openk9.
 
-For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.20.0 is used for Kubernetes.
+For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.31.0 is used for Kubernetes.
 
 For Openshift [Bitnami Helm Chart](https://github.com/bitnami/charts/tree/opensearch/1.8.0/bitnami/opensearch) is used to handle better system actions.
 
@@ -155,7 +155,7 @@ Install Opensearch
 For Kubernetes execute:
 
 ```bash
-helm install opensearch opensearch/opensearch --version 2.20.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
+helm install opensearch opensearch/opensearch --version 2.32.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
 ```
 
 For Openshift execute:
@@ -205,7 +205,7 @@ Open browser on [http://localhost:9200](http://localhost:9200). If you get follo
 ```
 
 
-### RabbitMQ v3.12.7
+### RabbitMQ v4.1.0
 
 [RabbitMQ](https://www.rabbitmq.com/) is a fundamental element of OpenK9 as it allows asynchronous dialogue between the different components of the solution.
 
@@ -238,7 +238,7 @@ For Kubernetes/OpenShift execute:
 ```yaml
 helm install rabbitmq bitnami/rabbitmq \
   -n openk9 \
-  --version 12.3.0 \
+  --version 16.0.0 \
   -f 00-base-requirements/02-rabbitmq/local-runtime.yaml
 ```
 
@@ -263,7 +263,7 @@ oc port-forward -n openk9 svc/rabbitmq 15672
 open browser on [http://localhost:15672](http://localhost:15672) and log in with the credentials entered in the previously created secret.
 
 
-### PostgreSQL v14.x
+### PostgreSQL v16.x
 
 Several elements of OpenK9 require the presence of a relational database. [PostgreSQL](https://www.postgresql.org/) represents the best open source solution.
 
@@ -296,7 +296,7 @@ For Kubernetes/OpenShift execute:
 ```bash
 helm install postgresql bitnami/postgresql \
   -n openk9 \
-  --version 13.2.21 \
+  --version 15.5.38 \
   -f 00-base-requirements/03-postgresql/local-runtime.yaml
 ```
 
@@ -359,7 +359,7 @@ pod "postgresql-client" deleted
 ```
 
 
-### Keycloack v25.0.6
+### Keycloack v26.1.4
 
 [Keycloak](https://www.keycloak.org/) is used by OpenK9 to manage and delegate user authentication logic. As well as some aspects of the authorization logic.
 
@@ -448,13 +448,13 @@ Install Keycloak
 For Kubernetes execute:
 
 ```bash
-helm install keycloak --version 23.0.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-runtime.yaml
+helm install keycloak --version 24.5.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-runtime.yaml
 ```
 
 For Openshift execute:
 
 ```bash
-helm install keycloak --version 23.0.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-crc.yaml
+helm install keycloak --version 24.5.0 bitnami/keycloak -n openk9 -f 00-base-requirements/06-keycloak/local-crc.yaml
 ```
 
 
