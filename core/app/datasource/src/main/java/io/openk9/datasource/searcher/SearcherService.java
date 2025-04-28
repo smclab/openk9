@@ -60,8 +60,6 @@ import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
-import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
-import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
@@ -572,44 +570,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					return responseBuilder.build();
 				})
-			);
-	}
-
-	@Override
-	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
-		GetEmbeddingModelConfigurationsRequest request) {
-
-		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
-			.flatMap(tenant -> embeddingModelService
-				.fetchCurrent(tenant.schemaName())
-				.map(embeddingModel -> {
-					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
-						.setApiUrl(embeddingModel.getApiUrl())
-						.setVectorSize(embeddingModel.getVectorSize());
-
-					if (embeddingModel.getProviderModel() != null) {
-						responseBuilder
-							.setProviderModel(
-								ProviderModel.newBuilder()
-									.setProvider(embeddingModel.getProviderModel().getProvider())
-									.setModel(embeddingModel.getProviderModel().getModel())
-						);
-					}
-
-						if (embeddingModel.getApiKey() != null) {
-							responseBuilder
-								.setApiKey(embeddingModel.getApiKey());
-						}
-
-						if (embeddingModel.getJsonConfig() != null) {
-							responseBuilder
-								.setJsonConfig(
-									StructUtils.fromJson(embeddingModel.getJsonConfig()));
-						}
-
-						return responseBuilder.build();
-					}
-				)
 			);
 	}
 
