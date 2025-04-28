@@ -6,7 +6,7 @@ push-datasource-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -22,7 +22,7 @@ push-ingestion-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -39,7 +39,7 @@ push-searcher-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -56,7 +56,7 @@ push-tenant-manager-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -73,7 +73,7 @@ push-tenant-ui-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -90,7 +90,7 @@ push-admin-ui-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -107,7 +107,7 @@ push-search-frontend-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:

@@ -6,7 +6,7 @@ push-openk9-k8s-client-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:

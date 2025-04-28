@@ -6,7 +6,7 @@ push-openk9-rag-module-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -22,7 +22,7 @@ push-openk9-embedding-module-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -38,7 +38,7 @@ push-talk-to-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:

@@ -6,7 +6,7 @@ push-entity-manager-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:

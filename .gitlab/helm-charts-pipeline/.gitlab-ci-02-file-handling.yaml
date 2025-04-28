@@ -8,7 +8,7 @@ push-file-manager-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -24,7 +24,7 @@ push-tika-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -41,7 +41,7 @@ push-tika-ocr-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
@@ -58,7 +58,7 @@ push-resources-validator-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
