@@ -50,7 +50,7 @@ def get_chain(
         grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
     )
 
-    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {question}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
+    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {{context}}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
     rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
@@ -59,7 +59,7 @@ def get_chain(
     api_url = llm_configuration.get("api_url")
     api_key = llm_configuration.get("api_key")
     model_type = llm_configuration.get("model_type")
-    model = "gpt-4o-mini"
+    model = llm_configuration.get("model")
     context_window = llm_configuration.get("context_window")
     retrieve_citations = llm_configuration.get("retrieve_citations")
     retrieve_type = llm_configuration.get("retrieve_type")
@@ -104,7 +104,6 @@ def get_chain(
     )
 
     documents = retriever.invoke(question)
-    print(documents)
     llm = initialize_language_model(configuration)
     prompt = ChatPromptTemplate.from_template(prompt_template)
     parser = StrOutputParser()
@@ -159,11 +158,7 @@ def get_chat_chain(
     api_key = llm_configuration.get("api_key")
     model_type = llm_configuration.get("model_type")
     model = llm_configuration.get("model")
-    # TODO remove line
-    model = "gpt-4o-mini"
     context_window = llm_configuration.get("context_window")
-    # TODO remove line
-    context_window = 50000
     retrieve_citations = llm_configuration.get("retrieve_citations")
     retrieve_type = llm_configuration.get("retrieve_type")
     watsonx_project_id = llm_configuration.get("watsonx_project_id")
