@@ -31,6 +31,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.model.dto.request.DocTypeWithTemplateDTO;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.DocTypeService;
@@ -182,6 +183,15 @@ public class DocTypeGraphqlResource {
 		""")
 	public Uni<DocType> deleteDocType(@Id long docTypeId, String docTypeName) {
 		return docTypeService.deleteById(docTypeId, docTypeName);
+	}
+
+	@Mutation
+	public Uni<Response<DocTypeField>> docTypeFieldWithAnalyzer(
+		@Id long docTypeId, @Id Long docTypeFieldId,
+		DocTypeFieldWithAnalyzerDTO docTypeFieldWithAnalyzerDTO,
+		@DefaultValue("false") boolean patch) {
+
+		return docTypeField(docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch);
 	}
 
 	@Mutation
