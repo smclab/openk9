@@ -13,6 +13,7 @@ import requests
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
 HYBRID_RETRIEVE_TYPE = "HYBRID"
+VECTORIAL_RETRIEVE_TYPES = ["KNN", "HYBRID"]
 SCORE_THRESHOLD = 0.5
 
 
@@ -34,7 +35,6 @@ class OpenSearchRetriever(BaseRetriever):
     sort: Optional[list] = None
     sort_after_key: Optional[str] = None
     language: Optional[str] = None
-    vector_indices: Optional[bool] = True
     context_window: int
     retrieve_type: str
     opensearch_host: str
@@ -83,7 +83,6 @@ class OpenSearchRetriever(BaseRetriever):
             sort=self.sort,
             sort_after_key=self.sort_after_key,
             language=self.language,
-            vector_indices=self.vector_indices,
             grpc_host=self.grpc_host,
         )
         query = query_data.query
@@ -113,7 +112,7 @@ class OpenSearchRetriever(BaseRetriever):
                 score = row["_score"]
                 if score < SCORE_THRESHOLD:
                     continue
-                if self.vector_indices:
+                if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
                     document_id = row["_source"]["contentId"]
                     page_content = row["_source"]["chunkText"]
                     title = row["_source"]["title"]
