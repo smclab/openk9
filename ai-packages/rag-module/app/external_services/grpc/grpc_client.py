@@ -22,7 +22,6 @@ def query_parser(
     sort,
     sort_after_key,
     language,
-    vector_indices,
     grpc_host,
 ):
     """Get opensearch query and index from grpc."""
@@ -50,7 +49,6 @@ def query_parser(
                 sort=sort,
                 sortAfterKey=sort_after_key,
                 language=language,
-                vectorIndices=vector_indices,
             )
         )
 

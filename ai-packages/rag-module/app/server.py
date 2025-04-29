@@ -160,9 +160,6 @@ class SearchQuery(BaseModel):
     language: Optional[str] = Field(
         None, description="Language code for localized results", example="it_IT"
     )
-    vectorIndices: Optional[bool] = Field(
-        False, description="Enable vector space search", example=True
-    )
     searchText: str = Field(
         ..., description="Primary search text input", example="What is OpenK9?"
     )
@@ -263,7 +260,6 @@ class SearchQuery(BaseModel):
                                 "sort": ["field1:asc"],
                                 "sortAfterKey": "sort-key",
                                 "language": "it_IT",
-                                "vectorIndices": True,
                                 "searchText": "What is OpenK9?",
                                 "reformulate": True,
                             },
@@ -298,7 +294,6 @@ async def rag_generate(
     sort = search_query_request.sort
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
-    vector_indices = search_query_request.vectorIndices
     search_text = search_query_request.searchText
     reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
@@ -321,7 +316,6 @@ async def rag_generate(
         sort,
         sort_after_key,
         language,
-        vector_indices,
         virtual_host,
         search_text,
         reformulate,
@@ -371,9 +365,6 @@ class SearchQueryChat(BaseModel):
     )
     language: Optional[str] = Field(
         None, description="Language code for localized results", example="it_IT"
-    )
-    vectorIndices: Optional[bool] = Field(
-        True, description="Enable vector search", example=True
     )
     searchText: str = Field(
         ..., description="Primary search text input", example="What is OpenK9?"
@@ -483,7 +474,6 @@ class SearchQueryChat(BaseModel):
                                 "rerank": False,
                                 "chunk_window": False,
                                 "range": [0, 5],
-                                "vectorIndices": True,
                                 "chatId": "chat-456",
                                 "afterKey": "some-key",
                                 "suggestKeyword": "OpenK9",
@@ -600,7 +590,6 @@ async def rag_chat(
     sort = search_query_chat.sort
     sort_after_key = search_query_chat.sortAfterKey
     language = search_query_chat.language
-    vector_indices = search_query_chat.vectorIndices
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
@@ -629,7 +618,6 @@ async def rag_chat(
         sort,
         sort_after_key,
         language,
-        vector_indices,
         virtual_host,
         search_text,
         chat_id,
@@ -713,7 +701,6 @@ async def rag_chat(
                                 "rerank": False,
                                 "chunk_window": False,
                                 "range": [0, 5],
-                                "vectorIndices": True,
                                 "chatId": "chat-456",
                                 "afterKey": "some-key",
                                 "suggestKeyword": "OpenK9",
@@ -824,7 +811,6 @@ async def rag_chat(
     sort = search_query_chat.sort
     sort_after_key = search_query_chat.sortAfterKey
     language = search_query_chat.language
-    vector_indices = search_query_chat.vectorIndices
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
@@ -853,7 +839,6 @@ async def rag_chat(
         sort,
         sort_after_key,
         language,
-        vector_indices,
         virtual_host,
         search_text,
         chat_id,

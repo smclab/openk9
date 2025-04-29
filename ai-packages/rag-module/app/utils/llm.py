@@ -281,7 +281,6 @@ def stream_rag_conversation(
     sort: list,
     sort_after_key: str,
     language: str,
-    vector_indices: bool,
     opensearch_host: str,
     grpc_host: str,
     chat_id: str,
@@ -314,7 +313,6 @@ def stream_rag_conversation(
         sort (list): Sorting criteria for search results.
         sort_after_key (str): Key for sorted pagination.
         language (str): Language code for localization.
-        vector_indices (bool): Flag to enable vector search.
         opensearch_host (str): OpenSearch cluster endpoint.
         grpc_host (str): gRPC service endpoint for embeddings.
         chat_id (str): Unique identifier for the chat session.
@@ -387,7 +385,6 @@ def stream_rag_conversation(
         sort=sort,
         sort_after_key=sort_after_key,
         language=language,
-        vector_indices=vector_indices,
         context_window=context_window,
         retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
