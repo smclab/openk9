@@ -340,6 +340,8 @@ public class EmbeddingService {
 			if (providerModel.getProvider() != null) {
 				providerModelBuilder.setProvider(providerModel.getProvider());
 			}
+
+			embeddingModelBuilder.setProviderModel(providerModelBuilder.build());
 		}
 
 		if (embeddingModel.getJsonConfig() != null) {
