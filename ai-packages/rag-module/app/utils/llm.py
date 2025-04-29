@@ -113,12 +113,20 @@ def initialize_language_model(configuration):
                 A prompt for rephrasing tasks, if applicable.
             - "context_window": int
                 Size of the context window for the model's input.
+            - "retrieve_citations": bool
+                Flag to enable citation extraction.
+            - "rerank": bool
+                Flag to enable document reranking.
+            - "chunk_window": int
+                If 0 disable context window merging, if > 0 and <=2 enable context window merging.
             - "retrieve_type": str
                 Specifies the type of retrieval mechanism to be used with the model.
             - "watsonx_project_id": str
-                Project ID for IBM WatsonX (required if using WatsonX).
+                Project ID for IBM WatsonX (required if using IBM_WATSONX).
             - "chat_vertex_ai_credentials": dict
-                Credentials for Google Vertex AI (required if using Vertexai).
+                Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI).
+            - "chat_vertex_ai_model_garden": dict
+                Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
 
     Returns:
     -------
@@ -315,14 +323,20 @@ def stream_rag_conversation(
         timestamp (str): ISO format timestamp of the request.
         chat_sequence_number (int): Sequence number in conversation history.
         configuration (dict): Configuration dictionary containing:
+            - api_url (str): URL for the API endpoint
+            - api_key (str): API key for authentication
             - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
+            - model (str):  Name of the model to use; defaults to DEFAULT_MODEL if not provided
             - prompt (str): Main prompt template
             - rephrase_prompt (str): Contextualization prompt template
             - context_window (int): Model context window size
-            - retrieve_type (str): Document retrieval strategy
+            - retrieve_citations (bool): Flag to enable citation extraction.
             - rerank (bool): Whether to enable document reranking
             - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
-            - retrieve_citations (bool): Flag to enable citation extraction.
+            - retrieve_type (str): Document retrieval strategy
+            - watsonx_project_id (str): Project ID for IBM WatsonX (required if using IBM_WATSONX)
+            - chat_vertex_ai_credentials (dict): Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI)
+            - chat_vertex_ai_model_garden (dict): Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN)
 
     Yields:
         Iterator[str]: JSON-encoded stream objects with following formats:
@@ -588,17 +602,17 @@ def stream_rag_conversation(
     }
     logger.info(json.dumps(info))
 
-    # if user_id:
-    #     save_chat_message(
-    #         open_search_client,
-    #         search_text,
-    #         result_answer["answer"],
-    #         conversation_title,
-    #         documents,
-    #         chat_id,
-    #         user_id,
-    #         timestamp,
-    #         chat_sequence_number,
-    #     )
+    if user_id:
+        save_chat_message(
+            open_search_client,
+            search_text,
+            result_answer["answer"],
+            conversation_title,
+            documents,
+            chat_id,
+            user_id,
+            timestamp,
+            chat_sequence_number,
+        )
 
     yield json.dumps({"chunk": "", "type": "END"})
