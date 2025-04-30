@@ -740,78 +740,78 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 	private Behavior<Command> onWorkStageResponse(WorkStageResponse workStageResponse) {
 		var response = workStageResponse.response();
 
-		if (response instanceof WorkStage.Invalid invalid) {
+		switch (response) {
+			case WorkStage.Invalid invalid -> {
 
-			var requester = invalid.requester();
+				var requester = invalid.requester();
 
-			log.warnf("Received an invalid payload to work: %s", invalid.errorMessage());
+				log.warnf("Received an invalid payload to work: %s", invalid.errorMessage());
 
-			requester.tell(new Failure(invalid.errorMessage()));
+				requester.tell(new Failure(invalid.errorMessage()));
 
-		}
-		else if (response instanceof WorkStage.Halt halt) {
+			}
+			case WorkStage.Halt halt -> {
 
-			var requester = halt.requester();
+				var requester = halt.requester();
 
-			requester.tell(Success.INSTANCE);
+				requester.tell(Success.INSTANCE);
 
-			getContext()
-				.getSelf()
-				.tell(new Halt(halt.exception()));
+				getContext()
+					.getSelf()
+					.tell(new Halt(halt.exception()));
 
-		}
-		else if (response instanceof WorkStage.Last last) {
+			}
+			case WorkStage.Last last -> {
 
-			var requester = last.requester();
+				var requester = last.requester();
 
-			requester.tell(Success.INSTANCE);
-			lastReceived = true;
-			log.infof("%s received last message", shardingKey);
+				requester.tell(Success.INSTANCE);
+				lastReceived = true;
+				log.infof("%s received last message", shardingKey);
 
-		}
-		else if (response instanceof WorkStage.Working working) {
+			}
+			case WorkStage.Working working -> {
 
-			var requester = working.requester();
-			var heldMessage = working.heldMessage();
+				var requester = working.requester();
+				var heldMessage = working.heldMessage();
 
-			heldMessages.put(heldMessage, requester);
+				heldMessages.put(heldMessage, requester);
 
-		}
-		else if (response instanceof WorkStage.Done done) {
+			}
+			case WorkStage.Done done -> {
 
-			var heldMessage = done.heldMessage();
-			var replyTo = heldMessages.remove(heldMessage);
+				var heldMessage = done.heldMessage();
+				var replyTo = heldMessages.remove(heldMessage);
 
-			log.infof("work done for %s", heldMessage, replyTo);
+				log.infof("work done for %s", heldMessage, replyTo);
 
-			replyTo.tell(Success.INSTANCE);
+				replyTo.tell(Success.INSTANCE);
 
-			OffsetDateTime parsingDate =
-				OffsetDateTime.ofInstant(
-					Instant.ofEpochMilli(heldMessage.parsingDate()),
-					ZoneOffset.UTC
-				);
+				OffsetDateTime parsingDate =
+					OffsetDateTime.ofInstant(
+						Instant.ofEpochMilli(heldMessage.parsingDate()),
+						ZoneOffset.UTC
+					);
 
-			getContext().getSelf().tell(new TrackDate(parsingDate));
+				getContext().getSelf().tell(new TrackDate(parsingDate));
 
-			return busy();
+				return busy();
 
-		}
-		else if (response instanceof WorkStage.Failed failed) {
+			}
+			case WorkStage.Failed failed -> {
 
-			var heldMessage = failed.heldMessage();
-			var exception = failed.exception();
-			var replyTo = heldMessages.remove(heldMessage);
+				var heldMessage = failed.heldMessage();
+				var exception = failed.exception();
+				var replyTo = heldMessages.remove(heldMessage);
 
-			log.errorf(exception, "work failed for %s", heldMessage);
+				log.errorf(exception, "work failed for %s", heldMessage);
 
-			getContext().getSelf().tell(new PersistException(exception));
+				getContext().getSelf().tell(new PersistException(exception));
 
-			replyTo.tell(new Failure("work stage failed"));
+				replyTo.tell(new Failure("work stage failed"));
 
-		}
-		else {
-			log.warn("unknown response type");
+			}
+			case null, default -> log.warn("unknown response type");
 		}
 
 		return heldMessages.size() < maxWorkers ? next() : busy();
