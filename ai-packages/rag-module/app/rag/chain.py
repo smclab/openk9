@@ -53,6 +53,7 @@ def get_chain(
     rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
+    metadata = rag_configuration.get("metadata")
 
     llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
@@ -75,6 +76,7 @@ def get_chain(
         "retrieve_citations": retrieve_citations,
         "rerank": rerank,
         "retrieve_type": retrieve_type,
+        "metadata": metadata,
         "watsonx_project_id": watsonx_project_id,
         "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
         "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
@@ -149,6 +151,7 @@ def get_chat_chain(
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     chunk_window = rag_configuration.get("chunk_window")
+    metadata = rag_configuration.get("metadata")
 
     llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
@@ -173,6 +176,7 @@ def get_chat_chain(
         "retrieve_citations": retrieve_citations,
         "rerank": rerank,
         "chunk_window": chunk_window,
+        "metadata": metadata,
         "retrieve_type": retrieve_type,
         "watsonx_project_id": watsonx_project_id,
         "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
@@ -241,6 +245,7 @@ def get_chat_chain_tool(
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     chunk_window = rag_configuration.get("chunk_window")
+    metadata = rag_configuration.get("metadata")
     rag_tool_description = rag_configuration.get("rag_tool_description")
     prompt_no_rag = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. ### QUESTION: {question} [/INST]"
 
@@ -268,6 +273,7 @@ def get_chat_chain_tool(
         "rerank": rerank,
         "chunk_window": chunk_window,
         "retrieve_type": retrieve_type,
+        "metadata": metadata,
         "rag_tool_description": rag_tool_description,
         "prompt_no_rag": prompt_no_rag,
         "watsonx_project_id": watsonx_project_id,

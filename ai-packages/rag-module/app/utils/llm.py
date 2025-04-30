@@ -328,9 +328,10 @@ def stream_rag_conversation(
             - prompt (str): Main prompt template
             - rephrase_prompt (str): Contextualization prompt template
             - context_window (int): Model context window size
-            - retrieve_citations (bool): Flag to enable citation extraction.
+            - retrieve_citations (bool): Flag to enable citation extraction
             - rerank (bool): Whether to enable document reranking
             - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
+            - metadata (dict): metadata for document fields extraction
             - retrieve_type (str): Document retrieval strategy
             - watsonx_project_id (str): Project ID for IBM WatsonX (required if using IBM_WATSONX)
             - chat_vertex_ai_credentials (dict): Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI)
@@ -365,6 +366,7 @@ def stream_rag_conversation(
     retrieve_type = configuration.get("retrieve_type")
     rerank = configuration.get("rerank")
     chunk_window = configuration.get("chunk_window")
+    metadata = configuration.get("metadata")
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -386,6 +388,7 @@ def stream_rag_conversation(
         sort_after_key=sort_after_key,
         language=language,
         context_window=context_window,
+        metadata=metadata,
         retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
         grpc_host=grpc_host,

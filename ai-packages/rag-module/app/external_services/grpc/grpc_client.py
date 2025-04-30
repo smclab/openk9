@@ -70,12 +70,14 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
     reformulate = response.reformulate
     json_config = json_format.MessageToDict(response.jsonConfig)
     rerank = json_config.get("rerank")
+    metadata = json_config.get("metadata")
 
     configuration = {
         "rag_tool_description": rag_tool_description,
         "chunk_window": chunk_window,
         "reformulate": reformulate,
         "rerank": rerank,
+        "metadata": metadata,
     }
 
     return configuration
