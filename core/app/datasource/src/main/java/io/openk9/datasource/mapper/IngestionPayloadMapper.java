@@ -17,18 +17,21 @@
 
 package io.openk9.datasource.mapper;
 
+import java.util.Arrays;
+import java.util.List;
+
 import io.openk9.common.util.ingestion.IngestionUtils;
+import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.processor.payload.DataPayload;
+import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
 import io.openk9.datasource.processor.payload.IngestionPayload;
+
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Mappings;
 import org.mapstruct.ReportingPolicy;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Mapper(
 	componentModel = MappingConstants.ComponentModel.CDI,
@@ -42,10 +45,21 @@ public interface IngestionPayloadMapper {
 		);
 	}
 
-	@Mapping(
-		target = "rest",
-		source = "datasourcePayload"
-	)
+
+	default DataPayload map(IngestionIndexWriterPayload payload) {
+		return map(payload.getIngestionPayload());
+	}
+
+	@Mappings({
+		@Mapping(
+			target = "rest",
+			source = "datasourcePayload"
+		),
+		@Mapping(
+			target = "type",
+			source = "."
+		)
+	})
 	DataPayload map(IngestionPayload ingestionPayload);
 
 	@InheritInverseConfiguration
@@ -62,11 +76,22 @@ public interface IngestionPayloadMapper {
 				source = "documentTypes"
 			),
 			@Mapping(
-				target = "last",
-				source = "ingestionPayload.last"
+				target = "type",
+				source = "ingestionPayload"
 			)
 		}
 	)
 	DataPayload map(IngestionPayload ingestionPayload, List<String> documentTypes);
+
+	default PayloadType mapType(IngestionPayload ingestionPayload) {
+		var last = ingestionPayload.isLast();
+		var type = ingestionPayload.getType();
+
+		return type != null
+			? type
+			: last ? PayloadType.LAST : PayloadType.DOCUMENT;
+
+
+	}
 
 }
