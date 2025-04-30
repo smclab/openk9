@@ -36,6 +36,7 @@ class OpenSearchRetriever(BaseRetriever):
     sort_after_key: Optional[str] = None
     language: Optional[str] = None
     context_window: int
+    metadata: Optional[dict] = None
     retrieve_type: str
     opensearch_host: str
     grpc_host: str
@@ -109,44 +110,57 @@ class OpenSearchRetriever(BaseRetriever):
             )
 
             for row in response["hits"]["hits"]:
-                score = row["_score"]
+                score = row.get("_score")
                 if score < SCORE_THRESHOLD:
                     continue
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
-                    document_id = row["_source"]["contentId"]
-                    page_content = row["_source"]["chunkText"]
-                    title = row["_source"]["title"]
-                    url = row["_source"]["url"]
+                    document_source = row.get("_source")
+                    document_type = document_source.get("documentTypes")[0]
+                    dynamic_metadata = {}
+                    if document_type in self.metadata.keys():
+                        for key, value in self.metadata[document_type].items():
+                            if metadata_value := document_source.get(document_type).get(
+                                value
+                            ):
+                                dynamic_metadata[key] = metadata_value
+                    document_id = document_source.get("contentId")
+                    page_content = document_source.get("chunkText")
                     source = "local"
-                    chunk_idx = row["_source"]["number"]
-                    prev_chunk = [
-                        element["chunkText"] for element in row["_source"]["previous"]
-                    ]
-                    next_chunk = [
-                        element["chunkText"] for element in row["_source"]["next"]
-                    ]
+                    chunk_idx = document_source.get("number")
+                    previous_chunks = document_source.get("previous")
+                    previous_chunk = (
+                        [element.get("chunkText") for element in previous_chunks]
+                        if previous_chunks
+                        else None
+                    )
+                    next_chunks = document_source.get("next")
+                    next_chunk = (
+                        [element.get("chunkText") for element in next_chunks]
+                        if next_chunks
+                        else None
+                    )
+
+                    metadata = {
+                        "source": source,
+                        "document_id": document_id,
+                        "score": score,
+                        "chunk_idx": chunk_idx,
+                        "prev": previous_chunk,
+                        "next": next_chunk,
+                    }
+
+                    metadata.update(dynamic_metadata)
 
                     document = Document(
                         page_content,
-                        metadata={
-                            "source": source,
-                            "title": title,
-                            "url": url,
-                            "document_id": document_id,
-                            "score": score,
-                            "chunk_idx": chunk_idx,
-                            "prev": prev_chunk,
-                            "next": next_chunk,
-                        },
+                        metadata=metadata,
                     )
-                    document_tokens_number = (
-                        len(page_content + title + url + source) / TOKEN_SIZE
-                    )
+                    document_tokens_number = len(page_content + source) / TOKEN_SIZE
                     total_tokens += document_tokens_number
                 else:
-                    document = Document(row["_source"]["rawContent"], metadata={})
+                    document = Document(document_source.get("rawContent"), metadata={})
                     document_tokens_number = (
-                        len(row["_source"]["rawContent"]) / TOKEN_SIZE
+                        len(document_source.get("rawContent")) / TOKEN_SIZE
                     )
                     total_tokens += document_tokens_number
 
@@ -156,7 +170,7 @@ class OpenSearchRetriever(BaseRetriever):
         if self.rerank:
             documents_to_rerank = [
                 {
-                    "document_id": doc.metadata["document_id"],
+                    "document_id": doc.metadata.get("document_id"),
                     "content": doc.page_content,
                 }
                 for doc in documents
