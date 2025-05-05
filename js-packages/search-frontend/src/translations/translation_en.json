@@ -61,6 +61,11 @@
     "to": "To",
     "today": "Today",
     "try-with-another-query": "Try another search",
-    "uncheck": "Uncheck"
+    "uncheck": "Uncheck",
+    "from-date": "From",
+    "to-date": "To",
+    "invalid-date-format": "Invalid date format",
+    "end-date-before-start": "End date cannot be earlier than start date",
+    "start-date-after-end": "Start date cannot be later than end date"
   }
 }

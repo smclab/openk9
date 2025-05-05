@@ -104,12 +104,14 @@ export function DataRangePickerVertical({
       if (inputValue !== "") {
         if (!dateObject.isValid()) {
           setValidationEnd(
-            translationLabel?.errorFormatData || "Formato data non valido",
+            translationLabel?.errorFormatData ||
+              t("invalid-date-format") ||
+              "Invalid date format",
           );
         } else {
           setValidationEnd(
-            translationLabel?.errorSelectData ||
-              "La data di fine non può essere inferiore alla data di inizio",
+            t(translationLabel?.errorSelectData || "end-date-before-start") ||
+              "End date cannot be earlier than start date",
           );
         }
       }
@@ -128,12 +130,15 @@ export function DataRangePickerVertical({
       if (inputValue !== "") {
         if (!dateObject.isValid()) {
           setValidationStart(
-            translationLabel?.errorFormatData || "Formato data non valido",
+            translationLabel?.errorFormatData ||
+              t("invalid-date-format") ||
+              "Invalid date format",
           );
         } else {
           setValidationStart(
             translationLabel?.errorSelectData ||
-              "La data di inizio non può essere inferiore alla data di fine",
+              t("start-date-after-end") ||
+              "Start date cannot be later than end date",
           );
         }
       }
@@ -152,8 +157,13 @@ export function DataRangePickerVertical({
       }}
     >
       <div className="DateRangePickerVertical-startDate-container">
-        <p className="DateRangePickerVertical-date-title">
-          {t("from")} ({t("gg/mm/aaaa")}):
+        <p
+          className="DateRangePickerVertical-date-title"
+          css={css`
+            font-weight: 700;
+          `}
+        >
+          {t("from-date")} ({t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-start-date"
@@ -255,7 +265,7 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          Al ({t("gg/mm/aaaa")}):
+          {t("to-date") || "To"} ({t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-end-date"
