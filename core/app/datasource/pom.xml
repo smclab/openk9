@@ -165,14 +165,16 @@
       <artifactId>hibernate-rx-multitenancy</artifactId>
       <version>${quarkus.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-reactive-pg-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-reactive-oracle-client</artifactId>
-    </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-reactive-pg-client</artifactId>
+		  <optional>true</optional>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-reactive-oracle-client</artifactId>
+		  <optional>true</optional>
+	  </dependency>
 
     <dependency>
       <groupId>io.openk9.common</groupId>
@@ -354,12 +356,47 @@
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus-plugin.version}</version>
         <executions>
-          <execution>
-            <goals>
-              <goal>build</goal>
-              <goal>generate-code</goal>
-            </goals>
-          </execution>
+			<!-- default configuration is for postgresql -->
+			<execution>
+				<goals>
+					<goal>build</goal>
+					<goal>generate-code</goal>
+				</goals>
+				<configuration>
+					<properties>
+						<quarkus.package.jar.filter-optional-dependencies>
+							true
+						</quarkus.package.jar.filter-optional-dependencies>
+						<quarkus.package.jar.included-optional-dependencies>
+							io.quarkus:quarkus-reactive-pg-client::jar
+						</quarkus.package.jar.included-optional-dependencies>
+					</properties>
+				</configuration>
+			</execution>
+			<execution>
+				<id>oracle</id>
+				<goals>
+					<goal>build</goal>
+					<goal>generate-code</goal>
+				</goals>
+				<configuration>
+					<properties>
+						<quarkus.profile>prod-oracle</quarkus.profile>
+						<quarkus.package.output-directory>
+							oracle-quarkus-app
+						</quarkus.package.output-directory>
+						<quarkus.package.jar.filter-optional-dependencies>
+							true
+						</quarkus.package.jar.filter-optional-dependencies>
+						<quarkus.package.jar.included-optional-dependencies>
+							io.quarkus:quarkus-reactive-oracle-client::jar
+						</quarkus.package.jar.included-optional-dependencies>
+						<quarkus.container-image.name>
+							openk9-datasource-oracle
+						</quarkus.container-image.name>
+					</properties>
+				</configuration>
+			</execution>
         </executions>
       </plugin>
     </plugins>
