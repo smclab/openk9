@@ -107,21 +107,6 @@ public class RAGConfigurationService
 	}
 
 	/**
-	 * Prepares a RAGConfiguration object from a CreateRAGConfigurationDTO.
-	 * Handles the DTO conversion and type setting.
-	 *
-	 * @param createRAGConfigurationDTO the creation DTO with data to use
-	 * @return a configured but not yet persisted RAGConfiguration object
-	 */
-	private RAGConfiguration prepareRAGConfiguration(
-			CreateRAGConfigurationDTO createRAGConfigurationDTO) {
-
-		var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
-		transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
-		return transientRagConfiguration;
-	}
-
-	/**
 	 * Retrieves a list of {@link RAGConfiguration} entities that match the given {@code ragType}
 	 * and are not yet associated with the specified Bucket.
 	 *
@@ -174,5 +159,20 @@ public class RAGConfigurationService
 	@Override
 	public Class<RAGConfiguration> getEntityClass() {
 		return RAGConfiguration.class;
+	}
+
+	/**
+	 * Prepares a RAGConfiguration object from a CreateRAGConfigurationDTO.
+	 * Handles the DTO conversion and type setting.
+	 *
+	 * @param createRAGConfigurationDTO the creation DTO with data to use
+	 * @return a configured but not yet persisted RAGConfiguration object
+	 */
+	private RAGConfiguration prepareRAGConfiguration(
+			CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+
+		var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
+		transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
+		return transientRagConfiguration;
 	}
 }
