@@ -248,6 +248,7 @@ export function Main({
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
             viewColor={configuration.showSyntax}
+            btnSearch={false}
           />
         </I18nextProvider>,
         configuration.search,
@@ -274,7 +275,7 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
-            btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
+            btnSearch={configuration.searchConfigurable?.btnSearch ?? true}
             htmlKey={configuration.searchConfigurable?.htmlKey}
             viewColor={configuration.showSyntax}
             messageSearchIsVisible={

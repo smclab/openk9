@@ -257,7 +257,9 @@ export function App() {
             `}
             onClick={handleClick}
             className="openk9-update-configuration-search"
-            ref={(element) => openk9.updateConfiguration({ search: element })}
+            ref={(element) =>
+              openk9.updateConfiguration({ searchWithButton: element })
+            }
           />
           <div
             css={css`
