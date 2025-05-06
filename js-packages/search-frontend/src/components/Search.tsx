@@ -430,6 +430,9 @@ export function Search({
                 border-radius: 8px;
                 cursor: pointer;
                 background-color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
               `}
               onClick={() => {
                 inputRef &&
