@@ -115,14 +115,15 @@ class OpenSearchRetriever(BaseRetriever):
                     continue
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
                     document_source = row.get("_source")
-                    document_type = document_source.get("documentTypes")[0]
+                    document_types = document_source.get("documentTypes")
                     dynamic_metadata = {}
-                    if document_type in self.metadata.keys():
-                        for key, value in self.metadata[document_type].items():
-                            if metadata_value := document_source.get(document_type).get(
-                                value
-                            ):
-                                dynamic_metadata[key] = metadata_value
+                    for document_type in document_types:
+                        if document_type in self.metadata.keys():
+                            for key, value in self.metadata[document_type].items():
+                                if metadata_value := document_source.get(
+                                    document_type
+                                ).get(value):
+                                    dynamic_metadata[key] = metadata_value
                     document_id = document_source.get("contentId")
                     page_content = document_source.get("chunkText")
                     source = "local"
