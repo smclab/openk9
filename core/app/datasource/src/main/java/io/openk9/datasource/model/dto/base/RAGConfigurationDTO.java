@@ -17,9 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
-import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.validation.json.Json;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -66,6 +64,4 @@ public class RAGConfigurationDTO extends K9EntityDTO {
 	private Boolean reformulate;
 	@Description("Prompt template used if reformulate is set to true.")
 	private String rephrasePrompt;
-	@NotNull
-	private RAGType type;
 }

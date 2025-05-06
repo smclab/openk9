@@ -24,6 +24,7 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGConfiguration_;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,6 +34,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.validation.ValidationException;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
 
@@ -59,6 +62,63 @@ public class RAGConfigurationService
 			case CHAT_RAG_TOOL -> Bucket_.RAG_CONFIGURATION_CHAT_TOOL;
 			case SIMPLE_GENERATE -> Bucket_.RAG_CONFIGURATION_SIMPLE_GENERATE;
 		};
+	}
+
+
+	/**
+	 * Creates a new RAG configuration using a provided session.
+	 *
+	 * @param session the Mutiny session to use for creation
+	 * @param dto the DTO object containing data for RAG configuration creation
+	 * @return a Uni emitting the created RAG configuration
+	 */
+	public Uni<RAGConfiguration> create(Mutiny.Session session, RAGConfigurationDTO dto) {
+
+		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+			if (createRAGConfigurationDTO.getType() != null) {
+				var transientRagConfiguration = prepareRAGConfiguration(createRAGConfigurationDTO);
+
+				return super.create(session, transientRagConfiguration);
+			}
+		}
+
+		return Uni.createFrom().failure(new ValidationException("Missing RAG type."));
+	}
+
+	/**
+	 * Creates a new RAG configuration using an internally managed transaction.
+	 *
+	 * @param dto the DTO object containing data for RAG configuration creation
+	 * @return a Uni emitting the created RAG configuration
+	 */
+	public Uni<RAGConfiguration> create(RAGConfigurationDTO dto) {
+
+		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+			if (createRAGConfigurationDTO.getType() != null) {
+				var transientRagConfiguration = prepareRAGConfiguration(createRAGConfigurationDTO);
+
+				return sessionFactory.withTransaction(
+					(s, transaction) -> super.create(s, transientRagConfiguration)
+				);
+			}
+		}
+
+		return Uni.createFrom().failure(new ValidationException("Missing RAG type."));
+	}
+
+	/**
+	 * Prepares a RAGConfiguration object from a CreateRAGConfigurationDTO.
+	 * Handles the DTO conversion and type setting.
+	 *
+	 * @param createRAGConfigurationDTO the creation DTO with data to use
+	 * @return a configured but not yet persisted RAGConfiguration object
+	 */
+	private RAGConfiguration prepareRAGConfiguration(
+			CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+
+		var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
+		transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
+		return transientRagConfiguration;
 	}
 
 	/**

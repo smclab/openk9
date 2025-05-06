@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.EmbeddingModel;
@@ -33,7 +34,7 @@ import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
@@ -151,9 +152,49 @@ public class SearcherGrpcTest {
 		enableLargeLanguageModelOne();
 
 		// RAGConfiguration
-		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT_RAG);
-		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
-		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SIMPLE_GENERATE);
+
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_CHAT_ONE)
+				.type(RAGType.CHAT_RAG)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_CHAT_TOOL_ONE)
+				.type(RAGType.CHAT_RAG_TOOL)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_SEARCH_ONE)
+				.type(RAGType.SIMPLE_GENERATE)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
 
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
@@ -463,7 +504,7 @@ public class SearcherGrpcTest {
 	}
 
 	private void createRAGConfiguration(String name, RAGType type) {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
+		CreateRAGConfigurationDTO dto = CreateRAGConfigurationDTO.builder()
 			.name(name)
 			.type(type)
 			.chunkWindow(CHUNK_WINDOW)
