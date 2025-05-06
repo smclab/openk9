@@ -17,25 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.time.Duration;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
@@ -66,13 +47,34 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
-
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
+
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PluginDriverService
 	extends BaseK9EntityService<PluginDriver, PluginDriverDTO> {
+
+	private static final Logger log = Logger.getLogger(PluginDriverService.class);
 
 	@Inject
 	DocTypeService docTypeService;
@@ -154,7 +156,7 @@ public class PluginDriverService
 	public <T extends K9Entity> Uni<T> persist(Mutiny.Session session, T entity) {
 
 		return super.persist(session, entity)
-			.log("PluginDriver created.")
+			.log("Trying to create PluginDriver.")
 			.log("Creating DocumentTypes associated with pluginDriver")
 			.call(() -> indexMappingService
 				.generateDocTypeFieldsFromPluginDriverSample(
@@ -163,14 +165,17 @@ public class PluginDriverService
 				.retry()
 				.withBackOff(Duration.ofSeconds(5))
 				.atMost(20)
-				.log("DocumentTypes associated with pluginDriver created.")
+				.onItem()
+				.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
+				.onFailure()
+				.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"))
 			);
 	}
 
 	@Override
 	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
 		return super.merge(s, entity)
-			.log("PluginDriver updated.")
+			.log("Trying to update PluginDriver.")
 			.log("Updating DocumentTypes associated with pluginDriver")
 			.call(() -> indexMappingService
 				.generateDocTypeFieldsFromPluginDriverSample(
@@ -179,7 +184,10 @@ public class PluginDriverService
 				.retry()
 				.withBackOff(Duration.ofSeconds(5))
 				.atMost(20)
-				.log("DocumentTypes associated with pluginDriver updated.")
+				.onItem()
+				.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
+				.onFailure()
+				.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"))
 			);
 	}
 
