@@ -64,46 +64,45 @@ public class RAGConfigurationService
 		};
 	}
 
-
 	/**
-	 * Creates a new RAG configuration using a provided session.
+	 * Creates a new {@link RAGConfiguration} using the provided Mutiny session.
+	 * Converts the given DTO into a transient entity, and persists it using the session.
+	 * <p>
+	 * Error Handling: Fails with {@link ValidationException} if the type is missing.
 	 *
-	 * @param session the Mutiny session to use for creation
-	 * @param dto the DTO object containing data for RAG configuration creation
-	 * @return a Uni emitting the created RAG configuration
+	 * @param session the session to use for persistence
+	 * @param dto the DTO containing configuration data
+	 * @return a {@link Uni} emitting the created {@link RAGConfiguration}
 	 */
 	public Uni<RAGConfiguration> create(Mutiny.Session session, RAGConfigurationDTO dto) {
-
-		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO) {
-			if (createRAGConfigurationDTO.getType() != null) {
-				var transientRagConfiguration = prepareRAGConfiguration(createRAGConfigurationDTO);
-
-				return super.create(session, transientRagConfiguration);
-			}
+		try {
+			var entity = createTransient(dto);
+			return super.create(session, entity);
 		}
-
-		return Uni.createFrom().failure(new ValidationException("Missing RAG type."));
+		catch (ValidationException e) {
+			return Uni.createFrom().failure(e);
+		}
 	}
 
 	/**
-	 * Creates a new RAG configuration using an internally managed transaction.
+	 * Creates a new {@link RAGConfiguration} within a managed transaction.
+	 * Converts the DTO into a transient entity, and persists it transactionally.
+	 * <p>
+	 * Error Handling: Fails with {@link ValidationException} if the type is missing.
 	 *
-	 * @param dto the DTO object containing data for RAG configuration creation
-	 * @return a Uni emitting the created RAG configuration
+	 * @param dto the DTO containing configuration data
+	 * @return a {@link Uni} emitting the created {@link RAGConfiguration}
 	 */
 	public Uni<RAGConfiguration> create(RAGConfigurationDTO dto) {
-
-		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO) {
-			if (createRAGConfigurationDTO.getType() != null) {
-				var transientRagConfiguration = prepareRAGConfiguration(createRAGConfigurationDTO);
-
-				return sessionFactory.withTransaction(
-					(s, transaction) -> super.create(s, transientRagConfiguration)
-				);
-			}
+		try {
+			var entity = createTransient(dto);
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, entity)
+			);
 		}
-
-		return Uni.createFrom().failure(new ValidationException("Missing RAG type."));
+		catch (ValidationException e) {
+			return Uni.createFrom().failure(e);
+		}
 	}
 
 	/**
@@ -162,17 +161,29 @@ public class RAGConfigurationService
 	}
 
 	/**
-	 * Prepares a RAGConfiguration object from a CreateRAGConfigurationDTO.
-	 * Handles the DTO conversion and type setting.
+	 * Converts a {@link CreateRAGConfigurationDTO} into a non-persistent {@link RAGConfiguration} entity.
+	 * <p>
+	 * This utility method maps the input DTO to a new entity instance and ensures
+	 * that the mandatory {@code type} field is present.
+	 * <p>
+	 * Error Handling: Throws {@link ValidationException} if the DTO is invalid or the type is null.
 	 *
-	 * @param createRAGConfigurationDTO the creation DTO with data to use
-	 * @return a configured but not yet persisted RAGConfiguration object
+	 * @param dto the DTO used for creating the entity
+	 * @return a new {@link RAGConfiguration} instance ready to be persisted
+	 * @throws ValidationException if the DTO is not of the expected type or lacks a type value
 	 */
-	private RAGConfiguration prepareRAGConfiguration(
-			CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+	private RAGConfiguration createTransient(RAGConfigurationDTO dto)
+		throws ValidationException {
 
-		var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
-		transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
-		return transientRagConfiguration;
+		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO
+				&& createRAGConfigurationDTO.getType() != null) {
+
+			var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
+			transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
+
+			return transientRagConfiguration;
+		}
+
+		throw new ValidationException("Missing RAG type.");
 	}
 }
