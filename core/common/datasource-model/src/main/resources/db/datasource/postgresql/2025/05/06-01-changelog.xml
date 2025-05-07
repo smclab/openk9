@@ -38,8 +38,8 @@
 					)
 				)
 			WHERE
-				(json_config::jsonb ? 'host')
-				AND (json_config::jsonb ? 'port');
+				(json_config::jsonb #>> '{host}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{port}' IS NOT NULL);
 		</sql>
 	</changeSet>
 
@@ -50,9 +50,9 @@
 			SET json_config =
 				json_config::jsonb - 'host' - 'port'
 			WHERE
-				(json_config::jsonb ? 'baseUri')
-				AND (json_config::jsonb ? 'host')
-				AND (json_config::jsonb ? 'port');
+				(json_config::jsonb #>> '{baseUri}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{host}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{port}' IS NOT NULL);
 		</sql>
 	</changeSet>
 
