@@ -51,7 +51,9 @@
 					REMOVE '$.host',
 					REMOVE '$.port'
 				)
-			WHERE JSON_EXISTS(json_config, '$.baseUri');
+			WHERE JSON_EXISTS(json_config, '$.baseUri')
+				AND JSON_EXISTS(json_config, '$.host')
+				AND JSON_EXISTS(json_config, '$.port');
 		</sql>
 	</changeSet>
 

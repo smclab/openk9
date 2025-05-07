@@ -34,10 +34,12 @@
 					json_config::jsonb,
 					'{baseUri}',
 					to_jsonb(
-						json_config->>'host' || ':' || json_config->>'port'
+						(json_config::jsonb ->> 'host') || ':' || (json_config::jsonb ->> 'port')
 					)
 				)
-			WHERE json_config ? 'host' AND json_config ? 'port';
+			WHERE
+				(json_config::jsonb ? 'host')
+				AND (json_config::jsonb ? 'port');
 		</sql>
 	</changeSet>
 
@@ -47,7 +49,10 @@
 			UPDATE plugin_driver
 			SET json_config =
 				json_config::jsonb - 'host' - 'port'
-			WHERE json_config ? 'baseUri';
+			WHERE
+				(json_config::jsonb ? 'baseUri')
+				AND (json_config::jsonb ? 'host')
+				AND (json_config::jsonb ? 'port');
 		</sql>
 	</changeSet>
 
