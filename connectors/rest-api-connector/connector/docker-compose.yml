@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  rest-api-parser:
+    image: rest-api-parser:latest
+    container_name: rest-api-parser
+    environment:
+      INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
+    ports:
+      - "5000:5000"
