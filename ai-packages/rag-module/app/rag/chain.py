@@ -339,20 +339,21 @@ def get_chat_chain_tool(
             )
             yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
-        open_search_client = OpenSearch(
-            hosts=[opensearch_host],
-        )
+        if user_id:
+            open_search_client = OpenSearch(
+                hosts=[opensearch_host],
+            )
 
-        save_chat_message(
-            open_search_client,
-            search_text,
-            result_answer,
-            conversation_title.strip('"'),
-            documents,
-            chat_id,
-            user_id,
-            timestamp,
-            chat_sequence_number,
-        )
+            save_chat_message(
+                open_search_client,
+                search_text,
+                result_answer,
+                conversation_title.strip('"'),
+                documents,
+                chat_id,
+                user_id,
+                timestamp,
+                chat_sequence_number,
+            )
 
         yield json.dumps({"chunk": "", "type": "END"})
