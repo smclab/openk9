@@ -11,7 +11,7 @@ from logging.config import dictConfig
 
 from rest_api.data_extraction import DataExtraction
 from rest_api.util.log_config import LogConfig
-from rest_api.util.base_model import RequestModel
+from rest_api.util.base_model import RequestModel, AuthModel
 
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("rest_api_logger")
@@ -21,9 +21,7 @@ app = FastAPI()
 
 class RestApiRequest(BaseModel):
 	requestList: List[RequestModel]
-	doAuth: bool = False
-	username: Optional[str] = None
-	password: Optional[str] = None
+	auth = Optional[AuthModel] = None
 	timestamp: int
 	datasourceId: int
 	scheduleId: str
@@ -35,19 +33,13 @@ def get_data(request: RestApiRequest):
 	request = request.dict()
 
 	request_list = request['requestList']
-	do_auth = request['doAuth']
-	username = request['username']
-	password = request['password']
+	auth = request['auth']
 	timestamp = request['timestamp']
 	datasource_id = request['datasourceId']
 	schedule_id = request['scheduleId']
 	tenant_id = request['tenantId']
 
-	if do_auth and (not username or not password):
-		logger.error("Authentication set as required but missing username or password")
-		return "extraction aborted"
-
-	data_extraction = DataExtraction(request_list, do_auth, username, password, timestamp, datasource_id, schedule_id, tenant_id)
+	data_extraction = DataExtraction(request_list, auth, timestamp, datasource_id, schedule_id, tenant_id)
 
 	thread = threading.Thread(target=data_extraction.extract_recent)
 	thread.start()

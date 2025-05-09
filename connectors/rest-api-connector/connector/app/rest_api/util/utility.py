@@ -1,3 +1,9 @@
+import base64
+import json
+import xmltodict
+import yaml
+import csv
+
 import requests
 import logging
 from logging.config import dictConfig
@@ -51,4 +57,40 @@ def format_raw_content(model):
 
     return raw_content.replace('\t', ' ').replace("\n", " ").replace("\\", " ") \
         .replace("..", "").replace("__", "").replace(";", "").replace(",", "").lower().strip()
+
+
+def handle_response_content(response: requests.Response):
+    class ResponseContentTypes:
+        JSON = 'json'
+        XML = ['application/xml', 'text/xml']
+        TEXT_PLAIN = 'text/plain'
+        TEXT_HTML = 'text/html'
+        YAML = 'application/x-yaml'
+        CSV = 'text/csv'
+        BINARY = 'application/octet-stream'
+        IMAGE = 'image/'
+        PDF = 'application/pdf'
+
+        def handle_response_content(response: requests.Response):
+            content_type = response.headers['content-type']
+
+            if ResponseContentTypes.JSON in content_type:
+                return response.json()
+            elif content_type in ResponseContentTypes.XML:
+                return xmltodict.parse(response.content)
+            elif content_type == ResponseContentTypes.TEXT_PLAIN or content_type == ResponseContentTypes.TEXT_HTML:
+                return response.content
+            elif content_type == ResponseContentTypes.YAML:
+                return yaml.safe_load(response.content)
+            elif content_type == ResponseContentTypes.CSV:
+                csv_reader = csv.DictReader(response.content.splitlines(), delimiter=',')
+                return { [ row for row in csv_reader ] }
+            elif content_type == ResponseContentTypes.BINARY or content_type == ResponseContentTypes.PDF or ResponseContentTypes.IMAGE in content_type:
+                return base64.b64encode(response.content)
+            
+            raise NotImplementedError(f'Error parsing content-type: {content_type}')
+
+
+    return ResponseContentTypes.handle_response_content(response)
+
 
