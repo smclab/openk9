@@ -41,6 +41,7 @@ public class HttpPluginDriverClient {
 
 	public static final String HEALTH_PATH = "/health";
 	public static final String HTTP = "http://";
+	public static final String HTTPS = "https://";
 	public static final String SAMPLE_PATH = "/sample";
 	public static final String FORM_PATH = "/form";
 	public static final String INVOKE_PATH = "/invoke";
@@ -155,7 +156,7 @@ public class HttpPluginDriverClient {
 	}
 
 	private String createAbsUri(boolean isSecure, String baseUri, String path) {
-		var scheme = isSecure ? "https://" : "http://";
+		var scheme = isSecure ? HTTPS : HTTP;
 		try {
 			return new URI(scheme + normalize(baseUri) + "/" + normalize(path)).toString();
 		}
