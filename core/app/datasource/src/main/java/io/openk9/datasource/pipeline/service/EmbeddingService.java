@@ -75,7 +75,7 @@ public class EmbeddingService {
 		return EventBusInstanceHolder.getEventBus()
 			.request(
 				GET_EMBEDDING_CHUNKS_CONFIGURATION,
-				new GetEmbeddingChunkRequest(tenantId, scheduleId)
+				new GetConfigurationRequest(tenantId, scheduleId)
 			)
 			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
 			.flatMap(message -> {
@@ -263,54 +263,55 @@ public class EmbeddingService {
 
 	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
 	Uni<EmbeddingChunksRequest> getEmbeddingChunksConfigurations(
-		GetEmbeddingChunkRequest request) {
+		GetConfigurationRequest configurationRequest) {
 
 		return QuarkusCacheUtil.getAsync(
 			cache,
-			new CompositeCacheKey(request),
-			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-					getEmbeddingModel(s, request.tenantId())
-					.onItem().ifNull().failWith(ConfigurationNotFound::new)
+			new CompositeCacheKey(configurationRequest),
+			sessionFactory.withTransaction(
+					configurationRequest.tenantId(),
+					(s, t) -> getEmbeddingModel(s, configurationRequest.tenantId())
+						.onItem().ifNull().failWith(ConfigurationNotFound::new)
 						.flatMap(embeddingModel -> s.createNamedQuery(
-							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-						.setPlan(s.getEntityGraph(
-							Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
-						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId())
-						.getSingleResultOrNull()
-						.map(scheduler -> {
+								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+							.setPlan(s.getEntityGraph(
+								Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
+							.setParameter(
+								Scheduler_.SCHEDULE_ID, configurationRequest.scheduleId())
+							.getSingleResultOrNull()
+							.map(scheduler -> {
+								var embeddingModelUrl = embeddingModel.getApiUrl();
 
+								EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
+									mapToEmbeddingModelRequest(embeddingModel);
 
-							var embeddingModelUrl = embeddingModel.getApiUrl();
+								var dataIndex = scheduler.getDataIndex();
 
-							EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
-								mapToEmbeddingModelRequest(embeddingModel);
+								// chunk strategy and configurations
+								var chunkJsonConfig = dataIndex.getEmbeddingJsonConfig();
+								var chunkType = dataIndex.getChunkType();
+								var chunkWindowSize = dataIndex.getChunkWindowSize();
 
-							var dataIndex = scheduler.getDataIndex();
+								var requestChunk = EmbeddingOuterClass.RequestChunk.newBuilder()
+									.setType(chunkType)
+									.setJsonConfig(StructUtils.fromJson(chunkJsonConfig))
+									.build();
 
-							// chunk strategy and configurations
-							var chunkJsonConfig = dataIndex.getEmbeddingJsonConfig();
-							var chunkType = dataIndex.getChunkType();
-							var chunkWindowSize = dataIndex.getChunkWindowSize();
-
-							var requestChunk = EmbeddingOuterClass.RequestChunk.newBuilder()
-								.setType(chunkType)
-								.setJsonConfig(StructUtils.fromJson(chunkJsonConfig))
-								.build();
-
-							return new EmbeddingChunksRequest(
-								embeddingModelUrl,
-								dataIndex.getEmbeddingDocTypeField(),
-								chunkWindowSize,
-								embeddingModelRequest,
-								requestChunk
-							);
-						})
-					))
+								return new EmbeddingChunksRequest(
+									embeddingModelUrl,
+									dataIndex.getEmbeddingDocTypeField(),
+									chunkWindowSize,
+									embeddingModelRequest,
+									requestChunk
+								);
+							})
+						)
+				)
 				.onFailure(EmbeddingServiceException.class)
 				.invoke(throwable -> log.warnf(
 						throwable,
 						"Embedding service is not configured for tenantId: %s",
-						request.tenantId()
+					configurationRequest.tenantId()
 					)
 				)
 				.onFailure()
@@ -363,18 +364,15 @@ public class EmbeddingService {
 	private Uni<EmbeddingModel> getEmbeddingModel(
 		Mutiny.Session session, String tenantId) {
 
-		return cache.getAsync(
-			new CompositeCacheKey(tenantId),
-			key -> embeddingModelService.fetchCurrent(session)
-				.onFailure()
-				.invoke(throwable ->
-					log.warnf(
-						throwable,
-						"Cannot fetch current embedding model for tenantId %s",
-						tenantId
-					)
+		return embeddingModelService.fetchCurrent(session)
+			.onFailure()
+			.invoke(throwable ->
+				log.warnf(
+					throwable,
+					"Cannot fetch current embedding model for tenantId %s",
+					tenantId
 				)
-		);
+			);
 	}
 
 	public record EmbeddedText(
@@ -389,7 +387,7 @@ public class EmbeddingService {
 		EmbeddingOuterClass.RequestChunk requestChunk
 	) {}
 
-	private record GetEmbeddingChunkRequest(String tenantId, String scheduleId) {}
+	private record GetConfigurationRequest(String tenantId, String scheduleId) {}
 
 
 }
