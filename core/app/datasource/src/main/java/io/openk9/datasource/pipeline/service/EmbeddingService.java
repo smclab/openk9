@@ -353,24 +353,19 @@ public class EmbeddingService {
 	}
 
 	private Uni<EmbeddingModel> getEmbeddingModel(String tenantId) {
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(tenantId),
-			sessionFactory.withTransaction(
-				tenantId,
-				(s, t) -> getEmbeddingModel(s, tenantId)
-			)
+			key -> sessionFactory.withTransaction(
+				tenantId, (s, t) -> getEmbeddingModel(s, tenantId))
 		);
 	}
 
 	private Uni<EmbeddingModel> getEmbeddingModel(
-		Mutiny.Session session,
-		String tenantId) {
+		Mutiny.Session session, String tenantId) {
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(tenantId),
-			embeddingModelService.fetchCurrent(session)
+			key -> embeddingModelService.fetchCurrent(session)
 				.onFailure()
 				.invoke(throwable ->
 					log.warnf(
@@ -379,10 +374,7 @@ public class EmbeddingService {
 						tenantId
 					)
 				)
-				.onFailure()
-				.recoverWithNull()
 		);
-
 	}
 
 	public record EmbeddedText(
