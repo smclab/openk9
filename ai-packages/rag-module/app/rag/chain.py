@@ -335,12 +335,12 @@ def get_chat_chain_tool(
 
             chat_history = get_chat_history_from_frontend(chat_history)
 
-            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {{question}}. Here is the chat history: {history} to use ONLY when explicitly relevant to the current question. Use Italian language only to answer.[/INST]"
+            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {question}. Here is the chat history: {history} to use ONLY when explicitly relevant to the current question. Use Italian language only to answer.[/INST]"
             prompt = ChatPromptTemplate.from_template(prompt_template)
             chain = prompt | llm | parser
             result = chain.stream({"question": search_text, "history": chat_history})
         else:
-            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {{question}}. Use Italian language only to answer.[/INST]"
+            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {question}. Use Italian language only to answer.[/INST]"
             prompt = ChatPromptTemplate.from_template(prompt_template)
             chain = prompt | llm | parser
             result = chain.stream({"question": search_text})
