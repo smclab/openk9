@@ -68,24 +68,9 @@ app = FastAPI(
     title="OpenK9 RAG API",
     description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
     version="3.0.0-SNAPSHOT",
-    openapi_tags=[
-        {
-            "name": "RAG",
-            "description": "Endpoints for Retrieval-Augmented Generation operations",
-        },
-        {
-            "name": "Chat",
-            "description": "Endpoints for fetch chat history",
-        },
-    ],
-    contact={
-        "name": "OpenK9 Support",
-        "email": "dev@openk9.io",
-    },
-    license_info={
-        "name": "GNU Affero General Public License v3.0",
-        "url": "https://github.com/smclab/openk9/blob/main/LICENSE",
-    },
+    openapi_tags=openapi.OPENAPI_TAGS,
+    contact=openapi.CONTACT,
+    license_info=openapi.LICENSE_INFO,
     lifespan=lifespan,
 )
 

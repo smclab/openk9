@@ -1,6 +1,27 @@
 from fastapi import status
 
 
+OPENAPI_TAGS = [
+    {
+        "name": "RAG",
+        "description": "Endpoints for Retrieval-Augmented Generation operations",
+    },
+    {
+        "name": "Chat",
+        "description": "Endpoints for fetch chat history",
+    },
+]
+
+CONTACT = {
+    "name": "OpenK9 Support",
+    "email": "dev@openk9.io",
+}
+
+LICENSE_INFO = {
+    "name": "GNU Affero General Public License v3.0",
+    "url": "https://github.com/smclab/openk9/blob/main/LICENSE",
+}
+
 API_RAG_GENERATE_RESPONSES = {
     status.HTTP_401_UNAUTHORIZED: {
         "description": "Unauthorized - Invalid token.",
