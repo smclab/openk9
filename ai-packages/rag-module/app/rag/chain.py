@@ -11,7 +11,7 @@ from app.external_services.grpc.grpc_client import (
     get_rag_configuration,
 )
 from app.rag.retriever import OpenSearchRetriever
-from app.utils.chat_history import save_chat_message
+from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
 from app.utils.llm import (
     generate_conversation_title,
     initialize_language_model,
@@ -247,7 +247,6 @@ def get_chat_chain_tool(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
     rag_tool_description = rag_configuration.get("rag_tool_description")
-    prompt_no_rag = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. ### QUESTION: {question} [/INST]"
 
     llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
@@ -275,7 +274,6 @@ def get_chat_chain_tool(
         "retrieve_type": retrieve_type,
         "metadata": metadata,
         "rag_tool_description": rag_tool_description,
-        "prompt_no_rag": prompt_no_rag,
         "watsonx_project_id": watsonx_project_id,
         "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
         "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
@@ -313,12 +311,40 @@ def get_chat_chain_tool(
         )
 
     else:
-        prompt_template = prompt_no_rag
-        prompt = ChatPromptTemplate.from_template(prompt_template)
-        parser = StrOutputParser()
-        chain = prompt | llm | parser
+        rephrase_prompt_template = """\
+        Given this chat history: {history}, and the user's latest question: {question} \
+        (which may contain contextual references), reformulate the question into a \
+        standalone version that requires NO chat history to understand. \
 
-        result = chain.stream({"question": search_text})
+        Rules:
+        1. Always output in Italian
+        2. Never include answers/solutions
+        3. Only modify the question if context-dependent references exist
+        4. Preserve the original question's intent and wording where possible
+
+        Result must be a clear, self-contained Italian question.\
+        """
+
+        parser = StrOutputParser()
+
+        if reformulate and chat_history:
+            rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+            rephrase_chain = rephrase_prompt | llm | parser
+            search_text = rephrase_chain.invoke(
+                {"question": search_text, "history": chat_history},
+            )
+
+            chat_history = get_chat_history_from_frontend(chat_history)
+
+            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {{question}}. Here is the chat history: {history} to use ONLY when explicitly relevant to the current question. Use Italian language only to answer.[/INST]"
+            prompt = ChatPromptTemplate.from_template(prompt_template)
+            chain = prompt | llm | parser
+            result = chain.stream({"question": search_text, "history": chat_history})
+        else:
+            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {{question}}. Use Italian language only to answer.[/INST]"
+            prompt = ChatPromptTemplate.from_template(prompt_template)
+            chain = prompt | llm | parser
+            result = chain.stream({"question": search_text})
 
         result_answer = ""
         documents = []
