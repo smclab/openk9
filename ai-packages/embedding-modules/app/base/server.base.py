@@ -10,6 +10,7 @@ import embedding_pb2
 import embedding_pb2_grpc
 import grpc
 from derived_text_splitter import DerivedTextSplitter
+from dotenv import load_dotenv
 from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
@@ -23,14 +24,21 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from text_cleaner import clean_text
 
+load_dotenv()
+
+LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(LOGGING_LEVEL)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler = TimedRotatingFileHandler(
+file_handler = TimedRotatingFileHandler(
     "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
 )
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+file_handler.setFormatter(formatter)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 # default text splitters parameters
 DEFAULT_CHUNK_SIZE = 100
