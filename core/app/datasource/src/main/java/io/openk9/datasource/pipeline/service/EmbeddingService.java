@@ -32,7 +32,6 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.service.EmbeddingModelService;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.jayway.jsonpath.Configuration;
@@ -265,10 +264,9 @@ public class EmbeddingService {
 	Uni<EmbeddingChunksRequest> getEmbeddingChunksConfigurations(
 		GetConfigurationRequest configurationRequest) {
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(configurationRequest),
-			sessionFactory.withTransaction(
+			key -> sessionFactory.withTransaction(
 					configurationRequest.tenantId(),
 					(s, t) -> getEmbeddingModel(s, configurationRequest.tenantId())
 						.onItem().ifNull().failWith(ConfigurationNotFound::new)

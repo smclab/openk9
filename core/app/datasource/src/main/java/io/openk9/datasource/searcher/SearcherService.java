@@ -55,9 +55,7 @@ import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
@@ -135,9 +133,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	RestHighLevelClient client;
-
-	@Inject
-	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	GrammarProvider grammarProvider;
@@ -808,10 +803,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 
-			return QuarkusCacheUtil.getAsync(
-					cache,
+			return cache.getAsync(
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
-					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+					key -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
 				.flatMap(tenantWithBucket -> {
 
@@ -898,13 +892,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return QuarkusCacheUtil.getAsync(
-					cache,
+			return cache.getAsync(
 					new CompositeCacheKey(
 						request.getVirtualHost(),
 						"getTenantAndFetchRelations",
 						request.getSuggestionCategoryId()),
-					getTenantAndFetchRelations(
+					key -> getTenantAndFetchRelations(
 						request.getVirtualHost(), true, request.getSuggestionCategoryId())
 				)
 				.flatMap(tenantWithBucket -> {

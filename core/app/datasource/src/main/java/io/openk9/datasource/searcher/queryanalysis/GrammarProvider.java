@@ -31,7 +31,6 @@ import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
@@ -99,10 +98,9 @@ public class GrammarProvider {
 	AnnotatorFactory annotatorFactory;
 
 	private Uni<TenantWithBucket> getTenantWithBucket(String virtualHost) {
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(virtualHost, "grammarProvider", "getTenantWithBucket"),
-			tenantRegistry
+			key -> tenantRegistry
 				.getTenantByVirtualHost(virtualHost)
 				.flatMap(tenant -> sessionFactory
 					.withTransaction(
