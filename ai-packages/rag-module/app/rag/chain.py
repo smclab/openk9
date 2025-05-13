@@ -311,23 +311,22 @@ def get_chat_chain_tool(
         )
 
     else:
-        rephrase_prompt_template = """\
-        Given this chat history: {history}, and the user's latest question: {question} \
-        (which may contain contextual references), reformulate the question into a \
-        standalone version that requires NO chat history to understand. \
-
-        Rules:
-        1. Always output in Italian
-        2. Never include answers/solutions
-        3. Only modify the question if context-dependent references exist
-        4. Preserve the original question's intent and wording where possible
-
-        Result must be a clear, self-contained Italian question.\
-        """
-
         parser = StrOutputParser()
 
         if reformulate and chat_history:
+            rephrase_prompt_template = """\
+                    Given this chat history: {history}, and the user's latest question: {question} \
+                    (which may contain contextual references), reformulate the question into a \
+                    standalone version that requires NO chat history to understand. \
+
+                    Rules:
+                    1. Always output in Italian
+                    2. Never include answers/solutions
+                    3. Only modify the question if context-dependent references exist
+                    4. Preserve the original question's intent and wording where possible
+
+                    Result must be a clear, self-contained Italian question.\
+                    """
             rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
             rephrase_chain = rephrase_prompt | llm | parser
             search_text = rephrase_chain.invoke(
