@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.plugindriver;
 
+import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
@@ -32,7 +33,8 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import org.jboss.logging.Logger;
 
-import java.util.Objects;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @ApplicationScoped
 public class HttpPluginDriverClient {
@@ -153,11 +155,17 @@ public class HttpPluginDriverClient {
 	}
 
 	private String createAbsUri(boolean isSecure, String baseUri, String path) {
-		return new StringBuilder()
-			.append(isSecure ? "https://" : "http://")
-			.append(Objects.requireNonNullElse(baseUri, ""))
-			.append(Objects.requireNonNullElse(path, ""))
-			.toString();
+		var scheme = isSecure ? "https://" : "http://";
+		try {
+			return new URI(scheme + normalize(baseUri) + "/" + normalize(path)).toString();
+		}
+		catch (URISyntaxException e) {
+			throw new InvalidUriException(e);
+		}
+	}
+
+	private String normalize(String string) {
+		return string == null ? "" : string.replaceAll("^/+", "").replaceAll("/+$", "");
 	}
 
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
