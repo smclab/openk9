@@ -29,11 +29,14 @@ import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
 @ApplicationScoped
 public class KnnQueryParser implements QueryParser {
+
+	private static final Logger log = Logger.getLogger(KnnQueryParser.class);
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -74,13 +77,16 @@ public class KnnQueryParser implements QueryParser {
 		return Uni.join().all(knnQueryUnis)
 			.usingConcurrencyOf(1)
 			.andCollectFailures()
-			.invoke(knnQueries -> {
+			.onItemOrFailure()
+			.invoke((knnQueries, throwable) -> {
+				if (throwable != null) {
+					log.warn("Error during knnQuery parsing.", throwable);
+				}
 
 				for (Query knnQuery : knnQueries) {
 
 					addKnnQuery(parserContext, knnQuery);
 				}
-
 			})
 			.replaceWithVoid();
 	}
