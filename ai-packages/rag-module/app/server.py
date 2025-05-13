@@ -27,6 +27,7 @@ GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
 CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 00 * * *")
+ARIZE_PHOENIX_ENABLED = bool(os.getenv("ARIZE_PHOENIX_ENABLED", False))
 ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
 ARIZE_PHOENIX_ENDPOINT = os.getenv(
     "ARIZE_PHOENIX_ENDPOINT", "http://127.0.0.1:6006/v1/traces"
@@ -35,11 +36,12 @@ OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
 
-tracer_provider = register(
-    project_name=ARIZE_PHOENIX_PROJECT_NAME,
-    endpoint=ARIZE_PHOENIX_ENDPOINT,
-    auto_instrument=True,
-)
+if ARIZE_PHOENIX_ENABLED:
+    tracer_provider = register(
+        project_name=ARIZE_PHOENIX_PROJECT_NAME,
+        endpoint=ARIZE_PHOENIX_ENDPOINT,
+        auto_instrument=True,
+    )
 
 
 @asynccontextmanager
