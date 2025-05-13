@@ -44,7 +44,8 @@ public class GrammarProvider {
 	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
 
 		return getTenantWithBucket(virtualHost)
-			.map(tenantWithBucket -> {
+			.onItem().ifNull().fail()
+			.onItem().ifNotNull().transform(tenantWithBucket -> {
 
 				var bucket = tenantWithBucket.getBucket();
 				var tenantId = tenantWithBucket.getTenant().schemaName();
@@ -109,6 +110,8 @@ public class GrammarProvider {
 							.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
 							.getSingleResult()
 							.map(bucket -> new TenantWithBucket(tenant, bucket))
+							.onFailure()
+							.recoverWithNull()
 					)
 				)
 		);
