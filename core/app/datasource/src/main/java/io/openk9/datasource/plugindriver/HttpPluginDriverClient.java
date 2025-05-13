@@ -166,7 +166,18 @@ public class HttpPluginDriverClient {
 	}
 
 	private String normalize(String string) {
-		return string == null ? "" : string.replaceAll("^/+", "").replaceAll("/+$", "");
+		if (string == null) {
+			return "";
+		}
+
+		if (string.startsWith("/")) {
+			string = string.substring(1);
+		}
+		if (string.endsWith("/")) {
+			string = string.substring(0, string.length() - 1);
+		}
+
+		return string;
 	}
 
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
