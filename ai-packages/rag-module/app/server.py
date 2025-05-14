@@ -10,9 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from opensearchpy import OpenSearch
 from phoenix.otel import register
-from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
+from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
@@ -88,74 +88,6 @@ async def redirect_root_to_docs():
     return RedirectResponse("/docs")
 
 
-class SearchToken(BaseModel):
-    """
-    SearchToken class model.
-    """
-
-    tokenType: str = Field(..., description="Type of the search token")
-    keywordKey: Optional[str] = Field(
-        "", description="Keyword key for the token", example=""
-    )
-    values: list[str] = Field(..., description="List of values for the token")
-    filter: Optional[bool] = Field(
-        False, description="Whether this token is used for filtering", example=False
-    )
-    entityType: Optional[str] = Field(
-        "", description="Type of entity for the token", example=""
-    )
-    entityName: Optional[str] = Field(
-        "", description="Name of the entity for the token", example=""
-    )
-    extra: Optional[dict[str, str]] = Field(
-        {}, description="Additional metadata for the token", example={}
-    )
-
-
-class SearchQuery(BaseModel):
-    """Represents a search query with various parameters for filtering, sorting, and pagination."""
-
-    searchQuery: list[SearchToken] = Field(..., description="List of search tokens")
-    range: list = Field(
-        ...,
-        description="Range filter as [start, end]",
-        example=[0, 5],
-    )
-    afterKey: Optional[str] = Field(
-        None, description="Pagination key for subsequent requests", example="page_2"
-    )
-    suggestKeyword: Optional[str] = Field(
-        None,
-        description="Partial keyword for suggestion autocomplete",
-        example="OpenK9",
-    )
-    suggestionCategoryId: Optional[int] = Field(
-        None, description="Category ID to filter suggestions", example=1
-    )
-    extra: Optional[dict[str, list]] = Field(
-        default_factory=dict,
-        description="Additional filter parameters",
-        example={"filter": ["example"]},
-    )
-    sort: Optional[list] = Field(
-        None,
-        description="Sorting criteria with field:direction format",
-        example=["field1:asc"],
-    )
-    sortAfterKey: Optional[str] = Field(
-        None, description="Pagination key for sorted results", example="sort-key"
-    )
-    language: Optional[str] = Field(
-        None, description="Language code for localized results", example="it_IT"
-    )
-    searchText: str = Field(
-        ..., description="Primary search text input", example="What is OpenK9?"
-    )
-    reformulate: Optional[bool] = Field(
-        True, description="Enable query reformulation", example=True
-    )
-
-
 @app.post(
     "/api/rag/generate",
     tags=["RAG"],
@@ -167,7 +99,7 @@ class SearchQuery(BaseModel):
     openapi_extra=openapi.API_RAG_GENERATE_OPENAPI_EXTRA,
 )
 async def rag_generate(
-    search_query_request: SearchQuery,
+    search_query_request: models.SearchQuery,
     request: Request,
     authorization: Optional[str] = Header(
         None,
@@ -222,85 +154,6 @@ async def rag_generate(
     return EventSourceResponse(chain)
 
 
-class SearchQueryChat(BaseModel):
-    """SearchQueryChat class model."""
-
-    chatId: Optional[str] = Field(
-        None,
-        description="Unique identifier for chat session",
-        example="chat_abc123def456",
-    )
-    range: Optional[list] = Field(
-        [0, 5],
-        description="Result window range as [offset, limit]",
-        example=[0, 5],
-    )
-    afterKey: Optional[str] = Field(
-        None, description="Pagination key for subsequent requests", example="page_2"
-    )
-    suggestKeyword: Optional[str] = Field(
-        None,
-        description="Partial keyword for suggestion autocomplete",
-        example="OpenK9",
-    )
-    suggestionCategoryId: Optional[int] = Field(
-        None, description="Category ID to filter suggestions", example=1
-    )
-    extra: Optional[dict[str, list]] = Field(
-        default_factory=dict,
-        description="Additional filter parameters",
-        example={"filter": ["example"]},
-    )
-    sort: Optional[list] = Field(
-        None,
-        description="Sorting criteria with field:direction format",
-        example=["field1:asc"],
-    )
-    sortAfterKey: Optional[str] = Field(
-        None, description="Pagination key for sorted results", example="sort-key"
-    )
-    language: Optional[str] = Field(
-        None, description="Language code for localized results", example="it_IT"
-    )
-    searchText: str = Field(
-        ..., description="Primary search text input", example="What is OpenK9?"
-    )
-    chatHistory: Optional[list] = Field(
-        None,
-        description="Previous chat messages in conversation",
-        example=[
-            {
-                "question": "Che cos’è la garanzia Infortuni del Conducente?",
-                "answer": "La garanzia Infortuni del Conducente è una garanzia accessoria offerta da AXA che protegge il conducente in caso di invalidità permanente o, nei casi più gravi, indennizza gli eredi in caso di morte mentre si guida il veicolo assicurato. Inoltre, l'estensione della garanzia copre anche le spese mediche sostenute a seguito di un infortunio.",
-                "title": "Spiegazione della Garanzia Infortuni del Conducente di AXA",
-                "sources": [
-                    {
-                        "title": "Assicurazione Infortuni Conducente | AXA",
-                        "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                        "source": "local",
-                        "citations": [],
-                    },
-                    {
-                        "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
-                        "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                        "source": "local",
-                        "citations": [],
-                    },
-                ],
-                "chat_id": "1740389549494",
-                "timestamp": "1740389552570",
-                "chat_sequence_number": 1,
-            },
-        ],
-    )
-    timestamp: str = Field(
-        ..., description="Timestamp of request", example="1740389552570"
-    )
-    chatSequenceNumber: int = Field(
-        ..., description="Incremental conversation turn number", example=3
-    )
-
-
 @app.post(
     "/api/rag/chat",
     tags=["RAG"],
@@ -311,7 +164,7 @@ class SearchQueryChat(BaseModel):
     openapi_extra=openapi.API_RAG_CHAT_OPENAPI_EXTRA,
 )
 async def rag_chat(
-    search_query_chat: SearchQueryChat,
+    search_query_chat: models.SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(
         None,
@@ -392,7 +245,7 @@ async def rag_chat(
     openapi_extra=openapi.API_RAG_CHAT_TOOL_OPENAPI_EXTRA,
 )
 async def rag_chat(
-    search_query_chat: SearchQueryChat,
+    search_query_chat: models.SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(
         None,
@@ -457,16 +310,6 @@ async def rag_chat(
     return EventSourceResponse(chain)
 
 
-class UserChats(BaseModel):
-    """Model for retrieving user chat history."""
-
-    chatSequenceNumber: int = Field(
-        1, description="Incremental conversation turn number", example=1
-    )
-    paginationFrom: int = Field(0, description="Pagination start index", example=0)
-    paginationSize: int = Field(10, description="Number of items per page", example=10)
-
-
 @app.post(
     "/api/rag/user-chats",
     tags=["Chat"],
@@ -476,7 +319,7 @@ class UserChats(BaseModel):
     openapi_extra=openapi.API_RAG_USER_CHATS_OPENAPI_EXTRA,
 )
 async def get_user_chats(
-    user_chats: UserChats,
+    user_chats: models.UserChats,
     request: Request,
     authorization: str = Header(
         ...,
@@ -652,23 +495,6 @@ async def delete_chat(
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-class ChatMessage(BaseModel):
-    """
-    Represents the payload for updating a chat conversation title.
-
-    Attributes:
-        newTitle: The new title to assign to the chat conversation
-    """
-
-    newTitle: str = Field(
-        ...,
-        min_length=1,
-        max_length=100,
-        description="New title for the chat conversation",
-        example="Project Discussion",
-    )
-
-
 @app.patch(
     "/api/rag/chat/{chat_id}",
     tags=["Chat"],
@@ -678,7 +504,7 @@ class ChatMessage(BaseModel):
 )
 async def rename_chat(
     chat_id: str,
-    chat_message: ChatMessage,
+    chat_message: models.ChatMessage,
     request: Request,
     authorization: str = Header(
         ...,
