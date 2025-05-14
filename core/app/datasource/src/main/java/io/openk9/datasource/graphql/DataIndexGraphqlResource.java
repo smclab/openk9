@@ -42,6 +42,7 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
+import org.jboss.logging.Logger;
 
 import java.util.Set;
 
@@ -49,6 +50,8 @@ import java.util.Set;
 @ApplicationScoped
 @CircuitBreaker
 public class DataIndexGraphqlResource {
+
+	private static final Logger log = Logger.getLogger(DataIndexGraphqlResource.class);
 
 	@Inject
 	DataIndexService dataIndexService;
@@ -109,7 +112,15 @@ public class DataIndexGraphqlResource {
 	}
 
 	public Uni<CatResponse> getCat(@Source DataIndex dataIndex){
-		return dataIndexService.catIndex(dataIndex.getId());
+		return dataIndexService.catIndex(dataIndex.getId())
+			.onItem()
+			.invoke(catResponse ->
+				log.debug(String.format("CatResponse: %s", catResponse.toString()))
+			)
+			.onFailure().call(th -> {
+				log.errorf(th, "Error fetching cat for DataIndex %d", dataIndex.getId());
+				return Uni.createFrom().failure(th);
+			});
 	}
 
 	@Query
