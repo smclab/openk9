@@ -24,6 +24,7 @@ import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
 
@@ -52,9 +53,11 @@ public class DataIndexGraphqlTest {
 	private static final String KNN_INDEX = "knnIndex";
 	private static final String NAME = "name";
 	private static final String NODE = "node";
-	private static final String RESPONSE = "response";
+	private static final String RESPONSE = "response: %s";
 	private static final String STATUS = "status";
 	private static final String TENANT_ID = "public";
+
+	private static final Logger log = Logger.getLogger(DataIndexGraphqlTest.class);
 
 	@Inject
 	DatasourceService datasourceService;
@@ -92,8 +95,7 @@ public class DataIndexGraphqlTest {
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println(RESPONSE);
-		System.out.println(response);
+		log.info(String.format(RESPONSE, response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -137,8 +139,7 @@ public class DataIndexGraphqlTest {
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println(RESPONSE);
-		System.out.println(response);
+		log.info(String.format(RESPONSE, response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -186,8 +187,7 @@ public class DataIndexGraphqlTest {
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println(RESPONSE);
-		System.out.println(response);
+		log.info(String.format(RESPONSE, response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -240,8 +240,7 @@ public class DataIndexGraphqlTest {
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println(RESPONSE);
-		System.out.println(response);
+		log.info(String.format(RESPONSE, response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
