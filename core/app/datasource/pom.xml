@@ -168,12 +168,10 @@
 	  <dependency>
 		  <groupId>io.quarkus</groupId>
 		  <artifactId>quarkus-reactive-pg-client</artifactId>
-		  <optional>true</optional>
 	  </dependency>
 	  <dependency>
 		  <groupId>io.quarkus</groupId>
 		  <artifactId>quarkus-reactive-oracle-client</artifactId>
-		  <optional>true</optional>
 	  </dependency>
 
     <dependency>
@@ -362,16 +360,6 @@
 					<goal>build</goal>
 					<goal>generate-code</goal>
 				</goals>
-				<configuration>
-					<properties>
-						<quarkus.package.jar.filter-optional-dependencies>
-							true
-						</quarkus.package.jar.filter-optional-dependencies>
-						<quarkus.package.jar.included-optional-dependencies>
-							io.quarkus:quarkus-reactive-pg-client::jar
-						</quarkus.package.jar.included-optional-dependencies>
-					</properties>
-				</configuration>
 			</execution>
 			<execution>
 				<id>oracle</id>
@@ -383,14 +371,8 @@
 					<properties>
 						<quarkus.profile>prod-oracle</quarkus.profile>
 						<quarkus.package.output-directory>
-							oracle-quarkus-app
+							quarkus-app-oracle
 						</quarkus.package.output-directory>
-						<quarkus.package.jar.filter-optional-dependencies>
-							true
-						</quarkus.package.jar.filter-optional-dependencies>
-						<quarkus.package.jar.included-optional-dependencies>
-							io.quarkus:quarkus-reactive-oracle-client::jar
-						</quarkus.package.jar.included-optional-dependencies>
 						<quarkus.container-image.name>
 							openk9-datasource-oracle
 						</quarkus.container-image.name>
