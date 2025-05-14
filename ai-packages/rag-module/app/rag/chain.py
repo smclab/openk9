@@ -280,6 +280,27 @@ def get_chat_chain_tool(
     }
 
     llm = initialize_language_model(configuration)
+    parser = StrOutputParser()
+
+    if reformulate and chat_history:
+        rephrase_prompt_template = """\
+                Given this chat history: {history}, and the user's latest question: {question} \
+                (which may contain contextual references), reformulate the question into a \
+                standalone version that requires NO chat history to understand. \
+
+                Rules:
+                1. Always output in Italian
+                2. Never include answers/solutions
+                3. Only modify the question if context-dependent references exist
+                4. Preserve the original question's intent and wording where possible
+
+                Result must be a clear, self-contained Italian question.\
+                """
+        rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+        rephrase_chain = rephrase_prompt | llm | parser
+        search_text = rephrase_chain.invoke(
+            {"question": search_text, "history": chat_history},
+        )
 
     rag_tool.description = rag_tool_description
     tools = [rag_tool]
@@ -311,39 +332,23 @@ def get_chat_chain_tool(
         )
 
     else:
-        parser = StrOutputParser()
+        prompt_template = (
+            "### [INST] Instruction: Answer the question based on your knowledge. "
+            "### QUESTION: {question}. Here is the chat history: {history} "
+            "to use ONLY when explicitly relevant to the current question. "
+            "Use Italian language only to answer.[/INST]"
+            if chat_history
+            else "### [INST] Instruction: Answer the question based on your knowledge. "
+            "### QUESTION: {question}. Use Italian language only to answer.[/INST]"
+        )
 
-        if reformulate and chat_history:
-            rephrase_prompt_template = """\
-                    Given this chat history: {history}, and the user's latest question: {question} \
-                    (which may contain contextual references), reformulate the question into a \
-                    standalone version that requires NO chat history to understand. \
+        prompt = ChatPromptTemplate.from_template(prompt_template)
+        input_data = {"question": search_text}
+        if chat_history:
+            input_data["history"] = get_chat_history_from_frontend(chat_history)
 
-                    Rules:
-                    1. Always output in Italian
-                    2. Never include answers/solutions
-                    3. Only modify the question if context-dependent references exist
-                    4. Preserve the original question's intent and wording where possible
-
-                    Result must be a clear, self-contained Italian question.\
-                    """
-            rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
-            rephrase_chain = rephrase_prompt | llm | parser
-            search_text = rephrase_chain.invoke(
-                {"question": search_text, "history": chat_history},
-            )
-
-            chat_history = get_chat_history_from_frontend(chat_history)
-
-            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {question}. Here is the chat history: {history} to use ONLY when explicitly relevant to the current question. Use Italian language only to answer.[/INST]"
-            prompt = ChatPromptTemplate.from_template(prompt_template)
-            chain = prompt | llm | parser
-            result = chain.stream({"question": search_text, "history": chat_history})
-        else:
-            prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. ### QUESTION: {question}. Use Italian language only to answer.[/INST]"
-            prompt = ChatPromptTemplate.from_template(prompt_template)
-            chain = prompt | llm | parser
-            result = chain.stream({"question": search_text})
+        chain = prompt | llm | parser
+        result = chain.stream(input_data)
 
         result_answer = ""
         documents = []
