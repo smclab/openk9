@@ -207,7 +207,7 @@
 				  </goals>
 				  <configuration>
 					  <properties>
-						  <quarkus.profile>prod-oracle</quarkus.profile>
+						  <quarkus.profile>prod,prod-oracle</quarkus.profile>
 						  <quarkus.package.output-directory>
 							  quarkus-app-oracle
 						  </quarkus.package.output-directory>
