@@ -109,7 +109,7 @@ export function DataSources() {
               label: "Trigger Scheduler",
               icon: "",
               onClick() {
-                triggerSchedulerMutation.mutate(dataSourceId);
+                triggerSchedulerMutation.mutate({ datasourceId: dataSourceId });
               },
             },
             {

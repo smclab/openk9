@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DatasourceJobStatus } from '../models/DatasourceJobStatus';
 import type { TriggerResourceRequest } from '../models/TriggerResourceRequest';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -12,12 +13,12 @@ export class TriggerResourceService {
 
     /**
      * @param requestBody 
-     * @returns number OK
+     * @returns DatasourceJobStatus OK
      * @throws ApiError
      */
     public postApiDatasourceV1Trigger(
 requestBody?: TriggerResourceRequest,
-): CancelablePromise<Array<number>> {
+): CancelablePromise<Array<DatasourceJobStatus>> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/v1/trigger',

@@ -15,12 +15,14 @@ export type DocTypeField = {
     numeric?: boolean;
     date?: boolean;
     boolean?: boolean;
+    i18N?: boolean;
     autocomplete?: boolean;
     defaultExclude?: boolean;
     defaultBoost?: boolean;
     searchableAndAutocomplete?: boolean;
     searchableAndDate?: boolean;
     searchableAndText?: boolean;
+    searchableAndI18N?: boolean;
     name?: string;
     description?: string;
     fieldName?: string;
@@ -30,6 +32,7 @@ export type DocTypeField = {
     fieldType?: FieldType;
     exclude?: boolean;
     jsonConfig?: string;
+    path?: string;
     children?: Array<DocTypeField>;
     docTypeFieldAndChildren?: Array<DocTypeField>;
 };

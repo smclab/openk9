@@ -10,4 +10,5 @@ export type DataIndex = {
     id?: number;
     name?: string;
     description?: string;
+    indexName?: string;
 };

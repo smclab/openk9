@@ -46,4 +46,5 @@ export enum FieldType {
     POINT = 'POINT',
     SHAPE = 'SHAPE',
     PERCOLATOR = 'PERCOLATOR',
+    I18N = 'I18N',
 }

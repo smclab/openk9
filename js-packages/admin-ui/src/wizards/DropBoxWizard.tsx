@@ -1,5 +1,14 @@
 import React from "react";
-import { BooleanInput, ContainerFluid, CronInput, CustomButtom, fromFieldValidators, NumberInput, TextInput, useForm } from "../components/Form";
+import {
+  BooleanInput,
+  ContainerFluid,
+  CronInput,
+  CustomButtom,
+  fromFieldValidators,
+  NumberInput,
+  TextInput,
+  useForm,
+} from "../components/Form";
 import { gql } from "@apollo/client";
 import { DataSourcesQuery } from "../components/DataSources";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +59,7 @@ export function DropBoxWizard() {
         bindPluginDriver(data.datasource.entity.id);
       }
       if (form.inputProps("reindex").value && data.datasource?.entity?.id) {
-        triggerSchedulerMutation.mutate(data.datasource.entity.id);
+        triggerSchedulerMutation.mutate({ datasourceId: data.datasource.entity.id });
       }
     },
   });

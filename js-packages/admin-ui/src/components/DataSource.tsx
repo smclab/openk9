@@ -31,7 +31,7 @@ import {
   useForm,
 } from "./Form";
 import { CodeInput } from "./CodeInput";
-import ClayForm from "@clayui/form";
+import ClayForm, { ClayToggle } from "@clayui/form";
 import ClayButton from "@clayui/button";
 import { DataSourcesQuery } from "./DataSources";
 import ClayToolbar from "@clayui/toolbar";
@@ -112,6 +112,7 @@ export function DataSource() {
   const navigate = useNavigate();
   const showToast = useToast();
   const [loading, setLoading] = React.useState(false);
+  const [startFromFirstReindex, setStartFromFirstReindex] = React.useState(false);
   const { observer: observerGenerate, onOpenChange: onOpenChangeGenerate, open: openGenerate } = useModal();
   const { observer: observerTrigger, onOpenChange: onOpenChangeTrigger, open: openTrigger } = useModal();
   const { observer: observerReindex, onOpenChange: onOpenChangeReindex, open: openReindex } = useModal();
@@ -205,12 +206,20 @@ export function DataSource() {
           labelContinue={"yes"}
           labelCancel={"cancel"}
           actionContinue={() => {
-            triggerSchedulerMutation.mutate(datasourceId);
+            triggerSchedulerMutation.mutate({ datasourceId, startFromFirst: startFromFirstReindex });
             onOpenChangeTrigger(false);
           }}
           actionCancel={() => {
             onOpenChangeTrigger(false);
           }}
+          content={
+            <div>
+              <ClayForm.Group style={{ marginBottom: "0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <label htmlFor="startFromFirstReindexToggle">Trigger from beginning</label>
+                <ClayToggle id="startFromFirstReindexToggle" toggled={startFromFirstReindex} onToggle={setStartFromFirstReindex} />
+              </ClayForm.Group>
+            </div>
+          }
           description="Are you sure you want to trigger it?"
         />
       )}
@@ -504,8 +513,11 @@ export function useTriggerSchedulerMutation() {
   const restClient = useRestClient();
   const showToast = useToast();
   return useMutation(
-    async (datasourceId: string) => {
-      await restClient.triggerResource.postApiDatasourceV1Trigger({ datasourceIds: [Number(datasourceId)] });
+    async ({ datasourceId, startFromFirst }: { datasourceId: string; startFromFirst?: boolean }) => {
+      await restClient.triggerResource.postApiDatasourceV1Trigger({
+        datasourceIds: [Number(datasourceId)],
+        startFromFirst,
+      });
     },
     {
       onSuccess(data, variables, context) {

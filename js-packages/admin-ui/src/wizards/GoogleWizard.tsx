@@ -20,7 +20,7 @@ export function GoogleWizard() {
         bindPluginDriver(data.datasource.entity.id);
       }
       if (form.inputProps("reindex").value && data.datasource?.entity?.id) {
-        triggerSchedulerMutation.mutate(data.datasource.entity.id);
+        triggerSchedulerMutation.mutate({ datasourceId: data.datasource.entity.id });
       }
     },
   });

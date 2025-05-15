@@ -185,6 +185,27 @@ id: number,
     }
 
     /**
+     * @param id 
+     * @returns DataIndex OK
+     * @throws ApiError
+     */
+    public getApiDatasourceDatasourcesDataIndexOrphans(
+id: number,
+): CancelablePromise<Array<DataIndex>> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/datasource/datasources/{id}/data-index-orphans',
+            path: {
+                'id': id,
+            },
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
+        });
+    }
+
+    /**
      * @param dataIndexId 
      * @param id 
      * @returns DataIndex OK

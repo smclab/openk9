@@ -8,4 +8,5 @@ export type DatasourceDTO = {
     scheduling: string;
     schedulable: boolean;
     jsonConfig?: string;
+    reindexRate: number;
 };

@@ -4,4 +4,5 @@
 
 export type TriggerResourceRequest = {
     datasourceIds?: Array<number>;
+    startFromFirst?: boolean;
 };

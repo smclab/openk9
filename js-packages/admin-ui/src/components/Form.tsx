@@ -2173,9 +2173,18 @@ type PropsSimpleModal = {
   labelCancel?: string;
   actionContinue(): void;
   actionCancel(): void;
+  content?: React.ReactNode;
 };
 
-export function SimpleModal({ observer, labelContinue, labelCancel, actionContinue, actionCancel, description }: PropsSimpleModal) {
+export function SimpleModal({
+  observer,
+  labelContinue,
+  labelCancel,
+  actionContinue,
+  actionCancel,
+  description,
+  content,
+}: PropsSimpleModal) {
   return (
     <ClayModal observer={observer} size="sm" status="info" className="custom-modal" center style={{ background: "#f2f2f2" }}>
       <style>{styleModal}</style>
@@ -2186,6 +2195,7 @@ export function SimpleModal({ observer, labelContinue, labelCancel, actionContin
               <BrandLogo width={70} height={70} colorFill={"#c22525"} />
               <p className="custom-modal__description">{description}</p>
             </div>
+            <div className="custom-modal__content-wrapper">{content}</div>
             <div className="custom-modal__footer">
               <ClayButton onClick={actionCancel} displayType="secondary" size="sm" className="custom-modal__cancel">
                 {labelCancel}
@@ -2467,6 +2477,15 @@ const styleModal = `
       font-size: 20px;
       font-family: sans-serif;
     }
+
+  .custom-modal__content-wrapper {
+    width: 100%;
+    margin-block: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
 
     .custom-modal__footer {
       display: flex;

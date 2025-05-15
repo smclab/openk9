@@ -5,5 +5,8 @@
 export type BucketDTO = {
     name: string;
     description?: string;
-    handleDynamicFilters: boolean;
+    refreshOnSuggestionCategory: boolean;
+    refreshOnTab: boolean;
+    refreshOnDate: boolean;
+    refreshOnQuery: boolean;
 };

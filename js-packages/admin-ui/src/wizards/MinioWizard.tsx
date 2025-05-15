@@ -29,7 +29,7 @@ export function MinioWizard() {
         bindPluginDriver(data.datasource.entity.id);
       }
       if (form.inputProps("reindex").value && data.datasource?.entity?.id) {
-        triggerSchedulerMutation.mutate(data.datasource.entity.id);
+        triggerSchedulerMutation.mutate({ datasourceId: data.datasource.entity.id });
       }
     },
   });
@@ -63,7 +63,7 @@ export function MinioWizard() {
               port: data.port,
               accessKey: data.accessKey,
               secretKey: data.secretKey,
-              bucketName: data.bucketName
+              bucketName: data.bucketName,
             },
             null,
             2
@@ -84,8 +84,8 @@ export function MinioWizard() {
       >
         <TextInput label="Name" {...form.inputProps("name")} />
         <CustomFormGroup className="form-group-autofit">
-			<TextInput label="Host" {...form.inputProps("host")} item />
-			<TextInput label="Port" {...form.inputProps("port")} item />
+          <TextInput label="Host" {...form.inputProps("host")} item />
+          <TextInput label="Port" {...form.inputProps("port")} item />
         </CustomFormGroup>
         <CustomFormGroup className="form-group-autofit">
           <TextInput label="Access Key" {...form.inputProps("accessKey")} item />

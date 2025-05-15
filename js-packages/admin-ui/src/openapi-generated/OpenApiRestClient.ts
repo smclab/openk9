@@ -13,26 +13,22 @@ import { DateFilterResourceService } from './services/DateFilterResourceService'
 import { DocTypeResourceService } from './services/DocTypeResourceService';
 import { EnrichItemResourceService } from './services/EnrichItemResourceService';
 import { EnrichPipelineResourceService } from './services/EnrichPipelineResourceService';
+import { MetricsResourceService } from './services/MetricsResourceService';
 import { OAuth2SettingsResourceService } from './services/OAuth2SettingsResourceService';
 import { PipelineResourceService } from './services/PipelineResourceService';
 import { PluginDriverFieldResourceService } from './services/PluginDriverFieldResourceService';
+import { PluginDriverResourceService } from './services/PluginDriverResourceService';
 import { ReindexResourceService } from './services/ReindexResourceService';
 import { SchedulerResourceService } from './services/SchedulerResourceService';
+import { SearchConfigResourceService } from './services/SearchConfigResourceService';
 import { SuggestionCategoryResourceService } from './services/SuggestionCategoryResourceService';
 import { TemplateResourceService } from './services/TemplateResourceService';
 import { TriggerResourceService } from './services/TriggerResourceService';
-
-import { K8SResourceService } from './services/K8SResourceService';
-import { MetricsResourceService } from './services/MetricsResourceService';
-import { Mlk8SResourceService } from './services/Mlk8SResourceService';
 
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 
 export class OpenApiRestClient {
 
-    public readonly k8SResource: K8SResourceService;
-    public readonly metricsResource: MetricsResourceService;
-    public readonly mlk8SResource: Mlk8SResourceService;
     public readonly bucketResource: BucketResourceService;
     public readonly dataIndexResource: DataIndexResourceService;
     public readonly datasourceEventResource: DatasourceEventResourceService;
@@ -41,11 +37,14 @@ export class OpenApiRestClient {
     public readonly docTypeResource: DocTypeResourceService;
     public readonly enrichItemResource: EnrichItemResourceService;
     public readonly enrichPipelineResource: EnrichPipelineResourceService;
+    public readonly metricsResource: MetricsResourceService;
     public readonly oAuth2SettingsResource: OAuth2SettingsResourceService;
     public readonly pipelineResource: PipelineResourceService;
     public readonly pluginDriverFieldResource: PluginDriverFieldResourceService;
+    public readonly pluginDriverResource: PluginDriverResourceService;
     public readonly reindexResource: ReindexResourceService;
     public readonly schedulerResource: SchedulerResourceService;
+    public readonly searchConfigResource: SearchConfigResourceService;
     public readonly suggestionCategoryResource: SuggestionCategoryResourceService;
     public readonly templateResource: TemplateResourceService;
     public readonly triggerResource: TriggerResourceService;
@@ -55,7 +54,7 @@ export class OpenApiRestClient {
     constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
         this.request = new HttpRequest({
             BASE: config?.BASE ?? '',
-            VERSION: config?.VERSION ?? '1.6.0-SNAPSHOT',
+            VERSION: config?.VERSION ?? '2.0.1-SNAPSHOT',
             WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
             CREDENTIALS: config?.CREDENTIALS ?? 'include',
             TOKEN: config?.TOKEN,
@@ -65,26 +64,24 @@ export class OpenApiRestClient {
             ENCODE_PATH: config?.ENCODE_PATH,
         });
 
-        this.k8SResource = new K8SResourceService(this.request);
+        this.bucketResource = new BucketResourceService(this.request);
+        this.dataIndexResource = new DataIndexResourceService(this.request);
+        this.datasourceEventResource = new DatasourceEventResourceService(this.request);
+        this.datasourceResource = new DatasourceResourceService(this.request);
+        this.dateFilterResource = new DateFilterResourceService(this.request);
+        this.docTypeResource = new DocTypeResourceService(this.request);
+        this.enrichItemResource = new EnrichItemResourceService(this.request);
+        this.enrichPipelineResource = new EnrichPipelineResourceService(this.request);
         this.metricsResource = new MetricsResourceService(this.request);
-        this.mlk8SResource = new Mlk8SResourceService(this.request);
-
-		this.bucketResource = new BucketResourceService(this.request);
-		this.dataIndexResource = new DataIndexResourceService(this.request);
-		this.datasourceEventResource = new DatasourceEventResourceService(this.request);
-		this.datasourceResource = new DatasourceResourceService(this.request);
-		this.dateFilterResource = new DateFilterResourceService(this.request);
-		this.docTypeResource = new DocTypeResourceService(this.request);
-		this.enrichItemResource = new EnrichItemResourceService(this.request);
-		this.enrichPipelineResource = new EnrichPipelineResourceService(this.request);
-		this.oAuth2SettingsResource = new OAuth2SettingsResourceService(this.request);
-		this.pipelineResource = new PipelineResourceService(this.request);
-		this.pluginDriverFieldResource = new PluginDriverFieldResourceService(this.request);
-		this.reindexResource = new ReindexResourceService(this.request);
-		this.schedulerResource = new SchedulerResourceService(this.request);
-		this.suggestionCategoryResource = new SuggestionCategoryResourceService(this.request);
-		this.templateResource = new TemplateResourceService(this.request);
-		this.triggerResource = new TriggerResourceService(this.request);
-            }
+        this.oAuth2SettingsResource = new OAuth2SettingsResourceService(this.request);
+        this.pipelineResource = new PipelineResourceService(this.request);
+        this.pluginDriverFieldResource = new PluginDriverFieldResourceService(this.request);
+        this.pluginDriverResource = new PluginDriverResourceService(this.request);
+        this.reindexResource = new ReindexResourceService(this.request);
+        this.schedulerResource = new SchedulerResourceService(this.request);
+        this.searchConfigResource = new SearchConfigResourceService(this.request);
+        this.suggestionCategoryResource = new SuggestionCategoryResourceService(this.request);
+        this.templateResource = new TemplateResourceService(this.request);
+        this.triggerResource = new TriggerResourceService(this.request);
+    }
 }
-

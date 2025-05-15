@@ -5,4 +5,5 @@
 export type CreateDataIndexFromDocTypesRequest = {
     docTypeIds?: Array<number>;
     indexName?: string;
+    settings?: Record<string, any>;
 };

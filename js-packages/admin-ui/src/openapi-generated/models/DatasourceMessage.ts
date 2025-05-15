@@ -2,14 +2,11 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type DatasourceEvent = {
+export type DatasourceMessage = {
     ingestionId?: string;
     datasourceId?: number;
     contentId?: string;
     parsingDate?: number;
-    rawContent?: string;
     tenantId?: string;
-    documentTypes?: Array<string>;
     indexName?: string;
-    errorMessage?: string;
 };

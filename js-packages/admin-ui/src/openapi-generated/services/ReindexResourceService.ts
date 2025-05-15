@@ -1,8 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { DatasourceJobStatus } from '../models/DatasourceJobStatus';
 import type { ReindexRequestDto } from '../models/ReindexRequestDto';
-import type { ReindexResponseDto } from '../models/ReindexResponseDto';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -13,12 +13,12 @@ export class ReindexResourceService {
 
     /**
      * @param requestBody 
-     * @returns ReindexResponseDto OK
+     * @returns DatasourceJobStatus OK
      * @throws ApiError
      */
     public postApiDatasourceV1IndexReindex(
 requestBody?: ReindexRequestDto,
-): CancelablePromise<Array<ReindexResponseDto>> {
+): CancelablePromise<Array<DatasourceJobStatus>> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/v1/index/reindex',

@@ -7,4 +7,5 @@ export type TokenTabResponseDTO = {
     keywordKey?: string;
     filter?: boolean;
     values?: Array<string>;
+    extra?: Record<string, string>;
 };
