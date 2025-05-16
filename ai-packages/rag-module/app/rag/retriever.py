@@ -111,10 +111,10 @@ class OpenSearchRetriever(BaseRetriever):
 
             for row in response["hits"]["hits"]:
                 score = row.get("_score")
+                document_source = row.get("_source")
                 if score < SCORE_THRESHOLD:
                     continue
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
-                    document_source = row.get("_source")
                     document_types = document_source.get("documentTypes")
                     dynamic_metadata = {}
                     for document_type in document_types:
