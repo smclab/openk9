@@ -49,8 +49,12 @@ def get_chain(
         grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
     )
 
-    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {{context}}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
-    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        prompt_template
+        + "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     metadata = rag_configuration.get("metadata")
@@ -146,8 +150,16 @@ def get_chat_chain(
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.CHAT_RAG.value
     )
-    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
-    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        prompt_template
+        + "Here is context to help: {context}. ### QUESTION: {{question}}"
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+    rephrase_prompt_template = (
+        rephrase_prompt_template
+        + "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+    )
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     chunk_window = rag_configuration.get("chunk_window")
@@ -240,8 +252,17 @@ def get_chat_chain_tool(
     rag_configuration = get_rag_configuration(
         grpc_host, virtual_host, RagType.CHAT_RAG_TOOL.value
     )
-    prompt_template = "### [INST] Instruction: Answer the question based on your knowledge. Use Italian language only to answer. Here is context to help: {context}. ### QUESTION: {{question}}  If you do not find relevant information in the context, reply that you are not able to answer[/INST]"
-    rephrase_prompt_template = "Given a chat history and the latest user question which might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question, just reformulate it if needed and otherwise return it as is."
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        prompt_template
+        + "Here is context to help: {context}. ### QUESTION: {{question}}"
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+    rephrase_prompt_template = (
+        rephrase_prompt_template
+        + "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+    )
+    prompt_no_rag = rag_configuration.get("prompt_no_rag")
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     chunk_window = rag_configuration.get("chunk_window")
@@ -283,23 +304,10 @@ def get_chat_chain_tool(
     parser = StrOutputParser()
 
     if reformulate and chat_history:
-        rephrase_prompt_template = """\
-                Given this chat history: {history}, and the user's latest question: {question} \
-                (which may contain contextual references), reformulate the question into a \
-                standalone version that requires NO chat history to understand. \
-
-                Rules:
-                1. Always output in Italian
-                2. Never include answers/solutions
-                3. Only modify the question if context-dependent references exist
-                4. Preserve the original question's intent and wording where possible
-
-                Result must be a clear, self-contained Italian question.\
-                """
         rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
         rephrase_chain = rephrase_prompt | llm | parser
         search_text = rephrase_chain.invoke(
-            {"question": search_text, "history": chat_history},
+            {"input": search_text, "chat_history": chat_history},
         )
 
     rag_tool.description = rag_tool_description
@@ -332,17 +340,14 @@ def get_chat_chain_tool(
         )
 
     else:
-        prompt_template = (
-            "### [INST] Instruction: Answer the question based on your knowledge. "
-            "### QUESTION: {question}. Here is the chat history: {history} "
-            "to use ONLY when explicitly relevant to the current question. "
-            "Use Italian language only to answer.[/INST]"
+        prompt_no_rag = (
+            prompt_no_rag
+            + "### QUESTION: {question}. Here is the chat history: {history} "
             if chat_history
-            else "### [INST] Instruction: Answer the question based on your knowledge. "
-            "### QUESTION: {question}. Use Italian language only to answer.[/INST]"
+            else "### QUESTION: {question}."
         )
 
-        prompt = ChatPromptTemplate.from_template(prompt_template)
+        prompt = ChatPromptTemplate.from_template(prompt_no_rag)
         input_data = {"question": search_text}
         if chat_history:
             input_data["history"] = get_chat_history_from_frontend(chat_history)
