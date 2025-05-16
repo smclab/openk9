@@ -51,8 +51,8 @@ def get_chain(
 
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
-        prompt_template
-        + "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+        "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+        + prompt_template
     )
     rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
     reformulate = rag_configuration.get("reformulate")
@@ -152,13 +152,13 @@ def get_chat_chain(
     )
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
-        prompt_template
-        + "Here is context to help: {context}. ### QUESTION: {{question}}"
+        "Here is context to help: {context}. ### QUESTION: {{question}}"
+        + prompt_template
     )
     rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
     rephrase_prompt_template = (
-        rephrase_prompt_template
-        + "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+        "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+        + rephrase_prompt_template
     )
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
@@ -254,13 +254,13 @@ def get_chat_chain_tool(
     )
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
-        prompt_template
-        + "Here is context to help: {context}. ### QUESTION: {{question}}"
+        "Here is context to help: {context}. ### QUESTION: {{question}}"
+        + prompt_template
     )
     rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
     rephrase_prompt_template = (
-        rephrase_prompt_template
-        + "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+        "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+        + rephrase_prompt_template
     )
     prompt_no_rag = rag_configuration.get("prompt_no_rag")
     reformulate = rag_configuration.get("reformulate")
@@ -341,10 +341,10 @@ def get_chat_chain_tool(
 
     else:
         prompt_no_rag = (
-            prompt_no_rag
-            + "### QUESTION: {question}. Here is the chat history: {history} "
+            "### QUESTION: {question}. Here is the chat history: {history}"
+            + prompt_no_rag
             if chat_history
-            else "### QUESTION: {question}."
+            else "### QUESTION: {question}." + prompt_no_rag
         )
 
         prompt = ChatPromptTemplate.from_template(prompt_no_rag)
