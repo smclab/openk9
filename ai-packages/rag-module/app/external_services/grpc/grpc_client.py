@@ -65,6 +65,9 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             )
         )
 
+    prompt = response.prompt
+    prompt_no_rag = response.promptNoRag
+    rephrase_prompt = response.rephrasePrompt
     rag_tool_description = response.ragToolDescription
     chunk_window = response.chunkWindow
     reformulate = response.reformulate
@@ -73,6 +76,9 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
     metadata = json_config.get("metadata")
 
     configuration = {
+        "prompt": prompt,
+        "prompt_no_rag": prompt_no_rag,
+        "rephrase_prompt": rephrase_prompt,
         "rag_tool_description": rag_tool_description,
         "chunk_window": chunk_window,
         "reformulate": reformulate,
