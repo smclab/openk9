@@ -295,6 +295,10 @@ def get_chat_chain_tool(
     parser = StrOutputParser()
 
     if reformulate and chat_history:
+        rephrase_prompt_template = (
+            "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+            + rephrase_prompt_template
+        )
         rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
         rephrase_chain = rephrase_prompt | llm | parser
         search_text = rephrase_chain.invoke(
