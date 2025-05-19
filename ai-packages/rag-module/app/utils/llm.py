@@ -325,8 +325,8 @@ def stream_rag_conversation(
             - api_key (str): API key for authentication
             - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
             - model (str):  Name of the model to use; defaults to DEFAULT_MODEL if not provided
-            - prompt (str): Main prompt template
-            - rephrase_prompt (str): Contextualization prompt template
+            - prompt_template (str): Main prompt template
+            - rephrase_prompt_template (str): Contextualization prompt template
             - context_window (int): Model context window size
             - retrieve_citations (bool): Flag to enable citation extraction
             - rerank (bool): Whether to enable document reranking
