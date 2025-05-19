@@ -232,7 +232,7 @@ def generate_conversation_title(llm, search_text, result_answer):
     title_prompt = PromptTemplate(
         input_variables=["question", "answer"],
         template="""Generate a title for a conversation where the user asks:
-                            '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
+                            '{question}' and the AI responds: '{answer}'.""",
     )
     title_chain = title_prompt | llm | StrOutputParser()
     conversation_title = title_chain.invoke(
