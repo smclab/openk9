@@ -156,10 +156,6 @@ def get_chat_chain(
         + prompt_template
     )
     rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
-    rephrase_prompt_template = (
-        "Here is the chat history: {chat_history}, and the user's latest question: {input}"
-        + rephrase_prompt_template
-    )
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
     chunk_window = rag_configuration.get("chunk_window")
@@ -258,10 +254,6 @@ def get_chat_chain_tool(
         + prompt_template
     )
     rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
-    rephrase_prompt_template = (
-        "Here is the chat history: {chat_history}, and the user's latest question: {input}"
-        + rephrase_prompt_template
-    )
     prompt_no_rag = rag_configuration.get("prompt_no_rag")
     reformulate = rag_configuration.get("reformulate")
     rerank = rag_configuration.get("rerank")
