@@ -39,7 +39,6 @@ def get_chain(
     language,
     virtual_host,
     question,
-    reformulate,
     reranker_api_url,
     opensearch_host,
     grpc_host,
