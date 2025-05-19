@@ -123,7 +123,6 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-    reformulate = search_query_request.reformulate
     virtual_host = urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
@@ -146,7 +145,6 @@ async def rag_generate(
         language,
         virtual_host,
         search_text,
-        reformulate,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
         GRPC_DATASOURCE_HOST,
