@@ -156,7 +156,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (((String) value).toLowerCase().startsWith(token)) {
+						if (!((String) value).equals(token)) {
 							categorySemantics.add(
 								CategorySemantics.of(
 									"$KEYWORD_AUTOCOMPLETE",
@@ -175,8 +175,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
 							if (e2.getValue() instanceof ArrayList) {
 								for (String name : ((ArrayList<String>) e2.getValue())) {
-									if (!name.toLowerCase().equals(token) &&
-										(name.toLowerCase().contains(token))) {
+									if (!name.toLowerCase().equals(token)) {
 										categorySemantics.add(
 											CategorySemantics.of(
 												"$KEYWORD_AUTOCOMPLETE",
