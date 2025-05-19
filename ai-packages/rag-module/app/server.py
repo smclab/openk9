@@ -559,7 +559,7 @@ async def rename_chat(
     document_id = hits[0]["_id"]
 
     try:
-        update_response = open_search_client.update(
+        open_search_client.update(
             index=user_id,
             id=document_id,
             body={"doc": {"title": chat_message.newTitle}},
