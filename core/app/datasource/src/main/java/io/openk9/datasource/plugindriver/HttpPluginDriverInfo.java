@@ -24,7 +24,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @AllArgsConstructor(staticName = "of")
@@ -50,6 +52,16 @@ public class HttpPluginDriverInfo {
 
 		public HttpMethod getHttpMethod() {
 			return httpMethod;
+		}
+
+		public static Optional<Method> fromString(String input) {
+			if (input == null) {
+				return Optional.empty();
+			}
+
+			return Arrays.stream(values())
+				.filter(m -> m.name().equalsIgnoreCase(input))
+				.findFirst();
 		}
 
 		private HttpMethod httpMethod;

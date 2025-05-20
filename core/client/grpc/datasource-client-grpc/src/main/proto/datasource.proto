@@ -38,11 +38,12 @@ message CreatePluginDriverRequest {
   string name = 2;
   string description = 3;
   PluginDriverType type = 4;
-  string host = 5;
-  string port = 6;
+  string host = 5 [deprecated = true];
+  string port = 6 [deprecated = true];
   string secure = 7;
   string path = 8;
   string method = 9;
+  string baseUri = 10;
 }
 
 message CreatePresetPluginDriverRequest {
