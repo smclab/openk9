@@ -146,9 +146,9 @@
         }
       },
       {
-        "label": "Page Count",
+        "label": "Extract Docs",
         "name": "doExtractDocs",
-        "type": "boolean",
+        "type": "checkbox",
         "size": 4,
         "required": true,
         "info": "If extract documents",
@@ -167,7 +167,7 @@
       {
         "label": "Document File Extensions",
         "name": "documentFileExtensions",
-        "type": "text",
+        "type": "list",
         "size": 4,
         "required": true,
         "info": "File extensions allowed",
