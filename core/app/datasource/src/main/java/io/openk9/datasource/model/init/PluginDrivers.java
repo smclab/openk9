@@ -33,7 +33,7 @@ public class PluginDrivers {
 
 	private static final EnumMap<Preset, PluginDriverPreset> PLUGIN_DRIVER_PRESET_MAP =
 		new EnumMap<>(Preset.class);
-	public static final String PORT = ":5000";
+	public static final String PORT = "5000";
 
 	private static final EnumMap<Preset, K9EntityDTO> PRESET_K9_ENTITY_DTO_MAP =
 		new EnumMap<>(Preset.class);
@@ -127,9 +127,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
@@ -191,9 +193,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
@@ -256,9 +260,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
@@ -321,9 +327,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
@@ -386,9 +394,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
@@ -452,9 +462,11 @@ public class PluginDrivers {
 				new StringBuilder(JSON_CONFIG.getBaseUri());
 
 			if (tenant != null) {
+				baseUri.append("-");
 				baseUri.append(tenant);
 			}
 
+			baseUri.append(":");
 			baseUri.append(PORT);
 
 			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
