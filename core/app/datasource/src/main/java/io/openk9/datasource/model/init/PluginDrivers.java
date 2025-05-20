@@ -33,6 +33,7 @@ public class PluginDrivers {
 
 	private static final EnumMap<Preset, PluginDriverPreset> PLUGIN_DRIVER_PRESET_MAP =
 		new EnumMap<>(Preset.class);
+	public static final String PORT = ":5000";
 
 	private static final EnumMap<Preset, K9EntityDTO> PRESET_K9_ENTITY_DTO_MAP =
 		new EnumMap<>(Preset.class);
@@ -76,7 +77,7 @@ public class PluginDrivers {
 		static final Liferay INSTANCE = new Liferay();
 
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -101,26 +102,46 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
+			return getPresetInternal(tenant);
+		}
 
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
-
 	}
 
 	private static final class Crawler implements PluginDriverPreset {
 		static final Crawler INSTANCE = new Crawler();
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
 			.secure(false)
 			.path("/startUrlsCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -145,15 +166,37 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+			return getPresetInternal(tenant);
+		}
+
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
@@ -171,7 +214,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.EMAIL) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -188,15 +231,37 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+			return getPresetInternal(tenant);
+		}
+
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
@@ -214,7 +279,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.GITLAB) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -231,15 +296,37 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+			return getPresetInternal(tenant);
+		}
+
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
@@ -257,7 +344,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
 			.secure(false)
 			.path("/startSitemapCrawling")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -274,15 +361,37 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+			return getPresetInternal(tenant);
+		}
+
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
@@ -301,7 +410,7 @@ public class PluginDrivers {
 		private static final PluginDriver.PluginDriverType TYPE =
 			PluginDriver.PluginDriverType.HTTP;
 		private static final HttpPluginDriverInfo JSON_CONFIG = HttpPluginDriverInfo.builder()
-			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE) + ":5000")
+			.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
 			.secure(false)
 			.path("/execute")
 			.method(HttpPluginDriverInfo.Method.POST)
@@ -318,15 +427,37 @@ public class PluginDrivers {
 
 		@Override
 		public PluginDriverDTO getPreset() {
-			return PLUGIN_DRIVER_DTO;
+			return getPresetInternal(null);
 		}
 
 		@Override
 		public PluginDriverDTO getPresetByTenant(String tenant) {
-			var jsonConfig = JSON_CONFIG.withBaseUri(StringUtils.withSuffix(
-				JSON_CONFIG.getBaseUri(),
-				tenant
-			));
+			return getPresetInternal(tenant);
+		}
+
+		/**
+		 * Builds a {@link PluginDriverDTO} with a modified JSON configuration URI.
+		 *
+		 * <p>This method constructs the base URI by appending the given tenant and a port to the default base URI.
+		 * It then updates the JSON configuration with this constructed URI and returns a new instance of
+		 * {@code PluginDriverDTO} containing the encoded configuration.
+		 *
+		 * @param tenant the tenant identifier to append to the base URI, or {@code null} if no tenant is used
+		 * @return a {@code PluginDriverDTO} with the updated JSON configuration
+		 *
+		 * @throws NullPointerException if {@code JSON_CONFIG} or {@code PLUGIN_DRIVER_DTO} is {@code null}
+		 */
+		private PluginDriverDTO getPresetInternal(String tenant) {
+			StringBuilder baseUri =
+				new StringBuilder(JSON_CONFIG.getBaseUri());
+
+			if (tenant != null) {
+				baseUri.append(tenant);
+			}
+
+			baseUri.append(PORT);
+
+			var jsonConfig = JSON_CONFIG.withBaseUri(baseUri.toString());
 
 			return PLUGIN_DRIVER_DTO.toBuilder().jsonConfig(Json.encode(jsonConfig)).build();
 		}
