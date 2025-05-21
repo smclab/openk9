@@ -158,18 +158,28 @@ public class PluginDriverService
 		return super.persist(session, entity)
 			.log("Trying to create PluginDriver.")
 			.log("Creating DocumentTypes associated with pluginDriver")
-			.call(() -> indexMappingService
-				.generateDocTypeFieldsFromPluginDriverSample(
-					session, ((PluginDriver) entity).getHttpPluginDriverInfo())
-				.onFailure()
-				.retry()
-				.withBackOff(Duration.ofSeconds(5))
-				.atMost(20)
-				.onItem()
-				.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
-				.onFailure()
-				.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"))
-			);
+			.call(() -> {
+				var pluginDriver = (PluginDriver) entity;
+
+				var generateDocTypeUni = indexMappingService
+					.generateDocTypeFieldsFromPluginDriverSample(
+						session, pluginDriver.getHttpPluginDriverInfo());
+
+				// Adds the retry if pluginDriver is of 'SYSTEM' type.
+				generateDocTypeUni = switch (pluginDriver.getProvisioning()) {
+					case USER -> generateDocTypeUni;
+					case SYSTEM -> generateDocTypeUni.onFailure()
+						.retry()
+						.withBackOff(Duration.ofSeconds(5))
+						.atMost(20);
+				};
+
+				return generateDocTypeUni
+					.onItem()
+					.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
+					.onFailure()
+					.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"));
+			});
 	}
 
 	@Override
@@ -177,18 +187,28 @@ public class PluginDriverService
 		return super.merge(s, entity)
 			.log("Trying to update PluginDriver.")
 			.log("Updating DocumentTypes associated with pluginDriver")
-			.call(() -> indexMappingService
-				.generateDocTypeFieldsFromPluginDriverSample(
-					s, ((PluginDriver) entity).getHttpPluginDriverInfo())
-				.onFailure()
-				.retry()
-				.withBackOff(Duration.ofSeconds(5))
-				.atMost(20)
-				.onItem()
-				.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
-				.onFailure()
-				.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"))
-			);
+			.call(() -> {
+				PluginDriver pluginDriver = (PluginDriver) entity;
+
+				Uni<Set<DocType>> generateDocTypeUni = indexMappingService
+					.generateDocTypeFieldsFromPluginDriverSample(
+						s, pluginDriver.getHttpPluginDriverInfo());
+
+				// Adds the retry if pluginDriver is of 'SYSTEM' type.
+				generateDocTypeUni = switch (pluginDriver.getProvisioning()) {
+					case USER -> generateDocTypeUni;
+					case SYSTEM -> generateDocTypeUni.onFailure()
+						.retry()
+						.withBackOff(Duration.ofSeconds(5))
+						.atMost(20);
+				};
+
+				return generateDocTypeUni
+					.onItem()
+					.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
+					.onFailure()
+					.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"));
+			});
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
