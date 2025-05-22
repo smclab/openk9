@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 from enum import Enum
 from typing import List
@@ -25,17 +24,10 @@ from app.utils.chat_history import (
     get_chat_history_from_frontend,
     save_chat_message,
 )
-
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+from app.utils.logger import logger
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
 
 
 class ModelType(Enum):

@@ -4,7 +4,6 @@ It includes functions to verify JWT tokens against a Keycloak server, handle una
 and communicate with gRPC services to retrieve tenant-specific configurations.
 """
 
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -13,17 +12,11 @@ from keycloak import KeycloakOpenID
 from keycloak.exceptions import KeycloakError, KeycloakInvalidTokenError
 
 from app.external_services.grpc.grpc_client import get_tenant_manager_configuration
+from app.utils.logger import logger
 
 load_dotenv()
 
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
 
 
 def verify_token(grpc_host: str, virtual_host: str, token: str) -> dict:

@@ -1,4 +1,3 @@
-import logging
 import os
 from datetime import date
 
@@ -6,14 +5,7 @@ from langchain.schema import AIMessage, HumanMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from opensearchpy import OpenSearch
-
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logger import logger
 
 
 def get_chat_history(
