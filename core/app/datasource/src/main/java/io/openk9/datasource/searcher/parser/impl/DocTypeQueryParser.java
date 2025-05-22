@@ -17,23 +17,25 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.List;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.Operator;
 import org.opensearch.index.query.QueryBuilders;
-
-import java.util.List;
 
 @ApplicationScoped
 public class DocTypeQueryParser implements QueryParser {
 
 	@Override
-	public String getType() {
-		return "DOCTYPE";
+	public QueryParserType getType() {
+		return QueryParserType.DOC_TYPE;
 	}
 
 	@Override

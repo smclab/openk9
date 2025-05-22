@@ -23,10 +23,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -38,11 +40,12 @@ import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 
 @ApplicationScoped
-public class SearchAsYouTypeQueryParser implements QueryParser {
+@Named("AutocompleteQueryParser")
+public class AutocompleteQueryParser implements QueryParser {
 
 	@Override
-	public String getType() {
-		return TYPE;
+	public QueryParserType getType() {
+		return QueryParserType.AUTOCOMPLETE;
 	}
 
 	@Override
@@ -69,7 +72,7 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 
 		List<String> values = tokenText.getValues();
 
-		if (values.size() == 0) {
+		if (values.isEmpty()) {
 			return;
 		}
 
@@ -114,7 +117,5 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 		query.must(innerBoolQueryBuilder);
 
 	}
-
-	private static final String TYPE = "AUTOCOMPLETE";
 
 }

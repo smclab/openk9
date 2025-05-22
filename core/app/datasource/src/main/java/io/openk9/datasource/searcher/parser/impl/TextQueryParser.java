@@ -31,6 +31,7 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -56,8 +57,9 @@ public class TextQueryParser implements QueryParser {
 	public static final String MULTI_MATCH_TYPE = "multiMatchType";
 	public static final String TIE_BREAKER = "tieBreaker";
 
-	public String getType() {
-		return "TEXT";
+	@Override
+	public QueryParserType getType() {
+		return QueryParserType.TEXT;
 	}
 
 	@Override

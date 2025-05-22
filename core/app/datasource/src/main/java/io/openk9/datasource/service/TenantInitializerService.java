@@ -167,7 +167,7 @@ public class TenantInitializerService {
 	private Uni<List<QueryParserConfig>> defaultQueryParserConfigs(Mutiny.Session s) {
 		var upserts = new ArrayList<Uni<QueryParserConfig>>();
 
-		for (QueryParserConfigDTO queryParserConfigDTO : QueryParserConfigs.INSTANCE) {
+		for (QueryParserConfigDTO queryParserConfigDTO : QueryParserConfigs.DTOs.values()) {
 			upserts.add(queryParserConfigService.upsert(s, queryParserConfigDTO));
 		}
 

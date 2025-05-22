@@ -23,6 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 
@@ -33,8 +34,8 @@ import org.opensearch.index.query.QueryBuilders;
 public class DatasourceIdQueryParser implements QueryParser {
 
 	@Override
-	public String getType() {
-		return "DATASOURCE_ID_QUERY_PARSER";
+	public QueryParserType getType() {
+		return QueryParserType.DATASOURCE_ID;
 	}
 
 	@Override

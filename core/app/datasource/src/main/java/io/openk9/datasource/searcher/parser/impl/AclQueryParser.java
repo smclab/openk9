@@ -24,6 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
@@ -59,8 +60,8 @@ public class AclQueryParser implements QueryParser {
 	}
 
 	@Override
-	public String getType() {
-		return "ACL";
+	public QueryParserType getType() {
+		return QueryParserType.ACL;
 	}
 
 	@Override

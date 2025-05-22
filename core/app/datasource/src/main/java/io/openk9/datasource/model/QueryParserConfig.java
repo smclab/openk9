@@ -17,13 +17,17 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -43,7 +47,8 @@ public class QueryParserConfig extends K9Entity {
 	private String name;
 
 	@Column(name = "type", nullable = false)
-	private String type;
+	@Enumerated(EnumType.STRING)
+	private QueryParserType type;
 
 	@Column(name = "description", length = 4096)
 	private String description;

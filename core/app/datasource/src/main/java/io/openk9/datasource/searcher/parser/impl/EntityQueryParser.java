@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.SearcherService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -43,8 +44,8 @@ import org.opensearch.index.query.QueryBuilders;
 public class EntityQueryParser implements QueryParser {
 
 	@Override
-	public String getType() {
-		return "ENTITY";
+	public QueryParserType getType() {
+		return QueryParserType.ENTITY;
 	}
 
 	@Override
@@ -131,12 +132,12 @@ public class EntityQueryParser implements QueryParser {
 					.map(ParserSearchToken::getEntityName)
 					.filter(StringUtils::isNotBlank)
 					.distinct()
-					.map(entityName ->
-						ParserSearchToken
-							.builder()
-							.values(List.of(entityName))
-							.tokenType(textQueryParser.getType())
-							.build())
+					.map(entityName -> ParserSearchToken
+						.builder()
+						.values(List.of(entityName))
+						.tokenType(textQueryParser.getType().name())
+						.build()
+					)
 					.toList();
 
 			Bucket bucket = parserContext.getTenantWithBucket().getBucket();

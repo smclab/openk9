@@ -19,10 +19,13 @@ package io.openk9.datasource.searcher.parser.impl;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import io.openk9.datasource.index.util.OpenSearchUtils;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
+import io.openk9.datasource.searcher.parser.QueryParser;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -31,12 +34,14 @@ import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
 @ApplicationScoped
-public class HybridQueryParser {
+@Named("HybridQueryParser")
+public class HybridQueryParser implements QueryParser {
 
 	@ConfigProperty(
 		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
 	)
 	String extraParamsKey;
+
 	@ConfigProperty(
 		name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false"
 	)
@@ -44,6 +49,17 @@ public class HybridQueryParser {
 
 	@Inject
 	EmbeddingService embeddingService;
+
+	@Override
+	public Uni<Void> apply(ParserContext parserContext) {
+		throw new UnsupportedOperationException(
+			"Hybrid query parser cannot be applied to standard queries.");
+	}
+
+	@Override
+	public QueryParserType getType() {
+		return QueryParserType.HYBRID;
+	}
 
 	public Uni<SearchSourceBuilder> apply(
 		ParserContext parserContext, SearchSourceBuilder searchSourceBuilder) {

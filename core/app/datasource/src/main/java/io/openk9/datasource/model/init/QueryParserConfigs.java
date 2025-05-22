@@ -17,45 +17,126 @@
 
 package io.openk9.datasource.model.init;
 
+import java.util.EnumMap;
+import java.util.Map;
 
-import java.util.Set;
-
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.form.FieldType;
+import io.openk9.datasource.model.form.FieldValue;
+import io.openk9.datasource.model.form.FormField;
+import io.openk9.datasource.model.form.FormTemplate;
+
 
 public class QueryParserConfigs {
 
-	public static Set<QueryParserConfigDTO> INSTANCE = Set.of(
-		DateOrder.INSTANCE,
-		Entity.INSTANCE,
-		Text.INSTANCE,
-		Filter.INSTANCE,
-		Date.INSTANCE,
-		Doctype.INSTANCE
-	);
+	public static Map<QueryParserType, QueryParserConfigDTO> DTOs =
+		new EnumMap<>(QueryParserType.class);
+
+	public static Map<QueryParserType, FormTemplate> FORM_TEMPLATES =
+		new EnumMap<>(QueryParserType.class);
+
+	static {
+		for (var type : QueryParserType.values()) {
+			switch (type) {
+				case ACL, AUTOCOMPLETE, DATASOURCE_ID, DOC_TYPE -> {
+				}
+				case DATE_ORDER -> DTOs.put(type, DateOrder.DTO);
+				case DATE -> DTOs.put(type, Date.DTO);
+				case ENTITY -> DTOs.put(type, Entity.DTO);
+				case FILTER -> DTOs.put(type, Filter.DTO);
+				case HYBRID -> DTOs.put(type, Hybrid.DTO);
+				case KNN -> DTOs.put(type, Knn.DTO);
+				case TEXT -> DTOs.put(type, Text.DTO);
+			}
+
+			switch (type) {
+				case ACL, AUTOCOMPLETE, DATASOURCE_ID, DOC_TYPE -> {
+				}
+				case DATE_ORDER -> FORM_TEMPLATES.put(type, DateOrder.FORM_TEMPLATE);
+				case DATE -> FORM_TEMPLATES.put(type, Date.FORM_TEMPLATE);
+				case ENTITY -> FORM_TEMPLATES.put(type, Entity.FORM_TEMPLATE);
+				case FILTER -> FORM_TEMPLATES.put(type, Filter.FORM_TEMPLATE);
+				case HYBRID -> FORM_TEMPLATES.put(type, Hybrid.FORM_TEMPLATE);
+				case KNN -> FORM_TEMPLATES.put(type, Knn.FORM_TEMPLATE);
+				case TEXT -> FORM_TEMPLATES.put(type, Text.FORM_TEMPLATE);
+			}
+		}
+	}
 
 	private QueryParserConfigs() {}
 
-	public static class DateOrder {
-		private static final String NAME = "Date Order Query Parser";
-		private static final String DESCRIPTION = "Configuration for Date Order query parser";
-		private static final String TYPE = "DATE_ORDER";
+	private static class Date {
+		private static final String NAME = "Date Query Parser";
+		private static final String DESCRIPTION = "Configuration for Date query parser";
+		private static final String TYPE = "DATE";
 		private static final String JSON_CONFIG = """
 			{
-				"scale": "3650d",
-				"boost": 50
+				"allFieldsWhenKeywordIsEmpty": true
 			}
 			""";
 
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.jsonConfig(JSON_CONFIG)
 			.build();
 
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("allFieldsWhenKeywordIsEmpty")
+				.value(FieldValue.builder()
+					.value("true")
+					.build()
+				)
+				.type(FieldType.CHECKBOX)
+				.build()
+			)
+			.build();
+
 	}
 
-	public static class Entity {
+	private static class DateOrder {
+		private static final String NAME = "Date Order Query Parser";
+		private static final String DESCRIPTION = "Configuration for Date Order query parser";
+		private static final String TYPE = "DATE_ORDER";
+		private static final String JSON_CONFIG = """
+			{
+				"scale": "3650d",
+				"boost": 0.1
+			}
+			""";
+
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.type(TYPE)
+			.jsonConfig(JSON_CONFIG)
+			.build();
+
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("scale")
+				.value(FieldValue.builder()
+					.value("365d")
+					.build()
+				)
+				.type(FieldType.TEXT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("boost")
+				.value(FieldValue.builder()
+					.value("50")
+					.build())
+				.type(FieldType.NUMBER)
+				.build())
+			.build();
+
+	}
+
+	private static class Entity {
 		private static final String NAME = "Entity Query Parser";
 		private static final String DESCRIPTION = "Configuration for Entity query parser";
 		private static final String TYPE = "ENTITY";
@@ -67,16 +148,211 @@ public class QueryParserConfigs {
 			}
 			""";
 
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.jsonConfig(JSON_CONFIG)
 			.build();
 
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("boost")
+				.value(FieldValue.builder().value("50").build())
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("queryCondition")
+				.value(FieldValue.builder()
+					.value("SHOULD")
+					.isDefault(true)
+					.build())
+				.value(FieldValue.builder().value("MUST").build())
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("manageEntityName")
+				.value(FieldValue.builder().value("true").build())
+				.type(FieldType.CHECKBOX)
+				.build()
+			)
+			.build();
+
 	}
 
-	public static class Text {
+	private static class Filter {
+		private static final String NAME = "Filter Query Parser";
+		private static final String DESCRIPTION = "Configuration for Filter query parser";
+		private static final String TYPE = "FILTER";
+		private static final String JSON_CONFIG = """
+			{
+				"boost": 50,
+				"valuesQueryType": "MUST",
+				"globalQueryType": "MUST",
+				"fuzziness": "ZERO"
+			}
+			""";
+
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.type(TYPE)
+			.jsonConfig(JSON_CONFIG)
+			.build();
+
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("boost")
+				.value(FieldValue.builder()
+					.value("50")
+					.build()
+				)
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("valuesQueryType")
+				.value(FieldValue.builder()
+					.value("MUST")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("SHOULD")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("globalQueryType")
+				.value(FieldValue.builder()
+					.value("MUST")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("SHOULD")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("fuzziness")
+				.value(FieldValue.builder()
+					.value("ZERO")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("ONE")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("TWO")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("AUTO")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.build();
+
+	}
+
+	private static class Hybrid {
+		private static final String NAME = "Hybrid Query Parser";
+		private static final String DESCRIPTION = "Configuration for Hybrid query parser";
+		private static final String TYPE = QueryParserType.HYBRID.name();
+		private static final String JSON_CONFIG = """
+			{
+				"kNeighbors": 2
+			}
+			""";
+
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.type(TYPE)
+			.jsonConfig(JSON_CONFIG)
+			.build();
+
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("kNeighbors")
+				.value(FieldValue.builder().value("2").build())
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("boost")
+				.value(FieldValue.builder()
+					.value("50")
+					.build()
+				)
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("fuzziness")
+				.value(FieldValue.builder()
+					.value("ZERO")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("ONE")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("TWO")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("AUTO")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.build();
+
+	}
+
+	private static class Knn {
+		private static final String NAME = "KNN Query Parser";
+		private static final String DESCRIPTION = "Configuration for Knn query parser";
+		private static final String TYPE = QueryParserType.KNN.name();
+		private static final String JSON_CONFIG = """
+			{
+				"kNeighbors": 2
+			}
+			""";
+
+		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
+			.name(NAME)
+			.description(DESCRIPTION)
+			.type(TYPE)
+			.jsonConfig(JSON_CONFIG)
+			.build();
+
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("kNeighbors")
+				.value(FieldValue.builder().value("2").build())
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.build();
+	}
+
+	private static class Text {
 		private static final String NAME = "Text Query Parser";
 		private static final String DESCRIPTION = "Configuration for Text query parser";
 		private static final String TYPE = "TEXT";
@@ -89,65 +365,74 @@ public class QueryParserConfigs {
 			}
 			""";
 
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
+		static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
 			.jsonConfig(JSON_CONFIG)
 			.build();
 
-	}
-
-	public static class Filter {
-		private static final String NAME = "Filter Query Parser";
-		private static final String DESCRIPTION = "Configuration for Filter query parser";
-		private static final String TYPE = "FILTER";
-		private static final String JSON_CONFIG = """
-			{
-				"boost": 50,
-				"valuesQueryType": "MUST",
-				"globalQueryType": "MUST",
-				"fuzziness":"ZERO"
-			}
-			""";
-
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.type(TYPE)
-			.jsonConfig(JSON_CONFIG)
+		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
+			.field(FormField.builder()
+				.name("boost")
+				.value(FieldValue.builder()
+					.value("50")
+					.build()
+				)
+				.type(FieldType.NUMBER)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("valuesQueryType")
+				.value(FieldValue.builder()
+					.value("MUST")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("SHOULD")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("globalQueryType")
+				.value(FieldValue.builder()
+					.value("MUST")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("SHOULD")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("fuzziness")
+				.value(FieldValue.builder()
+					.value("ZERO")
+					.isDefault(true)
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("ONE")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("TWO")
+					.build()
+				)
+				.value(FieldValue.builder()
+					.value("AUTO")
+					.build()
+				)
+				.type(FieldType.SELECT)
+				.build()
+			)
 			.build();
-
-	}
-
-	public static class Date {
-		private static final String NAME = "Date Query Parser";
-		private static final String DESCRIPTION = "Configuration for Date query parser";
-		private static final String TYPE = "DATE";
-		private static final String JSON_CONFIG = "{}";
-
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.type(TYPE)
-			.jsonConfig(JSON_CONFIG)
-			.build();
-
-	}
-
-	public static class Doctype {
-		private static final String NAME = "Doctype Query Parser";
-		private static final String DESCRIPTION = "Configuration for Doctype query parser";
-		private static final String TYPE = "DOCTYPE";
-		private static final String JSON_CONFIG = "{}";
-
-		static final QueryParserConfigDTO INSTANCE = QueryParserConfigDTO.builder()
-			.name(NAME)
-			.description(DESCRIPTION)
-			.type(TYPE)
-			.jsonConfig(JSON_CONFIG)
-			.build();
-
 	}
 
 }

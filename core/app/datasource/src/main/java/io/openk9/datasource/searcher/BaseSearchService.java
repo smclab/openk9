@@ -47,6 +47,7 @@ import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -87,7 +88,7 @@ public abstract class BaseSearchService {
 	@Inject
 	TenantRegistry tenantRegistry;
 
-	public static JsonObject getQueryParserConfig(Bucket bucket, String tokenType) {
+	public static JsonObject getQueryParserConfig(Bucket bucket, QueryParserType tokenType) {
 
 		SearchConfig searchConfig = bucket.getSearchConfig();
 
@@ -98,8 +99,8 @@ public abstract class BaseSearchService {
 		return searchConfig
 			.getQueryParserConfigs()
 			.stream()
-			.filter(queryParserConfig -> queryParserConfig.getType().equals(
-				tokenType))
+			.filter(queryParserConfig -> queryParserConfig
+				.getType().equals(tokenType))
 			.findFirst()
 			.map(SearcherService::toJsonObject)
 			.orElse(EMPTY_JSON);
@@ -147,7 +148,7 @@ public abstract class BaseSearchService {
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
-		Map<String, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
+		Map<QueryParserType, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
 		JWT jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -158,20 +159,23 @@ public abstract class BaseSearchService {
 
 		if (hasToken) {
 
-			for (Map.Entry<String, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
-				String tokenType = entry.getKey();
-				List<ParserSearchToken> parserSearchTokens =
-					entry.getValue();
+			for (Map.Entry<QueryParserType, List<ParserSearchToken>> entry : tokenGroup.entrySet()) {
+				QueryParserType tokenType = entry.getKey();
+				List<ParserSearchToken> parserSearchTokens = entry.getValue();
+
 				for (QueryParser queryParser : queryParserInstance) {
+
 					if (queryParser.isQueryParserGroup() &&
-						queryParser.getType().equals(tokenType)) {
+						queryParser.getType() == tokenType) {
+
 						var queryParserUni = queryParser.apply(
 							ParserContext
 								.builder()
 								.tokenTypeGroup(parserSearchTokens)
 								.mutableQuery(boolQueryBuilder)
 								.tenantWithBucket(tenantWithBucket)
-								.queryParserConfig(getQueryParserConfig(
+								.queryParserConfig(
+									getQueryParserConfig(
 										tenantWithBucket.getBucket(),
 										tokenType
 									)
@@ -234,18 +238,15 @@ public abstract class BaseSearchService {
 			.map(voids -> boolQueryBuilder);
 	}
 
-	protected Map<String, List<ParserSearchToken>> createTokenGroup(
+	protected Map<QueryParserType, List<ParserSearchToken>> createTokenGroup(
 		QueryParserRequest request) {
 
-		Map<String, List<ParserSearchToken>> tokenGroup =
-			request
-				.getSearchQueryList()
-				.stream()
-				.map(searcherMapper::toParserSearchToken)
-				.collect(
-					Collectors.groupingBy(ParserSearchToken::getTokenType));
-
-		return tokenGroup;
+		return request
+			.getSearchQueryList()
+			.stream()
+			.map(searcherMapper::toParserSearchToken)
+			.collect(Collectors.groupingBy(token ->
+				QueryParserType.valueOf(token.getTokenType())));
 
 	}
 

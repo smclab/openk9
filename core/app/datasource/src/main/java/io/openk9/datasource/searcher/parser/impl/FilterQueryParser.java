@@ -17,20 +17,24 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
+
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Named;
 import org.opensearch.index.query.BoolQueryBuilder;
 
 @ApplicationScoped
 @Named("FilterQueryParser")
 public class FilterQueryParser extends TextQueryParser implements QueryParser {
+
 	@Override
-	public String getType() {
-		return "FILTER";
+	public QueryParserType getType() {
+		return QueryParserType.FILTER;
 	}
 
 	@Override

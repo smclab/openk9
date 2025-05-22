@@ -24,6 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
@@ -41,8 +42,8 @@ import org.opensearch.index.query.RangeQueryBuilder;
 public class DateQueryParser implements QueryParser {
 
 	@Override
-	public String getType() {
-		return "DATE";
+	public QueryParserType getType() {
+		return QueryParserType.DATE;
 	}
 
 	@Override

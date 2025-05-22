@@ -40,6 +40,7 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -799,7 +800,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		return Uni.createFrom().deferred(() -> {
 
-			Map<String, List<ParserSearchToken>> tokenGroup =
+			Map<QueryParserType, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
 
@@ -826,13 +827,16 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, String> queryParams;
 
-					if (tokenGroup.containsKey("HYBRID")) {
+					if (tokenGroup.containsKey(QueryParserType.HYBRID)) {
 
 						queryParams = _getQueryParams(bucket);
 
-						var searchTokens = tokenGroup.get("HYBRID");
+						var searchTokens = tokenGroup.get(QueryParserType.HYBRID);
 
-						var queryParserConfig = getQueryParserConfig(bucket, "HYBRID");
+						var queryParserConfig = getQueryParserConfig(
+							bucket,
+							QueryParserType.HYBRID
+						);
 
 						return hybridQueryParser
 							.apply(
@@ -889,7 +893,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
 		return Uni.createFrom().deferred(() -> {
 
-			Map<String, List<ParserSearchToken>> tokenGroup =
+			Map<QueryParserType, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
 			return cache.getAsync(

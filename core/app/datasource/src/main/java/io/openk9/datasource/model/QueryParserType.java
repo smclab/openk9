@@ -15,20 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.searcher.parser;
+package io.openk9.datasource.model;
 
-import java.util.function.Function;
-
-import io.openk9.datasource.model.QueryParserType;
-
-import io.smallrye.mutiny.Uni;
-
-public interface QueryParser extends Function<ParserContext, Uni<Void>> {
-
-	QueryParserType getType();
-
-	default boolean isQueryParserGroup() {
-		return true;
-	}
-
+public enum QueryParserType {
+	ACL,
+	AUTOCOMPLETE,
+	DATASOURCE_ID,
+	DATE_ORDER,
+	DATE,
+	DOC_TYPE,
+	ENTITY,
+	FILTER,
+	HYBRID,
+	KNN,
+	TEXT
 }

@@ -22,6 +22,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.index.util.OpenSearchUtils;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -29,11 +30,13 @@ import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import jdk.jfr.Name;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
 @ApplicationScoped
+@Name("KnnQueryParser")
 public class KnnQueryParser implements QueryParser {
 
 	private static final Logger log = Logger.getLogger(KnnQueryParser.class);
@@ -42,8 +45,8 @@ public class KnnQueryParser implements QueryParser {
 	EmbeddingService embeddingService;
 
 	@Override
-	public String getType() {
-		return "KNN";
+	public QueryParserType getType() {
+		return QueryParserType.KNN;
 	}
 
 	@Override
@@ -94,12 +97,12 @@ public class KnnQueryParser implements QueryParser {
 	protected static Integer getKNeighbors(
 		ParserSearchToken parserSearchToken,
 		JsonObject queryParserConfig) {
-		var kNeighbors = ParserContext.getInteger(
+
+		return ParserContext.getInteger(
 			parserSearchToken,
 			queryParserConfig,
 			"kNeighbors"
 		).orElse(2);
-		return kNeighbors;
 	}
 
 	protected static Query toKnnQuery(
