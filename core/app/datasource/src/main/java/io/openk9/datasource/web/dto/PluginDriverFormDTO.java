@@ -15,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto.form;
+package io.openk9.datasource.web.dto;
+
+import java.util.Collection;
+
+import io.openk9.datasource.web.dto.form.FormField;
 
 import lombok.Builder;
 import lombok.Singular;
-
-import java.util.Collection;
 
 @Builder
 public record PluginDriverFormDTO(@Singular Collection<FormField> fields) {

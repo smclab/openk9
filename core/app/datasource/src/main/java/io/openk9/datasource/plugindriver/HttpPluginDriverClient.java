@@ -17,24 +17,25 @@
 
 package io.openk9.datasource.plugindriver;
 
-import io.openk9.datasource.plugindriver.exception.InvalidUriException;
-import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
-import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.ext.web.client.HttpResponse;
-import io.vertx.mutiny.ext.web.client.WebClient;
+import java.net.URI;
+import java.net.URISyntaxException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
-import org.jboss.logging.Logger;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import io.openk9.datasource.plugindriver.exception.InvalidUriException;
+import io.openk9.datasource.processor.payload.IngestionPayload;
+import io.openk9.datasource.web.dto.PluginDriverFormDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.WebClient;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class HttpPluginDriverClient {

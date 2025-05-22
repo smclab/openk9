@@ -28,8 +28,8 @@ import jakarta.ws.rs.PathParam;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.PluginDriverFormDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
-import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
 
 import io.smallrye.mutiny.Uni;
 
