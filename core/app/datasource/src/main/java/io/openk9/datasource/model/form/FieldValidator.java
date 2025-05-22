@@ -15,21 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto.form;
+package io.openk9.datasource.model.form;
 
 import lombok.Builder;
-import lombok.Singular;
-
-import java.util.Collection;
 
 @Builder
-public record FormField(
-	String info,
-	String label,
-	String name,
-	FormType type,
-	int size,
-	boolean required,
-	@Singular Collection<FormFieldValue> values,
-	FormFieldValidator validator
-) {}
+public record FieldValidator(int min, int max, String regex) {}

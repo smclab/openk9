@@ -25,9 +25,9 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
+import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.PluginDriverFormDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 
 import io.smallrye.mutiny.Uni;
@@ -141,7 +141,7 @@ public class HttpPluginDriverClient {
 			.flatMap(this::validateDto);
 	}
 
-	public Uni<PluginDriverFormDTO> getForm(HttpPluginDriverInfo pluginDriverInfo) {
+	public Uni<FormTemplate> getForm(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
@@ -152,7 +152,7 @@ public class HttpPluginDriverClient {
 			)
 			.send()
 			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(PluginDriverFormDTO.class))
+			.map(res -> res.bodyAsJson(FormTemplate.class))
 			.flatMap(this::validateDto);
 	}
 

@@ -26,9 +26,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.PluginDriverFormDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 
 import io.smallrye.mutiny.Uni;
@@ -49,13 +49,13 @@ public class PluginDriverResource {
 
 	@GET
 	@Path("/form/{id}")
-	public Uni<PluginDriverFormDTO> getForm(@PathParam("id") long id) {
+	public Uni<FormTemplate> getForm(@PathParam("id") long id) {
 		return service.getForm(id);
 	}
 
 	@POST
 	@Path("/form")
-	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+	public Uni<FormTemplate> getForm(PluginDriverDTO pluginDriverDTO) {
 		return service.getForm(pluginDriverDTO);
 	}
 

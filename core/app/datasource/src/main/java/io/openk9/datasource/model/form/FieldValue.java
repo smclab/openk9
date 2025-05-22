@@ -15,31 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto.form;
+package io.openk9.datasource.model.form;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Builder;
 
-public enum FormType {
-	TEXT("text"),
-	NUMBER("number"),
-	SELECT("select"),
-	MULTISELECT("multiselect"),
-	LIST("list"),
-	DATE("date"),
-	EMAIL("email"),
-	PASSWORD("password"),
-	TIME("time"),
-	URL("url"),
-	CHECKBOX("checkbox");
-
-	private final String value;
-
-	FormType(String value) {
-		this.value = value;
-	}
-
-	@JsonValue
-	public String getValue() {
-		return value;
-	}
-}
+@Builder
+public record FieldValue(String value, boolean isDefault) {}

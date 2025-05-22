@@ -55,6 +55,7 @@ import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.dto.request.PluginWithDocTypeDTO;
+import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
@@ -64,7 +65,6 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.PluginDriverFormDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 
 import io.smallrye.mutiny.Uni;
@@ -118,7 +118,7 @@ public class PluginDriverService
 		return PluginDriver.class;
 	}
 
-	public Uni<PluginDriverFormDTO> getForm(long id) {
+	public Uni<FormTemplate> getForm(long id) {
 		return findById(id)
 			.flatMap(pluginDriver ->
 				httpPluginDriverClient.getForm(
@@ -127,7 +127,7 @@ public class PluginDriverService
 			);
 	}
 
-	public Uni<PluginDriverFormDTO> getForm(PluginDriverDTO pluginDriverDTO) {
+	public Uni<FormTemplate> getForm(PluginDriverDTO pluginDriverDTO) {
 		return httpPluginDriverClient.getForm(
 			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
 	}

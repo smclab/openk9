@@ -65,6 +65,7 @@ import org.mockito.BDDMockito;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.CreateIndexRequest;
+import org.opensearch.client.indices.GetIndexRequest;
 import org.opensearch.search.aggregations.AggregationBuilder;
 import org.opensearch.search.aggregations.bucket.composite.CompositeAggregationBuilder;
 
@@ -144,8 +145,13 @@ public class SearcherSuggestionsGrpcTest {
 			var indexName = IndexName.from(SCHEMA_NAME, dataIndex);
 			var createIndexRequest = new CreateIndexRequest(indexName.toString());
 
-			openSearchClient.indices()
-				.create(createIndexRequest, RequestOptions.DEFAULT);
+			var indexExist = openSearchClient.indices()
+				.exists(new GetIndexRequest(indexName.toString()), RequestOptions.DEFAULT);
+
+			if (!indexExist) {
+				openSearchClient.indices()
+					.create(createIndexRequest, RequestOptions.DEFAULT);
+			}
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

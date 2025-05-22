@@ -23,13 +23,13 @@ import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.form.FieldType;
+import io.openk9.datasource.model.form.FieldValidator;
+import io.openk9.datasource.model.form.FieldValue;
+import io.openk9.datasource.model.form.FormField;
+import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.PluginDriverFormDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
-import io.openk9.datasource.web.dto.form.FormField;
-import io.openk9.datasource.web.dto.form.FormFieldValidator;
-import io.openk9.datasource.web.dto.form.FormFieldValue;
-import io.openk9.datasource.web.dto.form.FormType;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -181,10 +181,10 @@ class HttpPluginDriverClientTest {
 	@RunOnVertxContext
 	void should_get_form(UniAsserter asserter) throws IOException {
 
-		PluginDriverFormDTO expected;
+		FormTemplate expected;
 
 		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
-			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverFormDTO.class);
+			expected = Json.decodeValue(new String(in.readAllBytes()), FormTemplate.class);
 		}
 
 		asserter.assertThat(
@@ -196,17 +196,17 @@ class HttpPluginDriverClientTest {
 					.contains(FormField.builder()
 						.label("Title tag")
 						.name("titleTag")
-						.type(FormType.TEXT)
+						.type(FieldType.TEXT)
 						.size(10)
 						.required(true)
 						.info("")
 						.value(
-							FormFieldValue.builder()
+							FieldValue.builder()
 								.value("title::text")
 								.isDefault(true)
 								.build()
 						)
-						.validator(FormFieldValidator.builder()
+						.validator(FieldValidator.builder()
 							.min(0)
 							.max(100)
 							.regex("/[[:alnum:]]+/")
