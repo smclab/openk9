@@ -17,8 +17,8 @@
 
 package io.openk9.datasource.grpc;
 
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import io.openk9.datasource.grpc.exception.UnsupportedGrpcMethodException;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
@@ -165,10 +165,11 @@ public class DatasourceGrpcTest {
 				.build()),
 			throwable -> {
 				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-				Assertions.assertTrue(throwable
-					.getMessage()
-					.contains(UnsupportedGrpcMethodException.class.getName())
-				);
+
+				var exception = (StatusRuntimeException) throwable;
+
+				Assertions.assertEquals(
+					Status.Code.UNIMPLEMENTED, exception.getStatus().getCode());
 			}
 		);
 
