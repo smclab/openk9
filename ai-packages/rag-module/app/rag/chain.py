@@ -11,63 +11,70 @@ from app.utils.llm import (
     initialize_language_model,
     stream_rag_conversation,
 )
+from app.utils.logger import logger
 
 
 def get_chain(question, rag_configuration, llm_configuration, retriever):
+    try:
+        prompt_template = rag_configuration.get("prompt")
+        prompt_template = (
+            "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+            + prompt_template
+        )
+        rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+        reformulate = rag_configuration.get("reformulate")
+        rerank = rag_configuration.get("rerank")
+        metadata = rag_configuration.get("metadata")
 
-    prompt_template = rag_configuration.get("prompt")
-    prompt_template = (
-        "Here is context to help: {{context}}. ### QUESTION: {{question}}"
-        + prompt_template
-    )
-    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
-    reformulate = rag_configuration.get("reformulate")
-    rerank = rag_configuration.get("rerank")
-    metadata = rag_configuration.get("metadata")
+        api_url = llm_configuration.get("api_url")
+        api_key = llm_configuration.get("api_key")
+        model_type = llm_configuration.get("model_type")
+        model = llm_configuration.get("model")
+        context_window = llm_configuration.get("context_window")
+        retrieve_citations = llm_configuration.get("retrieve_citations")
+        retrieve_type = llm_configuration.get("retrieve_type")
+        watsonx_project_id = llm_configuration.get("watsonx_project_id")
+        chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+        chat_vertex_ai_model_garden = llm_configuration.get(
+            "chat_vertex_ai_model_garden"
+        )
 
-    api_url = llm_configuration.get("api_url")
-    api_key = llm_configuration.get("api_key")
-    model_type = llm_configuration.get("model_type")
-    model = llm_configuration.get("model")
-    context_window = llm_configuration.get("context_window")
-    retrieve_citations = llm_configuration.get("retrieve_citations")
-    retrieve_type = llm_configuration.get("retrieve_type")
-    watsonx_project_id = llm_configuration.get("watsonx_project_id")
-    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
-    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+        configuration = {
+            "api_url": api_url,
+            "api_key": api_key,
+            "model_type": model_type,
+            "model": model,
+            "context_window": context_window,
+            "retrieve_citations": retrieve_citations,
+            "rerank": rerank,
+            "metadata": metadata,
+            "retrieve_type": retrieve_type,
+            "watsonx_project_id": watsonx_project_id,
+            "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+        }
 
-    configuration = {
-        "api_url": api_url,
-        "api_key": api_key,
-        "model_type": model_type,
-        "model": model,
-        "context_window": context_window,
-        "retrieve_citations": retrieve_citations,
-        "rerank": rerank,
-        "metadata": metadata,
-        "retrieve_type": retrieve_type,
-        "watsonx_project_id": watsonx_project_id,
-        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
-        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
-    }
+        documents = retriever.invoke(question)
+        llm = initialize_language_model(configuration)
+        prompt = ChatPromptTemplate.from_template(prompt_template)
+        parser = StrOutputParser()
+        chain = prompt | llm | parser
 
-    documents = retriever.invoke(question)
-    llm = initialize_language_model(configuration)
-    prompt = ChatPromptTemplate.from_template(prompt_template)
-    parser = StrOutputParser()
-    chain = prompt | llm | parser
+        if reformulate:
+            rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+            rephrase_chain = rephrase_prompt | llm | parser
+            question = rephrase_chain.invoke({"question": question})
 
-    if reformulate:
-        rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
-        rephrase_chain = rephrase_prompt | llm | parser
-        question = rephrase_chain.invoke({"question": question})
+        yield json.dumps({"chunk": "", "type": "START"})
 
-    yield json.dumps({"chunk": "", "type": "START"})
+        for chunk in chain.stream({"question": question, "context": documents}):
+            yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
-    for chunk in chain.stream({"question": question, "context": documents}):
-        yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+        yield json.dumps({"chunk": "", "type": "END"})
 
-    yield json.dumps({"chunk": "", "type": "END"})
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
 
 
 def get_chat_chain(
@@ -82,57 +89,64 @@ def get_chat_chain(
     retriever,
     opensearch_host,
 ):
-    prompt_template = rag_configuration.get("prompt")
-    prompt_template = (
-        "Here is context to help: {context}. ### QUESTION: {{question}}"
-        + prompt_template
-    )
-    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
-    reformulate = rag_configuration.get("reformulate")
-    rerank = rag_configuration.get("rerank")
-    chunk_window = rag_configuration.get("chunk_window")
-    metadata = rag_configuration.get("metadata")
+    try:
+        prompt_template = rag_configuration.get("prompt")
+        prompt_template = (
+            "Here is context to help: {context}. ### QUESTION: {{question}}"
+            + prompt_template
+        )
+        rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+        reformulate = rag_configuration.get("reformulate")
+        rerank = rag_configuration.get("rerank")
+        chunk_window = rag_configuration.get("chunk_window")
+        metadata = rag_configuration.get("metadata")
 
-    api_url = llm_configuration.get("api_url")
-    api_key = llm_configuration.get("api_key")
-    model_type = llm_configuration.get("model_type")
-    model = llm_configuration.get("model")
-    context_window = llm_configuration.get("context_window")
-    retrieve_citations = llm_configuration.get("retrieve_citations")
-    retrieve_type = llm_configuration.get("retrieve_type")
-    watsonx_project_id = llm_configuration.get("watsonx_project_id")
-    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
-    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+        api_url = llm_configuration.get("api_url")
+        api_key = llm_configuration.get("api_key")
+        model_type = llm_configuration.get("model_type")
+        model = llm_configuration.get("model")
+        context_window = llm_configuration.get("context_window")
+        retrieve_citations = llm_configuration.get("retrieve_citations")
+        retrieve_type = llm_configuration.get("retrieve_type")
+        watsonx_project_id = llm_configuration.get("watsonx_project_id")
+        chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+        chat_vertex_ai_model_garden = llm_configuration.get(
+            "chat_vertex_ai_model_garden"
+        )
 
-    configuration = {
-        "api_url": api_url,
-        "api_key": api_key,
-        "model_type": model_type,
-        "model": model,
-        "prompt_template": prompt_template,
-        "rephrase_prompt_template": rephrase_prompt_template,
-        "context_window": context_window,
-        "retrieve_citations": retrieve_citations,
-        "rerank": rerank,
-        "chunk_window": chunk_window,
-        "metadata": metadata,
-        "retrieve_type": retrieve_type,
-        "watsonx_project_id": watsonx_project_id,
-        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
-        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
-    }
+        configuration = {
+            "api_url": api_url,
+            "api_key": api_key,
+            "model_type": model_type,
+            "model": model,
+            "prompt_template": prompt_template,
+            "rephrase_prompt_template": rephrase_prompt_template,
+            "context_window": context_window,
+            "retrieve_citations": retrieve_citations,
+            "rerank": rerank,
+            "chunk_window": chunk_window,
+            "metadata": metadata,
+            "retrieve_type": retrieve_type,
+            "watsonx_project_id": watsonx_project_id,
+            "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+        }
 
-    yield from stream_rag_conversation(
-        search_text,
-        opensearch_host,
-        chat_id,
-        user_id,
-        chat_history,
-        timestamp,
-        chat_sequence_number,
-        retriever,
-        configuration,
-    )
+        yield from stream_rag_conversation(
+            search_text,
+            opensearch_host,
+            chat_id,
+            user_id,
+            chat_history,
+            timestamp,
+            chat_sequence_number,
+            retriever,
+            configuration,
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
 
 
 @tool
@@ -156,130 +170,139 @@ def get_chat_chain_tool(
     retriever,
     opensearch_host,
 ):
-    prompt_template = rag_configuration.get("prompt")
-    prompt_template = (
-        "Here is context to help: {context}. ### QUESTION: {{question}}"
-        + prompt_template
-    )
-    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
-    prompt_no_rag = rag_configuration.get("prompt_no_rag")
-    reformulate = rag_configuration.get("reformulate")
-    rerank = rag_configuration.get("rerank")
-    chunk_window = rag_configuration.get("chunk_window")
-    metadata = rag_configuration.get("metadata")
-    rag_tool_description = rag_configuration.get("rag_tool_description")
-
-    api_url = llm_configuration.get("api_url")
-    api_key = llm_configuration.get("api_key")
-    model_type = llm_configuration.get("model_type")
-    model = llm_configuration.get("model")
-    context_window = llm_configuration.get("context_window")
-    retrieve_citations = llm_configuration.get("retrieve_citations")
-    retrieve_type = llm_configuration.get("retrieve_type")
-    watsonx_project_id = llm_configuration.get("watsonx_project_id")
-    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
-    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
-
-    configuration = {
-        "api_url": api_url,
-        "api_key": api_key,
-        "model_type": model_type,
-        "model": model,
-        "prompt_template": prompt_template,
-        "rephrase_prompt_template": rephrase_prompt_template,
-        "context_window": context_window,
-        "retrieve_citations": retrieve_citations,
-        "rerank": rerank,
-        "chunk_window": chunk_window,
-        "metadata": metadata,
-        "retrieve_type": retrieve_type,
-        "watsonx_project_id": watsonx_project_id,
-        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
-        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
-    }
-
-    llm = initialize_language_model(configuration)
-    parser = StrOutputParser()
-
-    if reformulate and chat_history:
-        rephrase_prompt_template = (
-            "Here is the chat history: {chat_history}, and the user's latest question: {input}"
-            + rephrase_prompt_template
+    try:
+        prompt_template = rag_configuration.get("prompt")
+        prompt_template = (
+            "Here is context to help: {context}. ### QUESTION: {{question}}"
+            + prompt_template
         )
-        rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
-        rephrase_chain = rephrase_prompt | llm | parser
-        search_text = rephrase_chain.invoke(
-            {"input": search_text, "chat_history": chat_history},
+        rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+        prompt_no_rag = rag_configuration.get("prompt_no_rag")
+        reformulate = rag_configuration.get("reformulate")
+        rerank = rag_configuration.get("rerank")
+        chunk_window = rag_configuration.get("chunk_window")
+        metadata = rag_configuration.get("metadata")
+        rag_tool_description = rag_configuration.get("rag_tool_description")
+
+        api_url = llm_configuration.get("api_url")
+        api_key = llm_configuration.get("api_key")
+        model_type = llm_configuration.get("model_type")
+        model = llm_configuration.get("model")
+        context_window = llm_configuration.get("context_window")
+        retrieve_citations = llm_configuration.get("retrieve_citations")
+        retrieve_type = llm_configuration.get("retrieve_type")
+        watsonx_project_id = llm_configuration.get("watsonx_project_id")
+        chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+        chat_vertex_ai_model_garden = llm_configuration.get(
+            "chat_vertex_ai_model_garden"
         )
 
-    rag_tool.description = rag_tool_description
-    tools = [rag_tool]
-    llm_with_tools = llm.bind_tools(tools)
-    llm_with_tools_response = llm_with_tools.invoke(search_text)
+        configuration = {
+            "api_url": api_url,
+            "api_key": api_key,
+            "model_type": model_type,
+            "model": model,
+            "prompt_template": prompt_template,
+            "rephrase_prompt_template": rephrase_prompt_template,
+            "context_window": context_window,
+            "retrieve_citations": retrieve_citations,
+            "rerank": rerank,
+            "chunk_window": chunk_window,
+            "metadata": metadata,
+            "retrieve_type": retrieve_type,
+            "watsonx_project_id": watsonx_project_id,
+            "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+            "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+        }
 
-    if llm_with_tools_response.tool_calls:
-        yield from stream_rag_conversation(
-            search_text,
-            opensearch_host,
-            chat_id,
-            user_id,
-            chat_history,
-            timestamp,
-            chat_sequence_number,
-            retriever,
-            configuration,
-        )
+        llm = initialize_language_model(configuration)
+        parser = StrOutputParser()
 
-    else:
-        prompt_no_rag = (
-            "### QUESTION: {question}. Here is the chat history: {history}"
-            + prompt_no_rag
-            if chat_history
-            else "### QUESTION: {question}." + prompt_no_rag
-        )
-
-        prompt = ChatPromptTemplate.from_template(prompt_no_rag)
-        input_data = {"question": search_text}
-        if chat_history:
-            input_data["history"] = get_chat_history_from_frontend(chat_history)
-
-        chain = prompt | llm | parser
-        result = chain.stream(input_data)
-
-        result_answer = ""
-        documents = []
-        conversation_title = ""
-        start = True
-
-        for chunk in result:
-            if start:
-                start = False
-                yield json.dumps({"chunk": "", "type": "START"})
-
-            result_answer += chunk
-            yield json.dumps({"chunk": chunk, "type": "CHUNK"})
-
-        if chat_sequence_number == 1:
-            conversation_title = generate_conversation_title(
-                llm, search_text, result_answer
+        if reformulate and chat_history:
+            rephrase_prompt_template = (
+                "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+                + rephrase_prompt_template
             )
-            yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
-
-        if user_id:
-            open_search_client = OpenSearch(
-                hosts=[opensearch_host],
+            rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+            rephrase_chain = rephrase_prompt | llm | parser
+            search_text = rephrase_chain.invoke(
+                {"input": search_text, "chat_history": chat_history},
             )
 
-            save_chat_message(
-                open_search_client,
+        rag_tool.description = rag_tool_description
+        tools = [rag_tool]
+        llm_with_tools = llm.bind_tools(tools)
+        llm_with_tools_response = llm_with_tools.invoke(search_text)
+
+        if llm_with_tools_response.tool_calls:
+            yield from stream_rag_conversation(
                 search_text,
-                result_answer,
-                conversation_title.strip('"'),
-                documents,
+                opensearch_host,
                 chat_id,
                 user_id,
+                chat_history,
                 timestamp,
                 chat_sequence_number,
+                retriever,
+                configuration,
             )
 
-        yield json.dumps({"chunk": "", "type": "END"})
+        else:
+            prompt_no_rag = (
+                "### QUESTION: {question}. Here is the chat history: {history}"
+                + prompt_no_rag
+                if chat_history
+                else "### QUESTION: {question}." + prompt_no_rag
+            )
+
+            prompt = ChatPromptTemplate.from_template(prompt_no_rag)
+            input_data = {"question": search_text}
+            if chat_history:
+                input_data["history"] = get_chat_history_from_frontend(chat_history)
+
+            chain = prompt | llm | parser
+            result = chain.stream(input_data)
+
+            result_answer = ""
+            documents = []
+            conversation_title = ""
+            start = True
+
+            for chunk in result:
+                if start:
+                    start = False
+                    yield json.dumps({"chunk": "", "type": "START"})
+
+                result_answer += chunk
+                yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+
+            if chat_sequence_number == 1:
+                conversation_title = generate_conversation_title(
+                    llm, search_text, result_answer
+                )
+                yield json.dumps(
+                    {"chunk": conversation_title.strip('"'), "type": "TITLE"}
+                )
+
+            if user_id:
+                open_search_client = OpenSearch(
+                    hosts=[opensearch_host],
+                )
+
+                save_chat_message(
+                    open_search_client,
+                    search_text,
+                    result_answer,
+                    conversation_title.strip('"'),
+                    documents,
+                    chat_id,
+                    user_id,
+                    timestamp,
+                    chat_sequence_number,
+                )
+
+            yield json.dumps({"chunk": "", "type": "END"})
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
