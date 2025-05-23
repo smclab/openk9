@@ -17,10 +17,8 @@
 
 package io.openk9.datasource.grpc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-
+import io.grpc.StatusRuntimeException;
+import io.openk9.datasource.grpc.exception.UnsupportedGrpcMethodException;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
@@ -29,8 +27,6 @@ import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
-
-import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -40,6 +36,10 @@ import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 
 @QuarkusTest
 public class DatasourceGrpcTest {
@@ -150,27 +150,6 @@ public class DatasourceGrpcTest {
 
 	@Test
 	@RunOnVertxContext
-	void should_create_plugin_driver(UniAsserter asserter) {
-
-		givenUpsertSuccess();
-
-		asserter.assertThat(
-			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
-				.setSchemaName(SCHEMA_NAME_VALUE)
-				.build()),
-			response -> {
-				BDDMockito.then(pluginDriverService)
-					.should(times(1))
-					.upsert(eq(SCHEMA_NAME_VALUE), any(PluginDriverDTO.class));
-
-				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());
-			}
-		);
-
-	}
-
-	@Test
-	@RunOnVertxContext
 	void should_fail_on_create_plugin_driver(UniAsserter asserter) {
 
 		BDDMockito.given(pluginDriverService.upsert(
@@ -184,7 +163,13 @@ public class DatasourceGrpcTest {
 			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
 				.setSchemaName(SCHEMA_NAME_VALUE)
 				.build()),
-			DatasourceGrpcTest::failureAssertions
+			throwable -> {
+				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
+				Assertions.assertTrue(throwable
+					.getMessage()
+					.contains(UnsupportedGrpcMethodException.class.getName())
+				);
+			}
 		);
 
 	}

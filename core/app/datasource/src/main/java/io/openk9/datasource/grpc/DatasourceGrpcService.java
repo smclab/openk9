@@ -17,10 +17,10 @@
 
 package io.openk9.datasource.grpc;
 
+import io.openk9.datasource.grpc.exception.UnsupportedGrpcMethodException;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
-import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
@@ -41,8 +41,6 @@ public class DatasourceGrpcService implements Datasource {
 	PluginDriverService pluginDriverService;
 	@Inject
 	EnrichItemMapper enrichItemMapper;
-	@Inject
-	PluginDriverMapper pluginDriverMapper;
 
 	@Override
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
@@ -66,13 +64,15 @@ public class DatasourceGrpcService implements Datasource {
 	}
 
 	@Override
+	@Deprecated
 	public Uni<CreatePluginDriverResponse> createPluginDriver(
 		CreatePluginDriverRequest request) {
 
-		var tenantId = request.getSchemaName();
-		var pluginDriverDTO = pluginDriverMapper.map(request);
-
-		return upsertPluginDriver(tenantId, pluginDriverDTO);
+		return Uni.createFrom().failure(
+			new UnsupportedGrpcMethodException(
+				"This GRPC method is deprecated and no longer available. Use GraphQL API instead.’"
+			)
+		);
 	}
 
 	@Override
