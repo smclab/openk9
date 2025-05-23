@@ -1,16 +1,10 @@
 import json
-from enum import Enum
 
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
-from app.external_services.grpc.grpc_client import (
-    get_llm_configuration,
-    get_rag_configuration,
-)
-from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
 from app.utils.llm import (
     generate_conversation_title,
@@ -19,34 +13,7 @@ from app.utils.llm import (
 )
 
 
-class RagType(Enum):
-    RAG_TYPE_UNSPECIFIED = "RAG_TYPE_UNSPECIFIED"
-    CHAT_RAG = "CHAT_RAG"
-    CHAT_RAG_TOOL = "CHAT_RAG_TOOL"
-    SIMPLE_GENERATE = "SIMPLE_GENERATE"
-
-
-def get_chain(
-    search_query,
-    range_values,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    jwt,
-    extra,
-    sort,
-    sort_after_key,
-    language,
-    virtual_host,
-    question,
-    reranker_api_url,
-    opensearch_host,
-    grpc_host,
-):
-
-    rag_configuration = get_rag_configuration(
-        grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
-    )
+def get_chain(question, rag_configuration, llm_configuration, retriever):
 
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
@@ -58,7 +25,6 @@ def get_chain(
     rerank = rag_configuration.get("rerank")
     metadata = rag_configuration.get("metadata")
 
-    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
     api_key = llm_configuration.get("api_key")
     model_type = llm_configuration.get("model_type")
@@ -85,27 +51,6 @@ def get_chain(
         "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
     }
 
-    retriever = OpenSearchRetriever(
-        search_query=search_query,
-        search_text=question,
-        rerank=rerank,
-        reranker_api_url=reranker_api_url,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        virtual_host=virtual_host,
-        jwt=jwt,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
-        context_window=context_window,
-        retrieve_type=retrieve_type,
-        opensearch_host=opensearch_host,
-        grpc_host=grpc_host,
-    )
-
     documents = retriever.invoke(question)
     llm = initialize_language_model(configuration)
     prompt = ChatPromptTemplate.from_template(prompt_template)
@@ -126,29 +71,17 @@ def get_chain(
 
 
 def get_chat_chain(
-    range_values,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    jwt,
-    extra,
-    sort,
-    sort_after_key,
-    language,
-    virtual_host,
     search_text,
     chat_id,
     user_id,
     chat_history,
     timestamp,
     chat_sequence_number,
-    reranker_api_url,
+    rag_configuration,
+    llm_configuration,
+    retriever,
     opensearch_host,
-    grpc_host,
 ):
-    rag_configuration = get_rag_configuration(
-        grpc_host, virtual_host, RagType.CHAT_RAG.value
-    )
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
         "Here is context to help: {context}. ### QUESTION: {{question}}"
@@ -160,7 +93,6 @@ def get_chat_chain(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
 
-    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
     api_key = llm_configuration.get("api_key")
     model_type = llm_configuration.get("model_type")
@@ -192,24 +124,13 @@ def get_chat_chain(
 
     yield from stream_rag_conversation(
         search_text,
-        reranker_api_url,
-        range_values,
-        after_key,
-        suggest_keyword,
-        suggestion_category_id,
-        virtual_host,
-        jwt,
-        extra,
-        sort,
-        sort_after_key,
-        language,
         opensearch_host,
-        grpc_host,
         chat_id,
         user_id,
         chat_history,
         timestamp,
         chat_sequence_number,
+        retriever,
         configuration,
     )
 
@@ -224,29 +145,17 @@ def rag_tool(
 
 
 def get_chat_chain_tool(
-    range_values,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    jwt,
-    extra,
-    sort,
-    sort_after_key,
-    language,
-    virtual_host,
     search_text,
     chat_id,
     user_id,
     chat_history,
     timestamp,
     chat_sequence_number,
-    reranker_api_url,
+    rag_configuration,
+    llm_configuration,
+    retriever,
     opensearch_host,
-    grpc_host,
 ):
-    rag_configuration = get_rag_configuration(
-        grpc_host, virtual_host, RagType.CHAT_RAG_TOOL.value
-    )
     prompt_template = rag_configuration.get("prompt")
     prompt_template = (
         "Here is context to help: {context}. ### QUESTION: {{question}}"
@@ -260,7 +169,6 @@ def get_chat_chain_tool(
     metadata = rag_configuration.get("metadata")
     rag_tool_description = rag_configuration.get("rag_tool_description")
 
-    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
     api_url = llm_configuration.get("api_url")
     api_key = llm_configuration.get("api_key")
     model_type = llm_configuration.get("model_type")
@@ -312,24 +220,13 @@ def get_chat_chain_tool(
     if llm_with_tools_response.tool_calls:
         yield from stream_rag_conversation(
             search_text,
-            reranker_api_url,
-            range_values,
-            after_key,
-            suggest_keyword,
-            suggestion_category_id,
-            virtual_host,
-            jwt,
-            extra,
-            sort,
-            sort_after_key,
-            language,
             opensearch_host,
-            grpc_host,
             chat_id,
             user_id,
             chat_history,
             timestamp,
             chat_sequence_number,
+            retriever,
             configuration,
         )
 
