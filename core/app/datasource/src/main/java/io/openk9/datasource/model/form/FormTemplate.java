@@ -22,6 +22,23 @@ import java.util.Collection;
 import lombok.Builder;
 import lombok.Singular;
 
+/**
+ * Represents a form template containing a collection of form fields for UI rendering.
+ *
+ * <p>This record defines the structure and configuration of a form by encapsulating
+ * multiple form fields. Each field contains information about input types, validation
+ * rules, default values, and display properties needed for proper form rendering.
+ *
+ * <p>Currently used in:
+ * <ul>
+ *   <li>FormConfiguration records for entity configuration forms</li>
+ *   <li>Plugin driver JSON form rendering</li>
+ * </ul>
+ *
+ * @param fields collection of form fields that define the form structure and behavior
+ * @see FormField
+ * @see FormConfigurations.FormConfiguration
+ */
 @Builder
 public record FormTemplate(@Singular Collection<FormField> fields) {
 }
