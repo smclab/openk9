@@ -27,9 +27,9 @@ public record FormField(
 	String info,
 	String label,
 	String name,
-	FieldType type,
+	FormFieldType type,
 	int size,
 	boolean required,
 	@Singular Collection<FieldValue> values,
-	FieldValidator validator
+	FormFieldValidator validator
 ) {}

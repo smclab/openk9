@@ -23,10 +23,10 @@ import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
 import io.openk9.datasource.TestUtils;
-import io.openk9.datasource.model.form.FieldType;
-import io.openk9.datasource.model.form.FieldValidator;
 import io.openk9.datasource.model.form.FieldValue;
 import io.openk9.datasource.model.form.FormField;
+import io.openk9.datasource.model.form.FormFieldType;
+import io.openk9.datasource.model.form.FormFieldValidator;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
@@ -196,7 +196,7 @@ class HttpPluginDriverClientTest {
 					.contains(FormField.builder()
 						.label("Title tag")
 						.name("titleTag")
-						.type(FieldType.TEXT)
+						.type(FormFieldType.TEXT)
 						.size(10)
 						.required(true)
 						.info("")
@@ -206,7 +206,7 @@ class HttpPluginDriverClientTest {
 								.isDefault(true)
 								.build()
 						)
-						.validator(FieldValidator.builder()
+						.validator(FormFieldValidator.builder()
 							.min(0)
 							.max(100)
 							.regex("/[[:alnum:]]+/")

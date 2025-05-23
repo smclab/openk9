@@ -17,29 +17,7 @@
 
 package io.openk9.datasource.model.form;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Builder;
 
-public enum FieldType {
-	TEXT("text"),
-	NUMBER("number"),
-	SELECT("select"),
-	MULTISELECT("multiselect"),
-	LIST("list"),
-	DATE("date"),
-	EMAIL("email"),
-	PASSWORD("password"),
-	TIME("time"),
-	URL("url"),
-	CHECKBOX("checkbox");
-
-	private final String value;
-
-	FieldType(String value) {
-		this.value = value;
-	}
-
-	@JsonValue
-	public String getValue() {
-		return value;
-	}
-}
+@Builder
+public record FormFieldValidator(int min, int max, String regex) {}
