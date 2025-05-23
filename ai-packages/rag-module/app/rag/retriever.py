@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 import requests
-from fastapi import HTTPException, status
 from langchain.schema import Document
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
