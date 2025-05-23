@@ -17,12 +17,19 @@
 
 package io.openk9.datasource.service;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.openk9.datasource.mapper.QueryParserConfigMapper;
 import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.form.FormConfigurations;
+import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.model.init.QueryParserConfigs;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
@@ -36,9 +43,50 @@ public class QueryParserConfigService extends BaseK9EntityService<QueryParserCon
 		return QueryParserConfig.class;
 	}
 
+	/**
+	 * Retrieves the cached {@link FormConfigurations} object derived from predefined form templates.
+	 * <p>
+	 * The configurations are generated once when this service is initialized, by processing
+	 * {@link QueryParserConfigs#FORM_TEMPLATES}. Subsequent calls return the same cached instance.
+	 *
+	 * @return The cached {@link FormConfigurations} instance containing a list of
+	 * all derived {@link FormConfigurations.FormConfiguration} objects.
+	 * @see QueryParserConfigs#FORM_TEMPLATES
+	 * @see FormConfigurations
+	 * @see QueryParserType
+	 * @see FormTemplate
+	 */
+	public FormConfigurations getFormConfigurations() {
+		return CACHED_FORM_CONFIGURATIONS;
+	}
+
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
 	}
 
+	private static FormConfigurations initFormConfigurations() {
+
+		// initialize the FormConfigurations cached instance
+
+		var formTemplateEntries = QueryParserConfigs.FORM_TEMPLATES.entrySet();
+
+		List<FormConfigurations.FormConfiguration> configurations = new LinkedList<>();
+
+		// Mapping entry to form configuration
+		for (Map.Entry<QueryParserType, FormTemplate> entry : formTemplateEntries) {
+
+			var configuration = new FormConfigurations.FormConfiguration(
+				entry.getKey().name(), // convert enum to string
+				entry.getValue()
+			);
+
+			configurations.add(configuration);
+
+		}
+
+		return new FormConfigurations(configurations);
+	}
+
+	private static final FormConfigurations CACHED_FORM_CONFIGURATIONS = initFormConfigurations();
 }

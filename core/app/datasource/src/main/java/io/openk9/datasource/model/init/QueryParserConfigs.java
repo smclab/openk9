@@ -20,14 +20,43 @@ package io.openk9.datasource.model.init;
 import java.util.EnumMap;
 import java.util.Map;
 
+import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
-import io.openk9.datasource.model.form.FieldType;
 import io.openk9.datasource.model.form.FieldValue;
 import io.openk9.datasource.model.form.FormField;
+import io.openk9.datasource.model.form.FormFieldType;
 import io.openk9.datasource.model.form.FormTemplate;
 
-
+/**
+ * Configuration registry for query parser types and their associated DTOs and form templates.
+ *
+ * <p>This utility class provides centralized access to configuration objects for different
+ * query parser types used in the search system. It maintains two primary mappings:
+ * <ul>
+ *   <li>Query parser type to configuration DTO mappings, useful for Tenant initialization</li>
+ *   <li>Query parser type to form template mappings, useful for UI</li>
+ * </ul>
+ *
+ * <p>The class supports the following query parser types:
+ * <ul>
+ *   <li><strong>DATE</strong> - Handles date-based queries with configurable field matching</li>
+ *   <li><strong>DATE_ORDER</strong> - Provides date-based result ordering with scale and boost parameters</li>
+ *   <li><strong>ENTITY</strong> - Manages entity-based searches with boost and query condition settings</li>
+ *   <li><strong>FILTER</strong> - Enables filtered searches with configurable query types and fuzziness</li>
+ *   <li><strong>HYBRID</strong> - Combines multiple search approaches with k-nearest neighbors support</li>
+ *   <li><strong>KNN</strong> - Implements k-nearest neighbors search functionality</li>
+ *   <li><strong>TEXT</strong> - Handles text-based searches with boost, query types, and fuzziness options</li>
+ * </ul>
+ *
+ * <p>Note: The following query parser types (ACL, AUTOCOMPLETE, DATASOURCE_ID, DOC_TYPE)
+ * are recognized but do not have associated configuration DTOs or form templates.
+ *
+ * @see QueryParserConfig
+ * @see QueryParserType
+ * @see QueryParserConfigDTO
+ * @see FormTemplate
+ */
 public class QueryParserConfigs {
 
 	public static Map<QueryParserType, QueryParserConfigDTO> DTOs =
@@ -90,7 +119,7 @@ public class QueryParserConfigs {
 					.value("true")
 					.build()
 				)
-				.type(FieldType.CHECKBOX)
+				.type(FormFieldType.CHECKBOX)
 				.build()
 			)
 			.build();
@@ -119,10 +148,10 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("scale")
 				.value(FieldValue.builder()
-					.value("365d")
+					.value("3650d")
 					.build()
 				)
-				.type(FieldType.TEXT)
+				.type(FormFieldType.TEXT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -130,7 +159,7 @@ public class QueryParserConfigs {
 				.value(FieldValue.builder()
 					.value("50")
 					.build())
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build())
 			.build();
 
@@ -159,7 +188,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("boost")
 				.value(FieldValue.builder().value("50").build())
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
@@ -169,13 +198,13 @@ public class QueryParserConfigs {
 					.isDefault(true)
 					.build())
 				.value(FieldValue.builder().value("MUST").build())
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
 				.name("manageEntityName")
 				.value(FieldValue.builder().value("true").build())
-				.type(FieldType.CHECKBOX)
+				.type(FormFieldType.CHECKBOX)
 				.build()
 			)
 			.build();
@@ -209,7 +238,7 @@ public class QueryParserConfigs {
 					.value("50")
 					.build()
 				)
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
@@ -223,7 +252,7 @@ public class QueryParserConfigs {
 					.value("SHOULD")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -237,7 +266,7 @@ public class QueryParserConfigs {
 					.value("SHOULD")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -259,7 +288,7 @@ public class QueryParserConfigs {
 					.value("AUTO")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.build();
@@ -287,7 +316,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("kNeighbors")
 				.value(FieldValue.builder().value("2").build())
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
@@ -296,7 +325,7 @@ public class QueryParserConfigs {
 					.value("50")
 					.build()
 				)
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
@@ -318,7 +347,7 @@ public class QueryParserConfigs {
 					.value("AUTO")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.build();
@@ -346,7 +375,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("kNeighbors")
 				.value(FieldValue.builder().value("2").build())
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.build();
@@ -379,7 +408,7 @@ public class QueryParserConfigs {
 					.value("50")
 					.build()
 				)
-				.type(FieldType.NUMBER)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
@@ -393,7 +422,7 @@ public class QueryParserConfigs {
 					.value("SHOULD")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -407,7 +436,7 @@ public class QueryParserConfigs {
 					.value("SHOULD")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -429,7 +458,7 @@ public class QueryParserConfigs {
 					.value("AUTO")
 					.build()
 				)
-				.type(FieldType.SELECT)
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.build();

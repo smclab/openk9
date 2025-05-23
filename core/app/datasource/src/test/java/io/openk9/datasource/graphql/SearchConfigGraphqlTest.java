@@ -17,27 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.EntitiesUtils;
-import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
-import io.openk9.datasource.service.SearchConfigService;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.InputObject;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -49,6 +28,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.service.SearchConfigService;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.InputObject;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class SearchConfigGraphqlTest {
@@ -882,6 +884,40 @@ public class SearchConfigGraphqlTest {
 		assertEquals(minScoreNew, actualSearchConfig.getMinScore());
 		assertTrue(actualSearchConfig.isMinScoreSuggestions());
 		assertTrue(actualSearchConfig.isMinScoreSearch());
+	}
+
+	@Test
+	void should_return_all_form_templates() throws ExecutionException, InterruptedException {
+
+		var query = document(
+			operation(
+				field(
+					"queryParserConfigFormConfigurations",
+					field(
+						"configurations",
+						field("type"),
+						field(
+							"form",
+							field(
+								"fields",
+								field("name"),
+								field("type"),
+								field(
+									"values",
+									field("value"),
+									field("default")
+								)
+							)
+						)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		Assertions.assertFalse(response.hasError());
+		Assertions.assertTrue(response.hasData());
 	}
 
 	@AfterEach
