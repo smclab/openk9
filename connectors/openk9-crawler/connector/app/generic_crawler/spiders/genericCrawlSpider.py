@@ -128,10 +128,10 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
                         web_item[metadata] = extract_text(specific_web_item_content[0])
                     elif len(specific_web_item_content) > 1:
                         specific_web_item_content = [extract_text(element) for element in specific_web_item_content]
-                        if not index:
-                            web_item[metadata] = specific_web_item_content
-                        elif len(specific_web_item_content) > index - 1:
-                            web_item[metadata] = specific_web_item_content[index - 1]
+                    if index == None:
+                        web_item[metadata] = specific_web_item_content
+                    elif len(specific_web_item_content) > index - 1:
+                        web_item[metadata] = specific_web_item_content[index]
 
             datasource_payload = {
                 "web": dict(web_item)
