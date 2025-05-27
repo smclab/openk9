@@ -559,7 +559,7 @@ public class SearchResource {
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
-		int statusCode = INTERNAL_SERVER_ERROR;
+		int statusCode = 0;
 		String reason = "Unable to serve search request";
 
 		if (throwable instanceof ResponseException responseException) {
@@ -568,16 +568,26 @@ public class SearchResource {
 				.getStatusCode();
 		}
 
-		if (statusCode == INTERNAL_SERVER_ERROR) {
-			log.error(reason, throwable);
-		}
-		else {
-			reason = "Invalid search request";
-			log.warn(reason, throwable);
+		jakarta.ws.rs.core.Response.Status responseStatus = null;
+
+		switch (statusCode) {
+			case 0, 404 -> {
+				responseStatus =
+					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+
+				log.error(reason, throwable);
+			}
+			default -> {
+				reason = "Invalid search request";
+				responseStatus =
+					jakarta.ws.rs.core.Response.Status.fromStatusCode(statusCode);
+
+				log.warn(reason, throwable);
+			}
 		}
 
 		return jakarta.ws.rs.core.Response
-			.status(statusCode)
+			.status(responseStatus)
 			.entity(JsonObject
 				.of(DETAILS_FIELD, reason))
 			.build();
