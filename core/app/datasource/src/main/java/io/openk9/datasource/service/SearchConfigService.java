@@ -17,13 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.util.Set;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.validation.constraints.NotNull;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.common.util.StringUtils;
@@ -36,24 +29,77 @@ import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.SearchConfigDTO;
 import io.openk9.datasource.model.dto.request.HybridSearchPipelineDTO;
+import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
 import io.openk9.datasource.model.dto.response.SearchPipelineResponseDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.validation.constraints.NotNull;
+import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.generic.Bodies;
 import org.opensearch.client.opensearch.generic.Requests;
+
+import java.util.List;
+import java.util.Set;
 
 
 @ApplicationScoped
 public class SearchConfigService extends BaseK9EntityService<SearchConfig, SearchConfigDTO> {
 
-	 SearchConfigService(SearchConfigMapper mapper) {
+	private static final Logger log = Logger.getLogger(SearchConfigService.class);
+
+	SearchConfigService(SearchConfigMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	@Override
+	public Uni<SearchConfig> create(SearchConfigDTO dto) {
+		if (dto instanceof SearchConfigWithQueryParsersDTO withQueryParsersDTO) {
+			SearchConfig transientSearchConfig = mapper.create(withQueryParsersDTO);
+
+			return sessionFactory.withTransaction((s, tr) ->
+				super.create(s, transientSearchConfig)
+					.flatMap(searchConfig -> {
+						List<Uni<Void>> unis = List.of(Uni.createFrom().voidItem());
+
+						var queryParsers = withQueryParsersDTO.getQueryParsers();
+
+						if (queryParsers != null) {
+							// iterates all DTO's queryParser information
+							unis = queryParsers.stream()
+								.map(queryParserConfigDTO ->
+									// creates a queryParser based on the DTO's information
+									queryParserConfigService.create(s, queryParserConfigDTO)
+										.invoke(queryParserConfig ->
+											// binds the queryParser to the searchConfig
+											searchConfig.addQueryParserConfig(
+												searchConfig.getQueryParserConfigs(),
+												queryParserConfig
+											)
+										)
+										.replaceWithVoid()
+								)
+								.toList();
+						}
+
+						return Uni.combine().all().unis(unis)
+							.usingConcurrencyOf(1)
+							.discardItems()
+							.onFailure()
+							.invoke(log::error)
+							.flatMap(ignored -> s.merge(searchConfig));
+					})
+			);
+		}
+		return super.create(dto);
 	}
 
 	@Override
@@ -134,6 +180,24 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 					}
 					return Uni.createFrom().nullItem();
 				})));
+	}
+
+	public Uni<SearchConfig> removeAllQueryParserConfig(Mutiny.Session s, long id) {
+		return findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(searchConfig ->
+				s.fetch(searchConfig.getQueryParserConfigs())
+					.flatMap(queryParserConfigs -> {
+					searchConfig.removeAllQueryParserConfig(queryParserConfigs);
+					return persist(s, searchConfig)
+						.map(dt -> dt);
+					})
+			);
+	}
+
+	public Uni<SearchConfig> removeAllQueryParserConfig(long id) {
+		return sessionFactory.withTransaction((s) -> removeAllQueryParserConfig(s, id));
 	}
 
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {

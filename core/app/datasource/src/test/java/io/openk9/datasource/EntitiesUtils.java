@@ -4,6 +4,7 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.BucketDTO;
@@ -16,9 +17,14 @@ import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.RAGConfigurationService;
+import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
+import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntitiesUtils {
 
@@ -210,6 +216,19 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
+	public static SearchConfig getSearchConfig(
+		Mutiny.SessionFactory sessionFactory, SearchConfigService searchConfigService,
+		String name) {
+
+		return sessionFactory.withTransaction(
+				session -> searchConfigService.findByName(session, name)
+				.call(searchConfig ->
+					Mutiny.fetch(searchConfig.getQueryParserConfigs()))
+			)
+			.await()
+			.indefinitely();
+	}
+
 	public static SuggestionCategory getSuggestionCategory(
 		Mutiny.SessionFactory sessionFactory, SuggestionCategoryService suggestionCategoryService,
 		String name) {
@@ -282,6 +301,15 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
+	public static void removeQueryParserConfig(
+		SearchConfigService searchConfigService,
+		long id, long queryParserId) {
+
+			searchConfigService.removeQueryParserConfig(id, queryParserId)
+				.await()
+				.indefinitely();
+	}
+
 	public static void removeRAGConfiguration(
 		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
 		RAGConfiguration ragConfiguration) {
@@ -305,6 +333,46 @@ public class EntitiesUtils {
 		sessionFactory.withTransaction(
 				session -> ragConfigurationService.deleteById(session, id)
 			)
+			.await()
+			.indefinitely();
+	}
+
+	public static void removeSearchConfig(
+		Mutiny.SessionFactory sessionFactory,
+		SearchConfigService searchConfigService,
+		SearchConfig searchConfig) {
+
+		removeSearchConfig(
+			sessionFactory, searchConfigService, searchConfig.getId());
+	}
+
+	public static void removeSearchConfig(
+		Mutiny.SessionFactory sessionFactory,
+		SearchConfigService searchConfigService,
+		String name) {
+
+		var searchConfig =
+			getSearchConfig(sessionFactory, searchConfigService, name);
+
+		removeSearchConfig(
+			sessionFactory, searchConfigService, searchConfig.getId());
+	}
+
+	public static void removeSearchConfig(
+		Mutiny.SessionFactory sessionFactory,
+		SearchConfigService searchConfigService,
+		long id) {
+
+		sessionFactory.withTransaction(
+				session -> {
+					List<Uni<SearchConfig>> unis = new ArrayList<>();
+					unis.add(searchConfigService.removeAllQueryParserConfig(session, id));
+					unis.add(searchConfigService.deleteById(session, id));
+
+					return Uni.combine().all().unis(unis)
+						.usingConcurrencyOf(1)
+						.with(ignored -> Uni.createFrom().voidItem());
+				})
 			.await()
 			.indefinitely();
 	}

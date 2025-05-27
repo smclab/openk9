@@ -17,11 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import java.util.List;
-import java.util.Set;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
@@ -30,14 +25,16 @@ import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.SearchConfigDTO;
+import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
 import io.openk9.datasource.service.QueryParserConfigService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -46,6 +43,9 @@ import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
+
+import java.util.List;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -165,6 +165,21 @@ public class SearchConfigGraphqlResource {
 				: updateSearchConfig(id, searchConfigDTO);
 		}
 
+	}
+
+	@Mutation
+	public Uni<Response<SearchConfig>> searchConfigWithQueryParsers(
+			@Id Long id, SearchConfigWithQueryParsersDTO searchConfigWithQueryParsersDTO,
+			@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createSearchConfig(searchConfigWithQueryParsersDTO);
+		}
+		else {
+			return patch
+				? patchSearchConfig(id, searchConfigWithQueryParsersDTO)
+				: updateSearchConfig(id, searchConfigWithQueryParsersDTO);
+		}
 	}
 
 	@Mutation

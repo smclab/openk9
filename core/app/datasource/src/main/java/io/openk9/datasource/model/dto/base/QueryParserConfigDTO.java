@@ -17,10 +17,9 @@
 
 package io.openk9.datasource.model.dto.base;
 
-import jakarta.validation.constraints.NotNull;
-
 import io.openk9.datasource.validation.json.Json;
-
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,6 +29,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
+@Embeddable
 public class QueryParserConfigDTO extends K9EntityDTO {
 
 	@NotNull
