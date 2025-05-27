@@ -893,23 +893,7 @@ public class SearchConfigGraphqlTest {
 			operation(
 				field(
 					"queryParserConfigFormConfigurations",
-					field(
-						"configurations",
-						field("type"),
-						field(
-							"form",
-							field(
-								"fields",
-								field("name"),
-								field("type"),
-								field(
-									"values",
-									field("value"),
-									field("default")
-								)
-							)
-						)
-					)
+					field("configurations")
 				)
 			)
 		);

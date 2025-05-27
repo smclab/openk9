@@ -19,6 +19,10 @@ package io.openk9.datasource.model.form;
 
 import java.util.Collection;
 
+import io.smallrye.graphql.api.CustomScalar;
+import io.smallrye.graphql.api.CustomStringScalar;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.graphql.Description;
 
 /**
@@ -40,11 +44,45 @@ public record FormConfigurations(Collection<FormConfiguration> configurations) {
 
 	/**
 	 * Represents a single form configuration with its associated type identifier.
-	 *
-	 * @param type the unique identifier for this form configuration type
-	 * @param form the form template containing the field definitions and structure
 	 */
+	@CustomScalar("FormConfiguration")
 	@Description("Represents a single form configuration with its associated type identifier.")
-	public record FormConfiguration(String type, FormTemplate form) {}
+	public static class FormConfiguration implements CustomStringScalar {
+
+		private final String stringValue;
+		private final String type;
+		private final FormTemplate form;
+
+		/**
+		 * @param type the unique identifier for this form configuration type
+		 * @param form the form template containing the field definitions and structure
+		 */
+		public FormConfiguration(String type, FormTemplate form) {
+
+			this.type = type;
+			this.form = form;
+
+			var jsonObj = JsonObject.of(type, form);
+			this.stringValue = jsonObj.encode();
+		}
+
+		/**
+		 * @param stringValue string representation of the json that map the form.
+		 */
+		public FormConfiguration(String stringValue) {
+			var jsonObj = (JsonObject) Json.decodeValue(stringValue);
+
+			var firstEntry = jsonObj.getMap().entrySet().iterator().next();
+			this.type = firstEntry.getKey();
+			this.form = ((JsonObject) firstEntry.getValue()).mapTo(FormTemplate.class);
+			this.stringValue = stringValue;
+
+		}
+
+		@Override
+		public String stringValueForSerialization() {
+			return stringValue;
+		}
+	}
 }
 
