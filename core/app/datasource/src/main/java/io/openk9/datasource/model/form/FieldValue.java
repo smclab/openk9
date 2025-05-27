@@ -20,4 +20,4 @@ package io.openk9.datasource.model.form;
 import lombok.Builder;
 
 @Builder
-public record FieldValue(String value, boolean isDefault) {}
+public record FieldValue(Object value, boolean isDefault) {}

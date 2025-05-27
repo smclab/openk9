@@ -76,7 +76,7 @@
 			"info": "",
 			"values": [
 				{
-					"value": "10000",
+					"value": 10000,
 					"isDefault": true
 				}
 			],
@@ -95,7 +95,7 @@
 			"info": "",
 			"values": [
 				{
-					"value": "0",
+					"value": 0,
 					"isDefault": true
 				}
 			],
