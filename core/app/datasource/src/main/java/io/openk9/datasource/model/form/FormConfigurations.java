@@ -18,17 +18,20 @@
 package io.openk9.datasource.model.form;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 import io.smallrye.graphql.api.CustomScalar;
 import io.smallrye.graphql.api.CustomStringScalar;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 import org.eclipse.microprofile.graphql.Description;
 
 /**
  * A collection of form configurations, each associated with a specific type identifier.
  *
- * <p>This record serves as a container for multiple form configurations primarily used
+ * <p>This class serves as a container for multiple form configurations primarily used
  * for UI form generation and rendering. Each configuration is identified by a unique
  * type string and contains the corresponding form template definition with field
  * specifications, validation rules, and display properties.
@@ -36,53 +39,71 @@ import org.eclipse.microprofile.graphql.Description;
  * <p>Currently used for QueryParserConfig entity forms, with plans to extend
  * to other entity configuration forms in the future.
  *
- * @param configurations collection of form configurations, each with a type and template
+ * <p>This class implements {@link CustomStringScalar} to enable serialization
+ * and deserialization of form configurations as JSON strings in GraphQL operations.
+ *
  * @see FormConfiguration
  * @see FormTemplate
  */
-public record FormConfigurations(Collection<FormConfiguration> configurations) {
+@Getter
+@CustomScalar("FormConfigurations")
+public class FormConfigurations implements CustomStringScalar {
+
+	private final Collection<FormConfiguration> configurations;
+
+	/**
+	 * Constructs a FormConfigurations instance with the provided collection of configurations.
+	 *
+	 * <p>This constructor is primarily used when creating instances programmatically.
+	 *
+	 * @param configurations a collection of form configurations, each containing a type
+	 *                       identifier and its associated form template
+	 */
+	public FormConfigurations(Collection<FormConfiguration> configurations) {
+		this.configurations = configurations;
+	}
+
+	/**
+	 * Constructs a FormConfigurations instance from a JSON array string.
+	 *
+	 * <p>This constructor is utilized by the {@link CustomStringScalar} handler to deserialize
+	 * JSON string representations into FormConfigurations objects. The JSON string
+	 * should represent an array of objects, where each object contains 'type' and 'form'
+	 * properties matching the {@link FormConfiguration} record structure.
+	 *
+	 * @param stringValue the JSON array as a string representation containing form configurations
+	 * @see CustomStringScalar
+	 */
+	public FormConfigurations(String stringValue) {
+		var jsonArray = (JsonArray) Json.decodeValue(stringValue);
+		Collection<FormConfiguration> configurations = new LinkedList<>();
+
+		for (Object obj : jsonArray.getList()) {
+			var jsonObj = (JsonObject) obj;
+			var configuration = jsonObj.mapTo(FormConfiguration.class);
+			configurations.add(configuration);
+		}
+
+		this.configurations = configurations;
+	}
+
+	@Override
+	public String stringValueForSerialization() {
+		return Json.encode(configurations);
+	}
 
 	/**
 	 * Represents a single form configuration with its associated type identifier.
+	 *
+	 * <p>Each form configuration consists of a unique type identifier
+	 * and a form template that defines the structure, fields, etc.
+	 * for the corresponding UI form.
+	 *
+	 * @param type the unique identifier for this form configuration type, used to
+	 *             distinguish between different kinds of forms
+	 * @param form the form template containing the complete field definitions,
+	 *             validation rules, and structural information for UI rendering
 	 */
-	@CustomScalar("FormConfiguration")
 	@Description("Represents a single form configuration with its associated type identifier.")
-	public static class FormConfiguration implements CustomStringScalar {
-
-		private final String stringValue;
-		private final String type;
-		private final FormTemplate form;
-
-		/**
-		 * @param type the unique identifier for this form configuration type
-		 * @param form the form template containing the field definitions and structure
-		 */
-		public FormConfiguration(String type, FormTemplate form) {
-
-			this.type = type;
-			this.form = form;
-
-			var jsonObj = JsonObject.of(type, form);
-			this.stringValue = jsonObj.encode();
-		}
-
-		/**
-		 * @param stringValue string representation of the json that map the form.
-		 */
-		public FormConfiguration(String stringValue) {
-			var jsonObj = (JsonObject) Json.decodeValue(stringValue);
-
-			var firstEntry = jsonObj.getMap().entrySet().iterator().next();
-			this.type = firstEntry.getKey();
-			this.form = ((JsonObject) firstEntry.getValue()).mapTo(FormTemplate.class);
-			this.stringValue = stringValue;
-
-		}
-
-		@Override
-		public String stringValueForSerialization() {
-			return stringValue;
-		}
-	}
+	public record FormConfiguration(String type, FormTemplate form) {}
 }
-

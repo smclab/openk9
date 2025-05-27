@@ -891,10 +891,7 @@ public class SearchConfigGraphqlTest {
 
 		var query = document(
 			operation(
-				field(
-					"queryParserConfigFormConfigurations",
-					field("configurations")
-				)
+				field("queryParserConfigFormConfigurations")
 			)
 		);
 
