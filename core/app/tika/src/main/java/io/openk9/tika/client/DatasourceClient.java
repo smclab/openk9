@@ -15,23 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tika;
+package io.openk9.tika.client;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.MediaType;
 
-import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@ApplicationScoped
-public class Processor {
+@Path("/api/datasource")
+@RegisterRestClient(configKey = "datasource")
+public interface DatasourceClient {
 
-	public void process(JsonObject tikaPayload) {
-
-		tikaProcessor.process(tikaPayload);
-
-	}
-
-	@Inject
-	TikaProcessor tikaProcessor;
-
+	@POST
+	@Path("/pipeline/callback/{token-id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	String sentToPipeline(@PathParam("token-id")String tokenId, String body);
 }

@@ -24,8 +24,8 @@ import java.time.Instant;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.tika.client.datasource.DatasourceClient;
-import io.openk9.tika.client.filemanager.FileManagerClient;
+import io.openk9.tika.client.DatasourceClient;
+import io.openk9.tika.client.FileManagerClient;
 import io.openk9.tika.util.Detectors;
 import io.openk9.tika.util.TextCleaner;
 
@@ -36,20 +36,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.mime.MediaType;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class TikaProcessor {
-
-    @Inject
-    @ConfigProperty(name = "openk9.tika-ocr.character-length")
-    Integer ocrCharacterLength;
-
-    @Inject
-    @ConfigProperty(name = "openk9.tika-ocr.enabled")
-    Boolean ocrEnabled;
 
     public void process(JsonObject jsonObject) {
 
@@ -191,25 +182,6 @@ public class TikaProcessor {
                     }
 
                     String text = tikaContent.getText();
-
-                    if (text.length() < ocrCharacterLength && ocrEnabled) {
-
-                        document.put("toOcr", true);
-
-                        datasourceClient.sentToPipeline(replyTo, response.toString());
-
-                        logger.info("Send message to datasource with token: "
-                                    + replyTo + " to ocr final destination");
-
-                        long estimatedTime = System.currentTimeMillis() - startTime;
-                        logger.info(estimatedTime);
-
-                        return;
-
-                    }
-                    else {
-                        document.put("toOcr", false);
-                    }
 
                     text = TextCleaner.cleanText(text);
 

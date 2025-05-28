@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tika.client.filemanager;
+package io.openk9.tika.client;
 
 import java.io.InputStream;
 import jakarta.ws.rs.GET;

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import io.smallrye.mutiny.Uni;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
@@ -38,12 +37,6 @@ public class Detectors {
 			: new BufferedInputStream(stream);
 
 		return _detector.detect(stream, new Metadata());
-
-	}
-
-	public Uni<MediaType> detectAsync(InputStream stream) {
-
-		return Unis.toBlockingToUni(() -> detect(stream));
 
 	}
 

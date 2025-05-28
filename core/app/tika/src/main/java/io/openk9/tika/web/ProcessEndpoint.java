@@ -28,7 +28,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 
-import io.openk9.tika.Processor;
+import io.openk9.tika.TikaProcessor;
 
 import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -57,7 +57,6 @@ public class ProcessEndpoint {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-
 	public void process(JsonObject payload) {
 
 		_executorService.execute(() -> {
@@ -67,7 +66,7 @@ public class ProcessEndpoint {
 	}
 
 	@Inject
-	Processor _processor;
+	TikaProcessor _processor;
 
 	private ExecutorService _executorService;
 
