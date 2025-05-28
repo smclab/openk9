@@ -1,11 +1,8 @@
 import React from "react";
 import { gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import ClayForm, { ClayToggle } from "@clayui/form";
-import ClayButton from "@clayui/button";
-import ClayLoadingIndicator from "@clayui/loading-indicator";
-import { useForm, fromFieldValidators, TextInput, StyleToggle, ClassNameButton } from "./Form";
-import ClayLayout from "@clayui/layout";
+import { Box, Button, CircularProgress, Container, FormControlLabel, Switch, Paper, Typography } from "@mui/material";
+import { useForm, fromFieldValidators, TextInput } from "./Form";
 import { useToast } from "./ToastProvider";
 import { useCreateOrUpdateTenantMutation, useTenantQuery } from "../graphql-generated";
 import { useRestClient } from "./queryClient";
@@ -57,7 +54,7 @@ export function TenantCreate() {
       }
     },
     onError(error) {
-      showToast({ displayType: "danger", title: "Tenant error", content: error.message ?? "failed to create Tenant" });
+      showToast({ displayType: "error", title: "Tenant error", content: error.message ?? "failed to create Tenant" });
     },
   });
   const form = useForm({
@@ -80,100 +77,80 @@ export function TenantCreate() {
   });
 
   return (
-    <ClayLayout.ContainerFluid view>
+    <Container maxWidth="sm" sx={{ mt: 4, position: "relative" }}>
       {loading && (
-        <div
-          style={{
+        <Box
+          sx={{
             position: "absolute",
-            top: "0",
-            left: "0",
+            top: 0,
+            left: 0,
             width: "100%",
             height: "100%",
-            background: "rgb(0 0 0 / 0.3)",
-            zIndex: "2",
+            bgcolor: "rgba(0,0,0,0.3)",
+            zIndex: 2,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <div style={{ position: "absolute", top: "50%", left: "55%" }}>
-            <div className="spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-            <div style={{ marginTop: "25px" }}>
-              <div className="spinner-word">
-                <span>L</span>
-                <span>O</span>
-                <span>A</span>
-                <span>D</span>
-                <span>I</span>
-                <span>N</span>
-                <span>G</span>
-                <span>.</span>
-                <span>.</span>
-                <span>.</span>
-              </div>
-            </div>
-          </div>
-        </div>
+          <CircularProgress />
+          <Typography sx={{ mt: 3, letterSpacing: 2 }}>LOADING...</Typography>
+        </Box>
       )}
 
-      <ClayForm
-        className="sheet"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (ability) {
-            form.submit();
-          }
-        }}
-      >
-        <TextInput label="VirtualHost" {...form.inputProps("virtualHost")} />
-        <div className="form-group" style={{ paddingTop: "18px" }}>
-          <ClayToggle
-            label={"Configure all fields"}
-            toggled={ability}
-            onToggle={() => {
-              setAbility(!ability);
-            }}
-          />
-          <style type="text/css">{StyleToggle}</style>
-        </div>
-        <TextInput label="Real Name" ability={ability} {...form.inputProps("realmName")} />
-        <TextInput label="Schema Name" ability={ability} {...form.inputProps("schemaName")} />
-        <TextInput label="Liquid Base Schema Name" ability={ability} {...form.inputProps("liquibaseSchemaName")} />
-        <TextInput label="Client Id" ability={ability} {...form.inputProps("clientId")} />
-        <div className="sheet-footer">
-          <ClayButton
-            className={ClassNameButton}
-            type="submit"
-            disabled={!form.canSubmit}
-            onClick={
-              !ability
-                ? async () => {
-                    setLoading(true);
-                    try {
-                      const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
-                        virtualHost: form.inputProps("virtualHost").value,
-                      });
-                      if (stato) {
-                        showToast({ displayType: "success", title: "Tenant created", content: "" });
-                        setLoading(false);
-                        navigate(`/tenants/`, { replace: true });
-                      }
-                    } catch (error) {
-                      setLoading(false);
-                      showToast({ displayType: "danger", title: "Tenant not created", content: "" });
-                    }
-                  }
-                : () => {}
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <form
+          onSubmit={(event: any) => {
+            event.preventDefault();
+            if (ability) {
+              form.submit();
             }
-          >
-            {tenantId === "new" ? "Create" : "Update"}
-          </ClayButton>
-        </div>
-      </ClayForm>
-    </ClayLayout.ContainerFluid>
+          }}
+        >
+          <TextInput label="VirtualHost" {...form.inputProps("virtualHost")} />
+          <Box sx={{ pt: 2 }}>
+            <FormControlLabel
+              control={<Switch checked={ability} onChange={() => setAbility(!ability)} color="primary" />}
+              label="Configure all fields"
+            />
+          </Box>
+          <TextInput label="Real Name" {...form.inputProps("realmName")} />
+          <TextInput label="Schema Name" {...form.inputProps("schemaName")} />
+          <TextInput label="Liquid Base Schema Name" {...form.inputProps("liquibaseSchemaName")} />
+          <TextInput label="Client Id" {...form.inputProps("clientId")} />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={!form.canSubmit}
+              onClick={
+                !ability
+                  ? async () => {
+                      setLoading(true);
+                      try {
+                        const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
+                          virtualHost: form.inputProps("virtualHost").value,
+                        });
+                        if (stato) {
+                          showToast({ displayType: "success", title: "Tenant created", content: "" });
+                          setLoading(false);
+                          navigate(`/tenants/`, { replace: true });
+                        }
+                      } catch (error) {
+                        setLoading(false);
+                        showToast({ displayType: "error", title: "Tenant not created", content: "" });
+                      }
+                    }
+                  : () => {}
+              }
+            >
+              {tenantId === "new" ? "Create" : "Update"}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Container>
   );
 }

@@ -90,25 +90,7 @@ export function DashBoard() {
 
   const byteCount = recoveryByteCount?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
 
-  return (
-    <ClayLayout.ContainerFluid view>
-      <div style={{ display: "flex", gap: "23px", marginTop: "25px" }}>
-        <Presentation user={user || ""} />
-        <WizardList />
-      </div>
-      <DetailGraph
-        dataGraph={data}
-        secondDataGraph={dataTwo}
-        firstCardNumber={docCount || 0}
-        secondCardNumber={documentDeleted || 0}
-        thirdCardNumber={bytesToMegabytes(byteCount) || 0}
-        firstCardLabel={"Document counts"}
-        secondCardLabel={"Document deleted"}
-        thirdCardLabel={"Store size"}
-        thirdCardUnity={"Megabyte"}
-      />
-    </ClayLayout.ContainerFluid>
-  );
+  return <>ciao</>;
 }
 
 function Presentation({ user }: { user: string }) {

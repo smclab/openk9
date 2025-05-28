@@ -33,6 +33,8 @@ export function Tenants() {
           { header: "Create Date", content: (tenant) => tenant?.createDate },
           { header: "Modify Date", content: (tenant) => tenant?.modifiedDate },
         ]}
+        onDelete={() => {}}
+        rowActions={[]}
       />
     </React.Fragment>
   );
