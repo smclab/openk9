@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import { useTenantsQuery } from "../graphql-generated";
 import { formatVirtualHost, Table } from "./Table";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const TenantsQuery = gql`
   query Tenants($searchText: String, $cursor: String) {
@@ -20,6 +21,8 @@ const TenantsQuery = gql`
 
 export function Tenants() {
   const bucketsQuery = useTenantsQuery();
+  const navigate = useNavigate();
+
   return (
     <React.Fragment>
       <Table
@@ -29,12 +32,19 @@ export function Tenants() {
         }}
         onCreatePath="/buckets/new"
         columns={[
-          { header: "Virtual Host", content: (tenant) => formatVirtualHost(tenant) },
+          { header: "Virtual Host", content: (tenant) => tenant?.virtualHost },
           { header: "Create Date", content: (tenant) => tenant?.createDate },
           { header: "Modify Date", content: (tenant) => tenant?.modifiedDate },
         ]}
         onDelete={() => {}}
-        rowActions={[]}
+        rowActions={[
+          {
+            label: "View",
+            action: (tenant) => {
+              if (tenant?.id) navigate(`${tenant.id}`);
+            },
+          },
+        ]}
       />
     </React.Fragment>
   );

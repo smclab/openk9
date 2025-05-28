@@ -17,9 +17,9 @@ import { Tenants } from "./components/Tenants";
 import { ToastProvider } from "./components/ToastProvider";
 import { SideNavigationContextProvider } from "./components/sideNavigationContext";
 import "./index.css";
+import { BrandLogo } from "./components/BrandLogo";
 
 export default function App() {
-  const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
   const savedTheme = localStorage.getItem("isDarkMode");
   const [isDarkMode, setIsDarkMode] = React.useState(savedTheme === "true");
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);
@@ -38,27 +38,27 @@ export default function App() {
                   <Box
                     sx={{
                       display: "flex",
+                      flexDirection: "column",
                       backgroundColor: isDarkMode ? "#1e1e1e" : "#f5f5f5",
-                      minHeight: "100vh",
-                      p: 0.5,
+                      height: "100vh",
+                      padding: 2,
+                      boxSizing: "border-box",
                     }}
                   >
                     <AppBar
-                      position="fixed"
                       elevation={0}
                       sx={{
-                        zIndex: (theme) => theme.zIndex.drawer + 1,
+                        position: "static",
                         backgroundColor: "background.paper",
-                        m: 0.5,
-                        width: "calc(100% - 8px)",
+                        mb: 1,
                         borderRadius: "8px",
                         border: `1px solid ${borderColor}`,
                         height: 56,
-                        justifyContent: "center",
                       }}
                     >
                       <Toolbar sx={{ minHeight: 56 }}>
                         <Box display="flex" alignItems="center" flexGrow={1}>
+                          <BrandLogo width={30} colorFill="#c22525" />
                           <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>
                             Open
                           </Typography>
@@ -71,103 +71,92 @@ export default function App() {
 
                     <Box
                       sx={{
-                        flexShrink: 0,
-                        mt: "64px",
-                        mr: 1,
-                        height: "calc(100vh - 72px)",
                         display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        width: "unset",
+                        flexGrow: 1,
+                        maxHeight: "calc(100% - 64px)",
+                        overflow: "hidden",
                       }}
                     >
                       <Box
                         sx={{
-                          backgroundColor: "background.paper",
-                          borderRadius: "8px",
-                          boxShadow: "none",
-                          border: `1px solid ${borderColor}`,
-                          flexGrow: 1,
-                          overflow: "auto",
-                          width: "unset",
-
-                          mb: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          width: "250px",
+                          mr: 2,
                         }}
                       >
-                        <TextField
-                          fullWidth
-                          size="small"
-                          placeholder="Cerca sezione..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
+                        <Box
                           sx={{
-                            p: 1,
-                            "& .MuiInputBase-root": {
-                              transition: "padding-left 0.3s ease-in-out",
-                              paddingLeft: searchTerm ? "14px" : "40px",
-                            },
-                            width: "unset",
+                            backgroundColor: "background.paper",
+                            borderRadius: "8px",
+                            boxShadow: "none",
+                            border: `1px solid ${borderColor}`,
+                            flexGrow: 1,
+                            overflow: "auto",
+                            height: "100%",
                           }}
-                          autoComplete="off"
-                          InputProps={{
-                            startAdornment: (
-                              <InputAdornment
-                                position="start"
-                                sx={{
-                                  position: "absolute",
-                                  left: "14px",
-                                  transition: "opacity 0.3s ease-in-out",
-                                  opacity: searchTerm ? 0 : 1,
-                                  pointerEvents: searchTerm ? "none" : "auto",
-                                  width: "unset",
-                                }}
-                              >
-                                <Search />
-                              </InputAdornment>
-                            ),
-                            endAdornment: searchTerm && (
-                              <InputAdornment position="end">
-                                <Clear onClick={() => setSearchTerm("")} sx={{ cursor: "pointer" }} />
-                              </InputAdornment>
-                            ),
-                          }}
-                        />
-                        <List component="nav" sx={{ p: 1 }}>
-                          {filteredMenuItems.map((item, index) => (
-                            <SideNavigationItem key={index} item={item} />
-                          ))}
-                        </List>
+                        >
+                          <TextField
+                            fullWidth
+                            size="small"
+                            placeholder="Cerca sezione..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            sx={{
+                              p: 1,
+                              "& .MuiInputBase-root": {
+                                transition: "padding-left 0.3s ease-in-out",
+                                paddingLeft: searchTerm ? "14px" : "40px",
+                              },
+                              width: "unset",
+                            }}
+                            autoComplete="off"
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment
+                                  position="start"
+                                  sx={{
+                                    position: "absolute",
+                                    left: "14px",
+                                    transition: "opacity 0.3s ease-in-out",
+                                    opacity: searchTerm ? 0 : 1,
+                                    pointerEvents: searchTerm ? "none" : "auto",
+                                    width: "unset",
+                                  }}
+                                >
+                                  <Search />
+                                </InputAdornment>
+                              ),
+                              endAdornment: searchTerm && (
+                                <InputAdornment position="end">
+                                  <Clear onClick={() => setSearchTerm("")} sx={{ cursor: "pointer" }} />
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                          <List component="nav" sx={{ p: 1 }}>
+                            {filteredMenuItems.map((item, index) => (
+                              <SideNavigationItem key={index} item={item} />
+                            ))}
+                          </List>
+                        </Box>
                       </Box>
+
+                      {/* Main content */}
                       <Box
+                        component="main"
                         sx={{
+                          flexGrow: 1,
                           backgroundColor: "background.paper",
                           borderRadius: "8px",
                           boxShadow: "none",
                           border: `1px solid ${borderColor}`,
-                          p: 1.5,
-                          display: "flex",
-                          justifyContent: "center",
+                          overflow: "auto",
+                          p: 2,
                         }}
-                      ></Box>
-                    </Box>
-
-                    <Box
-                      component="main"
-                      sx={{
-                        flexGrow: 1,
-                        p: 2,
-                        mt: "64px",
-                        backgroundColor: "background.paper",
-                        borderRadius: "8px",
-                        boxShadow: "none",
-                        border: `1px solid ${borderColor}`,
-                        overflow: "auto",
-                        height: "calc(100vh - 72px)",
-                        position: "relative",
-                        ml: 0,
-                      }}
-                    >
-                      <AppRoutes />
+                      >
+                        <AppRoutes />
+                      </Box>
                     </Box>
                   </Box>
                 </SideNavigationContextProvider>

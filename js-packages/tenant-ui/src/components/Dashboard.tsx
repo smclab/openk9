@@ -1,21 +1,11 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { getUserProfile } from "./authentication";
-import { BrandLogo } from "./BrandLogo";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Paper from "@mui/material/Paper";
-import PublicIcon from "@mui/icons-material/Public";
-import ArchiveIcon from "@mui/icons-material/Archive";
-import BusinessIcon from "@mui/icons-material/Business";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import React from "react";
+import { getUserProfile } from "./authentication";
+import { BrandLogo } from "./BrandLogo";
 
 export function bytesToMegabytes(bytes: number): number {
   const megabytes = bytes / (1024 * 1024);
@@ -34,7 +24,6 @@ export function DashBoard() {
     <Container maxWidth="lg">
       <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
         <Presentation user={user || ""} />
-        <WizardList />
       </Box>
     </Container>
   );
@@ -56,92 +45,5 @@ function Presentation({ user }: { user: string }) {
         </Typography>
       </CardContent>
     </Card>
-  );
-}
-
-function WizardList() {
-  return (
-    <Paper elevation={2} sx={{ maxWidth: 420, borderRadius: 2, flex: "1 1 0", p: 0 }}>
-      <Box sx={{ bgcolor: "white", pt: 2.5, borderTopLeftRadius: 2, borderTopRightRadius: 2 }}>
-        <Typography variant="h6" sx={{ pl: 2 }}>
-          <Link to="wizards" style={{ color: "inherit", textDecoration: "none", cursor: "pointer" }}>
-            Connect your stuff
-          </Link>
-        </Typography>
-      </Box>
-      <List>
-        <WizardListItem
-          icon={<PublicIcon sx={{ color: "#9C0E10" }} />}
-          to="wizards/web-crawler"
-          title="Web Crawler"
-          description="A web crawler that indexes a web-site"
-          firstElement={true}
-        />
-        <WizardListItem
-          icon={<ArchiveIcon sx={{ color: "#9C0E10" }} />}
-          to="wizards/database"
-          title="Database"
-          description="Index a database query"
-        />
-        <WizardListItem
-          icon={<BusinessIcon sx={{ color: "#9C0E10" }} />}
-          to="wizards/sitemap"
-          title="Site Map"
-          description="Index a site-map xml file"
-        />
-        <WizardListItem
-          icon={<MailOutlineIcon sx={{ color: "#9C0E10" }} />}
-          to="wizards/server-email"
-          title="Email Server"
-          description="Index emails"
-          lastElement={true}
-        />
-      </List>
-    </Paper>
-  );
-}
-
-type WizardListItemProps = {
-  icon: React.ReactNode;
-  to: string;
-  title: string;
-  description: string;
-  firstElement?: boolean;
-  lastElement?: boolean;
-};
-function WizardListItem({ icon, to, title, description, firstElement, lastElement }: WizardListItemProps) {
-  return (
-    <ListItem
-      alignItems="flex-start"
-      sx={{
-        borderTop: firstElement ? "none" : undefined,
-        mt: firstElement ? "-8px" : undefined,
-        borderBottomLeftRadius: lastElement ? 2 : 0,
-        borderBottomRightRadius: lastElement ? 2 : 0,
-        bgcolor: "background.paper",
-      }}
-    >
-      <ListItemIcon>
-        <Box
-          sx={{
-            bgcolor: "var(--openk9-embeddable-dashboard--secondary-color, #f5f5f5)",
-            p: 1,
-            display: "flex",
-            borderRadius: "50%",
-            color: "#9C0E10",
-          }}
-        >
-          {icon}
-        </Box>
-      </ListItemIcon>
-      <ListItemText
-        primary={
-          <Link to={to} style={{ color: "inherit", textDecoration: "none" }}>
-            {title}
-          </Link>
-        }
-        secondary={description}
-      />
-    </ListItem>
   );
 }
