@@ -99,6 +99,8 @@ public class SearchResource {
 		"\\.i18n\\..{5,}$|\\.base$");
 	private static final int INTERNAL_SERVER_ERROR = 500;
 	private static final String DETAILS_FIELD = "details";
+	private static final int NONE = 0;
+	private static final int NOT_FOUND = 404;
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 	@GrpcClient("searcher")
@@ -321,7 +323,7 @@ public class SearchResource {
 	}
 
 	private static Iterable<Integer> toList(Integer[] pos) {
-		if (pos == null || pos.length == 0) {
+		if (pos == null || pos.length == NONE) {
 			return List.of();
 		}
 		return List.of(pos);
@@ -559,7 +561,7 @@ public class SearchResource {
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
-		int statusCode = 0;
+		int statusCode = NONE;
 		String reason = "Unable to serve search request";
 
 		if (throwable instanceof ResponseException responseException) {
@@ -571,7 +573,7 @@ public class SearchResource {
 		jakarta.ws.rs.core.Response.Status responseStatus = null;
 
 		switch (statusCode) {
-			case 0, 404 -> {
+			case NONE, NOT_FOUND -> {
 				responseStatus =
 					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
@@ -677,7 +679,7 @@ public class SearchResource {
 
 			Object[] sortValues = hit.getSortValues();
 
-			if (sortValues != null && sortValues.length > 0) {
+			if (sortValues != null && sortValues.length > NONE) {
 				hitMap.put(
 					"sortAfterKey",
 					Base64.getEncoder().encodeToString(
@@ -693,7 +695,7 @@ public class SearchResource {
 		TotalHits totalHits = hits.getTotalHits();
 		var totalResult = totalHits != null
 			? Math.min(totalHits.value, totalResultLimit)
-			: 0;
+			: NONE;
 
 		return new Response(result, totalResult);
 	}
