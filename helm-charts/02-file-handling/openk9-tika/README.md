@@ -78,12 +78,9 @@ Openk9 Tika service is based on Quarkus Framework. Use following parameters to s
 
 Openk9 Tika has some custom configurations to handle some aspects. Here the configurations:
 
-
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `tika.ocrEnabled`    | To enable Ocr                                                                       | `false`            |
-| `tika.characterLength`    | Maximum length in character of extracted text to try Ocr                    | `10`            |
-| `tika.poolSize`    | Size of pool to handle concurrent processes                          | `4`            |
+| Name            | Description                                 | Value |
+|-----------------|---------------------------------------------|-------|
+| `tika.poolSize` | Size of pool to handle concurrent processes | `4`   |
 
 ### Configure connections to other Openk9 services
 

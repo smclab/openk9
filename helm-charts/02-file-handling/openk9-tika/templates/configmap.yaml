@@ -15,9 +15,6 @@ data:
   QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
   QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: {{ .Values.limit.max.size | quote }}
 
-  QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
-  OPENK9_TIKA_OCR_CHARACTER_LENGTH: {{ .Values.tika.characterLength | quote }}
-  OPENK9_TIKA_OCR_ENABLED: {{ .Values.tika.ocrEnabled | quote }}
   OPENK9_TIKA_POOL_SIZE: {{ .Values.tika.poolSize | quote }}
 
   # JVM Memory variable
