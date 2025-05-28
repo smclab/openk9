@@ -42,11 +42,13 @@ import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.generic.Bodies;
 import org.opensearch.client.opensearch.generic.Requests;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -180,6 +182,66 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 					}
 					return Uni.createFrom().nullItem();
 				})));
+	}
+
+	/**
+	 * Patches an existing {@link SearchConfig} by updating its fields and replacing its associated
+	 * {@link QueryParserConfig}s if the provided DTO includes them.
+	 *
+	 * <p>If the {@code dto} is an instance of {@link SearchConfigWithQueryParsersDTO}, the method updates
+	 * the main entity and fully replaces its related query parser configurations inside a transactional context.</p>
+	 *
+	 * @param id the ID of the {@link SearchConfig} to patch
+	 * @param dto the data transfer object containing the new values (with or without query parsers)
+	 * @return a {@link Uni} emitting the updated {@link SearchConfig}
+	 */
+	@Override
+	public Uni<SearchConfig> patch(long id, SearchConfigDTO dto) {
+		if (dto instanceof SearchConfigWithQueryParsersDTO withQueryParsersDTO) {
+			return sessionFactory.withTransaction(s -> findById(s, id)
+				.call(searchConfig ->
+					Mutiny.fetch(searchConfig.getQueryParserConfigs()))
+				.flatMap(searchConfig -> {
+
+					SearchConfig newStateSearchConfig =
+						mapper.patch(searchConfig, withQueryParsersDTO);
+
+					// UniBuilder to prevent empty unis
+					List<Uni<Void>> unis = new ArrayList<>();
+					unis.add(Uni.createFrom().voidItem());
+
+					List<QueryParserConfigDTO> queryParsers = withQueryParsersDTO.getQueryParsers();
+					if (queryParsers != null) {
+						unis.add(removeAllQueryParserConfig(s, id).replaceWithVoid());
+
+						// iterates all DTO's queryParser information
+						unis.addAll(withQueryParsersDTO.getQueryParsers().stream()
+							.map(queryParserConfigDTO ->
+								// creates a queryParser based on the DTO's information
+								queryParserConfigService.create(s, queryParserConfigDTO)
+									// binds the queryParser to the searchConfig
+									.invoke(queryParserConfig ->
+										searchConfig.addQueryParserConfig(
+											newStateSearchConfig.getQueryParserConfigs(),
+											queryParserConfig
+										)
+									)
+									.replaceWithVoid()
+							)
+							.toList()
+						);
+					}
+
+					return Uni.combine().all().unis(unis)
+						.usingConcurrencyOf(1)
+						.discardItems()
+						.onFailure()
+						.invoke(log::error)
+						.flatMap(ignored -> s.merge(newStateSearchConfig));
+				})
+			);
+		}
+		return super.patch(id, dto);
 	}
 
 	public Uni<SearchConfig> removeAllQueryParserConfig(Mutiny.Session s, long id) {

@@ -9,10 +9,12 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -126,6 +128,34 @@ public class EntitiesUtils {
 			.build();
 
 		createRAGConfiguration(ragConfigurationService, dto);
+	}
+
+	/**
+	 * Creates and persists a {@link SearchConfig} with the given name and associated {@link QueryParserConfigDTO}s.
+	 *
+	 * <p>Builds a {@link SearchConfigWithQueryParsersDTO} with default values and invokes the
+	 * {@code create} method of {@link SearchConfigService}, waiting for the result synchronously.</p>
+	 *
+	 * @param searchConfigService the service used to persist the search configuration
+	 * @param name the name of the search configuration
+	 * @param queryParserConfigDTOList the list of query parser configurations to associate
+	 */
+	public static void createSearchConfig(
+			SearchConfigService searchConfigService,
+			String name,
+			List<QueryParserConfigDTO> queryParserConfigDTOList) {
+
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(name)
+			.minScore(0F)
+			.minScoreSuggestions(false)
+			.minScoreSearch(false)
+			.queryParsers(queryParserConfigDTOList)
+			.build();
+
+		searchConfigService.create(dto)
+			.await()
+			.indefinitely();
 	}
 
 	public static void createRAGConfiguration(
