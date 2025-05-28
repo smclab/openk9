@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.EntitiesUtils;
@@ -383,6 +400,228 @@ public class SearchConfigServiceTest {
 		assertTrue(patchedParserExpectedNames.containsAll(patchedParserActualNames));
 		assertTrue(searchConfigPatched.isMinScoreSuggestions());
 		assertTrue(searchConfigPatched.isMinScoreSearch());
+	}
+
+	@Test
+	void should_update_search_config_two_with_query_analysis() {
+		float minScoreUpdated = 5F;
+		var queryParserDTOList = List.of(QUERY_PARSER_DTO_ONE, QUERY_PARSER_DTO_TWO);
+
+		// check initial state
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_TWO_NAME
+			);
+
+		assertEquals(0, searchConfig.getQueryParserConfigs().size());
+		assertEquals(0F, searchConfig.getMinScore());
+		assertFalse(searchConfig.isMinScoreSuggestions());
+		assertFalse(searchConfig.isMinScoreSearch());
+
+		// creates searchConfigDTO with queryParserConfigDTO to update
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(searchConfig.getName())
+			.minScore(minScoreUpdated)
+			.minScoreSuggestions(true)
+			.minScoreSearch(true)
+			.queryParsers(queryParserDTOList)
+			.build();
+
+		// update the searchConfiguration
+		searchConfigService.update(searchConfig.getId(), dto)
+			.await()
+			.indefinitely();
+
+		SearchConfig searchConfigUpdated =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_TWO_NAME
+			);
+
+		var updatedParserExpectedNames = queryParserDTOList.stream()
+			.map(QueryParserConfigDTO::getName)
+			.toList();
+		var updatedParserActualNames = searchConfigUpdated.getQueryParserConfigs().stream()
+			.map(QueryParserConfig::getName)
+			.toList();
+
+		// check updated searchConfiguration
+		assertEquals(queryParserDTOList.size(), searchConfigUpdated.getQueryParserConfigs().size());
+		assertEquals(minScoreUpdated, searchConfigUpdated.getMinScore());
+		assertTrue(updatedParserExpectedNames.containsAll(updatedParserActualNames));
+		assertTrue(searchConfigUpdated.isMinScoreSuggestions());
+		assertTrue(searchConfigUpdated.isMinScoreSearch());
+	}
+
+	@Test
+	void should_update_search_config_three_with_query_analysis() {
+		float minScoreUpdated = 5F;
+		var queryParserDTOList = List.of(QUERY_PARSER_DTO_FOUR);
+
+		// check initial state
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
+			.map(QueryParserConfigDTO::getName)
+			.toList();
+		var initialParserActualNames = searchConfig.getQueryParserConfigs().stream()
+			.map(QueryParserConfig::getName)
+			.toList();
+
+		assertEquals(PARSER_CONFIG_DTO_LIST.size(), searchConfig.getQueryParserConfigs().size());
+		assertEquals(0F, searchConfig.getMinScore());
+		assertTrue(initialParserExpectedNames.containsAll(initialParserActualNames));
+		assertFalse(searchConfig.isMinScoreSuggestions());
+		assertFalse(searchConfig.isMinScoreSearch());
+
+		// creates searchConfigDTO with queryParserConfigDTO to update
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(searchConfig.getName())
+			.minScore(minScoreUpdated)
+			.minScoreSuggestions(true)
+			.minScoreSearch(true)
+			.queryParsers(queryParserDTOList)
+			.build();
+
+		// update the searchConfiguration
+		searchConfigService.update(searchConfig.getId(), dto)
+			.await()
+			.indefinitely();
+
+		SearchConfig searchConfigUpdated =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		var updatedParserExpectedNames = queryParserDTOList.stream()
+			.map(QueryParserConfigDTO::getName)
+			.toList();
+		var updatedParserActualNames = searchConfigUpdated.getQueryParserConfigs().stream()
+			.map(QueryParserConfig::getName)
+			.toList();
+
+		// check updated searchConfiguration
+		assertEquals(queryParserDTOList.size(), searchConfigUpdated.getQueryParserConfigs().size());
+		assertEquals(minScoreUpdated, searchConfigUpdated.getMinScore());
+		assertTrue(updatedParserExpectedNames.containsAll(updatedParserActualNames));
+		assertTrue(searchConfigUpdated.isMinScoreSuggestions());
+		assertTrue(searchConfigUpdated.isMinScoreSearch());
+	}
+
+	@Test
+	void should_update_search_config_three_with_empty_query_analysis() {
+		float minScoreUpdated = 5F;
+
+		// check initial state
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
+			.map(QueryParserConfigDTO::getName)
+			.toList();
+		var initialParserActualNames = searchConfig.getQueryParserConfigs().stream()
+			.map(QueryParserConfig::getName)
+			.toList();
+
+		assertEquals(PARSER_CONFIG_DTO_LIST.size(), searchConfig.getQueryParserConfigs().size());
+		assertEquals(0F, searchConfig.getMinScore());
+		assertTrue(initialParserExpectedNames.containsAll(initialParserActualNames));
+		assertFalse(searchConfig.isMinScoreSuggestions());
+		assertFalse(searchConfig.isMinScoreSearch());
+
+		// creates searchConfigDTO with queryParserConfigDTO to update
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(searchConfig.getName())
+			.minScore(minScoreUpdated)
+			.minScoreSuggestions(true)
+			.minScoreSearch(true)
+			// set queryParsers to empty list
+			.queryParsers(new ArrayList<>())
+			.build();
+
+		// update the searchConfiguration
+		searchConfigService.update(searchConfig.getId(), dto)
+			.await()
+			.indefinitely();
+
+		SearchConfig searchConfigUpdated =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		// check updated searchConfiguration
+		assertEquals(0, searchConfigUpdated.getQueryParserConfigs().size());
+		assertEquals(minScoreUpdated, searchConfigUpdated.getMinScore());
+		assertTrue(searchConfigUpdated.isMinScoreSuggestions());
+		assertTrue(searchConfigUpdated.isMinScoreSearch());
+	}
+
+	@Test
+	void should_update_search_config_three_with_no_query_analysis() {
+		float minScoreUpdated = 5F;
+
+		// check initial state
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
+			.map(QueryParserConfigDTO::getName)
+			.toList();
+		var initialParserActualNames = searchConfig.getQueryParserConfigs().stream()
+			.map(QueryParserConfig::getName)
+			.toList();
+
+		assertEquals(PARSER_CONFIG_DTO_LIST.size(), searchConfig.getQueryParserConfigs().size());
+		assertEquals(0F, searchConfig.getMinScore());
+		assertTrue(initialParserExpectedNames.containsAll(initialParserActualNames));
+		assertFalse(searchConfig.isMinScoreSuggestions());
+		assertFalse(searchConfig.isMinScoreSearch());
+
+		// creates searchConfigDTO with queryParserConfigDTO to update
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(searchConfig.getName())
+			.minScore(minScoreUpdated)
+			.minScoreSuggestions(true)
+			.minScoreSearch(true)
+			.build();
+
+		// update the searchConfiguration
+		searchConfigService.update(searchConfig.getId(), dto)
+			.await()
+			.indefinitely();
+
+		SearchConfig searchConfigUpdated =
+			EntitiesUtils.getSearchConfig(
+				sessionFactory,
+				searchConfigService,
+				SEARCH_CONFIG_THREE_NAME
+			);
+
+		// check updated searchConfiguration
+		assertEquals(0, searchConfigUpdated.getQueryParserConfigs().size());
+		assertEquals(minScoreUpdated, searchConfigUpdated.getMinScore());
+		assertTrue(searchConfigUpdated.isMinScoreSuggestions());
+		assertTrue(searchConfigUpdated.isMinScoreSearch());
 	}
 
 	@AfterEach

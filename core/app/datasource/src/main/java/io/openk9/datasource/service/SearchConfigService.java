@@ -276,6 +276,68 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 				})));
 	}
 
+	/**
+	 * Updates an existing {@link SearchConfig} by applying the new values from the provided DTO,
+	 * and fully replaces its associated {@link QueryParserConfig}s if present.
+	 *
+	 * <p>If the {@code dto} is an instance of {@link SearchConfigWithQueryParsersDTO}, the method
+	 * performs a full update of the main entity and all its related query parser configurations within
+	 * a transactional context.</p>
+	 *
+	 * @param id the ID of the {@link SearchConfig} to update
+	 * @param dto the data transfer object containing the updated fields and optional query parsers
+	 * @return a {@link Uni} emitting the updated {@link SearchConfig}
+	 */
+	@Override
+	public Uni<SearchConfig> update(long id, SearchConfigDTO dto) {
+		if (dto instanceof SearchConfigWithQueryParsersDTO withQueryParsersDTO) {
+			return sessionFactory.withTransaction(s -> findById(s, id)
+				.call(searchConfig ->
+					Mutiny.fetch(searchConfig.getQueryParserConfigs()))
+				.flatMap(searchConfig -> {
+
+					SearchConfig newStateSearchConfig =
+						mapper.update(searchConfig, withQueryParsersDTO);
+
+					// UniBuilder to prevent empty unis
+					List<Uni<Void>> unis = new ArrayList<>();
+					unis.add(Uni.createFrom().voidItem());
+
+					List<QueryParserConfigDTO> queryParsers = withQueryParsersDTO.getQueryParsers();
+					unis.add(removeAllQueryParserConfig(s, id).replaceWithVoid());
+
+					if (queryParsers != null) {
+
+						// iterates all DTO's queryParser information
+						unis.addAll(withQueryParsersDTO.getQueryParsers().stream()
+							.map(queryParserConfigDTO ->
+								// creates a queryParser based on the DTO's information
+								queryParserConfigService.create(s, queryParserConfigDTO)
+									// binds the queryParser to the searchConfig
+									.invoke(queryParserConfig ->
+										searchConfig.addQueryParserConfig(
+											newStateSearchConfig.getQueryParserConfigs(),
+											queryParserConfig
+										)
+									)
+									.replaceWithVoid()
+							)
+							.toList()
+						);
+					}
+
+					return Uni.combine().all().unis(unis)
+						.usingConcurrencyOf(1)
+						.discardItems()
+						.onFailure()
+						.invoke(log::error)
+						.flatMap(ignored -> s.merge(newStateSearchConfig));
+				})
+			);
+		}
+		return super.update(id, dto);
+	}
+
 	@Inject
 	OpenSearchClient openSearchClient;
 	@Inject
