@@ -70,13 +70,16 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 			return sessionFactory.withTransaction((s, tr) ->
 				super.create(s, transientSearchConfig)
 					.flatMap(searchConfig -> {
-						List<Uni<Void>> unis = List.of(Uni.createFrom().voidItem());
+
+						// UniBuilder to prevent empty unis
+						List<Uni<Void>> unis = new ArrayList<>();
+						unis.add(Uni.createFrom().voidItem());
 
 						var queryParsers = withQueryParsersDTO.getQueryParsers();
 
 						if (queryParsers != null) {
 							// iterates all DTO's queryParser information
-							unis = queryParsers.stream()
+							unis.addAll(queryParsers.stream()
 								.map(queryParserConfigDTO ->
 									// creates a queryParser based on the DTO's information
 									queryParserConfigService.create(s, queryParserConfigDTO)
@@ -89,7 +92,8 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 										)
 										.replaceWithVoid()
 								)
-								.toList();
+								.toList()
+							);
 						}
 
 						return Uni.combine().all().unis(unis)
