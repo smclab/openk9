@@ -9,6 +9,7 @@ export class OAuth2SettingsResourceService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
+     * Settings Js
      * @returns string OK
      * @throws ApiError
      */

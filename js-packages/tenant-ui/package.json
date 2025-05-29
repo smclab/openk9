@@ -75,6 +75,10 @@
       "last 1 safari version"
     ]
   },
+  "resolutions": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.0"
+  },
   "devDependencies": {
     "@graphql-codegen/time": "^3.2.3"
   }
