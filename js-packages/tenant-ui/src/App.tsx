@@ -18,6 +18,7 @@ import { ToastProvider } from "./components/ToastProvider";
 import { SideNavigationContextProvider } from "./components/sideNavigationContext";
 import "./index.css";
 import { BrandLogo } from "./components/BrandLogo";
+import { ModalProvider } from "./components/Modals";
 
 export default function App() {
   const savedTheme = localStorage.getItem("isDarkMode");
@@ -33,134 +34,137 @@ export default function App() {
         <ApolloProvider client={apolloClient}>
           <ThemeProvider theme={memoizedTheme}>
             <ToastProvider>
-              <BrowserRouter basename="/tenant">
-                <SideNavigationContextProvider>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      backgroundColor: isDarkMode ? "#1e1e1e" : "#f5f5f5",
-                      height: "100vh",
-                      padding: 2,
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    <AppBar
-                      elevation={0}
-                      sx={{
-                        position: "static",
-                        backgroundColor: "background.paper",
-                        mb: 1,
-                        borderRadius: "8px",
-                        border: `1px solid ${borderColor}`,
-                        height: 56,
-                      }}
-                    >
-                      <Toolbar sx={{ minHeight: 56 }}>
-                        <Box display="flex" alignItems="center" flexGrow={1}>
-                          <BrandLogo width={30} colorFill="#c22525" />
-                          <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>
-                            Open
-                          </Typography>
-                          <Typography variant="h5" fontWeight={700} color="text.primary" ml={0.5}>
-                            K9
-                          </Typography>
-                        </Box>
-                      </Toolbar>
-                    </AppBar>
-
+              <ModalProvider>
+                <BrowserRouter basename="/tenant">
+                  <SideNavigationContextProvider>
                     <Box
                       sx={{
                         display: "flex",
-                        flexGrow: 1,
-                        maxHeight: "calc(100% - 64px)",
-                        overflow: "hidden",
+                        flexDirection: "column",
+                        backgroundColor: isDarkMode ? "#1e1e1e" : "#f5f5f5",
+                        height: "100vh",
+                        padding: 2,
+                        boxSizing: "border-box",
                       }}
                     >
+                      <AppBar
+                        elevation={0}
+                        sx={{
+                          position: "static",
+                          backgroundColor: "background.paper",
+                          mb: 1,
+                          borderRadius: "8px",
+                          border: `1px solid ${borderColor}`,
+                          height: 56,
+                          zIndex: 2,
+                        }}
+                      >
+                        <Toolbar sx={{ minHeight: 56 }}>
+                          <Box display="flex" alignItems="center" flexGrow={1}>
+                            <BrandLogo width={30} colorFill="#c22525" />
+                            <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>
+                              Open
+                            </Typography>
+                            <Typography variant="h5" fontWeight={700} color="text.primary" ml={0.5}>
+                              K9
+                            </Typography>
+                          </Box>
+                        </Toolbar>
+                      </AppBar>
+
                       <Box
                         sx={{
                           display: "flex",
-                          flexDirection: "column",
-                          width: "250px",
-                          mr: 2,
+                          flexGrow: 1,
+                          maxHeight: "calc(100% - 64px)",
+                          overflow: "hidden",
                         }}
                       >
                         <Box
                           sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "250px",
+                            mr: 2,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              backgroundColor: "background.paper",
+                              borderRadius: "8px",
+                              boxShadow: "none",
+                              border: `1px solid ${borderColor}`,
+                              flexGrow: 1,
+                              overflow: "auto",
+                              height: "100%",
+                            }}
+                          >
+                            <TextField
+                              fullWidth
+                              size="small"
+                              placeholder="Cerca sezione..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              sx={{
+                                p: 1,
+                                "& .MuiInputBase-root": {
+                                  transition: "padding-left 0.3s ease-in-out",
+                                  paddingLeft: searchTerm ? "14px" : "40px",
+                                },
+                                width: "unset",
+                              }}
+                              autoComplete="off"
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment
+                                    position="start"
+                                    sx={{
+                                      position: "absolute",
+                                      left: "14px",
+                                      transition: "opacity 0.3s ease-in-out",
+                                      opacity: searchTerm ? 0 : 1,
+                                      pointerEvents: searchTerm ? "none" : "auto",
+                                      width: "unset",
+                                    }}
+                                  >
+                                    <Search />
+                                  </InputAdornment>
+                                ),
+                                endAdornment: searchTerm && (
+                                  <InputAdornment position="end">
+                                    <Clear onClick={() => setSearchTerm("")} sx={{ cursor: "pointer" }} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                            />
+                            <List component="nav" sx={{ p: 1 }}>
+                              {filteredMenuItems.map((item, index) => (
+                                <SideNavigationItem key={index} item={item} />
+                              ))}
+                            </List>
+                          </Box>
+                        </Box>
+
+                        {/* Main content */}
+                        <Box
+                          component="main"
+                          sx={{
+                            flexGrow: 1,
                             backgroundColor: "background.paper",
                             borderRadius: "8px",
                             boxShadow: "none",
                             border: `1px solid ${borderColor}`,
-                            flexGrow: 1,
                             overflow: "auto",
-                            height: "100%",
+                            p: 2,
                           }}
                         >
-                          <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Cerca sezione..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{
-                              p: 1,
-                              "& .MuiInputBase-root": {
-                                transition: "padding-left 0.3s ease-in-out",
-                                paddingLeft: searchTerm ? "14px" : "40px",
-                              },
-                              width: "unset",
-                            }}
-                            autoComplete="off"
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment
-                                  position="start"
-                                  sx={{
-                                    position: "absolute",
-                                    left: "14px",
-                                    transition: "opacity 0.3s ease-in-out",
-                                    opacity: searchTerm ? 0 : 1,
-                                    pointerEvents: searchTerm ? "none" : "auto",
-                                    width: "unset",
-                                  }}
-                                >
-                                  <Search />
-                                </InputAdornment>
-                              ),
-                              endAdornment: searchTerm && (
-                                <InputAdornment position="end">
-                                  <Clear onClick={() => setSearchTerm("")} sx={{ cursor: "pointer" }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                          <List component="nav" sx={{ p: 1 }}>
-                            {filteredMenuItems.map((item, index) => (
-                              <SideNavigationItem key={index} item={item} />
-                            ))}
-                          </List>
+                          <AppRoutes />
                         </Box>
                       </Box>
-
-                      {/* Main content */}
-                      <Box
-                        component="main"
-                        sx={{
-                          flexGrow: 1,
-                          backgroundColor: "background.paper",
-                          borderRadius: "8px",
-                          boxShadow: "none",
-                          border: `1px solid ${borderColor}`,
-                          overflow: "auto",
-                          p: 2,
-                        }}
-                      >
-                        <AppRoutes />
-                      </Box>
                     </Box>
-                  </Box>
-                </SideNavigationContextProvider>
-              </BrowserRouter>
+                  </SideNavigationContextProvider>
+                </BrowserRouter>
+              </ModalProvider>
             </ToastProvider>
           </ThemeProvider>
         </ApolloProvider>

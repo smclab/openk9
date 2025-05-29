@@ -29,7 +29,7 @@ export function ModalConfirm({
   actionConfirm(): void;
   labelConfirm: string;
   title: string;
-  body?: string;
+  body: string;
   children?: ReactNode;
   close(): void;
   fullWidth?: boolean;

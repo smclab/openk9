@@ -10,6 +10,9 @@ import Typography from "@mui/material/Typography";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTenantQuery } from "../graphql-generated";
+import { Button, MenuItem } from "@mui/material";
+import { useModal } from "./Modals";
+import { ModalConfirm } from "./ModalConfirm";
 
 export const TenantQuery = gql`
   query Tenant($id: ID!) {
@@ -32,15 +35,62 @@ export function Tenant() {
     variables: { id: tenantId as string },
     skip: !tenantId || tenantId === "new",
   });
-
+  const [viewModal, setViewModal] = React.useState(false);
+  const [selectedConnector, setSelectedConnector] = React.useState("");
   const tenant = tenantQuery.data?.tenant;
+
+  const connectors = ["LIFERAY", "CRAWLER", "EMAIL", "GITLAB", "SITEMAP", "DATABASE"];
 
   return (
     <React.Fragment>
-      <Toolbar>
+      {viewModal && (
+        <ModalConfirm
+          actionConfirm={() => {
+            console.log("Selected connector:", selectedConnector);
+            setViewModal(false);
+          }}
+          close={() => {
+            setViewModal(false);
+            setSelectedConnector("");
+          }}
+          labelConfirm="Confirm"
+          title="Select Preset?"
+          fullWidth
+          type="error"
+        >
+          <Box sx={{ minWidth: 120, my: 2 }}>
+            <TextField
+              select
+              fullWidth
+              label="Select Connector"
+              value={selectedConnector}
+              onChange={(e) => setSelectedConnector(e.target.value)}
+              variant="outlined"
+            >
+              {connectors.map((connector) => (
+                <MenuItem key={connector} value={connector}>
+                  {connector}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Box>
+        </ModalConfirm>
+      )}
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <IconButton edge="start" color="inherit" aria-label="back" onClick={() => navigate(`/tenants/`, { replace: true })} size="large">
           <ArrowBackIcon />
         </IconButton>
+        <Button
+          color="primary"
+          aria-label="install connector"
+          size="medium"
+          variant="contained"
+          onClick={() => {
+            setViewModal(true);
+          }}
+        >
+          Install Connector
+        </Button>
       </Toolbar>
       <Container maxWidth="lg">
         <Box sx={{ px: 4, py: 3 }}>
