@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.plugindriver;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.vertx.core.http.HttpMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,7 @@ public class HttpPluginDriverInfo {
 	private String baseUri;
 	private String path;
 	private Method method;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private Map<String, Object> body;
 
 	public enum Method {
