@@ -163,7 +163,7 @@ export function Tenant() {
               setViewModalInit(true);
             }}
           >
-            Init
+            Initialize
           </Button>
           <Button
             color="primary"
