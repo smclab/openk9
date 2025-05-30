@@ -134,15 +134,13 @@ export function TextInput({
   haveReset,
 }: BaseInputProps<string> & { item?: boolean; haveReset?: { isVisible: boolean; callback(): void } }) {
   return (
-    <FormControl fullWidth variant="outlined" error={validationMessages.length > 0} sx={{ marginBottom: 2 }}>
-      <Typography variant="subtitle1" component="label" htmlFor={id}>
-        {label}
-      </Typography>
-      <Box sx={{ marginBottom: 1 }} display={"flex"} flexDirection="row" alignItems="center" gap="4px">
+    <FormControl fullWidth variant="outlined" error={validationMessages.length > 0}>
+      <Box display={"flex"} flexDirection="row" alignItems="center" gap="4px">
         <TextField
           id={id}
           variant="outlined"
           value={value}
+          label={label}
           onChange={(event) => onChange(event.currentTarget.value)}
           disabled={disabled}
           aria-describedby={`${id}-helper-text`}

@@ -2,7 +2,8 @@ import { gql } from "@apollo/client";
 import { useTenantsQuery } from "../graphql-generated";
 import { formatVirtualHost, Table } from "./Table";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Box, Button, Typography } from "@mui/material";
 
 const TenantsQuery = gql`
   query Tenants($searchText: String, $cursor: String) {
@@ -24,7 +25,26 @@ export function Tenants() {
   const navigate = useNavigate();
 
   return (
-    <React.Fragment>
+    <Box padding={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="flex-end" mb={2}>
+        <Box sx={{ width: "50%" }}>
+          <Typography component="h1" variant="h1" fontWeight="600">
+            Tenant area
+          </Typography>
+          <Typography variant="body1">
+            In information technology, a tenant refers to a logically separate and isolated instance within a shared computing environment,
+            typically in cloud computing or multi-tenant architectures. Each tenant operates independently and may represent an individual
+            user, a customer organization, or a business unit, with its own data, configurations, and user management.
+          </Typography>
+        </Box>
+        <Box>
+          <Link to="tenant-create" style={{ textDecoration: "none" }}>
+            <Button variant="contained" color="primary" aria-label="create new analyzer">
+              Create New Tenants
+            </Button>
+          </Link>
+        </Box>
+      </Box>
       <Table
         data={{
           queryResult: bucketsQuery,
@@ -46,6 +66,6 @@ export function Tenants() {
           },
         ]}
       />
-    </React.Fragment>
+    </Box>
   );
 }

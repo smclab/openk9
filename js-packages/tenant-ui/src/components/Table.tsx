@@ -102,7 +102,7 @@ export function Table<
   const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
 
   return (
-    <Container>
+    <Container style={{ paddingInline: "0px" }}>
       {viewDeleteModal.isView && deleted && (
         <ModalConfirm
           title={deleted?.title}

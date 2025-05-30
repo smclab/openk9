@@ -1,24 +1,25 @@
 import { ApolloProvider } from "@apollo/client";
 import { Clear, Search } from "@mui/icons-material";
-import { AppBar, Box, List, TextField, ThemeProvider, Toolbar, Typography, InputAdornment, createTheme } from "@mui/material";
+import { AppBar, Box, createTheme, InputAdornment, List, TextField, ThemeProvider, Toolbar, Typography } from "@mui/material";
 import { red } from "@mui/material/colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import { apolloClient } from "./components/apolloClient";
 import { AuthenticationProvider } from "./components/authentication";
+import { BrandLogo } from "./components/BrandLogo";
 import { DashBoard } from "./components/Dashboard";
+import { ModalProvider } from "./components/Modals";
 import { useFilteredMenuItems } from "./components/Navigation/menuItems";
 import { SideNavigationItem } from "./components/Navigation/SideNavigationItem";
 import { queryClient } from "./components/queryClient";
+import { SideNavigationContextProvider } from "./components/sideNavigationContext";
 import { Tenant } from "./components/Tenant";
 import { TenantCreate } from "./components/TenantCreate";
 import { Tenants } from "./components/Tenants";
+import ThemeSwitcher from "./components/ThemeSwitcher";
 import { ToastProvider } from "./components/ToastProvider";
-import { SideNavigationContextProvider } from "./components/sideNavigationContext";
 import "./index.css";
-import { BrandLogo } from "./components/BrandLogo";
-import { ModalProvider } from "./components/Modals";
 
 export default function App() {
   const savedTheme = localStorage.getItem("isDarkMode");
@@ -27,6 +28,11 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const filteredMenuItems = useFilteredMenuItems(searchTerm);
   const borderColor = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
+  const toggleTheme = () => {
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    localStorage.setItem("isDarkMode", newTheme.toString());
+  };
 
   return (
     <AuthenticationProvider>
@@ -52,7 +58,7 @@ export default function App() {
                         sx={{
                           position: "static",
                           backgroundColor: "background.paper",
-                          mb: 1,
+                          mb: 2,
                           borderRadius: "8px",
                           border: `1px solid ${borderColor}`,
                           height: 56,
@@ -60,14 +66,22 @@ export default function App() {
                         }}
                       >
                         <Toolbar sx={{ minHeight: 56 }}>
-                          <Box display="flex" alignItems="center" flexGrow={1}>
-                            <BrandLogo width={30} colorFill="#c22525" />
-                            <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>
-                              Open
-                            </Typography>
-                            <Typography variant="h5" fontWeight={700} color="text.primary" ml={0.5}>
-                              K9
-                            </Typography>
+                          <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+                            {/* Logo section on the left */}
+                            <Box display="flex" alignItems="center">
+                              <BrandLogo width={30} colorFill="#c22525" />
+                              <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>
+                                Open
+                              </Typography>
+                              <Typography variant="h5" fontWeight={700} color="text.primary" ml={0.5}>
+                                K9
+                              </Typography>
+                            </Box>
+
+                            {/* Theme switcher */}
+                            <Box marginBottom={0.8}>
+                              <ThemeSwitcher isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                            </Box>
                           </Box>
                         </Toolbar>
                       </AppBar>
@@ -86,6 +100,7 @@ export default function App() {
                             flexDirection: "column",
                             width: "250px",
                             mr: 2,
+                            flexShrink: 0,
                           }}
                         >
                           <Box
@@ -156,6 +171,7 @@ export default function App() {
                             border: `1px solid ${borderColor}`,
                             overflow: "auto",
                             p: 2,
+                            minWidth: 0,
                           }}
                         >
                           <AppRoutes />

@@ -1,12 +1,15 @@
-import React from "react";
 import { gql } from "@apollo/client";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DomainIcon from "@mui/icons-material/Domain";
+import { Box, Button, Container, FormControlLabel, IconButton, Switch, Toolbar, Typography } from "@mui/material";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Button, CircularProgress, Container, FormControlLabel, Switch, Paper, Typography } from "@mui/material";
-import { useForm, fromFieldValidators, TextInput } from "./Form";
-import { useToast } from "./ToastProvider";
 import { useCreateOrUpdateTenantMutation, useTenantQuery } from "../graphql-generated";
+import { fromFieldValidators, TextInput, useForm } from "./Form";
+import { LoadingOverlay } from "./Loading";
 import { useRestClient } from "./queryClient";
 import "./Spinner.css";
+import { useToast } from "./ToastProvider";
 gql`
   mutation CreateOrUpdateTenant(
     $id: ID
@@ -77,54 +80,95 @@ export function TenantCreate() {
   });
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4, position: "relative" }}>
-      {loading && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            bgcolor: "rgba(0,0,0,0.3)",
-            zIndex: 2,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CircularProgress />
-          <Typography sx={{ mt: 3, letterSpacing: 2 }}>LOADING...</Typography>
-        </Box>
-      )}
+    <React.Fragment>
+      <Toolbar>
+        <IconButton edge="start" color="inherit" aria-label="back" onClick={() => navigate(`/tenants/`, { replace: true })} size="large">
+          <ArrowBackIcon />
+        </IconButton>
+      </Toolbar>
+      <Container maxWidth="lg">
+        {loading && <LoadingOverlay />}
 
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <form
-          onSubmit={(event: any) => {
-            event.preventDefault();
-            if (ability) {
-              form.submit();
-            }
-          }}
-        >
-          <TextInput label="VirtualHost" {...form.inputProps("virtualHost")} />
-          <Box sx={{ pt: 2 }}>
+        <Box sx={{ px: 4, py: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 6,
+              borderBottom: "2px solid",
+              borderColor: "primary.main",
+              pb: 2,
+            }}
+          >
+            <DomainIcon sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
+            <Typography variant="h4" component="h1" color="primary">
+              {tenantId === "new" ? "Create Tenant" : "Edit Tenant"}
+            </Typography>
+          </Box>
+
+          <Box
+            component="form"
+            onSubmit={(event: any) => {
+              event.preventDefault();
+              if (ability) {
+                form.submit();
+              }
+            }}
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 4,
+              marginBottom: 2,
+
+              "& .MuiTextField-root": {
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "background.default",
+                  transition: "all 0.2s",
+                  "&:hover:not(.Mui-disabled)": {
+                    backgroundColor: "background.paper",
+                  },
+                  "&.Mui-focused": {
+                    backgroundColor: "background.paper",
+                  },
+                  "&.Mui-disabled": {
+                    backgroundColor: "action.disabledBackground",
+                    "& .MuiOutlinedInput-input": {
+                      color: "text.disabled",
+                    },
+                  },
+                },
+              },
+            }}
+          >
+            <TextInput label="Virtual Host" {...form.inputProps("virtualHost")} />
             <FormControlLabel
               control={<Switch checked={ability} onChange={() => setAbility(!ability)} color="primary" />}
-              label="Configure all fields"
+              label={<Typography sx={{ fontWeight: 500 }}>Configure all fields</Typography>}
             />
+            <TextInput label="Real Name" {...form.inputProps("realmName")} disabled={!ability} />
+            <TextInput label="Schema Name" {...form.inputProps("schemaName")} disabled={!ability} />
+            <TextInput label="Liquid Base Schema Name" {...form.inputProps("liquibaseSchemaName")} disabled={!ability} />
+            <TextInput label="Client Id" {...form.inputProps("clientId")} disabled={!ability} />
           </Box>
-          <TextInput label="Real Name" {...form.inputProps("realmName")} />
-          <TextInput label="Schema Name" {...form.inputProps("schemaName")} />
-          <TextInput label="Liquid Base Schema Name" {...form.inputProps("liquibaseSchemaName")} />
-          <TextInput label="Client Id" {...form.inputProps("clientId")} />
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
             <Button
               variant="contained"
               color="primary"
               type="submit"
               disabled={!form.canSubmit}
+              sx={{
+                px: 4,
+                py: 1.5,
+                borderRadius: 1,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
               onClick={
                 !ability
                   ? async () => {
@@ -149,8 +193,8 @@ export function TenantCreate() {
               {tenantId === "new" ? "Create" : "Update"}
             </Button>
           </Box>
-        </form>
-      </Paper>
-    </Container>
+        </Box>
+      </Container>
+    </React.Fragment>
   );
 }
