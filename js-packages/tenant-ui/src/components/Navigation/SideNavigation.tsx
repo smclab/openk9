@@ -1,4 +1,4 @@
-import { Box, List } from "@mui/material";
+import { List } from "@mui/material";
 import { SideNavigationItem } from "./SideNavigationItem";
 import { menuItems } from "./menuItems";
 

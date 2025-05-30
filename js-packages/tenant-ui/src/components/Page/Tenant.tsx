@@ -10,11 +10,12 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useTenantQuery } from "../graphql-generated";
-import { ModalConfirm } from "./ModalConfirm";
-import { useRestClient } from "./queryClient";
-import { Preset } from "../openapi-generated";
-import { useToast } from "./ToastProvider";
+import { useTenantQuery } from "../../graphql-generated";
+import { ModalConfirm } from "../Modal/ModalConfirm";
+import { Preset } from "../../openapi-generated";
+import { useToast } from "../ToastProvider";
+import { LoadingOverlay } from "../Loading/Loading";
+import { useRestClient } from "../client/queryClient";
 
 export const TenantQuery = gql`
   query Tenant($id: ID!) {
@@ -40,6 +41,7 @@ export function Tenant() {
   const [viewModal, setViewModal] = React.useState(false);
   const [viewModalInit, setViewModalInit] = React.useState(false);
   const [selectedConnector, setSelectedConnector] = React.useState<Preset | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
   const tenant = tenantQuery.data?.tenant;
 
   const restClient = useRestClient();
@@ -55,6 +57,7 @@ export function Tenant() {
       {viewModal && (
         <ModalConfirm
           actionConfirm={async () => {
+            setIsLoading(true);
             try {
               if (selectedConnector) {
                 await restClient.provisioningResource.postApiTenantManagerProvisioningConnector({
@@ -74,6 +77,8 @@ export function Tenant() {
                 title: "Error",
                 content: "Failed to install connector",
               });
+            } finally {
+              setIsLoading(false);
             }
           }}
           close={() => {
@@ -106,6 +111,7 @@ export function Tenant() {
       {viewModalInit && (
         <ModalConfirm
           actionConfirm={async () => {
+            setIsLoading(true);
             try {
               if (tenant?.schemaName) {
                 await restClient.provisioningResource.postApiTenantManagerProvisioningInitTenant({
@@ -124,6 +130,8 @@ export function Tenant() {
                 title: "Error",
                 content: "Failed to initialize tenant",
               });
+            } finally {
+              setIsLoading(false);
             }
           }}
           close={() => {
@@ -234,6 +242,7 @@ export function Tenant() {
           </Box>
         </Box>
       </Container>
+      {isLoading && <LoadingOverlay />}
     </React.Fragment>
   );
 }

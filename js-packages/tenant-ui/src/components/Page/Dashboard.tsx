@@ -4,8 +4,8 @@ import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import React from "react";
-import { getUserProfile } from "./authentication";
-import { BrandLogo } from "./BrandLogo";
+import { getUserProfile } from "../client/authentication";
+import { BrandLogo } from "../BrandLogo";
 
 export function bytesToMegabytes(bytes: number): number {
   const megabytes = bytes / (1024 * 1024);

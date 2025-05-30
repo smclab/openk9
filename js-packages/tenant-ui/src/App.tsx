@@ -5,21 +5,21 @@ import { red } from "@mui/material/colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
-import { apolloClient } from "./components/apolloClient";
-import { AuthenticationProvider } from "./components/authentication";
+import { AuthenticationProvider } from "./components/client/authentication";
 import { BrandLogo } from "./components/BrandLogo";
-import { DashBoard } from "./components/Dashboard";
 import { ModalProvider } from "./components/Modals";
 import { useFilteredMenuItems } from "./components/Navigation/menuItems";
 import { SideNavigationItem } from "./components/Navigation/SideNavigationItem";
-import { queryClient } from "./components/queryClient";
 import { SideNavigationContextProvider } from "./components/sideNavigationContext";
-import { Tenant } from "./components/Tenant";
+import { Tenant } from "./components/Page/Tenant";
 import { TenantCreate } from "./components/TenantCreate";
-import { Tenants } from "./components/Tenants";
+import { Tenants } from "./components/Page/Tenants";
 import ThemeSwitcher from "./components/ThemeSwitcher";
 import { ToastProvider } from "./components/ToastProvider";
 import "./index.css";
+import { DashBoard } from "./components/Page/Dashboard";
+import { queryClient } from "./components/client/queryClient";
+import { apolloClient } from "./components/client/apolloClient";
 
 export default function App() {
   const savedTheme = localStorage.getItem("isDarkMode");

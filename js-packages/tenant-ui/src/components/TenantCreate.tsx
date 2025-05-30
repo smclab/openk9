@@ -6,10 +6,10 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTenantMutation, useTenantQuery } from "../graphql-generated";
 import { fromFieldValidators, TextInput, useForm } from "./Form";
-import { LoadingOverlay } from "./Loading";
-import { useRestClient } from "./queryClient";
-import "./Spinner.css";
+import { LoadingOverlay } from "./Loading/Loading";
 import { useToast } from "./ToastProvider";
+import { useRestClient } from "./client/queryClient";
+
 gql`
   mutation CreateOrUpdateTenant(
     $id: ID

@@ -17,7 +17,7 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import { ModalConfirm } from "./ModalConfirm";
+import { ModalConfirm } from "./Modal/ModalConfirm";
 
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return (

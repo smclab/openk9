@@ -1,11 +1,10 @@
 import { gql } from "@apollo/client";
-import { useTenantsQuery } from "../graphql-generated";
-import { formatVirtualHost, Table } from "./Table";
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { useTenantsQuery } from "../../graphql-generated";
+import { Table } from "../Table";
 
-const TenantsQuery = gql`
+gql`
   query Tenants($searchText: String, $cursor: String) {
     tenants(searchText: $searchText, first: 25, after: $cursor) {
       edges {

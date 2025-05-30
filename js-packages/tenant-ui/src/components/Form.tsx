@@ -162,7 +162,6 @@ export function TextInput({
             ),
           }}
         />
-        {/* {description && <InformationField description={description} />} */}
         {validationMessages.length > 0 && (
           <FormHelperText error>
             {validationMessages.map((validationMessage, index) => (
