@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DomainIcon from "@mui/icons-material/Domain";
+import { Button, MenuItem } from "@mui/material";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
@@ -10,9 +11,10 @@ import Typography from "@mui/material/Typography";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTenantQuery } from "../graphql-generated";
-import { Button, MenuItem } from "@mui/material";
-import { useModal } from "./Modals";
 import { ModalConfirm } from "./ModalConfirm";
+import { useRestClient } from "./queryClient";
+import { Preset } from "../openapi-generated";
+import { useToast } from "./ToastProvider";
 
 export const TenantQuery = gql`
   query Tenant($id: ID!) {
@@ -36,25 +38,50 @@ export function Tenant() {
     skip: !tenantId || tenantId === "new",
   });
   const [viewModal, setViewModal] = React.useState(false);
-  const [selectedConnector, setSelectedConnector] = React.useState("");
+  const [viewModalInit, setViewModalInit] = React.useState(false);
+  const [selectedConnector, setSelectedConnector] = React.useState<Preset | null>(null);
   const tenant = tenantQuery.data?.tenant;
 
-  const connectors = ["LIFERAY", "CRAWLER", "EMAIL", "GITLAB", "SITEMAP", "DATABASE"];
+  const restClient = useRestClient();
+  const showToast = useToast();
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString();
+  };
 
   return (
     <React.Fragment>
       {viewModal && (
         <ModalConfirm
-          actionConfirm={() => {
-            console.log("Selected connector:", selectedConnector);
-            setViewModal(false);
+          actionConfirm={async () => {
+            try {
+              if (selectedConnector) {
+                await restClient.provisioningResource.postApiTenantManagerProvisioningConnector({
+                  tenantName: tenant?.schemaName || "",
+                  preset: selectedConnector,
+                });
+                showToast({
+                  displayType: "success",
+                  title: "Success",
+                  content: `Connector ${selectedConnector} installed successfully`,
+                });
+              }
+              setViewModal(false);
+            } catch (error) {
+              showToast({
+                displayType: "error",
+                title: "Error",
+                content: "Failed to install connector",
+              });
+            }
           }}
           close={() => {
             setViewModal(false);
-            setSelectedConnector("");
+            setSelectedConnector(null);
           }}
           labelConfirm="Confirm"
-          title="Select Preset?"
+          title="Select Preset"
           fullWidth
           type="error"
         >
@@ -64,15 +91,53 @@ export function Tenant() {
               fullWidth
               label="Select Connector"
               value={selectedConnector}
-              onChange={(e) => setSelectedConnector(e.target.value)}
+              onChange={(e) => setSelectedConnector(e.target.value as Preset)}
               variant="outlined"
             >
-              {connectors.map((connector) => (
-                <MenuItem key={connector} value={connector}>
-                  {connector}
+              {Object.values(Preset).map((preset) => (
+                <MenuItem key={preset} value={preset}>
+                  {preset}
                 </MenuItem>
               ))}
             </TextField>
+          </Box>
+        </ModalConfirm>
+      )}
+      {viewModalInit && (
+        <ModalConfirm
+          actionConfirm={async () => {
+            try {
+              if (tenant?.schemaName) {
+                await restClient.provisioningResource.postApiTenantManagerProvisioningInitTenant({
+                  tenantName: tenant.schemaName,
+                });
+                showToast({
+                  displayType: "success",
+                  title: "Success",
+                  content: "Tenant initialized successfully",
+                });
+              }
+              setViewModalInit(false);
+            } catch (error) {
+              showToast({
+                displayType: "error",
+                title: "Error",
+                content: "Failed to initialize tenant",
+              });
+            }
+          }}
+          close={() => {
+            setViewModalInit(false);
+          }}
+          labelConfirm="Confirm"
+          title="Confirm init"
+          fullWidth
+          type="error"
+        >
+          <Box>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Are you sure you want to initialize this tenant ?
+            </Typography>
           </Box>
         </ModalConfirm>
       )}
@@ -80,17 +145,30 @@ export function Tenant() {
         <IconButton edge="start" color="inherit" aria-label="back" onClick={() => navigate(`/tenants/`, { replace: true })} size="large">
           <ArrowBackIcon />
         </IconButton>
-        <Button
-          color="primary"
-          aria-label="install connector"
-          size="medium"
-          variant="contained"
-          onClick={() => {
-            setViewModal(true);
-          }}
-        >
-          Install Connector
-        </Button>
+        <Box display={"flex"} gap={2}>
+          <Button
+            color="primary"
+            aria-label="init connector"
+            size="medium"
+            variant="contained"
+            onClick={() => {
+              setViewModalInit(true);
+            }}
+          >
+            Init
+          </Button>
+          <Button
+            color="primary"
+            aria-label="install connector"
+            size="medium"
+            variant="contained"
+            onClick={() => {
+              setViewModal(true);
+            }}
+          >
+            Install Connector
+          </Button>
+        </Box>
       </Toolbar>
       <Container maxWidth="lg">
         <Box sx={{ px: 4, py: 3 }}>
@@ -141,14 +219,14 @@ export function Tenant() {
             />
             <TextField
               label="Create Date"
-              value={new Date(tenant?.createDate).toLocaleDateString()}
+              value={formatDate(tenant?.createDate)}
               InputProps={{ readOnly: true }}
               variant="outlined"
               fullWidth
             />
             <TextField
               label="Modify Date"
-              value={new Date(tenant?.modifiedDate).toLocaleDateString()}
+              value={formatDate(tenant?.modifiedDate)}
               InputProps={{ readOnly: true }}
               variant="outlined"
               fullWidth
