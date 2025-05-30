@@ -96,12 +96,6 @@ public class SearchConfigGraphqlTest {
 			.type(TYPE_ENTITY)
 			.jsonConfig(JSON_CONFIG)
 			.build();
-	private static final QueryParserConfigDTO QUERY_PARSER_DTO_FOUR =
-		QueryParserConfigDTO.builder()
-			.name(QUERY_PARSER_FOUR_NAME)
-			.type(TYPE_ENTITY)
-			.jsonConfig(JSON_CONFIG)
-			.build();
 	private static final List<QueryParserConfigDTO> PARSER_CONFIG_DTO_LIST =
 		List.of(QUERY_PARSER_DTO_ONE, QUERY_PARSER_DTO_TWO, QUERY_PARSER_DTO_THREE);
 	// InputObject for mutations and list

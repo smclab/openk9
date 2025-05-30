@@ -57,9 +57,91 @@ import java.util.Set;
 public class SearchConfigService extends BaseK9EntityService<SearchConfig, SearchConfigDTO> {
 
 	private static final Logger log = Logger.getLogger(SearchConfigService.class);
+	@Inject
+	QueryParserConfigMapper _queryParserConfigMapper;
+	@Inject
+	OpenSearchClient openSearchClient;
+	@Inject
+	QueryParserConfigService queryParserConfigService;
 
 	SearchConfigService(SearchConfigMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	protected static JsonObject getJsonBody(HybridSearchPipelineDTO pipelineDTO) {
+		return Json.createObjectBuilder()
+			.add("description", "Post processor for hybrid search")
+			.add("phase_results_processors", Json.createArrayBuilder()
+				.add(Json.createObjectBuilder()
+					.add("normalization-processor", Json.createObjectBuilder()
+						.add("normalization", Json.createObjectBuilder()
+							.add(
+								"technique",
+								pipelineDTO.getNormalizationTechnique().getValue()
+							)
+						)
+						.add("combination", Json.createObjectBuilder()
+							.add(
+								"technique",
+								pipelineDTO.getCombinationTechnique().getValue()
+							)
+							.add("parameters", Json.createObjectBuilder()
+								.add(
+									"weights",
+									Json.createArrayBuilder(
+										pipelineDTO.getWeights()
+									)
+
+								)
+							)
+						)
+					)
+				)
+			)
+			.build();
+	}
+
+	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfig(
+		long id, QueryParserConfigDTO queryParserConfigDTO) {
+
+		QueryParserConfig queryParserConfig =
+			_queryParserConfigMapper.create(queryParserConfigDTO);
+
+		return sessionFactory.withTransaction((s) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
+				queryParserConfigs -> {
+					if (searchConfig.addQueryParserConfig(queryParserConfigs, queryParserConfig)) {
+						return persist(s, searchConfig)
+							.map(dt -> Tuple2.of(dt, queryParserConfig));
+					}
+					return Uni.createFrom().nullItem();
+				})));
+	}
+
+	public Uni<SearchPipelineResponseDTO> configureHybridSearch(
+		long id, @NotNull HybridSearchPipelineDTO pipelineDTO) {
+
+		return sessionFactory.withTransaction((s) -> findById(s, id))
+			.flatMap(searchConfig -> Uni.createFrom()
+				.completionStage(openSearchClient
+					.generic()
+					.executeAsync(Requests.builder()
+						.method("PUT")
+						.endpoint(
+							"_search/pipeline/" + StringUtils.retainsAlnum(searchConfig.getName()))
+						.json(getJsonBody(pipelineDTO)
+						)
+						.build()
+					)
+				)
+			)
+			.map(response -> new SearchPipelineResponseDTO(
+				response.getStatus(),
+				response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
+				response.getReason()
+			));
 	}
 
 	@Override
@@ -113,9 +195,8 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		return SearchConfig.class;
 	}
 
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
+	public Uni<Set<QueryParserConfig>> getQueryParserConfig(SearchConfig searchConfig) {
+		return sessionFactory.withTransaction(s -> s.fetch(searchConfig.getQueryParserConfigs()));
 	}
 
 	public Uni<Connection<QueryParserConfig>> getQueryParserConfigs(
@@ -127,16 +208,6 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 			queryParserConfigService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
 	}
-
-	public Uni<Connection<QueryParserConfig>> getQueryParserConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-		return findJoinConnection(
-			id, SearchConfig_.QUERY_PARSER_CONFIGS, QueryParserConfig.class,
-			queryParserConfigService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
-
 
 	public Uni<Page<QueryParserConfig>> getQueryParserConfigs(
 		long searchConfigId, Pageable pageable) {
@@ -165,27 +236,18 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 			filter);
 	}
 
-	public Uni<Set<QueryParserConfig>> getQueryParserConfig(SearchConfig searchConfig) {
-		return sessionFactory.withTransaction(s -> s.fetch(searchConfig.getQueryParserConfigs()));
+	public Uni<Connection<QueryParserConfig>> getQueryParserConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, SearchConfig_.QUERY_PARSER_CONFIGS, QueryParserConfig.class,
+			queryParserConfigService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
 	}
 
-	public Uni<Tuple2<SearchConfig, QueryParserConfig>> addQueryParserConfig(
-		long id, QueryParserConfigDTO queryParserConfigDTO) {
-
-		QueryParserConfig queryParserConfig =
-			_queryParserConfigMapper.create(queryParserConfigDTO);
-
-		return sessionFactory.withTransaction((s) -> findById(s, id)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
-				queryParserConfigs -> {
-					if (searchConfig.addQueryParserConfig(queryParserConfigs, queryParserConfig)) {
-						return persist(s, searchConfig)
-							.map(dt -> Tuple2.of(dt, queryParserConfig));
-					}
-					return Uni.createFrom().nullItem();
-				})));
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {QueryAnalysis_.NAME, QueryAnalysis_.DESCRIPTION};
 	}
 
 	/**
@@ -263,7 +325,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<SearchConfig> removeAllQueryParserConfig(long id) {
-		return sessionFactory.withTransaction((s) -> removeAllQueryParserConfig(s, id));
+		return sessionFactory.withTransaction(s -> removeAllQueryParserConfig(s, id));
 	}
 
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {
@@ -340,70 +402,6 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 			);
 		}
 		return super.update(id, dto);
-	}
-
-	@Inject
-	OpenSearchClient openSearchClient;
-	@Inject
-	QueryParserConfigMapper _queryParserConfigMapper;
-	@Inject
-	QueryParserConfigService queryParserConfigService;
-
-	public Uni<SearchPipelineResponseDTO> configureHybridSearch(
-		long id, @NotNull HybridSearchPipelineDTO pipelineDTO) {
-
-		return sessionFactory.withTransaction((s) -> findById(s, id))
-			.flatMap(searchConfig -> Uni.createFrom()
-				.completionStage(openSearchClient
-					.generic()
-					.executeAsync(Requests.builder()
-						.method("PUT")
-						.endpoint(
-							"_search/pipeline/" + StringUtils.retainsAlnum(searchConfig.getName()))
-						.json(getJsonBody(pipelineDTO)
-						)
-						.build()
-					)
-				)
-			)
-			.map(response -> new SearchPipelineResponseDTO(
-				response.getStatus(),
-				response.getBody().orElse(Bodies.json("{}")).bodyAsString(),
-				response.getReason()
-			));
-	}
-
-	protected static JsonObject getJsonBody(HybridSearchPipelineDTO pipelineDTO) {
-		return Json.createObjectBuilder()
-			.add("description", "Post processor for hybrid search")
-			.add("phase_results_processors", Json.createArrayBuilder()
-				.add(Json.createObjectBuilder()
-					.add("normalization-processor", Json.createObjectBuilder()
-						.add("normalization", Json.createObjectBuilder()
-							.add(
-								"technique",
-								pipelineDTO.getNormalizationTechnique().getValue()
-							)
-						)
-						.add("combination", Json.createObjectBuilder()
-							.add(
-								"technique",
-								pipelineDTO.getCombinationTechnique().getValue()
-							)
-							.add("parameters", Json.createObjectBuilder()
-								.add(
-									"weights",
-									Json.createArrayBuilder(
-										pipelineDTO.getWeights()
-									)
-
-								)
-							)
-						)
-					)
-				)
-			)
-			.build();
 	}
 
 }

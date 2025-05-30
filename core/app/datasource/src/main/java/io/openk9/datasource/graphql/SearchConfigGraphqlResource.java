@@ -52,50 +52,18 @@ import java.util.Set;
 @CircuitBreaker
 public class SearchConfigGraphqlResource {
 
-	@Query
-	public Uni<Connection<SearchConfig>> getSearchConfigs(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return searchConfigService.findConnection(
-			after, before, first, last, searchText, sortByList);
+	@Inject
+	QueryParserConfigService _queryParserConfigService;
+	@Inject
+	SearchConfigService searchConfigService;
+
+	public Uni<Response<SearchConfig>> createSearchConfig(SearchConfigDTO searchConfigDTO) {
+		return searchConfigService.getValidator().create(searchConfigDTO);
 	}
 
-	@Query
-	public Uni<SearchConfig> getSearchConfig(@Id long id) {
-		return searchConfigService.findById(id);
-	}
-
-
-	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
-		@Source SearchConfig searchConfig,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@DefaultValue("false") boolean notEqual) {
-
-		return queryParserConfigs(
-			searchConfig.getId(), after, before, first, last, searchText,
-			sortByList, notEqual);
-	}
-
-	@Query
-	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
-		@Id long searchConfigId,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@DefaultValue("false") boolean notEqual) {
-
-		return searchConfigService.getQueryParserConfigs(
-			searchConfigId, after, before, first, last, searchText,
-			sortByList, notEqual);
+	@Mutation
+	public Uni<SearchConfig> deleteSearchConfig(@Id long searchConfigId) {
+		return searchConfigService.deleteById(searchConfigId);
 	}
 
 	@Query
@@ -103,16 +71,24 @@ public class SearchConfigGraphqlResource {
 		return _queryParserConfigService.findById(id);
 	}
 
+	@Query
+	public Uni<SearchConfig> getSearchConfig(@Id long id) {
+		return searchConfigService.findById(id);
+	}
+
+	@Query
+	public Uni<Connection<SearchConfig>> getSearchConfigs(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return searchConfigService.findConnection(
+			after, before, first, last, searchText, sortByList);
+	}
+
 	public Uni<Response<SearchConfig>> patchSearchConfig(@Id long id, SearchConfigDTO searchConfigDTO) {
 		return searchConfigService.getValidator().patch(id, searchConfigDTO);
-	}
-
-	public Uni<Response<SearchConfig>> updateSearchConfig(@Id long id, SearchConfigDTO searchConfigDTO) {
-		return searchConfigService.getValidator().update(id, searchConfigDTO);
-	}
-
-	public Uni<Response<SearchConfig>> createSearchConfig(SearchConfigDTO searchConfigDTO) {
-		return searchConfigService.getValidator().create(searchConfigDTO);
 	}
 
 	@Mutation
@@ -145,12 +121,40 @@ public class SearchConfigGraphqlResource {
 
 	}
 
+	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
+		@Source SearchConfig searchConfig,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@DefaultValue("false") boolean notEqual) {
+
+		return queryParserConfigs(
+			searchConfig.getId(), after, before, first, last, searchText,
+			sortByList, notEqual);
+	}
+
+	@Query
+	public Uni<Connection<QueryParserConfig>> queryParserConfigs(
+		@Id long searchConfigId,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@DefaultValue("false") boolean notEqual) {
+
+		return searchConfigService.getQueryParserConfigs(
+			searchConfigId, after, before, first, last, searchText,
+			sortByList, notEqual);
+	}
+
 	@Mutation
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(
 		@Id long searchConfigId, @Id long queryParserConfigId) {
 		return searchConfigService.removeQueryParserConfig(searchConfigId, queryParserConfigId);
 	}
-
 
 	@Mutation
 	public Uni<Response<SearchConfig>> searchConfig(
@@ -166,27 +170,6 @@ public class SearchConfigGraphqlResource {
 		}
 
 	}
-
-	@Mutation
-	public Uni<Response<SearchConfig>> searchConfigWithQueryParsers(
-			@Id Long id, SearchConfigWithQueryParsersDTO searchConfigWithQueryParsersDTO,
-			@DefaultValue("false") boolean patch) {
-
-		if (id == null) {
-			return createSearchConfig(searchConfigWithQueryParsersDTO);
-		}
-		else {
-			return patch
-				? patchSearchConfig(id, searchConfigWithQueryParsersDTO)
-				: updateSearchConfig(id, searchConfigWithQueryParsersDTO);
-		}
-	}
-
-	@Mutation
-	public Uni<SearchConfig> deleteSearchConfig(@Id long searchConfigId) {
-		return searchConfigService.deleteById(searchConfigId);
-	}
-
 
 	@Subscription
 	public Multi<SearchConfig> searchConfigCreated() {
@@ -212,9 +195,23 @@ public class SearchConfigGraphqlResource {
 			.map(K9EntityEvent::getEntity);
 	}
 
-	@Inject
-	SearchConfigService searchConfigService;
-	@Inject
-	QueryParserConfigService _queryParserConfigService;
+	@Mutation
+	public Uni<Response<SearchConfig>> searchConfigWithQueryParsers(
+			@Id Long id, SearchConfigWithQueryParsersDTO searchConfigWithQueryParsersDTO,
+			@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createSearchConfig(searchConfigWithQueryParsersDTO);
+		}
+		else {
+			return patch
+				? patchSearchConfig(id, searchConfigWithQueryParsersDTO)
+				: updateSearchConfig(id, searchConfigWithQueryParsersDTO);
+		}
+	}
+
+	public Uni<Response<SearchConfig>> updateSearchConfig(@Id long id, SearchConfigDTO searchConfigDTO) {
+		return searchConfigService.getValidator().update(id, searchConfigDTO);
+	}
 
 }

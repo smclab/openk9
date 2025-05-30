@@ -33,11 +33,9 @@ import lombok.experimental.SuperBuilder;
 public class QueryParserConfigDTO extends K9EntityDTO {
 
 	@NotNull
-	private String type;
-
-	@NotNull
 	private String description;
-
 	@Json
 	private String jsonConfig;
+	@NotNull
+	private String type;
 }
