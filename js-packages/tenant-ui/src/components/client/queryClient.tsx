@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient } from "@tanstack/react-query";
-import { OpenApiRestClient } from "../openapi-generated/OpenApiRestClient";
+import { OpenApiRestClient } from "../../openapi-generated";
 import { keycloak } from "./authentication";
 
 export const queryClient = new QueryClient();
