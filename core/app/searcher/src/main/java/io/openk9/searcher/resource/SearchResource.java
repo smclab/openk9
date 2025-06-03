@@ -97,10 +97,9 @@ public class SearchResource {
 	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
-	private static final int INTERNAL_SERVER_ERROR = 500;
 	private static final String DETAILS_FIELD = "details";
-	private static final int NONE = 0;
-	private static final int NOT_FOUND = 404;
+	private static final int NONE_STASUS_CODE = 0;
+	private static final int NOT_FOUND_STATUS_CODE = 404;
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 	@GrpcClient("searcher")
@@ -323,7 +322,7 @@ public class SearchResource {
 	}
 
 	private static Iterable<Integer> toList(Integer[] pos) {
-		if (pos == null || pos.length == NONE) {
+		if (pos == null || pos.length == 0) {
 			return List.of();
 		}
 		return List.of(pos);
@@ -561,7 +560,7 @@ public class SearchResource {
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
-		int statusCode = NONE;
+		int statusCode = NONE_STASUS_CODE;
 		String reason = "Unable to serve search request";
 
 		if (throwable instanceof ResponseException responseException) {
@@ -573,7 +572,7 @@ public class SearchResource {
 		jakarta.ws.rs.core.Response.Status responseStatus = null;
 
 		switch (statusCode) {
-			case NONE, NOT_FOUND -> {
+			case NONE_STASUS_CODE, NOT_FOUND_STATUS_CODE -> {
 				responseStatus =
 					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
@@ -679,7 +678,7 @@ public class SearchResource {
 
 			Object[] sortValues = hit.getSortValues();
 
-			if (sortValues != null && sortValues.length > NONE) {
+			if (sortValues != null && sortValues.length > 0) {
 				hitMap.put(
 					"sortAfterKey",
 					Base64.getEncoder().encodeToString(
@@ -695,7 +694,7 @@ public class SearchResource {
 		TotalHits totalHits = hits.getTotalHits();
 		var totalResult = totalHits != null
 			? Math.min(totalHits.value, totalResultLimit)
-			: NONE;
+			: 0;
 
 		return new Response(result, totalResult);
 	}
