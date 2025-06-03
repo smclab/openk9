@@ -677,6 +677,7 @@ export function Main({
                 "openk9-button-card-" + idPreview,
               ) as any;
               if (recoveryButton) recoveryButton.focus();
+              setDetail(null);
             }}
             setViewButtonDetail={setViewButtonDetail}
             viewButtonDetail={viewButtonDetail}
