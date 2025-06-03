@@ -35,7 +35,7 @@ public class DatasourceIdQueryParser implements QueryParser {
 
 	@Override
 	public QueryParserType getType() {
-		return QueryParserType.DATASOURCE_ID;
+		return QueryParserType.DATASOURCE;
 	}
 
 	@Override

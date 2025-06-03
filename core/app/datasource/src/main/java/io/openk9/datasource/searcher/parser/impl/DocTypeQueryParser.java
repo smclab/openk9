@@ -35,7 +35,7 @@ public class DocTypeQueryParser implements QueryParser {
 
 	@Override
 	public QueryParserType getType() {
-		return QueryParserType.DOC_TYPE;
+		return QueryParserType.DOCTYPE;
 	}
 
 	@Override

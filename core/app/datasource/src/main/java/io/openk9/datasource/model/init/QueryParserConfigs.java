@@ -68,7 +68,7 @@ public class QueryParserConfigs {
 	static {
 		for (var type : QueryParserType.values()) {
 			switch (type) {
-				case ACL, AUTOCOMPLETE, DATASOURCE_ID, DOC_TYPE -> {
+				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> {
 				}
 				case DATE_ORDER -> DTOs.put(type, DateOrder.DTO);
 				case DATE -> DTOs.put(type, Date.DTO);
@@ -80,7 +80,7 @@ public class QueryParserConfigs {
 			}
 
 			switch (type) {
-				case ACL, AUTOCOMPLETE, DATASOURCE_ID, DOC_TYPE -> {
+				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> {
 				}
 				case DATE_ORDER -> FORM_TEMPLATES.put(type, DateOrder.FORM_TEMPLATE);
 				case DATE -> FORM_TEMPLATES.put(type, Date.FORM_TEMPLATE);

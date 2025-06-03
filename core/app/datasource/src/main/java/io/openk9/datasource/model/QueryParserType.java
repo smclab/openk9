@@ -20,10 +20,10 @@ package io.openk9.datasource.model;
 public enum QueryParserType {
 	ACL,
 	AUTOCOMPLETE,
-	DATASOURCE_ID,
+	DATASOURCE,
 	DATE_ORDER,
 	DATE,
-	DOC_TYPE,
+	DOCTYPE,
 	ENTITY,
 	FILTER,
 	HYBRID,
