@@ -21,24 +21,32 @@ import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.PluginDriverType;
 import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
-
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.vertx.core.json.JsonObject;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
 import org.mapstruct.ValueMappings;
 
+import java.util.Optional;
+
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface PluginDriverMapper {
 
 	default PluginDriverDTO map(CreatePluginDriverRequest source) {
-		var jsonConfig = JsonObject.of(
-			"host", source.getHost(),
-			"port", source.getPort(),
-			"secure", source.getSecure(),
-			"path", source.getPath(),
-			"method", source.getMethod()
-		);
+		var infoBuilder = HttpPluginDriverInfo.builder()
+			.secure(Boolean.parseBoolean(source.getSecure()))
+			.baseUri(source.getBaseUri())
+			.path(source.getPath());
+
+		Optional<HttpPluginDriverInfo.Method> method =
+			HttpPluginDriverInfo.Method.fromString(source.getMethod());
+
+		method.ifPresent(infoBuilder::method);
+
+		HttpPluginDriverInfo pluginDriverInfo = infoBuilder.build();
+
+		var jsonConfig = JsonObject.mapFrom(pluginDriverInfo);
 
 		return PluginDriverDTO.builder()
 			.name(source.getName())

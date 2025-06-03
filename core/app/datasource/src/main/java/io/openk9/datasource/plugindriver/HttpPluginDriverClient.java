@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.plugindriver;
 
+import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.form.PluginDriverFormDTO;
@@ -32,10 +33,15 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 import org.jboss.logging.Logger;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 @ApplicationScoped
 public class HttpPluginDriverClient {
 
 	public static final String HEALTH_PATH = "/health";
+	public static final String HTTP = "http://";
+	public static final String HTTPS = "https://";
 	public static final String SAMPLE_PATH = "/sample";
 	public static final String FORM_PATH = "/form";
 	public static final String INVOKE_PATH = "/invoke";
@@ -62,25 +68,16 @@ public class HttpPluginDriverClient {
 			httpMethod = HttpPluginDriverInfo.Method.POST;
 		}
 
-		String host = httpPluginDriverInfo.getHost();
+		String baseUri = httpPluginDriverInfo.getBaseUri();
 
-		if (host == null) {
-			host = "localhost";
+		if (baseUri == null) {
+			baseUri = "localhost:8080";
 		}
 
-		Integer port = httpPluginDriverInfo.getPort();
-
-		if (port == null || port < 1 || port > 65535) {
-			port = 8080;
-		}
-
-		return webClient.request(
+		return webClient.requestAbs(
 				httpMethod.getHttpMethod(),
-				port,
-				host,
-				path
+				createAbsUri(httpPluginDriverInfo.isSecure(), baseUri, path)
 			)
-			.ssl(httpPluginDriverInfo.isSecure())
 			.sendJson(httpPluginDriverContext)
 			.flatMap(this::validateResponse);
 	}
@@ -109,13 +106,13 @@ public class HttpPluginDriverClient {
 
 	public Uni<PluginDriverHealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				HEALTH_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					HEALTH_PATH)
 			)
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
@@ -130,13 +127,13 @@ public class HttpPluginDriverClient {
 
 	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				SAMPLE_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					SAMPLE_PATH)
 			)
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(IngestionPayload.class))
@@ -145,17 +142,42 @@ public class HttpPluginDriverClient {
 
 	public Uni<PluginDriverFormDTO> getForm(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
-			.request(
+			.requestAbs(
 				HttpMethod.GET,
-				pluginDriverInfo.getPort(),
-				pluginDriverInfo.getHost(),
-				FORM_PATH
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					FORM_PATH)
 			)
-			.ssl(pluginDriverInfo.isSecure())
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(PluginDriverFormDTO.class))
 			.flatMap(this::validateDto);
+	}
+
+	private String createAbsUri(boolean isSecure, String baseUri, String path) {
+		var scheme = isSecure ? HTTPS : HTTP;
+		try {
+			return new URI(scheme + normalize(baseUri) + "/" + normalize(path)).toString();
+		}
+		catch (URISyntaxException e) {
+			throw new InvalidUriException(e);
+		}
+	}
+
+	private String normalize(String string) {
+		if (string == null) {
+			return "";
+		}
+
+		if (string.startsWith("/")) {
+			string = string.substring(1);
+		}
+		if (string.endsWith("/")) {
+			string = string.substring(0, string.length() - 1);
+		}
+
+		return string;
 	}
 
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {

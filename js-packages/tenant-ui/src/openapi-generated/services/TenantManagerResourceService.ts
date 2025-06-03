@@ -16,12 +16,13 @@ export class TenantManagerResourceService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
+     * Create Tenant
      * @param requestBody 
      * @returns Tenant OK
      * @throws ApiError
      */
     public postApiTenantManagerTenantManagerTenant(
-requestBody?: CreateTenantRequest,
+requestBody: CreateTenantRequest,
 ): CancelablePromise<Tenant> {
         return this.httpRequest.request({
             method: 'POST',
@@ -29,6 +30,7 @@ requestBody?: CreateTenantRequest,
             body: requestBody,
             mediaType: 'application/json',
             errors: {
+                400: `Bad Request`,
                 401: `Not Authorized`,
                 403: `Not Allowed`,
             },
@@ -36,32 +38,13 @@ requestBody?: CreateTenantRequest,
     }
 
     /**
-     * @param requestBody 
-     * @returns DeleteTenantResponse OK
-     * @throws ApiError
-     */
-    public postApiTenantManagerTenantManagerTenantDelete(
-requestBody?: DeleteTenantRequest,
-): CancelablePromise<DeleteTenantResponse> {
-        return this.httpRequest.request({
-            method: 'POST',
-            url: '/api/tenant-manager/tenant-manager/tenant/delete',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
-            },
-        });
-    }
-
-    /**
+     * Delete Tenant
      * @param requestBody 
      * @returns DeleteTenantResponse OK
      * @throws ApiError
      */
     public deleteApiTenantManagerTenantManagerTenantDelete(
-requestBody?: EffectiveDeleteTenantRequest,
+requestBody: EffectiveDeleteTenantRequest,
 ): CancelablePromise<DeleteTenantResponse> {
         return this.httpRequest.request({
             method: 'DELETE',
@@ -76,6 +59,29 @@ requestBody?: EffectiveDeleteTenantRequest,
     }
 
     /**
+     * Delete Tenant
+     * @param requestBody 
+     * @returns DeleteTenantResponse OK
+     * @throws ApiError
+     */
+    public postApiTenantManagerTenantManagerTenantDelete(
+requestBody: DeleteTenantRequest,
+): CancelablePromise<DeleteTenantResponse> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/api/tenant-manager/tenant-manager/tenant/delete',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad Request`,
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
+        });
+    }
+
+    /**
+     * Create Tables
      * @param id 
      * @returns CreateTablesResponse OK
      * @throws ApiError

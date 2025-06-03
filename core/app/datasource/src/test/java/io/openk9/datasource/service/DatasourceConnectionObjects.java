@@ -60,8 +60,7 @@ public class DatasourceConnectionObjects {
 		return PluginDrivers.getPluginDriverDTO(Preset.CRAWLER)
 			.toBuilder()
 			.jsonConfig(JsonObject.of(
-				"host", WireMockPluginDriver.HOST,
-				"port", WireMockPluginDriver.PORT,
+				"baseUri", WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT,
 				"secure", false
 			).encode());
 	}

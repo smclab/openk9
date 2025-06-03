@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import io.vertx.core.json.JsonObject;
@@ -37,10 +37,9 @@ import org.opensearch.index.query.BoolQueryBuilder;
 @NoArgsConstructor
 @Builder
 public class ParserContext {
-	private String tenantId;
 	private List<ParserSearchToken> tokenTypeGroup;
 	private BoolQueryBuilder mutableQuery;
-	private Bucket bucket;
+	private TenantWithBucket tenantWithBucket;
 	private JsonObject queryParserConfig;
 	private JWT jwt;
 	private Map<String, List<String>> extraParams;

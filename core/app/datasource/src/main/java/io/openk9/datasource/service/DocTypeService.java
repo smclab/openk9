@@ -301,13 +301,14 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
 
-		DocTypeField docTypeField =
-			docTypeFieldMapper.create(docTypeFieldDTO);
-
 		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+
+				DocTypeField docTypeField =
+					docTypeFieldService.createTransient(s, docTypeFieldDTO);
+
 				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
 					return persist(s, docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));

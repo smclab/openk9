@@ -17,15 +17,16 @@
 
 package io.openk9.datasource.processor.payload;
 
+import java.util.List;
+import java.util.Map;
+
 import io.openk9.common.util.ingestion.PayloadType;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
-import java.util.Map;
 
 @Data
 @Builder
@@ -43,6 +44,7 @@ public class IngestionPayload {
 	private String[] documentTypes;
 	private ResourcesPayload resources;
 	private Map<String, List<String>> acl;
+	@Deprecated
 	private boolean last;
 	private String scheduleId;
 	private PayloadType type;

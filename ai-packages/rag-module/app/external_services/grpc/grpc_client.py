@@ -22,7 +22,6 @@ def query_parser(
     sort,
     sort_after_key,
     language,
-    vector_indices,
     grpc_host,
 ):
     """Get opensearch query and index from grpc."""
@@ -50,11 +49,44 @@ def query_parser(
                 sort=sort,
                 sortAfterKey=sort_after_key,
                 language=language,
-                vectorIndices=vector_indices,
             )
         )
 
     return response
+
+
+def get_rag_configuration(grpc_host, virtual_host, rag_type):
+    """Get rag configuration from grpc."""
+    with grpc.insecure_channel(grpc_host) as channel:
+        stub = searcher_pb2_grpc.SearcherStub(channel)
+        response = stub.GetRAGConfigurations(
+            searcher_pb2.GetRAGConfigurationsRequest(
+                virtualHost=virtual_host, ragType=rag_type
+            )
+        )
+
+    prompt = response.prompt
+    prompt_no_rag = response.promptNoRag
+    rephrase_prompt = response.rephrasePrompt
+    rag_tool_description = response.ragToolDescription
+    chunk_window = response.chunkWindow
+    reformulate = response.reformulate
+    json_config = json_format.MessageToDict(response.jsonConfig)
+    rerank = json_config.get("rerank")
+    metadata = json_config.get("metadata")
+
+    configuration = {
+        "prompt": prompt,
+        "prompt_no_rag": prompt_no_rag,
+        "rephrase_prompt": rephrase_prompt,
+        "rag_tool_description": rag_tool_description,
+        "chunk_window": chunk_window,
+        "reformulate": reformulate,
+        "rerank": rerank,
+        "metadata": metadata,
+    }
+
+    return configuration
 
 
 def get_llm_configuration(grpc_host, virtual_host):
@@ -69,35 +101,25 @@ def get_llm_configuration(grpc_host, virtual_host):
 
     api_url = response.apiUrl
     api_key = response.apiKey
+    retrieve_type = response.retrieveType
+    context_window = response.contextWindow
+    retrieve_citations = response.retrieveCitations
+    model_type = response.providerModel.provider
+    model = response.providerModel.model
     json_config = json_format.MessageToDict(response.jsonConfig)
-    model_type = json_config.get("type")
-    model = json_config.get("model")
-    prompt = json_config.get("prompt")
-    prompt_no_rag = json_config.get("prompt_no_rag")
-    rag_tool_description = json_config.get("rag_tool_description")
-    rephrase_prompt = json_config.get("rephrase_prompt")
-    context_window = json_config.get("context_window")
-    retrieve_citations = json_config.get("retrieve_citations")
     rerank = json_config.get("rerank")
-    chunk_window = json_config.get("chunk_window")
     watsonx_project_id = json_config.get("watsonx_project_id")
     chat_vertex_ai_credentials = json_config.get("credentials")
     chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
-    retrieve_type = response.retrieveType
 
     configuration = {
         "api_url": api_url,
         "api_key": api_key,
         "model_type": model_type,
         "model": model,
-        "prompt": prompt,
-        "prompt_no_rag": prompt_no_rag,
-        "rag_tool_description": rag_tool_description,
-        "rephrase_prompt": rephrase_prompt,
         "context_window": context_window,
         "retrieve_citations": retrieve_citations,
         "rerank": rerank,
-        "chunk_window": chunk_window,
         "retrieve_type": retrieve_type,
         "watsonx_project_id": watsonx_project_id,
         "chat_vertex_ai_credentials": chat_vertex_ai_credentials,

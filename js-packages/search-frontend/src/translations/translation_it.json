@@ -61,6 +61,11 @@
     "to": "A",
     "today": "Oggi",
     "try-with-another-query": "Prova con una nuova ricerca",
-    "uncheck": "Deseleziona"
+    "uncheck": "Deseleziona",
+    "from-date": "Dal",
+    "to-date": "Al",
+    "invalid-date-format": "Formato data non valido",
+    "end-date-before-start": "La data di fine non può essere inferiore alla data di inizio",
+    "start-date-after-end": "La data di inizio non può essere superiore alla data di fine"
   }
 }

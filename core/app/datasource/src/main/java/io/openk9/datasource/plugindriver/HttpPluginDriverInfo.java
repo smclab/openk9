@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.plugindriver;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.vertx.core.http.HttpMethod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @AllArgsConstructor(staticName = "of")
@@ -33,10 +36,10 @@ import java.util.Map;
 @Builder
 public class HttpPluginDriverInfo {
 	private boolean secure;
-	private String host;
-	private Integer port;
+	private String baseUri;
 	private String path;
 	private Method method;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private Map<String, Object> body;
 
 	public enum Method {
@@ -51,6 +54,16 @@ public class HttpPluginDriverInfo {
 
 		public HttpMethod getHttpMethod() {
 			return httpMethod;
+		}
+
+		public static Optional<Method> fromString(String input) {
+			if (input == null) {
+				return Optional.empty();
+			}
+
+			return Arrays.stream(values())
+				.filter(m -> m.name().equalsIgnoreCase(input))
+				.findFirst();
 		}
 
 		private HttpMethod httpMethod;

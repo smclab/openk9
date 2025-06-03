@@ -17,22 +17,23 @@
 
 package io.openk9.datasource.pipeline.consumer;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Envelope;
+import java.io.IOException;
+
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.actor.QueueManager;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.processor.payload.IngestionIndexWriterPayload;
+
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Envelope;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.jboss.logging.Logger;
-
-import java.io.IOException;
 
 public class MainConsumer extends BaseConsumer {
 	private static final Logger log = Logger.getLogger(MainConsumer.class);
@@ -65,7 +66,7 @@ public class MainConsumer extends BaseConsumer {
 				IngestionIndexWriterPayload.class
 			);
 
-		DataPayload payload = payloadMapper.map(ingestionIndexWriterPayload.getIngestionPayload());
+		DataPayload payload = payloadMapper.map(ingestionIndexWriterPayload);
 
 		AskPattern.ask(
 			getScheduling(),

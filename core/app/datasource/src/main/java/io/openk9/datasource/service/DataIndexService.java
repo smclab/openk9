@@ -166,6 +166,10 @@ public class DataIndexService
 				.flatMap(tenant -> findById(session, id).flatMap(
 					dataIndex -> indexService.get_catIndicesFirst(
 						IndexName.from(tenant, dataIndex).toString())))
+		)
+		.onFailure()
+		.invoke(throwable ->
+			log.debug(String.format("Error retrieving cat for index with id %d", id), throwable)
 		);
 	}
 

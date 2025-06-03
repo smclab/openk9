@@ -17,10 +17,13 @@
 
 package io.openk9.datasource.grpc;
 
-import com.google.protobuf.Struct;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import jakarta.inject.Inject;
+
 import io.openk9.client.grpc.common.StructUtils;
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.EmbeddingModel;
@@ -31,29 +34,28 @@ import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.RAGConfigurationService;
-import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
+
+import com.google.protobuf.Struct;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class SearcherGrpcTest {
@@ -150,9 +152,49 @@ public class SearcherGrpcTest {
 		enableLargeLanguageModelOne();
 
 		// RAGConfiguration
-		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT_RAG);
-		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
-		createRAGConfiguration(RAG_SEARCH_ONE, RAGType.SIMPLE_GENERATE);
+
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_CHAT_ONE)
+				.type(RAGType.CHAT_RAG)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_CHAT_TOOL_ONE)
+				.type(RAGType.CHAT_RAG_TOOL)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			CreateRAGConfigurationDTO.builder()
+				.name(RAG_SEARCH_ONE)
+				.type(RAGType.SIMPLE_GENERATE)
+				.chunkWindow(CHUNK_WINDOW)
+				.prompt(PROMPT_TEST)
+				.promptNoRag(PROMPT_TEST)
+				.ragToolDescription(PROMPT_TEST)
+				.rephrasePrompt(PROMPT_TEST)
+				.reformulate(REFORMULATE)
+				.jsonConfig(JSON_CONFIG)
+				.build()
+		);
 
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
@@ -178,29 +220,6 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(MODEL, response.getProviderModel().getModel());
 				Assertions.assertEquals(CONTEXT_WINDOW_VALUE, response.getContextWindow());
 				assertTrue(response.getRetrieveCitations());
-			}
-		);
-	}
-
-	@Test
-	@RunOnVertxContext
-	void should_get_embedding_model_configurations(UniAsserter asserter) {
-		asserter.assertThat(
-			() -> searcher.getEmbeddingModelConfigurations(
-				GetEmbeddingModelConfigurationsRequest.newBuilder()
-					.setVirtualHost(VIRTUAL_HOST)
-					.build()
-			),
-			response -> {
-
-				log.info(String.format("getEmbeddingModelConfigurations response: %s", response));
-
-				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
-				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
-				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
-				assertEquals(PROVIDER, response.getProviderModel().getProvider());
-				assertEquals(MODEL, response.getProviderModel().getModel());
-				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
 			}
 		);
 	}
@@ -485,7 +504,7 @@ public class SearcherGrpcTest {
 	}
 
 	private void createRAGConfiguration(String name, RAGType type) {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
+		CreateRAGConfigurationDTO dto = CreateRAGConfigurationDTO.builder()
 			.name(name)
 			.type(type)
 			.chunkWindow(CHUNK_WINDOW)

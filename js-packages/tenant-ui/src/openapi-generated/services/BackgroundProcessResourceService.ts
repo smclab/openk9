@@ -12,6 +12,7 @@ export class BackgroundProcessResourceService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
+     * Find All Background Process
      * @returns BackgroundProcess OK
      * @throws ApiError
      */
@@ -27,6 +28,7 @@ export class BackgroundProcessResourceService {
     }
 
     /**
+     * Find Background Process By Id
      * @param id 
      * @returns BackgroundProcess OK
      * @throws ApiError
@@ -48,6 +50,7 @@ id: number,
     }
 
     /**
+     * Find All Background Process
      * @param status 
      * @returns BackgroundProcess OK
      * @throws ApiError

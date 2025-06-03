@@ -1,19 +1,25 @@
 import React from "react";
 import * as monaco from "monaco-editor";
-import { BaseInputProps } from "./Form";
 import prettier from "prettier/standalone";
 import parserTypeScript from "prettier/parser-typescript";
+import { Box, Theme, Typography, useTheme } from "@mui/material";
 
 // NICE TO HAVE: colorize JSX (see https://github.com/cancerberoSgx/jsx-alone/blob/master/jsx-explorer/HOWTO_JSX_MONACO.md)
 
-monaco.editor.defineTheme("clayui", {
-  base: "vs",
-  inherit: true,
-  rules: [],
-  colors: {
-    "editor.background": "#f1f2f5",
-  },
-});
+function applyMonacoTheme(theme: Theme) {
+  monaco.editor.defineTheme("materialTheme", {
+    base: theme.palette.mode === "dark" ? "vs-dark" : "vs", // Usa 'vs-dark' per il tema scuro e 'vs' per il tema chiaro
+    inherit: true,
+    rules: [], // Puoi aggiungere regole personalizzate qui se necessario
+    colors: {
+      "editor.background": theme.palette.mode === "dark" ? "#1e1e1e" : "#ffffff", // Background in base al tema
+      "editor.foreground": theme.palette.mode === "dark" ? "#d4d4d4" : "#000000", // Colore del testo
+      "editor.lineHighlightBackground": theme.palette.mode === "dark" ? "#2a2d2e" : "#fafafa", // Linea di evidenza
+      "editor.selectionBackground": theme.palette.mode === "dark" ? "#264f78" : "#ADD6FF", // Colore della selezione
+      "editor.inactiveSelectionBackground": theme.palette.mode === "dark" ? "#3a3d41" : "#D3D4D7", // Selezione inattiva
+    },
+  });
+}
 
 monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   jsx: monaco.languages.typescript.JsxEmit.Preserve,
@@ -36,7 +42,10 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
 for (const language of ["javascript", "typescript", "json"]) {
   monaco.languages.registerDocumentFormattingEditProvider(language, {
     provideDocumentFormattingEdits(model, options) {
-      const formatted = prettier.format(model.getValue(), { parser: "typescript", plugins: [parserTypeScript] });
+      const formatted = prettier.format(model.getValue(), {
+        parser: "typescript",
+        plugins: [parserTypeScript],
+      });
       return [
         {
           range: model.getFullModelRange(),
@@ -112,19 +121,34 @@ export function CodeInput({
   validationMessages,
   language,
   height = "200px",
+  readonly,
+  description,
+  tooltip,
 }: BaseInputProps<string> & {
   language: MonacoLanguage;
   height?: string;
+  readonly?: boolean;
+  description?: string;
+  tooltip?: React.ReactElement;
 }) {
   const editorElementRef = React.useRef<HTMLDivElement>(null);
-  const editorRef = React.useRef<{ editor?: monaco.editor.IStandaloneCodeEditor; model?: monaco.editor.ITextModel }>({});
+  const editorRef = React.useRef<{
+    editor?: monaco.editor.IStandaloneCodeEditor;
+    model?: monaco.editor.ITextModel;
+  }>({});
+
+  const theme = useTheme();
   React.useEffect(() => {
     if (editorElementRef.current) {
-      const editor = monaco.editor.create(editorElementRef.current, { minimap: { enabled: false }, theme: "clayui" });
+      applyMonacoTheme(theme);
+      const editor = monaco.editor.create(
+        editorElementRef.current,
+        { readOnly: readonly },
+        { minimap: { enabled: false }, theme: "materialTheme" }
+      );
       editor.updateOptions({ tabSize: 2 });
       editor.onDidBlurEditorText(() => {
         if (editorRef.current.model) {
-          editor.getAction("editor.action.formatDocument").run();
           onChange(editorRef.current.model.getValue());
         }
       });
@@ -134,12 +158,23 @@ export function CodeInput({
       };
     }
   }, [onChange]);
+
+  React.useEffect(() => {
+    applyMonacoTheme(theme);
+    if (editorRef.current.editor) {
+      monaco.editor.setTheme("materialTheme");
+    }
+  }, [theme]);
+
   React.useEffect(() => {
     if (editorRef.current.editor) {
       const model = monaco.editor.createModel(
         value,
         remapLanguage(language),
-        monaco.Uri.from({ scheme: "inmemory", path: createInMemoriUri(language) })
+        monaco.Uri.from({
+          scheme: "inmemory",
+          path: createInMemoriUri(language),
+        })
       );
       editorRef.current.editor.setModel(model);
       editorRef.current.model = model;
@@ -148,23 +183,37 @@ export function CodeInput({
       };
     }
   }, [language, value, onChange]);
+
+  const editorStyle = {
+    height,
+    width: "100%",
+    border: "2px solid #ccc",
+    borderRadius: "4px",
+    padding: "8px",
+    boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
+    overflow: "auto",
+  };
+
   return (
-    <div className={`form-group ${validationMessages.length ? "has-warning" : ""}`}>
-      <label htmlFor={id}>
-        {label} {labelPostfix(language)}
-      </label>
-      <div className="form-control">
-        <div ref={editorElementRef} style={{ height }} />
-      </div>
-      <div className="form-feedback-group">
-        {validationMessages.map((validationMessage, index) => {
+    <div className={`${validationMessages.length ? "has-warning" : ""}`}>
+      <Box display={"flex"} alignItems={"center"} marginBottom={1}>
+        <Typography key={id}>
+          {label} {labelPostfix(language)}
+        </Typography>
+        {tooltip}
+      </Box>
+      <Box style={{ width: "100%", position: "relative" }}>
+        <Box ref={editorElementRef} style={editorStyle} />
+      </Box>
+      <Box className="form-feedback-group">
+        {validationMessages.map((validationMessage: any, index: number) => {
           return (
-            <div key={index} className="form-feedback-item">
+            <Typography key={index} className="form-feedback-item">
               {validationMessage}
-            </div>
+            </Typography>
           );
         })}
-      </div>
+      </Box>
     </div>
   );
 }
@@ -228,3 +277,14 @@ function templateTypeDefinition() {
     type Without<T, K> = Pick<T, Exclude<keyof T, K>>; 
 `;
 }
+
+export type BaseInputProps<T> = {
+  id: string;
+  label: string;
+  value: T;
+  onChange(value: T): void;
+  disabled: boolean;
+  validationMessages: Array<string>;
+  description?: string;
+  isNotEnum?: boolean;
+};

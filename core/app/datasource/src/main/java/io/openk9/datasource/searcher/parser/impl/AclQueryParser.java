@@ -89,6 +89,7 @@ public class AclQueryParser implements QueryParser {
 
 			Iterator<AclMapping> iterator =
 				parserContext
+					.getTenantWithBucket()
 					.getBucket()
 					.getDatasources()
 					.stream()
@@ -118,6 +119,7 @@ public class AclQueryParser implements QueryParser {
 					List<String> roles = extraParams.get(extraParamsKey);
 					if (roles != null && !roles.isEmpty()) {
 						parserContext
+							.getTenantWithBucket()
 							.getBucket()
 							.getDatasources()
 							.stream()

@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 .PHONY: check_commands load_config \
-        build_openai build_sentence_transformer \
-        start_openai start_sentence_transformer \
-        stop_openai stop_sentence_transformer
+        build_base build_sentence_transformer \
+        start_base start_sentence_transformer \
+        stop_base stop_sentence_transformer
 .DEFAULT_GOAL := help
 
 # Define variables
@@ -19,20 +19,20 @@ help:
 	@echo "Targets:"
 	@echo "  check_commands               Verify required tools (git, docker) and environment"
 	@echo "  load_config                  Load and validate configuration from $(CONFIG_FILE)"
-	@echo "  build_openai                 Build Docker image for OpenAI module with configured settings"
+	@echo "  build_base                   Build Docker image for base module with configured settings"
 	@echo "  build_sentence_transformer   Build Docker image for Sentence Transformer module"
-	@echo "  start_openai                 Start OpenAI module service in detached mode"
+	@echo "  start_base                   Start base module service in detached mode"
 	@echo "  start_sentence_transformer   Start Sentence Transformer service in detached mode"
-	@echo "  stop_openai                  Stop running OpenAI module service"
+	@echo "  stop_base                    Stop running base module service"
 	@echo "  stop_sentence_transformer    Stop running Sentence Transformer service"
 	@echo "  help                         Show this help message"
 	@echo ""
-	@echo "Typical workflow for a module (e.g., OpenAI):"
-	@echo "  make build_openai            # Build the Docker image"
-	@echo "  make start_openai            # Start the service"
-	@echo "  make stop_openai             # Stop the service"
+	@echo "Typical workflow for a module (e.g., base):"
+	@echo "  make build_base              # Build the Docker image"
+	@echo "  make start_base              # Start the service"
+	@echo "  make stop_base               # Stop the service"
 	@echo ""
-	@echo "For Sentence Transformer module, replace 'openai' with 'sentence_transformer' in the targets."
+	@echo "For Sentence Transformer module, replace 'base' with 'sentence_transformer' in the targets."
 
 # Check for required commands and environment
 check_commands:
@@ -49,12 +49,12 @@ load_config: check_commands
 	test -n "$$PYTHON_BASE_DOCKER_IMAGE" || { echo "Error: PYTHON_BASE_DOCKER_IMAGE not set in config"; exit 1; }
 
 # Build Docker images
-build_openai: load_config
+build_base: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
-		-t openk9-embedding-module-openai:"$$OPENK9_VERSION" \
-		-f Dockerfile.openai \
+		-t openk9-embedding-module-base:"$$OPENK9_VERSION" \
+		-f Dockerfile.base \
 		.
 
 build_sentence_transformer: load_config
@@ -66,10 +66,10 @@ build_sentence_transformer: load_config
 		.
 
 # Start services
-start_openai: load_config
+start_base: load_config
 	@source "$(CONFIG_PATH)" && \
 	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.openai.yml up -d && \
+	docker compose -f docker-compose.base.yml up -d && \
 	unset OPENK9_VERSION
 
 start_sentence_transformer: load_config
@@ -79,10 +79,10 @@ start_sentence_transformer: load_config
 	unset OPENK9_VERSION
 
 # Stop services
-stop_openai: load_config
+stop_base: load_config
 	@source "$(CONFIG_PATH)" && \
 	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.openai.yml stop && \
+	docker compose -f docker-compose.base.yml stop && \
 	unset OPENK9_VERSION
 
 stop_sentence_transformer: load_config

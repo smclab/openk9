@@ -34,11 +34,12 @@ log_level = os.environ.get("INPUT_LOG_LEVEL")
 if log_level is None:
     log_level = "INFO"
 
-logging.basicConfig(filename="logs/uvicorn_log.log",
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s',
-                    datefmt='%H:%M:%S',
-                    level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(log_level)
+formatter = logging.Formatter("%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s")
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ class CrawlRequest(BaseRequest):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
-    logging.error(f"{request}: {exc_str}")
+    logger.error(f"{request}: {exc_str}")
     content = {'status_code': 10422, 'message': exc_str, 'data': None}
     return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -87,7 +88,7 @@ def set_up_sitemap_endpoint(request):
     request = request.dict()
 
     logging.info("======= RECEIVED SITEMAP REQUEST =======")
-    logging.info(request)
+    logger.info(request)
 
     sitemap_urls = request['sitemapUrls']
     body_tag = request["bodyTag"]

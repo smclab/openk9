@@ -237,8 +237,16 @@ export function OpenK9Client({
         refreshOnTab: boolean;
         refreshOnDate: boolean;
         refreshOnQuery: boolean;
+        retrieveType: string;
       } = await response.json();
-      return data;
+
+      return {
+        ...data,
+        retrieveType:
+          data.retrieveType.toUpperCase() === "MATCH"
+            ? "TEXT"
+            : data.retrieveType,
+      };
     },
     async getLanguageDefault() {
       const response = await authFetch(

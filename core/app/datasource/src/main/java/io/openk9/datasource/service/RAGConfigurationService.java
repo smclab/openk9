@@ -24,6 +24,7 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGConfiguration_;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,6 +34,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.validation.ValidationException;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.List;
 
@@ -59,6 +62,47 @@ public class RAGConfigurationService
 			case CHAT_RAG_TOOL -> Bucket_.RAG_CONFIGURATION_CHAT_TOOL;
 			case SIMPLE_GENERATE -> Bucket_.RAG_CONFIGURATION_SIMPLE_GENERATE;
 		};
+	}
+
+	/**
+	 * Creates a new {@link RAGConfiguration} using the provided Mutiny session.
+	 * Converts the given DTO into a transient entity, and persists it using the session.
+	 * <p>
+	 * Error Handling: Fails with {@link ValidationException} if the type is missing.
+	 *
+	 * @param session the session to use for persistence
+	 * @param dto the DTO containing configuration data
+	 * @return a {@link Uni} emitting the created {@link RAGConfiguration}
+	 */
+	public Uni<RAGConfiguration> create(Mutiny.Session session, RAGConfigurationDTO dto) {
+		try {
+			var entity = createTransient(dto);
+			return super.create(session, entity);
+		}
+		catch (ValidationException e) {
+			return Uni.createFrom().failure(e);
+		}
+	}
+
+	/**
+	 * Creates a new {@link RAGConfiguration} within a managed transaction.
+	 * Converts the DTO into a transient entity, and persists it transactionally.
+	 * <p>
+	 * Error Handling: Fails with {@link ValidationException} if the type is missing.
+	 *
+	 * @param dto the DTO containing configuration data
+	 * @return a {@link Uni} emitting the created {@link RAGConfiguration}
+	 */
+	public Uni<RAGConfiguration> create(RAGConfigurationDTO dto) {
+		try {
+			var entity = createTransient(dto);
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, entity)
+			);
+		}
+		catch (ValidationException e) {
+			return Uni.createFrom().failure(e);
+		}
 	}
 
 	/**
@@ -114,5 +158,32 @@ public class RAGConfigurationService
 	@Override
 	public Class<RAGConfiguration> getEntityClass() {
 		return RAGConfiguration.class;
+	}
+
+	/**
+	 * Converts a {@link CreateRAGConfigurationDTO} into a non-persistent {@link RAGConfiguration} entity.
+	 * <p>
+	 * This utility method maps the input DTO to a new entity instance and ensures
+	 * that the mandatory {@code type} field is present.
+	 * <p>
+	 * Error Handling: Throws {@link ValidationException} if the DTO is invalid or the type is null.
+	 *
+	 * @param dto the DTO used for creating the entity
+	 * @return a new {@link RAGConfiguration} instance ready to be persisted
+	 * @throws ValidationException if the DTO is not of the expected type or lacks a type value
+	 */
+	private RAGConfiguration createTransient(RAGConfigurationDTO dto)
+		throws ValidationException {
+
+		if (dto instanceof CreateRAGConfigurationDTO createRAGConfigurationDTO
+				&& createRAGConfigurationDTO.getType() != null) {
+
+			var transientRagConfiguration = mapper.create(createRAGConfigurationDTO);
+			transientRagConfiguration.setType(createRAGConfigurationDTO.getType());
+
+			return transientRagConfiguration;
+		}
+
+		throw new ValidationException("Missing RAG type.");
 	}
 }

@@ -60,6 +60,11 @@
     "to": "pour",
     "today": "Aujourd'hui",
     "try-with-another-query": "Essayez une autre recherche",
-    "uncheck": "Décochez"
+    "uncheck": "Décochez",
+    "from-date": "Du",
+    "to-date": "Au",
+    "invalid-date-format": "Format de date invalide",
+    "end-date-before-start": "La date de fin ne peut pas être antérieure à la date de début",
+    "start-date-after-end": "La date de début ne peut pas être postérieure à la date de fin"
   }
 }

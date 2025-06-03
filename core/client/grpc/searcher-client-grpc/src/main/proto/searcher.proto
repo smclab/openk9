@@ -13,7 +13,6 @@ service Searcher {
   rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
   rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
-  rpc GetEmbeddingModelConfigurations(GetEmbeddingModelConfigurationsRequest) returns (GetEmbeddingModelConfigurationsResponse) {}
   rpc GetRAGConfigurations(GetRAGConfigurationsRequest) returns (GetRAGConfigurationsResponse) {}
 }
 
@@ -96,10 +95,6 @@ message GetLLMConfigurationsRequest {
   string virtualHost = 1;
 }
 
-message GetEmbeddingModelConfigurationsRequest {
-  string virtualHost = 1;
-}
-
 message GetRAGConfigurationsRequest {
   string virtualHost = 1;
   RAGType ragType = 2;
@@ -159,14 +154,6 @@ message GetLLMConfigurationsResponse {
 message ProviderModel {
   string provider = 1;
   string model = 2;
-}
-
-message GetEmbeddingModelConfigurationsResponse {
-  string apiUrl = 1;
-  optional string apiKey = 2;
-  .google.protobuf.Struct jsonConfig = 3;
-  ProviderModel providerModel = 4;
-  int32 vectorSize = 5;
 }
 
 message GetRAGConfigurationsResponse{

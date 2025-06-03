@@ -92,17 +92,17 @@ public class CreateBucketTest {
 
 		// Creates RAGConfigurations
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_CHAT_ONE, RAGType.CHAT_RAG);
+			ragService, RAG_CHAT_ONE, RAGType.CHAT_RAG);
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_CHAT_TWO, RAGType.CHAT_RAG);
+			ragService, RAG_CHAT_TWO, RAGType.CHAT_RAG);
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
+			ragService, RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
+			ragService, RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE, RAGType.SIMPLE_GENERATE);
+			ragService, RAG_SIMPLE_GENERATE_ONE, RAGType.SIMPLE_GENERATE);
 		EntitiesUtils.createRAGConfiguration(
-			sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO, RAGType.SIMPLE_GENERATE);
+			ragService, RAG_SIMPLE_GENERATE_TWO, RAGType.SIMPLE_GENERATE);
 
 		// Retrieves RAGConfigurations one
 		var ragConfigurationChatOne =
