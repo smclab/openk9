@@ -1,18 +1,29 @@
 import json
+from enum import Enum
 
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
-from app.external_services.grpc.grpc_client import get_llm_configuration
+from app.external_services.grpc.grpc_client import (
+    get_llm_configuration,
+    get_rag_configuration,
+)
 from app.rag.retriever import OpenSearchRetriever
-from app.utils.chat_history import save_chat_message
+from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
 from app.utils.llm import (
     generate_conversation_title,
     initialize_language_model,
     stream_rag_conversation,
 )
+
+
+class RagType(Enum):
+    RAG_TYPE_UNSPECIFIED = "RAG_TYPE_UNSPECIFIED"
+    CHAT_RAG = "CHAT_RAG"
+    CHAT_RAG_TOOL = "CHAT_RAG_TOOL"
+    SIMPLE_GENERATE = "SIMPLE_GENERATE"
 
 
 def get_chain(
@@ -26,20 +37,53 @@ def get_chain(
     sort,
     sort_after_key,
     language,
-    vector_indices,
     virtual_host,
     question,
-    reformulate,
     reranker_api_url,
     opensearch_host,
     grpc_host,
 ):
-    configuration = get_llm_configuration(grpc_host, virtual_host)
-    prompt_template = configuration["prompt"]
-    rephrase_prompt_template = configuration["rephrase_prompt"]
-    context_window = configuration["context_window"]
-    retrieve_type = configuration["retrieve_type"]
-    rerank = configuration["rerank"]
+
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.SIMPLE_GENERATE.value
+    )
+
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+        + prompt_template
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+    metadata = rag_configuration.get("metadata")
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = llm_configuration.get("model")
+    context_window = llm_configuration.get("context_window")
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "metadata": metadata,
+        "retrieve_type": retrieve_type,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     retriever = OpenSearchRetriever(
         search_query=search_query,
@@ -56,7 +100,6 @@ def get_chain(
         sort=sort,
         sort_after_key=sort_after_key,
         language=language,
-        vector_indices=vector_indices,
         context_window=context_window,
         retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
@@ -92,7 +135,6 @@ def get_chat_chain(
     sort,
     sort_after_key,
     language,
-    vector_indices,
     virtual_host,
     search_text,
     chat_id,
@@ -104,7 +146,49 @@ def get_chat_chain(
     opensearch_host,
     grpc_host,
 ):
-    configuration = get_llm_configuration(grpc_host, virtual_host)
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.CHAT_RAG.value
+    )
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        "Here is context to help: {context}. ### QUESTION: {{question}}"
+        + prompt_template
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+    chunk_window = rag_configuration.get("chunk_window")
+    metadata = rag_configuration.get("metadata")
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = llm_configuration.get("model")
+    context_window = llm_configuration.get("context_window")
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "prompt_template": prompt_template,
+        "rephrase_prompt_template": rephrase_prompt_template,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "chunk_window": chunk_window,
+        "metadata": metadata,
+        "retrieve_type": retrieve_type,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     yield from stream_rag_conversation(
         search_text,
@@ -119,7 +203,6 @@ def get_chat_chain(
         sort,
         sort_after_key,
         language,
-        vector_indices,
         opensearch_host,
         grpc_host,
         chat_id,
@@ -150,7 +233,6 @@ def get_chat_chain_tool(
     sort,
     sort_after_key,
     language,
-    vector_indices,
     virtual_host,
     search_text,
     chat_id,
@@ -162,10 +244,65 @@ def get_chat_chain_tool(
     opensearch_host,
     grpc_host,
 ):
-    configuration = get_llm_configuration(grpc_host, virtual_host)
-    rag_tool_description = configuration["rag_tool_description"]
+    rag_configuration = get_rag_configuration(
+        grpc_host, virtual_host, RagType.CHAT_RAG_TOOL.value
+    )
+    prompt_template = rag_configuration.get("prompt")
+    prompt_template = (
+        "Here is context to help: {context}. ### QUESTION: {{question}}"
+        + prompt_template
+    )
+    rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
+    prompt_no_rag = rag_configuration.get("prompt_no_rag")
+    reformulate = rag_configuration.get("reformulate")
+    rerank = rag_configuration.get("rerank")
+    chunk_window = rag_configuration.get("chunk_window")
+    metadata = rag_configuration.get("metadata")
+    rag_tool_description = rag_configuration.get("rag_tool_description")
+
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    api_url = llm_configuration.get("api_url")
+    api_key = llm_configuration.get("api_key")
+    model_type = llm_configuration.get("model_type")
+    model = llm_configuration.get("model")
+    context_window = llm_configuration.get("context_window")
+    retrieve_citations = llm_configuration.get("retrieve_citations")
+    retrieve_type = llm_configuration.get("retrieve_type")
+    watsonx_project_id = llm_configuration.get("watsonx_project_id")
+    chat_vertex_ai_credentials = llm_configuration.get("chat_vertex_ai_credentials")
+    chat_vertex_ai_model_garden = llm_configuration.get("chat_vertex_ai_model_garden")
+
+    configuration = {
+        "api_url": api_url,
+        "api_key": api_key,
+        "model_type": model_type,
+        "model": model,
+        "prompt_template": prompt_template,
+        "rephrase_prompt_template": rephrase_prompt_template,
+        "context_window": context_window,
+        "retrieve_citations": retrieve_citations,
+        "rerank": rerank,
+        "chunk_window": chunk_window,
+        "metadata": metadata,
+        "retrieve_type": retrieve_type,
+        "watsonx_project_id": watsonx_project_id,
+        "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
+        "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+    }
 
     llm = initialize_language_model(configuration)
+    parser = StrOutputParser()
+
+    if reformulate and chat_history:
+        rephrase_prompt_template = (
+            "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+            + rephrase_prompt_template
+        )
+        rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
+        rephrase_chain = rephrase_prompt | llm | parser
+        search_text = rephrase_chain.invoke(
+            {"input": search_text, "chat_history": chat_history},
+        )
 
     rag_tool.description = rag_tool_description
     tools = [rag_tool]
@@ -186,7 +323,6 @@ def get_chat_chain_tool(
             sort,
             sort_after_key,
             language,
-            vector_indices,
             opensearch_host,
             grpc_host,
             chat_id,
@@ -198,12 +334,20 @@ def get_chat_chain_tool(
         )
 
     else:
-        prompt_template = configuration["prompt_no_rag"]
-        prompt = ChatPromptTemplate.from_template(prompt_template)
-        parser = StrOutputParser()
-        chain = prompt | llm | parser
+        prompt_no_rag = (
+            "### QUESTION: {question}. Here is the chat history: {history}"
+            + prompt_no_rag
+            if chat_history
+            else "### QUESTION: {question}." + prompt_no_rag
+        )
 
-        result = chain.stream({"question": search_text})
+        prompt = ChatPromptTemplate.from_template(prompt_no_rag)
+        input_data = {"question": search_text}
+        if chat_history:
+            input_data["history"] = get_chat_history_from_frontend(chat_history)
+
+        chain = prompt | llm | parser
+        result = chain.stream(input_data)
 
         result_answer = ""
         documents = []
@@ -224,20 +368,21 @@ def get_chat_chain_tool(
             )
             yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
-        open_search_client = OpenSearch(
-            hosts=[opensearch_host],
-        )
+        if user_id:
+            open_search_client = OpenSearch(
+                hosts=[opensearch_host],
+            )
 
-        save_chat_message(
-            open_search_client,
-            search_text,
-            result_answer,
-            conversation_title.strip('"'),
-            documents,
-            chat_id,
-            user_id,
-            timestamp,
-            chat_sequence_number,
-        )
+            save_chat_message(
+                open_search_client,
+                search_text,
+                result_answer,
+                conversation_title.strip('"'),
+                documents,
+                chat_id,
+                user_id,
+                timestamp,
+                chat_sequence_number,
+            )
 
         yield json.dumps({"chunk": "", "type": "END"})

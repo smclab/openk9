@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.function.BiFunction;
 
 import io.openk9.common.util.ShardingKey;
-import io.openk9.common.util.ingestion.PayloadType;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
@@ -145,94 +144,88 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 		DataPayload dataPayload =
 			Json.decodeValue(Buffer.buffer(payloadArray), DataPayload.class);
 
-		if (dataPayload.getType() != null && dataPayload.getType() == PayloadType.HALT) {
+		switch (dataPayload.getType()) {
+			case DOCUMENT -> {
+				// Prepares for working on this dataPayload
+				var contentId = dataPayload.getContentId();
 
-			log.warnf(
-				"The publisher has sent an HALT message. So %s will be cancelled.",
-				shardingKey
-			);
+				if (contentId == null) {
+					this.replyTo.tell(new Invalid("content-id is null", requester));
+				}
 
-			DataProcessException exception;
+				if (this.writer == null) {
+					this.writer = getContext().spawnAnonymous(
+						this.writerFactory.apply(
+							scheduler,
+							writerAdapter
+						)
+					);
+				}
 
-			var rawContent = dataPayload.getRawContent();
+				counter++;
+				var parsingDateTimeStamp = dataPayload.getParsingDate();
 
-			if (rawContent != null
-				&& !rawContent.isEmpty()) {
+				var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
 
-				exception = new DataProcessException(rawContent);
+				var heldMessage = new HeldMessage(
+					processKey,
+					counter,
+					parsingDateTimeStamp,
+					contentId
+				);
+
+				// If there are no documentTypes defined,
+				// then the associated documents has to be deleted.
+
+				var documentTypes = dataPayload.getDocumentTypes();
+
+				if (documentTypes == null || documentTypes.length == 0) {
+
+					log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
+					writer.tell(new Writer.Start(null, heldMessage));
+
+					return this;
+				}
+
+				var processorChain =
+					getContext().spawnAnonymous(ProcessorChain.create(processorTypes));
+
+				processorChain.tell(new Processor.Start(
+					Json.encodeToBuffer(dataPayload).getBytes(),
+					scheduler,
+					heldMessage,
+					this.dataProcessAdapter
+				));
+
+				this.replyTo.tell(new Working(heldMessage, requester));
 			}
-			else {
-				exception = new DataProcessException(String.format(
-					"Halt received from the source for scheduling %s.",
+			case LAST -> this.replyTo.tell(new Last(requester));
+			case HALT -> {
+				log.warnf(
+					"The publisher has sent an HALT message. So %s will be cancelled.",
 					shardingKey
-				)
 				);
-			}
 
-			this.replyTo.tell(new Halt(exception, requester));
+				DataProcessException exception;
 
-		}
-		else if (dataPayload.getContentId() != null) {
+				var rawContent = dataPayload.getRawContent();
 
-			// Prepares for working on this dataPayload
-			var contentId = dataPayload.getContentId();
+				if (rawContent != null
+					&& !rawContent.isEmpty()) {
 
-			if (this.writer == null) {
-				this.writer = getContext().spawnAnonymous(
-					this.writerFactory.apply(
-						scheduler,
-						writerAdapter
+					exception = new DataProcessException(rawContent);
+				}
+				else {
+					exception = new DataProcessException(String.format(
+						"Halt received from the source for scheduling %s.",
+						shardingKey
 					)
-				);
+					);
+				}
+
+				this.replyTo.tell(new Halt(exception, requester));
+
 			}
-
-			counter++;
-			var parsingDateTimeStamp = dataPayload.getParsingDate();
-
-			var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
-
-			var heldMessage = new HeldMessage(
-				processKey,
-				counter,
-				parsingDateTimeStamp,
-				contentId
-			);
-
-			// If there are no documentTypes defined,
-			// then the associated documents has to be deleted.
-
-			var documentTypes = dataPayload.getDocumentTypes();
-
-			if (documentTypes == null || documentTypes.length == 0) {
-
-				log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
-				writer.tell(new Writer.Start(null, heldMessage));
-
-				return this;
-			}
-
-			var processorChain =
-				getContext().spawnAnonymous(ProcessorChain.create(processorTypes));
-
-			processorChain.tell(new Processor.Start(
-				Json.encodeToBuffer(dataPayload).getBytes(),
-				scheduler,
-				heldMessage,
-				this.dataProcessAdapter
-			));
-
-			this.replyTo.tell(new Working(heldMessage, requester));
-
-		}
-		else if (!dataPayload.isLast()) {
-
-			this.replyTo.tell(new Invalid("content-id is null", requester));
-
-		}
-		else {
-
-			this.replyTo.tell(new Last(requester));
-
 		}
 
 		return Behaviors.same();

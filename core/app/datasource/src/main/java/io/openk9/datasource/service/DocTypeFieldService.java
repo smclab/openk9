@@ -38,6 +38,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
@@ -48,6 +49,54 @@ import org.hibernate.reactive.mutiny.Mutiny;
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {
 	 DocTypeFieldService(DocTypeFieldMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	@Override
+	public Uni<DocTypeField> create(DocTypeFieldDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			create(session, dto));
+	}
+
+	@Override
+	public Uni<DocTypeField> create(Mutiny.Session s, DocTypeFieldDTO dto) {
+		var entity = createTransient(s, dto);
+
+		return super.create(s, entity);
+	}
+
+	/**
+	 * Creates a transient DocTypeField entity from the provided DTO without persisting it to the database.
+	 * <p>
+	 * This method handles the mapping of a DocTypeFieldDTO to a DocTypeField entity. If the DTO is an instance of
+	 * DocTypeFieldWithAnalyzerDTO and contains a non-null analyzerId, it additionally sets the associated Analyzer
+	 * by retrieving a reference to it from the session.
+	 * <p>
+	 * The created entity is not persisted to the database and remains in a transient state, making this method
+	 * suitable for use within transaction contexts like the {@link DocTypeService#addDocTypeField(long, DocTypeFieldDTO)} method, where the DocTypeField is
+	 * attached to a DocType entity that handles the persistence.
+	 *
+	 * @param session The Mutiny.Session used for retrieving entity references
+	 * @param dto     The data transfer object containing the field information. If this is an instance of
+	 *                DocTypeFieldWithAnalyzerDTO with a non-null analyzerId, the analyzer reference will be set
+	 * @return A newly created transient DocTypeField entity with all properties set according to the DTO
+	 * @see DocTypeFieldDTO
+	 * @see DocTypeFieldWithAnalyzerDTO
+	 * @see Analyzer
+	 */
+	public DocTypeField createTransient(Mutiny.Session session, DocTypeFieldDTO dto) {
+		var docTypeField = mapper.create(dto);
+
+		if (dto instanceof DocTypeFieldWithAnalyzerDTO withAnalyzerDTO) {
+
+			// only when analyzerId is not null
+			var analyzerId = withAnalyzerDTO.getAnalyzerId();
+			if (analyzerId != null) {
+				var analyzer = session.getReference(Analyzer.class, analyzerId);
+				docTypeField.setAnalyzer(analyzer);
+			}
+		}
+
+		return docTypeField;
 	}
 
 	@Override
@@ -189,8 +238,34 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			getSearchFields(),
 			after, before, first, last, searchText, sortByList
 		);
-	 }
+	}
 
+	@Override
+	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			patch(session, id, dto));
+	}
+
+	@Override
+	protected Uni<DocTypeField> patch(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
+		return findThenMapAndPersist(
+			s, id, dto, (docTypeField, docTypeFieldDTO) ->
+				patchMapper(s, docTypeField, docTypeFieldDTO)
+		);
+	}
+
+	@Override
+	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			update(session, id, dto));
+	}
+
+	@Override
+	public Uni<DocTypeField> update(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
+		return findThenMapAndPersist(
+			s, id, dto, (docTypeField, docTypeFieldDTO) ->
+			updateMapper(s, docTypeField, docTypeFieldDTO));
+	}
 
 	private Uni<? extends Set<DocTypeField>> loadAndExpandDocTypeFields(Mutiny.Session s, List<Set<DocTypeField>> list) {
 
@@ -284,6 +359,48 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			.discardItems();
 	}
 
+
+	private DocTypeField patchMapper(
+		Mutiny.Session session,
+		DocTypeField docTypeField,
+		DocTypeFieldDTO docTypeFieldDTO) {
+
+		mapper.patch(docTypeField, docTypeFieldDTO);
+
+		if (docTypeFieldDTO instanceof DocTypeFieldWithAnalyzerDTO withAnalyzerDTO) {
+
+			// only when analyzerId is not null
+			var analyzerId = withAnalyzerDTO.getAnalyzerId();
+			if (analyzerId != null) {
+				var analyzer = session.getReference(Analyzer.class, analyzerId);
+				docTypeField.setAnalyzer(analyzer);
+			}
+		}
+
+		return docTypeField;
+	}
+
+	private DocTypeField updateMapper(
+		Mutiny.Session session,
+		DocTypeField docTypeField,
+		DocTypeFieldDTO docTypeFieldDTO) {
+
+		mapper.update(docTypeField, docTypeFieldDTO);
+
+		if (docTypeFieldDTO instanceof DocTypeFieldWithAnalyzerDTO withAnalyzerDTO) {
+
+			// always set analyzer
+			var analyzerId = withAnalyzerDTO.getAnalyzerId();
+			Analyzer analyzer = null;
+			if (analyzerId != null) {
+				analyzer = session.getReference(Analyzer.class, analyzerId);
+			}
+
+			docTypeField.setAnalyzer(analyzer);
+		}
+
+		return docTypeField;
+	}
 
 	@Inject
 	AnalyzerService _analyzerService;

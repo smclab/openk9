@@ -5,33 +5,44 @@ import "google/protobuf/struct.proto";
 package embedding;
 
 service Embedding {
-  rpc GetMessages(EmbeddingRequest) returns (EmbeddingResponse);
+    rpc GetMessages(EmbeddingRequest) returns (EmbeddingResponse);
 }
 
 enum ChunkType {
-  CHUNK_TYPE_DEFAULT = 0;
-  CHUNK_TYPE_TEXT_SPLITTER = 1;
-  CHUNK_TYPE_TOKEN_TEXT_SPLITTER = 2;
-  CHUNK_TYPE_CHARACTER_TEXT_SPLITTER = 3;
-  CHUNK_TYPE_SEMANTIC_SPLITTER = 4;
+    CHUNK_TYPE_DEFAULT = 0;
+    CHUNK_TYPE_TEXT_SPLITTER = 1;
+    CHUNK_TYPE_TOKEN_TEXT_SPLITTER = 2;
+    CHUNK_TYPE_CHARACTER_TEXT_SPLITTER = 3;
+    CHUNK_TYPE_SEMANTIC_SPLITTER = 4;
 }
 
 message RequestChunk {
-  optional ChunkType type = 1;
-  google.protobuf.Struct jsonConfig = 2;
+    optional ChunkType type = 1;
+    google.protobuf.Struct jsonConfig = 2;
+}
+
+message ProviderModel {
+    string provider = 1;
+    string model = 2;
+}
+
+message EmbeddingModel {
+    optional string apiKey = 1;
+    ProviderModel providerModel = 2;
+    .google.protobuf.Struct jsonConfig = 3;
 }
 
 message ResponseChunk {
-  int32 number = 1;
-  int32 total = 2;
-  string text = 3;
-  repeated float vectors = 4;
+    int32 number = 1;
+    int32 total = 2;
+    string text = 3;
+    repeated float vectors = 4;
 }
 
 message EmbeddingRequest {
-  RequestChunk chunk = 1;
-  optional string api_key = 2;
-  string text = 3;
+    RequestChunk chunk = 1;
+    EmbeddingModel embeddingModel = 2;
+    string text = 3;
 }
 
-message EmbeddingResponse { repeated ResponseChunk chunks = 1; }
+message EmbeddingResponse {repeated ResponseChunk chunks = 1;}

@@ -27,7 +27,6 @@ function Detail<E>(props: DetailProps<E>) {
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
   const isMobile = props.isMobile;
-  const setViewButtonDetail = props.setViewButtonDetail;
   const viewButtonDetail = props.viewButtonDetail;
   const callbackFocusedButton = props.callbackFocusedButton;
   const cardDetailsOnOver = props.cardDetailsOnOver;
@@ -40,19 +39,17 @@ function Detail<E>(props: DetailProps<E>) {
   React.useEffect(() => {
     const modalElement = modalRef.current as any;
 
-    if (modalElement) {
+    if (modalElement && result) {
       const focusableElements = modalElement?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
-      const trapForInvisibleButton = focusableElements[1];
 
       const handleTabKeyPress = (event: any) => {
         if (event.key === "Tab") {
-          if (document.activeElement === firstElement) {
-            setShowButton(true);
-          }
+          setShowButton(true);
+
           if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
             lastElement.focus();
@@ -77,17 +74,6 @@ function Detail<E>(props: DetailProps<E>) {
       };
     }
   }, [result]);
-
-  React.useEffect(() => {
-    const modalElement = modalRef.current as any;
-
-    const isFocusWithinModal = modalElement?.contains(document.activeElement);
-    if (isFocusWithinModal) {
-      setShowButton(true);
-    } else {
-      setShowButton(false);
-    }
-  }, [document.activeElement]);
 
   const refFocus = React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
@@ -188,7 +174,7 @@ function Detail<E>(props: DetailProps<E>) {
             {t("preview")}
           </h2>
         </div>
-        {showButton && !isMobile && viewButtonDetail && (
+        {showButton && viewButtonDetail && (
           <button
             className="button-return-cards"
             css={css`
@@ -205,7 +191,7 @@ function Detail<E>(props: DetailProps<E>) {
             `}
             onClick={() => {
               if (callbackFocusedButton) callbackFocusedButton();
-              setViewButtonDetail(false);
+              setShowButton(false);
             }}
           >
             {t("return-cards")}

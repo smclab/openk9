@@ -113,12 +113,20 @@ def initialize_language_model(configuration):
                 A prompt for rephrasing tasks, if applicable.
             - "context_window": int
                 Size of the context window for the model's input.
+            - "retrieve_citations": bool
+                Flag to enable citation extraction.
+            - "rerank": bool
+                Flag to enable document reranking.
+            - "chunk_window": int
+                If 0 disable context window merging, if > 0 and <=2 enable context window merging.
             - "retrieve_type": str
                 Specifies the type of retrieval mechanism to be used with the model.
             - "watsonx_project_id": str
-                Project ID for IBM WatsonX (required if using WatsonX).
+                Project ID for IBM WatsonX (required if using IBM_WATSONX).
             - "chat_vertex_ai_credentials": dict
-                Credentials for Google Vertex AI (required if using Vertexai).
+                Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI).
+            - "chat_vertex_ai_model_garden": dict
+                Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
 
     Returns:
     -------
@@ -224,7 +232,7 @@ def generate_conversation_title(llm, search_text, result_answer):
     title_prompt = PromptTemplate(
         input_variables=["question", "answer"],
         template="""Generate a title for a conversation where the user asks:
-                            '{question}' and the AI responds: '{answer}'. Use Italian language only.""",
+                            '{question}' and the AI responds: '{answer}'.""",
     )
     title_chain = title_prompt | llm | StrOutputParser()
     conversation_title = title_chain.invoke(
@@ -273,7 +281,6 @@ def stream_rag_conversation(
     sort: list,
     sort_after_key: str,
     language: str,
-    vector_indices: bool,
     opensearch_host: str,
     grpc_host: str,
     chat_id: str,
@@ -306,7 +313,6 @@ def stream_rag_conversation(
         sort (list): Sorting criteria for search results.
         sort_after_key (str): Key for sorted pagination.
         language (str): Language code for localization.
-        vector_indices (bool): Flag to enable vector search.
         opensearch_host (str): OpenSearch cluster endpoint.
         grpc_host (str): gRPC service endpoint for embeddings.
         chat_id (str): Unique identifier for the chat session.
@@ -315,14 +321,21 @@ def stream_rag_conversation(
         timestamp (str): ISO format timestamp of the request.
         chat_sequence_number (int): Sequence number in conversation history.
         configuration (dict): Configuration dictionary containing:
+            - api_url (str): URL for the API endpoint
+            - api_key (str): API key for authentication
             - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
-            - prompt (str): Main prompt template
-            - rephrase_prompt (str): Contextualization prompt template
+            - model (str):  Name of the model to use; defaults to DEFAULT_MODEL if not provided
+            - prompt_template (str): Main prompt template
+            - rephrase_prompt_template (str): Contextualization prompt template
             - context_window (int): Model context window size
-            - retrieve_type (str): Document retrieval strategy
+            - retrieve_citations (bool): Flag to enable citation extraction
             - rerank (bool): Whether to enable document reranking
             - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
-            - retrieve_citations (bool): Flag to enable citation extraction.
+            - metadata (dict): metadata for document fields extraction
+            - retrieve_type (str): Document retrieval strategy
+            - watsonx_project_id (str): Project ID for IBM WatsonX (required if using IBM_WATSONX)
+            - chat_vertex_ai_credentials (dict): Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI)
+            - chat_vertex_ai_model_garden (dict): Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN)
 
     Yields:
         Iterator[str]: JSON-encoded stream objects with following formats:
@@ -344,19 +357,16 @@ def stream_rag_conversation(
         - Response streaming implemented using generator pattern
         - Document processing includes deduplication and citation mapping
     """
-    model_type = (
-        configuration["model_type"]
-        if configuration["model_type"]
-        else DEFAULT_MODEL_TYPE
-    )
-    model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
-    prompt_template = configuration["prompt"]
-    rephrase_prompt_template = configuration["rephrase_prompt"]
-    context_window = configuration["context_window"]
-    retrieve_citations = configuration["retrieve_citations"]
-    retrieve_type = configuration["retrieve_type"]
-    rerank = configuration["rerank"]
-    chunk_window = configuration["chunk_window"]
+    model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
+    model = configuration.get("model", DEFAULT_MODEL)
+    prompt_template = configuration.get("prompt_template")
+    rephrase_prompt_template = configuration.get("rephrase_prompt_template")
+    context_window = configuration.get("context_window")
+    retrieve_citations = configuration.get("retrieve_citations")
+    retrieve_type = configuration.get("retrieve_type")
+    rerank = configuration.get("rerank")
+    chunk_window = configuration.get("chunk_window")
+    metadata = configuration.get("metadata")
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
@@ -377,8 +387,8 @@ def stream_rag_conversation(
         sort=sort,
         sort_after_key=sort_after_key,
         language=language,
-        vector_indices=vector_indices,
         context_window=context_window,
+        metadata=metadata,
         retrieve_type=retrieve_type,
         opensearch_host=opensearch_host,
         grpc_host=grpc_host,

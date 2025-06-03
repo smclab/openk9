@@ -17,8 +17,12 @@
 
 package io.openk9.datasource.cache;
 
+import java.time.Duration;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import io.openk9.datasource.util.CborSerializable;
-import io.openk9.datasource.util.QuarkusCacheUtil;
+
 import io.quarkus.cache.Cache;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
@@ -31,10 +35,6 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.apache.pekko.actor.typed.receptionist.Receptionist;
 import org.apache.pekko.actor.typed.receptionist.ServiceKey;
 import org.jboss.logging.Logger;
-
-import java.time.Duration;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class P2PCache extends AbstractBehavior<P2PCache.Command> {
 
@@ -147,7 +147,7 @@ public class P2PCache extends AbstractBehavior<P2PCache.Command> {
 		}
 
 		for (Cache cache : this.cacheSet) {
-			QuarkusCacheUtil.invalidateAllAsync(cache);
+			cache.invalidateAll().await().indefinitely();
 		}
 	}
 

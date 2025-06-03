@@ -51,7 +51,7 @@ public class DateQueryParser implements QueryParser {
 		List<ParserSearchToken> searchTokens =
 			parserContext.getTokenTypeGroup();
 
-		Bucket currentTenant = parserContext.getBucket();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
@@ -59,7 +59,7 @@ public class DateQueryParser implements QueryParser {
 			.getBoolean("allFieldsWhenKeywordIsEmpty", true);
 
 		List<Tuple2<DocTypeField, ParserSearchToken>> collect =
-			Utils.getDocTypeFieldsFrom(currentTenant)
+			Utils.getDocTypeFieldsFrom(bucket)
 				.filter(DocTypeField::isSearchableAndDate)
 				.flatMap(docTypeField -> {
 

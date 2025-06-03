@@ -46,8 +46,7 @@ import java.io.InputStream;
 class HttpPluginDriverClientTest {
 
 	private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
-		.host(WireMockPluginDriver.HOST)
-		.port(WireMockPluginDriver.PORT)
+		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
 		.build();
 
 	@Inject
@@ -114,7 +113,7 @@ class HttpPluginDriverClientTest {
 
 	@Test
 	@RunOnVertxContext
-	void should_get_health_unkonwn_when_response_body_is_invalid(UniAsserter asserter) {
+	void should_get_health_unknown_when_response_body_is_invalid(UniAsserter asserter) {
 
 		var invalidBodyStub = wireMockServer.stubFor(WireMock
 			.get(HttpPluginDriverClient.HEALTH_PATH)

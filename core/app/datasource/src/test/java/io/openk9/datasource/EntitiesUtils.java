@@ -8,10 +8,10 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -111,24 +111,22 @@ public class EntitiesUtils {
 	}
 
 	public static void createRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		String name, RAGType type) {
+			RAGConfigurationService ragConfigurationService,
+			String name, RAGType type) {
 
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
+		CreateRAGConfigurationDTO dto = CreateRAGConfigurationDTO.builder()
 			.name(name)
 			.type(type)
 			.build();
 
-		createRAGConfiguration(sessionFactory, ragConfigurationService, dto);
+		createRAGConfiguration(ragConfigurationService, dto);
 	}
 
 	public static void createRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		RAGConfigurationDTO dto) {
+			RAGConfigurationService ragConfigurationService,
+			CreateRAGConfigurationDTO dto) {
 
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
-			)
+		ragConfigurationService.create(dto)
 			.await()
 			.indefinitely();
 	}

@@ -17,9 +17,9 @@
 
 package io.openk9.datasource.graphql;
 
-import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.RAGType;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
@@ -55,6 +55,8 @@ public class RAGConfigurationGraphqlTest {
 	private static final String CHUNK_WINDOW = "chunkWindow";
 	private static final int CHUNK_WINDOW_VALUE = 1500;
 	private static final int CHUNK_WINDOW_VALUE_UPDATED = 3000;
+	private static final String CREATE_RAG_CONFIGURATION = "createRAGConfiguration";
+	private static final String CREATE_RAG_CONFIGURATION_DTO = "createRAGConfigurationDTO";
 	private static final Integer DEFAULT_CHUNK_WINDOW = 0;
 	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
 	private static final Boolean DEFAULT_REFORMULATE = false;
@@ -103,7 +105,6 @@ public class RAGConfigurationGraphqlTest {
 		" pellentesque neque tincidunt enim bibendum bibendum. Vestibulum ante ipsum primis in faucibus orci luctus " +
 		"et ultrices posuere cubilia curae; Morbi consequat et leo sed faucibus.";
 	private static final String PROMPT_NO_RAG = "promptNoRag";
-	private static final String RAG_CONFIGURATION = "ragConfiguration";
 	private static final String RAG_CONFIGURATION_DTO = "ragConfigurationDTO";
 	private static final String RAG_CONFIGURATION_ONE_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 1 ";
 	private static final String RAG_CONFIGURATION_TWO_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 2 ";
@@ -111,6 +112,7 @@ public class RAGConfigurationGraphqlTest {
 	private static final String REPHRASE_PROMPT = "rephrasePrompt";
 	private static final String REFORMULATE = "reformulate";
 	private static final String TYPE = "type";
+	private static final String UPDATE_RAG_CONFIGURATION = "updateRAGConfiguration";
 	private static final Logger log = Logger.getLogger(RAGConfigurationGraphqlTest.class);
 
 	@Inject
@@ -125,7 +127,19 @@ public class RAGConfigurationGraphqlTest {
 
 	@BeforeEach
 	void setup() {
-		createRAGConfigurationTwo();
+		var ragConfigurationDTOTwo = CreateRAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_TWO_NAME)
+			.type(RAGType.CHAT_RAG)
+			.rephrasePrompt(PROMPT_EXAMPLE)
+			.prompt(PROMPT_EXAMPLE)
+			.promptNoRag(PROMPT_EXAMPLE)
+			.ragToolDescription(PROMPT_EXAMPLE)
+			.chunkWindow(CHUNK_WINDOW_VALUE)
+			.reformulate(true)
+			.jsonConfig(JSON_CONFIG_SHORT)
+			.build();
+
+		EntitiesUtils.createRAGConfiguration(ragConfigurationService, ragConfigurationDTOTwo);
 	}
 
 	@Test
@@ -135,10 +149,10 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					CREATE_RAG_CONFIGURATION,
 					args(
 						arg(
-							RAG_CONFIGURATION_DTO,
+							CREATE_RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_ONE_NAME),
 								prop(TYPE, RAGType.CHAT_RAG),
@@ -179,12 +193,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(CREATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationOne = getRagConfigurationOne();
+		var ragConfigurationOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_ONE_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
@@ -196,7 +215,11 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(ragConfigurationOne.getReformulate());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationOne.getJsonConfig());
 
-		removeRAGConfigurationOne();
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CONFIGURATION_ONE_NAME
+		);
 	}
 
 	@Test
@@ -206,10 +229,10 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					CREATE_RAG_CONFIGURATION,
 					args(
 						arg(
-							RAG_CONFIGURATION_DTO,
+							CREATE_RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_ONE_NAME),
 								prop(TYPE, RAGType.CHAT_RAG)
@@ -242,12 +265,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(CREATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationOne = getRagConfigurationOne();
+		var ragConfigurationOne =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_ONE_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
@@ -259,14 +287,23 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
 		assertNull(ragConfigurationOne.getJsonConfig());
 
-		removeRAGConfigurationOne();
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CONFIGURATION_ONE_NAME
+		);
 	}
 
 	@Test
 	void should_patch_rag_configuration_two() throws ExecutionException, InterruptedException {
 
 		// check initial state
-		var initialRagConfigurationTwo = getRagConfigurationTwo();
+		var initialRagConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
@@ -282,7 +319,7 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					UPDATE_RAG_CONFIGURATION,
 					args(
 						arg(ID, initialRagConfigurationTwo.getId()),
 						arg(PATCH, true),
@@ -290,7 +327,6 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.SIMPLE_GENERATE),
 								prop(PROMPT, PROMPT_EMPTY),
 								prop(REPHRASE_PROMPT, PROMPT_EMPTY),
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
@@ -328,12 +364,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(UPDATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationTwo = getRagConfigurationTwo();
+		var ragConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		// type is an immutable field
@@ -351,7 +392,12 @@ public class RAGConfigurationGraphqlTest {
 	void should_patch_rag_configuration_two_with_no_fields() throws ExecutionException, InterruptedException {
 
 		// check initial state
-		var initialRagConfigurationTwo = getRagConfigurationTwo();
+		var initialRagConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
@@ -367,15 +413,14 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					UPDATE_RAG_CONFIGURATION,
 					args(
 						arg(ID, initialRagConfigurationTwo.getId()),
 						arg(PATCH, true),
 						arg(
 							RAG_CONFIGURATION_DTO,
 							inputObject(
-								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.CHAT_RAG)
+								prop(NAME, RAG_CONFIGURATION_TWO_NAME)
 							)
 						)
 					),
@@ -406,12 +451,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(UPDATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationTwo = getRagConfigurationTwo();
+		var ragConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
@@ -428,7 +478,12 @@ public class RAGConfigurationGraphqlTest {
 	void should_update_rag_configuration_two() throws ExecutionException, InterruptedException {
 
 		// check initial state
-		var initialRagConfigurationTwo = getRagConfigurationTwo();
+		var initialRagConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
@@ -444,7 +499,7 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					UPDATE_RAG_CONFIGURATION,
 					args(
 						arg(ID, initialRagConfigurationTwo.getId()),
 						arg(PATCH, false),
@@ -452,7 +507,6 @@ public class RAGConfigurationGraphqlTest {
 							RAG_CONFIGURATION_DTO,
 							inputObject(
 								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.SIMPLE_GENERATE),
 								prop(PROMPT, PROMPT_EMPTY),
 								prop(REPHRASE_PROMPT, PROMPT_EMPTY),
 								prop(PROMPT_NO_RAG, PROMPT_EMPTY),
@@ -490,12 +544,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(UPDATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationTwo = getRagConfigurationTwo();
+		var ragConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		// type is an immutable field
@@ -513,7 +572,12 @@ public class RAGConfigurationGraphqlTest {
 	void should_update_rag_configuration_two_with_no_fields() throws ExecutionException, InterruptedException {
 
 		// check initial state
-		var initialRagConfigurationTwo = getRagConfigurationTwo();
+		var initialRagConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, initialRagConfigurationTwo.getType());
@@ -529,15 +593,14 @@ public class RAGConfigurationGraphqlTest {
 			operation(
 				OperationType.MUTATION,
 				field(
-					RAG_CONFIGURATION,
+					UPDATE_RAG_CONFIGURATION,
 					args(
 						arg(ID, initialRagConfigurationTwo.getId()),
 						arg(PATCH, false),
 						arg(
 							RAG_CONFIGURATION_DTO,
 							inputObject(
-								prop(NAME, RAG_CONFIGURATION_TWO_NAME),
-								prop(TYPE, RAGType.CHAT_RAG)
+								prop(NAME, RAG_CONFIGURATION_TWO_NAME)
 							)
 						)
 					),
@@ -568,12 +631,17 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var ragConfigurationResponse = response.getData().getJsonObject(RAG_CONFIGURATION);
+		var ragConfigurationResponse = response.getData().getJsonObject(UPDATE_RAG_CONFIGURATION);
 
 		assertNotNull(ragConfigurationResponse);
 		assertTrue(ragConfigurationResponse.isNull(FIELD_VALIDATORS));
 
-		var ragConfigurationTwo = getRagConfigurationTwo();
+		var ragConfigurationTwo =
+			EntitiesUtils.getRAGConfiguration(
+				sessionFactory,
+				ragConfigurationService,
+				RAG_CONFIGURATION_TWO_NAME
+			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
@@ -588,67 +656,10 @@ public class RAGConfigurationGraphqlTest {
 
 	@AfterEach
 	void tearDown() {
-		removeRAGConfigurationTwo();
-	}
-
-	private RAGConfiguration createRAGConfigurationTwo() {
-		var dto = RAGConfigurationDTO.builder()
-			.name(RAG_CONFIGURATION_TWO_NAME)
-			.type(RAGType.CHAT_RAG)
-			.rephrasePrompt(PROMPT_EXAMPLE)
-			.prompt(PROMPT_EXAMPLE)
-			.promptNoRag(PROMPT_EXAMPLE)
-			.ragToolDescription(PROMPT_EXAMPLE)
-			.chunkWindow(CHUNK_WINDOW_VALUE)
-			.reformulate(true)
-			.jsonConfig(JSON_CONFIG_SHORT)
-			.build();
-
-		return sessionFactory.withTransaction(
-			session ->
-				ragConfigurationService.create(session, dto)
-		)
-		.await()
-		.indefinitely();
-	}
-
-	private RAGConfiguration getRagConfigurationOne() {
-		return sessionFactory.withTransaction(
-			session ->
-				ragConfigurationService.findByName(session, RAG_CONFIGURATION_ONE_NAME)
-		)
-		.await()
-		.indefinitely();
-	}
-
-	private RAGConfiguration getRagConfigurationTwo() {
-		return sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.findByName(session, RAG_CONFIGURATION_TWO_NAME)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private RAGConfiguration removeRAGConfigurationOne() {
-		var ragConfiguration = getRagConfigurationOne();
-
-		return sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.deleteById(session, ragConfiguration.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private RAGConfiguration removeRAGConfigurationTwo() {
-		var ragConfiguration = getRagConfigurationTwo();
-
-		return sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.deleteById(session, ragConfiguration.getId())
-			)
-			.await()
-			.indefinitely();
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CONFIGURATION_TWO_NAME
+		);
 	}
 }

@@ -51,12 +51,12 @@ public class DateOrderQueryParser implements QueryParser {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
-		Bucket currentTenant = parserContext.getBucket();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
 		Iterator<String> iterator =
-			Utils.getDocTypeFieldsFrom(currentTenant)
+			Utils.getDocTypeFieldsFrom(bucket)
 				.filter(DocTypeField::isSearchableAndDate)
 				.map(DocTypeField::getPath)
 				.distinct()

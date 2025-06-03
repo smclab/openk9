@@ -147,7 +147,7 @@ public abstract class BaseSearchService {
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
-		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
+		Map<String, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
 		JWT jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -170,8 +170,12 @@ public abstract class BaseSearchService {
 								.builder()
 								.tokenTypeGroup(parserSearchTokens)
 								.mutableQuery(boolQueryBuilder)
-								.bucket(bucket)
-								.queryParserConfig(getQueryParserConfig(bucket, tokenType))
+								.tenantWithBucket(tenantWithBucket)
+								.queryParserConfig(getQueryParserConfig(
+										tenantWithBucket.getBucket(),
+										tokenType
+									)
+								)
 								.jwt(jwt)
 								.extraParams(extraParams)
 								.language(language)
@@ -207,10 +211,13 @@ public abstract class BaseSearchService {
 						.builder()
 						.tokenTypeGroup(parserSearchTokens)
 						.mutableQuery(boolQueryBuilder)
-						.bucket(bucket)
+						.tenantWithBucket(tenantWithBucket)
 						.queryParserConfig(
 							getQueryParserConfig(
-								bucket, queryParser.getType()))
+								tenantWithBucket.getBucket(),
+								queryParser.getType()
+							)
+						)
 						.jwt(jwt)
 						.extraParams(extraParams)
 						.build()

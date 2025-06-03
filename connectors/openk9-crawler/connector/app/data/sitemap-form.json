@@ -116,7 +116,7 @@
         "info": "Max length for main content. If negative all text is extracted",
         "values": [
           {
-            "value": "-1",
+            "value": -1,
             "isDefault": true
           }
         ],
@@ -135,7 +135,7 @@
         "info": "Number of pages extracted. If 0 all pages founded in sitemap are scraped",
         "values": [
           {
-            "value": "0",
+            "value": 0,
             "isDefault": true
           }
         ],
@@ -146,9 +146,9 @@
         }
       },
       {
-        "label": "Page Count",
+        "label": "Extract Docs",
         "name": "doExtractDocs",
-        "type": "boolean",
+        "type": "checkbox",
         "size": 4,
         "required": true,
         "info": "If extract documents",
@@ -167,7 +167,7 @@
       {
         "label": "Document File Extensions",
         "name": "documentFileExtensions",
-        "type": "text",
+        "type": "list",
         "size": 4,
         "required": true,
         "info": "File extensions allowed",

@@ -17,11 +17,11 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.BucketDTO;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -53,9 +53,9 @@ public class UnboundRAGConfigurationTest {
 	private static final String RAG_CHAT_TOOL_TWO = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 2";
 	private static final String RAG_CHAT_TOOL_THREE = ENTITY_NAME_PREFIX + "RAG Configuration chat tool 3";
 
-	private static int allChatCount = 0;
-	private static int allChatToolCount = 0;
-	private static int allSimpleGenerateCount = 0;
+	private int allChatCount = 0;
+	private int allChatToolCount = 0;
+	private int allSimpleGenerateCount = 0;
 
 	@Inject
 	BucketService bucketService;
@@ -71,19 +71,55 @@ public class UnboundRAGConfigurationTest {
 		createBucketOne();
 		createBucketTwo();
 
-		createRAGConfiguration(RAG_CHAT_ONE, RAGType.CHAT_RAG);
-		createRAGConfiguration(RAG_CHAT_TWO, RAGType.CHAT_RAG);
-		createRAGConfiguration(RAG_CHAT_THREE, RAGType.CHAT_RAG);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_ONE,
+			RAGType.CHAT_RAG
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_TWO,
+			RAGType.CHAT_RAG
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_THREE,
+			RAGType.CHAT_RAG
+		);
 		allChatCount = 3;
 
-		createRAGConfiguration(RAG_SIMPLE_GENERATE_ONE, RAGType.SIMPLE_GENERATE);
-		createRAGConfiguration(RAG_SIMPLE_GENERATE_TWO, RAGType.SIMPLE_GENERATE);
-		createRAGConfiguration(RAG_SIMPLE_GENERATE_THREE, RAGType.SIMPLE_GENERATE);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_SIMPLE_GENERATE_ONE,
+			RAGType.SIMPLE_GENERATE
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_SIMPLE_GENERATE_TWO,
+			RAGType.SIMPLE_GENERATE
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_SIMPLE_GENERATE_THREE,
+			RAGType.SIMPLE_GENERATE
+		);
 		allSimpleGenerateCount = 3;
 
-		createRAGConfiguration(RAG_CHAT_TOOL_ONE, RAGType.CHAT_RAG_TOOL);
-		createRAGConfiguration(RAG_CHAT_TOOL_TWO, RAGType.CHAT_RAG_TOOL);
-		createRAGConfiguration(RAG_CHAT_TOOL_THREE, RAGType.CHAT_RAG_TOOL);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_TOOL_ONE,
+			RAGType.CHAT_RAG_TOOL
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_TOOL_TWO,
+			RAGType.CHAT_RAG_TOOL
+		);
+		EntitiesUtils.createRAGConfiguration(
+			ragConfigurationService,
+			RAG_CHAT_TOOL_THREE,
+			RAGType.CHAT_RAG_TOOL
+		);
 		allChatToolCount = 3;
 	}
 
@@ -416,19 +452,6 @@ public class UnboundRAGConfigurationTest {
 						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
 						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
 						.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void createRAGConfiguration(String name, RAGType type) {
-		RAGConfigurationDTO dto = RAGConfigurationDTO.builder()
-			.name(name)
-			.type(type)
-			.build();
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
 			)
 			.await()
 			.indefinitely();

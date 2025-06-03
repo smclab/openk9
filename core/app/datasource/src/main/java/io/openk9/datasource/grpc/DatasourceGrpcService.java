@@ -17,18 +17,17 @@
 
 package io.openk9.datasource.grpc;
 
-import jakarta.inject.Inject;
-
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
-import io.openk9.datasource.grpc.mapper.PluginDriverMapper;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.TenantInitializerService;
-
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
 
 @GrpcService
 public class DatasourceGrpcService implements Datasource {
@@ -41,8 +40,6 @@ public class DatasourceGrpcService implements Datasource {
 	PluginDriverService pluginDriverService;
 	@Inject
 	EnrichItemMapper enrichItemMapper;
-	@Inject
-	PluginDriverMapper pluginDriverMapper;
 
 	@Override
 	public Uni<InitTenantResponse> initTenant(InitTenantRequest request) {
@@ -66,13 +63,11 @@ public class DatasourceGrpcService implements Datasource {
 	}
 
 	@Override
-	public Uni<CreatePluginDriverResponse> createPluginDriver(
-		CreatePluginDriverRequest request) {
-
-		var tenantId = request.getSchemaName();
-		var pluginDriverDTO = pluginDriverMapper.map(request);
-
-		return upsertPluginDriver(tenantId, pluginDriverDTO);
+	@Deprecated
+	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
+		return Uni.createFrom().failure(new StatusRuntimeException(Status.UNIMPLEMENTED
+			.withDescription("This GRPC method is deprecated and no longer available. Use GraphQL API instead."))
+		);
 	}
 
 	@Override

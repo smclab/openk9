@@ -20,8 +20,10 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import jakarta.validation.ValidationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -84,7 +87,7 @@ public class RAGConfigurationServiceTest {
 
 	@Test
 	void should_create_rag_configuration_one() {
-		var dto = RAGConfigurationDTO.builder()
+		var dto = CreateRAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
 			.type(RAGType.CHAT_RAG)
 			.prompt(PROMPT_EXAMPLE)
@@ -114,7 +117,7 @@ public class RAGConfigurationServiceTest {
 
 	@Test
 	void should_create_rag_configuration_one_with_default_fields() {
-		var dto = RAGConfigurationDTO.builder()
+		var dto = CreateRAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
 			.type(RAGType.CHAT_RAG)
 			.build();
@@ -142,7 +145,7 @@ public class RAGConfigurationServiceTest {
 	@Test
 	void should_not_change_rag_configuration_one_rag_type() {
 		// create the ragConfiguration to patch
-		var dto = RAGConfigurationDTO.builder()
+		var dto = CreateRAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
 			.type(RAGType.CHAT_RAG)
 			.chunkWindow(DEFAULT_VALUE_CHUNK_WINDOW)
@@ -167,7 +170,6 @@ public class RAGConfigurationServiceTest {
 		// patch the ragConfigurationOne
 		var dtoWithPatch = RAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
-			.type(RAGType.SIMPLE_GENERATE)
 			.chunkWindow(CHUNK_WINDOW)
 			.build();
 
@@ -184,12 +186,42 @@ public class RAGConfigurationServiceTest {
 		removeRAGConfigurationOne();
 	}
 
+	@Test
+	void should_fail_create_rag_configuration_one_with_missing_type() {
+		var dto = CreateRAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_ONE_NAME)
+			.prompt(PROMPT_EXAMPLE)
+			.rephrasePrompt(PROMPT_EXAMPLE)
+			.promptNoRag(PROMPT_EXAMPLE)
+			.ragToolDescription(PROMPT_EXAMPLE)
+			.chunkWindow(CHUNK_WINDOW)
+			.reformulate(true)
+			.jsonConfig(JSON_CONFIG_EMPTY)
+			.build();
+
+		assertThrows(ValidationException.class, () -> createRAGConfiguration(dto));
+	}
+
+	@Test
+	void should_fail_create_rag_configuration_one_with_base_dto() {
+		var dto = RAGConfigurationDTO.builder()
+			.name(RAG_CONFIGURATION_ONE_NAME)
+			.prompt(PROMPT_EXAMPLE)
+			.rephrasePrompt(PROMPT_EXAMPLE)
+			.promptNoRag(PROMPT_EXAMPLE)
+			.ragToolDescription(PROMPT_EXAMPLE)
+			.chunkWindow(CHUNK_WINDOW)
+			.reformulate(true)
+			.jsonConfig(JSON_CONFIG_EMPTY)
+			.build();
+
+		assertThrows(ValidationException.class, () -> createRAGConfiguration(dto));
+	}
+
 	private RAGConfiguration createRAGConfiguration(RAGConfigurationDTO dto) {
-		return sessionFactory.withTransaction(
-			session -> ragConfigurationService.create(session, dto)
-		)
-		.await()
-		.indefinitely();
+		return ragConfigurationService.create(dto)
+			.await()
+			.indefinitely();
 	}
 
 	private RAGConfiguration getRAGConfigurationOne() {

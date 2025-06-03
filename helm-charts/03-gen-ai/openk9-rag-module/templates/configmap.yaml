@@ -5,14 +5,27 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
 data:
+  # Env variables
   ORIGINS: {{ .Values.cors.origins | quote }}
+  LOGGING_LEVEL:  {{ .Values.log.level | quote }}
+
+  # Keycloak env variables
   KEYCLOAK_URL: {{ .Values.keycloak.url | quote }}
   
+  # Opensearch env variables
   OPENSEARCH_HOST: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
   OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
 
+  # Grpc env variables
   GRPC_DATASOURCE_HOST: {{ .Values.openk9.datasource.host | quote }}
   GRPC_TENANT_MANAGER_HOST: {{ .Values.openk9.tenantManager.host | quote }}
 
+  # Phoenix arize env variables
+  ARIZE_PHOENIX_ENABLED: {{ .Values.phoenix.enabled | quote }}
   ARIZE_PHOENIX_ENDPOINT: {{ .Values.phoenix.endpoint | quote }}
   ARIZE_PHOENIX_PROJECT_NAME: {{ .Values.phoenix.projectName | quote }}
+
+  # Retention env variables
+  SCHEDULE: {{ .Values.retention.schedule | quote }}
+  CRON_EXPRESSION: {{ .Values.retention.cronexpression | quote }}
+  INTERVAL_IN_DAYS: {{ .Values.retention.interval | quote }}

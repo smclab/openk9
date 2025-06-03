@@ -23,6 +23,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -46,6 +47,23 @@ public class RAGConfigurationGraphqlResource {
 
 	@Inject
 	RAGConfigurationService service;
+
+	@Description("""
+		Create a RAGConfiguration entity based on the provided input.
+		
+		Arguments:
+		- `createRAGConfigurationDTO` (RAGConfigurationDTO!): The input object with data for creation or update.
+		
+		Returns:
+		- The RAGConfiguration entity created.
+		"""
+	)
+	@Mutation
+	public Uni<Response<RAGConfiguration>> createRAGConfiguration(
+		CreateRAGConfigurationDTO createRAGConfigurationDTO) {
+
+		return service.getValidator().create(createRAGConfigurationDTO);
+	}
 
 	@Mutation
 	public Uni<RAGConfiguration> deleteRAGConfiguration(@Id long id) {
@@ -91,26 +109,27 @@ public class RAGConfigurationGraphqlResource {
 		return service.findUnboundRAGConfigurationByBucket(bucketId, ragType);
 	}
 
+	@Description("""
+		Update or patch a RAGConfiguration entity based on the provided input.
+		
+		Arguments:
+		- `id` (Long): The ID of the RAGConfiguration to update.
+		- `ragConfigurationDTO` (RAGConfigurationDTO!): The input object with data for creation or update.
+		- `patch` (Boolean): Whether to perform a partial update. Defaults to false.
+		
+		Returns:
+		- The RAGConfiguration entity created.
+		"""
+	)
 	@Mutation
-	public Uni<Response<RAGConfiguration>> ragConfiguration(
-		@Id Long id,
-		RAGConfigurationDTO ragConfigurationDTO,
-		@DefaultValue("false") boolean patch) {
+	public Uni<Response<RAGConfiguration>> updateRAGConfiguration(
+			@NonNull @Id Long id,
+			RAGConfigurationDTO ragConfigurationDTO,
+			@DefaultValue("false") boolean patch) {
 
-		if (id == null) {
-			return createRAGConfiguration(ragConfigurationDTO);
-		}
-		else {
-			return patch
-				? patchRAGConfiguration(id, ragConfigurationDTO)
-				: updateRAGConfiguration(id, ragConfigurationDTO);
-		}
-	}
-
-	protected Uni<Response<RAGConfiguration>> createRAGConfiguration(
-		RAGConfigurationDTO ragConfigurationDTO) {
-
-		return service.getValidator().create(ragConfigurationDTO);
+		return patch
+			? patchRAGConfiguration(id, ragConfigurationDTO)
+			: updateRAGConfiguration(id, ragConfigurationDTO);
 	}
 
 	protected Uni<Response<RAGConfiguration>> patchRAGConfiguration(

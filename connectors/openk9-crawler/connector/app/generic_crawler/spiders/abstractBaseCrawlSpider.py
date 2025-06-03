@@ -13,7 +13,7 @@ from requests_futures.sessions import FuturesSession
 from scrapy import Spider
 
 from generic_crawler.items import FileItem, DocumentItem, BinaryItem, Payload
-from generic_crawler.spiders.util.file.utility import get_path
+from generic_crawler.spiders.util.file.utility import get_path, extension_from_mimetype
 from generic_crawler.spiders.util.generic.utility import get_as_base64, post_message, str_to_bool
 from twisted.python.log import logerr
 
@@ -101,8 +101,6 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			logger.warning(f"Document Url: Could not parse document with href: {href}, extracted url: {document_url}")
 			return
 
-		logger.info(document_url)
-
 		response = requests.get(document_url, headers=headers, allow_redirects=True, timeout=5)
 
 		if not (response.status_code == 200):
@@ -120,6 +118,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		document_item = DocumentItem()
 		document_item['url'] = document_url
 		document_item['mimeType'] = document_mime_type
+		document_item['extension'] = extension_from_mimetype(document_mime_type)
 
 		datasource_payload = {
 			"file": dict(file_item),
@@ -154,7 +153,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 
 		if content_id not in self.crawled_ids:
 
-			# post_message(self.ingestion_url, dict(payload))
+			post_message(self.ingestion_url, dict(payload))
 
 			self.crawled_ids.append(content_id)
 

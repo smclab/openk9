@@ -11,7 +11,9 @@ package grpc;
 service Datasource {
   rpc InitTenant(InitTenantRequest) returns (InitTenantResponse) {}
   rpc CreateEnrichItem(CreateEnrichItemRequest) returns (CreateEnrichItemResponse) {}
-  rpc CreatePluginDriver(CreatePluginDriverRequest) returns (CreatePluginDriverResponse) {}
+  rpc CreatePluginDriver(CreatePluginDriverRequest) returns (CreatePluginDriverResponse) {
+    option deprecated = true;
+  }
   rpc CreatePresetPluginDriver(CreatePresetPluginDriverRequest) returns (CreatePluginDriverResponse) {}
 }
 
@@ -38,11 +40,12 @@ message CreatePluginDriverRequest {
   string name = 2;
   string description = 3;
   PluginDriverType type = 4;
-  string host = 5;
-  string port = 6;
+  string host = 5 [deprecated = true];
+  string port = 6 [deprecated = true];
   string secure = 7;
   string path = 8;
   string method = 9;
+  string baseUri = 10;
 }
 
 message CreatePresetPluginDriverRequest {

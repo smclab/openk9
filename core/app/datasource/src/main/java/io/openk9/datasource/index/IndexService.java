@@ -367,36 +367,21 @@ public class IndexService {
 
 				String indexName = String.join(",", existIndexNames);
 
-				return Uni
-						.createFrom()
-						.<Response>emitter((sink) -> {
+				// synchronous call on worker thread
+				return VertxContextSupport.executeBlocking(() -> {
+						RestClient lowLevelClient = restHighLevelClient.getLowLevelClient();
 
-							RestClient lowLevelClient = restHighLevelClient.getLowLevelClient();
+						Request
+							catRequest = new Request("GET", "/_cat/indices/" + indexName);
 
-							Request
-								catRequest = new Request("GET", "/_cat/indices/" + indexName);
+						catRequest.addParameter("format", "JSON");
+						catRequest.addParameter("v", "true");
+						catRequest.addParameter("bytes", "b");
 
-							catRequest.addParameter("format", "JSON");
-							catRequest.addParameter("v", "true");
-							catRequest.addParameter("bytes", "b");
-
-							lowLevelClient.performRequestAsync(
-								catRequest,
-								new ResponseListener() {
-									@Override
-									public void onSuccess(Response response) {
-										sink.complete(response);
-									}
-
-									@Override
-									public void onFailure(Exception exception) {
-										sink.fail(exception);
-									}
-								});
-						})
-						.map(IndexService::responseToCatResponses);
-				}
-			);
+						return lowLevelClient.performRequest(catRequest);
+					})
+					.map(IndexService::responseToCatResponses);
+			});
 	}
 
 	public Uni<CatResponse> get_catIndicesFirst(String indexName) {
@@ -443,14 +428,11 @@ public class IndexService {
 	}
 
 	public Uni<Boolean> indexExist(String name) {
-		return Uni.createFrom()
-			.<Boolean>emitter(
-				emitter -> restHighLevelClient
+		// synchronous call on worker thread
+		return VertxContextSupport.executeBlocking(() ->
+				restHighLevelClient
 					.indices()
-					.existsAsync(
-						new GetIndexRequest(name), RequestOptions.DEFAULT,
-						UniActionListener.of(emitter)
-					)
+					.exists(new GetIndexRequest(name), RequestOptions.DEFAULT)
 			)
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {

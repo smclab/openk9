@@ -65,9 +65,9 @@ public class TextQueryParser implements QueryParser {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
-		Bucket currentTenant = parserContext.getBucket();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
-		Set<Datasource> datasources = currentTenant.getDatasources();
+		Set<Datasource> datasources = bucket.getDatasources();
 
 		String language = parserContext.getLanguage();
 

@@ -2,11 +2,11 @@ ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
 
 FROM python:${PYTHON_BASE_DOCKER_IMAGE}
 
-RUN mkdir -p /openai_embedding_module  && \
+RUN mkdir -p /embedding_module  && \
 mkdir -p /var/log/openk9
-WORKDIR /openai_embedding_module/
+WORKDIR /embedding_module/
 
-COPY app/openai/requirements.openai.txt ./requirements.txt
+COPY app/base/requirements.base.txt ./requirements.txt
 COPY app/external_services/grpc/embedding/embedding.proto ./
 
 RUN pip install --no-cache-dir -r requirements.txt  && \
@@ -14,9 +14,7 @@ python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.pro
 
 COPY app/text_splitters/derived_text_splitter.py ./
 COPY app/utils/text_cleaner.py ./
-COPY app/openai/server.openai.py ./server.py
-COPY app/openai/client.openai.py ./client.py
-
+COPY app/base/server.base.py ./server.py
 
 EXPOSE 5000
 

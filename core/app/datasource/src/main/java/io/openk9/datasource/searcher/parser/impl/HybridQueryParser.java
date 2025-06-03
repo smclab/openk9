@@ -51,7 +51,8 @@ public class HybridQueryParser {
 		var jsonConfig = parserContext.getQueryParserConfig();
 		var parserSearchToken = parserContext.getTokenTypeGroup().iterator().next();
 
-		var tenantId = parserContext.getTenantId();
+		var tenant = parserContext.getTenantWithBucket().getTenant();
+		var tenantId = tenant.schemaName();
 
 		var kNeighbors = KnnQueryParser.getKNeighbors(parserSearchToken, jsonConfig);
 		var boost = TextQueryParser.getBoost(parserSearchToken, jsonConfig);

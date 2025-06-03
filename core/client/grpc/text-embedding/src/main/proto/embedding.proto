@@ -23,6 +23,17 @@ message RequestChunk {
   google.protobuf.Struct jsonConfig = 2;
 }
 
+message ProviderModel {
+  string provider = 1;
+  string model = 2;
+}
+
+message EmbeddingModel {
+  optional string apiKey = 1;
+  ProviderModel providerModel = 2;
+  .google.protobuf.Struct jsonConfig = 3;
+}
+
 message ResponseChunk {
   int32 number = 1;
   int32 total = 2;
@@ -32,7 +43,7 @@ message ResponseChunk {
 
 message EmbeddingRequest {
   RequestChunk chunk = 1;
-  optional string api_key = 2;
+  EmbeddingModel embeddingModel = 2;
   string text = 3;
 }
 
