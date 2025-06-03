@@ -50,7 +50,7 @@ class GenericCrawlerPipeline:
             # uncomment next line to save crawled data to csv files
             # self.exporter.export_item(item)
 
-            logger.info(dict(item))
+            # logger.info(dict(item))
 
             # logger.info("ContentId " + str(item['contentId']))
             post_message(ingestion_url, dict(item))
