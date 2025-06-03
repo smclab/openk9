@@ -116,7 +116,7 @@ public class SearchConfigServiceTest {
 
 		Set<QueryParserConfig> queryParserConfigs = searchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -155,7 +155,7 @@ public class SearchConfigServiceTest {
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(sessionFactory, searchConfigService, SEARCH_CONFIG_ONE_NAME);
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				searchConfig.getQueryParserConfigs().size(),

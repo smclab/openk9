@@ -175,7 +175,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -195,7 +195,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = searchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -255,7 +255,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -275,7 +275,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = searchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -353,7 +353,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -373,7 +373,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -456,7 +456,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -476,7 +476,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -550,7 +550,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -570,7 +570,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -653,7 +653,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -673,7 +673,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -756,7 +756,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -776,7 +776,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),
@@ -850,7 +850,7 @@ public class SearchConfigGraphqlTest {
 
 		var response = graphQLClient.executeSync(mutation);
 
-		log.info(String.format("Response:\n%s", response));
+		log.debug(String.format("Response:\n%s", response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
@@ -870,7 +870,7 @@ public class SearchConfigGraphqlTest {
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
 
-		log.info(
+		log.debug(
 			String.format(
 				"searchConfig (%d): %s",
 				queryParserConfigs.size(),

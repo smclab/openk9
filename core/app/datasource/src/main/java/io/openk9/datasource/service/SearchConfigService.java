@@ -107,7 +107,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		QueryParserConfig queryParserConfig =
 			_queryParserConfigMapper.create(queryParserConfigDTO);
 
-		return sessionFactory.withTransaction((s) -> findById(s, id)
+		return sessionFactory.withTransaction(s -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
@@ -123,7 +123,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	public Uni<SearchPipelineResponseDTO> configureHybridSearch(
 		long id, @NotNull HybridSearchPipelineDTO pipelineDTO) {
 
-		return sessionFactory.withTransaction((s) -> findById(s, id))
+		return sessionFactory.withTransaction(s -> findById(s, id))
 			.flatMap(searchConfig -> Uni.createFrom()
 				.completionStage(openSearchClient
 					.generic()
@@ -329,7 +329,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 	}
 
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {
-		return sessionFactory.withTransaction((s) -> findById(s, id)
+		return sessionFactory.withTransaction(s -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(searchConfig -> s.fetch(searchConfig.getQueryParserConfigs()).flatMap(
