@@ -17,6 +17,31 @@
 
 package io.openk9.k8sclient.web;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+
+import io.openk9.k8sclient.dto.MlDto;
+import io.openk9.k8sclient.dto.MlPodResponse;
+import io.openk9.k8sclient.dto.ModelActionesponse;
+import io.openk9.k8sclient.dto.PodResponse;
+import io.openk9.tenantmanager.grpc.TenantManagerGrpc;
+import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
+
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSource;
@@ -30,34 +55,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.openk9.k8sclient.dto.MlDto;
-import io.openk9.k8sclient.dto.MlPodResponse;
-import io.openk9.k8sclient.dto.ModelActionesponse;
-import io.openk9.k8sclient.dto.PodResponse;
-import io.openk9.tenantmanager.grpc.TenantManagerGrpc;
-import io.openk9.tenantmanager.grpc.TenantRequest;
-import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.quarkus.grpc.GrpcClient;
 import io.vertx.core.http.HttpServerRequest;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 @ActivateRequestContext
@@ -469,6 +470,7 @@ public class MLK8sResource {
 	@Inject
 	Logger logger;
 
+	// TODO: passing through tenantRegistry
 	@GrpcClient("tenantmanager")
 	TenantManagerGrpc.TenantManagerBlockingStub tenantmanager;
 

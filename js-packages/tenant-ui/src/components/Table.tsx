@@ -1,33 +1,39 @@
 import React from "react";
 import { QueryResult } from "@apollo/client";
-import ClayTable from "@clayui/table";
 import { TableVirtuoso } from "react-virtuoso";
-import ClayLayout from "@clayui/layout";
-import ClayButton, { ClayButtonWithIcon } from "@clayui/button";
-import useDebounced from "./useDebounced";
-import { ClayDropDownWithItems } from "@clayui/drop-down";
-import { Link, useNavigate } from "react-router-dom";
-import ClayEmptyState from "@clayui/empty-state";
-import { ClayCheckbox } from "@clayui/form";
-import useMap from "./useMap";
-import ClayModal, { useModal } from "@clayui/modal";
-import { useRestClient } from "./queryClient";
-import ClayToolbar from "@clayui/toolbar";
-import { useToast } from "./ToastProvider";
-import { ClassNameButton } from "./Form";
-import Button from "@clayui/button";
-import ClayIcon from "@clayui/icon";
+import { Link } from "react-router-dom";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  TextField,
+  Table as TableMaterial,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Container,
+  Typography,
+  InputAdornment,
+  useTheme,
+  Box,
+  Button,
+} from "@mui/material";
+import { ModalConfirm } from "./Modal/ModalConfirm";
+
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
-  return value?.id && <Link to={value.id}>{value.name}</Link>;
-}
-export function formatVirtualHost(value: { id?: string | null; virtualHost?: string | null } | null | undefined) {
   return (
     value?.id && (
       <Link
-        style={{ color: "#da1414", textDecoration: "none", font: "Helvetica", fontWeight: "700", fontSize: "15px", lineHeight: "44px" }}
-        to={"" + value.id}
+        style={{
+          color: "#da1414",
+          textDecoration: "none",
+          font: "Helvetica",
+          fontWeight: "700",
+          fontSize: "15px",
+          lineHeight: "44px",
+        }}
+        to={value.id}
       >
-        {value.virtualHost}
+        {value.name}
       </Link>
     )
   );
@@ -42,21 +48,9 @@ export function formatBoolean(value: boolean | undefined) {
   }
 }
 
-export function formatDate(value: any) {
-  return dateTimeFormatter.format(new Date(value));
-}
-const dateTimeFormatter = Intl.DateTimeFormat([], {
-  dateStyle: "medium",
-  timeStyle: "medium",
-});
-type isSelectedType = {
-  selected: boolean;
-  id: string;
-};
-
 export function Table<
   Query,
-  Row extends { id?: string | null },
+  Row extends { id?: string | null; name?: string | null },
   Parameters extends { searchText?: string | null; cursor?: string | null }
 >({
   data: {
@@ -65,10 +59,9 @@ export function Table<
   },
   isItemsSelectable,
   columns,
-  onCreatePath,
-  onDelete,
-  rowActions = () => [],
-  rowsActions = () => [],
+  rowActions,
+  deleted,
+  loadMoreResults,
 }: {
   data: {
     queryResult: QueryResult<Query, Parameters>;
@@ -80,447 +73,226 @@ export function Table<
       | null
       | undefined;
   };
-
   isItemsSelectable?: boolean;
-  columns: Array<{ header: React.ReactNode; content(row: Row | undefined): React.ReactNode }>;
-  onDelete?(row: Row | undefined): void;
+  columns: Array<{
+    header: React.ReactNode;
+    content(row: Row | undefined): React.ReactNode;
+  }>;
+  onDelete(row: Row | undefined): void;
+  loadMoreResults?: () => void;
+  deleted?:
+    | {
+        actionDeleted: (id: string, name: string) => void;
+        messsage: string;
+        wordConfirm: string;
+        title: string;
+      }
+    | undefined;
   onCreatePath: string;
-  rowActions?(row: Row | undefined): Array<{ label: string; icon: string; onClick(): void }>;
-  rowsActions?(rows: Array<Row>): Array<{ label: string; onClick(): void }>;
+  rowActions: Array<{ label: string; action(suggestionCategory?: any): void; isDisabled?: (dat: any) => boolean }>;
 }) {
   const [searchText, setSearchText] = React.useState("");
-  const { observer, onOpenChange, open } = useModal();
-  const restClient = useRestClient();
-  const searchTextDebounced = useDebounced(searchText);
-  const selection = useMap<Row>();
-  const [valueModal, setValueModal] = React.useState("");
-  const [showSelectedItemsTable, setShowSelectedItemsTable] = React.useState(false);
+  const [showSelectedItemsTable] = React.useState(false);
+  const [viewDeleteModal, setViewDeleteModal] = React.useState({ isView: false, name: "", id: "" });
+
   React.useEffect(() => {
-    refetch({ searchText: searchTextDebounced } as any);
-  }, [refetch, searchTextDebounced]);
-  const navigate = useNavigate();
-  const toast = useToast();
+    refetch({ searchText: searchText } as any);
+  }, [refetch, searchText]);
+  const theme = useTheme();
+  const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
+
   return (
-    <React.Fragment>
-      <ClayToolbar light>
-        <ClayLayout.ContainerFluid>
-          <ClayToolbar.Nav>
-            <ClayToolbar.Item expand>
-              <div style={{ position: "relative" }}>
-                <ClayToolbar.Input
-                  placeholder="Search..."
-                  sizing="sm"
-                  value={searchText}
-                  onChange={(event) => {
-                    setSearchText(event.currentTarget.value);
-                    setShowSelectedItemsTable(false);
-                  }}
-                />
-                {searchText !== "" && (
-                  <ClayButtonWithIcon
-                    aria-label=""
-                    symbol="times"
-                    className="component-action"
-                    onClick={() => {
-                      setSearchText("");
-                    }}
-                    style={{ position: "absolute", right: "10px", top: "0px" }}
-                  />
-                )}
-              </div>
-            </ClayToolbar.Item>
-            <ClayToolbar.Item>
-              <Link to={"tenant-create"}>
-                <Button
-                  className={ClassNameButton}
-                  onClick={() => {
-                    onOpenChange(true);
-                  }}
-                  size="sm"
-                  style={{ fontFamily: "Helvetica", fontStyle: "normal", fontWeight: "700" }}
-                >
-                  <ClayIcon symbol="plus" /> Add New
-                </Button>
-              </Link>
-            </ClayToolbar.Item>
-          </ClayToolbar.Nav>
-        </ClayLayout.ContainerFluid>
-      </ClayToolbar>
-      {open && (
-        <ClayModal observer={observer}>
-          <ClayModal.Header>{"Create Tenant"}</ClayModal.Header>
-          <ClayModal.Body>
-            <div className="form-group-item">
-              <label style={{ paddingTop: "18px" }}>Virtualhost</label>
-              <input
-                type="text"
-                className="form-control"
-                value={valueModal}
-                onChange={(event) => {
-                  setValueModal(event.currentTarget.value);
-                }}
-              ></input>
-            </div>
-          </ClayModal.Body>
-          <ClayModal.Footer
-            first={<ClayButton.Group spaced></ClayButton.Group>}
-            last={
-              <ClayButton
-                onClick={async () => {
-                  const response = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
-                    virtualHost: valueModal,
-                  });
-                  if (response.id) {
-                    toast({ displayType: "success", title: "tenant create", content: "" });
-                    onOpenChange(false);
-                    navigate(`/process/`, { replace: true });
-                  } else {
-                    toast({ displayType: "danger", title: "tenant error", content: "" });
-                    onOpenChange(false);
-                  }
-                }}
-              >
-                {"Create"}
-              </ClayButton>
-            }
-          />
-        </ClayModal>
+    <Container style={{ paddingInline: "0px" }}>
+      {viewDeleteModal.isView && deleted && (
+        <ModalConfirm
+          title={deleted?.title}
+          body={deleted?.messsage}
+          labelConfirm="Delete"
+          actionConfirm={() => {
+            deleted?.actionDeleted(viewDeleteModal.id, viewDeleteModal.name);
+          }}
+          confirmationWord={viewDeleteModal.name}
+          close={() => setViewDeleteModal({ isView: false, name: "", id: "" })}
+        />
       )}
-      <ClayLayout.ContainerFluid view>
-        <table hidden={!showSelectedItemsTable} className="table table-list" style={{ tableLayout: "fixed" }}>
-          <thead>
-            <tr>
-              <ClayTable.Cell headingCell style={{ width: "40px" }} />
-              {columns.map((column, index) => {
-                return (
-                  <ClayTable.Cell key={index} headingCell headingTitle>
-                    {column.header && <span className="text-truncate">{column.header}</span>}
-                  </ClayTable.Cell>
-                );
-              })}
-              <ClayTable.Cell headingCell style={{ width: "56px" }} />
-            </tr>
-          </thead>
-          <tbody>
-            {selection.entries.map(([id, row]) => {
-              return (
-                <tr key={id}>
-                  <ClayTable.Cell>
-                    <ClayCheckbox
-                      checked={true}
-                      onChange={() => {
-                        selection.rem(id);
-                        if (selection.size === 1) {
-                          setShowSelectedItemsTable(false);
-                        }
-                      }}
-                    />
-                  </ClayTable.Cell>
-                  {columns.map((column, index) => {
-                    return <ClayTable.Cell key={index}>{column.content(row)}</ClayTable.Cell>;
-                  })}
-                  <ClayTable.Cell style={{ height: "57px" }} />
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          background: "raop",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: "16px",
+          }}
+        >
+          <TextField
+            id="basicInputTypeText"
+            placeholder="Search"
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.currentTarget.value)}
+            variant="outlined"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon style={{ color: "lightgray" }} />
+                </InputAdornment>
+              ),
+            }}
+            style={{ width: "200px" }}
+          />
+        </div>
         <TableVirtuoso
           hidden={showSelectedItemsTable}
           totalCount={field(data)?.edges?.length}
-          style={{ height: "80vh" }}
+          style={{
+            height: "80vh",
+            backgroundColor: theme.palette.background.paper,
+            border: `1px solid ${borderColor}`,
+            borderRadius: "8px",
+          }}
           components={{
-            Table: (props) => (
-              <table
-                {...props}
-                style={{ ...props.style, tableLayout: "fixed" }}
-                className="table table-hover show-quick-actions-on-Hover table-list"
-              />
-            ),
-            TableBody: ClayTable.Body,
-            TableHead: ClayTable.Head,
-            TableRow: ClayTable.Row,
+            Table: (props) => <TableMaterial {...props} style={{ ...props.style, tableLayout: "fixed", position: "relative" }} />,
+            TableBody: TableBody,
+            TableHead: TableHead,
+            TableRow: TableRow,
             EmptyPlaceholder: () => (
-              <tbody>
-                <tr>
-                  <td colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)} style={{ backgroundColor: "white" }}>
-                    <ClayEmptyState description="There are no matching entities" title="No entities" className="c-empty-state-animation" />
-                  </td>
-                </tr>
-              </tbody>
+              <TableRow>
+                <TableCell colSpan={columns.length + 1 + (isItemsSelectable ? 1 : 0)}>
+                  <EmptySpace
+                    description="There are no matching unassociated entities"
+                    title="No entities"
+                    extraClass="c-empty-state-animation"
+                  />
+                </TableCell>
+              </TableRow>
             ),
           }}
           fixedHeaderContent={() => (
-            <ClayTable.Row>
-              {isItemsSelectable && <ClayTable.Cell headingCell style={{ width: "40px" }} />}
-              {columns.map((column, index) => {
-                return (
-                  <ClayTable.Cell headingCell headingTitle key={index}>
-                    {column.header && <span className="text-truncate">{column.header}</span>}
-                  </ClayTable.Cell>
-                );
-              })}
-              <ClayTable.Cell headingCell style={{ width: "56px" }}></ClayTable.Cell>
-            </ClayTable.Row>
+            <>
+              {isItemsSelectable && <TableCell style={{ width: "40px" }} />}
+              {columns.map((column, index) => (
+                <TableCell key={index}>
+                  <Typography variant="subtitle2">{column.header}</Typography>
+                </TableCell>
+              ))}
+              <TableCell>
+                <Typography variant="subtitle2">Actions</Typography>
+              </TableCell>
+            </>
           )}
           itemContent={(index) => {
             const row = field(data)?.edges?.[index]?.node ?? undefined;
             return (
               <React.Fragment>
-                {isItemsSelectable && (
-                  <ClayTable.Cell>
-                    <ClayCheckbox
-                      checked={row?.id ? selection.has(row.id) : false}
-                      onChange={() => {
-                        if (row?.id) {
-                          if (selection.has(row.id)) {
-                            selection.rem(row.id);
-                          } else {
-                            selection.set(row.id, row);
-                          }
-                        }
-                      }}
-                    />
-                  </ClayTable.Cell>
-                )}
-                {columns.map((column, index) => {
-                  return <ClayTable.Cell key={index}>{column.content(row)}</ClayTable.Cell>;
-                })}
-                <ClayTable.Cell>
-                  <TableRowActions
-                    actions={[
-                      ...rowActions(row),
-                      {
-                        label: "Redirect",
-                        icon: "sites",
-                        onClick: () => {
-                          window.location.href = "http://" + JSON.parse(JSON.stringify(row)).virtualHost + "/admin";
-                        },
-                      },
-                      {
-                        label: "Create Openk9 Tables",
-                        icon: "",
-                        onClick: async () => {
-                          await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenantTables(Number(row?.id));
-                        },
-                      },
-                    ]}
-                  />
-                </ClayTable.Cell>
+                {columns.map((column, colIndex) => (
+                  <TableCell key={colIndex}>{column.content(row)}</TableCell>
+                ))}
+                <TableCell>
+                  <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "10px" }}>
+                    {rowActions.map((rowAction, indexMap) => {
+                      const row = rowAction.isDisabled === undefined;
+                      const isActive = row || (rowAction?.isDisabled && rowAction.isDisabled(field(data)?.edges?.[index]?.node));
+                      return (
+                        <Button
+                          key={indexMap}
+                          sx={{
+                            border: "none",
+                            background: "none",
+                            padding: "0",
+                            marginLeft: indexMap > 0 ? "20px" : "unset",
+                            textDecoration: "none",
+                            cursor: !isActive ? "not-allowed" : "pointer",
+                            color: !isActive ? "gray" : "unset",
+                            "&:hover": {
+                              textDecoration: !isActive ? "none" : "underline",
+                            },
+                            fontSize: "14px",
+                            fontWeight: "400",
+                            minWidth: "unset",
+                            textTransform: "none",
+                          }}
+                          onClick={() => {
+                            if (isActive) {
+                              rowAction.action(field(data)?.edges?.[index]?.node);
+                            }
+                          }}
+                        >
+                          {rowAction.label}
+                        </Button>
+                      );
+                    })}
+                    {deleted && (
+                      <Box
+                        sx={{
+                          border: "none",
+                          background: "none",
+                          padding: "0",
+                          marginLeft: "20px",
+                          textDecoration: "none",
+                          cursor: "pointer",
+                          color: "unset",
+                          "&:hover": {
+                            textDecoration: "underline",
+                          },
+                        }}
+                        onClick={() => {
+                          setViewDeleteModal({ isView: true, name: row?.name || "Unnamed", id: row?.id || "" });
+                        }}
+                      >
+                        Delete
+                      </Box>
+                    )}
+                  </Box>
+                </TableCell>
               </React.Fragment>
             );
           }}
           endReached={() => {
-            if (field(data)?.pageInfo?.hasNextPage) {
-              fetchMore({
-                variables: {
-                  cursor: field(data)?.pageInfo?.endCursor,
-                },
-              });
-            }
+            loadMoreResults && loadMoreResults();
           }}
         />
-      </ClayLayout.ContainerFluid>
-    </React.Fragment>
-  );
-}
-
-function TableRowActions({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
-  return (
-    <React.Fragment>
-      <div className="quick-action-menu" style={{ alignItems: "center" }}>
-        {actions.map((action, index) => {
-          if (action.icon !== "") {
-            return (
-              <ClayButtonWithIcon
-                aria-label=""
-                key={index}
-                symbol={action.icon}
-                className="component-action quick-action-item"
-                onClick={action.onClick}
-              />
-            );
-          }
-        })}
       </div>
-
-      <ClayDropDownWithItems
-        trigger={<ClayButtonWithIcon symbol="ellipsis-v" aria-label="" className="component-action" />}
-        items={actions.map((action) => ({
-          label: action.label,
-          onClick: action.onClick,
-        }))}
-      />
-    </React.Fragment>
+    </Container>
   );
 }
 
-function TableRowActionsSubFields({ actions }: { actions: Array<{ label: string; icon: string; onClick: () => void }> }) {
+export function EmptySpace({ title, description, extraClass = "" }: { title: string; description: string; extraClass?: string }) {
+  const classNames = `empty-state ${extraClass}`;
   return (
-    <React.Fragment>
-      <span>
-        {actions.map((action, index) => {
-          if (action.icon !== "") {
-            return (
-              <ClayButtonWithIcon key={index} aria-label="" className="component-action " symbol={action.icon} onClick={action.onClick} />
-            );
-          }
-        })}
-      </span>
-      <span>
-        <ClayDropDownWithItems
-          trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" className="component-action" />}
-          items={actions.map((action) => ({
-            label: action.label,
-            onClick: action.onClick,
-          }))}
-        />
-      </span>
-    </React.Fragment>
-  );
-}
-function TableRowsActions({ actions }: { actions: Array<{ label: string; disabled?: boolean; onClick: () => void }> }) {
-  return (
-    <ClayButton.Group>
-      {actions.map((action, index) => {
-        return (
-          <ClayButton key={index} onClick={action.onClick} small displayType="secondary" disabled={action.disabled}>
-            {action.label}
-          </ClayButton>
-        );
-      })}
-      <ClayDropDownWithItems trigger={<ClayButtonWithIcon aria-label="" symbol="ellipsis-v" displayType="secondary" />} items={actions} />
-    </ClayButton.Group>
+    <div
+      className={classNames}
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "30vh",
+        flexDirection: "column",
+      }}
+    >
+      <div>
+        <h3 className="empty-state-title">{title}</h3>
+      </div>
+      <div className="empty-state-description">{description}</div>
+    </div>
   );
 }
 
-export function TableWithSubFields<
-  Query,
-  Row extends { id?: string | null },
-  Parameters extends { searchText?: string | null; cursor?: string | null }
->({
-  data: {
-    queryResult: { data, fetchMore, refetch },
-    field,
-  },
-  isItemsSelectable,
-  columns,
-  subColumns,
-  complessColumns,
-  onCreatePath,
-  onDelete,
-  rowActions = () => [],
-  rowsActions = () => [],
-}: {
-  data: {
-    queryResult: QueryResult<Query, Parameters>;
-    field(queryResult: Query | undefined):
-      | {
-          edges?: Array<{ node?: Row | null } | null> | null;
-          pageInfo?: { hasNextPage: boolean; endCursor?: string | null } | null;
-        }
-      | null
-      | undefined;
-  };
-  isItemsSelectable?: boolean;
-  columns: Array<{ header: React.ReactNode; content(row: Row | undefined): React.ReactNode }>;
-  complessColumns: string;
-  subColumns: string;
-  onDelete(row: Row | undefined): void;
-  onCreatePath: string;
-  rowActions?(row: Row | undefined): Array<{ label: string; icon: string; onClick(): void }>;
-  rowsActions?(rows: Array<Row>): Array<{ label: string; onClick(): void }>;
-}) {
-  const [isSelected, setIsSelected] = React.useState<isSelectedType>({ id: "", selected: false });
-
+export function formatVirtualHost(value: { id?: string | null; virtualHost?: string | null } | null | undefined) {
   return (
-    <React.Fragment>
-      <ClayLayout.ContainerFluid view>
-        <ClayTable className="table table-list" style={{ tableLayout: "fixed" }}>
-          <ClayTable.Head>
-            <ClayTable.Row>
-              <ClayTable.Cell headingCell headingTitle>
-                <span className="text-truncate">Name</span>
-              </ClayTable.Cell>
-              {columns.map((column, index) => {
-                return (
-                  <ClayTable.Cell key={index + "column"} headingCell headingTitle>
-                    <span className="text-truncate" key={"spanHead" + index}>
-                      {column.header}
-                    </span>
-                  </ClayTable.Cell>
-                );
-              })}
-              <ClayTable.Cell headingCell headingTitle>
-                <span className="text-truncate"></span>
-              </ClayTable.Cell>
-            </ClayTable.Row>
-          </ClayTable.Head>
-          <ClayTable.Body>
-            {field(data)?.edges?.map((rows, index) => {
-              const row = field(data)?.edges?.[index]?.node ?? undefined;
-              return (
-                <React.Fragment key={"fragment" + index}>
-                  <ClayTable.Row key={"row" + index}>
-                    <ClayTable.Cell key={index + "printData" + row?.id}>
-                      <div key={index + "spanPrintData" + row?.id} className="text-truncate">
-                        {JSON.parse(JSON.stringify(field(data)?.edges?.[index]?.node))[complessColumns]}
-                      </div>
-                      <span className={"label label-success process-status"}>
-                        {JSON.parse(JSON.stringify(field(data)?.edges?.[index]?.node))[subColumns]}
-                      </span>
-                    </ClayTable.Cell>
-                    {columns.map((column, index) => {
-                      return (
-                        <React.Fragment key={"fragmentfirst" + index}>
-                          <ClayTable.Cell key={index + "printData" + row?.id}>
-                            <span key={index + "spanPrintData" + row?.id} className="text-truncate">
-                              {column.content(row)}
-                            </span>
-                          </ClayTable.Cell>
-                        </React.Fragment>
-                      );
-                    })}
-                    <ClayTable.Cell className="table-column-text-end" key={index + "button" + row?.id}>
-                      <div
-                        key={index + "divButton" + row?.id}
-                        style={{ listStyle: "none", display: "flex", alignItems: "center", justifyContent: "right" }}
-                      >
-                        <span key={index + "subField" + row?.id}>
-                          <ClayButtonWithIcon
-                            className="component-action "
-                            aria-label=""
-                            key={"button" + index}
-                            symbol={isSelected.id === row?.id && isSelected.selected ? "angle-up-small" : "angle-down-small"}
-                            onClick={() => {
-                              if (isSelected.id !== row?.id) {
-                                setIsSelected({ id: row?.id || "", selected: true });
-                              } else {
-                                setIsSelected({ id: row?.id || "", selected: !isSelected.selected });
-                              }
-                            }}
-                          ></ClayButtonWithIcon>
-                        </span>
-
-                        <TableRowActionsSubFields
-                          actions={[
-                            ...rowActions(row),
-                            {
-                              label: "Delete",
-                              icon: "",
-                              onClick: () => onDelete(row),
-                            },
-                          ]}
-                        />
-                      </div>
-                    </ClayTable.Cell>
-                  </ClayTable.Row>
-                </React.Fragment>
-              );
-            })}
-          </ClayTable.Body>
-        </ClayTable>
-      </ClayLayout.ContainerFluid>
-    </React.Fragment>
+    value?.id && (
+      <Link
+        style={{ color: "#da1414", textDecoration: "none", font: "Helvetica", fontWeight: "700", fontSize: "15px", lineHeight: "44px" }}
+        to={"" + value.id}
+      >
+        {value.virtualHost}
+      </Link>
+    )
   );
 }

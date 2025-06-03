@@ -17,13 +17,16 @@
 
 package io.openk9.datasource.model.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.common.graphql.util.relay.GraphqlId;
+import java.time.OffsetDateTime;
+import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.SequenceGenerator;
+
+import io.openk9.common.graphql.util.relay.GraphqlId;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -31,13 +34,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.DialectOverride;
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.dialect.OracleDialect;
-
-import java.time.OffsetDateTime;
-import java.util.Objects;
 
 @MappedSuperclass
 @Getter
@@ -67,14 +64,6 @@ public abstract class K9Entity implements GraphqlId {
 	@Column(name = "modified_date")
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
-
-	@JsonIgnore
-	@Formula("current_schema()")
-	@DialectOverride.Formula(
-		dialect = OracleDialect.class,
-		override = @Formula("SYS_CONTEXT('USERENV','CURRENT_SCHEMA')")
-	)
-	private String tenant;
 
 	@Override
 	public boolean equals(Object o) {

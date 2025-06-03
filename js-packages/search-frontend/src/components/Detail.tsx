@@ -8,6 +8,7 @@ import { useRenderers } from "./useRenderers";
 import { PreviewSvg } from "../svgElement/PreviewSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
+import { TemplatesProps } from "../embeddable/entry";
 
 export type DetailProps<E> = {
   result: GenericResultItem<E> | null;
@@ -18,6 +19,7 @@ export type DetailProps<E> = {
   callbackFocusedButton?(): void;
   setViewButtonDetail: React.Dispatch<React.SetStateAction<boolean>>;
   viewButtonDetail: boolean;
+  template: TemplatesProps | null;
 };
 function Detail<E>(props: DetailProps<E>) {
   const result = props.result as any;
@@ -25,10 +27,11 @@ function Detail<E>(props: DetailProps<E>) {
   const actionOnCLose = props.actionOnCLose;
   const renderers = useRenderers();
   const isMobile = props.isMobile;
-  const setViewButtonDetail = props.setViewButtonDetail;
   const viewButtonDetail = props.viewButtonDetail;
   const callbackFocusedButton = props.callbackFocusedButton;
   const cardDetailsOnOver = props.cardDetailsOnOver;
+  const template = props.template;
+
   const [showButton, setShowButton] = React.useState(false);
 
   const modalRef = React.useRef(null);
@@ -36,19 +39,17 @@ function Detail<E>(props: DetailProps<E>) {
   React.useEffect(() => {
     const modalElement = modalRef.current as any;
 
-    if (modalElement) {
+    if (modalElement && result) {
       const focusableElements = modalElement?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
-      const trapForInvisibleButton = focusableElements[1];
 
       const handleTabKeyPress = (event: any) => {
         if (event.key === "Tab") {
-          if (document.activeElement === firstElement) {
-            setShowButton(true);
-          }
+          setShowButton(true);
+
           if (event.shiftKey && document.activeElement === firstElement) {
             event.preventDefault();
             lastElement.focus();
@@ -74,17 +75,6 @@ function Detail<E>(props: DetailProps<E>) {
     }
   }, [result]);
 
-  React.useEffect(() => {
-    const modalElement = modalRef.current as any;
-
-    const isFocusWithinModal = modalElement?.contains(document.activeElement);
-    if (isFocusWithinModal) {
-      setShowButton(true);
-    } else {
-      setShowButton(false);
-    }
-  }, [document.activeElement]);
-
   const refFocus = React.useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
 
@@ -100,6 +90,16 @@ function Detail<E>(props: DetailProps<E>) {
       scrollContainer.scrollTop = 0;
     }
   }, []);
+
+  const getCustomTemplate = () => {
+    if (!template || template.length === 0) return null;
+
+    const matchedTemplate = template.find((templat) =>
+      result.source.documentTypes.includes(templat.source),
+    );
+
+    return matchedTemplate?.TemplateDetail ?? null;
+  };
 
   return (
     <div
@@ -154,7 +154,7 @@ function Detail<E>(props: DetailProps<E>) {
             gap: 5px;
           `}
         >
-          <div>
+          <div className="openk9-preview-icon-wrapper">
             <PreviewSvg size={23} />
           </div>
           <h2
@@ -174,7 +174,7 @@ function Detail<E>(props: DetailProps<E>) {
             {t("preview")}
           </h2>
         </div>
-        {showButton && !isMobile && viewButtonDetail && (
+        {showButton && viewButtonDetail && (
           <button
             className="button-return-cards"
             css={css`
@@ -191,7 +191,7 @@ function Detail<E>(props: DetailProps<E>) {
             `}
             onClick={() => {
               if (callbackFocusedButton) callbackFocusedButton();
-              setViewButtonDetail(false);
+              setShowButton(false);
             }}
           >
             {t("return-cards")}
@@ -200,6 +200,7 @@ function Detail<E>(props: DetailProps<E>) {
         {setDetailMobile && (
           <button
             aria-label={t("close") || "close"}
+            className="openk9-close-modal openk9-close-modal-detail"
             ref={refFocus}
             css={css`
               cursor: pointer;
@@ -232,6 +233,16 @@ function Detail<E>(props: DetailProps<E>) {
               result.source.documentTypes
                 .map((k: string) => renderers?.detailRenderers[k])
                 .find(Boolean);
+
+            const CustomTemplate = getCustomTemplate();
+
+            if (CustomTemplate) {
+              return (
+                <React.Fragment>
+                  <CustomTemplate {...result} />
+                </React.Fragment>
+              );
+            }
             if (Renderer) {
               return <Renderer result={result} />;
             }

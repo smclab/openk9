@@ -54,6 +54,7 @@ export class OpenK9 {
       tenant: this.configuration.tenant ?? "",
       useKeycloak: this.configuration.useKeycloak,
       waitKeycloackForToken: this.configuration.waitKeycloackForToken,
+      callback: this.configuration.callbackClient,
     });
     this.render();
   }
@@ -179,6 +180,7 @@ type FiltersLiveMobileConfiguration = {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
   viewTabs?: boolean | null;
   isCollapsable?: boolean | null;
+  haveSearch?: boolean | null;
 };
 
 type SearchMobileConfiguration = {
@@ -213,6 +215,14 @@ type DataRangePickerVerticalProps = {
   start?: any;
   end?: any;
   readOnly?: boolean;
+  internationalLabel?: {
+    labelStart?: string;
+    labelEnd?: string;
+    placeholderStart?: string;
+    placeholderEnd?: string;
+    errorFormatData?: string;
+    errorSelectData?: string;
+  };
 };
 
 type ResultListProps = {
@@ -237,12 +247,18 @@ type SortResultListCustomProps = {
     isDefault: boolean;
     hasAscDesc: boolean;
   }>;
+  labelSort?: string | null | undefined;
   element: Element | string | null;
 };
 
 type SortableProps = {
   element: Element | string | null;
   relevance: string;
+};
+
+export type characterControlType = {
+  actionCharacter(): void;
+  numberOfCharacters: number;
 };
 
 type SearchProps = {
@@ -252,8 +268,10 @@ type SearchProps = {
   htmlKey?: string | undefined | null;
   messageSearchIsVisible?: boolean;
   customMessageSearch?: string;
+  characterControl?: characterControlType;
   actionOnClick?(): void;
   callbackClickSearch?(): void;
+  callbackChangeSearch?(text: string): void;
 };
 
 type FilterProps = {
@@ -261,6 +279,7 @@ type FilterProps = {
   numberItems?: number | null | undefined;
   noResultMessage?: string | null | undefined;
   placeholder?: string | null | undefined;
+  haveSearch?: boolean | null | undefined;
 };
 
 type ResulListPaginationProps = {
@@ -335,7 +354,11 @@ type searchWithSuggestionsProps =
   | null
   | undefined;
 
-export type TemplatesProps = Array<{ source: string; Template: React.FC<any> }>;
+export type TemplatesProps = Array<{
+  source: string;
+  Template: React.FC<any>;
+  TemplateDetail: React.FC<any>;
+}>;
 
 export type IconsCustom =
   | {
@@ -351,10 +374,25 @@ export type Configuration = {
   defaultString: string | null | undefined;
   languageSelect: string | null | undefined;
   enabled: boolean;
+  callbackClient(): void | null | undefined;
   filterTokens: Array<SearchToken>;
   icons: IconsCustom;
   isQueryAnalysis: boolean | null;
-  isActiveSkeleton: boolean | null;
+  isActiveSkeleton: {
+    results?: boolean | null;
+    filters?: boolean | null;
+    tabs?: boolean | null;
+  } | null;
+  filtersMobileBasicCallback: () => void | null | undefined;
+  mobileFiltersBasicLiveChange:
+    | {
+        closeFiltersMobileLiveChangeCallback?: () => void | null | undefined;
+        applyfiltersMobileLiveChangeCallback?: () => void | null | undefined;
+        viewTabs?: boolean | null | undefined;
+        addExtraClass?: string | null | undefined;
+      }
+    | null
+    | undefined;
   numberResult: number | null | undefined;
   numberResultOfFilters: number | null | undefined;
   memoryResults: boolean | null | undefined;
@@ -379,15 +417,18 @@ export type Configuration = {
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
+  calendarVertical: Element | string | null;
   changeLanguage: Element | string | null;
   detailMobile: Element | string | null;
   details: Element | string | null;
   filters: Element | string | null;
+  filtersMobileBasic: Element | string | null;
   generateResponse: Element | string | null;
   login: Element | string | null;
   queryStringValues: queryStringValues;
   results: Element | string | null;
   search: Element | string | null;
+  searchWithButton: Element | string | null;
   sortable: Element | string | null;
   tabs: Element | string | null;
   totalResult: Element | string | null;
@@ -402,6 +443,7 @@ export type Configuration = {
   filtersHorizontal: FiltersHorizontalConfiguration | null;
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
+  filtersMobileLiveChangeBasic: Element | string | null;
   resultList: ResultListProps | null;
   resultListPagination: ResulListPaginationProps | null;
   resultsDisplayMode: ResultsDisplayMode;
@@ -427,8 +469,10 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   activeFilters: null,
   activeFiltersConfigurable: null,
+  callbackClient: () => null,
   calendar: null,
   calendarMobile: null,
+  calendarVertical: null,
   changeLanguage: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
@@ -444,10 +488,14 @@ const defaultConfiguration: Configuration = {
   filtersHorizontal: null,
   filtersMobile: null,
   filtersMobileLiveChange: null,
+  filtersMobileLiveChangeBasic: null,
+  mobileFiltersBasicLiveChange: null,
+  filtersMobileBasic: null,
+  filtersMobileBasicCallback: () => null,
   filterTokens: [],
   generateResponse: null,
   icons: null,
-  isActiveSkeleton: null,
+  isActiveSkeleton: { results: null, filters: null, tabs: null },
   isQueryAnalysis: true,
   login: null,
   memoryResults: null,
@@ -460,6 +508,7 @@ const defaultConfiguration: Configuration = {
   results: null,
   resultsDisplayMode: { type: "infinite" },
   search: null,
+  searchWithButton: null,
   select: null,
   searchAutoselect: true,
   searchConfigurable: null,

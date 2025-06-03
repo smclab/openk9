@@ -32,7 +32,6 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.service.EmbeddingModelService;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.jayway.jsonpath.Configuration;
@@ -51,8 +50,15 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class EmbeddingService {
 
+	private static final EmbeddingOuterClass.RequestChunk REQUEST_CHUNK_DEFAULT =
+		EmbeddingOuterClass.RequestChunk.newBuilder()
+			.setType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
+			.build();
+
 	private static final String GET_EMBEDDING_CHUNKS_CONFIGURATION =
 		"EmbeddingService#getEmbeddingChunksConfiguration";
+
+	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -62,33 +68,29 @@ public class EmbeddingService {
 	@CacheName("bucket-resource")
 	Cache cache;
 
-	private static final Logger log = Logger.getLogger(EmbeddingService.class);
-
 	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
 
 		return EventBusInstanceHolder.getEventBus()
 			.request(
 				GET_EMBEDDING_CHUNKS_CONFIGURATION,
-				new EmbeddingChunksConfigurationRequest(tenantId, scheduleId)
+				new GetConfigurationRequest(tenantId, scheduleId)
 			)
 			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
 			.flatMap(message -> {
-				var configurations = (EmbeddingChunksConfiguration) message.body();
+				var embeddingChunksRequest = (EmbeddingChunksRequest) message.body();
 
-				var apiKey = configurations.apiKey();
-				var jsonConfig = configurations.jsonConfig() != null
-					? configurations.jsonConfig()
-					: "{}";
-				var chunkType = configurations.chunkType();
-				var windowSize = configurations.chunkWindowSize();
+				// embedding model service url
+				var apiUrl = embeddingChunksRequest.embeddingModelUrl();
+
+				var chunkWindowSize = embeddingChunksRequest.chunkWindowSize();
 
 				var documentContext = JsonPath
 					.using(Configuration.defaultConfiguration())
 					.parseUtf8(payload);
 
 				var docTypeField = Objects.requireNonNull(
-					configurations.docTypeField(),
+					embeddingChunksRequest.docTypeField(),
 					"The source field for text embedding is not specified."
 				);
 
@@ -112,19 +114,16 @@ public class EmbeddingService {
 					);
 				}
 
-				var client = EmbeddingStubRegistry.getStub(configurations.apiUrl());
+				var client = EmbeddingStubRegistry.getStub(apiUrl);
 
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
 						.newBuilder()
-						.setApiKey(apiKey)
-						.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
-							.setType(chunkType)
-							.setJsonConfig(StructUtils.fromJson(jsonConfig))
-							.build())
+						.setEmbeddingModel(embeddingChunksRequest.embeddingModel())
+						.setChunk(embeddingChunksRequest.requestChunk())
 						.setText(text)
 						.build())
 					.map(embeddingResponse -> EmbeddingService
-						.mapToPayload(embeddingResponse, root, windowSize)
+						.mapToPayload(embeddingResponse, root, chunkWindowSize)
 					);
 			})
 			.subscribeAsCompletionStage();
@@ -240,59 +239,77 @@ public class EmbeddingService {
 
 	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
 
-		return getEmbeddingConfiguration(tenantId)
+		return getEmbeddingModel(tenantId)
 			.onItem().ifNull().failWith(ConfigurationNotFound::new)
-			.flatMap(configuration -> {
-				var client = EmbeddingStubRegistry.getStub(configuration.apiUrl());
+			.flatMap(embeddingModel -> {
+
+				EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
+					mapToEmbeddingModelRequest(embeddingModel);
+				var apiUrl = embeddingModel.getApiUrl();
+
+				var client = EmbeddingStubRegistry.getStub(apiUrl);
 				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
 					.setText(text)
-					.setApiKey(configuration.apiKey())
-					.setChunk(EmbeddingOuterClass.RequestChunk.newBuilder()
-						.setType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
-						.build())
+					.setEmbeddingModel(embeddingModelRequest)
+					.setChunk(REQUEST_CHUNK_DEFAULT)
 					.build());
 			})
 			.map(embeddingResponse -> new EmbeddedText(
+				// with default chunk strategy, we always have one embedding.
 				embeddingResponse.getChunks(0).getVectorsList()));
 
 	}
 
 	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
-	Uni<EmbeddingChunksConfiguration> getEmbeddingChunksConfigurations(
-		EmbeddingChunksConfigurationRequest request) {
+	Uni<EmbeddingChunksRequest> getEmbeddingChunksConfigurations(
+		GetConfigurationRequest configurationRequest) {
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
-			new CompositeCacheKey(request),
-			sessionFactory.withTransaction(request.tenantId(), (s, t) ->
-					getEmbeddingConfiguration(s, request.tenantId)
-					.onItem().ifNull().failWith(ConfigurationNotFound::new)
-					.flatMap(embeddingConfiguration -> s.createNamedQuery(
-							Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
-						.setPlan(s.getEntityGraph(
-							Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
-						.setParameter(Scheduler_.SCHEDULE_ID, request.scheduleId())
-						.getSingleResultOrNull()
-						.map(scheduler -> {
+		return cache.getAsync(
+			new CompositeCacheKey(configurationRequest),
+			key -> sessionFactory.withTransaction(
+					configurationRequest.tenantId(),
+					(s, t) -> getEmbeddingModel(s, configurationRequest.tenantId())
+						.onItem().ifNull().failWith(ConfigurationNotFound::new)
+						.flatMap(embeddingModel -> s.createNamedQuery(
+								Scheduler.FETCH_BY_SCHEDULE_ID, Scheduler.class)
+							.setPlan(s.getEntityGraph(
+								Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
+							.setParameter(
+								Scheduler_.SCHEDULE_ID, configurationRequest.scheduleId())
+							.getSingleResultOrNull()
+							.map(scheduler -> {
+								var embeddingModelUrl = embeddingModel.getApiUrl();
 
-							var dataIndex = scheduler.getDataIndex();
+								EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
+									mapToEmbeddingModelRequest(embeddingModel);
 
-							return new EmbeddingChunksConfiguration(
-								embeddingConfiguration.apiUrl(),
-								embeddingConfiguration.apiKey(),
-								dataIndex.getEmbeddingDocTypeField(),
-								dataIndex.getChunkType(),
-								dataIndex.getChunkWindowSize(),
-								dataIndex.getEmbeddingJsonConfig(),
-								dataIndex.getIndexName()
-							);
-						})
-					))
+								var dataIndex = scheduler.getDataIndex();
+
+								// chunk strategy and configurations
+								var chunkJsonConfig = dataIndex.getEmbeddingJsonConfig();
+								var chunkType = dataIndex.getChunkType();
+								var chunkWindowSize = dataIndex.getChunkWindowSize();
+
+								var requestChunk = EmbeddingOuterClass.RequestChunk.newBuilder()
+									.setType(chunkType)
+									.setJsonConfig(StructUtils.fromJson(chunkJsonConfig))
+									.build();
+
+								return new EmbeddingChunksRequest(
+									embeddingModelUrl,
+									dataIndex.getEmbeddingDocTypeField(),
+									chunkWindowSize,
+									embeddingModelRequest,
+									requestChunk
+								);
+							})
+						)
+				)
 				.onFailure(EmbeddingServiceException.class)
 				.invoke(throwable -> log.warnf(
 						throwable,
 						"Embedding service is not configured for tenantId: %s",
-						request.tenantId()
+					configurationRequest.tenantId()
 					)
 				)
 				.onFailure()
@@ -305,61 +322,70 @@ public class EmbeddingService {
 		);
 	}
 
-	private record EmbeddingChunksConfigurationRequest(String tenantId, String scheduleId) {}
+	private static EmbeddingOuterClass.EmbeddingModel mapToEmbeddingModelRequest(EmbeddingModel embeddingModel) {
+		var embeddingModelBuilder = EmbeddingOuterClass.EmbeddingModel.newBuilder();
 
-	public record EmbeddingChunksConfiguration(
-		String apiUrl,
-		String apiKey,
-		DocTypeField docTypeField,
-		EmbeddingOuterClass.ChunkType chunkType,
-		int chunkWindowSize,
-		String jsonConfig,
-		String indexName
-	) {}
+		if (embeddingModel.getApiKey() != null) {
+			embeddingModelBuilder.setApiKey(embeddingModel.getApiKey());
+		}
 
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(String tenantId) {
-		return sessionFactory.withTransaction(
-			tenantId, (s, t) ->
-				getEmbeddingConfiguration(s, tenantId)
+		var providerModel = embeddingModel.getProviderModel();
+		if (providerModel != null) {
+			var providerModelBuilder = EmbeddingOuterClass.ProviderModel.newBuilder();
+
+			if (providerModel.getModel() != null) {
+				providerModelBuilder.setModel(providerModel.getModel());
+			}
+			if (providerModel.getProvider() != null) {
+				providerModelBuilder.setProvider(providerModel.getProvider());
+			}
+
+			embeddingModelBuilder.setProviderModel(providerModelBuilder.build());
+		}
+
+		if (embeddingModel.getJsonConfig() != null) {
+			embeddingModelBuilder.setJsonConfig(
+				StructUtils.fromJson(embeddingModel.getJsonConfig()));
+		}
+
+		return embeddingModelBuilder.build();
+	}
+
+	private Uni<EmbeddingModel> getEmbeddingModel(String tenantId) {
+		return cache.getAsync(
+			new CompositeCacheKey(tenantId),
+			key -> sessionFactory.withTransaction(
+				tenantId, (s, t) -> getEmbeddingModel(s, tenantId))
 		);
+	}
+
+	private Uni<EmbeddingModel> getEmbeddingModel(
+		Mutiny.Session session, String tenantId) {
+
+		return embeddingModelService.fetchCurrent(session)
+			.onFailure()
+			.invoke(throwable ->
+				log.warnf(
+					throwable,
+					"Cannot fetch current embedding model for tenantId %s",
+					tenantId
+				)
+			);
 	}
 
 	public record EmbeddedText(
 		List<Float> vector
 	) {}
 
-	private Uni<EmbeddingConfiguration> getEmbeddingConfiguration(
-		Mutiny.Session session,
-		String tenantId) {
+	private record EmbeddingChunksRequest(
+		String embeddingModelUrl,
+		DocTypeField docTypeField,
+		int chunkWindowSize,
+		EmbeddingOuterClass.EmbeddingModel embeddingModel,
+		EmbeddingOuterClass.RequestChunk requestChunk
+	) {}
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
-			new CompositeCacheKey(tenantId),
-			embeddingModelService.fetchCurrent(session)
-				.map(EmbeddingConfiguration::map)
-				.onFailure()
-				.invoke(throwable ->
-					log.warnf(
-						throwable,
-						"Cannot fetch current embedding model for tenantId %s",
-						tenantId
-					)
-				)
-				.onFailure()
-				.recoverWithNull()
-		);
+	private record GetConfigurationRequest(String tenantId, String scheduleId) {}
 
-	}
-
-	public record EmbeddingConfiguration(
-		String apiUrl,
-		String apiKey
-	) {
-
-		public static EmbeddingConfiguration map(EmbeddingModel model) {
-			return new EmbeddingConfiguration(model.getApiUrl(), model.getApiKey());
-		}
-
-	}
 
 }

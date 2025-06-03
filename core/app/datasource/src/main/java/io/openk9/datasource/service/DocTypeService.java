@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,11 +32,10 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
-import io.openk9.datasource.index.mappings.IndexMappingsUtil;
-import io.openk9.datasource.index.mappings.MappingsKey;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
@@ -52,6 +50,7 @@ import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.request.DocTypeWithTemplateDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -69,10 +68,177 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	DocTypeService(DocTypeMapper mapper) {
 		this.mapper = mapper;
 	}
-
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {DocType_.NAME, DocType_.DESCRIPTION};
+	}
+
+	@Override
+	public Uni<DocType> create(DocTypeDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, dto));
+	}
+
+	@Override
+	public Uni<DocType> create(Mutiny.Session session, DocTypeDTO dto) {
+		var entity = createMapper(session, dto);
+
+		return super.create(session, entity);
+	}
+
+
+	/**
+	 * Deletes a DocType entity by its ID after verifying the provided name matches the entity's name.
+	 *
+	 * <p>This method adds a validation step to the deletion process by requiring the caller to provide
+	 * the correct name of the DocType being deleted. This serves as a safety mechanism to prevent
+	 * accidental deletions by confirming the caller has knowledge of the entity they intend to remove.
+	 *
+	 * <p>The validation flow:
+	 * <ol>
+	 *   <li>Retrieves the DocType entity by the provided ID</li>
+	 *   <li>Validates that the provided name exactly matches the entity's name</li>
+	 *   <li>If validation passes, proceeds with the deletion process</li>
+	 * </ol>
+	 *
+	 * @param docTypeId   The ID of the DocType to delete
+	 * @param docTypeName The name of the DocType to verify before deletion
+	 * @return A {@link io.smallrye.mutiny.Uni} containing the deleted DocType if successful
+	 * @throws ValidationException If the provided name doesn't match the entity's actual name
+	 * @see #deleteById(long) The underlying deletion method called after validation
+	 */
+	public Uni<DocType> deleteById(long docTypeId, String docTypeName) {
+		return findById(docTypeId)
+			.flatMap(docType -> {
+				if (!docType.getName().equals(docTypeName)) {
+					throw new ValidationException("docTypeName is not the same");
+				}
+
+				return deleteById(docTypeId);
+			});
+	}
+
+	/**
+	 * Deletes a DocType entity by its ID, handling all necessary dereferencing of related entities.
+	 *
+	 * <p>This method performs a series of database operations to properly delete a DocType:
+	 * <ol>
+	 *   <li>Dereferences AclMappings linked to the DocType's fields</li>
+	 *   <li>Removes parent and analyzer references from DocTypeFields</li>
+	 *   <li>Deletes all DocTypeFields associated with the DocType</li>
+	 *   <li>Dereferences any DocTypeTemplate connection</li>
+	 *   <li>Removes the DocType from associated DataIndex entities</li>
+	 *   <li>Finally deletes the DocType itself</li>
+	 * </ol>
+	 *
+	 * <p>The method executes these operations within a transaction to ensure data integrity.
+	 * If the deletion of DocTypeFields fails due to constraint violations (meaning they're
+	 * still referenced by other entities), the operation will fail with a K9Error.
+	 *
+	 * @param entityId The ID of the DocType to delete
+	 * @return A {@link io.smallrye.mutiny.Uni} containing the deleted DocType if successful
+	 * @throws K9Error If DocTypeFields are still referenced by other entities
+	 */
+	@Override
+	public Uni<DocType> deleteById(long entityId) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+		// dereference aclMappings
+		CriteriaUpdate<AclMapping> updateAclMapping = cb.createCriteriaUpdate(AclMapping.class);
+		Root<AclMapping> updateAclMappingFrom = updateAclMapping.from(AclMapping.class);
+
+		Subquery<Long> fieldSubquery = updateAclMapping.subquery(Long.class);
+		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
+		fieldSubquery.select(fieldSubqueryFrom.get(DocTypeField_.id));
+		fieldSubquery.where(cb.equal(
+			fieldSubqueryFrom.get(DocTypeField_.docType).get(DocType_.id),
+			entityId
+		));
+
+		updateAclMapping.where(
+			updateAclMappingFrom
+				.get(AclMapping_.docTypeField)
+				.get(DocTypeField_.id)
+				.in(fieldSubquery)
+		);
+
+		updateAclMapping.set(
+			updateAclMappingFrom.get(AclMapping_.docTypeField),
+			cb.nullLiteral(DocTypeField.class)
+		);
+
+		// dereference parents and analyzer
+		CriteriaUpdate<DocTypeField> updateDocTypeField =
+			cb.createCriteriaUpdate(DocTypeField.class);
+		Root<DocTypeField> updateDocTypeFieldFrom = updateDocTypeField.from(DocTypeField.class);
+
+		updateDocTypeField.where(
+			cb.equal(
+				updateDocTypeFieldFrom
+					.get(DocTypeField_.docType)
+					.get(DocType_.id),
+				entityId
+			)
+		);
+
+		updateDocTypeField.set(
+			updateDocTypeFieldFrom.get(DocTypeField_.analyzer),
+			cb.nullLiteral(Analyzer.class)
+		);
+		updateDocTypeField.set(
+			updateDocTypeFieldFrom.get(DocTypeField_.parentDocTypeField),
+			cb.nullLiteral(DocTypeField.class)
+		);
+
+		// delete docTypeFields
+		CriteriaDelete<DocTypeField> deleteDocTypeFields =
+			cb.createCriteriaDelete(DocTypeField.class);
+		Root<DocTypeField> deleteFrom = deleteDocTypeFields.from(DocTypeField.class);
+
+		deleteDocTypeFields.where(
+			cb.equal(
+				deleteFrom.get(DocTypeField_.docType).get(DocType_.id),
+				entityId
+			)
+		);
+
+		// dereference docTypeTemplate
+		CriteriaUpdate<DocType> updateDocType = cb.createCriteriaUpdate(DocType.class);
+		Root<DocType> docTypeFrom = updateDocType.from(DocType.class);
+		updateDocType.where(cb.equal(docTypeFrom.get(DocType_.id), entityId));
+		updateDocType.set(DocType_.docTypeTemplate, cb.nullLiteral(DocTypeTemplate.class));
+
+		// queries dataIndex
+		CriteriaQuery<DataIndex> dataIndexQuery = cb.createQuery(DataIndex.class);
+		Root<DataIndex> dataIndexFrom = dataIndexQuery.from(DataIndex.class);
+		dataIndexFrom.fetch(DataIndex_.docTypes, JoinType.INNER);
+		SetJoin<DataIndex, DocType> join = dataIndexFrom.join(DataIndex_.docTypes, JoinType.INNER);
+		dataIndexQuery.where(cb.equal(join.get(DocType_.id), entityId));
+
+		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
+			.call(docType -> s.createQuery(dataIndexQuery)
+				.getResultList()
+				.flatMap(dataIndices -> {
+					for (DataIndex dataIndex : dataIndices) {
+						Set<DocType> docTypes = dataIndex.getDocTypes();
+						docTypes.remove(docType);
+					}
+					return s.mergeAll(dataIndices.toArray());
+				})
+			)
+			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
+			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
+			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate()
+				.onFailure()
+				.transform(throwable -> switch (throwable) {
+					case ConstraintViolationException c -> new K9Error(
+						"There are some DocTypeFields referenced by other entities");
+					default -> throwable;
+				})
+			)
+			.call(docType -> s.createQuery(updateDocType).executeUpdate())
+			.call(docType -> remove(s, docType))
+		);
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
@@ -135,13 +301,14 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
 
-		DocTypeField docTypeField =
-			docTypeFieldMapper.create(docTypeFieldDTO);
-
 		return sessionFactory.withTransaction((s) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
 			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+
+				DocTypeField docTypeField =
+					docTypeFieldService.createTransient(s, docTypeFieldDTO);
+
 				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
 					return persist(s, docType)
 						.map(dt -> Tuple2.of(dt, docTypeField));
@@ -216,7 +383,15 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		});
 	}
 
-	public Uni<List<DocType>> getDocTypeListByNames(
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
+		Mutiny.Session session, Collection<String> docTypeNames) {
+
+		return getDocTypesInDocTypeNames(
+			session, docTypeNames.toArray(String[]::new))
+			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
+	}
+
+	public Uni<List<DocType>> getDocTypesInDocTypeNames(
 		Mutiny.Session session, String[] docTypeNames) {
 		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
@@ -263,113 +438,25 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				session, dts));
 	}
 
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
-		Mutiny.Session session, Collection<String> docTypeNames) {
-
-		return getDocTypeListByNames(
-			session, docTypeNames.toArray(String[]::new))
-			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
-	}
-
-	@Override
-	public Uni<DocType> deleteById(long entityId) {
+	public Uni<List<DocType>> getDocTypesNotInDocTypeNames(
+		Mutiny.Session session, String[] docTypeNames) {
 		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
 
-		// dereference aclMappings
-		CriteriaUpdate<AclMapping> updateAclMapping = cb.createCriteriaUpdate(AclMapping.class);
-		Root<AclMapping> updateAclMappingFrom = updateAclMapping.from(AclMapping.class);
+		Class<DocType> entityClass = getEntityClass();
 
-		Subquery<Long> fieldSubquery = updateAclMapping.subquery(Long.class);
-		Root<DocTypeField> fieldSubqueryFrom = fieldSubquery.from(DocTypeField.class);
-		fieldSubquery.select(fieldSubqueryFrom.get(DocTypeField_.id));
-		fieldSubquery.where(cb.equal(
-			fieldSubqueryFrom.get(DocTypeField_.docType).get(DocType_.id),
-			entityId
-		));
+		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
 
-		updateAclMapping.where(
-			updateAclMappingFrom
-				.get(AclMapping_.docTypeField)
-				.get(DocTypeField_.id)
-				.in(fieldSubquery)
+		Root<DocType> from = query.from(entityClass);
+
+		query.where(
+			from.get(DocType_.name)
+				.in(List.of(docTypeNames))
+				.not()
 		);
 
-		updateAclMapping.set(
-			updateAclMappingFrom.get(AclMapping_.docTypeField),
-			cb.nullLiteral(DocTypeField.class)
-		);
-
-		// dereference parents and analyzer
-		CriteriaUpdate<DocTypeField> updateDocTypeField =
-			cb.createCriteriaUpdate(DocTypeField.class);
-		Root<DocTypeField> updateDocTypeFieldFrom = updateDocTypeField.from(DocTypeField.class);
-
-		updateDocTypeField.where(
-			cb.equal(
-				updateDocTypeFieldFrom
-					.get(DocTypeField_.docType)
-					.get(DocType_.id),
-				entityId
-			)
-		);
-
-		updateDocTypeField.set(
-			updateDocTypeFieldFrom.get(DocTypeField_.analyzer),
-			cb.nullLiteral(Analyzer.class)
-		);
-		updateDocTypeField.set(
-			updateDocTypeFieldFrom.get(DocTypeField_.parentDocTypeField),
-			cb.nullLiteral(DocTypeField.class));
-
-		// delete docTypeFields
-		CriteriaDelete<DocTypeField> deleteDocTypeFields =
-			cb.createCriteriaDelete(DocTypeField.class);
-		Root<DocTypeField> deleteFrom = deleteDocTypeFields.from(DocTypeField.class);
-
-		deleteDocTypeFields.where(
-			cb.equal(
-				deleteFrom.get(DocTypeField_.docType).get(DocType_.id),
-				entityId
-			)
-		);
-
-		// dereference docTypeTemplate
-		CriteriaUpdate<DocType> updateDocType = cb.createCriteriaUpdate(DocType.class);
-		Root<DocType> docTypeFrom = updateDocType.from(DocType.class);
-		updateDocType.where(cb.equal(docTypeFrom.get(DocType_.id), entityId));
-		updateDocType.set(DocType_.docTypeTemplate, cb.nullLiteral(DocTypeTemplate.class));
-
-		// queries dataIndex
-		CriteriaQuery<DataIndex> dataIndexQuery = cb.createQuery(DataIndex.class);
-		Root<DataIndex> dataIndexFrom = dataIndexQuery.from(DataIndex.class);
-		dataIndexFrom.fetch(DataIndex_.docTypes, JoinType.INNER);
-		SetJoin<DataIndex, DocType> join = dataIndexFrom.join(DataIndex_.docTypes, JoinType.INNER);
-		dataIndexQuery.where(cb.equal(join.get(DocType_.id), entityId));
-
-		return sessionFactory.withTransaction((s, t) -> findById(s, entityId)
-			.call(docType -> s.createQuery(dataIndexQuery)
-				.getResultList()
-				.flatMap(dataIndices -> {
-					for (DataIndex dataIndex : dataIndices) {
-						Set<DocType> docTypes = dataIndex.getDocTypes();
-						docTypes.remove(docType);
-					}
-					return s.mergeAll(dataIndices.toArray());
-				})
-			)
-			.call(docType -> s.createQuery(updateAclMapping).executeUpdate())
-			.call(docType -> s.createQuery(updateDocTypeField).executeUpdate())
-			.call(docType -> s.createQuery(deleteDocTypeFields).executeUpdate()
-				.onFailure()
-				.transform(throwable -> switch (throwable) {
-					case ConstraintViolationException c -> new K9Error(
-						"There are some DocTypeFields referenced by other entities");
-					default -> throwable;
-				})
-			)
-			.call(docType -> s.createQuery(updateDocType).executeUpdate())
-			.call(docType -> remove(s, docType))
-		);
+		return session
+			.createQuery(query)
+			.getResultList();
 	}
 
 	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds, Mutiny.Session session) {
@@ -383,14 +470,104 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
 	}
 
-	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
+	@Override
+	public Uni<DocType> patch(long id, DocTypeDTO dto) {
 
-		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToMappings);
+		return sessionFactory.withTransaction(
+			(session, transaction) -> patch(session, id, dto));
 	}
 
-	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
+	@Override
+	public Uni<DocType> patch(Mutiny.Session session, long id, DocTypeDTO dto) {
 
-		return findDocTypes(docTypeIds).map(IndexMappingsUtil::docTypesToSettings);
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(docType, docTypeDTO) -> patchMapper(session, docType, docTypeDTO)
+		);
+	}
+
+	@Override
+	public Uni<DocType> update(long id, DocTypeDTO dto) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> update(session, id, dto));
+	}
+
+	@Override
+	public Uni<DocType> update(Mutiny.Session session, long id, DocTypeDTO dto) {
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(docType, docTypeDTO) -> updateMapper(session, docType, docTypeDTO)
+		);
+	}
+
+	private DocType createMapper(Mutiny.Session session, DocTypeDTO docTypeDTO) {
+
+		var docType = mapper.create(docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// set docTypeTemplate only when docTypeTemplateId is not null
+			var docTypeTemplateId = docTypeWithTemplateDTO.getDocTypeTemplateId();
+			if (docTypeTemplateId != null) {
+				var docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeTemplateId
+				);
+
+				docType.setDocTypeTemplate(docTypeTemplate);
+			}
+
+		}
+
+		return docType;
+	}
+
+	private DocType patchMapper(Mutiny.Session session, DocType docType, DocTypeDTO docTypeDTO) {
+
+		mapper.patch(docType, docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// set docTypeTemplate only when docTypeTemplateId is not null
+			var docTypeTemplateId = docTypeWithTemplateDTO.getDocTypeTemplateId();
+			if (docTypeTemplateId != null) {
+				var docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeTemplateId
+				);
+
+				docType.setDocTypeTemplate(docTypeTemplate);
+			}
+
+
+		}
+
+		return docType;
+	}
+
+	private DocType updateMapper(Mutiny.Session session, DocType docType, DocTypeDTO docTypeDTO) {
+
+		mapper.update(docType, docTypeDTO);
+
+		if (docTypeDTO instanceof DocTypeWithTemplateDTO docTypeWithTemplateDTO) {
+
+			// always set docTypeTemplate
+			DocTypeTemplate docTypeTemplate = null;
+			if (docTypeWithTemplateDTO.getDocTypeTemplateId() != null) {
+				docTypeTemplate = session.getReference(
+					DocTypeTemplate.class,
+					docTypeWithTemplateDTO.getDocTypeTemplateId()
+				);
+			}
+
+			docType.setDocTypeTemplate(docTypeTemplate);
+		}
+
+		return docType;
 	}
 
 	@Inject

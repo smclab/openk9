@@ -17,15 +17,18 @@
 
 package io.openk9.datasource.actor;
 
-import com.typesafe.config.ConfigFactory;
-import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
-import io.quarkus.runtime.Startup;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+
+import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
+
+import com.typesafe.config.ConfigFactory;
+import io.quarkus.runtime.Startup;
+import io.vertx.mutiny.core.eventbus.EventBus;
+import lombok.Getter;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -43,11 +46,8 @@ public class ActorSystemProvider {
 	EventBus eventBus;
 	@ConfigProperty(name = "pekko.cluster.file")
 	String clusterFile;
+	@Getter
 	private ActorSystem<?> actorSystem;
-
-	public ActorSystem<?> getActorSystem() {
-		return actorSystem;
-	}
 
 	@PostConstruct
 	void init() {

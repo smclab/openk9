@@ -23,8 +23,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.ws.rs.NotFoundException;
 
-import io.openk9.datasource.index.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.mapper.EmbeddingModelMapper;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.EmbeddingModel_;
@@ -50,6 +50,12 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 		return session.createNamedQuery(
 				EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
 			.getSingleResult();
+	}
+
+	public Uni<EmbeddingModel> fetchCurrent(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(EmbeddingModel.FETCH_CURRENT, EmbeddingModel.class)
+			.getSingleResult());
 	}
 
 	@Override
@@ -133,9 +139,10 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 
 	private Uni<Void> createComponentTemplate(Mutiny.Session session, EmbeddingModel entity) {
 
-		return session.find(TenantBinding.class, 1L)
-			.flatMap(tenantBinding -> {
-				var tenantId = tenantBinding.getTenant();
+		return getCurrentTenant(session)
+			.flatMap(tenant -> {
+				var tenantId = tenant.schemaName();
+
 				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
 					tenantId,
 					entity.getName(),

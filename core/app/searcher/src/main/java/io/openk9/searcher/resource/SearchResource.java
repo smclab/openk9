@@ -104,9 +104,6 @@ public class SearchResource {
 	@GrpcClient("searcher")
 	Searcher searcherClient;
 	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken;
-	@Inject
 	SearcherMapper searcherMapper;
 	@Inject
 	InternalSearcherMapper internalSearcherMapper;
@@ -115,12 +112,14 @@ public class SearchResource {
 	@Context
 	HttpServerRequest request;
 	@Context
-	HttpHeaders
-		headers;
+	HttpHeaders headers;
 	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
 	List<String> supportedHeadersName;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken; // it is injected to force authentication.
 
 	@POST
 	@Path("/search-query")
@@ -178,7 +177,7 @@ public class SearchResource {
 				ProtocolStringList indexNameList =
 					queryParserResponse.getIndexNameList();
 
-				if (indexNameList == null || indexNameList.isEmpty()) {
+				if (indexNameList.isEmpty()) {
 					return Uni.createFrom().item(Response.EMPTY);
 				}
 
@@ -306,6 +305,21 @@ public class SearchResource {
 
 	}
 
+	protected static String getRawToken(HttpHeaders headers) {
+		String rawToken = "";
+
+		var authorization = headers.getRequestHeader("Authorization");
+
+		if (!authorization.isEmpty()) {
+			var value = authorization.getFirst();
+			if (value != null && !value.isEmpty()) {
+				rawToken = value.trim().substring(7);
+			}
+		}
+
+		return rawToken;
+	}
+
 	private static Iterable<Integer> toList(Integer[] pos) {
 		if (pos == null || pos.length == 0) {
 			return List.of();
@@ -341,32 +355,37 @@ public class SearchResource {
 		return qastBuilder;
 	}
 
-	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
+	private QueryAnalysisRequest getQueryAnalysisRequest(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
 
-		var requestBuilder = searcherMapper
-			.toQueryParserRequest(searchRequest)
-			.toBuilder();
+		QueryAnalysisRequest.Builder builder =
+			QueryAnalysisRequest.newBuilder();
 
-		Map<String, Value> extra = new HashMap<>();
+		var rawToken = getRawToken(headers);
+		builder.setSearchText(searchRequest.getSearchText());
+		builder.setVirtualHost(request.authority().host());
+		builder.setJwt(rawToken);
+		builder.setMode(mode);
 
-		for (String headerName : supportedHeadersName) {
-			List<String> requestHeader = headers.getRequestHeader(headerName);
-			if (requestHeader != null && !requestHeader.isEmpty()) {
-				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
+		if (searchRequest.getTokens() != null) {
+
+			for (QueryAnalysisToken token : searchRequest.getTokens()) {
+				QueryAnalysisSearchToken.Builder qastBuilder =
+					createQastBuilder(token);
+				builder
+					.addTokens(
+						io.openk9.searcher.grpc.QueryAnalysisToken
+							.newBuilder()
+							.setText(token.getText())
+							.setEnd(token.getEnd())
+							.setStart(token.getStart())
+							.addAllPos(toList(token.getPos()))
+							.setToken(qastBuilder));
 			}
+
 		}
 
-		String sortAfterKey = searchRequest.getSortAfterKey();
-		String language = searchRequest.getLanguage();
-
-		return requestBuilder
-			.setVirtualHost(request.host())
-			.setJwt(rawToken == null ? "" : rawToken)
-			.putAllExtra(extra)
-			.addAllSort(mapToGrpc(searchRequest.getSort()))
-			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
-			.setLanguage(language == null ? "" : language)
-			.build();
+		return builder.build();
 
 	}
 
@@ -507,36 +526,34 @@ public class SearchResource {
 
 	}
 
-	private QueryAnalysisRequest getQueryAnalysisRequest(
-		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
+	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
 
-		QueryAnalysisRequest.Builder builder =
-			QueryAnalysisRequest.newBuilder();
+		var requestBuilder = searcherMapper
+			.toQueryParserRequest(searchRequest)
+			.toBuilder();
 
-		builder.setSearchText(searchRequest.getSearchText());
-		builder.setVirtualHost(request.host());
-		builder.setJwt(rawToken == null ? "" : rawToken);
-		builder.setMode(mode);
+		Map<String, Value> extra = new HashMap<>();
 
-		if (searchRequest.getTokens() != null) {
-
-			for (QueryAnalysisToken token : searchRequest.getTokens()) {
-				QueryAnalysisSearchToken.Builder qastBuilder =
-					createQastBuilder(token);
-				builder
-					.addTokens(
-						io.openk9.searcher.grpc.QueryAnalysisToken
-							.newBuilder()
-							.setText(token.getText())
-							.setEnd(token.getEnd())
-							.setStart(token.getStart())
-							.addAllPos(toList(token.getPos()))
-							.setToken(qastBuilder));
+		for (String headerName : supportedHeadersName) {
+			List<String> requestHeader = headers.getRequestHeader(headerName);
+			if (requestHeader != null && !requestHeader.isEmpty()) {
+				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
 			}
-
 		}
 
-		return builder.build();
+		var rawToken = getRawToken(headers);
+
+		String sortAfterKey = searchRequest.getSortAfterKey();
+		String language = searchRequest.getLanguage();
+
+		return requestBuilder
+			.setVirtualHost(request.authority().host())
+			.setJwt(rawToken)
+			.putAllExtra(extra)
+			.addAllSort(mapToGrpc(searchRequest.getSort()))
+			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
+			.setLanguage(language == null ? "" : language)
+			.build();
 
 	}
 

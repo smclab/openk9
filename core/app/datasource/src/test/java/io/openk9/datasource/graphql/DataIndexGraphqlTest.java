@@ -17,6 +17,20 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.service.DatasourceService;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch.OpenSearchClient;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -27,22 +41,23 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.concurrent.ExecutionException;
-import jakarta.inject.Inject;
-
-import io.openk9.datasource.Initializer;
-import io.openk9.datasource.service.DatasourceService;
-
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import org.junit.jupiter.api.Test;
-
 @QuarkusTest
 public class DataIndexGraphqlTest {
 
+	private static final String CAT = "cat";
+	private static final String DATA_INDEX = "dataIndex";
+	private static final String DATA_INDICES = "dataIndices";
+	private static final String DATASOURCE = "datasource";
+	private static final String EDGES = "edges";
+	private static final String ID = "id";
+	private static final String KNN_INDEX = "knnIndex";
+	private static final String NAME = "name";
+	private static final String NODE = "node";
+	private static final String RESPONSE = "response: %s";
+	private static final String STATUS = "status";
 	private static final String TENANT_ID = "public";
+
+	private static final Logger log = Logger.getLogger(DataIndexGraphqlTest.class);
 
 	@Inject
 	DatasourceService datasourceService;
@@ -50,6 +65,9 @@ public class DataIndexGraphqlTest {
 	@Inject
 	@GraphQLClient("openk9-dynamic")
 	DynamicGraphQLClient graphQLClient;
+
+	@Inject
+	OpenSearchClient openSearchClient;
 
 	@Test
 	void should_return_knnDataIndex()
@@ -64,32 +82,174 @@ public class DataIndexGraphqlTest {
 			operation(
 				OperationType.QUERY,
 				field(
-					"dataIndex",
+					DATA_INDEX,
 					args(
-						arg("id", dataIndex.getId())
+						arg(ID, dataIndex.getId())
 					),
-					field("id"),
-					field("name"),
-					field("knnIndex")
+					field(ID),
+					field(NAME),
+					field(KNN_INDEX)
 				)
 			)
 		);
 
 		var response = graphQLClient.executeSync(query);
 
-		System.out.println("response");
-		System.out.println(response);
+		log.info(String.format(RESPONSE, response));
 
 		assertFalse(response.hasError());
 		assertTrue(response.hasData());
 
-		var dataIndexR = response.getData().getJsonObject("dataIndex");
+		var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
 
 		assertNotNull(dataIndexR);
 		assertEquals(
-			dataIndex.getId(), Long.parseLong(dataIndexR.getString("id")));
-		assertFalse(dataIndexR.getBoolean("knnIndex"));
+			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
+		assertFalse(dataIndexR.getBoolean(KNN_INDEX));
 
+	}
+
+	@Test
+	void should_retrieve_datasource()
+		throws ExecutionException, InterruptedException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDEX,
+					args(
+						arg(ID, dataIndex.getId())
+					),
+					field(ID),
+					field(NAME),
+					field(
+						DATASOURCE,
+						field(ID),
+						field(NAME)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		log.info(String.format(RESPONSE, response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
+
+		assertNotNull(dataIndexR);
+		assertEquals(
+			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
+
+		var datasourceR = dataIndexR.getJsonObject(DATASOURCE);
+
+		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
+
+	}
+
+	@Test
+	void should_get_all_dataindices_and_retrieve_datasource()
+		throws ExecutionException, InterruptedException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDICES,
+					field(EDGES,
+						field(NODE,
+							field(ID),
+							field(NAME),
+							field(
+								DATASOURCE,
+								field(ID),
+								field(NAME)
+							)
+						)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		log.info(String.format(RESPONSE, response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var dataIndicesR = response.getData().getJsonObject(DATA_INDICES);
+		assertNotNull(dataIndicesR);
+
+		var edges = dataIndicesR.getJsonArray(EDGES);
+		assertFalse(edges.isEmpty());
+
+		var firstNode = edges.getFirst().asJsonObject().getJsonObject(NODE);
+		assertEquals(
+			dataIndex.getId(), Long.parseLong(firstNode.getString(ID)));
+
+		var datasourceR = firstNode.getJsonObject(DATASOURCE);
+
+		assertEquals(Initializer.INIT_DATASOURCE_CONNECTION, datasourceR.getString(NAME));
+
+	}
+
+	@Test
+	void should_return_cat()
+		throws ExecutionException, InterruptedException, IOException {
+
+		var dataIndex = datasourceService.findByName(
+				TENANT_ID, Initializer.INIT_DATASOURCE_CONNECTION)
+			.flatMap(datasource -> datasourceService.getDataIndex(datasource))
+			.await().indefinitely();
+
+		openSearchClient.indices().create(req ->
+			req.index(TENANT_ID + "-" + dataIndex.getName().toLowerCase()));
+
+		var query = document(
+			operation(
+				OperationType.QUERY,
+				field(
+					DATA_INDEX,
+					args(
+						arg(ID, dataIndex.getId())
+					),
+					field(ID),
+					field(NAME),
+					field(
+						CAT,
+						field(STATUS)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		log.info(String.format(RESPONSE, response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var dataIndexR = response.getData().getJsonObject(DATA_INDEX);
+
+		assertNotNull(dataIndexR);
+		assertEquals(
+			dataIndex.getId(), Long.parseLong(dataIndexR.getString(ID)));
 	}
 
 }

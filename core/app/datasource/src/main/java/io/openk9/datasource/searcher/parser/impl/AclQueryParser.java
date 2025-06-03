@@ -17,21 +17,22 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 @ApplicationScoped
 public class AclQueryParser implements QueryParser {
@@ -88,7 +89,8 @@ public class AclQueryParser implements QueryParser {
 
 			Iterator<AclMapping> iterator =
 				parserContext
-					.getCurrentTenant()
+					.getTenantWithBucket()
+					.getBucket()
 					.getDatasources()
 					.stream()
 					.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
@@ -117,7 +119,8 @@ public class AclQueryParser implements QueryParser {
 					List<String> roles = extraParams.get(extraParamsKey);
 					if (roles != null && !roles.isEmpty()) {
 						parserContext
-							.getCurrentTenant()
+							.getTenantWithBucket()
+							.getBucket()
 							.getDatasources()
 							.stream()
 							.flatMap(d -> d.getPluginDriver().getAclMappings().stream())

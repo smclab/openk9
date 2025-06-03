@@ -17,69 +17,65 @@
 
 package io.openk9.datasource.searcher.queryanalysis;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
-import io.openk9.datasource.util.QuarkusCacheUtil;
-import io.openk9.tenantmanager.grpc.TenantManager;
-import io.openk9.tenantmanager.grpc.TenantRequest;
+
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
-import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 @ApplicationScoped
 public class GrammarProvider {
 
 	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
 
-		Uni<Tuple2<String, Bucket>> getTenantUni = _getBucket(virtualHost);
+		return getTenantWithBucket(virtualHost)
+			.onItem().ifNull().fail()
+			.onItem().ifNotNull().transform(tenantWithBucket -> {
 
-		return getTenantUni
-			.map(t2 -> {
+				var bucket = tenantWithBucket.getBucket();
+				var tenantId = tenantWithBucket.getTenant().schemaName();
 
-				String schemaName = t2.getItem1();
-				Bucket b = t2.getItem2();
+				QueryAnalysis queryAnalysis = bucket.getQueryAnalysis();
 
-				if (b != null) {
-					QueryAnalysis queryAnalysis = b.getQueryAnalysis();
+				Set<Rule> rules = queryAnalysis.getRules();
 
-					Set<Rule> rules = queryAnalysis.getRules();
+				List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
+					_toGrammarRule(rules);
 
-					List<io.openk9.datasource.searcher.queryanalysis.Rule> mappedRules =
-						_toGrammarRule(rules);
+				List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator>
+					mappedAnnotators =
+					_toAnnotator(tenantWithBucket, queryAnalysis, jwt);
 
-					List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> mappedAnnotators =
-						_toAnnotator(schemaName, b, queryAnalysis.getStopWordsList(), jwt);
+				GrammarMixin grammarMixin = GrammarMixin.of(
+					mappedRules, mappedAnnotators);
 
-					GrammarMixin grammarMixin = GrammarMixin.of(
-						mappedRules, mappedAnnotators);
-
-					return new Grammar(schemaName, List.of(grammarMixin));
-				}
-				else {
-					return new Grammar(schemaName, List.of());
-				}
+				return new Grammar(tenantId, List.of(grammarMixin));
 			});
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		String schemaName, Bucket bucket, List<String> stopWords, JWT jwt) {
-		return bucket.getQueryAnalysis().getAnnotators()
+		TenantWithBucket tenantWithBucket, QueryAnalysis queryAnalysis, JWT jwt) {
+
+		var stopWords = queryAnalysis.getStopWordsList();
+
+		return queryAnalysis.getAnnotators()
 			.stream()
-			.map(a -> annotatorFactory.getAnnotator(schemaName, bucket, a, stopWords, jwt))
+			.map(a -> annotatorFactory.getAnnotator(tenantWithBucket, a, stopWords, jwt))
 			.toList();
 	}
 
@@ -93,30 +89,8 @@ public class GrammarProvider {
 			.toList();
 	}
 
-	private Uni<Tuple2<String, Bucket>> _getBucket(String virtualHost) {
-		return QuarkusCacheUtil.getAsync(
-			cache,
-			new CompositeCacheKey(virtualHost, "grammarProvider", "_getBucket"),
-			tenantManager
-				.findTenant(TenantRequest.newBuilder().setVirtualHost(virtualHost).build())
-				.flatMap(tenantResponse -> sessionFactory
-					.withTransaction(tenantResponse.getSchemaName(), (s, t) -> s
-						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
-						.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
-						.getSingleResult()
-						.onItemOrFailure()
-						.transform((bucket, throwable) -> {
-							if (throwable != null) {
-								return Tuple2.of(tenantResponse.getSchemaName(), null);
-							}
-							else {
-								return Tuple2.of(tenantResponse.getSchemaName(), bucket);
-							}
-						})
-					)
-				)
-		);
-	}
+	@Inject
+	TenantRegistry tenantRegistry;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -124,8 +98,24 @@ public class GrammarProvider {
 	@Inject
 	AnnotatorFactory annotatorFactory;
 
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
+	private Uni<TenantWithBucket> getTenantWithBucket(String virtualHost) {
+		return cache.getAsync(
+			new CompositeCacheKey(virtualHost, "grammarProvider", "getTenantWithBucket"),
+			key -> tenantRegistry
+				.getTenantByVirtualHost(virtualHost)
+				.flatMap(tenant -> sessionFactory
+					.withTransaction(
+						tenant.schemaName(), (s, t) -> s
+							.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
+							.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
+							.getSingleResult()
+							.map(bucket -> new TenantWithBucket(tenant, bucket))
+							.onFailure()
+							.recoverWithNull()
+					)
+				)
+		);
+	}
 
 	@CacheName("bucket-resource")
 	Cache cache;

@@ -26,6 +26,7 @@ type FilterCategoryDynamicallyProps = {
   isUniqueLoadMore?: boolean;
   loadAll?: boolean;
   language: string;
+  haveSearch?: boolean | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   placeholder?: string | undefined | null;
   noResultMessage?: string | null | undefined;
@@ -52,6 +53,7 @@ function FilterCategoryDynamic({
   noResultMessage,
   placeholder,
   iconCustom,
+  haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
   const suggestions = useInfiniteSuggestions(
@@ -146,6 +148,11 @@ function FilterCategoryDynamic({
           </strong>
         </legend>
         <button
+          className={`openk9-mobile-collapsable-filters openk9-collapsable-filters ${
+            isOpen
+              ? "openk9-dropdown-filters-open"
+              : "openk9-dropdown-filters-close"
+          }`}
           aria-label={
             t("openk9-collapsable-filter") || "openk9 collapsable filter"
           }
@@ -165,7 +172,7 @@ function FilterCategoryDynamic({
       </div>
       {isOpen && (
         <React.Fragment>
-          {!isUniqueLoadMore && (
+          {!isUniqueLoadMore && haveSearch && (
             <>
               <label
                 htmlFor={"search-category-" + suggestionCategoryId}

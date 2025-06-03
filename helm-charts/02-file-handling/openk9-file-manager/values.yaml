@@ -87,7 +87,7 @@ config:
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 
 jvm:
-  toolOptions: "-XX:MaxRAMPercentage=60.0"
+  toolOptions: ""
   
 ## Http Limit configuration
 limit:

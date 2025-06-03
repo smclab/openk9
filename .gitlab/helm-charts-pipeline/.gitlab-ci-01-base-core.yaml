@@ -6,14 +6,14 @@ push-datasource-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-datasource -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -22,14 +22,14 @@ push-ingestion-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-ingestion -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -39,14 +39,14 @@ push-searcher-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-searcher -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -56,14 +56,14 @@ push-tenant-manager-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-tenant-manager -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -73,14 +73,14 @@ push-tenant-ui-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-tenant-ui -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -90,14 +90,14 @@ push-admin-ui-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-admin-ui -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
@@ -107,13 +107,13 @@ push-search-frontend-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 01-base-core && mkdir package
+    - cd helm-charts/01-base-core && mkdir package
     - helm package openk9-search-frontend -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

@@ -17,28 +17,24 @@
 
 package io.openk9.datasource.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.datasource.model.util.K9Entity;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
+import io.openk9.datasource.model.util.K9Entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 
 @Entity
@@ -73,35 +69,12 @@ public class TokenTab extends K9Entity {
 	@ToString.Exclude
 	private DocTypeField docTypeField;
 
-	@ElementCollection
-	@CollectionTable(
-		name = "token_tab_extra_params",
-		joinColumns = @JoinColumn(name = "token_tab_id")
-
-	)
-	@MapKeyColumn(name = "key")
-	@Column(name = "value")
-	@JsonIgnore
-	private Map<String, String> extraParams = new HashMap<>();
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "extra_params")
+	private String extraParams;
 
 	public enum TokenType {
 		DATE, DOCTYPE, TEXT, ENTITY, AUTOCOMPLETE, FILTER, DATE_ORDER
 	}
 
-	public void addExtraParam(String key, String value) {
-		extraParams.put(key, value);
-	}
-
-	public void removeExtraParam(String key) {
-		extraParams.remove(key);
-	}
-
-	public static Set<ExtraParam> getExtraParamsSet(Map<String, String> extraParams) {
-		return extraParams
-			.entrySet()
-			.stream().map(e -> new ExtraParam(e.getKey(), e.getValue()))
-			.collect(Collectors.toSet());
-	}
-
-	public record ExtraParam(String key, String value) {}
 }

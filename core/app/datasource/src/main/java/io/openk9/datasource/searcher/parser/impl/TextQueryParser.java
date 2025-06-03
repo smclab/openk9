@@ -17,6 +17,15 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
+import jakarta.inject.Named;
+
 import io.openk9.datasource.mapper.FuzzinessMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -28,20 +37,12 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Default;
-import jakarta.inject.Named;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Named("TextQueryParser")
@@ -64,9 +65,9 @@ public class TextQueryParser implements QueryParser {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
-		Bucket currentTenant = parserContext.getCurrentTenant();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
-		Set<Datasource> datasources = currentTenant.getDatasources();
+		Set<Datasource> datasources = bucket.getDatasources();
 
 		String language = parserContext.getLanguage();
 

@@ -20,6 +20,7 @@ package io.openk9.datasource.pipeline.service.dto;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.Scheduler;
 
 import lombok.Data;
@@ -27,6 +28,7 @@ import lombok.Data;
 @Data
 public class SchedulerDTO {
 	private Long id;
+	private String tenantId;
 	private String scheduleId;
 	private Long datasourceId;
 	private Set<EnrichItemDTO> enrichItems;
@@ -47,11 +49,26 @@ public class SchedulerDTO {
 	}
 
 	public String getIndexName() {
-		String newDataIndexName = getNewDataIndexName();
 
-		return newDataIndexName != null
-			? newDataIndexName
-			: getOldDataIndexName();
+		String newIndexName = getNewIndexName();
+
+		return newIndexName != null ? newIndexName : getOldIndexName();
+	}
+
+	public String getNewIndexName() {
+		if (tenantId == null || newDataIndexName == null) {
+			return null;
+		}
+
+		return IndexName.from(tenantId, newDataIndexName).toString();
+	}
+
+	public String getOldIndexName() {
+		if (tenantId == null || oldDataIndexName == null) {
+			return null;
+		}
+
+		return IndexName.from(tenantId, oldDataIndexName).toString();
 	}
 
 }

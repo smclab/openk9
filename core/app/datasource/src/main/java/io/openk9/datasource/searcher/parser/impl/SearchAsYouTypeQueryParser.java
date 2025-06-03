@@ -17,6 +17,13 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
@@ -24,17 +31,11 @@ import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class SearchAsYouTypeQueryParser implements QueryParser {
@@ -52,11 +53,11 @@ public class SearchAsYouTypeQueryParser implements QueryParser {
 		List<ParserSearchToken> tokenTypeGroup =
 			parserContext.getTokenTypeGroup();
 
-		Bucket currentTenant = parserContext.getCurrentTenant();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		for (ParserSearchToken searchToken : tokenTypeGroup) {
 			_termSearchAsYouTypeQueryValues(
-				searchToken, mutableQuery, currentTenant.getDatasources());
+				searchToken, mutableQuery, bucket.getDatasources());
 		}
 
 		return Uni.createFrom().voidItem();

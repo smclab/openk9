@@ -13,6 +13,7 @@ service Searcher {
   rpc SuggestionsQueryParser(QueryParserRequest) returns (SuggestionsResponse) {}
   rpc QueryAnalysis(QueryAnalysisRequest) returns (QueryAnalysisResponse) {}
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
+  rpc GetRAGConfigurations(GetRAGConfigurationsRequest) returns (GetRAGConfigurationsResponse) {}
 }
 
 message QueryParserResponse {
@@ -94,6 +95,18 @@ message GetLLMConfigurationsRequest {
   string virtualHost = 1;
 }
 
+message GetRAGConfigurationsRequest {
+  string virtualHost = 1;
+  RAGType ragType = 2;
+}
+
+enum RAGType {
+  RAG_TYPE_UNSPECIFIED = 0;
+  CHAT_RAG = 1;
+  CHAT_RAG_TOOL = 2;
+  SIMPLE_GENERATE = 3;
+}
+
 message QueryAnalysisToken {
   string text = 1;
   int32 start = 2;
@@ -133,5 +146,24 @@ message GetLLMConfigurationsResponse {
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   string retrieveType = 4;
+  ProviderModel providerModel = 5;
+  int32 contextWindow = 6;
+  bool retrieveCitations = 7;
+}
+
+message ProviderModel {
+  string provider = 1;
+  string model = 2;
+}
+
+message GetRAGConfigurationsResponse{
+  string name = 1;
+  int32 chunkWindow = 2;
+  bool reformulate = 3;
+  string prompt = 4;
+  string promptNoRag = 5;
+  string ragToolDescription = 6;
+  string rephrasePrompt = 7;
+  .google.protobuf.Struct jsonConfig = 8;
 }
 

@@ -67,7 +67,7 @@ Build Admin Frontend:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/admin-ui
     - yarn install
@@ -81,10 +81,13 @@ Build Verifier:
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+    - "Fetch version"
+    - "Build Admin Frontend"
   script:
     - source version.env
     - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
-    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+    - gtcs scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 

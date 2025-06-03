@@ -6,13 +6,13 @@ push-entity-manager-helm:
   image: alpine:latest
   only:
     refs:
-      - master
+      - main
   when:
     manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-    - cd 04-knowledge-handling && mkdir package
+    - cd helm-charts/04-knowledge-handling && mkdir package
     - helm package openk9-entity-manager -d package
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

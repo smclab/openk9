@@ -17,22 +17,26 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.ArrayList;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 
-import java.util.ArrayList;
-
 @ApplicationScoped
 public class KnnQueryParser implements QueryParser {
+
+	private static final Logger log = Logger.getLogger(KnnQueryParser.class);
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -49,9 +53,8 @@ public class KnnQueryParser implements QueryParser {
 
 		var tokenTypeGroup = parserContext.getTokenTypeGroup();
 
-		var currentTenant = parserContext.getCurrentTenant();
-
-		var tenantId = currentTenant.getTenant();
+		var tenant = parserContext.getTenantWithBucket().getTenant();
+		var tenantId = tenant.schemaName();
 
 		var knnQueryUnis = new ArrayList<Uni<Query>>();
 
@@ -74,13 +77,16 @@ public class KnnQueryParser implements QueryParser {
 		return Uni.join().all(knnQueryUnis)
 			.usingConcurrencyOf(1)
 			.andCollectFailures()
-			.invoke(knnQueries -> {
+			.onItemOrFailure()
+			.invoke((knnQueries, throwable) -> {
+				if (throwable != null) {
+					log.warn("Error during knnQuery parsing.", throwable);
+				}
 
 				for (Query knnQuery : knnQueries) {
 
 					addKnnQuery(parserContext, knnQuery);
 				}
-
 			})
 			.replaceWithVoid();
 	}

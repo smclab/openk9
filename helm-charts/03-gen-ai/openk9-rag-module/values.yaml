@@ -68,9 +68,19 @@ opensearch:
   keyPasswordSecret: "password"
   keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
 
+## Logging configuration
+log:
+  level: "INFO"
+  
 ## Cors configuration
 cors:
   origins: "*"
+
+## Retention configuration
+retention:
+  schedule: ""
+  cronexpression: "0 0 * ? * *"
+  interval: "30"
 
 ## Keycloak configuration
 keycloak:
@@ -87,6 +97,7 @@ openk9:
       host: "openk9-tenant-manager:9000"
 
 phoenix:
+  enabled: ""
   endpoint: "http://127.0.0.1:6006/v1/traces"
   projectName: "default"
 

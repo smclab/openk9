@@ -17,20 +17,6 @@
 
 package io.openk9.datasource.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.ws.rs.NotFoundException;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
@@ -44,6 +30,8 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.SuggestionCategory;
@@ -51,7 +39,6 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.resource.util.Filter;
@@ -59,11 +46,24 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -246,6 +246,50 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
+	/**
+	 * Binds a specific {@link RAGConfiguration} to a {@link Bucket}.
+	 * If both exist, it associates the
+	 * {@code RAGConfiguration} with the {@code Bucket} according to the
+	 * {@link RAGType}.
+	 * </p>
+	 *
+	 * @param bucketId The ID of the {@link Bucket} to bind the
+	 * {@link RAGConfiguration} to.
+	 * @param ragConfigurationId The ID of the {@link RAGConfiguration} to bind.
+	 * @return A {@link Uni} emitting a {@link Tuple2} containing the persisted
+	 * {@link Bucket} and the bound {@link RAGConfiguration}, or an empty
+	 * {@link Uni} if either the {@link Bucket} or the
+	 * {@link RAGConfiguration} is not found. The operation is performed
+	 * within a transaction.
+	 */
+	public Uni<Tuple2<Bucket, RAGConfiguration>> bindRAGConfiguration(
+		long bucketId, long ragConfigurationId) {
+
+		return sessionFactory.withTransaction((s, tr) ->
+			findById(s, bucketId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(bucket ->
+					ragConfigurationService.findById(s, ragConfigurationId)
+						.onItem()
+						.ifNotNull()
+						.transformToUni(ragConfiguration -> {
+							switch (ragConfiguration.getType()) {
+								case CHAT_RAG -> bucket.setRagConfigurationChat(ragConfiguration);
+								case CHAT_RAG_TOOL ->
+									bucket.setRagConfigurationChatTool(ragConfiguration);
+								case SIMPLE_GENERATE -> bucket.setRagConfigurationSimpleGenerate(ragConfiguration);
+							}
+
+							return persist(s, bucket)
+								.map(bucketPersisted ->
+									Tuple2.of(bucketPersisted, ragConfiguration)
+								);
+						})
+				)
+		);
+	}
+
 	public Uni<Tuple2<Bucket, SearchConfig>> bindSearchConfig(long bucketId, long searchConfigId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -345,6 +389,41 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								s.getReference(Language.class, bucketWithListsDTO.getDefaultLanguageId());
 
 							bucket.setDefaultLanguage(defaultLanguage);
+						}
+
+						//RAGConfigurations
+						//RAGConfigurationChat
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							var ragConfigurationChat =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChat()
+								);
+
+							bucket.setRagConfigurationChat(ragConfigurationChat);
+						}
+
+						//RAGConfigurationChatTool
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							var ragConfigurationChatTool =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChatTool()
+								);
+
+							bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+						}
+
+						//RAGConfigurationSimpleGenerate
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							var ragConfigurationSimpleGenerate =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+								);
+
+							bucket.
+								setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
 						}
 
 						return builder.joinAll()
@@ -513,10 +592,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		);
 	}
 
-	public Uni<Bucket> getCurrentBucket(String host) {
+	public Uni<Bucket> getCurrentBucket() {
 		return sessionFactory.withTransaction(session -> session
 			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
-			.setParameter(TenantBinding_.VIRTUAL_HOST, host)
+			.getSingleResult()
+		);
+	}
+
+	public Uni<Bucket> getCurrentBucket(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s
+			.createNamedQuery(Bucket.CURRENT_NAMED_QUERY, Bucket.class)
 			.getSingleResult()
 		);
 	}
@@ -618,6 +703,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	public Uni<QueryAnalysis> getQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getQueryAnalysis())));
+	}
+
+	public Uni<RAGConfiguration> getRagConfigurationChat(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationChat())));
+	}
+
+	public Uni<RAGConfiguration> getRagConfigurationChatTool(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationChatTool())));
+	}
+
+	public Uni<RAGConfiguration> getRagConfigurationSimpleGenerate(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getRagConfigurationSimpleGenerate())));
 	}
 
 	public Uni<SearchConfig> getSearchConfig(long bucketId) {
@@ -802,6 +902,41 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//RAGConfigurations
+						//RAGConfigurationChat
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							var ragConfigurationChat = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationChat()
+							);
+
+							bucket.setRagConfigurationChat(ragConfigurationChat);
+							builder.add(s.persist(bucket));
+						}
+
+						//RAGConfigurationChatTool
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							var ragConfigurationChatTool = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationChatTool()
+							);
+
+							bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+							builder.add(s.persist(bucket));
+						}
+
+						//RAGConfigurationSimpleGenerate
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							var ragConfigurationSimpleGenerate = s.getReference(
+								RAGConfiguration.class,
+								bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+							);
+
+							bucket.
+								setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -921,6 +1056,45 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				bucket.setQueryAnalysis(null);
 				return persist(s, bucket).map(t -> Tuple2.of(t, null));
 			}));
+	}
+
+	/**
+	 * Unbinds a specific type of {@link RAGConfiguration} from a {@link Bucket}.
+	 * If found, it sets the corresponding {@link RAGConfiguration} field
+	 * (based on the provided{@link RAGType}) to {@code null}. The updated
+	 * {@link Bucket} is then persisted.
+	 * </p>
+	 *
+	 * @param bucketId The ID of the {@link Bucket} to unbind the
+	 * {@link RAGConfiguration} from.
+	 * @param ragType  The {@link RAGType} indicating which
+	 * {@link RAGConfiguration} to unbind (e.g., CHAT, CHAT_TOOL,
+	 * SEARCH).
+	 * @return A {@link Uni} emitting a {@link Tuple2} containing the persisted
+	 * {@link Bucket} with the specified {@link RAGConfiguration} unbound
+	 * (set to {@code null}), or an empty {@link Uni} if the {@link Bucket}
+	 * is not found. The operation is performed within a transaction. The
+	 * second element of the {@link Tuple2} will always be {@code null} as the
+	 * {@link RAGConfiguration} is being unbound.
+	 */
+	public Uni<Tuple2<Bucket, RAGConfiguration>> unbindRAGConfiguration(
+		long bucketId, RAGType ragType) {
+
+		return sessionFactory.withTransaction((s, tr) ->
+			findById(s, bucketId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(bucket -> {
+					switch (ragType) {
+						case CHAT_RAG -> bucket.setRagConfigurationChat(null);
+						case CHAT_RAG_TOOL -> bucket.setRagConfigurationChatTool(null);
+						case SIMPLE_GENERATE -> bucket.setRagConfigurationSimpleGenerate(null);
+					}
+
+					return persist(s, bucket)
+						.map(bucketUpdated -> Tuple2.of(bucketUpdated, null));
+				})
+		);
 	}
 
 	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
@@ -1058,6 +1232,46 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						bucket.setDefaultLanguage(defaultLanguage);
 
+						//RAGConfigurations
+						//RAGConfigurationChat
+						RAGConfiguration ragConfigurationChat = null;
+
+						if (bucketWithListsDTO.getRagConfigurationChat() != null) {
+							ragConfigurationChat =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChat()
+								);
+						}
+
+						bucket.setRagConfigurationChat(ragConfigurationChat);
+
+						//RAGConfigurationChatTool
+						RAGConfiguration ragConfigurationChatTool = null;
+
+						if (bucketWithListsDTO.getRagConfigurationChatTool() != null) {
+							ragConfigurationChatTool =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationChatTool()
+								);
+						}
+
+						bucket.setRagConfigurationChatTool(ragConfigurationChatTool);
+
+						//RAGConfigurationSimpleGenerate
+						RAGConfiguration ragConfigurationSimpleGenerate = null;
+
+						if (bucketWithListsDTO.getRagConfigurationSimpleGenerate() != null) {
+							ragConfigurationSimpleGenerate =
+								s.getReference(
+									RAGConfiguration.class,
+									bucketWithListsDTO.getRagConfigurationSimpleGenerate()
+								);
+						}
+
+						bucket.setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
+
 						builder.add(s.persist(bucket));
 
 						return builder.joinAll()
@@ -1119,6 +1333,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	QueryAnalysisService queryAnalysisService;
+
+	@Inject
+	RAGConfigurationService ragConfigurationService;
 
 	@Inject
 	SearchConfigService searchConfigService;

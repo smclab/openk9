@@ -17,20 +17,21 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.Iterator;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.opensearch.index.query.functionscore.ScoreFunctionBuilders;
-
-import java.util.Iterator;
 
 @ApplicationScoped
 public class DateOrderQueryParser implements QueryParser {
@@ -50,12 +51,12 @@ public class DateOrderQueryParser implements QueryParser {
 
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
-		Bucket currentTenant = parserContext.getCurrentTenant();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
 		Iterator<String> iterator =
-			Utils.getDocTypeFieldsFrom(currentTenant)
+			Utils.getDocTypeFieldsFrom(bucket)
 				.filter(DocTypeField::isSearchableAndDate)
 				.map(DocTypeField::getPath)
 				.distinct()

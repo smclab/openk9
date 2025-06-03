@@ -48,6 +48,15 @@ The command deploys Openk9 Rag Module on the Kubernetes cluster in the default c
 | `commonAnnotations`                          | Annotations to add to all deployed objects                                                                                                                              | `{}`                                              |
 | `hostAliases`                                | Deployment pod host aliases                                                                                                                                             | `[]`                                              |
 
+### Retention configurations
+
+Openk9 Rag Module service handles retention mechanism to handle saved conversations. Following parameters allow to handle in better possible way.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `retention.schedule`    | Enable retention if not empty string     | `""`    |
+| `retention.cronexpression`  | Cron expression to specify when retention job runs      | `0 0 * ? * *` |
+| `retention.interval`      | Interval in days to specify age of conversations to retain | `30`    |     
 
 ### Configure Opensearch
 
@@ -89,6 +98,22 @@ To configure connection to Datasource following parameters are available:
 | `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
 | `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
 
+
+### Configure Phoenix Arize
+
+Openk9 Rag Module supports collecting metrics e tracing about traffic using [Phoenix Arize](https://phoenix.arize.com/).
+
+To enable this feature you need an active instance of Phoenix Arize.
+
+Once install you need to configure appropriately some parameters on this Helm Chart.
+
+To activate and set pointing to Phoenix Arize istance use following parameters.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `phoenix.enabled`    | If tracing to Phoenix Arize is enabled     | `false`            |
+| `phoenix.endpoint`  | Phoenix Arize endpoint instance                                   | `http://127.0.0.1:6006/v1/traces` |
+| `phoenix.projectName`  | Phoenix Arize project                                 | `default` |
 
 ### Service account and rbac
 
@@ -248,7 +273,17 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
+
 ### Advanced logging
+
+In case you want to configure Openk9 Datasource logging you can set up following parameters:
+
+An example:
+
+```yaml
+log:
+  level: "INFO" ## change log level
+```
 
 
 ### Known issues

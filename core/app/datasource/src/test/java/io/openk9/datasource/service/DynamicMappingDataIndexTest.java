@@ -61,8 +61,7 @@ class DynamicMappingDataIndexTest {
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
 					s,
 					HttpPluginDriverInfo.builder()
-						.host(WireMockPluginDriver.HOST)
-						.port(WireMockPluginDriver.PORT)
+						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
 						.secure(false)
 						.build()
 				)

@@ -17,15 +17,21 @@
 
 package io.openk9.datasource.searcher.queryanalysis.annotator;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import io.openk9.datasource.model.AclMapping;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
+
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -37,21 +43,16 @@ import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 	public BaseKeywordAutoCompleteAnnotator(
-		Bucket bucket,
-		io.openk9.datasource.model.Annotator annotator,
+		TenantWithBucket tenantWithBucket,
+		Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
 		String includeField, String searchKeyword, JWT jwt) {
-		super(bucket, annotator, stopWords, null);
+
+		super(tenantWithBucket, annotator, stopWords);
 		this.includeField = includeField;
 		this.searchKeyword = searchKeyword;
 		this.restHighLevelClient = restHighLevelClient;
@@ -74,6 +75,8 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 		multiMatchQueryBuilder.field(searchKeyword);
 
 		builder.must(multiMatchQueryBuilder);
+
+		var bucket = tenantWithBucket.getBucket();
 
 		Iterator<AclMapping> iterator =
 			bucket.getDatasources()
@@ -102,15 +105,7 @@ public class BaseKeywordAutoCompleteAnnotator extends BaseAnnotator {
 
 		builder.filter(innerQuery);
 
-		String[] indexNames =
-			bucket
-				.getDatasources()
-				.stream()
-				.map(Datasource::getDataIndex)
-				.map(DataIndex::getIndexName)
-				.toArray(String[]::new);
-
-		SearchRequest searchRequest = new SearchRequest(indexNames);
+		SearchRequest searchRequest = new SearchRequest(tenantWithBucket.getIndexNames());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 

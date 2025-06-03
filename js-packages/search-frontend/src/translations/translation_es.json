@@ -60,6 +60,11 @@
     "to": "A",
     "today": "Hoy",
     "try-with-another-query": "Intenta otra búsqueda",
-    "uncheck": "Desmarcar"
+    "uncheck": "Desmarcar",
+    "from-date": "Desde",
+    "to-date": "Hasta",
+    "invalid-date-format": "Formato de fecha no válido",
+    "end-date-before-start": "La fecha de fin no puede ser anterior a la fecha de inicio",
+    "start-date-after-end": "La fecha de inicio no puede ser posterior a la fecha de fin"
   }
 }

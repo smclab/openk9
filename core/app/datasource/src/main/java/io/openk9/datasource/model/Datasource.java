@@ -24,7 +24,6 @@ import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -34,7 +33,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import io.openk9.datasource.listener.K9EntityListener;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.validation.ValidQuartzCron;
 
@@ -53,7 +51,6 @@ import org.hibernate.type.SqlTypes;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@EntityListeners(K9EntityListener.class)
 public class Datasource extends K9Entity {
 
 	private static final Boolean DEFAULT_PURGEABLE = false;

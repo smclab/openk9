@@ -29,6 +29,10 @@ export type FiltersMobileProps<E> = {
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   numberResultOfFilters: number | null | undefined;
   memoryResults: any;
+  filtersMobileBasicCallback?:
+    | (() => void | null | undefined)
+    | null
+    | undefined;
 };
 function FiltersMobile<E>({
   dynamicFilters,
@@ -43,6 +47,7 @@ function FiltersMobile<E>({
   selectionsDispatch,
   numberResultOfFilters,
   memoryResults,
+  filtersMobileBasicCallback,
 }: FiltersMobileProps<E>) {
   const componet = (
     <React.Fragment>
@@ -108,6 +113,7 @@ function FiltersMobile<E>({
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            filtersMobileBasicCallback && filtersMobileBasicCallback();
           }}
           style={{ backgroundColor: "white", border: "none" }}
         >

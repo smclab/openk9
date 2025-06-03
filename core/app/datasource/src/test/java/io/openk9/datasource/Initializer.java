@@ -50,10 +50,12 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class Initializer {
 
-	private static final Logger log = Logger.getLogger(Initializer.class);
+	public static final String EMBEDDING_MODEL_DEFAULT_PRIMARY = "Test embedding model";
+	public static final String LLM_DEFAULT_PRIMARY = "Test LLM";
 	public static final String INIT_DATASOURCE_CONNECTION = "INIT_DATASOURCE_CONNECTION";
 	public static final String INIT_DATASOURCE_PLUGIN = "INIT_DATASOURCE_PLUGIN";
 	public static final String INIT_DATASOURCE_PIPELINE = "INIT_DATASOURCE_PIPELINE";
+	private static final Logger log = Logger.getLogger(Initializer.class);
 
 	@Inject
 	BucketService bucketService;
@@ -271,7 +273,7 @@ public class Initializer {
 
 		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO
 				.builder()
-				.name("Test embedding model")
+				.name(EMBEDDING_MODEL_DEFAULT_PRIMARY)
 				.apiUrl("embedding-model.local")
 				.apiKey("secret-key")
 				.vectorSize(1500)
@@ -293,7 +295,7 @@ public class Initializer {
 
 		var testLLM = largeLanguageModelService.create(LargeLanguageModelDTO
 				.builder()
-				.name("Test LLM")
+				.name(LLM_DEFAULT_PRIMARY)
 				.apiUrl("llm.local")
 				.apiKey("secret-key")
 				.jsonConfig("{}")

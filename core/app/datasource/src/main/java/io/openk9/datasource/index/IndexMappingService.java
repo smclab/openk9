@@ -34,21 +34,23 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-import io.openk9.datasource.index.mappings.IndexMappingsUtil;
-import io.openk9.datasource.index.mappings.MappingsKey;
+import io.openk9.datasource.index.model.DataIndexTemplate;
+import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
+import io.openk9.datasource.index.model.IndexName;
+import io.openk9.datasource.index.model.MappingsKey;
+import io.openk9.datasource.index.util.IndexMappingUtils;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.UnknownTenantException;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
-import io.openk9.datasource.util.OpenSearchUtils;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
@@ -173,6 +175,36 @@ public class IndexMappingService {
 	}
 
 	/**
+	 * Retrieves mappings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and transforms
+	 * them into a structured mapping configuration suitable for OpenSearch index templates.
+	 * The mappings define how document fields should be stored and indexed in OpenSearch.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with MappingsKey objects as keys and their corresponding
+	 * mapping configurations as values, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToMappings);
+	}
+
+	/**
+	 * Retrieves index settings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and extracts
+	 * their associated settings configuration. The settings define various OpenSearch index
+	 * properties such as number of shards, replicas, analysis settings, etc.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with setting names as String keys and their
+	 * corresponding setting values as Objects, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToSettings);
+	}
+
+	/**
 	 * Generates DocType and fields from provided mappings and document types.
 	 *
 	 * @param session       The Hibernate reactive session used for database operations
@@ -201,7 +233,7 @@ public class IndexMappingService {
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
 	 */
 	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
-		Mutiny.Session session, String indexName) {
+		Mutiny.Session session, IndexName indexName) {
 
 		return indexService.getMappings(indexName)
 			.flatMap(mappings -> indexService
@@ -266,7 +298,7 @@ public class IndexMappingService {
 		var embeddingModel = indexTemplateRequest.embeddingModel();
 
 		Map<MappingsKey, Object> mappings =
-			IndexMappingsUtil.docTypesToMappings(dataIndex.getDocTypes());
+			IndexMappingUtils.docTypesToMappings(dataIndex.getDocTypes());
 
 		var settings = getSettings(indexSettings, dataIndex);
 
@@ -276,28 +308,25 @@ public class IndexMappingService {
 		ComposableIndexTemplate composableIndexTemplate = null;
 
 		try {
-			String indexName = null;
-
-			if (tenantId != null) {
-				indexName = DataIndex.getIndexName(tenantId, dataIndex);
-			}
-			else {
-				indexName = dataIndex.getIndexName();
-			}
+			IndexName indexName = IndexName.from(tenantId, dataIndex);
 
 			List<String> componentTemplates = new ArrayList<>();
 
 			// adds the knn component template on this indexTemplate
 			if (dataIndex.getKnnIndex() && embeddingModel != null) {
 
-				var componentTemplate = EmbeddingComponentTemplate
-					.fromEmbeddingModel(embeddingModel);
+				var componentTemplate = new EmbeddingComponentTemplate(
+					tenantId,
+					embeddingModel.getName(),
+					embeddingModel.getVectorSize()
+				);
+
 				componentTemplates.add(componentTemplate.getName());
 
 			}
 
 			composableIndexTemplate = new ComposableIndexTemplate(
-				List.of(indexName),
+				List.of(indexName.toString()),
 				new Template(
 					settings, new CompressedXContent(
 					Json.encode(mappings)), null
@@ -311,14 +340,6 @@ public class IndexMappingService {
 				.indexTemplate(composableIndexTemplate);
 
 			return request;
-		}
-		catch (UnknownTenantException e) {
-			throw new WebApplicationException(Response
-				.status(Response.Status.INTERNAL_SERVER_ERROR)
-				.entity(JsonObject.of(
-					DataIndexService.DETAILS_FIELD, "cannot obtain a proper index name"
-				))
-				.build());
 		}
 		catch (IOException e) {
 			throw new WebApplicationException(Response
@@ -425,7 +446,7 @@ public class IndexMappingService {
 
 		settingsMap = settingsMap != null && !settingsMap.isEmpty()
 			? settingsMap
-			: IndexMappingsUtil.docTypesToSettings(dataIndex.getDocTypes());
+			: IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes());
 
 		if (!settingsMap.isEmpty()) {
 			settingsBuilder.loadFromMap(settingsMap);

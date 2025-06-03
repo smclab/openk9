@@ -4,7 +4,7 @@ import { SearchDateRange } from "../embeddable/Main";
 import "./dateRangePickerVertical.css";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
-import { formatterLanguage, mappingNameLanguage } from "./CalendarModal";
+import { mappingNameLanguage } from "./CalendarModal";
 import "moment/locale/de";
 import "moment/locale/it";
 import "moment/locale/es";
@@ -19,6 +19,7 @@ export function DataRangePickerVertical({
   end,
   classTab,
   readOnly = false,
+  translationLabel,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -27,6 +28,16 @@ export function DataRangePickerVertical({
   end?: any;
   classTab?: string;
   readOnly?: boolean;
+  translationLabel:
+    | {
+        labelStart?: string;
+        labelEnd?: string;
+        placeholderStart?: string;
+        placeholderEnd?: string;
+        errorFormatData?: string;
+        errorSelectData?: string;
+      }
+    | undefined;
 }) {
   const languageCalendar = mappingNameLanguage(language);
   moment.locale(languageCalendar);
@@ -92,10 +103,15 @@ export function DataRangePickerVertical({
       setDataEnd("");
       if (inputValue !== "") {
         if (!dateObject.isValid()) {
-          setValidationEnd("Formato data non valido");
+          setValidationEnd(
+            translationLabel?.errorFormatData ||
+              t("invalid-date-format") ||
+              "Invalid date format",
+          );
         } else {
           setValidationEnd(
-            "La data di fine non può essere inferiore alla data di inizio",
+            t(translationLabel?.errorSelectData || "end-date-before-start") ||
+              "End date cannot be earlier than start date",
           );
         }
       }
@@ -113,10 +129,16 @@ export function DataRangePickerVertical({
       setDataStart("");
       if (inputValue !== "") {
         if (!dateObject.isValid()) {
-          setValidationStart("Formato data non valido");
+          setValidationStart(
+            translationLabel?.errorFormatData ||
+              t("invalid-date-format") ||
+              "Invalid date format",
+          );
         } else {
           setValidationStart(
-            "La data di inizio non può essere inferiore alla data di fine",
+            translationLabel?.errorSelectData ||
+              t("start-date-after-end") ||
+              "Start date cannot be later than end date",
           );
         }
       }
@@ -141,14 +163,14 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          {t("from")} ({t("gg/mm/aaaa")}):
+          {t("from-date")} ({t("gg/mm/aaaa")}):
         </p>
         <div
+          className="openk9-container-input-start-date"
           css={css`
             display: flex;
             border: 1px solid gray;
             border-radius: 8px;
-            gap: 20px;
           `}
         >
           <label
@@ -175,12 +197,16 @@ export function DataRangePickerVertical({
             `}
             htmlFor={"input-start-date"}
           >
-            {t("start-day")}
+            {translationLabel?.labelStart || t("start-day")}
           </label>
           <input
             type="text"
             id={"input-start-date"}
-            placeholder={t("start-day") || "Data Inizio"}
+            placeholder={
+              translationLabel?.placeholderStart ||
+              t("start-day") ||
+              "Data Inizio"
+            }
             className="input-start-calendar"
             value={dataStart}
             onChange={(event) => {
@@ -216,8 +242,12 @@ export function DataRangePickerVertical({
                   (endDate && day.isAfter(endDate))
                 );
               }}
-              placeholder={t("start-day") || "Start day"}
-              openDirection="down"
+              placeholder={
+                translationLabel?.placeholderStart ||
+                t("start-day") ||
+                "Start day"
+              }
+              openDirection="up"
               phrases={customPhrasesStart}
             />
           </div>
@@ -235,9 +265,10 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          Al ({t("gg/mm/aaaa")}):
+          {t("to-date") || "To"} ({t("gg/mm/aaaa")}):
         </p>
         <div
+          className="openk9-container-input-end-date"
           css={css`
             display: flex;
             border: 1px solid gray;
@@ -268,12 +299,14 @@ export function DataRangePickerVertical({
               white-space: nowrap;
             `}
           >
-            {t("end-day")}
+            {translationLabel?.labelEnd || t("end-day")}
           </label>
           <input
             id={"input-end-date"}
             type="text"
-            placeholder={t("end-day") || "Data fine"}
+            placeholder={
+              translationLabel?.placeholderEnd || t("end-day") || "Data Fine"
+            }
             className="input-end-calendar"
             value={dataEnd}
             onChange={(event) => {
@@ -317,7 +350,9 @@ export function DataRangePickerVertical({
                   (startDate && startDate.isAfter(day))
                 );
               }}
-              placeholder={t("end-day") || "End day"}
+              placeholder={
+                translationLabel?.placeholderEnd || t("end-day") || "End day"
+              }
               openDirection="up"
               phrases={customPhrasesEndDate}
             />

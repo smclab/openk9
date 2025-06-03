@@ -28,6 +28,10 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.index.exception.CannotCreateComponentTemplateException;
+import io.openk9.datasource.index.exception.CannotCreateIndexTemplateException;
+import io.openk9.datasource.index.exception.DeleteIndexException;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.util.UniActionListener;
 
@@ -124,13 +128,13 @@ public class IndexService {
 			try {
 				// delete index or throw an exception
 				var delete = openSearchClient.indices().delete(req -> req
-					.index(indexName.value())
+					.index(indexName.toString())
 					.ignoreUnavailable(true));
 
 				if (!delete.acknowledged()) {
 					log.errorf(
 						"Error deleting index %s, cluster didn't acknowledge",
-						indexName.value()
+						indexName
 					);
 
 					throw new DeleteIndexException("not acknowledged");
@@ -158,7 +162,7 @@ public class IndexService {
 		return VertxContextSupport.executeBlocking(() -> {
 
 			var indices = indexNames.stream()
-				.map(IndexName::value)
+				.map(IndexName::toString)
 				.toList();
 
 			var acknowledgedResponse = openSearchClient.indices()
@@ -210,9 +214,9 @@ public class IndexService {
 
 	}
 
-	public Uni<List<String>> getDocumentTypes(String indexName) {
+	public Uni<List<String>> getDocumentTypes(IndexName indexName) {
 
-		SearchRequest searchRequest = new SearchRequest(indexName);
+		SearchRequest searchRequest = new SearchRequest(indexName.toString());
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
@@ -241,13 +245,13 @@ public class IndexService {
 
 	}
 
-	public Uni<Map<String, Object>> getMappings(String indexName) {
+	public Uni<Map<String, Object>> getMappings(IndexName indexName) {
 		return Uni
 			.createFrom()
 			.item(() -> {
 				try {
 					return restHighLevelClient.indices().getMapping(
-						new GetMappingsRequest().indices(indexName),
+						new GetMappingsRequest().indices(indexName.toString()),
 						RequestOptions.DEFAULT
 					);
 				}
@@ -255,29 +259,23 @@ public class IndexService {
 					throw new RuntimeException(e);
 				}
 			})
-			.map(response -> response.mappings().get(indexName).sourceAsMap());
-	}
-
-	public Uni<CatResponse> get_catIndicesFirst(String indexName) {
-		return get_catIndices(indexName).map(catResponses -> {
-			if (catResponses.isEmpty()) {
-				return null;
-			}
-			return catResponses.get(0);
-		});
+			.map(response -> response.mappings()
+				.get(indexName.toString())
+				.sourceAsMap()
+			);
 	}
 
 	public Uni<List<CatResponse>> get_catIndices(Collection<String> indexNames) {
 		return get_catIndices(indexNames.toArray(String[]::new));
 	}
 
-	public Uni<String> getSettings(String indexName) {
+	public Uni<String> getSettings(IndexName indexName) {
 		return Uni
 			.createFrom()
 			.item(() -> {
 				try {
 					return restHighLevelClient.indices().getSettings(
-						new GetSettingsRequest().indices(indexName),
+						new GetSettingsRequest().indices(indexName.toString()),
 						RequestOptions.DEFAULT
 					);
 				}
@@ -285,12 +283,14 @@ public class IndexService {
 					throw new RuntimeException(e);
 				}
 			})
-			.map(response -> response.getIndexToSettings().get(indexName).toString());
+			.map(response -> response.getIndexToSettings()
+				.get(indexName.toString())
+				.toString());
 	}
 
 	private void deleteIndexTemplate(IndexName indexName) {
 		// delete index-template (best-effort)
-		var indexTemplateName = indexName.value() + TEMPLATE_SUFFIX;
+		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
 		try {
 			openSearchClient.indices().deleteIndexTemplate(req -> req
 				.name(indexTemplateName));
@@ -367,36 +367,30 @@ public class IndexService {
 
 				String indexName = String.join(",", existIndexNames);
 
-				return Uni
-						.createFrom()
-						.<Response>emitter((sink) -> {
+				// synchronous call on worker thread
+				return VertxContextSupport.executeBlocking(() -> {
+						RestClient lowLevelClient = restHighLevelClient.getLowLevelClient();
 
-							RestClient lowLevelClient = restHighLevelClient.getLowLevelClient();
+						Request
+							catRequest = new Request("GET", "/_cat/indices/" + indexName);
 
-							Request
-								catRequest = new Request("GET", "/_cat/indices/" + indexName);
+						catRequest.addParameter("format", "JSON");
+						catRequest.addParameter("v", "true");
+						catRequest.addParameter("bytes", "b");
 
-							catRequest.addParameter("format", "JSON");
-							catRequest.addParameter("v", "true");
-							catRequest.addParameter("bytes", "b");
+						return lowLevelClient.performRequest(catRequest);
+					})
+					.map(IndexService::responseToCatResponses);
+			});
+	}
 
-							lowLevelClient.performRequestAsync(
-								catRequest,
-								new ResponseListener() {
-									@Override
-									public void onSuccess(Response response) {
-										sink.complete(response);
-									}
-
-									@Override
-									public void onFailure(Exception exception) {
-										sink.fail(exception);
-									}
-								});
-						})
-						.map(IndexService::responseToCatResponses);
-				}
-			);
+	public Uni<CatResponse> get_catIndicesFirst(String indexName) {
+		return get_catIndices(indexName).map(catResponses -> {
+			if (catResponses.isEmpty()) {
+				return null;
+			}
+			return catResponses.get(0);
+		});
 	}
 
 	public Uni<List<String>> getOnlyExistsIndexNames(List<String> indexNames) {
@@ -434,14 +428,11 @@ public class IndexService {
 	}
 
 	public Uni<Boolean> indexExist(String name) {
-		return Uni.createFrom()
-			.<Boolean>emitter(
-				emitter -> restHighLevelClient
+		// synchronous call on worker thread
+		return VertxContextSupport.executeBlocking(() ->
+				restHighLevelClient
 					.indices()
-					.existsAsync(
-						new GetIndexRequest(name), RequestOptions.DEFAULT,
-						UniActionListener.of(emitter)
-					)
+					.exists(new GetIndexRequest(name), RequestOptions.DEFAULT)
 			)
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {

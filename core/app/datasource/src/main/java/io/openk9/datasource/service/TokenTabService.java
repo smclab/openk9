@@ -33,34 +33,12 @@ import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 ;
 
 @ApplicationScoped
 public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> {
 	TokenTabService(TokenTabMapper mapper) {this.mapper = mapper;}
-
-	private static Uni<TokenTab> fetchExtraParams(Mutiny.Session s, TokenTab tokenTab) {
-		return s
-			.fetch(tokenTab.getExtraParams())
-			.flatMap(extraParams -> {
-				tokenTab.setExtraParams(extraParams);
-				return Uni.createFrom().item(tokenTab);
-			});
-	}
-
-	public Uni<TokenTab> addExtraParam(long id, String key, String value) {
-		return getSessionFactory()
-			.withTransaction(s ->
-				findById(s, id)
-					.flatMap(tokenTab -> fetchExtraParams(s, tokenTab))
-					.flatMap(tokenTab -> {
-						tokenTab.addExtraParam(key, value);
-						return persist(s, tokenTab);
-					})
-			);
-	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> bindDocTypeFieldToTokenTab(
 		long tokenTabId, long docTypeFieldId) {
@@ -132,13 +110,6 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 		return TokenTab.class;
 	}
 
-	public Uni<Set<TokenTab.ExtraParam>> getExtraParams(TokenTab tokenTab) {
-		return sessionFactory.withTransaction((s, t) -> s
-				.merge(tokenTab)
-				.flatMap(merged -> s.fetch(merged.getExtraParams())))
-			.map(TokenTab::getExtraParamsSet);
-	}
-
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {TokenTab_.NAME, TokenTab_.TOKEN_TYPE};
@@ -169,18 +140,6 @@ public class TokenTabService extends BaseK9EntityService<TokenTab, TokenTabDTO> 
 			);
 		}
 		return super.patch(id, dto);
-	}
-
-	public Uni<TokenTab> removeExtraParam(int id, String key) {
-		return getSessionFactory()
-			.withTransaction(s ->
-				findById(s, id)
-					.flatMap(tokenTab -> fetchExtraParams(s, tokenTab))
-					.flatMap(tokenTab -> {
-						tokenTab.removeExtraParam(key);
-						return persist(s, tokenTab);
-					})
-			);
 	}
 
 	public Uni<Tuple2<TokenTab, DocTypeField>> unbindDocTypeFieldFromTokenTab(

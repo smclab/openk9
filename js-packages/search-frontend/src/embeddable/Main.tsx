@@ -50,11 +50,11 @@ import {
 import _, { isEqual } from "lodash";
 import { RemoveFilters } from "../components/RemoveFilters";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
-import { SortResultListCustom } from "../components/SortResultListCustom";
 import SelectComponent from "../components/Select";
 import SortResults, { Options } from "../components/SortResults";
 import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
 import GenerateResponse from "../components/GenerateResponse";
+import { SortResultListCustomMemo } from "../components/SortResultListCustom";
 import { useRange } from "../components/useRange";
 import CustomSkeleton from "../components/Skeleton";
 
@@ -81,7 +81,7 @@ export function Main({
   const useKeycloak = configuration.useKeycloak;
   const iconCustom = configuration.icons;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
-  const isActiveSkeleton = configuration?.isActiveSkeleton || false;
+  const isActiveSkeleton = configuration?.isActiveSkeleton || null;
   const viewButton = configuration?.viewButton;
   const queryStringValues = configuration?.queryStringValues || [
     "text",
@@ -265,6 +265,20 @@ export function Main({
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
             showSyntax={isQueryAnalysisComplete}
+            btnSearch={true}
+            viewColor={configuration.showSyntax}
+          />
+        </I18nextProvider>,
+        configuration.searchWithButton,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <Search
+            configuration={configuration}
+            spans={spans}
+            selectionsState={selectionsState}
+            selectionsDispatch={selectionsDispatch}
+            showSyntax={isQueryAnalysisComplete}
             btnSearch={configuration.searchConfigurable?.btnSearch ?? false}
             htmlKey={configuration.searchConfigurable?.htmlKey}
             viewColor={configuration.showSyntax}
@@ -282,6 +296,12 @@ export function Main({
             }}
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
+            }
+            characterControl={
+              configuration?.searchConfigurable?.characterControl
+            }
+            callbackChangeSearch={
+              configuration?.searchConfigurable?.callbackChangeSearch
             }
           />
         </I18nextProvider>,
@@ -320,10 +340,8 @@ export function Main({
               resetSort={resetSort}
               selectionsDispatch={selectionsDispatch}
             />
-          ) : skeletonCustom.tabs ? (
-            isActiveSkeleton && skeletonCustom.tabs
           ) : (
-            isActiveSkeleton && <TabsSkeleton />
+            skeletonCustom.tabs && isActiveSkeleton && skeletonCustom.tabs
           )}
         </I18nextProvider>,
         configuration.tabs,
@@ -385,9 +403,7 @@ export function Main({
           {isSearchLoading ? (
             skeletonCustom.filters ? (
               isActiveSkeleton && skeletonCustom.filters
-            ) : (
-              isActiveSkeleton && <SkeletonFilters />
-            )
+            ) : null
           ) : (
             <FiltersMemo
               searchQuery={searchQuery}
@@ -398,7 +414,7 @@ export function Main({
               sortAfterKey={sortAfterKey}
               language={languageSelect}
               isDynamicElement={dynamicData}
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               iconCustom={iconCustom}
@@ -411,7 +427,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           {isSearchLoading ? (
             skeletonCustom.results ? (
-              isActiveSkeleton && skeletonCustom.results
+              isActiveSkeleton && skeletonCustom.filters
             ) : (
               isActiveSkeleton && <SkeletonFilters />
             )
@@ -429,10 +445,11 @@ export function Main({
               noResultMessage={
                 configuration.filtersConfigurable?.noResultMessage
               }
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               placeholder={configuration.filtersConfigurable?.placeholder}
+              haveSearch={configuration.filtersConfigurable?.haveSearch}
               iconCustom={iconCustom}
             />
           )}
@@ -658,12 +675,14 @@ export function Main({
           <DetailMemo
             result={detail}
             actionOnCLose={() => {}}
+            template={configuration.template}
             cardDetailsOnOver={isHoverChangeDetail}
             callbackFocusedButton={() => {
               const recoveryButton = document.getElementById(
                 "openk9-button-card-" + idPreview,
               ) as any;
               if (recoveryButton) recoveryButton.focus();
+              setDetail(null);
             }}
             setViewButtonDetail={setViewButtonDetail}
             viewButtonDetail={viewButtonDetail}
@@ -679,11 +698,16 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
-          <SortResultListCustom
-            classTab={tabs[selectedTabIndex]?.label}
+          <SortResultListCustomMemo
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
             setSortResult={setSort}
             selectOptions={
               configuration.sortResultListCustom?.selectOptions ?? []
+            }
+            labelSelect={
+              configuration.sortResultListCustom?.labelSort || "ordina per"
             }
           />
         </I18nextProvider>,
@@ -772,9 +796,37 @@ export function Main({
               ) as HTMLButtonElement;
               if (recoveryButton) recoveryButton.focus();
             }}
+            template={configuration.template}
           />
         </I18nextProvider>,
         configuration.detailMobile,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          {isSearchLoading ? null : (
+            <FiltersMobileMemo
+              searchQuery={searchQuery}
+              onConfigurationChange={onConfigurationChange}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              selectionsDispatch={selectionsDispatch}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              isVisibleFilters={true}
+              setIsVisibleFilters={undefined}
+              language={languageSelect}
+              sortAfterKey={sortAfterKey}
+              isDynamicElement={dynamicData}
+              numberResultOfFilters={numberResultOfFilters}
+              memoryResults={memoryResults}
+              filtersMobileBasicCallback={
+                configuration.filtersMobileBasicCallback
+              }
+            />
+          )}
+        </I18nextProvider>,
+        configuration.filtersMobileBasic,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -814,7 +866,7 @@ export function Main({
               filtersSelect={configuration.filterTokens}
               sort={completelySort}
               skeletonCategoryCustom={skeletonCustom.suggestion}
-              isActiveSkeleton={isActiveSkeleton}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
               dynamicFilters={
                 dynamicFilters.data?.handleDynamicFilters || false
               }
@@ -840,12 +892,62 @@ export function Main({
               numberOfResults={numberOfResults}
               selectionsDispatch={selectionsDispatch}
               memoryResults={memoryResults}
+              haveSearch={configuration.filtersMobileLiveChange?.haveSearch}
             />
           )}
         </I18nextProvider>,
         configuration.filtersMobileLiveChange?.element !== undefined
           ? configuration.filtersMobileLiveChange?.element
           : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          {isSearchLoading ? null : (
+            <FiltersMobileLiveChangeMemo
+              searchQuery={searchQuery}
+              addExtraClass={
+                configuration.mobileFiltersBasicLiveChange?.addExtraClass ||
+                undefined
+              }
+              onAddFilterToken={addFilterToken}
+              onRemoveFilterToken={removeFilterToken}
+              onConfigurationChange={onConfigurationChange}
+              sortAfterKey={sortAfterKey}
+              filtersSelect={configuration.filterTokens}
+              sort={completelySort}
+              skeletonCategoryCustom={skeletonCustom.suggestion}
+              isActiveSkeleton={isActiveSkeleton?.filters ?? false}
+              dynamicFilters={
+                dynamicFilters.data?.handleDynamicFilters || false
+              }
+              configuration={configuration}
+              whoIsDynamic={dynamicData}
+              isVisibleFilters={true}
+              setIsVisibleFilters={undefined}
+              tabs={tabs}
+              onSelectedTabIndexChange={setSelectedTabIndex}
+              selectedTabIndex={selectedTabIndex}
+              viewTabs={
+                configuration.mobileFiltersBasicLiveChange?.viewTabs ?? false
+              }
+              language={languageSelect}
+              isCollapsable={true}
+              numberOfResults={numberOfResults}
+              selectionsDispatch={selectionsDispatch}
+              memoryResults={memoryResults}
+              haveSearch={true}
+              callbackClose={
+                configuration?.mobileFiltersBasicLiveChange
+                  ?.closeFiltersMobileLiveChangeCallback
+              }
+              callbackApply={
+                configuration?.mobileFiltersBasicLiveChange
+                  ?.applyfiltersMobileLiveChangeCallback
+              }
+            />
+          )}
+        </I18nextProvider>,
+        configuration.filtersMobileLiveChangeBasic,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -869,13 +971,35 @@ export function Main({
             language={languageSelect}
             start={configuration.dataRangePickerVertical?.start}
             end={configuration.dataRangePickerVertical?.end}
-            classTab={tabs[selectedTabIndex]?.label}
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
             readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
+            translationLabel={
+              configuration.dataRangePickerVertical?.internationalLabel
+            }
           />
         </I18nextProvider>,
         configuration.dataRangePickerVertical?.element !== undefined
           ? configuration.dataRangePickerVertical?.element
           : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DataRangePickerVertical
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+            classTab={tabs[selectedTabIndex]?.label
+              .replaceAll(" ", "-")
+              .toLowerCase()}
+            readOnly={configuration.dataRangePickerVertical?.readOnly ?? false}
+            translationLabel={
+              configuration.dataRangePickerVertical?.internationalLabel
+            }
+          />
+        </I18nextProvider>,
+        configuration.calendarVertical,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

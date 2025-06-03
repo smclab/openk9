@@ -22,6 +22,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.validation.json.Json;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,5 +46,8 @@ public class TokenTabDTO extends K9EntityDTO {
 
 	@NotNull
 	private Boolean filter;
+
+	@Json
+	private String extraParams;
 
 }

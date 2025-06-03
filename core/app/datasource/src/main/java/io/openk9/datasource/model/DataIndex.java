@@ -31,16 +31,13 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.util.OpenSearchUtils;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -75,12 +72,6 @@ public class DataIndex extends K9Entity {
 	private static final EmbeddingOuterClass.ChunkType DEFAULT_CHUNK_TYPE =
 		EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT;
 
-	public static String getIndexName(String tenantId, DataIndex dataIndex) {
-		return OpenSearchUtils.indexNameSanitizer(
-			String.format("%s-%s", tenantId, dataIndex.getName())
-		);
-	}
-
 	@Column(
 		name = "name", nullable = false, unique = true, updatable = false)
 	@Immutable
@@ -109,11 +100,6 @@ public class DataIndex extends K9Entity {
 	private Datasource datasource;
 
 	@Transient
-	@Setter(AccessLevel.NONE)
-	@Getter(AccessLevel.NONE)
-	private String indexName;
-
-	@Transient
 	@JsonIgnore
 	@Ignore
 	private Map<String, Object> settingsMap;
@@ -139,14 +125,6 @@ public class DataIndex extends K9Entity {
 	@Column(name = "embedding_json_config")
 	private String embeddingJsonConfig = DEFAULT_EMBEDDING_JSON_CONFIG;
 
-	public String getIndexName() throws UnknownTenantException {
-		if (indexName == null) {
-			initIndexName();
-		}
-
-		return indexName;
-	}
-
 	public void setChunkType(EmbeddingOuterClass.ChunkType chunkType) {
 		this.chunkType =
 			Objects.requireNonNullElse(chunkType, DEFAULT_CHUNK_TYPE);
@@ -160,37 +138,6 @@ public class DataIndex extends K9Entity {
 	public void setEmbeddingJsonConfig(String embeddingJsonConfig) {
 		this.embeddingJsonConfig =
 			Objects.requireNonNullElse(embeddingJsonConfig, DEFAULT_EMBEDDING_JSON_CONFIG);
-	}
-
-	@PostLoad
-	protected void initIndexName() throws UnknownTenantException {
-		String tenantId = getTenant();
-
-		// This is a workaround needed when a new DataIndex is being created.
-		// The tenant is not identified, likely because the entity has not
-		// been persisted yet. Therefore, it is obtained from an entity that
-		// is already in the persistence context, typically, the first
-		// DocType associated with the new DataIndex, or alternatively,
-		// the Datasource associated with it.
-		if (tenantId == null) {
-			var iterator = docTypes.iterator();
-			if (iterator.hasNext()) {
-				var docType = iterator.next();
-				tenantId = docType.getTenant();
-			}
-			else {
-				var ds = getDatasource();
-				if (ds != null) {
-					tenantId = ds.getTenant();
-				}
-			}
-			if (tenantId == null) {
-				throw new UnknownTenantException(
-					String.format("Cannot identify the tenant for DataIndex: %s", getName()));
-			}
-		}
-
-		this.indexName = getIndexName(tenantId, this);
 	}
 
 }

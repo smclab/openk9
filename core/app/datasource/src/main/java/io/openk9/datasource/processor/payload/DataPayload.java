@@ -17,10 +17,16 @@
 
 package io.openk9.datasource.processor.payload;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import io.openk9.common.util.ingestion.PayloadType;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.openk9.common.util.ingestion.PayloadType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,13 +35,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Data
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @RegisterForReflection
@@ -54,48 +55,17 @@ public class DataPayload {
 	@Builder.Default
 	private Map<String, Object> rest = new HashMap<>();
 	private String indexName;
-	private boolean last;
 	private String scheduleId;
 	private String oldIndexName;
 	private PayloadType type;
 
 	public static DataPayload copy(DataPayload dataPayload) {
-		return DataPayload.builder()
-			.ingestionId(dataPayload.ingestionId)
-			.datasourceId(dataPayload.datasourceId)
-			.contentId(dataPayload.contentId)
-			.parsingDate(dataPayload.parsingDate)
-			.rawContent(dataPayload.rawContent)
-			.tenantId(dataPayload.tenantId)
-			.documentTypes(dataPayload.documentTypes)
-			.resources(dataPayload.resources)
-			.acl(dataPayload.acl)
-			.rest(dataPayload.rest)
-			.indexName(dataPayload.indexName)
-			.last(dataPayload.last)
-			.scheduleId(dataPayload.scheduleId)
-			.oldIndexName(dataPayload.oldIndexName)
-			.type(dataPayload.type)
-			.build();
+		return dataPayload.toBuilder().build();
 	}
 
 	public DataPayload rest(Map<String, Object> rest) {
-		return DataPayload.builder()
-			.ingestionId(ingestionId)
-			.datasourceId(datasourceId)
-			.contentId(contentId)
-			.parsingDate(parsingDate)
-			.rawContent(rawContent)
-			.tenantId(tenantId)
-			.documentTypes(documentTypes)
-			.resources(resources)
-			.acl(acl)
+		return this.toBuilder()
 			.rest(rest)
-			.indexName(indexName)
-			.last(last)
-			.scheduleId(scheduleId)
-			.oldIndexName(oldIndexName)
-			.type(type)
 			.build();
 	}
 

@@ -26,58 +26,54 @@
   <artifactId>searcher</artifactId>
   <name>OpenK9 :: App :: Searcher</name>
   <dependencies>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-openapi</artifactId>
-    </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-openapi</artifactId>
+	  </dependency>
 
-    <dependency>
-      <groupId>io.quarkiverse.opensearch</groupId>
-      <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
-    </dependency>
+	  <dependency>
+		  <groupId>io.quarkiverse.opensearch</groupId>
+		  <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+	  </dependency>
 
-    <!-- // authentication -->
-    <dependency>
-      <groupId>io.openk9.client.common</groupId>
-      <artifactId>tenant-manager-bridge</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.openk9.service</groupId>
-      <artifactId>auth-service</artifactId>
-    </dependency>
-    <!-- authentication // -->
+	  <!-- // authentication -->
+	  <dependency>
+		  <groupId>io.openk9.service</groupId>
+		  <artifactId>auth-service</artifactId>
+	  </dependency>
+	  <!-- authentication // -->
 
-    <!-- consumes -->
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>searcher-client-grpc</artifactId>
-    </dependency>
+	  <!-- consumes -->
+	  <dependency>
+		  <groupId>io.openk9.client.grpc</groupId>
+		  <artifactId>searcher-client-grpc</artifactId>
+	  </dependency>
 
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mapstruct</groupId>
-      <artifactId>mapstruct</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
+	  <dependency>
+		  <groupId>org.projectlombok</groupId>
+		  <artifactId>lombok</artifactId>
+		  <scope>provided</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.mapstruct</groupId>
+		  <artifactId>mapstruct</artifactId>
+		  <scope>provided</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.commons</groupId>
+		  <artifactId>commons-lang3</artifactId>
+	  </dependency>
 
-    <!-- // standalone -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-stork</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.smallrye.stork</groupId>
-      <artifactId>stork-service-discovery-eureka</artifactId>
-    </dependency>
-    <!-- standalone //-->
+	  <!-- // standalone -->
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-stork</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.smallrye.stork</groupId>
+		  <artifactId>stork-service-discovery-eureka</artifactId>
+	  </dependency>
+	  <!-- standalone //-->
 
   </dependencies>
 

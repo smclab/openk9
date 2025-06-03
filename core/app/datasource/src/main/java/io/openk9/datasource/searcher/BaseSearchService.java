@@ -34,6 +34,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
@@ -53,17 +54,14 @@ import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
+import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
-import io.openk9.tenantmanager.grpc.TenantManager;
-import io.openk9.tenantmanager.grpc.TenantRequest;
-import io.openk9.tenantmanager.grpc.TenantResponse;
 
 import com.google.protobuf.ByteString;
-import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
@@ -86,8 +84,8 @@ public abstract class BaseSearchService {
 	SearcherMapper searcherMapper;
 	@Inject
 	Mutiny.SessionFactory sf;
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
+	@Inject
+	TenantRegistry tenantRegistry;
 
 	public static JsonObject getQueryParserConfig(Bucket bucket, String tokenType) {
 
@@ -149,7 +147,7 @@ public abstract class BaseSearchService {
 	}
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
-		Map<String, List<ParserSearchToken>> tokenGroup, Bucket bucket,
+		Map<String, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
 		JWT jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -172,8 +170,12 @@ public abstract class BaseSearchService {
 								.builder()
 								.tokenTypeGroup(parserSearchTokens)
 								.mutableQuery(boolQueryBuilder)
-								.currentTenant(bucket)
-								.queryParserConfig(getQueryParserConfig(bucket, tokenType))
+								.tenantWithBucket(tenantWithBucket)
+								.queryParserConfig(getQueryParserConfig(
+										tenantWithBucket.getBucket(),
+										tokenType
+									)
+								)
 								.jwt(jwt)
 								.extraParams(extraParams)
 								.language(language)
@@ -209,10 +211,13 @@ public abstract class BaseSearchService {
 						.builder()
 						.tokenTypeGroup(parserSearchTokens)
 						.mutableQuery(boolQueryBuilder)
-						.currentTenant(bucket)
+						.tenantWithBucket(tenantWithBucket)
 						.queryParserConfig(
 							getQueryParserConfig(
-								bucket, queryParser.getType()))
+								tenantWithBucket.getBucket(),
+								queryParser.getType()
+							)
+						)
 						.jwt(jwt)
 						.extraParams(extraParams)
 						.build()
@@ -318,18 +323,14 @@ public abstract class BaseSearchService {
 
 	}
 
-	protected Uni<TenantResponse> getTenant(String virtualHost) {
-		return tenantManager.findTenant(TenantRequest.newBuilder()
-			.setVirtualHost(virtualHost)
-			.build());
-	}
 
-	protected Uni<Bucket> getTenantAndFetchRelations(
+	protected Uni<TenantWithBucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		return getTenant(virtualHost)
-			.flatMap(tenantResponse -> sf
-				.withTransaction(tenantResponse.getSchemaName(), (s, t) -> {
+		return tenantRegistry.getTenantByVirtualHost(virtualHost)
+			.flatMap(tenant -> sf
+				.withTransaction(
+					tenant.schemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -343,8 +344,10 @@ public abstract class BaseSearchService {
 					return s
 						.createQuery(criteriaQuery)
 						.getSingleResultOrNull();
-				}));
-
+					}
+				)
+				.map(bucket -> new TenantWithBucket(tenant, bucket))
+			);
 
 	}
 

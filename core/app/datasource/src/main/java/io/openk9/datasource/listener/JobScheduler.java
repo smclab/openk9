@@ -17,6 +17,17 @@
 
 package io.openk9.datasource.listener;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -27,6 +38,7 @@ import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.util.SchedulerUtil;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.Behavior;
@@ -40,17 +52,6 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
 import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension;
 import org.jboss.logging.Logger;
 import scala.Option;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
 
 public class JobScheduler {
 
@@ -264,10 +265,11 @@ public class JobScheduler {
 		ActorContext<Command> ctx, CopyIndexTemplate cit) {
 
 		var scheduler = cit.scheduler();
+		var tenantId = cit.tenantName();
 
 		ctx.pipeToSelf(
-			JobSchedulerService.copyIndexTemplate(scheduler),
-			(ignore, throwable) -> new PersistSchedulerInternal(scheduler, throwable)
+			JobSchedulerService.copyIndexTemplate(tenantId, scheduler),
+			(ignore, throwable) -> new PersistSchedulerInternal(tenantId, scheduler, throwable)
 		);
 
 		return Behaviors.same();
@@ -332,7 +334,7 @@ public class JobScheduler {
 
 				if (docTypes != null && !docTypes.isEmpty()) {
 					ctx.getSelf().tell(
-						new CopyIndexTemplate(scheduler));
+						new CopyIndexTemplate(tenantName, scheduler));
 
 					return Behaviors.same();
 				}
@@ -342,7 +344,7 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(response, throwable) ->
-				new PersistSchedulerResponse(scheduler, startIngestionDate, throwable)
+				new PersistSchedulerResponse(tenantName, scheduler, startIngestionDate, throwable)
 		);
 
 		return Behaviors.same();
@@ -352,8 +354,7 @@ public class JobScheduler {
 		ActorContext<Command> ctx, HaltScheduling cs) {
 
 		Scheduler scheduler = cs.scheduler;
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
+		var tenantId = cs.tenantName();
 
 		var exception = cs.exception;
 
@@ -400,8 +401,9 @@ public class JobScheduler {
 	private static Behavior<Command> onInvokePluginDriverInternal(
 		InvokePluginDriverInternal ipdi, ActorContext<Command> ctx) {
 
-		var scheduler = ipdi.scheduler;
-		var startIngestionDate = ipdi.startIngestionDate;
+		var scheduler = ipdi.scheduler();
+		var startIngestionDate = ipdi.startIngestionDate();
+		var tenantId = ipdi.tenantName();
 
 		Datasource datasource = scheduler.getDatasource();
 		PluginDriver pluginDriver = datasource.getPluginDriver();
@@ -420,17 +422,28 @@ public class JobScheduler {
 				datasource.getLastIngestionDate() : startIngestionDate;
 		}
 
-		switch (pluginDriver.getType()) {
-			case HTTP: {
+		var pluginDriverType = pluginDriver.getType();
+		if (pluginDriverType == PluginDriver.PluginDriverType.HTTP) {
+			ctx.pipeToSelf(
+				JobSchedulerService.callHttpPluginDriverClient(
+					tenantId, scheduler, lastIngestionDate),
+				(unused, throwable) ->
+					new InvokePluginDriverResponse(
+						tenantId, scheduler, throwable)
+			);
+		}
+		else {
+			var exception = new IllegalArgumentException(
+				String.format(
+					"Unknown PluginDriverType for pluginDriver %s on tenant %s",
+					pluginDriver.getName(),
+					tenantId
+				)
+			);
 
-				ctx.pipeToSelf(
-					JobSchedulerService.callHttpPluginDriverClient(
-						scheduler, lastIngestionDate),
-					(unused, throwable) ->
-						new InvokePluginDriverResponse(scheduler, throwable)
-				);
+			log.error(exception);
 
-			}
+			ctx.getSelf().tell(new HaltScheduling(tenantId, scheduler, exception));
 		}
 
 		return Behaviors.same();
@@ -442,13 +455,13 @@ public class JobScheduler {
 
 		var scheduler = res.scheduler();
 		var exception = res.exception();
+		var tenantId = res.tenantName();
+
 
 		if (exception != null) {
-			ctx.getSelf().tell(new HaltScheduling(scheduler, exception));
+			ctx.getSelf().tell(new HaltScheduling(tenantId, res.scheduler, exception));
 		}
 		else {
-			var datasource = scheduler.getDatasource();
-			var tenantId = datasource.getTenant();
 			var scheduleId = scheduler.getScheduleId();
 
 			// TODO: transform to a message
@@ -468,7 +481,7 @@ public class JobScheduler {
 
 		Scheduler scheduler = pndi.scheduler;
 		var datasource = scheduler.getDatasource();
-		var tenantName = datasource.getTenant();
+		var tenantName = pndi.tenantName();
 
 		Throwable exception = pndi.throwable();
 
@@ -492,7 +505,7 @@ public class JobScheduler {
 		ctx.pipeToSelf(
 			JobSchedulerService.persistScheduler(tenantName, scheduler),
 			(s, throwable) ->
-				new PersistSchedulerResponse(s, null, throwable)
+				new PersistSchedulerResponse(tenantName, s, null, throwable)
 		);
 
 		return Behaviors.same();
@@ -507,8 +520,7 @@ public class JobScheduler {
 		List<String> jobNames) {
 
 		var scheduler = rq.scheduler();
-		var datasource = scheduler.getDatasource();
-		var tenantId = datasource.getTenant();
+		var tenantId = rq.tenantName();
 		var startIngestionDate = rq.startIngestionDate;
 
 		var throwable = rq.throwable();
@@ -531,7 +543,7 @@ public class JobScheduler {
 				tenantId, scheduler.getScheduleId())));
 
 		ctx.getSelf()
-			.tell(new InvokePluginDriverInternal(scheduler, startIngestionDate));
+			.tell(new InvokePluginDriverInternal(tenantId, scheduler, startIngestionDate));
 
 		return unstashAndRelease(
 			ctx,
@@ -703,13 +715,12 @@ public class JobScheduler {
 		ActorRef<MessageGateway.Command> messageGateway,
 		List<String> jobNames) {
 
-		Datasource datasource = startSchedulerInternal.datasource;
-		var tenantName = datasource.getTenant();
-		Scheduler schedulerToCancel = null;
-
+		var datasource = startSchedulerInternal.datasource();
+		var tenantName = startSchedulerInternal.tenantName();
 		var startIngestionDate = startSchedulerInternal.startIngestionDate;
-
 		var throwable1 = startSchedulerInternal.throwable();
+
+		Scheduler schedulerToCancel = null;
 
 		if (throwable1 != null) {
 			log.warnf(throwable1, "Cannot start a Scheduler.");
@@ -854,9 +865,9 @@ public class JobScheduler {
 		}
 
 		ctx.pipeToSelf(
-			JobSchedulerService.getTriggerType(datasource, reindex),
+			JobSchedulerService.getTriggerType(tenantId, datasource, reindex),
 			(triggerType, t) ->
-				new StartSchedulerInternal(datasource, offsetDateTime, triggerType, t)
+				new StartSchedulerInternal(tenantId, datasource, offsetDateTime, triggerType, t)
 		);
 
 		return Behaviors.same();
@@ -1049,7 +1060,7 @@ public class JobScheduler {
 
 	public record UnScheduleDatasource(String tenantName, long datasourceId) implements Command {}
 
-	private record CopyIndexTemplate(Scheduler scheduler) implements Command {}
+	private record CopyIndexTemplate(String tenantName, Scheduler scheduler) implements Command {}
 
 	private record CreateNewScheduler(
 		ActorContext<Command> ctx, TriggerType triggerType, Datasource datasource,
@@ -1057,27 +1068,27 @@ public class JobScheduler {
 	) implements Command {}
 
 	private record HaltScheduling(
+		String tenantName,
 		Scheduler scheduler,
 		Throwable exception
 	) implements Command {}
 
 	private record InvokePluginDriverInternal(
-		Scheduler scheduler, OffsetDateTime startIngestionDate
+		String tenantName, Scheduler scheduler, OffsetDateTime startIngestionDate
 	) implements Command {}
 
 	private record InvokePluginDriverResponse(
-		Scheduler scheduler,
-		Throwable exception
+		String tenantName, Scheduler scheduler, Throwable exception
 	) implements Command {}
 
 	private record MessageGatewaySubscription(Receptionist.Listing listing) implements Command {}
 
 	private record PersistSchedulerInternal(
-		Scheduler scheduler, Throwable throwable
+		String tenantName, Scheduler scheduler, Throwable throwable
 	) implements Command {}
 
 	private record PersistSchedulerResponse(
-		Scheduler scheduler, OffsetDateTime startIngestionDate,
+		String tenantName, Scheduler scheduler, OffsetDateTime startIngestionDate,
 		Throwable throwable
 	) implements Command {}
 
@@ -1089,7 +1100,10 @@ public class JobScheduler {
 	private record Start(ActorRef<MessageGateway.Command> channelManagerRef) implements Command {}
 
 	private record StartSchedulerInternal(
-		Datasource datasource, OffsetDateTime startIngestionDate, TriggerType triggerType,
+		String tenantName,
+		Datasource datasource,
+		OffsetDateTime startIngestionDate,
+		TriggerType triggerType,
 		Throwable throwable
 	) implements Command {}
 

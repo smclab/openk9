@@ -3,7 +3,7 @@ import { css } from "styled-components/macro";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { TokenSelect } from "../components/TokenSelect";
-import { Configuration } from "../embeddable/entry";
+import { characterControlType, Configuration } from "../embeddable/entry";
 import { AnalysisResponseEntry, AnalysisToken, SearchToken } from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DeleteLogo } from "./DeleteLogo";
@@ -23,6 +23,8 @@ type SearchProps = {
   messageSearchIsVisible?: boolean;
   viewColor?: boolean;
   callbackClickSearch?(): void;
+  characterControl?: characterControlType;
+  callbackChangeSearch?(text: string): void;
 };
 export function Search({
   configuration,
@@ -37,6 +39,8 @@ export function Search({
   viewColor = true,
   actionOnClick,
   callbackClickSearch,
+  characterControl,
+  callbackChangeSearch,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
   const replaceText = configuration.searchReplaceText;
@@ -62,6 +66,8 @@ export function Search({
   const { setText, search, clearSearch } = setValueSearch({
     isBtn: btnSearch,
     selectionsDispatch: selectionsDispatch,
+    characterControl,
+    actionSearch: characterControl?.actionCharacter,
   });
   const { t } = useTranslation();
 
@@ -231,6 +237,8 @@ export function Search({
               }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
+                callbackChangeSearch &&
+                  callbackChangeSearch(event.currentTarget.value);
               }}
               css={css`
                 position: relative;
@@ -452,9 +460,13 @@ export function Search({
 function setValueSearch({
   isBtn,
   selectionsDispatch,
+  characterControl,
+  actionSearch,
 }: {
   isBtn: boolean;
   selectionsDispatch: (action: SelectionsAction) => void;
+  characterControl?: characterControlType;
+  actionSearch?(): void;
 }) {
   const setText = (text: string) =>
     !isBtn
@@ -467,12 +479,23 @@ function setValueSearch({
           type: "set-text-btn",
           textOnchange: text,
         });
-  const search = (text: string) =>
-    selectionsDispatch({
-      type: "set-text",
-      text: text,
-      textOnchange: text,
-    });
+  const search = (text: string) => {
+    (!characterControl?.numberOfCharacters ||
+      text === "" ||
+      text.length > characterControl.numberOfCharacters) &&
+      selectionsDispatch({
+        type: "set-text",
+        text: text,
+        textOnchange: text,
+      });
+    if (
+      characterControl &&
+      text.length <= characterControl.numberOfCharacters &&
+      text !== ""
+    ) {
+      actionSearch && actionSearch();
+    }
+  };
   const clearSearch = () =>
     selectionsDispatch({
       type: "reset-search",

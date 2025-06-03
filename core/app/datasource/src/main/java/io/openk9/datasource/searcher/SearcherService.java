@@ -37,10 +37,10 @@ import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.JWT;
@@ -54,12 +54,15 @@ import io.openk9.datasource.searcher.queryanalysis.SemanticTypes;
 import io.openk9.datasource.searcher.suggestions.SuggestionsUtil;
 import io.openk9.datasource.searcher.util.Tuple;
 import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.LargeLanguageModelService;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
+import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
+import io.openk9.searcher.grpc.GetRAGConfigurationsResponse;
+import io.openk9.searcher.grpc.ProviderModel;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -67,6 +70,7 @@ import io.openk9.searcher.grpc.QueryAnalysisToken;
 import io.openk9.searcher.grpc.QueryAnalysisTokens;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
+import io.openk9.searcher.grpc.RAGType;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
@@ -93,6 +97,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -118,6 +123,9 @@ import org.opensearch.search.sort.SortOrder;
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+
+	@Inject
+	BucketService bucketService;
 
 	@Inject
 	@CacheName("searcher-service")
@@ -147,20 +155,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	)
 	Integer maxSearchPageSize;
 
-	private static String[] _getIndexNames(QueryParserRequest request, Bucket tenant) {
-		var indexNames = new HashSet<String>();
-
-		var datasources = tenant.getDatasources();
-
-		for (Datasource datasource : datasources) {
-			var dataIndex = datasource.getDataIndex();
-
-			indexNames.add(dataIndex.getIndexName());
-		}
-
-		return indexNames.toArray(String[]::new);
-	}
-
 	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
 		String requestLanguage = request.getLanguage();
 		if (requestLanguage != null && !requestLanguage.isBlank()) {
@@ -179,8 +173,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return Language.NONE;
 	}
 
-	private static Map<String, String> _getQueryParams(
-		Bucket bucket) {
+	private static Map<String, String> _getQueryParams(Bucket bucket) {
 
 		var queryParams = new HashMap<String, String>();
 
@@ -480,11 +473,47 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			: getI18nParent(parent);
 	}
 
+	/**
+	 * Retrieves the {@link RAGConfiguration} associated with the given {@link Bucket}
+	 * based on the specified {@link RAGType}.
+	 *
+	 * <p>This method selects the appropriate {@link RAGConfiguration} from the provided {@link Bucket}
+	 * depending on the given {@code ragType}. If the {@code ragType} is invalid, it returns an
+	 * {@link Uni} failure with {@link Status#INVALID_ARGUMENT}. If the corresponding
+	 * configuration is missing in the bucket, it returns an {@link Uni} failure with {@link Status#NOT_FOUND}.</p>
+	 *
+	 * @param bucket The {@link Bucket} from which to fetch the corresponding {@link RAGConfiguration}.
+	 * @param ragType The {@link RAGType} that specifies which {@link RAGConfiguration} to retrieve.
+	 * @return An {@link Uni} containing the {@link RAGConfiguration}, or an error if the ragType is invalid
+	 *         or if the configuration is missing.
+	 */
+	private static Uni<RAGConfiguration> getRagConfiguration(Bucket bucket, RAGType ragType) {
+
+		Uni<RAGConfiguration> ragConfigurationUni = switch (ragType) {
+			case CHAT_RAG -> Uni.createFrom().item(bucket.getRagConfigurationChat());
+			case CHAT_RAG_TOOL -> Uni.createFrom().item(bucket.getRagConfigurationChatTool());
+			case SIMPLE_GENERATE -> Uni.createFrom().item(bucket.getRagConfigurationSimpleGenerate());
+			default -> Uni.createFrom().failure(new StatusRuntimeException(Status.INVALID_ARGUMENT
+						.withDescription(String.format("Unexpected ragType value: %s", ragType))));
+		};
+
+		return ragConfigurationUni
+			.onItem().ifNull().failWith(
+				() -> new StatusRuntimeException(
+					Status.NOT_FOUND.withDescription(
+						String.format(
+							"RAGConfiguration of type %s missing for the specified bucket.",
+							ragType.name())
+					)
+				)
+			);
+	}
+
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
-		return getTenant(request.getVirtualHost())
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
 			.flatMap(tenantResponse -> largeLanguageModelService
-				.fetchCurrentLLMAndBucket(tenantResponse.getSchemaName())
+				.fetchCurrentLLMAndBucket(tenantResponse.schemaName())
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
@@ -497,8 +526,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					var bucket = bucketLLM.bucket();
 
 					var responseBuilder = GetLLMConfigurationsResponse.newBuilder()
-						.setApiUrl(llm.getApiUrl())
-						.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+						.setApiUrl(llm.getApiUrl());
 
 					if (llm.getApiKey() != null) {
 						responseBuilder.setApiKey(llm.getApiKey());
@@ -508,8 +536,86 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						responseBuilder.setRetrieveType(bucket.getRetrieveType().name());
 					}
 
+					if (llm.getProviderModel() != null) {
+						responseBuilder.setProviderModel(
+							ProviderModel.newBuilder()
+								.setProvider(llm.getProviderModel().getProvider())
+								.setModel(llm.getProviderModel().getModel())
+						);
+					}
+
+					if (llm.getContextWindow() != null){
+						responseBuilder
+							.setContextWindow(llm.getContextWindow());
+					}
+
+					if (llm.getRetrieveCitations() != null){
+						responseBuilder
+							.setRetrieveCitations(llm.getRetrieveCitations());
+					}
+
+					if (llm.getJsonConfig() != null){
+						responseBuilder
+							.setJsonConfig(StructUtils.fromJson(llm.getJsonConfig()));
+					}
+
 					return responseBuilder.build();
 				})
+			);
+	}
+
+	/**
+	 * Retrieves the {@link GetRAGConfigurationsResponse} associated with a given virtual host and {@link RAGType}.
+	 *
+	 * <p>This method fetches the current {@link Bucket} based on the provided virtual host,
+	 * loads the necessary RAG configurations according to the {@link RAGType}, and returns
+	 * the corresponding {@link GetRAGConfigurationsResponse}.
+	 * If an error occurs (e.g., invalid {@link RAGType} or missing configuration), it is handled
+	 * and propagated as a gRPC {@link StatusRuntimeException}.
+	 *
+	 * <p>Error Handling:</p>
+	 * <ul>
+	 *   <li>Returns {@link Status#INVALID_ARGUMENT} if the provided RAG type is not recognized.</li>
+	 *   <li>Returns {@link Status#NOT_FOUND} if no matching RAGConfiguration exists for the given bucket.</li>
+	 * </ul>
+	 *
+	 * @param request The {@link GetRAGConfigurationsRequest} containing the virtual host
+	 *                and the RAG type for which the configuration is requested.
+	 * @return A {@link Uni} emitting a {@link GetRAGConfigurationsResponse} containing
+	 *         the requested RAG configuration details.
+	 * @throws StatusRuntimeException if the RAG type is invalid or the configuration is missing.
+	 */
+	@Override
+	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
+		GetRAGConfigurationsRequest request) {
+
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
+			.flatMap(tenant ->
+				bucketService.getCurrentBucket(tenant.schemaName())
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
+					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
+					.flatMap(bucket -> getRagConfiguration(bucket, request.getRagType()))
+					.map(ragConfiguration -> {
+						var responseBuilder = GetRAGConfigurationsResponse.newBuilder()
+							.setName(ragConfiguration.getName())
+							.setChunkWindow(ragConfiguration.getChunkWindow())
+							.setReformulate(ragConfiguration.getReformulate())
+							.setPrompt(ragConfiguration.getPrompt())
+							.setPromptNoRag(ragConfiguration.getPromptNoRag())
+							.setRagToolDescription(ragConfiguration.getRagToolDescription())
+							.setRephrasePrompt(ragConfiguration.getRephrasePrompt());
+
+						if (ragConfiguration.getJsonConfig() != null) {
+							responseBuilder
+								.setJsonConfig(
+									StructUtils.fromJson(ragConfiguration.getJsonConfig()));
+						}
+
+							return responseBuilder.build();
+					})
+					.onFailure(StatusRuntimeException.class)
+					.recoverWithUni(error -> Uni.createFrom().failure(error))
 			);
 	}
 
@@ -697,27 +803,26 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 
-			return QuarkusCacheUtil.getAsync(
-					cache,
+			return cache.getAsync(
 					new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
-					getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+					key -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
 				)
-				.flatMap(bucket -> {
+				.flatMap(tenantWithBucket -> {
 
-					if (bucket == null) {
+					if (tenantWithBucket == null) {
 						return Uni.createFrom().item(QueryParserResponse
 							.newBuilder()
 							.build()
 						);
 					}
 
+					var bucket = tenantWithBucket.getBucket();
+
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
 					String language = _getLanguage(request, bucket);
 
 					var searchSourceBuilder = _getSearchSourceBuilder(request, bucket, language);
-
-					String[] indexNames = _getIndexNames(request, bucket);
 
 					Map<String, String> queryParams;
 
@@ -733,7 +838,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.apply(
 								ParserContext
 									.builder()
-									.currentTenant(bucket)
+									.tenantWithBucket(tenantWithBucket)
 									.queryParserConfig(queryParserConfig)
 									.tokenTypeGroup(searchTokens)
 									.jwt(JWT.of(request.getJwt()))
@@ -744,7 +849,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							)
 							.map(searchSource -> QueryParserResponse.newBuilder()
 								.setQuery(searchSourceBuilderToOutput(searchSource))
-								.addAllIndexName(List.of(indexNames))
+								.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 								.putAllQueryParameters(queryParams)
 								.build());
 
@@ -754,7 +859,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						queryParams = new HashMap<>();
 
 						return createBoolQuery(
-							tokenGroup, bucket, JWT.of(request.getJwt()), extraParams, language)
+							tokenGroup,
+							tenantWithBucket,
+							JWT.of(request.getJwt()),
+							extraParams,
+							language
+						)
 							.map(boolQueryBuilder -> {
 
 								searchSourceBuilder.query(boolQueryBuilder);
@@ -762,7 +872,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 								return QueryParserResponse
 									.newBuilder()
 									.setQuery(searchSourceBuilderToOutput(searchSourceBuilder))
-									.addAllIndexName(List.of(indexNames))
+									.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 									.putAllQueryParameters(queryParams)
 									.build();
 
@@ -782,18 +892,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<String, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return QuarkusCacheUtil.getAsync(
-					cache,
+			return cache.getAsync(
 					new CompositeCacheKey(
 						request.getVirtualHost(),
 						"getTenantAndFetchRelations",
 						request.getSuggestionCategoryId()),
-					getTenantAndFetchRelations(
+					key -> getTenantAndFetchRelations(
 						request.getVirtualHost(), true, request.getSuggestionCategoryId())
 				)
-				.flatMap(tenant -> {
+				.flatMap(tenantWithBucket -> {
 
-					if (tenant == null) {
+					if (tenantWithBucket == null) {
 						return Uni.createFrom().item(
 							SuggestionsResponse
 								.newBuilder()
@@ -801,8 +910,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						);
 					}
 
+					var bucket = tenantWithBucket.getBucket();
+
 					Set<SuggestionCategory> suggestionCategories =
-						tenant.getSuggestionCategories();
+						bucket.getSuggestionCategories();
 
 					if (suggestionCategories == null || suggestionCategories.isEmpty()) {
 						return Uni.createFrom().item(
@@ -814,10 +925,15 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					Map<String, List<String>> extraParams = _getExtraParams(request.getExtraMap());
 
-					String language = _getLanguage(request, tenant);
+					String language = _getLanguage(request, bucket);
 
 					return createBoolQuery(
-						tokenGroup, tenant, JWT.of(request.getJwt()), extraParams, language)
+						tokenGroup,
+						tenantWithBucket,
+						JWT.of(request.getJwt()),
+						extraParams,
+						language
+					)
 						.flatMap(boolQueryBuilder -> {
 
 							SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -831,7 +947,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							List<DocTypeField> docTypeFieldList =
 								Utils
-									.getDocTypeFieldsFrom(tenant)
+									.getDocTypeFieldsFrom(bucket)
 									.filter(docTypeField -> !docTypeField.isI18N())
 									.toList();
 
@@ -938,7 +1054,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							searchSourceBuilder.from(0);
 							searchSourceBuilder.size(0);
 
-							SearchConfig searchConfig = tenant.getSearchConfig();
+							SearchConfig searchConfig = bucket.getSearchConfig();
 
 							if (searchConfig != null && searchConfig.isMinScoreSuggestions()) {
 								searchSourceBuilder.minScore(searchConfig.getMinScore());
@@ -946,10 +1062,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 							searchSourceBuilder.highlighter(null);
 
-							String[] indexNames = _getIndexNames(request, tenant);
-
 							SearchRequest searchRequest =
-								new SearchRequest(indexNames, searchSourceBuilder);
+								new SearchRequest(
+									tenantWithBucket.getIndexNames(),
+									searchSourceBuilder
+								);
 
 							Uni<SearchResponse> searchResponseUni = _search(searchRequest);
 
@@ -1009,9 +1126,10 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									};
 								}
 
-								for (CompositeAggregation.Bucket bucket : buckets) {
+								for (CompositeAggregation.Bucket aggregationBucket : buckets) {
 
-									Map<String, Object> keys = new HashMap<>(bucket.getKey());
+									Map<String, Object> keys = new HashMap<>(
+										aggregationBucket.getKey());
 
 									for (Map.Entry<String, Object> entry : keys.entrySet()) {
 
@@ -1025,7 +1143,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 											continue;
 										}
 
-										long docCount = bucket.getDocCount();
+										long docCount = aggregationBucket.getDocCount();
 
 										addSuggestions.accept(
 											value,

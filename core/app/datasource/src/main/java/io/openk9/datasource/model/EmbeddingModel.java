@@ -17,19 +17,25 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import io.openk9.datasource.model.util.K9Entity;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Objects;
 
 @Entity
 @Table(name = "embedding_model")
@@ -37,8 +43,9 @@ import lombok.Setter;
 	name = EmbeddingModel.FETCH_CURRENT,
 	query = "from EmbeddingModel em where em.tenantBinding is not null"
 )
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class EmbeddingModel extends K9Entity {
 
 	public static final String FETCH_CURRENT = "EmbeddingModel.FetchCurrent";
@@ -55,12 +62,23 @@ public class EmbeddingModel extends K9Entity {
 	@Column(name = "api_key")
 	private String apiKey;
 
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "json_config")
+	private String jsonConfig;
+
 	@OneToOne(mappedBy = "embeddingModel")
 	@JsonIgnore
 	private TenantBinding tenantBinding;
 
 	@Column(name = "vector_size")
 	private Integer vectorSize = 0;
+
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "provider", column = @Column(name = "provider")),
+		@AttributeOverride(name = "model", column = @Column(name = "model"))
+	})
+	private ProviderModel providerModel;
 
 	@Transient
 	private boolean enabled = false;
@@ -70,4 +88,7 @@ public class EmbeddingModel extends K9Entity {
 		this.enabled = tenantBinding != null;
 	}
 
+	public void setProviderModel(ProviderModel providerModel) {
+		this.providerModel = Objects.requireNonNullElse(providerModel, new ProviderModel());
+	}
 }

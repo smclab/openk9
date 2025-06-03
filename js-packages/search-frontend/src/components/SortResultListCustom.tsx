@@ -1,5 +1,4 @@
 import React from "react";
-import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import "./SortResultList.css";
@@ -11,6 +10,7 @@ function SortResultList({
   HtmlString = "",
   language,
   selectOptions,
+  labelSelect,
 }: {
   classTab?: string;
   setSortResult: setSortResultsType;
@@ -18,6 +18,7 @@ function SortResultList({
   minHeight?: string;
   color?: string;
   HtmlString?: string;
+  labelSelect?: string;
   language?: string;
   selectOptions: Array<{
     value: { value: string; sort: string };
@@ -34,11 +35,19 @@ function SortResultList({
     name: defaultOption?.label,
     icon: "",
   });
-
+  const myValueMemo = React.useMemo(() => myValue, [myValue]);
   const { t } = useTranslation();
 
-  const sortOptions: Array<{ value: string; name: string; icon: string }> =
-    selectOptions.flatMap((option) => {
+  React.useEffect(() => {
+    const findTabDefault = selectOptions.find((s) => s.isDefault);
+    setSortResult({
+      field: findTabDefault?.label || "",
+      type: findTabDefault?.sort as "asc" | "desc",
+    });
+  }, [selectOptions]);
+
+  const sortOptions = React.useMemo(() => {
+    return selectOptions.flatMap((option) => {
       if (option.hasAscDesc) {
         return [
           {
@@ -69,22 +78,16 @@ function SortResultList({
         };
       }
     });
-
-  const SingleValue = (props: any) => (
-    <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        {props.children}
-      </div>
-    </components.SingleValue>
-  );
+  }, [selectOptions, t]);
 
   // TODO: `event` dovrà essere di tipo `{value: string | undefined, name: string | undefined, icon: string}`
   const handleChange = (event: any) => {
     const eventValue = event?.value && JSON.parse(event.value);
+
     if (eventValue) {
       setSortResult({
         field: eventValue.label.value,
-        type: eventValue,
+        type: eventValue.label.sort,
       });
       setMyValue(event);
     }
@@ -112,7 +115,7 @@ function SortResultList({
       }),
     }),
     indicatorSeparator: () => ({
-      display: "none", // Nasconde la linea separatoria
+      display: "none",
     }),
   };
 
@@ -127,12 +130,13 @@ function SortResultList({
     >
       {!HtmlString && (
         <label className="openk9-label-sort" htmlFor="defaultSort">
-          {"Ordina per:"}
+          {labelSelect}
         </label>
       )}
       <Select
         getOptionLabel={(event) => event.name || ""}
         tabIndex={0}
+        menuPlacement="auto"
         inputId={HtmlString || "defaultSort"}
         aria-label=""
         aria-labelledby=""
@@ -140,12 +144,11 @@ function SortResultList({
         className={`openk9-react-select-container SortResultListCustom-container`}
         classNamePrefix="openk9-react-select"
         options={sortOptions}
-        components={{ SingleValue }}
         onChange={handleChange}
-        value={myValue}
+        value={myValueMemo}
         styles={customStyles}
       />
     </span>
   );
 }
-export const SortResultListCustom = React.memo(SortResultList);
+export const SortResultListCustomMemo = React.memo(SortResultList);

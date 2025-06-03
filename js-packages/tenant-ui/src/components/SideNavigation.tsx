@@ -1,66 +1,88 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { BrandLogo } from "./BrandLogo";
-import ClayIcon from "@clayui/icon";
+import Drawer from "@mui/material/Drawer";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import Collapse from "@mui/material/Collapse";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) {
   const [elementSelect, setSelect] = React.useState("");
+
   return (
-    <div className={`sidenav-fixed sidenav-menu-slider ${isSideMenuOpen ? "open" : "close"}`}>
-      <div
-        className="sidebar sidebar-dark sidenav-menu product-menu"
-        style={{ backgroundColor: "white", borderRight: "1px solid #00000017" }}
-      >
-        <div className="sidebar-header" style={{ color: "black" }}>
-          <div style={{ display: "inline-block", margin: "-16px 16px -16px 0px" }}>
-            <BrandLogo height={32} width={32} />
-          </div>
+    <Drawer
+      variant="persistent"
+      anchor="left"
+      open={isSideMenuOpen}
+      sx={{
+        width: 240,
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
+          width: 240,
+          boxSizing: "border-box",
+          backgroundColor: "white",
+          borderRight: "1px solid #00000017",
+        },
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", padding: 16 }}>
+        <BrandLogo height={32} width={32} />
+        <Typography variant="h6" sx={{ marginLeft: 2, color: "black" }}>
           OpenK9 Admin
-        </div>
-        <div className="sidebar-body">
-          <nav className="menubar">
-            <ul className="nav nav-nested " style={{ color: "#5c5d63" }}>
-              <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} IsChildren={false} label="Dashboard" path="/" />
-              <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} IsChildren={false} label="Tenant" path="/tenants" />
-            </ul>
-          </nav>
-        </div>
+        </Typography>
       </div>
-      <style type="text/css"> {StyleSideNavigation}</style>
-    </div>
+      <Divider />
+      <List>
+        <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} label="Dashboard" path="/" />
+        <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} label="Tenant" path="/tenants" />
+        {/* Ejemplo de menú colapsable */}
+        {/* 
+        <SideNavigationCollapsible label="More">
+          <SideNavigationItem
+            setSelect={setSelect}
+            elementSelect={elementSelect}
+            label="Child"
+            path="/child"
+            isChild
+          />
+        </SideNavigationCollapsible>
+        */}
+      </List>
+    </Drawer>
   );
 }
 
 type SideNavigationItemProps = {
   label: string;
   path: string;
-  setSelect: Dispatch<SetStateAction<string>>;
+  setSelect: React.Dispatch<React.SetStateAction<string>>;
   elementSelect: string;
-  IsChildren: boolean;
+  isChild?: boolean;
 };
-function SideNavigationItem({ label, path, setSelect, elementSelect, IsChildren }: SideNavigationItemProps) {
+function SideNavigationItem({ label, path, setSelect, elementSelect, isChild = false }: SideNavigationItemProps) {
   return (
-    <React.Fragment>
-      <li className="nav-item" style={{ display: "flex", alignItems: "center" }}>
-        <NavLink
-          to={path}
-          className="nav-link "
-          style={{ outline: "none", boxShadow: "none" }}
-          onClick={() => {
-            setSelect(label);
-          }}
-        >
-          {elementSelect === label ? (
-            <div>
-              <span style={{ borderLeft: "3px solid red", marginLeft: IsChildren ? "-15px" : "" }}></span>
-              <span style={{ marginLeft: "15px" }}>{label}</span>
-            </div>
-          ) : (
-            label
-          )}
-        </NavLink>
-      </li>
-    </React.Fragment>
+    <ListItem disablePadding sx={{ pl: isChild ? 4 : 2 }}>
+      <ListItemButton
+        component={NavLink}
+        to={path}
+        selected={elementSelect === label}
+        onClick={() => setSelect(label)}
+        sx={{
+          "&.Mui-selected": {
+            borderLeft: "3px solid red",
+            color: "black",
+          },
+        }}
+      >
+        <ListItemText primary={label} />
+      </ListItemButton>
+    </ListItem>
   );
 }
 
@@ -69,40 +91,19 @@ type SideNavigationCollapsibleProps = {
   children: React.ReactNode;
 };
 function SideNavigationCollapsible({ label, children }: SideNavigationCollapsibleProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <li className="nav-item ">
-      <button
-        className={`collapse-icon nav-link btn-unstyled ${!isOpen ? "collapsed" : ""}`}
-        onClick={() => {
-          setIsOpen(!isOpen);
-        }}
-      >
-        {label}
-        <span className="collapse-icon-closed">
-          <ClayIcon symbol="caret-bottom" />
-        </span>
-        <span className="collapse-icon-open">
-          <ClayIcon symbol="caret-top" />
-        </span>
-      </button>
-      <div className={`collapse ${isOpen ? "show" : ""}`} id="navCollapse01">
-        <ul className="nav nav-stacked">{children}</ul>
-      </div>
-    </li>
+    <>
+      <ListItemButton onClick={() => setOpen(!open)}>
+        <ListItemText primary={label} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItemButton>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          {children}
+        </List>
+      </Collapse>
+    </>
   );
 }
-
-export const StyleSideNavigation = `
-.sidebar-dark .nav-nested .nav-link:hover {
-  color: black;
-}
-
-.sidebar-dark .nav-nested .nav-link.active {
-  color: black;
-}
-
-.sidebar-dark .nav-nested .nav-link {
-  color: #686c99;
-}
-`;

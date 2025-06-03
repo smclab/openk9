@@ -17,15 +17,13 @@
 
 package io.openk9.datasource.pipeline.service;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.model.EmbeddingModel;
-
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 class EmbeddingServiceTest {

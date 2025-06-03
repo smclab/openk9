@@ -17,6 +17,12 @@
 
 package io.openk9.datasource.pipeline.service;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.model.Scheduler;
@@ -24,15 +30,10 @@ import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.service.SchedulerService;
 import io.openk9.datasource.util.SchedulerUtil;
+
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @ApplicationScoped
 public class SchedulingService {
@@ -123,7 +124,7 @@ public class SchedulingService {
 				s.setDefaultReadOnly(true);
 				return doFetchScheduler(s, scheduleId);
 			})
-			.map(schedulerMapper::map);
+			.map(scheduler -> schedulerMapper.map(scheduler, tenantId));
 	}
 
 	@ConsumeEvent(GET_DELETED_CONTENT_ID)
@@ -152,7 +153,7 @@ public class SchedulingService {
 					return s.merge(entity);
 				})
 			)
-			.map(schedulerMapper::map);
+			.map(scheduler -> schedulerMapper.map(scheduler, tenantId));
 	}
 
 	@ConsumeEvent(PERSIST_LAST_INGESTION_DATE)
@@ -171,7 +172,7 @@ public class SchedulingService {
 					return s.merge(entity);
 				})
 			)
-			.map(schedulerMapper::map);
+			.map(scheduler -> schedulerMapper.map(scheduler, tenantId));
 	}
 
 	@ConsumeEvent(PERSIST_STATUS)
@@ -189,7 +190,7 @@ public class SchedulingService {
 					return s.merge(entity);
 				})
 			)
-			.map(schedulerMapper::map);
+			.map(scheduler -> schedulerMapper.map(scheduler, tenantId));
 	}
 
 	private record FetchRequest(ShardingKey shardingKey) {}

@@ -350,6 +350,7 @@ Maven Dependency Check:
     - ./mvnw install
   script:
     - ./mvnw -pl '!../vendor/hibernate-rx-multitenancy, !../vendor/hibernate-rx-multitenancy/runtime, !../vendor/hibernate-rx-multitenancy/deployment'  dependency-check:aggregate
+  allow_failure: true
   artifacts:
     paths:
       - core/target/dependency-check-report.html

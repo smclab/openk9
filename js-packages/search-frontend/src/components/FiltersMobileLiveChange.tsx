@@ -22,6 +22,7 @@ import { Tab, translationTab } from "./Tabs";
 import { capitalize } from "lodash";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
 import { SelectionsAction } from "./useSelections";
+import { useFocusTrap } from "./useFocusTrap";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -50,11 +51,16 @@ export type FiltersMobileProps<E> = {
   isActiveSkeleton: boolean;
   skeletonCategoryCustom: React.ReactNode | null;
   memoryResults: boolean;
+  haveSearch: boolean | null | undefined;
+  callbackClose?: () => void;
+  callbackApply?: () => void;
+  addExtraClass?: string;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
   searchQuery,
   sort,
+  addExtraClass,
   onAddFilterToken,
   onRemoveFilterToken,
   onConfigurationChange,
@@ -75,6 +81,9 @@ function FiltersMobileLiveChange<E>({
   skeletonCategoryCustom,
   selectionsDispatch,
   memoryResults,
+  haveSearch,
+  callbackClose,
+  callbackApply,
 }: FiltersMobileProps<E>) {
   const results = useInfiniteResults<any>(
     searchQuery,
@@ -85,10 +94,13 @@ function FiltersMobileLiveChange<E>({
     memoryResults,
   );
   const { t } = useTranslation();
+  const [trapFocus] = useFocusTrap(true);
   const componet = (
     <React.Fragment>
       <div
-        className="openk9-filter-list-container-first-title container-openk9-filter-mobile-live-change live-change"
+        className={
+          "openk9-filter-list-container-first-title container-openk9-filter-mobile-live-change live-change "
+        }
         css={css`
           display: flex;
           justify-content: space-beetween;
@@ -152,6 +164,7 @@ function FiltersMobileLiveChange<E>({
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            if (callbackClose) callbackClose();
           }}
           style={{ backgroundColor: "white", border: "none" }}
         >
@@ -180,6 +193,7 @@ function FiltersMobileLiveChange<E>({
           numberItems={numberItems}
           skeletonCategoryCustom={skeletonCategoryCustom}
           isActiveSkeleton={isActiveSkeleton}
+          haveSearch={haveSearch}
           preFilters={
             viewTabs ? (
               <ViewAllTabs
@@ -253,6 +267,7 @@ function FiltersMobileLiveChange<E>({
           onClick={() => {
             onConfigurationChange({ filterTokens: [] });
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            callbackClose && callbackClose();
             if (selectionsDispatch)
               selectionsDispatch({ type: "reset-filters" });
           }}
@@ -298,6 +313,7 @@ function FiltersMobileLiveChange<E>({
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
+            callbackApply && callbackApply();
           }}
         >
           <div>
@@ -313,7 +329,14 @@ function FiltersMobileLiveChange<E>({
   );
   if (!isVisibleFilters) return null;
 
-  return <ModalDetail padding="0px" background="white" content={componet} />;
+  return (
+    <div
+      className={"modal-detail-container-external " + addExtraClass}
+      ref={trapFocus}
+    >
+      <ModalDetail padding="0px" background="white" content={componet} />
+    </div>
+  );
 }
 
 function ViewAllTabs({
@@ -361,6 +384,11 @@ function ViewAllTabs({
         </div>
         {isCollapsable && (
           <button
+            className={`openk9-mobile-collapsable-filters openk9-collapsable-filters openk9-tabs-in-filters ${
+              isOpen
+                ? "openk9-dropdown-filters-open"
+                : "openk9-dropdown-filters-close"
+            }`}
             aria-label={
               t("openk9-collapsable-filter") || "openk9 collapsable filter"
             }

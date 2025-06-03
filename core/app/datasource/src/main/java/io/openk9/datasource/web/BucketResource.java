@@ -18,6 +18,25 @@
 package io.openk9.datasource.web;
 
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+
 import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -43,36 +62,17 @@ import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
-import io.openk9.datasource.util.QuarkusCacheUtil;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
+
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Fetch;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 @Path("/buckets")
@@ -84,10 +84,9 @@ public class BucketResource {
 	@Path("/current/templates")
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getTemplates"),
-			getDocTypeTemplateList(request.host())
+			key -> getDocTypeTemplateList(request.host())
 		);
 	}
 
@@ -96,10 +95,10 @@ public class BucketResource {
 	public Uni<List<TabResponseDTO>> getTabs(
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getTabs", translated),
-			getTabList(request.host(), translated));
+			key -> getTabList(request.host(), translated)
+		);
 	}
 
 	@Path("/current/suggestionCategories")
@@ -107,10 +106,9 @@ public class BucketResource {
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getSuggestionCategories", translated),
-			getSuggestionCategoryList(request.host(), translated)
+			key -> getSuggestionCategoryList(request.host(), translated)
 		);
 	}
 
@@ -118,55 +116,52 @@ public class BucketResource {
 	@GET
 	public Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortable(
 		@QueryParam("translated") @DefaultValue("true") boolean translated){
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
-			getDocTypeFieldsSortableList(request.host(), translated));
+			key -> getDocTypeFieldsSortableList(request.host(), translated)
+		);
 	}
 
 	@Path("/current/sortings")
 	@GET
 	public Uni<List<SortingResponseDTO>> getSortings(
 		@QueryParam("translated") @DefaultValue("true") boolean translated){
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getSortings", translated),
-			getSortingList(request.host(), translated));
+			key -> getSortingList(request.host(), translated)
+		);
 	}
 
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getDefaultLanguage"),
-			getDefaultLanguage(request.host())
+			key -> getDefaultLanguage(request.host())
 		);
 	}
 
 	@Path("/current/availableLanguage")
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getAvailableLanguage"),
-			getAvailableLanguageList(request.host())
+			key -> getAvailableLanguageList(request.host())
 		);
 	}
 
 	@Path("/current")
 	@GET
 	public Uni<CurrentBucket> getCurrentBucket() {
-		return QuarkusCacheUtil.getAsync(
-			cache,
+		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getCurrentBucket"),
-			_getCurrentBucket(request.host())
+			key -> _getCurrentBucket()
 		);
 	}
 
-	private Uni<CurrentBucket> _getCurrentBucket(String host) {
+	private Uni<CurrentBucket> _getCurrentBucket() {
 		return bucketService
-			.getCurrentBucket(host)
+			.getCurrentBucket()
 			.map(mapper::toCurrentBucket);
 	}
 
@@ -364,8 +359,6 @@ public class BucketResource {
 			Fetch<Tab, TokenTab> tokenTabFetch = tabsJoin.fetch(Tab_.tokenTabs, JoinType.LEFT);
 
 			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
-
-			tokenTabFetch.fetch(TokenTab_.extraParams, JoinType.LEFT);
 
 			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
 

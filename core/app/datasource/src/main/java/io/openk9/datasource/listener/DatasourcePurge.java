@@ -17,12 +17,7 @@
 
 package io.openk9.datasource.listener;
 
-import io.openk9.datasource.model.DataIndex;
-import org.apache.pekko.actor.typed.Behavior;
-import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
-import org.apache.pekko.actor.typed.javadsl.ActorContext;
-import org.apache.pekko.actor.typed.javadsl.Behaviors;
-import org.apache.pekko.actor.typed.javadsl.Receive;
+import static io.openk9.datasource.util.SchedulerUtil.parseDuration;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -31,7 +26,13 @@ import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static io.openk9.datasource.util.SchedulerUtil.parseDuration;
+import io.openk9.datasource.model.DataIndex;
+
+import org.apache.pekko.actor.typed.Behavior;
+import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
+import org.apache.pekko.actor.typed.javadsl.ActorContext;
+import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.apache.pekko.actor.typed.javadsl.Receive;
 
 public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 
@@ -86,7 +87,7 @@ public class DatasourcePurge extends AbstractBehavior<DatasourcePurge.Command> {
 	private Behavior<Command> onDeleteEsIndices() {
 
 		getContext().pipeToSelf(
-			DatasourcePurgeService.deleteIndices(currentChunk),
+			DatasourcePurgeService.deleteIndices(tenantName, currentChunk),
 			(res, err) -> {
 				if (err != null) {
 					return new DeleteError(new DatasourcePurgeException(err));

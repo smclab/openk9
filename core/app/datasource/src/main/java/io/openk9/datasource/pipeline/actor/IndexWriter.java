@@ -66,8 +66,8 @@ public class IndexWriter {
 			RestHighLevelClient restHighLevelClient =
 				CDI.current().select(RestHighLevelClient.class).get();
 
-			var oldDataIndexName = scheduler.getOldDataIndexName();
-			var newDataIndexName = scheduler.getNewDataIndexName();
+			var oldDataIndexName = scheduler.getOldIndexName();
+			var newDataIndexName = scheduler.getNewIndexName();
 
 			return initial(
 				ctx,

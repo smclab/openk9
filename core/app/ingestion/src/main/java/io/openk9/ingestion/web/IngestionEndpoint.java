@@ -18,6 +18,7 @@
 package io.openk9.ingestion.web;
 
 import io.openk9.ingestion.dto.IngestionDTO;
+import io.openk9.ingestion.dto.IngestionDtoExamples;
 import io.openk9.ingestion.exception.NoSuchQueueException;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
@@ -28,6 +29,17 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+
+
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -39,6 +51,49 @@ public class IngestionEndpoint {
 	@Inject
 	FileManagerEmitter _fileManagerEmitter;
 
+	@Operation(operationId = "ingestion")
+	@Tag(name = "Ingestion API", description = "Permits to ingest data and associated resources inside Openk9 and perform elaboration and indexing.")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Ingestion successful",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = IngestionDtoExamples.INGESTION_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+			content = {
+					@Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = IngestionDTO.class),
+							examples = {
+									@ExampleObject(
+											name = "Simple ingestion payload",
+											value = IngestionDtoExamples.INGESTION_SIMPLE_DTO
+									),
+									@ExampleObject(
+											name = "Ingestion payload passing resources and binaries",
+											value = IngestionDtoExamples.INGESTION_WITH_RESOURCES_DTO
+									),
+									@ExampleObject(
+											name = "Ingestion payload passing access control list on data",
+											value = IngestionDtoExamples.INGESTION_WITH_ACL_DTO
+									)
+							}
+					)
+			}
+	)
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

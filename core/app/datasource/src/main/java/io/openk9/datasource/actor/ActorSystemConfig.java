@@ -32,7 +32,6 @@ import io.openk9.datasource.pipeline.actor.EnrichPipeline;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
-import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
 import io.openk9.datasource.queue.QueueConnectionProvider;
 
 import io.quarkus.arc.properties.IfBuildProperty;
@@ -43,7 +42,6 @@ import org.apache.pekko.cluster.sharding.typed.javadsl.Entity;
 import org.apache.pekko.cluster.typed.Cluster;
 import org.apache.pekko.management.cluster.bootstrap.ClusterBootstrap;
 import org.apache.pekko.management.javadsl.PekkoManagement;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 @Dependent
@@ -136,13 +134,9 @@ public class ActorSystemConfig {
 
 	@Inject
 	Logger logger;
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
     @Inject
 	QueueConnectionProvider queueConnectionProvider;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
-	@Inject
-	SchedulerMapper schedulerMapper;
 
 }

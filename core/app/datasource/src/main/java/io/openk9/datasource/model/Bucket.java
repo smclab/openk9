@@ -69,7 +69,6 @@ import org.eclipse.microprofile.graphql.Ignore;
 			"join fetch b.queryAnalysis qa " +
 			"join fetch qa.rules qar " +
 			"join fetch qa.annotators qaa " +
-			"left join fetch qaa.extraParams extra " +
 			"left join fetch qaa.docTypeField dtf " +
 			"left join fetch dtf.parentDocTypeField pdtf " +
 			"left join fetch dtf.subDocTypeFields sdtf " +
@@ -81,10 +80,7 @@ import org.eclipse.microprofile.graphql.Ignore;
 	),
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,
-		query =
-			"select b " +
-			"from Bucket b join b.tenantBinding tb " +
-			"where tb.virtualHost = :virtualHost "
+		query = "from Bucket b where b.tenantBinding is not null"
 	)
 })
 public class Bucket extends K9Entity {
@@ -199,6 +195,21 @@ public class Bucket extends K9Entity {
 
 	@Transient
 	private boolean enabled = false;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_chat_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationChat;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_chat_tool_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationChatTool;
+
+	@OneToOne
+	@JoinColumn(name = "rag_configuration_simple_generate_id")
+	@JsonIgnore
+	private RAGConfiguration ragConfigurationSimpleGenerate;
 
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {

@@ -17,24 +17,25 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.index.query.RangeQueryBuilder;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 @ApplicationScoped
 public class DateQueryParser implements QueryParser {
@@ -50,7 +51,7 @@ public class DateQueryParser implements QueryParser {
 		List<ParserSearchToken> searchTokens =
 			parserContext.getTokenTypeGroup();
 
-		Bucket currentTenant = parserContext.getCurrentTenant();
+		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
 		JsonObject queryParserConfig = parserContext.getQueryParserConfig();
 
@@ -58,7 +59,7 @@ public class DateQueryParser implements QueryParser {
 			.getBoolean("allFieldsWhenKeywordIsEmpty", true);
 
 		List<Tuple2<DocTypeField, ParserSearchToken>> collect =
-			Utils.getDocTypeFieldsFrom(currentTenant)
+			Utils.getDocTypeFieldsFrom(bucket)
 				.filter(DocTypeField::isSearchableAndDate)
 				.flatMap(docTypeField -> {
 

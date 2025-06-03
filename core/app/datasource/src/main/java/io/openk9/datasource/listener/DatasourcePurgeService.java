@@ -29,8 +29,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.actor.EventBusInstanceHolder;
-import io.openk9.datasource.index.IndexName;
 import io.openk9.datasource.index.IndexService;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.util.K9Entity;
 
@@ -62,6 +62,7 @@ public class DatasourcePurgeService {
 		"where d.id = :id " +
 		"and di.modifiedDate < :maxAgeDate";
 	private static final Logger log = Logger.getLogger(DatasourcePurgeService.class);
+
 	@Inject
 	IndexService indexService;
 
@@ -79,9 +80,11 @@ public class DatasourcePurgeService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletableFuture<Void> deleteIndices(List<DataIndex> dataIndices) {
+	public static CompletableFuture<Void> deleteIndices(
+		String tenantName,
+		List<DataIndex> dataIndices) {
 
-		var request = new DeleteIndicesRequest(dataIndices);
+		var request = new DeleteIndicesRequest(tenantName, dataIndices);
 
 		return EventBusInstanceHolder.getEventBus()
 			.<Void>request(DELETE_INDICES, request)
@@ -152,18 +155,17 @@ public class DatasourcePurgeService {
 		}
 
 		var first = dataIndices.getFirst();
-		var tenantId = first.getTenant();
 		var datasource = first.getDatasource();
 		var datasourceId = datasource.getId();
 
 		log.infof(
 			"Deleting Opensearch orphans indices for datasource %s-%s",
-			tenantId, datasourceId
+			request.tenantId(), datasourceId
 		);
 
 		var dataIndexNames = dataIndices.stream()
-			.map(DataIndex::getIndexName)
-			.map(IndexName::new)
+			.map(dataIndex -> IndexName.from(
+				request.tenantId(), dataIndex))
 			.collect(Collectors.toSet());
 
 		return indexService.deleteIndices(dataIndexNames);
@@ -200,7 +202,7 @@ public class DatasourcePurgeService {
 		List<DataIndex> dataIndices
 	) {}
 
-	private record DeleteIndicesRequest(List<DataIndex> dataIndices) {}
+	private record DeleteIndicesRequest(String tenantId, List<DataIndex> dataIndices) {}
 
 	private record FetchOrphansRequest(String tenantId, long datasourceId, Duration maxAge) {}
 

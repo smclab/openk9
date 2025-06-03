@@ -23,11 +23,13 @@ export function OpenK9Client({
   tenant,
   useKeycloak = true,
   waitKeycloackForToken,
+  callback,
 }: {
   onAuthenticated(): void;
   tenant: string;
   useKeycloak?: boolean;
   waitKeycloackForToken: boolean;
+  callback(): void | null | undefined;
 }) {
   const keycloak = new Keycloak({
     url: window.KEYCLOAK_URL,
@@ -59,6 +61,9 @@ export function OpenK9Client({
     await keycloakInit;
     if (keycloak.authenticated) {
       await keycloak.updateToken(30);
+    }
+    if (callback) {
+      callback();
     }
     if (
       waitKeycloackForToken &&

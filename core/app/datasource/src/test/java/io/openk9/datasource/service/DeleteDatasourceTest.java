@@ -23,6 +23,7 @@ import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.init.Bucket;
@@ -97,8 +98,9 @@ public class DeleteDatasourceTest {
 		var dataIndex = datasourceService.getDataIndex(datasource.getId())
 			.await().indefinitely();
 
+		var indexName = IndexName.from("public", dataIndex);
 		openSearchClient.indices().create(req -> req
-			.index(dataIndex.getIndexName()));
+			.index(indexName.toString()));
 
 		Scheduler scheduler = new Scheduler();
 		scheduler.setScheduleId("a-random-schedule-id");
@@ -146,9 +148,11 @@ public class DeleteDatasourceTest {
 		Assertions.assertNull(datasourceService.findById(datasource.getId())
 			.await().indefinitely());
 
+		var indexName = IndexName.from("public", dataIndex);
+
 		var indexExists = openSearchClient
 			.indices()
-			.exists(req -> req.index(dataIndex.getIndexName()));
+			.exists(req -> req.index(indexName.toString()));
 
 		Assertions.assertFalse(indexExists.value());
 	}

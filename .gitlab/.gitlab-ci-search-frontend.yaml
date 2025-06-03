@@ -64,7 +64,7 @@ Build Search Frontend:
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:18
   script:
     - cd js-packages/search-frontend
     - yarn install
@@ -79,11 +79,12 @@ Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
+    - "Fetch version"
     - "Build Search Frontend"
   script:
     - source version.env # Carica la versione dall'artifact
     - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
-    - container-scanning scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Esegue lo scan dell'immagine
+    - gtcs scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Esegue lo scan dell'immagine
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 

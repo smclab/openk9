@@ -28,10 +28,10 @@ import jakarta.enterprise.inject.spi.CDI;
 
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
+import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Writer;
-import io.openk9.datasource.util.OpenSearchUtils;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;

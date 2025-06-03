@@ -48,7 +48,6 @@ function Result<E>(props: ResultProps<E>) {
 
     return matchedTemplate?.Template ?? null;
   };
-
   return (
     <div
       className={`openk9-embeddable-search--result-container openk9-card-${result?.source?.id}`}
