@@ -1,2 +1,0 @@
-schema: "https://test.openk9.io/graphql"
-documents: "src/**/*.{tsx}"
