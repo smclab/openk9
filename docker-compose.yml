@@ -39,7 +39,7 @@ services:
             timeout: 10s
             retries: 5
         volumes:
-            - ./elasticsearch/data:/var/lib/elasticsearch/data
+            - elastic-data:/var/lib/elasticsearch/data
     postgresql:
         image: postgres:latest
         hostname: postgresql
@@ -55,7 +55,7 @@ services:
             timeout: 10s
             retries: 5
         volumes:
-            - ./compose-data/postgres/db-data:/var/lib/postgresql/data
+            - postgres-data:/var/lib/postgresql/data
             - ./compose-utilities:/docker-entrypoint-initdb.d
     adminer:
         image: adminer
@@ -91,6 +91,17 @@ services:
             default:
                 aliases:
                 - keycloak.openk9.localhost
+    minio:
+        image: minio/minio:latest
+        command: server /data --console-address ":9090"
+        ports:
+        - "9000:9000"
+        - "9090:9090"
+        environment:
+        - MINIO_ROOT_USER=minio
+        - MINIO_ROOT_PASSWORD=minio123
+        volumes:
+        - minio-data:/minio/data:/data
     tenant-manager:
         image: smclab/openk9-tenant-manager:1.7.3
         hostname: openk9-tenant-manager
@@ -109,6 +120,7 @@ services:
             QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.localhost:8081'
             QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.localhost:8081/realms/tenant-manager'
             QUARKUS_OIDC_CLIENT_ID: 'tenant-manager'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
         ports:
         - 8186:8080
         depends_on:
@@ -156,6 +168,7 @@ services:
             QUARKUS_HTTP_PROXY_ALLOW_X_FORWARDED: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_HOST: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_PREFIX: 'true'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
         ports:
         - 8185:8080
         depends_on:
@@ -183,6 +196,7 @@ services:
             QUARKUS_HTTP_PROXY_ALLOW_X_FORWARDED: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_HOST: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_PREFIX: 'true'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
         ports:
         - 8187:8080
         depends_on:
@@ -205,13 +219,42 @@ services:
             QUARKUS_HTTP_PROXY_ALLOW_X_FORWARDED: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_HOST: 'true'
             QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_PREFIX: 'true'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
         ports:
         - 8188:8080
         depends_on:
             elasticsearch:
                 condition: service_healthy
             keycloak:
-                condition: service_healthy
+                condition: service_healthy  
+    file-manager:
+        image: smclab/openk9-file-manager:1.7.3
+        container_name: file-manager
+        environment:
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+            QUARKUS_OTEL_SDK_DISABLED: 'true'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
+            QUARKUS_MINIO_ACCESS_KEY: 'minio'
+            QUARKUS_MINIO_SECRET_KEY: 'minio123'
+            QUARKUS_MINIO_URL: 'http://minio:9000'
+            QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'datasource'
+    tika:
+        image: smclab/openk9-tika:1.7.3
+        container_name: tika
+        environment:
+            QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+            QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+            QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+            QUARKUS_OTEL_SDK_DISABLED: 'true'
+            QUARKUS_LOG_CONSOLE_JSON: 'false'
+            OPENK9_TIKA_OCR_CHARACTER_LENGTH: '10'
+            OPENK9_TIKA_OCR_ENABLED: 'true'
+            OPENK9_TIKA_POOL_SIZE: '1'
+            QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://datasource:8080'
+            QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://file-manager:8080'
+
     web-parser:
         image: smclab/openk9-web-parser:latest
         container_name: web-parser
@@ -219,7 +262,7 @@ services:
             INGESTION_URL: " http://ingestion:8080/api/ingestion/v1/ingestion/"
             DELETE_URL: "http://ingestion:8080/v1/ingestion/"
         ports:
-            - "5008:80"
+            - "5008:5000"
             - "6800:6800"
     search-frontend:
         image: smclab/search-frontend:1.6.0.1
@@ -236,3 +279,7 @@ services:
       ports:
           - '80:8080'
 
+volumes:
+  elastic-data: 
+  postgres-data:
+  minio-data:

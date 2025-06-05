@@ -393,7 +393,7 @@ BEGIN
         "area": "string",
         "tags": [],
         "additionalMetadata": {}
-        }',	NULL,	'test',	'0',	'0 0 * ? * * *',	NULL,	NULL,	3,	0);
+        }',	NULL,	'test',	'0',	'0 0 * ? * * *',	NULL,	4,	3,	0);
 
         CREATE TABLE "openk9"."datasource_buckets" (
             "datasource_id" bigint NOT NULL,
@@ -479,7 +479,35 @@ BEGIN
         CREATE UNIQUE INDEX uk_30eqiwulrtffhilqri8poy0e9 ON openk9.enrich_item USING btree (name);
 
         INSERT INTO "enrich_item" ("id", "create_date", "modified_date", "description", "json_config", "name", "service_name", "type", "script", "behavior_merge_type", "json_path", "behavior_on_error", "request_timeout") VALUES
-        (5,	'2025-05-31 13:01:42.519531',	'2025-05-31 13:01:42.51959',	'',	'{}',	'tika',	'http://openk9-tika:8080/api/tika/process',	'HTTP_ASYNC',	'',	'MERGE',	'$',	'SKIP',	20000);
+        (5,	'2025-05-31 13:01:42.519531',	'2025-05-31 13:01:42.51959',	'',	'{
+            "type_mapping": {
+                "application/pdf": "pdf",
+                "application/msword": "word",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "word",
+                "application/vnd.ms-excel": "excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "excel",
+                "application/vnd.ms-powerpoint": "powerpoint",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation": "powerpoint",
+                "text/plain": "plaintext",
+                "application/vnd.oasis.opendocument.spreadsheet": "excel",
+                "application/vnd.oasis.opendocument.text": "word",
+                "application/vnd.oasis.opendocument.presentation": "powerpoint",
+                "application/epub+zip": "epub",
+                "image/png": "png",
+                "image/jpeg": "jpeg",
+                "image/jpg": "jpg",
+                "message/rfc822": "email",
+                "application/x-tika-msoffice": "office",
+                "application/mbox": "email",
+                "application/x-7z-compressed": "zip",
+                "application/gzip": "gz"
+            },
+            "retain_binaries": false,
+            "summary_length": 5000,
+            "max_length": 100000,
+            "include_last_modified_date": true,
+            "include_content_type": true
+        }',	'tika',	'http://openk9-tika:8080/api/tika/process',	'HTTP_ASYNC',	'',	'MERGE',	'$',	'SKIP',	20000);
 
         CREATE TABLE "openk9"."enrich_pipeline" (
             "id" bigint NOT NULL,
@@ -629,11 +657,6 @@ BEGIN
         WITH (oids = false);
 
         CREATE UNIQUE INDEX uc_schedule_id ON openk9.scheduler USING btree (schedule_id);
-
-        INSERT INTO "scheduler" ("id", "create_date", "modified_date", "schedule_id", "datasource_id", "old_data_index_id", "new_data_index_id", "status", "last_ingestion_date") VALUES
-        (6,	'2025-05-31 13:02:54.915669',	'2025-05-31 13:02:54.915688',	'5df0d8c3-02f1-4a19-adbe-d8b2d5c917a3',	2,	NULL,	7,	'CANCELLED',	NULL),
-        (8,	'2025-05-31 13:04:19.678207',	'2025-05-31 13:04:19.678228',	'1e9ac21a-12a2-46c6-8fdc-e2ee76a29d7f',	2,	NULL,	9,	'CANCELLED',	NULL),
-        (10,	'2025-05-31 13:06:31.690534',	'2025-05-31 13:06:36.319489',	'136e78bf-9e25-4487-a4a8-1cda7b762498',	2,	NULL,	11,	'RUNNING',	'2025-05-31 13:06:34.13');
 
         CREATE TABLE "openk9"."search_config" (
             "id" bigint NOT NULL,
