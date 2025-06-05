@@ -17,6 +17,9 @@
 
 package io.openk9.datasource;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.RAGConfiguration;
@@ -39,11 +42,9 @@ import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
+
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class EntitiesUtils {
 
@@ -55,7 +56,7 @@ public class EntitiesUtils {
 	 *   <li>Setting default values for mandatory fields:</li>
 	 *   <ul>
 	 *     <li>Disables all refresh flags ({@code refreshOnDate}, {@code refreshOnQuery}, etc.).</li>
-	 *     <li>Sets the {@code retrieveType} to {@link Bucket.RetrieveType#MATCH}.</li>
+	 *     <li>Sets the {@code retrieveType} to {@link Bucket.RetrieveType#TEXT}.</li>
 	 *   </ul>
 	 *   <li>Implicitly unsetting or nullifying any optional configuration not explicitly included in the update DTO.</li>
 	 * </ul>
@@ -77,7 +78,7 @@ public class EntitiesUtils {
 			.refreshOnQuery(false)
 			.refreshOnTab(false)
 			.refreshOnSuggestionCategory(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build()
 		).await().indefinitely();
 	}
@@ -91,7 +92,7 @@ public class EntitiesUtils {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		createBucket(sessionFactory, bucketService, dto);

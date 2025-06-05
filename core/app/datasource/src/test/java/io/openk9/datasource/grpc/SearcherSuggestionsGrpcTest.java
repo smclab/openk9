@@ -320,7 +320,7 @@ public class SearcherSuggestionsGrpcTest {
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.suggestionCategoryIds(Set.of(suggestionCategoryOneId))
 			.build();
 

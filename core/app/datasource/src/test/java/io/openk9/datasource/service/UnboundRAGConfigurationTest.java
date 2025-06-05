@@ -17,24 +17,25 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.BucketDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class UnboundRAGConfigurationTest {
@@ -422,7 +423,7 @@ public class UnboundRAGConfigurationTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(
@@ -443,7 +444,7 @@ public class UnboundRAGConfigurationTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(

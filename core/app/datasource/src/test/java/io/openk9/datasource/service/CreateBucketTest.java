@@ -17,25 +17,26 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.util.K9Entity;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class CreateBucketTest {
@@ -119,7 +120,7 @@ public class CreateBucketTest {
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.datasourceIds(datasourceIds)
 			.suggestionCategoryIds(suggestionCategorieIds)
 			.tabIds(tabIds)
@@ -168,7 +169,7 @@ public class CreateBucketTest {
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.datasourceIds(datasourceIds)
 			.suggestionCategoryIds(suggestionCategorieIds)
 			.tabIds(tabIds)
@@ -249,7 +250,7 @@ public class CreateBucketTest {
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.tabIds(Set.of())
 			.ragConfigurationChat(ragConfigurationChatTwo.getId())
 			.ragConfigurationChatTool(ragConfigurationChatToolTwo.getId())
