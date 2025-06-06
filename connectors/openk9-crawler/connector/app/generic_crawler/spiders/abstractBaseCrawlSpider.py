@@ -108,7 +108,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			return
 
 		document_mime_type = response.headers.get('Content-Type')
-		document_file_name = re.findall('filename=(.+)', response.headers.get('Content-Disposition'))[0]
+		try:
+			document_file_name = re.findall('filename=(.+)', response.headers.get('Content-Disposition'))[0]
+		except Exception as e:
+			document_file_name = None
 		document_content = response.content
 
 		file_item = FileItem()
@@ -118,7 +121,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		document_item = DocumentItem()
 		document_item['url'] = document_url
 		document_item['mimeType'] = document_mime_type
-		document_item['extension'] = extension_from_mimetype(document_mime_type)
+		try:
+			document_item['extension'] = extension_from_mimetype(document_mime_type)
+		except Exception as e:
+			document_item['extension'] = None
 
 		datasource_payload = {
 			"file": dict(file_item),
