@@ -40,6 +40,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -182,6 +184,7 @@ public class Scheduler extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
 	@Column(name = "last_ingestion_date")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime lastIngestionDate;
 	@Column(name = "error_description")
 	private String errorDescription;

@@ -17,8 +17,8 @@
 
 package io.openk9.tenantmanager.model;
 
-import io.openk9.common.graphql.util.relay.GraphqlId;
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.time.OffsetDateTime;
+import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +26,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+
+import io.openk9.common.graphql.util.relay.GraphqlId;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -33,10 +37,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.OffsetDateTime;
-import java.util.Objects;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "tenant")
@@ -62,11 +65,13 @@ public class Tenant implements GraphqlId {
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
 	@CreationTimestamp
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime createDate;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "modified_date")
 	@UpdateTimestamp
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime modifiedDate;
 
 	@Column(name = "schema_name", nullable = false)

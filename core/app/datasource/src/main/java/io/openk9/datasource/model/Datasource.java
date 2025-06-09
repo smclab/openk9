@@ -117,6 +117,7 @@ public class Datasource extends K9Entity {
 	private String jsonConfig;
 	@Description("Last ingestion date of data for current datasource")
 	@Column(name = "last_ingestion_date")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime lastIngestionDate;
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
