@@ -25,7 +25,11 @@
   },
   "resolutions": {
     "@emotion/react": "11.14.0",
-    "@emotion/styled": "11.14.0"
+    "@emotion/styled": "11.14.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@types/react": "18.3.1",
+    "@types/react-dom": "18.3.0"
   },
   "workspaces": {
     "packages": [
@@ -33,13 +37,10 @@
       "plugins/**/js"
     ],
     "nohoist": [
-      "**/react-scripts/**",
       "**/@docusaurus/core/**",
       "**/babel-loader",
       "**/webpack",
-      "**/craco",
-      "**/react",
-      "**/react-router-dom"
+      "**/craco"
     ]
   }
 }
