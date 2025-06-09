@@ -43,7 +43,6 @@ import io.openk9.datasource.model.dto.request.TabWithTokenTabsDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;

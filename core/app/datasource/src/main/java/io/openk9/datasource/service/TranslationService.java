@@ -30,7 +30,6 @@ import io.openk9.datasource.model.TranslationKey;
 import io.openk9.datasource.model.dto.base.TranslationDTO;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.LocalizedEntity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.common.Identifier;

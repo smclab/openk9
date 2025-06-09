@@ -17,6 +17,21 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
@@ -36,31 +51,16 @@ import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.DataIndexResource;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 
 @ApplicationScoped
 public class DataIndexService

@@ -23,7 +23,6 @@ import io.openk9.datasource.mapper.RuleMapper;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.Rule_;
 import io.openk9.datasource.model.dto.base.RuleDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class RuleService extends BaseK9EntityService<Rule, RuleDTO> {

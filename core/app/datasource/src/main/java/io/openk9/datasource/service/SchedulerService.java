@@ -33,7 +33,6 @@ import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.model.dto.base.SchedulerDTO;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.pipeline.actor.Scheduling;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;

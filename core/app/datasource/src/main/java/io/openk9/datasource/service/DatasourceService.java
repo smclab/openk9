@@ -46,7 +46,6 @@ import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.request.CreateDatasourceDTO;
 import io.openk9.datasource.model.dto.request.UpdateDatasourceDTO;
 import io.openk9.datasource.service.exception.K9Error;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 

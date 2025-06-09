@@ -31,7 +31,6 @@ import io.openk9.datasource.model.EmbeddingModel_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;

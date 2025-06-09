@@ -29,7 +29,6 @@ import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.dto.base.TokenTabDTO;
 import io.openk9.datasource.model.dto.request.TokenTabWithDocTypeFieldDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;

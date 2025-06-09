@@ -32,7 +32,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.service.util.BaseK9EntityService;
+import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 
 import io.smallrye.mutiny.Multi;

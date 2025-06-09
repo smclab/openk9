@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.service.util;
+package io.openk9.datasource.service;
 
 
 import java.util.ArrayList;
@@ -53,6 +53,9 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.FilterField;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
+import io.openk9.datasource.service.util.K9EntityEvent;
+import io.openk9.datasource.service.util.K9EntityService;
+import io.openk9.datasource.service.util.K9EntityServiceException;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;

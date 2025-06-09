@@ -23,7 +23,6 @@ import io.openk9.datasource.mapper.LanguageMapper;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.Language_;
 import io.openk9.datasource.model.dto.base.LanguageDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class LanguageService extends BaseK9EntityService<Language, LanguageDTO> {

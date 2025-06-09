@@ -31,7 +31,6 @@ import io.openk9.datasource.model.QueryAnalysis_;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
 import io.openk9.datasource.model.dto.request.QueryAnalysisWithListsDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;

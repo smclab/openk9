@@ -23,7 +23,6 @@ import io.openk9.datasource.mapper.TokenizerMapper;
 import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.Tokenizer_;
 import io.openk9.datasource.model.dto.base.TokenizerDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class TokenizerService extends BaseK9EntityService<Tokenizer, TokenizerDTO> {

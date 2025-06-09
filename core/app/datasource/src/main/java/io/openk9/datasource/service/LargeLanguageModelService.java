@@ -28,7 +28,6 @@ import io.openk9.datasource.model.LargeLanguageModel_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.projection.BucketLargeLanguageModel;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;

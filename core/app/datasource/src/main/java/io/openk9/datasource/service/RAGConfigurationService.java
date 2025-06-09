@@ -17,16 +17,7 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.mapper.RAGConfigurationMapper;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Bucket_;
-import io.openk9.datasource.model.RAGConfiguration;
-import io.openk9.datasource.model.RAGConfiguration_;
-import io.openk9.datasource.model.RAGType;
-import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
-import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
-import io.smallrye.mutiny.Uni;
+import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -35,9 +26,18 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.validation.ValidationException;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
+import io.openk9.datasource.mapper.RAGConfigurationMapper;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.RAGConfiguration_;
+import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+
+import io.smallrye.mutiny.Uni;
+import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class RAGConfigurationService
