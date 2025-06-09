@@ -56,7 +56,7 @@ public class Annotator extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fuziness")
 	private Fuzziness fuziness;
-	@Column(name = "size")
+	@Column(name = "annotator_size")
 	private Integer size;
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "doc_type_field_id")
