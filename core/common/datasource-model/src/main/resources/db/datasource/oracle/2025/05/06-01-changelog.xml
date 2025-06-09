@@ -29,15 +29,14 @@
 		<comment>Combina i campi host e port nel nuovo campo baseUri</comment>
 		<sql>
 			UPDATE plugin_driver
-			SET json_config =
-				JSON_TRANSFORM(
-					json_config,
-					SET '$.baseUri' =
-						JSON_VALUE(json_config, '$.host') || ':' || JSON_VALUE(json_config, '$.port')
+			SET json_config = JSON_MERGEPATCH(
+			json_config,
+			JSON_OBJECT('baseUri' VALUE
+			JSON_VALUE(json_config, '$.host') || ':' || JSON_VALUE(json_config, '$.port')
 				)
-			WHERE
-				JSON_EXISTS(json_config, '$.host')
-				AND JSON_EXISTS(json_config, '$.port');
+			)
+			WHERE JSON_EXISTS(json_config, '$.host')
+			AND JSON_EXISTS(json_config, '$.port');
 		</sql>
 	</changeSet>
 
@@ -45,15 +44,17 @@
 		<comment>Rimuovi i campi host e port dopo la migrazione a baseUri</comment>
 		<sql>
 			UPDATE plugin_driver
-			SET json_config =
-				JSON_TRANSFORM(
-					json_config,
-					REMOVE '$.host',
-					REMOVE '$.port'
+			SET json_config = JSON_MERGEPATCH(
+			json_config,
+			JSON_OBJECT(
+			'host' VALUE null,
+			'port' VALUE null
 				)
+			)
 			WHERE JSON_EXISTS(json_config, '$.baseUri')
-				AND JSON_EXISTS(json_config, '$.host')
-				AND JSON_EXISTS(json_config, '$.port');
+			AND JSON_EXISTS(json_config, '$.host')
+			AND JSON_EXISTS(json_config, '$.port');
+
 		</sql>
 	</changeSet>
 
