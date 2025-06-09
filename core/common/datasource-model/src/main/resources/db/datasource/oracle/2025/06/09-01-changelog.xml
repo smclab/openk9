@@ -26,11 +26,15 @@
 >
 
 	<changeSet id="1749464109-1" author="openk9">
-		<renameTable oldTableName="LANGUAGE" newTableName="language"/>
+		<sql>
+			ALTER TABLE "LANGUAGE" RENAME TO "language";
+		</sql>
 	</changeSet>
 
 	<changeSet id="1749464109-2" author="openk9">
-		<renameColumn tableName="language" oldColumnName="VALUE" newColumnName="value"/>
+		<sql>
+			ALTER TABLE "language" RENAME COLUMN "VALUE" TO "value";
+		</sql>
 	</changeSet>
 
 	<changeSet id="1749464109-3" author="openk9">
