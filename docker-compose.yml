@@ -38,6 +38,8 @@ services:
       memlock:
         soft: -1
         hard: -1
+    volumes:
+    - opensearch-data:/usr/share/opensearch/data
   postgresql:
     image: postgres:16
     hostname: postgresql
@@ -56,7 +58,7 @@ services:
       retries: 5
     volumes:
       - ./compose-utilities:/docker-entrypoint-initdb.d
-      - ./compose-data/postgres/db-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9090"
@@ -67,7 +69,7 @@ services:
       - MINIO_ROOT_USER=minio
       - MINIO_ROOT_PASSWORD=minio123
     volumes:
-      - ./compose-data/minio/data:/data
+      - minio-data:/data
   adminer:
     image: adminer
     restart: always
@@ -260,11 +262,6 @@ services:
   web-parser:
     image: smclab/openk9-web-parser:latest
     container_name: web-parser
-  minio-parser:
-    image: smclab/openk9-minio-parser:latest
-    container_name: minio-parser
-    environment:
-      INGESTION_URL : 'http://ingestion:8080/api/ingestion/v1/ingestion/'
   rag-module:
     image: smclab/openk9-rag-module:3.0.0-SNAPSHOT
     container_name: rag-module
@@ -278,7 +275,7 @@ services:
       KEYKLOAK_INFO_API_URL : http://datasource/api/datasource/oauth2/settings
       REWRITE_QUESTION: 'false'
   embedding-module:
-    image: registry.smc.it:49083/openk9/openk9-embedding-module-base:3.0.0-SNAPSHOT
+    image: smclab/openk9-embedding-module-base:3.0.0-SNAPSHOT
     container_name: embedding-module
     environment:
       ORIGINS: '*'
@@ -297,7 +294,12 @@ services:
     ports:
       - "8082:80"
   gateway:
-      image: gw-springapp:latest
+      image: smclab/openk9-gw:2.0.0
       hostname: gateway
       ports:
           - '80:8080'
+
+volumes:
+  opensearch-data: 
+  postgres-data:
+  minio-data:
