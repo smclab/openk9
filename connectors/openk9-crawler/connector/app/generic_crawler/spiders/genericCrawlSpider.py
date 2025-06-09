@@ -131,8 +131,10 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
                     if index == None:
                         web_item[metadata] = specific_web_item_content
                     elif len(specific_web_item_content) > index - 1:
-                        web_item[metadata] = specific_web_item_content[index]
-
+                        try:
+                            web_item[metadata] = specific_web_item_content[index]
+                        except IndexError as e:
+                            web_item[metadata] = specific_web_item_content
             datasource_payload = {
                 "web": dict(web_item)
             }
