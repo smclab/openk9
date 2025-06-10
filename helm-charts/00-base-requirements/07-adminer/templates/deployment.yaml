@@ -22,3 +22,6 @@ spec:
            - name: ADMINER_DEFAULT_SERVER
              value: postgresql
           command: ["php", "-S", "0.0.0.0:{{ .Values.service.port }}", "-t", "/var/www/html"]
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
