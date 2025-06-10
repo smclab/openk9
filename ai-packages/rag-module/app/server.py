@@ -243,7 +243,7 @@ async def rag_chat(
         user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     configurations = get_configurations(
-        rag_type=RagType.SIMPLE_GENERATE.value,
+        rag_type=RagType.CHAT_RAG.value,
         search_text=search_text,
         search_query=None,
         range_values=range_values,
@@ -348,7 +348,7 @@ async def rag_chat(
         user_id = user_info[KEYCLOAK_USER_INFO_KEY]
 
     configurations = get_configurations(
-        rag_type=RagType.SIMPLE_GENERATE.value,
+        rag_type=RagType.CHAT_RAG_TOOL.value,
         search_text=search_text,
         search_query=None,
         range_values=range_values,

@@ -34,7 +34,7 @@ class SearchQuery(BaseModel):
     range: list = Field(
         ...,
         description="Range filter as [start, end]",
-        example=[0, 5],
+        example=[0, 10],
     )
     afterKey: Optional[str] = Field(
         None, description="Pagination key for subsequent requests", example="page_2"
