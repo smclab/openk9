@@ -559,17 +559,27 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	public Uni<Datasource> updateDatasourceConnection(
 		Mutiny.Session s, UpdateDatasourceDTO updateConnectionDTO) {
 
-		return findByIdWithPluginDriver(s, updateConnectionDTO.getDatasourceId())
-			.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
-				.invoke(datasource::setEnrichPipeline)
-				.map(enrichPipeline -> s.getReference(
-					DataIndex.class, updateConnectionDTO.getDataIndexId()))
-				.invoke(datasource::setDataIndex)
-				.map(__ -> mapper.update(datasource, updateConnectionDTO))
-				.chain(newState -> merge(s, newState)))
-			.invoke(datasource -> getProcessor().onNext(K9EntityEvent.of(
-				K9EntityEvent.EventType.UPDATE, datasource)
-			));
+		return getCurrentTenant(s)
+			.flatMap(tenant -> findByIdWithPluginDriver(
+				s, updateConnectionDTO.getDatasourceId())
+				.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
+					.invoke(datasource::setEnrichPipeline)
+					.map(enrichPipeline -> s.getReference(
+						DataIndex.class, updateConnectionDTO.getDataIndexId()))
+					.invoke(datasource::setDataIndex)
+					.map(__ -> mapper.update(datasource, updateConnectionDTO))
+					.chain(newState -> merge(s, newState)))
+				.invoke(datasource -> getProcessor().onNext(K9EntityEvent.of(
+					K9EntityEvent.EventType.UPDATE, datasource)
+				))
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenant.schemaName(), datasource)
+					)
+				)
+			);
+
 	}
 
 	@ConsumeEvent(UPDATE_DATASOURCE)
