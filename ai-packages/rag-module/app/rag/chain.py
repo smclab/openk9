@@ -18,7 +18,7 @@ def get_chain(question, rag_configuration, llm_configuration, retriever):
     try:
         prompt_template = rag_configuration.get("prompt")
         prompt_template = (
-            "Here is context to help: {{context}}. ### QUESTION: {{question}}"
+            "Here is context to help: {context}. ### QUESTION: {question}"
             + prompt_template
         )
         rephrase_prompt_template = rag_configuration.get("rephrase_prompt")
