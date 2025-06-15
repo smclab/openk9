@@ -239,8 +239,7 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading ||
-    retrieveType === undefined;
+    languages.isLoading;
 
   return (
     <React.Fragment>
