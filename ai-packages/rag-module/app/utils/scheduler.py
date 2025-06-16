@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.utils.chat_history import delete_documents
-
+from app.utils.quartz_apscheduler import QuartzExpressionParser
 
 scheduler = BackgroundScheduler()
 JOB_ID = "document_deletion_job"
@@ -17,7 +17,7 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
 
     :param str opensearch_host: OpenSearch connection string (host:port)
     :param bool schedule: True to enable scheduling, False to disable
-    :param str cron_expression: Cron schedule for deletions (5-part format)
+    :param str cron_expression: Cron schedule for deletions (7-part quartz format)
 
     **Usage Example**:
 
@@ -27,7 +27,7 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
         start_document_deletion_scheduler(
             "localhost:9200",
             True,
-            "0 0 * * *"
+            "0 0 0 ? * * *"
         )
 
         # Disable cleanup
@@ -35,16 +35,19 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
 
     **Cron Format**:
 
-    * ``minute hour day month day_of_week``
-    * Uses standard cron syntax with 5 time components
-    * Example: "0 3 * * 0" = Sundays at 3:00 AM
+    * ``seconds minutes hours day_of_month month day_of_week year``
+    * Uses quartz cron syntax with 7 time components
+    * Example: "0 20 20 ? * * *" = Daily at 20:20
+    * Example: "0 0 10 ? * MON *" = Weekly on Monday at 10:00 UTC
     """
     if schedule and not scheduler.running:
 
         def delete_documents_cron():
             delete_documents(opensearch_host)
 
-        trigger = CronTrigger.from_crontab(cron_expression)
+        parser = QuartzExpressionParser(cron_expression)
+        apscheduler_kwargs = parser.to_apscheduler_kwargs()
+        trigger = CronTrigger(**apscheduler_kwargs)
 
         scheduler.add_job(
             delete_documents_cron, trigger=trigger, id=JOB_ID, replace_existing=True
