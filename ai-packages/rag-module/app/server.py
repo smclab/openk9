@@ -15,7 +15,6 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
-from app.rag.retriever import OpenSearchRetriever
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
 from app.utils.llm import get_configurations
@@ -144,24 +143,12 @@ async def rag_generate(
 
     configurations = get_configurations(
         rag_type=RagType.SIMPLE_GENERATE.value,
-        search_text=search_text,
-        search_query=search_query,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        token=token,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
-    query_data = configurations["query_data"]
 
     retrieve_type = llm_configuration.get("retrieve_type")
     context_window = llm_configuration.get("context_window")
@@ -169,19 +156,25 @@ async def rag_generate(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
 
-    retriever = OpenSearchRetriever(
-        query_data=query_data,
-        search_text=search_text,
-        rerank=rerank,
-        reranker_api_url=RERANKER_API_URL,
-        chunk_window=chunk_window,
-        context_window=context_window,
-        metadata=metadata,
-        retrieve_type=retrieve_type,
-        opensearch_host=OPENSEARCH_HOST,
+    chain = get_chain(
+        search_query,
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
+        token,
+        extra,
+        sort,
+        sort_after_key,
+        language,
+        virtual_host,
+        search_text,
+        rag_configuration,
+        llm_configuration,
+        RERANKER_API_URL,
+        OPENSEARCH_HOST,
+        GRPC_DATASOURCE_HOST,
     )
-
-    chain = get_chain(search_text, rag_configuration, llm_configuration, retriever)
     return EventSourceResponse(chain)
 
 
@@ -244,24 +237,12 @@ async def rag_chat(
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
-        search_text=search_text,
-        search_query=None,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        token=token,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
-    query_data = configurations["query_data"]
 
     retrieve_type = llm_configuration.get("retrieve_type")
     context_window = llm_configuration.get("context_window")
@@ -269,19 +250,17 @@ async def rag_chat(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
 
-    retriever = OpenSearchRetriever(
-        query_data=query_data,
-        search_text=search_text,
-        rerank=rerank,
-        reranker_api_url=RERANKER_API_URL,
-        chunk_window=chunk_window,
-        context_window=context_window,
-        metadata=metadata,
-        retrieve_type=retrieve_type,
-        opensearch_host=OPENSEARCH_HOST,
-    )
-
     chain = get_chat_chain(
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
+        token,
+        extra,
+        sort,
+        sort_after_key,
+        language,
+        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -290,8 +269,9 @@ async def rag_chat(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
-        retriever,
+        RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
 
@@ -349,24 +329,12 @@ async def rag_chat(
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
-        search_text=search_text,
-        search_query=None,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        token=token,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
-    query_data = configurations["query_data"]
 
     retrieve_type = llm_configuration.get("retrieve_type")
     context_window = llm_configuration.get("context_window")
@@ -374,19 +342,17 @@ async def rag_chat(
     chunk_window = rag_configuration.get("chunk_window")
     metadata = rag_configuration.get("metadata")
 
-    retriever = OpenSearchRetriever(
-        query_data=query_data,
-        search_text=search_text,
-        rerank=rerank,
-        reranker_api_url=RERANKER_API_URL,
-        chunk_window=chunk_window,
-        context_window=context_window,
-        metadata=metadata,
-        retrieve_type=retrieve_type,
-        opensearch_host=OPENSEARCH_HOST,
-    )
-
     chain = get_chat_chain_tool(
+        range_values,
+        after_key,
+        suggest_keyword,
+        suggestion_category_id,
+        token,
+        extra,
+        sort,
+        sort_after_key,
+        language,
+        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -395,8 +361,9 @@ async def rag_chat(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
-        retriever,
+        RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
 
