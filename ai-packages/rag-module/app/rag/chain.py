@@ -5,6 +5,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
+from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
 from app.utils.llm import (
     generate_conversation_title,
@@ -14,7 +15,25 @@ from app.utils.llm import (
 from app.utils.logger import logger
 
 
-def get_chain(question, rag_configuration, llm_configuration, retriever):
+def get_chain(
+    search_query,
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    virtual_host,
+    question,
+    rag_configuration,
+    llm_configuration,
+    reranker_api_url,
+    opensearch_host,
+    grpc_host,
+):
     try:
         prompt_template = rag_configuration.get("prompt")
         prompt_template = (
@@ -54,16 +73,38 @@ def get_chain(question, rag_configuration, llm_configuration, retriever):
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
         }
 
-        documents = retriever.invoke(question)
         llm = initialize_language_model(configuration)
-        prompt = ChatPromptTemplate.from_template(prompt_template)
         parser = StrOutputParser()
-        chain = prompt | llm | parser
 
         if reformulate:
             rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
             rephrase_chain = rephrase_prompt | llm | parser
             question = rephrase_chain.invoke({"question": question})
+
+        retriever = OpenSearchRetriever(
+            search_query=search_query,
+            search_text=question,
+            rerank=rerank,
+            reranker_api_url=reranker_api_url,
+            range_values=range_values,
+            after_key=after_key,
+            suggest_keyword=suggest_keyword,
+            suggestion_category_id=suggestion_category_id,
+            virtual_host=virtual_host,
+            jwt=jwt,
+            extra=extra,
+            sort=sort,
+            sort_after_key=sort_after_key,
+            language=language,
+            context_window=context_window,
+            retrieve_type=retrieve_type,
+            opensearch_host=opensearch_host,
+            grpc_host=grpc_host,
+        )
+
+        documents = retriever.invoke()
+        prompt = ChatPromptTemplate.from_template(prompt_template)
+        chain = prompt | llm | parser
 
         yield json.dumps({"chunk": "", "type": "START"})
 
@@ -78,6 +119,16 @@ def get_chain(question, rag_configuration, llm_configuration, retriever):
 
 
 def get_chat_chain(
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    virtual_host,
     search_text,
     chat_id,
     user_id,
@@ -86,8 +137,9 @@ def get_chat_chain(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
-    retriever,
+    reranker_api_url,
     opensearch_host,
+    grpc_host,
 ):
     try:
         prompt_template = rag_configuration.get("prompt")
@@ -134,13 +186,24 @@ def get_chat_chain(
 
         yield from stream_rag_conversation(
             search_text,
+            reranker_api_url,
+            range_values,
+            after_key,
+            suggest_keyword,
+            suggestion_category_id,
+            virtual_host,
+            jwt,
+            extra,
+            sort,
+            sort_after_key,
+            language,
             opensearch_host,
+            grpc_host,
             chat_id,
             user_id,
             chat_history,
             timestamp,
             chat_sequence_number,
-            retriever,
             configuration,
         )
 
@@ -159,6 +222,16 @@ def rag_tool(
 
 
 def get_chat_chain_tool(
+    range_values,
+    after_key,
+    suggest_keyword,
+    suggestion_category_id,
+    jwt,
+    extra,
+    sort,
+    sort_after_key,
+    language,
+    virtual_host,
     search_text,
     chat_id,
     user_id,
@@ -167,8 +240,9 @@ def get_chat_chain_tool(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
-    retriever,
+    reranker_api_url,
     opensearch_host,
+    grpc_host,
 ):
     try:
         prompt_template = rag_configuration.get("prompt")
@@ -237,13 +311,24 @@ def get_chat_chain_tool(
         if llm_with_tools_response.tool_calls:
             yield from stream_rag_conversation(
                 search_text,
+                reranker_api_url,
+                range_values,
+                after_key,
+                suggest_keyword,
+                suggestion_category_id,
+                virtual_host,
+                jwt,
+                extra,
+                sort,
+                sort_after_key,
+                language,
                 opensearch_host,
+                grpc_host,
                 chat_id,
                 user_id,
                 chat_history,
                 timestamp,
                 chat_sequence_number,
-                retriever,
                 configuration,
             )
 
