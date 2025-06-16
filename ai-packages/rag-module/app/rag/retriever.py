@@ -6,6 +6,7 @@ from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
+from app.external_services.grpc.grpc_client import query_parser
 from app.rag.chunk_window import get_context_window_merged
 
 TOKEN_SIZE = 3.5
@@ -18,24 +19,77 @@ SCORE_THRESHOLD = 0
 class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
-    query_data: dict
+    search_query: Optional[list] = None
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
     chunk_window: Optional[int] = 0
+    range_values: list
+    after_key: Optional[str] = None
+    suggest_keyword: Optional[str] = None
+    suggestion_category_id: Optional[int] = None
+    virtual_host: str
+    jwt: Optional[str] = None
+    extra: Optional[dict] = None
+    sort: Optional[list] = None
+    sort_after_key: Optional[str] = None
+    language: Optional[str] = None
     context_window: int
     metadata: Optional[dict] = None
     retrieve_type: str
     opensearch_host: str
+    grpc_host: str
 
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
 
-        opensearch_query = self.query_data["query"]
-        index_name = list(self.query_data["index_name"])
+        search_query = (
+            [
+                {
+                    "entityType": query_element.entityType,
+                    "entityName": query_element.entityName,
+                    "tokenType": query_element.tokenType,
+                    "keywordKey": query_element.keywordKey,
+                    "values": query_element.values,
+                    "extra": query_element.extra,
+                    "filter": query_element.filter,
+                }
+                for query_element in self.search_query
+            ]
+            if self.search_query
+            else [
+                {
+                    "entityType": "",
+                    "entityName": "",
+                    "tokenType": self.retrieve_type,
+                    "keywordKey": "",
+                    "values": [query],
+                    "extra": {},
+                    "filter": True,
+                }
+            ]
+        )
+
+        query_data = query_parser(
+            search_query=search_query,
+            range_values=self.range_values,
+            after_key=self.after_key,
+            suggest_keyword=self.suggest_keyword,
+            suggestion_category_id=self.suggestion_category_id,
+            virtual_host=self.virtual_host,
+            jwt=self.jwt,
+            extra=self.extra,
+            sort=self.sort,
+            sort_after_key=self.sort_after_key,
+            language=self.language,
+            grpc_host=self.grpc_host,
+        )
+
+        query = query_data["query"]
+        index_name = list(query_data["index_name"])
         params = (
-            dict(self.query_data["query_parameters"])
+            dict(query_data["query_parameters"])
             if self.retrieve_type == HYBRID_RETRIEVE_TYPE
             else None
         )
@@ -50,7 +104,7 @@ class OpenSearchRetriever(BaseRetriever):
             total_tokens = 0
 
             response = client.search(
-                body=opensearch_query,
+                body=query,
                 index=index_name,
                 params=params,
             )
