@@ -150,12 +150,6 @@ async def rag_generate(
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
 
-    retrieve_type = llm_configuration.get("retrieve_type")
-    context_window = llm_configuration.get("context_window")
-    rerank = rag_configuration.get("rerank")
-    chunk_window = rag_configuration.get("chunk_window")
-    metadata = rag_configuration.get("metadata")
-
     chain = get_chain(
         search_query,
         range_values,
@@ -244,12 +238,6 @@ async def rag_chat(
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
 
-    retrieve_type = llm_configuration.get("retrieve_type")
-    context_window = llm_configuration.get("context_window")
-    rerank = rag_configuration.get("rerank")
-    chunk_window = rag_configuration.get("chunk_window")
-    metadata = rag_configuration.get("metadata")
-
     chain = get_chat_chain(
         range_values,
         after_key,
@@ -335,12 +323,6 @@ async def rag_chat(
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
-
-    retrieve_type = llm_configuration.get("retrieve_type")
-    context_window = llm_configuration.get("context_window")
-    rerank = rag_configuration.get("rerank")
-    chunk_window = rag_configuration.get("chunk_window")
-    metadata = rag_configuration.get("metadata")
 
     chain = get_chat_chain_tool(
         range_values,
