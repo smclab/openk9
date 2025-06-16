@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Header, Request, status
+from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from opensearchpy import OpenSearch
@@ -29,7 +29,7 @@ GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
-CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 00 * * *")
+CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
 ARIZE_PHOENIX_ENABLED = bool(os.getenv("ARIZE_PHOENIX_ENABLED", False))
 ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
 ARIZE_PHOENIX_ENDPOINT = os.getenv(
