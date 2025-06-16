@@ -20,7 +20,6 @@ from pydantic import BaseModel, Field
 from app.external_services.grpc.grpc_client import (
     get_llm_configuration,
     get_rag_configuration,
-    query_parser,
 )
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
@@ -120,9 +119,9 @@ def initialize_language_model(configuration):
                 'IBM_WATSONX', 'CHAT_VERTEX_AI').
             - "model": str
                 Name of the model to use; defaults to DEFAULT_MODEL if not provided.
-            - "prompt": str
+            - "prompt_template": str
                 The initial prompt to be used with the model.
-            - "rephrase_prompt": str
+            - "rephrase_prompt_template": str
                 A prompt for rephrasing tasks, if applicable.
             - "context_window": int
                 Size of the context window for the model's input.
@@ -333,7 +332,6 @@ def stream_rag_conversation(
         chat_history (list): Chat history for not logged users.
         timestamp (str): ISO format timestamp of the request.
         chat_sequence_number (int): Sequence number in conversation history.
-        retriever (List)
         configuration (dict): Configuration dictionary containing:
             - api_url (str): URL for the API endpoint
             - api_key (str): API key for authentication
