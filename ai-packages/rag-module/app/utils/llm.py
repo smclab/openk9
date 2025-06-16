@@ -85,71 +85,15 @@ def save_google_application_credentials(credentials):
 
 def get_configurations(
     rag_type,
-    search_text,
-    search_query,
-    range_values,
-    after_key,
-    suggest_keyword,
-    suggestion_category_id,
-    token,
-    extra,
-    sort,
-    sort_after_key,
-    language,
     grpc_host,
     virtual_host,
 ):
     rag_configuration = get_rag_configuration(grpc_host, virtual_host, rag_type)
     llm_configuration = get_llm_configuration(grpc_host, virtual_host)
 
-    retrieve_type = llm_configuration.get("retrieve_type")
-
-    search_query = (
-        [
-            {
-                "entityType": query_element.entityType,
-                "entityName": query_element.entityName,
-                "tokenType": query_element.tokenType,
-                "keywordKey": query_element.keywordKey,
-                "values": query_element.values,
-                "extra": query_element.extra,
-                "filter": query_element.filter,
-            }
-            for query_element in search_query
-        ]
-        if search_query
-        else [
-            {
-                "entityType": "",
-                "entityName": "",
-                "tokenType": retrieve_type,
-                "keywordKey": "",
-                "values": [search_text],
-                "extra": {},
-                "filter": True,
-            }
-        ]
-    )
-
-    query_data = query_parser(
-        search_query=search_query,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        virtual_host=virtual_host,
-        jwt=token,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
-        grpc_host=grpc_host,
-    )
-
     configurations = {
         "rag_configuration": rag_configuration,
         "llm_configuration": llm_configuration,
-        "query_data": query_data,
     }
 
     return configurations
@@ -339,13 +283,24 @@ class Citations(BaseModel):
 
 def stream_rag_conversation(
     search_text: str,
+    reranker_api_url: str,
+    range_values: list,
+    after_key: str,
+    suggest_keyword: str,
+    suggestion_category_id: int,
+    virtual_host: str,
+    jwt: str,
+    extra: dict,
+    sort: list,
+    sort_after_key: str,
+    language: str,
     opensearch_host: str,
+    grpc_host: str,
     chat_id: str,
     user_id: str,
     chat_history: list,
     timestamp: str,
     chat_sequence_number: int,
-    retriever: OpenSearchRetriever,
     configuration: dict,
 ):
     """
@@ -420,10 +375,37 @@ def stream_rag_conversation(
     model = configuration.get("model", DEFAULT_MODEL)
     prompt_template = configuration.get("prompt_template")
     rephrase_prompt_template = configuration.get("rephrase_prompt_template")
+    context_window = configuration.get("context_window")
     retrieve_citations = configuration.get("retrieve_citations")
+    retrieve_type = configuration.get("retrieve_type")
+    rerank = configuration.get("rerank")
+    chunk_window = configuration.get("chunk_window")
+    metadata = configuration.get("metadata")
 
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
+    )
+
+    retriever = OpenSearchRetriever(
+        search_text=search_text,
+        rerank=rerank,
+        reranker_api_url=reranker_api_url,
+        chunk_window=chunk_window,
+        range_values=range_values,
+        after_key=after_key,
+        suggest_keyword=suggest_keyword,
+        suggestion_category_id=suggestion_category_id,
+        virtual_host=virtual_host,
+        jwt=jwt,
+        extra=extra,
+        sort=sort,
+        sort_after_key=sort_after_key,
+        language=language,
+        context_window=context_window,
+        metadata=metadata,
+        retrieve_type=retrieve_type,
+        opensearch_host=opensearch_host,
+        grpc_host=grpc_host,
     )
 
     llm = initialize_language_model(configuration)
