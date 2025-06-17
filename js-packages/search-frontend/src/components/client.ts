@@ -242,10 +242,7 @@ export function OpenK9Client({
 
       return {
         ...data,
-        retrieveType:
-          data.retrieveType.toUpperCase() === "MATCH"
-            ? "TEXT"
-            : data.retrieveType,
+        retrieveType: data.retrieveType,
       };
     },
     async getLanguageDefault() {
