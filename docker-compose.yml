@@ -262,6 +262,9 @@ services:
   web-parser:
     image: smclab/openk9-web-parser:latest
     container_name: web-parser
+    ports:
+      - "5001:5000"
+      - "6800:6800"
   rag-module:
     image: smclab/openk9-rag-module:3.0.0-SNAPSHOT
     container_name: rag-module
