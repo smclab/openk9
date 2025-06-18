@@ -130,6 +130,23 @@ To configure connection to Keycloak following parameters are available:
 | `keycloak.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD`   |
 
 
+### Configure connections to other Openk9 services
+
+Openk9 Tenant Manager needs to communicate with other components to work. 
+In particular Openk9 Tenant Manager need to communicate with Datasource and K8s Client to perform data creation and connectors installation.
+
+To configure connection to Tenant Manager following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
+
+To configure connection to Searcher following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `openk9.k8sClient.host`    | K8s Client host                         | `openk9-k8s-client`            |
+
 
 ### Configure Opentelemetry
 

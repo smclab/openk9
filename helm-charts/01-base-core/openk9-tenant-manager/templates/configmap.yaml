@@ -62,3 +62,7 @@ data:
     OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_TABLE_NAME : {{ .Values.liquibase.changeLogTable | quote }}
   {{- end }}
 
+
+  QUARKUS_GRPC_CLIENTS__APPMANAGER__HOST: {{ include "helper.k8sClientURL" . | quote }}
+  QUARKUS_GRPC_CLIENTS__DATASOURCE__HOST: {{ include "helper.datasourceURL" . | quote }}
+
