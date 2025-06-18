@@ -297,7 +297,7 @@ services:
     ports:
       - "8082:80"
   gateway:
-      image: smclab/openk9-gw:2.0.0
+      image: gw-springapp:3.0.0-SNAPSHOT
       hostname: gateway
       ports:
           - '80:8080'

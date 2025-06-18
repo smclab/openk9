@@ -310,6 +310,7 @@ BEGIN
 
         CREATE UNIQUE INDEX uk_9318c5hvkjhrqjlq8rd3jkhe9 ON openk9.annotator USING btree (name);
 
+        CREATE SEQUENCE IF NOT EXISTS "openk9"."hibernate_sequence";
 
         CREATE TABLE "openk9"."bucket" (
             "id" bigint NOT NULL,
@@ -912,11 +913,8 @@ BEGIN
         INSERT INTO "enrich_pipeline" ("id", "create_date", "modified_date", "description", "name") VALUES
         (19,	'2025-06-17 10:37:24.460791',	'2025-06-17 11:54:49.855125',	'',	'pipeline');
 
-
-
         INSERT INTO "datasource" ("id", "create_date", "modified_date", "description", "json_config", "last_ingestion_date", "name", "schedulable", "scheduling", "data_index_id", "enrich_pipeline_id", "plugin_driver_id", "reindexable", "reindexing", "purgeable", "purging", "purge_max_age") VALUES
         (30,	'2025-06-17 11:24:17.648002',	'2025-06-17 11:54:40.419122',	'',	'{"sitemapUrls":["https://www.smc.it/sitemap.xml"],"allowedDomains":["www.smc.it"],"allowedPaths":[],"excludedPaths":[],"bodyTag":"body","titleTag":"title::text","maxLength":-1,"pageCount":0,"doExtractDocs":false,"documentFileExtensions":[]}',	NULL,	'smc site ',	'0',	'0 */30 * ? * * *',	NULL,	NULL,	1,	'0',	'0 0 1 * * ?',	'0',	'0 0 1 * * ?',	'2d');
-
 
         INSERT INTO "doc_type" ("id", "create_date", "modified_date", "description", "name", "doc_type_template_id") VALUES
         (2,	'2025-06-16 21:28:48.947629',	'2025-06-16 21:28:48.947651',	'auto-generated',	'default',	NULL),
@@ -950,11 +948,8 @@ BEGIN
         (43,	'2025-06-17 11:55:28.307233',	'2025-06-17 11:55:28.30724',	1,	'auto-generated',	NULL,	'keyword',	'KEYWORD',	'{"ignore_above":256}',	'previous.chunkText.keyword',	'1',	NULL,	2,	42,	'0'),
         (44,	'2025-06-17 11:55:28.307652',	'2025-06-17 11:55:28.307659',	1,	'auto-generated',	NULL,	'number',	'LONG',	NULL,	'previous.number',	'0',	NULL,	2,	41,	'0');
 
-
         INSERT INTO "embedding_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "vector_size", "provider", "model", "json_config") VALUES
         (32,	'2025-06-17 11:55:28.111138',	'2025-06-17 11:55:28.111167',	'',	'openai embedding model',	'embedding-module:5000',	'',	1536,	'openai',	'gpt-4o',	'{}');
-
-
 
         INSERT INTO "large_language_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "json_config", "provider", "model", "context_window", "retrieve_citations") VALUES
         (45,	'2025-06-17 11:55:50.16052',	'2025-06-17 11:55:50.16054',	'',	'openai',	'',	'',	'{}',	'openai',	'gpt-4o',	128000,	'0');
