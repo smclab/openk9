@@ -902,11 +902,6 @@ BEGIN
 
         ALTER TABLE ONLY "openk9"."token_tab" ADD CONSTRAINT "fk37w5m3swa2cebgar0umrnytyy" FOREIGN KEY (doc_type_field_id) REFERENCES doc_type_field(id) NOT DEFERRABLE;
 
-
-        INSERT INTO "bucket" ("id", "create_date", "modified_date", "description", "name", "query_analysis_id", "search_config_id", "refresh_on_suggestion_category", "language_id", "refresh_on_tab", "refresh_on_date", "refresh_on_query", "retrieve_type", "rag_configuration_chat_id", "rag_configuration_chat_tool_id", "rag_configuration_simple_generate_id") VALUES
-        (18,	'2025-06-17 10:37:18.417429',	'2025-06-17 10:37:18.418488',	'',	'test',	NULL,	NULL,	'0',	NULL,	'0',	'0',	'0',	'HYBRID',	NULL,	NULL,	NULL);
-
-
         INSERT INTO "plugin_driver" ("id", "create_date", "modified_date", "description", "json_config", "name", "type", "provisioning") VALUES
         (1,	'2025-06-16 21:28:48.540534',	'2025-06-16 21:28:48.541568',	'',	'{"baseUri":"web-parser:5000","path":"/startSitemapCrawling","method":"POST"}',	'web parser',	'HTTP',	'USER');
 
@@ -949,23 +944,47 @@ BEGIN
         (44,	'2025-06-17 11:55:28.307652',	'2025-06-17 11:55:28.307659',	1,	'auto-generated',	NULL,	'number',	'LONG',	NULL,	'previous.number',	'0',	NULL,	2,	41,	'0');
 
         INSERT INTO "embedding_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "vector_size", "provider", "model", "json_config") VALUES
-        (32,	'2025-06-17 11:55:28.111138',	'2025-06-17 11:55:28.111167',	'',	'openai embedding model',	'embedding-module:5000',	'',	1536,	'openai',	'gpt-4o',	'{}');
+        (32,	'2025-06-17 11:55:28.111138',	'2025-06-17 11:55:28.111167',	'',	'openai embedding model',	'embedding-module:5000',	'',	1536,	'openai',	'text-embedding-3-small',	'{}');
 
         INSERT INTO "large_language_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "json_config", "provider", "model", "context_window", "retrieve_citations") VALUES
         (45,	'2025-06-17 11:55:50.16052',	'2025-06-17 11:55:50.16054',	'',	'openai',	'',	'',	'{}',	'openai',	'gpt-4o',	128000,	'0');
 
-
-
-
-
-
-
-
-
-
+        INSERT INTO "tab" ("id", "create_date", "modified_date", "description", "name", "priority") VALUES
+        (4,	'2025-06-18 10:27:58.287845',	'2025-06-18 10:27:58.287881',	'',	'Tutti i risultati',	0);
 
         INSERT INTO "tenant_binding" ("id", "create_date", "modified_date", "virtual_host", "tenant_binding_bucket_id", "embedding_model_id", "large_language_model_id") VALUES
         (1,	NULL,	'2025-06-17 11:55:52.94292',	'demo.openk9.localhost',	18,	32,	45);
 
         END IF;
+
+        INSERT INTO "rag_configuration" ("id", "create_date", "modified_date", "description", "name", "type", "prompt", "rephrase_prompt", "prompt_no_rag", "rag_tool_description", "chunk_window", "reformulate", "json_config") VALUES
+        (1,	'2025-06-18 10:26:07.107759',	'2025-06-18 10:26:07.108051',	'',	'chat rag configuration',	'CHAT_RAG',	'',	'Given a chat history and the latest user questionwhich might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question,  just reformulate it if needed and otherwise return it as is.',	'',	'',	0,	'1',	'{
+        "rerank": false,
+        "metadata":{
+            "web":{
+                "title":"title",
+                "url":"url",
+                "content":"chunkText"
+            }
+        }
+        }
+        '),
+        (3,	'2025-06-18 10:27:30.198161',	'2025-06-18 10:27:30.198186',	'',	'simple generate configuration',	'SIMPLE_GENERATE',	'',	'',	'',	'',	0,	'0',	'{
+        "rerank": false,
+        "metadata":{
+            "web":{
+                "title":"title",
+                "url":"url",
+                "content":"content"
+            }
+        }
+        }
+        ');
+
+
+        INSERT INTO "bucket" ("id", "create_date", "modified_date", "description", "name", "query_analysis_id", "search_config_id", "refresh_on_suggestion_category", "language_id", "refresh_on_tab", "refresh_on_date", "refresh_on_query", "retrieve_type", "rag_configuration_chat_id", "rag_configuration_chat_tool_id", "rag_configuration_simple_generate_id") VALUES
+        (18,	'2025-06-17 10:37:18.417429',	'2025-06-18 10:27:40.952599',	'',	'test',	NULL,	NULL,	'0',	NULL,	'0',	'0',	'0',	'HYBRID',	1,	NULL,	3);
+
+        END IF;
+        
 END $$;

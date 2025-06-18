@@ -214,8 +214,8 @@ services:
       OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
       QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
       QUARKUS_OPENSEARCH_USERNAME: elastic
-      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: openk9-datasource
-      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
+      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: 'datasource'
+      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'tenant-manager'
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.localhost:8081/realms/master
       QUARKUS_OIDC_CLIENT_ID: openk9
       QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.localhost:8081
@@ -272,11 +272,9 @@ services:
       ORIGINS: '*'
       OPENSEARCH_USERNAME: 'opensearch'
       OPENSEARCH_HOST: 'opensearch:9200'
-      GRPC_DATASOURCE_HOST : datasource:9000
-      GRPC_TENANT_MANAGER_HOST : tenant-manager:9000
-      KEYCLOAK_URL : http://keycloak.openk9.localhost:8081/
-      KEYKLOAK_INFO_API_URL : http://datasource/api/datasource/oauth2/settings
-      REWRITE_QUESTION: 'false'
+      GRPC_DATASOURCE_HOST : 'datasource:9000'
+      GRPC_TENANT_MANAGER_HOST : 'tenant-manager:9000'
+      KEYCLOAK_URL : 'http://keycloak.openk9.localhost:8081'
   embedding-module:
     image: smclab/openk9-embedding-module-base:3.0.0-SNAPSHOT
     container_name: embedding-module
