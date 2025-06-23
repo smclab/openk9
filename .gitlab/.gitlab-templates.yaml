@@ -1,6 +1,4 @@
-
-
-# Template generico di build che viene utilizzato da ogni componente (datasource,ingestion etc...)
+# Generic build template used by each component (datasource, ingestion, etc.)
 
 .build_template:
   #image: eclipse-temurin:21-jdk
@@ -14,10 +12,10 @@
   cache:
     key: "$COMPONENT"
     paths:
-      - $CI_PROJECT_DIR/.m2/repository
+    - $CI_PROJECT_DIR/.m2/repository
   artifacts:
     paths:
-      - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
+    - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
     expire_in: 2 days
 
 .container-scanning-template:
@@ -32,16 +30,14 @@
     reports:
       container_scanning: gl-container-scanning-report.json
       cyclonedx: "**/gl-sbom-*.cdx.json"
-    paths: [gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json"]
+    paths: [ gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json" ]
   #dependencies: [$DEPENDS_ON]
   before_script:
-    - export VERSION=$(cat $CI_PROJECT_DIR/.version | grep -oE '^[^=]+$')
-    - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
-    - echo "Using version $VERSION"
+  - export VERSION=$(cat $CI_PROJECT_DIR/.version | grep -oE '^[^=]+$')
+  - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+  - echo "Using version $VERSION"
   script:
-    - gtcs scan
-
-
+  - gtcs scan
 
 .dependency_check_frontend_template:
   image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
@@ -51,11 +47,203 @@
     reports:
       dependency_scanning: gl-dependency-scanning-report.json
     paths:
-      - gl-dependency-scanning-report.json
+    - gl-dependency-scanning-report.json
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - js-packages/**/*
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/**/*
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/**/*
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/**/*
+
+# ========================================
+# TEMPLATE: .restart_job_template (UPDATED)
+# ========================================
+# This template manages the restart of ArgoCD pods based on the pipeline context:
+#
+# ▶️ 1. ON "main" BRANCH OR TAG:
+#    - Dynamically retrieves the IMAGE_TAG value based on component type:
+#        - frontend  ➝ from version.env (VERSION=...)
+#        - backend   ➝ from .version (containing only the version number)
+#        - ai        ➝ from config.env (VERSION=...)
+#    - If no file is found, fallback to "dev-SNAPSHOT"
+#
+#    - Executes restart in these namespaces (UPDATED LOGIC):
+#        - backend       ➝ k9-backend, k9-backend01, k9-test
+#        - backend-oracle ➝ k9-backend-oracle
+#        - ai            ➝ k9-ai
+#        - frontend      ➝ k9-frontend
+#        - test          ➝ k9-test
+#
+# ▶️ 2. ON FEATURE BRANCH (e.g. 123-new-feature):
+#    - The restart happens based on COMPONENT_TYPE and passes GITLAB_USER_LOGIN
+#      to let the target pipeline determine the correct namespace:
+#        - Passes COMPONENT_TYPE and GITLAB_USER_LOGIN to target pipeline
+#        - Target pipeline determines namespace based on user + component type
+#        - Uses appropriate SNAPSHOT tags per component type
+#
+# ▶️ 3. OTHER BRANCHES:
+#    - No action performed
+#
+# NOTE:
+# - This template triggers the target pipeline with the necessary parameters
+# - The target pipeline (.gitlab-ci.yml) handles the actual ArgoCD restart logic
+# - User-based namespace determination is handled by the target pipeline
+
+.restart_job_template:
+  stage: restart
+  image: alpine:latest
+  script:
+  - apk add --no-cache bash curl
+  - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
+  - echo "GITLAB_USER_LOGIN=$GITLAB_USER_LOGIN"
+  - echo "COMPONENT_NAME=$COMPONENT_NAME"
+  - echo "COMPONENT_TYPE=$COMPONENT_TYPE"
+  - |
+    bash -c '
+    if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
+      echo "🔁 Merge on main or tag: calculating IMAGE_TAG for $COMPONENT_NAME"
+
+      # 🔁 Dynamically retrieve IMAGE_TAG based on component type
+      if [ "$COMPONENT_TYPE" = "frontend" ] && [ -f "$CI_PROJECT_DIR/version.env" ]; then
+        source "$CI_PROJECT_DIR/version.env"
+        export IMAGE_TAG="$VERSION"
+        echo "✅ Loaded IMAGE_TAG (frontend) from version.env: $IMAGE_TAG"
+
+      elif [ "$COMPONENT_TYPE" = "backend" ] && [ -f "$CI_PROJECT_DIR/.version" ]; then
+        IMAGE_TAG=$(cat "$CI_PROJECT_DIR/.version")
+        echo "✅ Loaded IMAGE_TAG (backend) from .version: $IMAGE_TAG"
+
+      elif [ "$COMPONENT_TYPE" = "ai" ] && [ -f "$CI_PROJECT_DIR/config.env" ]; then
+        source "$CI_PROJECT_DIR/config.env"
+        export IMAGE_TAG="$VERSION"
+        echo "✅ Loaded IMAGE_TAG (ai) from config.env: $IMAGE_TAG"
+
+      else
+        echo "⚠️ No version file found, using fallback"
+        export IMAGE_TAG="dev-SNAPSHOT"
+      fi
+
+      # ✅ NEW LOGIC: Restart based on component type with updated namespace mapping
+      if [ "$COMPONENT_TYPE" = "backend" ]; then
+        echo "🔁 Restarting backend on k9-backend + k9-backend01 + k9-test"
+        for ns in k9-backend k9-backend01 k9-test; do
+          curl -X POST \
+            -F "token=${RESTART_TRIGGER_TOKEN}" \
+            -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+            -F "variables[NAMESPACE]=$ns" \
+            -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+            -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+            -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+            -F "ref=master" \
+            "${RESTART_TRIGGER_URL}"
+        done
+
+      elif [ "$COMPONENT_TYPE" = "backend-oracle" ]; then
+        echo "🔁 Restarting backend-oracle on k9-backend-oracle"
+        curl -X POST \
+          -F "token=${RESTART_TRIGGER_TOKEN}" \
+          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+          -F "variables[NAMESPACE]=k9-backend-oracle" \
+          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+          -F "ref=master" \
+          "${RESTART_TRIGGER_URL}"
+
+      elif [ "$COMPONENT_TYPE" = "ai" ]; then
+        echo "🔁 Restarting AI on k9-ai"
+        curl -X POST \
+          -F "token=${RESTART_TRIGGER_TOKEN}" \
+          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+          -F "variables[NAMESPACE]=k9-ai" \
+          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+          -F "ref=master" \
+          "${RESTART_TRIGGER_URL}"
+
+      elif [ "$COMPONENT_TYPE" = "frontend" ]; then
+        echo "🔁 Restarting frontend on k9-frontend"
+        curl -X POST \
+          -F "token=${RESTART_TRIGGER_TOKEN}" \
+          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+          -F "variables[NAMESPACE]=k9-frontend" \
+          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+          -F "ref=master" \
+          "${RESTART_TRIGGER_URL}"
+
+      elif [ "$COMPONENT_TYPE" = "test" ]; then
+        echo "🔁 Restarting test component on k9-test"
+        curl -X POST \
+          -F "token=${RESTART_TRIGGER_TOKEN}" \
+          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+          -F "variables[NAMESPACE]=k9-test" \
+          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+          -F "ref=master" \
+          "${RESTART_TRIGGER_URL}"
+
+      else
+        echo "🔍 Component type not specified or unknown, letting target pipeline auto-detect"
+        curl -X POST \
+          -F "token=${RESTART_TRIGGER_TOKEN}" \
+          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+          -F "ref=master" \
+          "${RESTART_TRIGGER_URL}"
+      fi
+
+    elif echo "$CI_COMMIT_BRANCH" | grep -qE "^[0-9]+-.*$"; then
+      # 🔁 Feature branch: pass user info to target pipeline for namespace determination
+      echo "🌿 Feature branch ➤ component type: $COMPONENT_TYPE, user: $GITLAB_USER_LOGIN"
+
+      # Determine IMAGE_TAG based on component type
+      case "$COMPONENT_TYPE" in
+        "backend")
+          IMAGE_TAG="999-SNAPSHOT"
+          ;;
+        "backend-oracle")
+          IMAGE_TAG="999-SNAPSHOT"
+          ;;
+        "ai")
+          IMAGE_TAG="997-SNAPSHOT"
+          ;;
+        "frontend")
+          IMAGE_TAG="996-SNAPSHOT"
+          ;;
+        "test")
+          IMAGE_TAG="latest"
+          ;;
+        *)
+          IMAGE_TAG="latest"
+          ;;
+      esac
+
+      echo "🔧 Using IMAGE_TAG: $IMAGE_TAG for component type: $COMPONENT_TYPE"
+
+      # Single call - let target pipeline determine namespace based on user + component type
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+        -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+        -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+        -F "variables[OPENK9_USER]=$GITLAB_USER_LOGIN" \
+        -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+        -F "ref=master" \
+        "${RESTART_TRIGGER_URL}"
+
+    else
+      echo "⛔ Branch $CI_COMMIT_BRANCH doesn'\''t match any pattern"
+    fi
+    '
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'

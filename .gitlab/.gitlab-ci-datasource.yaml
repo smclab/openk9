@@ -4,7 +4,7 @@ stages:
   - restart
 
 variables:
-  # Immagine usata per il container scanning
+  # Image used for container scanning
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
@@ -20,15 +20,17 @@ Build Datasource image:
     COMPONENT: "datasource"
   script:
     - |
-      echo "=== Leggo la versione dal POM Maven ==="
+      echo "=== Reading version from Maven POM ==="
       cd core
       VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
       echo "VERSION=$VERSION"
       echo "$VERSION" > $CI_PROJECT_DIR/.version
 
-      echo "=== Lancio 'mvn package' in base al branch/tag MAVEL CLI OPTS: $MAVEN_OPTS  ==="
+      echo "=== Running 'mvn package' based on branch/tag MAVEN CLI OPTS: $MAVEN_OPTS  ==="
+      
       if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
-        # Build + push immagine su branch main o su tag
+        # Build + push image on main branch or tag
+        echo "Build on main or tag with official version"
         mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=true \
@@ -36,7 +38,8 @@ Build Datasource image:
           $MAVEN_OPTS
 
       elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        # Build senza push su merge request
+        # Build without push on merge request
+        echo "Build on MR without push"
         mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=false \
@@ -44,7 +47,7 @@ Build Datasource image:
           $MAVEN_OPTS
 
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        # Branch feature + autore Michele => push con tag 998-SNAPSHOT
+        # Feature branch by Michele => push with tag 998-SNAPSHOT
         echo "Triggered by Michele"
         mvn package $MAVEN_OPTS \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
@@ -53,8 +56,20 @@ Build Datasource image:
           -Dquarkus.container-image.tag=998-SNAPSHOT \
           -P 'exclude-quarkus-test'
 
+      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
+        # Feature branch by Mirko => push with tag 999-SNAPSHOT
+        echo "Triggered by Mirko"
+        mvn package  \
+          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+          -Dquarkus.container-image.build=true \
+          -Dquarkus.container-image.push=true \
+          -Dquarkus.container-image.tag=999-SNAPSHOT \
+          -P 'exclude-quarkus-test' \
+          $MAVEN_OPTS
+
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        # Branch feature generico => push con tag 999-SNAPSHOT
+        # Feature branch by other developer => push with tag 999-SNAPSHOT
+        echo "Triggered by other developer"
         mvn package  \
           -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
           -Dquarkus.container-image.build=true \
@@ -68,16 +83,16 @@ Build Datasource image:
       - .version
     expire_in: 24 hours
   rules:
-    # Caso 1: commit su main (push su main)
+    # Case 1: commit on main
     - if: '$CI_COMMIT_BRANCH == "main"'
-    # Caso 2: merge request
+    # Case 2: merge request
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: creazione di un tag
+    # Case 3: tag creation
     - if: '$CI_COMMIT_TAG'
-    # Blocco della PRIMA esecuzione quando viene creato un branch
+    # Block FIRST execution when a branch is created
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Caso 4: commit su feature branch con pattern ^[0-9]+-.*$
+    # Case: commit on feature branch with pattern ^[0-9]+-.*$
     - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 
@@ -100,44 +115,9 @@ Container Scanning Datasource:
 #              TRIGGER RESTART DATASOURCE APP                 #
 ###############################################################
 Trigger Restart Datasource:
-  image: alpine:latest
-  stage: restart
-  script:
-    - |
-      echo "=== Installo 'curl' e valuto se far ripartire il datasource ==="
-      apk add --no-cache curl
-
-      if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ || "$CI_COMMIT_TAG" != "" ]]; then
-        echo "Branch/tag compatibile con la restart"
-
-        if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-          echo "Trigger RESTART su k9-backend01 (Michele)"
-          curl -X POST \
-            -F token=$RESTART_TRIGGER_TOKEN \
-            -F "variables[TRIGGER_JOB]=restart-datasource" \
-            -F "variables[NAMESPACE]=k9-backend01" \
-            -F ref=master \
-            $RESTART_TRIGGER_URL
-        else
-          echo "Trigger RESTART generico (altri utenti)"
-          curl -X POST \
-            -F token=$RESTART_TRIGGER_TOKEN \
-            -F "variables[TRIGGER_JOB]=restart-datasource" \
-            -F ref=master \
-            $RESTART_TRIGGER_URL
-        fi
-      else
-        echo "Branch non compatibile con la restart"
-      fi
-  rules:
-    # Caso 1: commit su main
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    # (Disabilitato) Caso 2: merge request
-    # - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Caso 3: creazione di un tag
-    - if: '$CI_COMMIT_TAG'
-    # Blocco della PRIMA esecuzione su branch appena creato
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
-    # Caso 4: commit su branch con pattern ^[0-9]+-.*$
-    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
+  extends: .restart_job_template
+  dependencies:
+    - Build Datasource image
+  variables:
+    COMPONENT_NAME: "datasource"
+    COMPONENT_TYPE: "backend"

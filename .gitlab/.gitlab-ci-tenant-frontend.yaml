@@ -44,30 +44,45 @@ Build Tenant Frontend:
     - job: Fetch version
       artifacts: true
   script:
-    # Carica la variabile VERSION dal file artifact version.env
-    - source $CI_PROJECT_DIR/version.env
-    - echo "=== Building Tenant UI with VERSION=$VERSION ==="
+    # Docker credentials configuration
     - mkdir -p /kaniko/.docker
-    # Configurazione credenziali Docker in /kaniko/.docker/config.json
     - |
       echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
       > /kaniko/.docker/config.json
-
-    - echo "=== Build e Push dell'immagine con Kaniko ==="
+    
+    # Conditional logic to determine which tag to use
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
+        # For main, use version from package.json
+        source $CI_PROJECT_DIR/version.env
+        echo "=== Building Tenant Frontend with VERSION=$VERSION ==="
+        DOCKER_TAG="$VERSION"
+      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+        # For feature branch, use 996-SNAPSHOT
+        echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for feature branch ==="
+        DOCKER_TAG="996-SNAPSHOT"
+      fi
+    
+    # Run build with the determined tag
     - |
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}" \
         --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
-        --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
+        --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG"
   rules:
-    - changes:
-        - js-packages/tenant-ui/**/*
+    # Rule for main branch
     - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/tenant-ui/**/*
+    # Rule for feature branch
+    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+      changes:
+        - js-packages/tenant-ui/**/*
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:18
+  image: node:14
   script:
     - cd js-packages/tenant-ui
     - yarn install
@@ -93,19 +108,21 @@ Container Scanning:
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
-  stage: restart
-  image: alpine:latest
-  script:
-    - apk add --no-cache curl
-    - echo "Triggering restart for Tenant Frontend"
-    - |
-      curl -X POST \
-        -F "token=${RESTART_TRIGGER_TOKEN}" \
-        -F "variables[TRIGGER_JOB]=restart-tenant-frontend" \
-        -F "ref=main" \
-        "${RESTART_TRIGGER_URL}"
+  extends: .restart_job_template
+  dependencies:
+    - Fetch version
+  variables:
+    COMPONENT_NAME: "tenant-frontend"
+    COMPONENT_TYPE: "frontend"
   rules:
+    # Rule for main branch
     - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - js-packages/tenant-ui/**/*
+    # Rule for feature branch
+    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+      changes:
+        - js-packages/tenant-ui/**/*
 
 ####################### PUBLISH TENANT FRONTEND #######################
 Publish Tenant Frontend:

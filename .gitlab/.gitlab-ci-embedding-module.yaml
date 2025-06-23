@@ -5,6 +5,7 @@
 stages:
   - build
   - container-scanning
+  - restart
 
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
@@ -20,12 +21,13 @@ include:
 
 Fetch config:
   stage: build
-  image: node:16-alpine
+  image: alpine:3.16
   script:
+    - apk add --no-cache grep
     - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
-    # Estrae il valore PYTHON_BASE_DOCKER_IMAGE dal file di config
+    # Extract PYTHON_BASE_DOCKER_IMAGE value from config file
     - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
-    # Scrive i risultati in un file .env
+    # Write results to .env file
     - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
     - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
   artifacts:
@@ -51,33 +53,34 @@ Build Embedding OpenAI:
     HOME: "/tmp"
   script:
     - source $CI_PROJECT_DIR/config.env
-    #stampa config.env
+    # Print config.env
     - cat $CI_PROJECT_DIR/config.env
-    - echo "=== Configurazione credenziali Kaniko ==="
+    - echo "=== Configuring Kaniko credentials ==="
     - mkdir -p /kaniko/.docker
     - |
       echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
       > /kaniko/.docker/config.json
+    
+    # Determine tag to use
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
-          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
-          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
-      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
-          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
-          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
+        # For main branch or tag, use official version
+        DOCKER_TAG="$VERSION"
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
-          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
-          --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$VERSION"
+        # For feature branch, use 997-SNAPSHOT for AI components
+        echo "=== Building with tag 997-SNAPSHOT for feature branch ==="
+        DOCKER_TAG="997-SNAPSHOT"
+      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+        # For merge requests, use standard version
+        DOCKER_TAG="$VERSION"
       fi
+      
+      # Execute build with determined tag
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.openai" \
+        --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$DOCKER_TAG"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
@@ -86,7 +89,6 @@ Build Embedding OpenAI:
 
 
 ####################### BUILD EMBEDDING SENTENCE TRANSFORMER #######################
-#Fa fetch della versione, ma ora è inutile in quanto non fa push
 Build Embedding ST:
   stage: build
   image:
@@ -100,23 +102,18 @@ Build Embedding ST:
     HOME: "/tmp"
   script:
     - source $CI_PROJECT_DIR/config.env
-    #stampa config.env
+    # Print config.env
     - cat $CI_PROJECT_DIR/config.env
-    - echo "=== Configurazione credenziali Kaniko ==="
+    - echo "=== Configuring Kaniko credentials ==="
     - mkdir -p /kaniko/.docker
     - |
       echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
       > /kaniko/.docker/config.json
+    
+    # Setting for build with or without push
     - |
       if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
-          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
-          --no-push \
-          --compressed-caching=false \
-          --cleanup
-      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+        # For main branch or tag, no-push
         /kaniko/executor \
           --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
           --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
@@ -125,6 +122,17 @@ Build Embedding ST:
           --compressed-caching=false \
           --cleanup
       elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+        # For feature branch, build with no-push
+        echo "=== Building ST for feature branch (no-push) ==="
+        /kaniko/executor \
+          --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+          --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
+          --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
+          --no-push \
+          --compressed-caching=false \
+          --cleanup
+      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+        # For merge requests, no-push
         /kaniko/executor \
           --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
           --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
@@ -170,11 +178,23 @@ Container Scanning Embedding OpenAI:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
-##############  SCANNING: ST (commentato perché troppo pesante)  ##############
+######################## TRIGGER RESTART EMBEDDING #########################
+Trigger Restart:
+  extends: .restart_job_template
+  variables:
+    COMPONENT_NAME: "embedding-modules"
+    COMPONENT_TYPE: "ai"
+  needs:
+    - job: Fetch config
+      artifacts: true
+  rules:
+    # Rule for main branch
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    # Rule for feature branch
+    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+
+##############  SCANNING: ST (commented out because it's too heavy)  ##############
 # Container Scanning Embedding ST:
 #   extends: .container-scanning-template
 #   dependencies: [Build Embedding ST]
 #   variables:
-#     REGISTRY_COMPONENT_NAME: "embedding-st"
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "main"'
