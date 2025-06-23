@@ -31,7 +31,7 @@ public enum FormFieldType {
 	TIME("time"),
 	URL("url"),
 	CHECKBOX("checkbox"),
-	METADATA_MAP("metadataMap");
+	STRING_MAP("stringMap");
 
 	private final String value;
 
