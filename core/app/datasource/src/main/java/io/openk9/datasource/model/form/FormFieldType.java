@@ -30,7 +30,8 @@ public enum FormFieldType {
 	PASSWORD("password"),
 	TIME("time"),
 	URL("url"),
-	CHECKBOX("checkbox");
+	CHECKBOX("checkbox"),
+	METADATA_MAP("metadataMap");
 
 	private final String value;
 

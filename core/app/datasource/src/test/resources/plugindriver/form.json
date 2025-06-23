@@ -118,6 +118,21 @@
 				"max": 100,
 				"regex": "/[[:alnum:]]+/"
 			}
+		},
+		{
+			"label": "Metadata mapping",
+			"name": "metadataMapping",
+			"type": "metadataMap",
+			"required": true,
+			"values": [
+				{
+					"value": {
+						"field1": "div.articleBody",
+						"field2": "p.articleFooter"
+					},
+					"isDefault": false
+				}
+			]
 		}
 	]
 }
