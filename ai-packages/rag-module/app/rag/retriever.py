@@ -43,7 +43,6 @@ class OpenSearchRetriever(BaseRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
-
         search_query = (
             [
                 {

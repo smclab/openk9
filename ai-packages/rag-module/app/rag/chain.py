@@ -2,6 +2,7 @@ import json
 
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
@@ -97,18 +98,24 @@ def get_chain(
             sort_after_key=sort_after_key,
             language=language,
             context_window=context_window,
+            metadata=metadata,
             retrieve_type=retrieve_type,
             opensearch_host=opensearch_host,
             grpc_host=grpc_host,
         )
 
-        documents = retriever.invoke()
         prompt = ChatPromptTemplate.from_template(prompt_template)
-        chain = prompt | llm | parser
+
+        chain = (
+            {"context": retriever, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | parser
+        )
 
         yield json.dumps({"chunk": "", "type": "START"})
 
-        for chunk in chain.stream({"question": question, "context": documents}):
+        for chunk in chain.stream({"question": question}):
             yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
         yield json.dumps({"chunk": "", "type": "END"})
