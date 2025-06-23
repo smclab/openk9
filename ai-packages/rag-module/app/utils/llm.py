@@ -488,8 +488,9 @@ def stream_rag_conversation(
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
     ):
-        citations_chain = qa_prompt | llm.with_structured_output(Citations)
-
+        citations_chain = qa_prompt | llm.with_structured_output(
+            schema=Citations, include_raw=True, method="function_calling"
+        )
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
             history_factory,
@@ -534,6 +535,8 @@ def stream_rag_conversation(
     documents_id = set()
     citations = []
     conversation_title = ""
+    citations_response = []
+    parsing_error = ""
 
     for chunk in result:
         if chunk and "answer" in chunk.keys() and result_answer == "":
@@ -556,12 +559,19 @@ def stream_rag_conversation(
             and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
             and "annotations" in chunk.keys()
         ):
-            citations = chunk
+            citations_response.append(chunk["annotations"])
+
+    for element in citations_response:
+        if "parsing_error" in element:
+            parsing_error = element["parsing_error"]
+        elif "parsed" in element:
+            citations = element["parsed"]
 
     all_citations = (
-        citations.get("annotations").dict()["citations"]
+        citations.dict()["citations"]
         if citations
         and retrieve_citations
+        and parsing_error is None
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else []
