@@ -466,7 +466,6 @@ Trigger Rag Module:
     when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-rag-module.yaml"
-    strategy: depend
 
 # Procedere a fare la build di Ebedding anche se RAG fallisce
 Trigger Embedding Module:
@@ -487,4 +486,3 @@ Trigger Embedding Module:
     when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
-    strategy: depend
