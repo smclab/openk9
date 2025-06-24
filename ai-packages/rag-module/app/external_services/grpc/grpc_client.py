@@ -11,6 +11,8 @@ from app.external_services.grpc.tenant_manager import (
 )
 from app.utils.logger import logger
 
+UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
+
 
 def query_parser(
     search_query,
@@ -70,9 +72,10 @@ def query_parser(
         error_message = f"gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
     raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error."
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
     )
 
 
@@ -114,9 +117,10 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         error_message = f"gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
     raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error."
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
     )
 
 
@@ -164,9 +168,10 @@ def get_llm_configuration(grpc_host, virtual_host):
         error_message = f"gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
     raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error."
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
     )
 
 
@@ -197,7 +202,8 @@ def get_tenant_manager_configuration(grpc_host, virtual_host):
         error_message = f"gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
     raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected error."
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
     )
