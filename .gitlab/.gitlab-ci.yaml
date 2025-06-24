@@ -429,7 +429,7 @@ Trigger Rag Module:
     changes:
     - ai-packages/rag-module/**/*
   # Caso specifico per Luca Callocchia
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'dmytro.kozak'"
     changes:
     - ai-packages/rag-module/**/*
   # Blocco della prima esecuzione quando branch appena creato
@@ -450,7 +450,7 @@ Trigger Embedding Module:
     changes:
     - ai-packages/embedding-modules/**/*
   # feature + luca
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'dmytro.kozak'"
     changes:
     - ai-packages/embedding-modules/**/*
   # Blocco della prima esecuzione quando branch appena creato
