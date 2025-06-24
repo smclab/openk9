@@ -4,7 +4,7 @@ from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import tool
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, OpenSearchDeprecationWarning
 
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
