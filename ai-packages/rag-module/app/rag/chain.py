@@ -15,6 +15,8 @@ from app.utils.llm import (
 )
 from app.utils.logger import logger
 
+UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
+
 
 def get_chain(
     search_query,
@@ -121,8 +123,8 @@ def get_chain(
         yield json.dumps({"chunk": "", "type": "END"})
 
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
+        yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
 
 
 def get_chat_chain(
@@ -215,8 +217,8 @@ def get_chat_chain(
         )
 
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
+        yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
 
 
 @tool
@@ -396,5 +398,5 @@ def get_chat_chain_tool(
             yield json.dumps({"chunk": "", "type": "END"})
 
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        yield json.dumps({"chunk": f"Unexpected error", "type": "ERROR"})
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
+        yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
