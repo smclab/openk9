@@ -46,6 +46,15 @@ Build Embedding OpenAI:
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
     HOME: "/tmp"
+  cache:
+    key: "embedding-openai-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - .pip-cache/
+    policy: pull-push
+    when: always
+    expire_in: 30 days
+  before_script:
+  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   # Print config.env
@@ -75,7 +84,10 @@ Build Embedding OpenAI:
       --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
       --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
       --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.base" \
-      --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$DOCKER_TAG"
+      --destination "${CI_REGISTRY_NAME}/openk9/embedding-openai:$DOCKER_TAG" \
+      --cache=true \
+      --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-openai-cache" \
+      --cache-ttl=720h
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
   - if: '$CI_COMMIT_TAG'
@@ -94,6 +106,15 @@ Build Embedding ST:
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
     HOME: "/tmp"
+  cache:
+    key: "embedding-st-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - .pip-cache/
+    policy: pull-push
+    when: always
+    expire_in: 30 days
+  before_script:
+  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   # Print config.env
@@ -114,7 +135,9 @@ Build Embedding ST:
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
         --no-push \
         --compressed-caching=false \
-        --cleanup
+        --cleanup \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       # For feature branch, build with no-push
       echo "=== Building ST for feature branch (no-push) ==="
@@ -124,7 +147,9 @@ Build Embedding ST:
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
         --no-push \
         --compressed-caching=false \
-        --cleanup
+        --cleanup \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
     elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
       # For merge requests, no-push
       /kaniko/executor \
@@ -133,7 +158,9 @@ Build Embedding ST:
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer" \
         --no-push \
         --compressed-caching=false \
-        --cleanup
+        --cleanup \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
     fi
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
