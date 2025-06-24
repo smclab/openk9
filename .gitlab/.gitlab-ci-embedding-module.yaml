@@ -180,6 +180,10 @@ Trigger Restart:
   needs:
   - job: Fetch config
     artifacts: true
+  - job: Build Embedding OpenAI
+    artifacts: false
+  - job: Build Embedding ST
+    artifacts: false
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
