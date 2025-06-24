@@ -3,17 +3,16 @@
 ################################################################################
 
 stages:
-  - build
-  - container-scanning
-  - restart
+- build
+- container-scanning
+- restart
 
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
-  - local: '/.gitlab/.gitlab-templates.yaml'
-
+- local: '/.gitlab/.gitlab-templates.yaml'
 
 ################################################################################
 #                                   JOBS                                        #
@@ -24,70 +23,67 @@ Fetch config:
   stage: build
   image: alpine:3.16
   script:
-    - apk add --no-cache grep
-    - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
-    # Extract PYTHON_BASE_DOCKER_IMAGE value from config file
-    - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
-    # Write results to .env file
-    - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
-    - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
+  - apk add --no-cache grep
+  - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
+  # Extract PYTHON_BASE_DOCKER_IMAGE value from config file
+  - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
+  # Write results to .env file
+  - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
+  - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
   artifacts:
     paths:
-      - config.env
+    - config.env
     expire_in: 1 day
-
 
 ######################## BUILD RAG IMAGE (KANIKO) ########################
 Build Rag Image:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+    entrypoint: [ "" ]
   needs:
-    - job: Fetch config
-      artifacts: true
+  - job: Fetch config
+    artifacts: true
   script:
-    - source $CI_PROJECT_DIR/config.env
-    - echo "=== Configuring Kaniko credentials ==="
-    - mkdir -p /kaniko/.docker
-    - |
-      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-      > /kaniko/.docker/config.json
-    - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
-        echo "[RAG] Build & push as :$VERSION"
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
-      elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
-        echo "[RAG] Build & push as :merge-request"
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
-      elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
-        echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
-        /kaniko/executor \
-          --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-          --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-          --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT"
-      fi
+  - source $CI_PROJECT_DIR/config.env
+  - echo "=== Configuring Kaniko credentials ==="
+  - mkdir -p /kaniko/.docker
+  - |
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+  - |
+    if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
+      echo "[RAG] Build & push as :$VERSION"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+    elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+      echo "[RAG] Build & push as :merge-request"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+    elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
+      echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT"
+    fi
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
-
-
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
 
 ######################## CONTAINER SCANNING RAG #########################
 Container Scanning Rag:
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE
   needs:
-    - job: Fetch config
-      artifacts: true
+  - job: Fetch config
+    artifacts: true
   variables:
     CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
@@ -99,17 +95,17 @@ Container Scanning Rag:
       container_scanning: gl-container-scanning-report.json
       cyclonedx: "**/gl-sbom-*.cdx.json"
     paths:
-      - gl-container-scanning-report.json
-      - gl-dependency-scanning-report.json
-      - "**/gl-sbom-*.cdx.json"
+    - gl-container-scanning-report.json
+    - gl-dependency-scanning-report.json
+    - "**/gl-sbom-*.cdx.json"
   before_script:
-    - source $CI_PROJECT_DIR/config.env
-    - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
-    - echo "Using version $VERSION"
+  - source $CI_PROJECT_DIR/config.env
+  - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+  - echo "Using version $VERSION"
   script:
-    - gtcs scan
+  - gtcs scan
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_BRANCH == "main"'
 
 ######################## TRIGGER RESTART RAG #########################
 Trigger Restart:
@@ -118,10 +114,10 @@ Trigger Restart:
     COMPONENT_NAME: "rag-module"
     COMPONENT_TYPE: "ai"
   needs:
-    - job: Fetch config
-      artifacts: true
+  - job: Fetch config
+    artifacts: true
   rules:
-    # Rule for main branch
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    # Rule for feature branch
-    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'"
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
