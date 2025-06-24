@@ -44,6 +44,15 @@ Build Rag Image:
   needs:
   - job: Fetch config
     artifacts: true
+  cache:
+    key: "rag-module-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - .pip-cache/
+    policy: pull-push
+    when: always
+    expire_in: 30 days
+  before_script:
+  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   - echo "=== Configuring Kaniko credentials ==="
@@ -57,19 +66,25 @@ Build Rag Image:
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
     elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[RAG] Build & push as :merge-request"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
     fi
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
