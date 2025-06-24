@@ -75,7 +75,7 @@ Build Rag Image:
   - if: '$CI_COMMIT_BRANCH == "main"'
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 ######################## CONTAINER SCANNING RAG #########################
 Container Scanning Rag:
@@ -120,4 +120,4 @@ Trigger Restart:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
   # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
