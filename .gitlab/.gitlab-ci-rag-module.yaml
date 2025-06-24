@@ -50,7 +50,6 @@ Build Rag Image:
     - .pip-cache/
     policy: pull-push
     when: always
-    expire_in: 30 days
   before_script:
   - mkdir -p .pip-cache
   script:
