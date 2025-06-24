@@ -232,7 +232,7 @@
         -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
         -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
         -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-        -F "variables[OPENK9_USER]=$GITLAB_USER_LOGIN" \
+        -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
         -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
         -F "ref=master" \
         "${RESTART_TRIGGER_URL}"
