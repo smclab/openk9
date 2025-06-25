@@ -200,7 +200,7 @@ Container Scanning Embedding OpenAI:
 Trigger Restart:
   extends: .restart_job_template
   variables:
-    COMPONENT_NAME: "embedding-modules"
+    COMPONENT_NAME: "embedding-module"
     COMPONENT_TYPE: "ai"
   needs:
   - job: Fetch config
