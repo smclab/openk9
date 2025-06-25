@@ -189,6 +189,7 @@
           -F "ref=master" \
           "${RESTART_TRIGGER_URL}"
 
+
       else
         echo "🔍 Component type not specified or unknown, letting target pipeline auto-detect"
         curl -X POST \
