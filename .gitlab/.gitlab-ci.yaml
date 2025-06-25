@@ -201,7 +201,7 @@ Trigger File-Manager:
     when: never
 
   # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/file-manager/**/*
     - core/common/resources-common/**/*
@@ -229,7 +229,7 @@ Trigger Tenant-Manager:
     when: never
 
   # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tenant-manager/**/*
     - core/common/graphql-util/**/*
@@ -290,7 +290,7 @@ Trigger Tika ocr:
     when: never
 
   # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tika/**/*
     - core/common/resources-common/**/*
@@ -458,7 +458,7 @@ Trigger Rag Module:
     changes:
     - ai-packages/rag-module/**/*
   # Caso specifico per Luca Callocchia
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'dmytro.kozak'"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
     changes:
     - ai-packages/rag-module/**/*
   # Blocco della prima esecuzione quando branch appena creato
@@ -478,7 +478,7 @@ Trigger Embedding Module:
     changes:
     - ai-packages/embedding-modules/**/*
   # feature + luca
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'dmytro.kozak'"
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
     changes:
     - ai-packages/embedding-modules/**/*
   # Blocco della prima esecuzione quando branch appena creato
