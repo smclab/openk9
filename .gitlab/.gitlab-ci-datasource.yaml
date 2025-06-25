@@ -1,14 +1,14 @@
 stages:
-  - build
-  - container-scanning
-  - restart
+- build
+- container-scanning
+- restart
 
 variables:
   # Image used for container scanning
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
-  - local: '/.gitlab/.gitlab-templates.yaml'
+- local: '/.gitlab/.gitlab-templates.yaml'
 
 ###############################################################
 #                       BUILD DATASOURCE                      #
@@ -19,97 +19,93 @@ Build Datasource image:
   variables:
     COMPONENT: "datasource"
   script:
-    - |
-      echo "=== Reading version from Maven POM ==="
-      cd core
-      VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-      echo "VERSION=$VERSION"
-      echo "$VERSION" > $CI_PROJECT_DIR/.version
+  - |
+    echo "=== Reading version from Maven POM ==="
+    cd core
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    echo "VERSION=$VERSION"
+    echo "$VERSION" > $CI_PROJECT_DIR/.version
 
-      echo "=== Running 'mvn package' based on branch/tag MAVEN CLI OPTS: $MAVEN_OPTS  ==="
-      
-      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
-        # Build + push image on main branch or tag
-        echo "Build on main or tag with official version"
-        mvn package  \
-          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
-          -Dquarkus.container-image.build=true \
-          -Dquarkus.container-image.push=true \
-          $MAVEN_OPTS
+    echo "=== Running 'mvn package' based on branch/tag MAVEN CLI OPTS: $MAVEN_OPTS  ==="
 
-      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        # Build without push on merge request
-        echo "Build on MR without push"
-        mvn package  \
-          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
-          -Dquarkus.container-image.build=false \
-          -Dquarkus.container-image.push=false \
-          $MAVEN_OPTS
+    if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
+      # Build + push image on main branch or tag
+      echo "Build on main or tag with official version"
+      mvn package  \
+        -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true \
+        $MAVEN_OPTS
 
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        # Feature branch by Michele => push with tag 998-SNAPSHOT
-        echo "Triggered by Michele"
-        mvn package $MAVEN_OPTS \
-          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
-          -Dquarkus.container-image.build=true \
-          -Dquarkus.container-image.push=true \
-          -Dquarkus.container-image.tag=998-SNAPSHOT \
-          -P 'exclude-quarkus-test'
+    elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+      # Build without push on merge request
+      echo "Build on MR without push"
+      mvn package  \
+        -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+        -Dquarkus.container-image.build=false \
+        -Dquarkus.container-image.push=false \
+        $MAVEN_OPTS
 
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
-        # Feature branch by Mirko => push with tag 999-SNAPSHOT
-        echo "Triggered by Mirko"
-        mvn package  \
-          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
-          -Dquarkus.container-image.build=true \
-          -Dquarkus.container-image.push=true \
-          -Dquarkus.container-image.tag=999-SNAPSHOT \
-          -P 'exclude-quarkus-test' \
-          $MAVEN_OPTS
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+      # Feature branch by Michele => push with tag 998-SNAPSHOT
+      echo "Triggered by Michele"
+      mvn package $MAVEN_OPTS \
+        -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true \
+        -Dquarkus.container-image.tag=998-SNAPSHOT \
+        -P 'exclude-quarkus-test'
 
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        # Feature branch by other developer => push with tag 999-SNAPSHOT
-        echo "Triggered by other developer"
-        mvn package  \
-          -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
-          -Dquarkus.container-image.build=true \
-          -Dquarkus.container-image.push=true \
-          -Dquarkus.container-image.tag=999-SNAPSHOT \
-          -P 'exclude-quarkus-test' \
-          $MAVEN_OPTS
-      fi
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
+      # Feature branch by Mirko => push with tag 999-SNAPSHOT
+      echo "Triggered by Mirko"
+      mvn package  \
+        -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true \
+        -Dquarkus.container-image.tag=999-SNAPSHOT \
+        -P 'exclude-quarkus-test' \
+        $MAVEN_OPTS
+
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # Feature branch by other developer => push with tag 999-SNAPSHOT
+      echo "Triggered by other developer"
+      mvn package  \
+        -pl ../vendor/hibernate-rx-multitenancy/deployment,app/datasource -am \
+        -Dquarkus.container-image.build=true \
+        -Dquarkus.container-image.push=true \
+        -Dquarkus.container-image.tag=999-SNAPSHOT \
+        -P 'exclude-quarkus-test' \
+        $MAVEN_OPTS
+    fi
   artifacts:
     paths:
-      - .version
+    - .version
     expire_in: 24 hours
   rules:
-    # Case 1: commit on main
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    # Case 2: merge request
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Case 3: tag creation
-    - if: '$CI_COMMIT_TAG'
-    # Block FIRST execution when a branch is created
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
-    # Case: commit on feature branch with pattern ^[0-9]+-.*$
-    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-
-
+  # Case 1: commit on main
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  # Case 2: merge request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  # Case 3: tag creation
+  - if: '$CI_COMMIT_TAG'
+  # Block FIRST execution when a branch is created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # Case: commit on feature branch with pattern ^[0-9]+-.*$
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 ###############################################################
 #                 CONTAINER SCANNING DATASOURCE               #
 ###############################################################
 Container Scanning Datasource:
-  dependencies: [Build Datasource image]
+  dependencies: [ Build Datasource image ]
   extends: .container-scanning-template
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-datasource"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-
-
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
 
 ###############################################################
 #              TRIGGER RESTART DATASOURCE APP                 #
@@ -117,7 +113,7 @@ Container Scanning Datasource:
 Trigger Restart Datasource:
   extends: .restart_job_template
   dependencies:
-    - Build Datasource image
+  - Build Datasource image
   variables:
     COMPONENT_NAME: "datasource"
     COMPONENT_TYPE: "backend"

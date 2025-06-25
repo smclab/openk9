@@ -3,16 +3,15 @@
 ################################################################################
 
 stages:
-  - build
-  - container-scanning
-  - restart
+- build
+- container-scanning
+- restart
 
 variables:
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
-  - local: '/.gitlab/.gitlab-templates.yaml'
-
+- local: '/.gitlab/.gitlab-templates.yaml'
 
 ################################################################################
 #                                   JOBS                                        #
@@ -25,55 +24,65 @@ Build K8S-Client Image:
     COMPONENT: "k8s-client"
   stage: build
   script:
-    - cd core
-    - |
-      VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-      echo "VERSION=$VERSION"
-      echo "$VERSION" > $CI_PROJECT_DIR/.version
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
-        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
-      elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
-      fi
+  - cd core
+  - |
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    echo "VERSION=$VERSION"
+    echo "$VERSION" > $CI_PROJECT_DIR/.version
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
+      # Build + push image on main branch or tag
+      echo "Build on main or tag with official version"
+      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+    elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+      # Build without push on merge request
+      echo "Build on MR without push"
+      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+      # Feature branch by Michele => push with tag 998-SNAPSHOT
+      echo "Triggered by Michele"
+      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "dmytro.kozak" ]]; then
+      # Feature branch by Mirko => push with tag 999-SNAPSHOT
+      echo "Triggered by Mirko"
+      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # Feature branch by other developer => push with tag 999-SNAPSHOT
+      echo "Triggered by other developer"
+      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+    fi
   artifacts:
     paths:
-      - .version
+    - .version
     expire_in: 24 hours
   rules:
-    # Case 1: When there is a commit to main (push to main)
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    # Case 2: When a merge request is approved
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # Case 3: When a tag is created
-    - if: '$CI_COMMIT_TAG'
-    # Block the first execution when a branch is created
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
-    # Case 4: When the commit is made on a feature branch that matches the pattern ^[0-9]+-.*$
-    - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-
+  # Case 1: When there is a commit to main (push to main)
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  # Case 2: When a merge request is approved
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  # Case 3: When a tag is created
+  - if: '$CI_COMMIT_TAG'
+  # Block the first execution when a branch is created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # Case 4: When the commit is made on a feature branch that matches the pattern ^[0-9]+-.*$
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
 ###################### CONTAINER SCANNING K8S-CLIENT ####################
 Container Scanning K8S-Client:
-  dependencies: [Build K8S-Client Image]
+  dependencies: [ Build K8S-Client Image ]
   extends: .container-scanning-template
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-k8s-client"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
 
 ##################### TRIGGER RESTART K8S-CLIENT ########################
 Trigger Restart K8S-Client:
   extends: .restart_job_template
   dependencies:
-    - Build K8S-Client Image
+  - Build K8S-Client Image
   variables:
     COMPONENT_NAME: "k8s-client"
     COMPONENT_TYPE: "backend"
