@@ -152,16 +152,18 @@
           "${RESTART_TRIGGER_URL}"
 
       elif [ "$COMPONENT_TYPE" = "ai" ]; then
-        echo "🔁 Restarting AI on k9-ai"
-        curl -X POST \
-          -F "token=${RESTART_TRIGGER_TOKEN}" \
-          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-          -F "variables[NAMESPACE]=k9-ai" \
-          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-          -F "ref=master" \
-          "${RESTART_TRIGGER_URL}"
+        echo "🔁 Restarting AI on ALL namespaces EXCEPT k9-ai (main branch deployment)"
+        for ns in k9-backend k9-backend01 k9-test k9-frontend; do
+          curl -X POST \
+            -F "token=${RESTART_TRIGGER_TOKEN}" \
+            -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+            -F "variables[NAMESPACE]=$ns" \
+            -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+            -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+            -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+            -F "ref=master" \
+            "${RESTART_TRIGGER_URL}"
+        done
 
       elif [ "$COMPONENT_TYPE" = "frontend" ]; then
         echo "🔁 Restarting frontend on k9-frontend"
