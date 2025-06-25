@@ -74,8 +74,8 @@ Trigger Datasource:
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
-  # Case 4: feature branch matching ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/datasource/**/*
     - core/service/**/*
@@ -108,8 +108,8 @@ Trigger Searcher:
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
-  # Case 4: feature branch matching ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/common/resources-common/**/*
     - core/app/searcher/**/*
@@ -139,8 +139,8 @@ Trigger Ingestion:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/ingestion/**/*
     - core/common/util/**/*
@@ -167,8 +167,8 @@ Trigger K8S-Client:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/k8s-client/**/*
     - core/app/service/**/*
@@ -200,8 +200,8 @@ Trigger File-Manager:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/file-manager/**/*
     - core/common/resources-common/**/*
@@ -228,8 +228,8 @@ Trigger Tenant-Manager:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tenant-manager/**/*
     - core/common/graphql-util/**/*
@@ -262,8 +262,8 @@ Trigger Tika no-ocr:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tika/**/*
     - core/common/resources-common/**/*
@@ -289,8 +289,8 @@ Trigger Tika ocr:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Caso 4: feature branch ^\d+-.*$ + mirko o michele
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'dmytro.kozak' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+  # Caso 4: feature branch ^\d+-.*$
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tika/**/*
     - core/common/resources-common/**/*

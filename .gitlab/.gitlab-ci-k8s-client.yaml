@@ -42,13 +42,9 @@ Build K8S-Client Image:
       # Feature branch by Michele => push with tag 998-SNAPSHOT
       echo "Triggered by Michele"
       mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=998-SNAPSHOT -P 'exclude-quarkus-test'
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "dmytro.kozak" ]]; then
-      # Feature branch by Mirko => push with tag 999-SNAPSHOT
-      echo "Triggered by Mirko"
-      mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # Feature branch by other developer => push with tag 999-SNAPSHOT
-      echo "Triggered by other developer"
+      # Feature branch by mirko.zizzari (or other authorized user) => push with tag 999-SNAPSHOT
+      echo "Triggered by authorized user: $GITLAB_USER_LOGIN"
       mvn package $MAVEN_OPTS -pl app/k8s-client -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
     fi
   artifacts:
