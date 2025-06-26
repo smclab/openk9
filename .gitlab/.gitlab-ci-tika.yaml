@@ -17,11 +17,11 @@ include:
 #                                   JOBS                                        #
 ################################################################################
 
-######################## BUILD TIKA NO-OCR IMAGE ########################
-Build Tika no-ocr:
+######################## BUILD TIKA IMAGE ########################
+Build Tika:
   extends: .build_template
   variables:
-    COMPONENT: "tika-no-ocr"
+    COMPONENT: "tika"
   stage: build
   script:
   - cd core
@@ -31,11 +31,11 @@ Build Tika no-ocr:
     echo "$VERSION" > $CI_PROJECT_DIR/.version
   - |
     if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
-      mvn package $MAVEN_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
+      mvn package $MAVEN_OPTS -pl app/tika -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true
     elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-    mvn package $MAVEN_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
+    mvn package $MAVEN_OPTS -pl app/tika -am -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      mvn package $MAVEN_OPTS -pl app/tika/tika-no-ocr -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
+      mvn package $MAVEN_OPTS -pl app/tika -am -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=999-SNAPSHOT -P 'exclude-quarkus-test'
     fi
   artifacts:
     paths:
@@ -54,21 +54,21 @@ Build Tika no-ocr:
   # Case 4: commit on feature branch with pattern ^[0-9]+-.*$
   - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
 
-###################### CONTAINER SCANNING TIKA NO-OCR #####################
-Container Scanning Tika no-ocr:
-  dependencies: [ Build Tika no-ocr ]
+###################### CONTAINER SCANNING TIKA #####################
+Container Scanning Tika:
+  dependencies: [ Build Tika ]
   extends: .container-scanning-template
   variables:
-    REGISTRY_COMPONENT_NAME: "openk9-tika-no-ocr"
+    REGISTRY_COMPONENT_NAME: "openk9-tika"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
   - if: '$CI_COMMIT_TAG'
 
-###################### TRIGGER RESTART TIKA NO-OCR #######################
-Trigger Restart Tika no-ocr:
+###################### TRIGGER RESTART TIKA #######################
+Trigger Restart Tika:
   extends: .restart_job_template
   dependencies:
-  - Build Tika no-ocr
+  - Build Tika
   variables:
-    COMPONENT_NAME: "tika-no-ocr"
+    COMPONENT_NAME: "tika"
     COMPONENT_TYPE: "backend"

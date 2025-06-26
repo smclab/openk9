@@ -50,11 +50,6 @@ variables:
 # WHEN THERE ARE CHANGES IN HELM CHART TRIGGER (but manual)
 include:
 - local: '/.gitlab/.gitlab-templates.yaml'
-- local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml'
-- local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml'
-- local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml'
-- local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml'
-- local: '/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml'
 
 ################################################################################
 #                               TRIGGER DATASOURCE                             #
@@ -244,9 +239,9 @@ Trigger Tenant-Manager:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
 
 ################################################################################
-#                              TRIGGER TIKA NO-OCR                             #
+#                                TRIGGER TIKA                                  #
 ################################################################################
-Trigger Tika no-ocr:
+Trigger Tika:
   stage: trigger
   rules:
   # Case 1: push on main
@@ -268,34 +263,7 @@ Trigger Tika no-ocr:
     - core/app/tika/**/*
     - core/common/resources-common/**/*
   trigger:
-    include: "/.gitlab/.gitlab-ci-tika-no-ocr.yaml"
-
-################################################################################
-#                                TRIGGER TIKA OCR                              #
-################################################################################
-Trigger Tika ocr:
-  stage: trigger
-  rules:
-  # Caso 1: push su main
-  - if: '$CI_COMMIT_BRANCH == "main"'
-
-  # Caso 2: merge request approvata
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
-
-  # Caso 3: creazione tag
-  - if: "$CI_COMMIT_TAG"
-
-  # Blocco della prima esecuzione quando branch appena creato
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
-
-  # Caso 4: feature branch ^\d+-.*$
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
-    changes:
-    - core/app/tika/**/*
-    - core/common/resources-common/**/*
-  trigger:
-    include: "/.gitlab/.gitlab-ci-tika-ocr.yaml"
+    include: "/.gitlab/.gitlab-ci-tika.yaml"
 
 ################################################################################
 #                         PIPELINE FRONT-END TRIGGERS                          #
@@ -486,3 +454,67 @@ Trigger Embedding Module:
     when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
+
+################################################################################
+#                              TRIGGER HELM CHARTS                             #
+################################################################################
+
+Trigger Helm Base Core:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - helm-charts/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml"
+
+Trigger Helm File Handling:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - helm-charts/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml"
+
+Trigger Helm Gen AI:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - helm-charts/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
+
+Trigger Helm Knowledge Handling:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - helm-charts/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
+
+Trigger Helm Utilities:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - helm-charts/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"

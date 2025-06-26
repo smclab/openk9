@@ -33,6 +33,11 @@ Fetch config:
     paths:
     - config.env
     expire_in: 1 day
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
 
 ######################## BUILD EMBEDDING OPENAI ########################
 Build Embedding OpenAI:
@@ -123,10 +128,10 @@ Build Embedding ST:
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
-  # Setting for build with or without push
+  # Setting for build with or without push - DISABLING CACHE TO FIX EOF ERROR
   - |
     if [[ "$CI_COMMIT_BRANCH" == "main" || "$CI_COMMIT_TAG" != "" ]]; then
-      # For main branch or tag, no-push
+      # For main branch or tag, no-push, no cache to avoid EOF error
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
@@ -134,11 +139,11 @@ Build Embedding ST:
         --no-push \
         --compressed-caching=false \
         --cleanup \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
+        --cache=false \
+        --verbosity=debug
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # For feature branch, build with no-push
-      echo "=== Building ST for feature branch (no-push) ==="
+      # For feature branch, build with no-push, no cache to avoid EOF error
+      echo "=== Building ST for feature branch (no-push, no-cache) ==="
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
@@ -146,10 +151,10 @@ Build Embedding ST:
         --no-push \
         --compressed-caching=false \
         --cleanup \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
+        --cache=false \
+        --verbosity=debug
     elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
-      # For merge requests, no-push
+      # For merge requests, no-push, no cache to avoid EOF error
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --build-arg "PYTHON_BASE_DOCKER_IMAGE=${PYTHON_BASE_DOCKER_IMAGE}" \
@@ -157,8 +162,8 @@ Build Embedding ST:
         --no-push \
         --compressed-caching=false \
         --cleanup \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/embedding-st-cache"
+        --cache=false \
+        --verbosity=debug
     fi
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
