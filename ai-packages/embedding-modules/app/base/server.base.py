@@ -60,7 +60,7 @@ class ModelType(Enum):
     CHAT_VERTEX_AI = "chat_vertex_ai"
 
 
-def save_google_application_credentials(credentials, credentials_file_path='./'):
+def save_google_application_credentials(credentials, credentials_file_path="./"):
     """
     Save Google Application credentials to a JSON file and configure environment variables.
 
@@ -93,7 +93,7 @@ def save_google_application_credentials(credentials, credentials_file_path='./')
     """
     try:
         json_credentials = json.dumps(credentials, indent=2, sort_keys=True)
-        credential_file = f'{credentials_file_path}application_default_credentials.json'
+        credential_file = f"{credentials_file_path}application_default_credentials.json"
 
         with open(credential_file, "w", encoding="utf-8") as outfile:
             outfile.write(json_credentials)
@@ -162,7 +162,9 @@ def initialize_embedding_model(configuration):
                 params=embed_params,
             )
         case ModelType.CHAT_VERTEX_AI.value:
-            chat_vertex_ai_model_garden = configuration.get("chat_vertex_ai_model_garden")
+            chat_vertex_ai_model_garden = configuration.get(
+                "chat_vertex_ai_model_garden"
+            )
             google_credentials = chat_vertex_ai_model_garden.get("credentials")
             save_google_application_credentials(google_credentials)
             project_id = google_credentials.get("quota_project_id")
@@ -206,6 +208,16 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         text_splitted = []
         chunks = []
 
+        info = {
+            "text": text,
+            "chunk_type": chunk_type,
+            "provider": model_type,
+            "model": model,
+            "chunk_config": chunk_json_config,
+        }
+
+        logger.info(info)
+
         if chunk_type == 1:
             chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
             chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
@@ -222,7 +234,9 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
             chunk_model_name = chunk_json_config.get("model_name", DEFAULT_MODEL_NAME)
             chunk_encoding = chunk_json_config.get("encoding", DEFAULT_ENCODING_NAME)
-            chunk_is_separator_regex = chunk_json_config.get("is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX)
+            chunk_is_separator_regex = chunk_json_config.get(
+                "is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX
+            )
             text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
                 separator=chunk_separator,
                 chunk_size=chunk_size,
@@ -237,7 +251,9 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
             chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
             chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
-            chunk_is_separator_regex = chunk_json_config.get("is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX)
+            chunk_is_separator_regex = chunk_json_config.get(
+                "is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX
+            )
             text_splitter = CharacterTextSplitter(
                 separator=chunk_separator,
                 chunk_size=chunk_size,
@@ -264,7 +280,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         end = time.time()
 
-        logger.info("request: %s", request)
         logger.info(
             "text splitted in %s chunks in %s seconds",
             total_chunks,
