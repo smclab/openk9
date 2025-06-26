@@ -34,9 +34,9 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
                  max_length, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions,
-                 specific_tags, additional_metadata, do_extract_docs, timestamp, *a, **kw):
+                 custom_metadata, additional_metadata, do_extract_docs, timestamp, *a, **kw):
         super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, title_tag, allowed_domains, excluded_paths,
-                                                 allowed_paths, max_length, document_file_extensions, specific_tags,
+                                                 allowed_paths, max_length, document_file_extensions, custom_metadata,
                                                  additional_metadata, do_extract_docs, datasource_id, schedule_id,
                                                  timestamp, tenant_id, *a, **kw)
 
@@ -94,8 +94,8 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
             web_item_fields = ['url', 'title', 'content', 'favicon']
 
-            for element in self.specific_tags:
-                web_item_fields.append(list(element.keys())[0])
+            for key, value in self.custom_metadata.items():
+                web_item_fields.append(key)
 
             web_item = generate_item(web_item_fields)
             web_item['url'] = url
@@ -106,35 +106,16 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
             except Exception as e:
                 logger.error("Something goes wrong getting favicon")
 
-            if len(self.specific_tags) > 0:
-                for element in self.specific_tags:
-                    metadata, values = list(element.items())[0]
-                    html_element = values["html_element"]
-                    try:
-                        index = values["index"]
-                    except KeyError:
-                        index = None
-
-                    if "id" in values.keys():
-                        html_element_id = values['id']
-                        specific_web_item_content = response.css(f"{html_element}#{html_element_id}").getall()
-                    elif "class" in values.keys():
-                        html_element_class = values['class']
-                        specific_web_item_content = response.css(f"{html_element}.{html_element_class}").getall()
+            if self.custom_metadata:
+                for key, value in self.custom_metadata.items():
+                    extracted_elements = response.xpath(value).getall()
+                    if len(extracted_elements) == 1:
+                        web_item[key] = extracted_elements[0].strip()
+                    elif len(extracted_elements) > 1:
+                        web_item[key] = [extracted_element.strip() for extracted_element in extracted_elements]
                     else:
-                        specific_web_item_content = response.css(f"{html_element}").getall()
+                        web_item[key] = None
 
-                    if len(specific_web_item_content) == 1:
-                        web_item[metadata] = extract_text(specific_web_item_content[0])
-                    elif len(specific_web_item_content) > 1:
-                        specific_web_item_content = [extract_text(element) for element in specific_web_item_content]
-                    if index == None:
-                        web_item[metadata] = specific_web_item_content
-                    elif len(specific_web_item_content) > index - 1:
-                        try:
-                            web_item[metadata] = specific_web_item_content[index]
-                        except IndexError as e:
-                            web_item[metadata] = specific_web_item_content
             datasource_payload = {
                 "web": dict(web_item)
             }

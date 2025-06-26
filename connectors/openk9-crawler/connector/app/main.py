@@ -53,7 +53,7 @@ class BaseRequest(ABC, BaseModel):
     allowedPaths: Optional[list] = []
     maxLength: Optional[int] = -1
     documentFileExtensions: Optional[list] = []
-    specificTags: Optional[list] = []
+    customMetadata: Optional[dict] = {}
     pageCount: int = 0
     additionalMetadata: Optional[dict] = {}
     doExtractDocs: bool = False
@@ -102,7 +102,7 @@ def set_up_sitemap_endpoint(request):
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
     document_file_extensions = request["documentFileExtensions"]
-    specific_tags = request["specificTags"]
+    custom_metadata = request["customMetadata"]
     page_count = request["pageCount"]
     replace_rule = request["replaceRule"]
     additional_metadata = request["additionalMetadata"]
@@ -125,7 +125,7 @@ def set_up_sitemap_endpoint(request):
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),
-        "specific_tags": json.dumps(specific_tags),
+        "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
@@ -157,7 +157,7 @@ def set_up_crawl_endpoint(request):
     tenant_id = request["tenantId"]
     excluded_paths = request["excludedPaths"]
     document_file_extensions = request["documentFileExtensions"]
-    specific_tags = request["specificTags"]
+    custom_metadata = request["customMetadata"]
     close_spider_page_count = request["pageCount"]
     additional_metadata = request["additionalMetadata"]
     do_extract_docs = request["doExtractDocs"]
@@ -179,7 +179,7 @@ def set_up_crawl_endpoint(request):
         "max_length": max_length,
         "tenant_id": tenant_id,
         "document_file_extensions": json.dumps(document_file_extensions),
-        "specific_tags": json.dumps(specific_tags),
+        "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],

@@ -25,7 +25,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 	crawled_ids = []
 
 	def __init__(self, ingestion_url, body_tag, title_tag, allowed_domains, excluded_paths,
-				 allowed_paths, max_length, document_file_extensions, specific_tags, additional_metadata,
+				 allowed_paths, max_length, document_file_extensions, custom_metadata, additional_metadata,
 				 do_extract_docs, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
@@ -41,7 +41,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.allowed_paths = ast.literal_eval(allowed_paths)
 		self.max_length = int(max_length)
 		self.document_file_extensions = ast.literal_eval(document_file_extensions)
-		self.specific_tags = ast.literal_eval(specific_tags)
+		self.custom_metadata = ast.literal_eval(custom_metadata)
 		self.additional_metadata = ast.literal_eval(additional_metadata)
 
 		self.timestamp = timestamp
