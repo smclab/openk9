@@ -952,11 +952,6 @@ BEGIN
         INSERT INTO "tab" ("id", "create_date", "modified_date", "description", "name", "priority") VALUES
         (4,	'2025-06-18 10:27:58.287845',	'2025-06-18 10:27:58.287881',	'',	'Tutti i risultati',	0);
 
-        INSERT INTO "tenant_binding" ("id", "create_date", "modified_date", "virtual_host", "tenant_binding_bucket_id", "embedding_model_id", "large_language_model_id") VALUES
-        (1,	NULL,	'2025-06-17 11:55:52.94292',	'demo.openk9.localhost',	18,	32,	45);
-
-        END IF;
-
         INSERT INTO "rag_configuration" ("id", "create_date", "modified_date", "description", "name", "type", "prompt", "rephrase_prompt", "prompt_no_rag", "rag_tool_description", "chunk_window", "reformulate", "json_config") VALUES
         (1,	'2025-06-18 10:26:07.107759',	'2025-06-18 10:26:07.108051',	'',	'chat rag configuration',	'CHAT_RAG',	'',	'Given a chat history and the latest user questionwhich might reference context in the chat history, formulate a standalone question which can be understood without the chat history. Do NOT answer the question,  just reformulate it if needed and otherwise return it as is.',	'',	'',	0,	'1',	'{
         "rerank": false,
@@ -981,9 +976,11 @@ BEGIN
         }
         ');
 
-
         INSERT INTO "bucket" ("id", "create_date", "modified_date", "description", "name", "query_analysis_id", "search_config_id", "refresh_on_suggestion_category", "language_id", "refresh_on_tab", "refresh_on_date", "refresh_on_query", "retrieve_type", "rag_configuration_chat_id", "rag_configuration_chat_tool_id", "rag_configuration_simple_generate_id") VALUES
         (18,	'2025-06-17 10:37:18.417429',	'2025-06-18 10:27:40.952599',	'',	'test',	NULL,	NULL,	'0',	NULL,	'0',	'0',	'0',	'HYBRID',	1,	NULL,	3);
+
+        INSERT INTO "tenant_binding" ("id", "create_date", "modified_date", "virtual_host", "tenant_binding_bucket_id", "embedding_model_id", "large_language_model_id") VALUES
+        (1,	NULL,	'2025-06-17 11:55:52.94292',	'demo.openk9.localhost',	18,	32,	45);
 
         END IF;
         
