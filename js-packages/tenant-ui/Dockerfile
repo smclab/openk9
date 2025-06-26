@@ -1,4 +1,4 @@
-FROM node:16.18-alpine as react-build
+FROM node:18-alpine as react-build
 
 COPY ./js-packages/tenant-ui /app
 COPY ./yarn.lock /app
