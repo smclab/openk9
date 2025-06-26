@@ -29,6 +29,10 @@ spec:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: http
+              protocol: TCP
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config
