@@ -43,9 +43,7 @@
 			],
 			"info": "",
 			"validator": {
-				"min": 0,
-				"max": 100,
-				"regex": "/[[:alnum:]]+/"
+				"max": 100
 			}
 		},
 		{
@@ -82,8 +80,7 @@
 			],
 			"validator": {
 				"min": 0,
-				"max": 100,
-				"regex": "/[[:alnum:]]+/"
+				"max": 100
 			}
 		},
 		{
@@ -100,8 +97,6 @@
 				}
 			],
 			"validator": {
-				"min": 0,
-				"max": 100,
 				"regex": "/[[:alnum:]]+/"
 			}
 		},
@@ -115,7 +110,6 @@
 			"values": [],
 			"validator": {
 				"min": 0,
-				"max": 100,
 				"regex": "/[[:alnum:]]+/"
 			}
 		},

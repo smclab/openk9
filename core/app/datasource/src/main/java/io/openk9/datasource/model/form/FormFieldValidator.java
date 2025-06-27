@@ -20,4 +20,4 @@ package io.openk9.datasource.model.form;
 import lombok.Builder;
 
 @Builder
-public record FormFieldValidator(int min, int max, String regex) {}
+public record FormFieldValidator(Integer min, Integer max, String regex) {}
