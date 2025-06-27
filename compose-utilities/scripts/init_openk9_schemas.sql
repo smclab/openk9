@@ -244,7 +244,7 @@ BEGIN
         ('1746544287297-2',	'openk9',	'db/datasource/2025/05/06-01-changelog.xml',	'2025-06-17 11:58:36.192685',	206,	'EXECUTED',	'9:2b2526d8bba9f010640bfe9f0b77e6b0',	'sql',	'Rimuovi i campi host e port dopo la migrazione a baseUri',	NULL,	'4.29.1',	NULL,	NULL,	'0161515059'),
         ('1749131762-1',	'openk9',	'db/datasource/2025/06/05-01-changelog.xml',	'2025-06-17 11:58:36.195006',	207,	'EXECUTED',	'9:0bc99fce902cee8221542ede809f8c9b',	'addDefaultValue columnName=retrieve_type, tableName=bucket',	'',	NULL,	'4.29.1',	NULL,	NULL,	'0161515059'),
         ('1749131762-2',	'openk9',	'db/datasource/2025/06/05-01-changelog.xml',	'2025-06-17 11:58:36.196929',	208,	'EXECUTED',	'9:698e61644fa1829f1d605db3e6853944',	'update tableName=bucket',	'',	NULL,	'4.29.1',	NULL,	NULL,	'0161515059');
-
+        
         CREATE TABLE "openk9_liquibase"."databasechangeloglock" (
             "id" integer NOT NULL,
             "locked" boolean NOT NULL,
@@ -301,7 +301,7 @@ BEGIN
             "field_name" character varying(255) NOT NULL,
             "fuziness" character varying(255),
             "name" character varying(255) NOT NULL,
-            "size" integer,
+            "annotator_size" integer,
             "type" character varying(255) NOT NULL,
             "doc_type_field_id" bigint,
             "extra_params" text,
