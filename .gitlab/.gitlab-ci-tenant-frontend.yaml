@@ -3,15 +3,15 @@
 ################################################################################
 
 stages:
-  - build
-  - build-verifier
-  - container-scanning
-  - dependency-check
-  - restart
-  - publish
+- build
+- build-verifier
+- container-scanning
+- dependency-check
+- restart
+- publish
 
 include:
-  - local: "/.gitlab/.gitlab-templates.yaml"
+- local: "/.gitlab/.gitlab-templates.yaml"
 
 ################################################################################
 #                                    JOBS                                       #
@@ -22,14 +22,14 @@ include:
 #################
 Fetch version:
   stage: build
-  image: node:16-alpine
+  image: node:18-alpine
   script:
-    - cd js-packages/tenant-ui
-    - export VERSION=$(node -p "require('./package.json').version")
-    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
+  - cd js-packages/tenant-ui
+  - export VERSION=$(node -p "require('./package.json').version")
+  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
   artifacts:
     paths:
-      - version.env
+    - version.env
     expire_in: 1 day
 
 ######################## BUILD TENANT FRONTEND ########################
@@ -37,116 +37,116 @@ Build Tenant Frontend:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [""]
+    entrypoint: [ "" ]
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
   needs:
-    - job: Fetch version
-      artifacts: true
+  - job: Fetch version
+    artifacts: true
   script:
-    # Docker credentials configuration
-    - mkdir -p /kaniko/.docker
-    - |
-      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-      > /kaniko/.docker/config.json
-    
-    # Conditional logic to determine which tag to use
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-        # For main, use version from package.json
-        source $CI_PROJECT_DIR/version.env
-        echo "=== Building Tenant Frontend with VERSION=$VERSION ==="
-        DOCKER_TAG="$VERSION"
-      elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-        # For feature branch, use 996-SNAPSHOT
-        echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for feature branch ==="
-        DOCKER_TAG="996-SNAPSHOT"
-      fi
-    
-    # Run build with the determined tag
-    - |
-      /kaniko/executor \
-        --context "${CI_PROJECT_DIR}" \
-        --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
-        --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG"
+  # Docker credentials configuration
+  - mkdir -p /kaniko/.docker
+  - |
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+  # Conditional logic to determine which tag to use
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
+      # For main, use version from package.json
+      source $CI_PROJECT_DIR/version.env
+      echo "=== Building Tenant Frontend with VERSION=$VERSION ==="
+      DOCKER_TAG="$VERSION"
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # For feature branch, use 996-SNAPSHOT
+      echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for feature branch ==="
+      DOCKER_TAG="996-SNAPSHOT"
+    fi
+
+  # Run build with the determined tag
+  - |
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
+      --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG"
   rules:
-    # Rule for main branch
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/tenant-ui/**/*
-    # Rule for feature branch
-    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-      changes:
-        - js-packages/tenant-ui/**/*
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/tenant-ui/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/tenant-ui/**/*
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
   image: node:14
   script:
-    - cd js-packages/tenant-ui
-    - yarn install
-    - yarn build
+  - cd js-packages/tenant-ui
+  - yarn install
+  - yarn build
   rules:
-    - changes:
-        - js-packages/tenant-ui/**/*
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  - changes:
+    - js-packages/tenant-ui/**/*
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
-    - "Fetch version"
-    - "Build Tenant Frontend"
+  - "Fetch version"
+  - "Build Tenant Frontend"
   script:
-    - source version.env
-    - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
-    - gtcs scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
+  - source version.env
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_BRANCH == "main"'
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
   extends: .restart_job_template
   dependencies:
-    - Fetch version
+  - Fetch version
   variables:
     COMPONENT_NAME: "tenant-frontend"
     COMPONENT_TYPE: "frontend"
   rules:
-    # Rule for main branch
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/tenant-ui/**/*
-    # Rule for feature branch
-    - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-      changes:
-        - js-packages/tenant-ui/**/*
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/tenant-ui/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/tenant-ui/**/*
 
 ####################### PUBLISH TENANT FRONTEND #######################
 Publish Tenant Frontend:
   stage: publish
   image: node:18
   script:
-    - cd js-packages/tenant-ui
-    - pwd
-    - whoami
-    - yarn install
-    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-    - npm publish --access public
+  - cd js-packages/tenant-ui
+  - pwd
+  - whoami
+  - yarn install
+  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+  - npm publish --access public
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
-    - when: never
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    when: manual
+  - when: never
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Tenant UI:
   stage: dependency-check
   needs:
-    - job: "Trigger Tenant Frontend"
+  - job: "Trigger Tenant Frontend"
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-    - cd js-packages/tenant-ui
-    - /analyzer run
+  - cd js-packages/tenant-ui
+  - /analyzer run
