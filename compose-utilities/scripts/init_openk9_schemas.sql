@@ -905,9 +905,15 @@ BEGIN
         INSERT INTO "plugin_driver" ("id", "create_date", "modified_date", "description", "json_config", "name", "type", "provisioning") VALUES
         (1,	'2025-06-16 21:28:48.540534',	'2025-06-16 21:28:48.541568',	'',	'{"baseUri":"web-parser:5000","path":"/startSitemapCrawling","method":"POST"}',	'web parser',	'HTTP',	'USER');
 
-        INSERT INTO "enrich_pipeline" ("id", "create_date", "modified_date", "description", "name") VALUES
-        (19,	'2025-06-17 10:37:24.460791',	'2025-06-17 11:54:49.855125',	'',	'pipeline');
+        INSERT INTO "enrich_item" ("id", "create_date", "modified_date", "description", "json_config", "name", "service_name", "type", "script", "behavior_merge_type", "json_path", "behavior_on_error", "request_timeout") VALUES
+        (1,	'2025-06-29 20:10:56.418262',	'2025-06-29 20:10:56.420208',	'',	'{}',	'tika',	'http://openk9-tika:8080/api/tika/process',	'HTTP_ASYNC',	'',	'MERGE',	'$',	'SKIP',	10000);
 
+        INSERT INTO "enrich_pipeline" ("id", "create_date", "modified_date", "description", "name") VALUES
+        (19,	'2025-06-17 10:37:24.460791',	'2025-06-29 20:11:09.268201',	'',	'document pipeline');
+
+        INSERT INTO "enrich_pipeline_item" ("enrich_item_id", "enrich_pipeline_id", "weight") VALUES
+        (1,	19,	1);
+        
         INSERT INTO "datasource" ("id", "create_date", "modified_date", "description", "json_config", "last_ingestion_date", "name", "schedulable", "scheduling", "data_index_id", "enrich_pipeline_id", "plugin_driver_id", "reindexable", "reindexing", "purgeable", "purging", "purge_max_age") VALUES
         (30,	'2025-06-17 11:24:17.648002',	'2025-06-17 11:54:40.419122',	'',	'{"sitemapUrls":["https://www.smc.it/sitemap.xml"],"allowedDomains":["www.smc.it"],"allowedPaths":[],"excludedPaths":[],"bodyTag":"body","titleTag":"title::text","maxLength":-1,"pageCount":0,"doExtractDocs":false,"documentFileExtensions":[]}',	NULL,	'smc site ',	'0',	'0 */30 * ? * * *',	NULL,	NULL,	1,	'0',	'0 0 1 * * ?',	'0',	'0 0 1 * * ?',	'2d');
 
@@ -943,12 +949,6 @@ BEGIN
         (43,	'2025-06-17 11:55:28.307233',	'2025-06-17 11:55:28.30724',	1,	'auto-generated',	NULL,	'keyword',	'KEYWORD',	'{"ignore_above":256}',	'previous.chunkText.keyword',	'1',	NULL,	2,	42,	'0'),
         (44,	'2025-06-17 11:55:28.307652',	'2025-06-17 11:55:28.307659',	1,	'auto-generated',	NULL,	'number',	'LONG',	NULL,	'previous.number',	'0',	NULL,	2,	41,	'0');
 
-        INSERT INTO "embedding_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "vector_size", "provider", "model", "json_config") VALUES
-        (32,	'2025-06-17 11:55:28.111138',	'2025-06-17 11:55:28.111167',	'',	'openai embedding model',	'embedding-module:5000',	'',	1536,	'openai',	'text-embedding-3-small',	'{}');
-
-        INSERT INTO "large_language_model" ("id", "create_date", "modified_date", "description", "name", "api_url", "api_key", "json_config", "provider", "model", "context_window", "retrieve_citations") VALUES
-        (45,	'2025-06-17 11:55:50.16052',	'2025-06-17 11:55:50.16054',	'',	'openai',	'',	'',	'{}',	'openai',	'gpt-4o',	128000,	'0');
-
         INSERT INTO "tab" ("id", "create_date", "modified_date", "description", "name", "priority") VALUES
         (4,	'2025-06-18 10:27:58.287845',	'2025-06-18 10:27:58.287881',	'',	'Tutti i risultati',	0);
 
@@ -980,7 +980,7 @@ BEGIN
         (18,	'2025-06-17 10:37:18.417429',	'2025-06-18 10:27:40.952599',	'',	'test',	NULL,	NULL,	'0',	NULL,	'0',	'0',	'0',	'HYBRID',	1,	NULL,	3);
 
         INSERT INTO "tenant_binding" ("id", "create_date", "modified_date", "virtual_host", "tenant_binding_bucket_id", "embedding_model_id", "large_language_model_id") VALUES
-        (1,	NULL,	'2025-06-17 11:55:52.94292',	'demo.openk9.localhost',	18,	32,	45);
+        (1,	NULL,	'2025-06-17 11:55:52.94292',	'demo.openk9.localhost',	18,	NULL,	NULL);
 
         END IF;
         
