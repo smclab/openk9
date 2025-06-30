@@ -28,7 +28,11 @@ To accesso to admin panel go to [http://demo.openk9.localhost/admin](http://demo
 
 Search frontend is available here:
 
-- [Standalone search frontend](http://demo.openk9.localhost) to test search on indexed data
+- [Standalone search frontend](http://demo.openk9.localhost) to test search on indexed data.
+
+To test conversational search:
+
+- [Conversational search frontend](http://demo.openk9.localhost/chat) to chat with indexed data
 
 Enjoy Openk9!
 
