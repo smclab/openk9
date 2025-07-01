@@ -5,6 +5,7 @@ from langchain.schema import AIMessage, HumanMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from opensearchpy import OpenSearch
+
 from app.utils.logger import logger
 
 
@@ -116,7 +117,7 @@ def save_chat_message(
     .. note::
         - Creates index with mappings if not exists (user_id as index name)
         - Source documents require specific structure:
-            - metadata: dict with title, url, source
+            - metadata: dict with title, url
             - citations: list of citation texts
         - Index mapping enforces:
             - timestamp as date type
@@ -128,12 +129,10 @@ def save_chat_message(
     for source in sources:
         document_title = source["metadata"]["title"]
         document_url = source["metadata"]["url"]
-        document_source = source["metadata"]["source"]
         document_citations = source["citations"]
         document = {
             "title": document_title,
             "url": document_url,
-            "source": document_source,
             "citations": document_citations,
         }
         documents.append(document)

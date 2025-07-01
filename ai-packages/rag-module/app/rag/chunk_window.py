@@ -39,7 +39,6 @@ def get_context_window_merged(chunks, window_size: int = 2):
                     "url": document_chunks[0]["url"],
                     "document_id": document_chunks[0]["document_id"],
                     "score": document_chunks[0]["score"],
-                    "source": document_chunks[0]["source"],
                     "content": ctxt,
                 }
                 documents.append(document)
@@ -59,7 +58,6 @@ def get_context_window_merged(chunks, window_size: int = 2):
             "url": document_chunks[0]["url"],
             "document_id": document_chunks[0]["document_id"],
             "score": document_chunks[0]["score"],
-            "source": document_chunks[0]["source"],
             "content": ctxt,
         }
         documents.append(document)

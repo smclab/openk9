@@ -126,13 +126,11 @@ class SearchQueryChat(BaseModel):
                     {
                         "title": "Assicurazione Infortuni Conducente | AXA",
                         "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                        "source": "local",
                         "citations": [],
                     },
                     {
                         "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
                         "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                        "source": "local",
                         "citations": [],
                     },
                 ],
