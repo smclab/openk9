@@ -100,32 +100,34 @@ class OpenSearchRetriever(BaseRetriever):
                 hosts=[self.opensearch_host],
             )
 
-            total_tokens = 0
-
             response = client.search(
                 body=query,
                 index=index_name,
                 params=params,
             )
 
+            max_tokens = self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE
+            total_tokens = 0
+
             for row in response["hits"]["hits"]:
-                score = row.get("_score")
-                document_source = row.get("_source")
-                if score < SCORE_THRESHOLD:
+                if (score := row.get("_score", 0)) < SCORE_THRESHOLD:
                     continue
+
+                document_source = row.get("_source")
+                document_id = document_source.get("contentId")
+                document_types = document_source.get("documentTypes", [])
+                dynamic_metadata = {}
+
+                for document_type in document_types:
+                    if document_type in self.metadata.keys():
+                        for key, value in self.metadata[document_type].items():
+                            if metadata_value := document_source.get(document_type).get(
+                                value
+                            ):
+                                dynamic_metadata[key] = metadata_value
+
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
-                    document_types = document_source.get("documentTypes")
-                    dynamic_metadata = {}
-                    for document_type in document_types:
-                        if document_type in self.metadata.keys():
-                            for key, value in self.metadata[document_type].items():
-                                if metadata_value := document_source.get(
-                                    document_type
-                                ).get(value):
-                                    dynamic_metadata[key] = metadata_value
-                    document_id = document_source.get("contentId")
-                    page_content = document_source.get("chunkText")
-                    source = "local"
+                    page_content = document_source.get("chunkText", "")
                     chunk_idx = document_source.get("number")
                     previous_chunks = document_source.get("previous")
                     previous_chunk = (
@@ -139,9 +141,7 @@ class OpenSearchRetriever(BaseRetriever):
                         if next_chunks
                         else None
                     )
-
                     metadata = {
-                        "source": source,
                         "document_id": document_id,
                         "score": score,
                         "chunk_idx": chunk_idx,
@@ -149,22 +149,21 @@ class OpenSearchRetriever(BaseRetriever):
                         "next": next_chunk,
                     }
 
-                    metadata.update(dynamic_metadata)
+                else:
+                    page_content = document_source.get("rawContent", "")
+                    metadata = {
+                        "document_id": document_id,
+                    }
 
+                document_tokens_number = len(page_content) / TOKEN_SIZE
+                total_tokens += document_tokens_number
+
+                if total_tokens < max_tokens:
+                    metadata.update(dynamic_metadata)
                     document = Document(
                         page_content,
                         metadata=metadata,
                     )
-                    document_tokens_number = len(page_content + source) / TOKEN_SIZE
-                    total_tokens += document_tokens_number
-                else:
-                    document = Document(document_source.get("rawContent"), metadata={})
-                    document_tokens_number = (
-                        len(document_source.get("rawContent")) / TOKEN_SIZE
-                    )
-                    total_tokens += document_tokens_number
-
-                if total_tokens < self.context_window * MAX_CONTEXT_WINDOW_PERCENTAGE:
                     documents.append(document)
 
         if self.rerank:
@@ -207,7 +206,6 @@ class OpenSearchRetriever(BaseRetriever):
                     "next": doc.metadata["next"],
                     "title": doc.metadata["title"],
                     "url": doc.metadata["url"],
-                    "source": doc.metadata["source"],
                     "score": doc.metadata["score"],
                     "content": doc.page_content,
                 }
@@ -220,7 +218,6 @@ class OpenSearchRetriever(BaseRetriever):
             documents = []
             for merged_document in merged_documents:
                 page_content = merged_document["content"]
-                source = merged_document["source"]
                 title = merged_document["title"]
                 url = merged_document["url"]
                 document_id = merged_document["document_id"]
@@ -229,7 +226,6 @@ class OpenSearchRetriever(BaseRetriever):
                 document = Document(
                     page_content,
                     metadata={
-                        "source": source,
                         "title": title,
                         "url": url,
                         "document_id": document_id,
