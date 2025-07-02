@@ -456,8 +456,28 @@ Trigger Embedding Module:
     include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
 
 ################################################################################
+#                              Connectors pipeline                             #
+################################################################################
+
+
+
+Trigger Connectors Build:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/.gitlab-ci-connectors.yaml"
+
+################################################################################
 #                              TRIGGER HELM CHARTS                             #
 ################################################################################
+
+
 
 Trigger Helm Base Core:
   stage: trigger
@@ -518,3 +538,15 @@ Trigger Helm Utilities:
     when: never
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
+
+Trigger Helm Connectors:
+  stage: trigger
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-05-connectors.yaml"

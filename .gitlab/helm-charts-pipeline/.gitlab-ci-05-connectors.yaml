@@ -1,0 +1,78 @@
+stages:
+- push
+
+push-web-connector-helm:
+  stage: push
+  image: alpine:latest
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/openk9-crawler/chart/openk9-web-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-email-connector-helm:
+  stage: push
+  image: alpine:latest
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/email-connector/chart/openk9-email-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-database-connector-helm:
+  stage: push
+  image: alpine:latest
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/database-connector/chart/openk9-wordpress-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-youtube-connector-helm:
+  stage: push
+  image: alpine:latest
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/youtube-connector/chart/openk9-youtube-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

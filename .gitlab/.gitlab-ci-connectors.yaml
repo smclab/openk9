@@ -1,0 +1,198 @@
+stages:
+- build
+- container-scanning
+
+variables:
+  # Image used for container scanning
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
+
+include:
+- local: '/.gitlab/.gitlab-templates.yaml'
+
+###############################################################
+#                    BUILD WEB CONNECTOR                      #
+###############################################################
+Build Web Connector image:
+  extends: .build_template
+  stage: build
+  variables:
+    COMPONENT: "web-connector"
+  script:
+  - |
+    echo "=== Building Web Connector (openk9-crawler) ==="
+    cd connectors/openk9-crawler
+
+    echo "=== Building and pushing Docker image ==="
+    docker build -t registry.gitlab.com/openk9/openk9-web-connector:latest ./connector
+    docker push registry.gitlab.com/openk9/openk9-web-connector:latest
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-web-connector
+    echo "VERSION=latest" > version-web-connector.env
+  artifacts:
+    paths:
+    - .version-web-connector
+    reports:
+      dotenv: version-web-connector.env
+    expire_in: 24 hours
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                   BUILD EMAIL CONNECTOR                     #
+###############################################################
+Build Email Connector image:
+  extends: .build_template
+  stage: build
+  variables:
+    COMPONENT: "email-connector"
+  script:
+  - |
+    echo "=== Building Email Connector ==="
+    cd connectors/email-connector
+
+    echo "=== Building and pushing Docker image ==="
+    docker build -t registry.gitlab.com/openk9/openk9-email-connector:latest ./connector
+    docker push registry.gitlab.com/openk9/openk9-email-connector:latest
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-email-connector
+    echo "VERSION=latest" > version-email-connector.env
+  artifacts:
+    paths:
+    - .version-email-connector
+    reports:
+      dotenv: version-email-connector.env
+    expire_in: 24 hours
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                  BUILD DATABASE CONNECTOR                   #
+###############################################################
+Build Database Connector image:
+  extends: .build_template
+  stage: build
+  variables:
+    COMPONENT: "database-connector"
+  script:
+  - |
+    echo "=== Building Database Connector ==="
+    cd connectors/database-connector
+
+    echo "=== Building and pushing Docker image ==="
+    docker build -t registry.gitlab.com/openk9/openk9-wordpress-connector:latest ./connector
+    docker push registry.gitlab.com/openk9/openk9-wordpress-connector:latest
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-database-connector
+    echo "VERSION=latest" > version-database-connector.env
+  artifacts:
+    paths:
+    - .version-database-connector
+    reports:
+      dotenv: version-database-connector.env
+    expire_in: 24 hours
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                  BUILD YOUTUBE CONNECTOR                    #
+###############################################################
+Build YouTube Connector image:
+  extends: .build_template
+  stage: build
+  variables:
+    COMPONENT: "youtube-connector"
+  script:
+  - |
+    echo "=== Building YouTube Connector ==="
+    cd connectors/youtube-connector
+
+    echo "=== Building and pushing Docker image ==="
+    docker build -t registry.gitlab.com/openk9/openk9-youtube-connector:latest ./connector
+    docker push registry.gitlab.com/openk9/openk9-youtube-connector:latest
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-youtube-connector
+    echo "VERSION=latest" > version-youtube-connector.env
+  artifacts:
+    paths:
+    - .version-youtube-connector
+    reports:
+      dotenv: version-youtube-connector.env
+    expire_in: 24 hours
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#               CONTAINER SCANNING WEB CONNECTOR              #
+###############################################################
+Container Scanning Web Connector:
+  dependencies: [ Build Web Connector image ]
+  extends: .container-scanning-template
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-web-connector"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/**/*
+
+###############################################################
+#               CONTAINER SCANNING EMAIL CONNECTOR            #
+###############################################################
+Container Scanning Email Connector:
+  dependencies: [ Build Email Connector image ]
+  extends: .container-scanning-template
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-email-connector"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING DATABASE CONNECTOR           #
+###############################################################
+Container Scanning Database Connector:
+  dependencies: [ Build Database Connector image ]
+  extends: .container-scanning-template
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-wordpress-connector"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING YOUTUBE CONNECTOR            #
+###############################################################
+Container Scanning YouTube Connector:
+  dependencies: [ Build YouTube Connector image ]
+  extends: .container-scanning-template
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-youtube-connector"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/**/*
