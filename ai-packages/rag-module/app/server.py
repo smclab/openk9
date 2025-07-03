@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 from enum import Enum
-from typing import Optional
+from typing import Annotated, Optional
 from urllib.parse import urlparse
 
 import uvicorn
@@ -110,22 +110,7 @@ async def redirect_root_to_docs():
 async def rag_generate(
     search_query_request: models.SearchQuery,
     request: Request,
-    authorization: Optional[str] = Header(
-        None,
-        description="Bearer token in format: 'Bearer <JWT>'",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    ),
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
-    x_forwarded_host: Optional[str] = Header(
-        None,
-        description="""The original host requested by the client in the Host HTTP request header. 
-        This header is typically used in reverse proxy setups to identify the original host of the request.""",
-        example="example.com",
-    ),
+    headers: Annotated[models.CommonHeaders, Header()],
 ):
     """Process complex search queries and stream RAG-powered results using Server-Sent Events.
 
@@ -179,12 +164,16 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
-    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
     if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
         unauthorized_response()
 
@@ -231,22 +220,7 @@ async def rag_generate(
 async def rag_chat(
     search_query_chat: models.SearchQueryChat,
     request: Request,
-    authorization: Optional[str] = Header(
-        None,
-        description="Bearer token in format: 'Bearer <JWT>'",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    ),
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
-    x_forwarded_host: Optional[str] = Header(
-        None,
-        description="""The original host requested by the client in the Host HTTP request header. 
-        This header is typically used in reverse proxy setups to identify the original host of the request.""",
-        example="example.com",
-    ),
+    headers: Annotated[models.CommonHeaders, Header()],
 ):
     """Process conversational chat interactions with RAG system using Server-Sent Events streaming.
 
@@ -308,12 +282,16 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
-    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
     user_id = None
 
     if token:
@@ -369,22 +347,7 @@ async def rag_chat(
 async def rag_chat_tool(
     search_query_chat: models.SearchQueryChat,
     request: Request,
-    authorization: Optional[str] = Header(
-        None,
-        description="Bearer token in format: 'Bearer <JWT>'",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    ),
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
-    x_forwarded_host: Optional[str] = Header(
-        None,
-        description="""The original host requested by the client in the Host HTTP request header. 
-        This header is typically used in reverse proxy setups to identify the original host of the request.""",
-        example="example.com",
-    ),
+    headers: Annotated[models.CommonHeaders, Header()],
 ):
     """Process conversational chat interactions with RAG as tool using Server-Sent Events streaming.
 
@@ -449,12 +412,16 @@ async def rag_chat_tool(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
-    token = authorization.replace(TOKEN_PREFIX, "") if authorization else None
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
     user_id = None
 
     if token:
@@ -708,17 +675,7 @@ async def get_chat(
 async def delete_chat(
     chat_id: str,
     request: Request,
-    authorization: str = Header(
-        ...,
-        description="Bearer token in format: 'Bearer <JWT>'",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    ),
-    x_forwarded_host: Optional[str] = Header(
-        None,
-        description="""The original host requested by the client in the Host HTTP request header. 
-        This header is typically used in reverse proxy setups to identify the original host of the request.""",
-        example="example.com",
-    ),
+    headers: Annotated[models.CommonHeaders, Header()],
 ):
     """Permanently delete all messages belonging to a specific chat conversation.
 
@@ -749,8 +706,8 @@ async def delete_chat(
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
-    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = authorization.replace(TOKEN_PREFIX, "")
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    token = headers.authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
 
@@ -799,17 +756,7 @@ async def rename_chat(
     chat_id: str,
     chat_message: models.ChatMessage,
     request: Request,
-    authorization: str = Header(
-        ...,
-        description="Bearer token in format: 'Bearer <JWT>'",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    ),
-    x_forwarded_host: Optional[str] = Header(
-        None,
-        description="""The original host requested by the client in the Host HTTP request header. 
-        This header is typically used in reverse proxy setups to identify the original host of the request.""",
-        example="example.com",
-    ),
+    headers: Annotated[models.CommonHeaders, Header()],
 ):
     """Update the title of an existing chat conversation.
 
@@ -843,8 +790,8 @@ async def rename_chat(
         - Only affects chats belonging to the authenticated user
         - The chat must contain at least one message to be renamed
     """
-    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = authorization.replace(TOKEN_PREFIX, "")
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    token = headers.authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
 
