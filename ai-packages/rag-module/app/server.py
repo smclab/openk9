@@ -120,8 +120,55 @@ async def rag_generate(
         description="Access control list for tenant resources",
         example=["group:admins", "project:openk9"],
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    """Definition of /api/rag/generate api."""
+    """Process complex search queries and stream RAG-powered results using Server-Sent Events.
+
+    Args:
+        search_query_request (models.SearchQuery): Request object containing:
+            - searchQuery: Main search query parameters
+            - range: Range filter as [start, end]
+            - afterKey: Pagination key for subsequent requests
+            - suggestKeyword: Partial keyword for suggestion autocomplete
+            - suggestionCategoryId: Category ID to filter suggestions
+            - extra: Additional filter parameters
+            - sort: Sorting criteria with field:direction format
+            - sortAfterKey: Pagination key for sorted results
+            - language: Language code for localized result
+            - searchText: Primary search text input
+        request (Request): FastAPI Request object
+        authorization (Optional[str]): Bearer token for authentication
+        openk9_acl (Optional[list[str]]): Access control list for tenant isolation
+        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+
+    Returns:
+        EventSourceResponse: Server-Sent Events stream containing:
+            - Search results in real-time
+            - Processing status updates
+            - Completion signals
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if invalid token provided
+            - 400 Bad Request if invalid parameters
+            - 500 Internal Server Error for processing failures
+
+    Notes:
+        - Supports both authenticated and unauthenticated access
+        - Combines traditional search with vector retrieval
+        - Implements faceted search with range filters
+        - Provides query suggestions
+        - Uses tenant isolation via ACL headers
+        - Streams results progressively via SSE
+        - Configuration is tenant-specific (pulled from GRPC_DATASOURCE_HOST)
+        - Supports multiple languages
+        - Implements result re-ranking
+    """
     search_query = search_query_request.searchQuery
     range_values = search_query_request.range
     after_key = search_query_request.afterKey
@@ -132,7 +179,7 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-    virtual_host = urlparse(str(request.base_url)).hostname
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
@@ -194,13 +241,59 @@ async def rag_chat(
         description="Access control list for tenant resources",
         example=["group:admins", "project:openk9"],
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    """
-    Handle RAG chat interactions with streaming response.
+    """Process conversational chat interactions with RAG system using Server-Sent Events streaming.
 
-    - **search_query_chat**: Request body with chat parameters
-    - **authorization**: JWT bearer token for authentication
-    - **openk9_acl**: Access control list for tenant isolation
+    Args:
+        search_query_chat (models.SearchQueryChat): Request object containing:
+            - chatId: Unique identifier for the chat session
+            - range: Result window range as [offset, limit]
+            - afterKey: Pagination key for subsequent requests
+            - suggestKeyword: Partial keyword for suggestion autocomplete
+            - suggestionCategoryId: Category ID to filter suggestions
+            - extra: Additional filter parameters
+            - sort: Sorting criteria
+            - sortAfterKey: Pagination key for sorted results
+            - language: Language code for localized results
+            - searchText: Primary search text input
+            - chatHistory: Previous chat messages in the conversation
+            - timestamp: Timestamp of the request
+            - chatSequenceNumber: Sequence number of the message in chat
+        request (Request): FastAPI Request object
+        authorization (Optional[str]): Bearer token for authentication
+        openk9_acl (Optional[list[str]]): Access control list for tenant isolation
+        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+
+    Returns:
+        EventSourceResponse: Server-Sent Events stream containing:
+            - Chat responses in real-time
+            - Contextual information
+            - Processing status updates
+            - Completion signals
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if invalid token provided
+            - 400 Bad Request if invalid parameters
+            - 500 Internal Server Error for processing failures
+
+    Notes:
+        - Supports both authenticated and unauthenticated access
+        - Maintains conversation context through chat history
+        - Implements tenant isolation via ACL headers
+        - Streams responses progressively via SSE
+        - Supports multi-language interactions
+        - Tracks conversation sequence numbers
+        - Uses RAG for contextual responses
+        - Configuration is tenant-specific (pulled from GRPC_DATASOURCE_HOST)
+        - Implements result re-ranking
+        - Stores conversation history for authenticated users
     """
     chat_id = search_query_chat.chatId
     range_values = search_query_chat.range
@@ -215,7 +308,7 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = urlparse(str(request.base_url)).hostname
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
@@ -273,7 +366,7 @@ async def rag_chat(
     responses=openapi.API_RAG_CHAT_TOOL_RESPONSES,
     openapi_extra=openapi.API_RAG_CHAT_TOOL_OPENAPI_EXTRA,
 )
-async def rag_chat(
+async def rag_chat_tool(
     search_query_chat: models.SearchQueryChat,
     request: Request,
     authorization: Optional[str] = Header(
@@ -286,8 +379,63 @@ async def rag_chat(
         description="Access control list for tenant resources",
         example=["group:admins", "project:openk9"],
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    """Definition of /api/rag/chat api."""
+    """Process conversational chat interactions with RAG as tool using Server-Sent Events streaming.
+
+    Args:
+        search_query_chat (models.SearchQueryChat): Request object containing:
+            - chatId: Unique identifier for the chat session
+            - range: Result window range as [offset, limit]
+            - afterKey: Pagination key for subsequent requests
+            - suggestKeyword: Partial keyword for suggestion autocomplete
+            - suggestionCategoryId: Category ID to filter suggestions
+            - extra: Additional filter parameters
+            - sort: Sorting criteria
+            - sortAfterKey: Pagination key for sorted results
+            - language: Language code for localized results
+            - searchText: Primary search text input
+            - chatHistory: Previous chat messages in the conversation
+            - timestamp: Timestamp of the request
+            - chatSequenceNumber: Sequence number of the message in chat
+        request (Request): FastAPI Request object
+        authorization (Optional[str]): Bearer token for authentication
+        openk9_acl (Optional[list[str]]): Access control list for tenant isolation
+        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+
+    Returns:
+        EventSourceResponse: Server-Sent Events stream containing:
+            - Chat responses in real-time
+            - Tool execution results
+            - Contextual information
+            - Processing status updates
+            - Completion signals
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if invalid token provided
+            - 400 Bad Request if invalid parameters
+            - 500 Internal Server Error for processing failures
+
+    Notes:
+        - Supports both authenticated and unauthenticated access
+        - Integrates external tools with RAG capabilities
+        - Maintains conversation context through chat history
+        - Implements tenant isolation via ACL headers
+        - Streams responses progressively via SSE
+        - Supports multi-language interactions
+        - Tracks conversation sequence numbers
+        - Uses RAG for contextual responses with tool augmentation
+        - Configuration is tenant-specific (pulled from GRPC_DATASOURCE_HOST)
+        - Implements result re-ranking
+        - Stores conversation history for authenticated users
+        - Tools are selected based on query intent analysis
+    """
     chat_id = search_query_chat.chatId
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
@@ -301,7 +449,7 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = urlparse(str(request.base_url)).hostname
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
 
     if openk9_acl:
         extra[OPENK9_ACL_HEADER] = openk9_acl
@@ -366,11 +514,46 @@ async def get_user_chats(
         description="Bearer token in format: 'Bearer <JWT>'",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
+    """Retrieve paginated chat history for a specific user.
+
+    Args:
+        user_chats (models.UserChats): The user chat request object containing:
+            - chatSequenceNumber: Sequence number identifying the chat
+            - paginationFrom: Starting index for pagination
+            - paginationSize: Number of items to return per page
+        request (Request): FastAPI Request object
+        authorization (str): JWT bearer token for authentication
+        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+
+    Returns:
+        dict: Dictionary containing:
+            - result (list): List of chat history items, each containing:
+                - title: Chat title
+                - question: User question
+                - timestamp: Timestamp of chat
+                - chat_id: Unique identifier for the chat
+
+    Raises:
+        HTTPException:
+            - 401 if authentication fails
+            - 500 if there are server errors
+
+    Notes:
+        - Requires valid JWT token in Authorization header
+        - Uses OpenSearch for chat history storage
+        - Results are sorted by timestamp in descending order
+    """
     chat_sequence_number = user_chats.chatSequenceNumber
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
-    virtual_host = urlparse(str(request.base_url)).hostname
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -428,8 +611,43 @@ async def get_chat(
         description="Bearer token in format: 'Bearer <JWT>'",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    virtual_host = urlparse(str(request.base_url)).hostname
+    """Retrieve complete conversation history for a specific chat.
+
+    Args:
+        chat_id (str): Unique identifier of the chat to retrieve
+        request (Request): FastAPI Request object
+        authorization (str): JWT bearer token for authentication
+        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+
+    Returns:
+        dict: Dictionary containing:
+            - chat_id (str): The chat identifier
+            - messages (list): List of message dictionaries, each containing:
+                - question (str): User's question
+                - answer (str): System's answer
+                - timestamp (str): Timestamp of the message
+                - chat_sequence_number (int): Sequence number of the message in chat
+                - sources (list): List of source documents used for the answer
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if authentication fails
+            - 404 Not Found if the chat doesn't exist or user has no access
+
+    Notes:
+        - Requires valid JWT token in Authorization header
+        - Messages are sorted by chat_sequence_number in ascending order
+        - Only returns messages belonging to the authenticated user
+        - Uses OpenSearch for data storage and retrieval
+    """
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -495,8 +713,43 @@ async def delete_chat(
         description="Bearer token in format: 'Bearer <JWT>'",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    virtual_host = urlparse(str(request.base_url)).hostname
+    """Permanently delete all messages belonging to a specific chat conversation.
+
+    Args:
+        chat_id (str): Unique identifier of the chat to delete
+        request (Request): FastAPI Request object
+        authorization (str): JWT bearer token for authentication
+        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+
+    Returns:
+        JSONResponse: Response containing:
+            - message (str): Operation result message
+            - status (str): "success" or "error"
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if authentication fails
+            - 404 Not Found if:
+                - User index doesn't exist
+                - No messages found for specified chat_id
+                - Chat doesn't belong to authenticated user
+            - 500 Internal Server Error for database operation failures
+
+    Notes:
+        - Requires valid JWT token in Authorization header
+        - Performs a hard delete - removed data cannot be recovered
+        - Deletes all messages associated with the chat_id
+        - Only affects chats belonging to the authenticated user
+        - Uses OpenSearch's delete_by_query operation
+    """
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -551,8 +804,46 @@ async def rename_chat(
         description="Bearer token in format: 'Bearer <JWT>'",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     ),
+    x_forwarded_host: Optional[str] = Header(
+        None,
+        description="""The original host requested by the client in the Host HTTP request header. 
+        This header is typically used in reverse proxy setups to identify the original host of the request.""",
+        example="example.com",
+    ),
 ):
-    virtual_host = urlparse(str(request.base_url)).hostname
+    """Update the title of an existing chat conversation.
+
+    Args:
+        chat_id (str): Unique identifier of the chat to rename
+        chat_message (models.ChatMessage): Object containing:
+            - newTitle (str): The new title to assign to the chat
+        request (Request): FastAPI Request object
+        authorization (str): JWT bearer token for authentication
+        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+
+    Returns:
+        JSONResponse: Response containing:
+            - message (str): Operation result message
+            - status (str): "success" or "error"
+
+    Raises:
+        HTTPException:
+            - 401 Unauthorized if authentication fails
+            - 404 Not Found if:
+                - User index doesn't exist
+                - Chat document not found (invalid chat_id)
+            - 500 Internal Server Error for:
+                - OpenSearch search failures
+                - OpenSearch update failures
+
+    Notes:
+        - Requires valid JWT token in Authorization header
+        - Only updates the first message in the chat (sequence_number=1)
+        - Title changes are immediately visible (refresh=True)
+        - Only affects chats belonging to the authenticated user
+        - The chat must contain at least one message to be renamed
+    """
+    virtual_host = x_forwarded_host or urlparse(str(request.base_url)).hostname
     token = authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
