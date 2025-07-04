@@ -111,11 +111,6 @@ async def rag_generate(
     search_query_request: models.SearchQuery,
     request: Request,
     headers: Annotated[models.CommonHeaders, Header()],
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
 ):
     """Process complex search queries and stream RAG-powered results using Server-Sent Events.
 
@@ -171,8 +166,10 @@ async def rag_generate(
     search_text = search_query_request.searchText
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
+
+    print(extra[OPENK9_ACL_HEADER])
 
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
@@ -226,11 +223,6 @@ async def rag_chat(
     search_query_chat: models.SearchQueryChat,
     request: Request,
     headers: Annotated[models.CommonHeaders, Header()],
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
 ):
     """Process conversational chat interactions with RAG system using Server-Sent Events streaming.
 
@@ -294,8 +286,8 @@ async def rag_chat(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
@@ -358,11 +350,6 @@ async def rag_chat_tool(
     search_query_chat: models.SearchQueryChat,
     request: Request,
     headers: Annotated[models.CommonHeaders, Header()],
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
-    ),
 ):
     """Process conversational chat interactions with RAG as tool using Server-Sent Events streaming.
 
@@ -429,8 +416,8 @@ async def rag_chat_tool(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if openk9_acl:
-        extra[OPENK9_ACL_HEADER] = openk9_acl
+    if headers.openk9_acl:
+        extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
@@ -491,7 +478,7 @@ async def rag_chat_tool(
 async def get_user_chats(
     user_chats: models.UserChats,
     request: Request,
-    headers: Annotated[models.CommonHeaders, Header()],
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
     """Retrieve paginated chat history for a specific user.
 
@@ -578,7 +565,7 @@ async def get_user_chats(
 async def get_chat(
     chat_id: str,
     request: Request,
-    headers: Annotated[models.CommonHeaders, Header()],
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
     """Retrieve complete conversation history for a specific chat.
 
@@ -670,7 +657,7 @@ async def get_chat(
 async def delete_chat(
     chat_id: str,
     request: Request,
-    headers: Annotated[models.CommonHeaders, Header()],
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
     """Permanently delete all messages belonging to a specific chat conversation.
 
@@ -751,7 +738,7 @@ async def rename_chat(
     chat_id: str,
     chat_message: models.ChatMessage,
     request: Request,
-    headers: Annotated[models.CommonHeaders, Header()],
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
     """Update the title of an existing chat conversation.
 
