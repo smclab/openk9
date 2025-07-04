@@ -17,29 +17,11 @@
 
 package io.openk9.datasource.service;
 
-import java.time.Duration;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.FieldValidator;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
+import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.mapper.PluginDriverMapper;
@@ -65,10 +47,27 @@ import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
-
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PluginDriverService
@@ -161,24 +160,33 @@ public class PluginDriverService
 			.call(() -> {
 				var pluginDriver = (PluginDriver) entity;
 
-				var generateDocTypeUni = indexMappingService
-					.generateDocTypeFieldsFromPluginDriverSample(
-						session, pluginDriver.getHttpPluginDriverInfo());
+				return switch (pluginDriver.getProvisioning()) {
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
+							new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+								session,
+								pluginDriver.getHttpPluginDriverInfo(),
+								PluginDriver.Provisioning.USER
+							)
+						)
+						.onItem()
+						.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
+						.onFailure()
+						.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"));
+					case SYSTEM -> {
+						// fire and forget using the eventBuss message
+						EventBusInstanceHolder.getEventBus()
+							.requestAndForget(
+								IndexMappingService.GENERATE_DOC_TYPE,
+								new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+									null,
+									pluginDriver.getHttpPluginDriverInfo(),
+									PluginDriver.Provisioning.SYSTEM
+								)
+							);
 
-				// Adds the retry if pluginDriver is of 'SYSTEM' type.
-				generateDocTypeUni = switch (pluginDriver.getProvisioning()) {
-					case USER -> generateDocTypeUni;
-					case SYSTEM -> generateDocTypeUni.onFailure()
-						.retry()
-						.withBackOff(Duration.ofSeconds(5))
-						.atMost(20);
+						yield Uni.createFrom().item(entity);
+					}
 				};
-
-				return generateDocTypeUni
-					.onItem()
-					.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
-					.onFailure()
-					.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"));
 			});
 	}
 
@@ -190,24 +198,33 @@ public class PluginDriverService
 			.call(() -> {
 				PluginDriver pluginDriver = (PluginDriver) entity;
 
-				Uni<Set<DocType>> generateDocTypeUni = indexMappingService
-					.generateDocTypeFieldsFromPluginDriverSample(
-						s, pluginDriver.getHttpPluginDriverInfo());
+				return switch (pluginDriver.getProvisioning()) {
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
+							new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+								s,
+								pluginDriver.getHttpPluginDriverInfo(),
+								PluginDriver.Provisioning.USER
+							)
+						)
+						.onItem()
+						.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
+						.onFailure()
+						.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"));
+					case SYSTEM -> {
+						// fire and forget using the eventBuss message
+						EventBusInstanceHolder.getEventBus()
+							.requestAndForget(
+								IndexMappingService.GENERATE_DOC_TYPE,
+								new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+									null,
+									pluginDriver.getHttpPluginDriverInfo(),
+									PluginDriver.Provisioning.SYSTEM
+								)
+							);
 
-				// Adds the retry if pluginDriver is of 'SYSTEM' type.
-				generateDocTypeUni = switch (pluginDriver.getProvisioning()) {
-					case USER -> generateDocTypeUni;
-					case SYSTEM -> generateDocTypeUni.onFailure()
-						.retry()
-						.withBackOff(Duration.ofSeconds(5))
-						.atMost(20);
+						yield Uni.createFrom().item(entity);
+					}
 				};
-
-				return generateDocTypeUni
-					.onItem()
-					.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
-					.onFailure()
-					.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"));
 			});
 	}
 

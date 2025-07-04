@@ -17,23 +17,6 @@
 
 package io.openk9.datasource.index;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-
 import io.openk9.datasource.index.model.DataIndexTemplate;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.model.IndexName;
@@ -45,16 +28,21 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
-
+import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.client.indices.PutComposableIndexTemplateRequest;
@@ -64,6 +52,20 @@ import org.opensearch.cluster.metadata.Template;
 import org.opensearch.common.compress.CompressedXContent;
 import org.opensearch.common.settings.Settings;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Service responsible for handling the creation and management of index mappings in OpenSearch.
  * This class provides functionality for creating index templates, component templates, and
@@ -71,6 +73,8 @@ import org.opensearch.common.settings.Settings;
  */
 @ApplicationScoped
 public class IndexMappingService {
+
+	public static final String GENERATE_DOC_TYPE = "IndexMappingService#generateDocTypeFieldsFromPluginDriverSample";
 
 	// all the document fields that must be ignored on write
 	private static final String[] IGNORED_FIELD_PATHS = new String[]{
@@ -109,6 +113,8 @@ public class IndexMappingService {
 	IngestionPayloadMapper ingestionPayloadMapper;
 	@Inject
 	io.quarkus.qute.Template embeddingComponentMappings;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	/**
 	 * Create an IndexTemplate from a dataIndex and a settings map.
@@ -246,33 +252,44 @@ public class IndexMappingService {
 	 * Generates DocType fields from a plugin driver sample data.
 	 * This method retrieves a sample from the plugin driver, extracts document types
 	 * and mappings, and then generates the corresponding DocType fields.
+	 * The operation includes a retry mechanism for 'SYSTEM' provisioned plugin drivers
+	 * to handle transient failures during transaction processing.
 	 *
-	 * @param session The Hibernate reactive session used for database operations
-	 * @param httpPluginDriverInfo Information about the plugin driver to retrieve sample from
+	 * @param message The message containing the Hibernate reactive session, plugin driver information,
+	 * and provisioning type.
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
 	 */
+	@ConsumeEvent(GENERATE_DOC_TYPE)
 	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
-		Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+			GenerateDocTypeFromPluginSampleMessage message) {
 
-		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
-			.flatMap(ingestionPayload -> {
+		var session = message.session();
+		var httpPluginDriverInfo = message.httpPluginDriverInfo();
+		var provisioning = message.provisioning();
 
-				var documentTypes =
-					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+		Uni<Set<DocType>> generateDocTypeUni;
 
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
+		// Adds the retry if pluginDriver is of 'SYSTEM' type.
+		generateDocTypeUni = switch (provisioning) {
+			case USER -> generateDocTypeUni(httpPluginDriverInfo, session);
+			case SYSTEM -> sessionFactory.withTransaction(newSession ->
+					generateDocTypeUni(httpPluginDriverInfo, newSession)
+				)
+				.onFailure()
+				.retry()
+				.withBackOff(Duration.ofSeconds(5))
+				.atMost(20);
+		};
 
-				return generateDocTypeFields(
-					session, mappings.getMap(), documentTypes);
+		return generateDocTypeUni
+			.flatMap(docTypes -> {
+				log.debug("DocType size=" + docTypes.size());
+				return Uni.createFrom().item(docTypes);
 			})
-			.flatMap(docTypes ->
-				session.mergeAll(docTypes.toArray())
-					.map(unused -> docTypes)
-			);
-
+			.onItem()
+			.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
+			.onFailure()
+			.invoke(() -> log.warn("Error creating/updating DocumentTypes associated with pluginDriver"));
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(
@@ -438,6 +455,29 @@ public class IndexMappingService {
 
 	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
 		return _toDocTypeFields(_toFlatFields(mappings));
+	}
+
+	private Uni<Set<DocType>> generateDocTypeUni(HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
+		Uni<Set<DocType>> generateDocTypeUni;
+		generateDocTypeUni = httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes =
+					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				return generateDocTypeFields(
+					session, mappings.getMap(), documentTypes);
+			})
+			.flatMap(docTypes ->
+				session.mergeAll(docTypes.toArray())
+					.map(unused -> docTypes)
+			);
+		return generateDocTypeUni;
 	}
 
 	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
@@ -658,5 +698,11 @@ public class IndexMappingService {
 				docTypeAndFieldsGroup, existingDocTypes)
 			);
 	}
+
+	public record GenerateDocTypeFromPluginSampleMessage(
+		Mutiny.Session session,
+		HttpPluginDriverInfo httpPluginDriverInfo,
+		PluginDriver.Provisioning provisioning
+	) {}
 
 }

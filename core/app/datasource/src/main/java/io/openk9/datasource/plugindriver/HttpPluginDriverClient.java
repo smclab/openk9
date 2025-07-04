@@ -135,6 +135,7 @@ public class HttpPluginDriverClient {
 					pluginDriverInfo.getBaseUri(),
 					SAMPLE_PATH)
 			)
+			.timeout(10000)
 			.send()
 			.flatMap(this::validateResponse)
 			.map(res -> res.bodyAsJson(IngestionPayload.class))
