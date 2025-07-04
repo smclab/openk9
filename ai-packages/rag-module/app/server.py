@@ -169,8 +169,6 @@ async def rag_generate(
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
 
-    print(extra[OPENK9_ACL_HEADER])
-
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
