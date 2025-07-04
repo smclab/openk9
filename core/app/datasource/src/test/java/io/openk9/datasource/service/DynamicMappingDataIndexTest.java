@@ -17,31 +17,41 @@
 
 package io.openk9.datasource.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
-
-import java.util.List;
-import java.util.Map;
-import jakarta.inject.Inject;
-
+import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import io.vertx.mutiny.core.eventbus.Message;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)
 class DynamicMappingDataIndexTest {
+
+	private static final Logger log = Logger.getLogger(DynamicMappingDataIndexTest.class);
 
 	@InjectSpy
 	IndexMappingService indexMappingService;
@@ -59,11 +69,14 @@ class DynamicMappingDataIndexTest {
 		asserter.assertThat(
 			() -> sessionFactory.withTransaction((s, t) ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
-					s,
-					HttpPluginDriverInfo.builder()
-						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-						.secure(false)
-						.build()
+					new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+						s,
+						HttpPluginDriverInfo.builder()
+							.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+							.secure(false)
+							.build(),
+						PluginDriver.Provisioning.USER
+					)
 				)
 			),
 			dataIndex -> {
@@ -83,6 +96,34 @@ class DynamicMappingDataIndexTest {
 			}
 		);
 
+	}
+
+	@Test
+	void should_create_docTypes_from_event_bus_message() {
+		Message<Object> responseMessage = EventBusInstanceHolder.getEventBus()
+			.request(
+				IndexMappingService.GENERATE_DOC_TYPE,
+				new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+					null,
+					HttpPluginDriverInfo.builder()
+						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+						.secure(false)
+						.build(),
+					PluginDriver.Provisioning.SYSTEM
+				)
+			)
+			.await()
+			.indefinitely();
+
+		var docTypes = (Set<DocType>) responseMessage.body();
+
+		assertNotNull(docTypes);
+		assertFalse(docTypes.isEmpty());
+		assertTrue(
+			docTypes.stream().anyMatch(docType ->
+				docType.getName().equalsIgnoreCase("sample")
+			)
+		);
 	}
 
 	private static boolean isAnIndexMapping(Map<String, Object> map) {

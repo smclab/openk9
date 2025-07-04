@@ -17,13 +17,8 @@
 
 package io.openk9.datasource;
 
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.Startup;
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
@@ -44,8 +39,13 @@ import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
+
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class Initializer {
@@ -221,6 +221,7 @@ public class Initializer {
 		var pluginDriver =
 			pluginDriverService.create(DatasourceConnectionObjects.PLUGIN_DRIVER_DTO_BUILDER()
 				.name(INIT_DATASOURCE_PLUGIN)
+				.provisioning(PluginDriver.Provisioning.USER)
 				.build()
 			).await().indefinitely();
 
