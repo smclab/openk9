@@ -181,18 +181,13 @@ class CommonHeaders(BaseModel):
     A collection of common HTTP headers used across the apis.
 
     This model represents standard HTTP headers that are commonly used in requests,
-    particularly for authentication, authorization, and request routing purposes.
+    particularly for authentication and request routing purposes.
     """
 
     authorization: Optional[str] = Header(
         None,
         description="Bearer token in format: 'Bearer <JWT>'",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    )
-    openk9_acl: Optional[list[str]] = Header(
-        None,
-        description="Access control list for tenant resources",
-        example=["group:admins", "project:openk9"],
     )
     x_forwarded_host: Optional[str] = Header(
         None,
