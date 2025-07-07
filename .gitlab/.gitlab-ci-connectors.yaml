@@ -29,12 +29,6 @@ Build Web Connector image:
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-web-connector
     echo "VERSION=latest" > version-web-connector.env
-  artifacts:
-    paths:
-    - .version-web-connector
-    reports:
-      dotenv: version-web-connector.env
-    expire_in: 24 hours
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -63,12 +57,6 @@ Build Email Connector image:
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-email-connector
     echo "VERSION=latest" > version-email-connector.env
-  artifacts:
-    paths:
-    - .version-email-connector
-    reports:
-      dotenv: version-email-connector.env
-    expire_in: 24 hours
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -97,12 +85,6 @@ Build Database Connector image:
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-database-connector
     echo "VERSION=latest" > version-database-connector.env
-  artifacts:
-    paths:
-    - .version-database-connector
-    reports:
-      dotenv: version-database-connector.env
-    expire_in: 24 hours
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -131,12 +113,6 @@ Build YouTube Connector image:
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-youtube-connector
     echo "VERSION=latest" > version-youtube-connector.env
-  artifacts:
-    paths:
-    - .version-youtube-connector
-    reports:
-      dotenv: version-youtube-connector.env
-    expire_in: 24 hours
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
