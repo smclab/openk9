@@ -17,8 +17,9 @@
 
 package io.openk9.k8sclient.grpc;
 
-import com.google.protobuf.Empty;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.ApplyResponse;
@@ -30,16 +31,20 @@ import io.openk9.common.util.StringUtils;
 import io.openk9.k8s.crd.Manifest;
 import io.openk9.k8sclient.service.IngressDef;
 import io.openk9.k8sclient.service.IngressService;
-import io.quarkus.grpc.GrpcService;
-import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.util.List;
+import com.google.protobuf.Empty;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.quarkus.grpc.GrpcService;
+import io.quarkus.vertx.VertxContextSupport;
+import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 @GrpcService
 public class AppManagerService implements AppManager {
+
+	private static final Logger log =
+		Logger.getLogger(AppManagerService.class);
 
 	@Inject
 	KubernetesClient k8sClient;
@@ -74,20 +79,21 @@ public class AppManagerService implements AppManager {
 			)
 			.build();
 
-		return Uni.createFrom()
-			.item(() -> k8sClient
+		return VertxContextSupport.executeBlocking(() -> k8sClient
 				.resource(manifest.asResource())
 				.createOr(ignore -> k8sClient
 					.resource(manifest.asResource())
 					.update())
 			)
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
 			.map(hasMetadata -> ApplyResponse.newBuilder()
 				.setStatus(hasMetadata
 					.getMetadata()
 					.getName())
 				.build()
-			);
+			)
+			.onFailure()
+			.invoke(throwable ->
+				log.warn("Resource apply got an error", throwable));
 	}
 
 	@Override
@@ -101,10 +107,12 @@ public class AppManagerService implements AppManager {
 			.tenant(appManifest.getSchemaName())
 			.build();
 
-		return Uni.createFrom()
-			.item(() -> k8sClient.resource(manifest.asResource()).delete())
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-			.map(ignore -> Empty.newBuilder().build());
+		return VertxContextSupport.executeBlocking(() -> k8sClient
+				.resource(manifest.asResource()).delete())
+			.map(ignore -> Empty.newBuilder().build())
+			.onFailure()
+			.invoke(throwable ->
+				log.warn("Resource delete got an error", throwable));
 	}
 
 	@Override
@@ -115,7 +123,10 @@ public class AppManagerService implements AppManager {
 			.map(hasMetadata -> CreateIngressResponse.newBuilder()
 				.setStatus("SUCCESS")
 				.setResourceName(hasMetadata.getMetadata().getName())
-				.build());
+				.build())
+			.onFailure()
+			.invoke(throwable ->
+				log.warn("Ingress create got an error", throwable));
 	}
 
 	@Override
@@ -126,7 +137,10 @@ public class AppManagerService implements AppManager {
 			.map(statusDetails -> DeleteIngressResponse.newBuilder()
 				.setStatus("SUCCESS")
 				.setResourceName(ingressDef.ingressName())
-				.build());
+				.build())
+			.onFailure()
+			.invoke(throwable ->
+				log.warn("Ingress delete got an error", throwable));
 	}
 
 	private static IngressDef getIngressDef(String schemaName, String virtualHost) {
