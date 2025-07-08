@@ -289,6 +289,10 @@ public class IndexMappingService {
 				generateDocTypeUni(httpPluginDriverInfo, s)
 			)
 			.onFailure()
+			.invoke(failure ->
+				log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
+			)
+			.onFailure()
 			.retry()
 			.withBackOff(Duration.ofSeconds(5))
 			.atMost(20)

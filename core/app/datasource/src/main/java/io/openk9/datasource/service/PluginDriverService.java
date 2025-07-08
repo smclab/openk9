@@ -178,7 +178,7 @@ public class PluginDriverService
 						});
 					case SYSTEM -> getCurrentTenant(session)
 						.flatMap(tenant -> {
-							// fire and forget using the eventBuss message
+							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
 								.requestAndForget(
 									IndexMappingService.GENERATE_DOC_TYPE,
@@ -219,7 +219,7 @@ public class PluginDriverService
 						});
 					case SYSTEM -> getCurrentTenant(s)
 						.flatMap(tenant -> {
-							// fire and forget using the eventBuss message
+							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
 								.requestAndForget(
 									IndexMappingService.GENERATE_DOC_TYPE,
