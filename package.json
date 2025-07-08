@@ -35,12 +35,6 @@
     "packages": [
       "js-packages/*",
       "plugins/**/js"
-    ],
-    "nohoist": [
-      "**/@docusaurus/core/**",
-      "**/babel-loader",
-      "**/webpack",
-      "**/craco"
     ]
   }
 }
