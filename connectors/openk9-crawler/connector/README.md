@@ -27,8 +27,8 @@ This endpoint takes different arguments in JSON raw body:
 - **titleTag**: html tag for title to assign to extracted page (optional, if not specified )
 - **pageCount**: count of page limit to crawl (optional, if not specified )
 - **maxLength**: maximum length of extracted content (optional, if not specified )
-- **specificTags**:
-- **documentFileExtensions**: 
+- **customMetadata**: map key-value where key is the metadata to extract and value is xpath expression to get element/s to extract from html
+- **documentFileExtensions**: extensions of files to allowed during extraction
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -43,9 +43,9 @@ curl -X 'POST' \
   -H 'Content-Type: application/json' \
   -d '{
   "startUrls": [
-    "https://www.openk9.io"
+    "https://www.smc.it"
   ],
-  "allowedDomains": [],
+  "allowedDomains": ["www.smc.it"],
   "allowedPaths": [],
   "excludedPaths": [],
   "bodyTag": "body",
@@ -84,9 +84,10 @@ This endpoint takes different arguments in JSON raw body:
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified get all body page)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl
-- **maxLength**: maximum length of extracted content (optional, if not specified )
-- **specificTags**:
-- **documentFileExtensions**: 
+- **maxLength**: maximum length of extracted content (optional, if not specified)
+- **customMetadata**: map key-value where key is the metadata added to Openk9 payload and value is xpath expression to get element/s to extract from html and ling to metadata
+- **doExtractDocs**: if follows links when parser link from sitemap
+- **documentFileExtensions**: extensions of files to allowed during extraction
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -99,17 +100,23 @@ Follows an example of Curl call:
 curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "startUrls": ["https://smc.it"],
-    "allowedDomains": ["smc.it"],
+    "sitemapUrls": ["https://www.smc.it/sitemap.xml"],
+    "allowedDomains": ["www.smc.it"],
     "allowedPaths": [],
-    "excludedPaths": [".php"],
+    "excludedPaths": [".pdf"],
     "datasourceId": 1,
     "timestamp": 0,
     "bodyTag": "div#main-content",
     "titleTag": "title::text",
     "depth": 0,
     "pageCount": 0
-    "follow": true
+    "follow": true,
+    "doExtractDocs**: true,
+    "documentFileExtensions": [".pdf"],
+    "customMetadata": {
+      "metadataName1": "//span/text",
+      "metadataName2": "//div[@id="images"]/a/text()"
+    }
 }'
 ```
 
