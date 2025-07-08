@@ -299,7 +299,14 @@ public class IndexMappingService {
 			.onItem()
 			.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
 			.onFailure()
-			.invoke(() -> log.warn("Error creating/updating DocumentTypes associated with pluginDriver"));
+			.invoke((throwable) -> {
+				if (log.isDebugEnabled()) {
+					log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
+				}
+				else {
+					log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
+				}
+			});
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(

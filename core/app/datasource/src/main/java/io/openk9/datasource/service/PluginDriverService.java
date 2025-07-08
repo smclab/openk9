@@ -168,7 +168,14 @@ public class PluginDriverService
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
 						.onFailure()
-						.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"));
+						.invoke((throwable) -> {
+							if (log.isDebugEnabled()) {
+								log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
+							}
+							else {
+								log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
+							}
+						});
 					case SYSTEM -> getCurrentTenant(session)
 						.flatMap(tenant -> {
 							// fire and forget using the eventBuss message
@@ -202,7 +209,14 @@ public class PluginDriverService
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
 						.onFailure()
-						.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"));
+						.invoke((throwable) -> {
+							if (log.isDebugEnabled()) {
+								log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
+							}
+							else {
+								log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
+							}
+						});
 					case SYSTEM -> getCurrentTenant(s)
 						.flatMap(tenant -> {
 							// fire and forget using the eventBuss message
