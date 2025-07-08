@@ -2,10 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "declaration": true, // Genera file .d.ts
-    "emitDeclarationOnly": false, // Emette sia .js che .d.ts
-    "outDir": "./dist", // Directory di output
-    "declarationDir": "./dist/types", // Directory di output per i file .d.ts
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "outDir": "./dist",
+    "declarationDir": "./dist/types",
     "esModuleInterop": true,
     "skipLibCheck": true
   },
