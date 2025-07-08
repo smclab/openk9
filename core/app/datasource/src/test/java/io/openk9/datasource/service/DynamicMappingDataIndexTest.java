@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
@@ -51,6 +50,7 @@ import static org.mockito.Mockito.times;
 @QuarkusTestResource(WireMockPluginDriver.class)
 class DynamicMappingDataIndexTest {
 
+	public static final String TENANT_ID = "public";
 	private static final Logger log = Logger.getLogger(DynamicMappingDataIndexTest.class);
 
 	@InjectSpy
@@ -68,15 +68,12 @@ class DynamicMappingDataIndexTest {
 
 		asserter.assertThat(
 			() -> sessionFactory.withTransaction((s, t) ->
-				indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
-					new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-						s,
-						HttpPluginDriverInfo.builder()
-							.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-							.secure(false)
-							.build(),
-						PluginDriver.Provisioning.USER
-					)
+				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleUser(
+					s,
+					HttpPluginDriverInfo.builder()
+						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+						.secure(false)
+						.build()
 				)
 			),
 			dataIndex -> {
@@ -104,12 +101,11 @@ class DynamicMappingDataIndexTest {
 			.request(
 				IndexMappingService.GENERATE_DOC_TYPE,
 				new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-					null,
+					TENANT_ID,
 					HttpPluginDriverInfo.builder()
 						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
 						.secure(false)
-						.build(),
-					PluginDriver.Provisioning.SYSTEM
+						.build()
 				)
 			)
 			.await()

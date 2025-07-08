@@ -28,7 +28,6 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
-import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -74,7 +73,8 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class IndexMappingService {
 
-	public static final String GENERATE_DOC_TYPE = "IndexMappingService#generateDocTypeFieldsFromPluginDriverSample";
+	public static final String GENERATE_DOC_TYPE =
+		"IndexMappingService#generateDocTypeFieldsFromPluginDriverSampleSystem";
 
 	// all the document fields that must be ignored on write
 	private static final String[] IGNORED_FIELD_PATHS = new String[]{
@@ -249,39 +249,49 @@ public class IndexMappingService {
 	}
 
 	/**
-	 * Generates DocType fields from a plugin driver sample data.
+	 * Generates DocType fields from a plugin driver's sample data for 'USER' provisioned drivers.
 	 * This method retrieves a sample from the plugin driver, extracts document types
 	 * and mappings, and then generates the corresponding DocType fields.
-	 * The operation includes a retry mechanism for 'SYSTEM' provisioned plugin drivers
-	 * to handle transient failures during transaction processing.
+	 * This operation reuses an <strong>existing Mutiny session</strong> provided as a parameter.
 	 *
-	 * @param message The message containing the Hibernate reactive session, plugin driver information,
-	 * and provisioning type.
+	 * @param session The active Hibernate Mutiny session to be used for the operation.
+	 * @param httpPluginDriverInfo The information about the HTTP plugin driver.
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects.
+	 */
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleUser(
+			Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+
+		return generateDocTypeUni(httpPluginDriverInfo, session)
+			.flatMap(docTypes -> {
+				log.debug("DocType size=" + docTypes.size());
+				return Uni.createFrom().item(docTypes);
+			});
+	}
+
+	/**
+	 * Generates DocType fields from a plugin driver's sample data, specifically for 'SYSTEM' provisioned drivers.
+	 * This method retrieves a sample from the plugin driver, extracts document types
+	 * and mappings, and then generates the corresponding DocType fields.
+	 * The operation includes a retry mechanism to handle transient failures during transaction processing,
+	 * utilizing a <strong>new Mutiny session</strong> for the transaction.
+	 *
+	 * @param message The message containing the tenantId and plugin driver information.
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
 	 */
 	@ConsumeEvent(GENERATE_DOC_TYPE)
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSample(
-			GenerateDocTypeFromPluginSampleMessage message) {
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSystem(
+		GenerateDocTypeFromPluginSampleMessage message) {
 
-		var session = message.session();
+		var tenantId = message.tenantId();
 		var httpPluginDriverInfo = message.httpPluginDriverInfo();
-		var provisioning = message.provisioning();
 
-		Uni<Set<DocType>> generateDocTypeUni;
-
-		// Adds the retry if pluginDriver is of 'SYSTEM' type.
-		generateDocTypeUni = switch (provisioning) {
-			case USER -> generateDocTypeUni(httpPluginDriverInfo, session);
-			case SYSTEM -> sessionFactory.withTransaction(newSession ->
-					generateDocTypeUni(httpPluginDriverInfo, newSession)
-				)
-				.onFailure()
-				.retry()
-				.withBackOff(Duration.ofSeconds(5))
-				.atMost(20);
-		};
-
-		return generateDocTypeUni
+		return sessionFactory.withTransaction(tenantId, (s, t) ->
+				generateDocTypeUni(httpPluginDriverInfo, s)
+			)
+			.onFailure()
+			.retry()
+			.withBackOff(Duration.ofSeconds(5))
+			.atMost(20)
 			.flatMap(docTypes -> {
 				log.debug("DocType size=" + docTypes.size());
 				return Uni.createFrom().item(docTypes);
@@ -700,9 +710,8 @@ public class IndexMappingService {
 	}
 
 	public record GenerateDocTypeFromPluginSampleMessage(
-		Mutiny.Session session,
-		HttpPluginDriverInfo httpPluginDriverInfo,
-		PluginDriver.Provisioning provisioning
+		String tenantId,
+		HttpPluginDriverInfo httpPluginDriverInfo
 	) {}
 
 }

@@ -161,31 +161,27 @@ public class PluginDriverService
 				var pluginDriver = (PluginDriver) entity;
 
 				return switch (pluginDriver.getProvisioning()) {
-					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
-							new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-								session,
-								pluginDriver.getHttpPluginDriverInfo(),
-								PluginDriver.Provisioning.USER
-							)
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleUser(
+							session,
+							pluginDriver.getHttpPluginDriverInfo()
 						)
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
 						.onFailure()
 						.invoke(() -> log.warn("Error creating DocumentTypes associated with pluginDriver"));
-					case SYSTEM -> {
-						// fire and forget using the eventBuss message
-						EventBusInstanceHolder.getEventBus()
-							.requestAndForget(
-								IndexMappingService.GENERATE_DOC_TYPE,
-								new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-									null,
-									pluginDriver.getHttpPluginDriverInfo(),
-									PluginDriver.Provisioning.SYSTEM
-								)
-							);
-
-						yield Uni.createFrom().item(entity);
-					}
+					case SYSTEM -> getCurrentTenant(session)
+						.flatMap(tenant -> {
+							// fire and forget using the eventBuss message
+							EventBusInstanceHolder.getEventBus()
+								.requestAndForget(
+									IndexMappingService.GENERATE_DOC_TYPE,
+									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+										tenant.schemaName(),
+										pluginDriver.getHttpPluginDriverInfo()
+									)
+								);
+							return Uni.createFrom().item(entity);
+						});
 				};
 			});
 	}
@@ -199,31 +195,27 @@ public class PluginDriverService
 				PluginDriver pluginDriver = (PluginDriver) entity;
 
 				return switch (pluginDriver.getProvisioning()) {
-					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSample(
-							new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-								s,
-								pluginDriver.getHttpPluginDriverInfo(),
-								PluginDriver.Provisioning.USER
-							)
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleUser(
+							s,
+							pluginDriver.getHttpPluginDriverInfo()
 						)
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
 						.onFailure()
 						.invoke(() -> log.warn("Error updating DocumentTypes associated with pluginDriver"));
-					case SYSTEM -> {
-						// fire and forget using the eventBuss message
-						EventBusInstanceHolder.getEventBus()
-							.requestAndForget(
-								IndexMappingService.GENERATE_DOC_TYPE,
-								new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-									null,
-									pluginDriver.getHttpPluginDriverInfo(),
-									PluginDriver.Provisioning.SYSTEM
-								)
-							);
-
-						yield Uni.createFrom().item(entity);
-					}
+					case SYSTEM -> getCurrentTenant(s)
+						.flatMap(tenant -> {
+							// fire and forget using the eventBuss message
+							EventBusInstanceHolder.getEventBus()
+								.requestAndForget(
+									IndexMappingService.GENERATE_DOC_TYPE,
+									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
+										tenant.schemaName(),
+										pluginDriver.getHttpPluginDriverInfo()
+									)
+								);
+							return Uni.createFrom().item(entity);
+						});
 				};
 			});
 	}
