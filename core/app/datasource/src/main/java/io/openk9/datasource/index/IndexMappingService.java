@@ -295,8 +295,7 @@ public class IndexMappingService {
 					)
 					.onFailure()
 					.retry()
-					.withJitter(0.0)
-					.withBackOff(Duration.ofSeconds(5))
+					.withBackOff(Duration.ofSeconds(5), Duration.ofSeconds(30))
 					.atMost(20)
 					.flatMap(docTypes -> {
 						log.debug("DocType size=" + docTypes.size());
