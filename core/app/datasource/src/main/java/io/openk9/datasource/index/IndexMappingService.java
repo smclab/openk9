@@ -479,8 +479,7 @@ public class IndexMappingService {
 	}
 
 	private Uni<Set<DocType>> generateDocTypeUni(HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
-		Uni<Set<DocType>> generateDocTypeUni;
-		generateDocTypeUni = httpPluginDriverClient.getSample(httpPluginDriverInfo)
+		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
 			.flatMap(ingestionPayload -> {
 
 				var documentTypes =
@@ -498,7 +497,6 @@ public class IndexMappingService {
 				session.mergeAll(docTypes.toArray())
 					.map(unused -> docTypes)
 			);
-		return generateDocTypeUni;
 	}
 
 	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {

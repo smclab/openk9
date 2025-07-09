@@ -180,7 +180,7 @@ public class PluginDriverService
 						.flatMap(tenant -> {
 							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
-								.requestAndForget(
+								.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenant.schemaName(),
@@ -221,7 +221,7 @@ public class PluginDriverService
 						.flatMap(tenant -> {
 							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
-								.requestAndForget(
+								.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenant.schemaName(),
