@@ -36,6 +36,7 @@ import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -280,10 +281,11 @@ public class IndexMappingService {
 	 */
 	@ConsumeEvent(GENERATE_DOC_TYPE)
 	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSystem(
-		GenerateDocTypeFromPluginSampleMessage message) {
+			GenerateDocTypeFromPluginSampleMessage message) {
 
 		var tenantId = message.tenantId();
 		var httpPluginDriverInfo = message.httpPluginDriverInfo();
+		var currentEventLoopContext = Vertx.currentContext();
 
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
 				generateDocTypeUni(httpPluginDriverInfo, s)
@@ -296,6 +298,9 @@ public class IndexMappingService {
 			.retry()
 			.withBackOff(Duration.ofSeconds(5))
 			.atMost(20)
+			.emitOn(runnable ->
+				currentEventLoopContext.runOnContext(ignored -> runnable.run())
+			)
 			.flatMap(docTypes -> {
 				log.debug("DocType size=" + docTypes.size());
 				return Uni.createFrom().item(docTypes);
