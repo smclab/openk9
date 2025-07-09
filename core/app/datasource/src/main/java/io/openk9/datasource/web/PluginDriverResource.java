@@ -17,6 +17,13 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.service.PluginDriverService;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,13 +32,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
-import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.service.PluginDriverService;
-import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
-
-import io.smallrye.mutiny.Uni;
+import java.util.Set;
 
 @ApplicationScoped
 @Path("/pluginDrivers")
@@ -45,6 +46,12 @@ public class PluginDriverResource {
 	@Path("/documentTypes/{id}")
 	public Uni<PluginDriverDocTypesDTO> getDocTypes(@PathParam("id") long id) {
 		return service.getDocTypes(id);
+	}
+
+	@POST
+	@Path("/documentTypes/{id}")
+	public Uni<Set<DocType>> createDocTypes(@PathParam("id") long id) {
+		return service.createPluginDriverDocTypes(id);
 	}
 
 	@GET

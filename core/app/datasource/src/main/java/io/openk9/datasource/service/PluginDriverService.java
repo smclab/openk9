@@ -88,6 +88,17 @@ public class PluginDriverService
 		this.mapper = mapper;
 	}
 
+	public Uni<Set<DocType>> createPluginDriverDocTypes(long id) {
+		return sessionFactory.withTransaction(session -> findById(id)
+			.flatMap(pluginDriver ->
+				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
+					session,
+					pluginDriver.getHttpPluginDriverInfo()
+				)
+			)
+		);
+	}
+
 	public Uni<PluginDriverDocTypesDTO> getDocTypes(long id) {
 		return sessionFactory.withSession(session -> findById(id)
 			.flatMap(pluginDriver ->
@@ -161,7 +172,7 @@ public class PluginDriverService
 				var pluginDriver = (PluginDriver) entity;
 
 				return switch (pluginDriver.getProvisioning()) {
-					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleUser(
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 							session,
 							pluginDriver.getHttpPluginDriverInfo()
 						)
@@ -202,7 +213,7 @@ public class PluginDriverService
 				PluginDriver pluginDriver = (PluginDriver) entity;
 
 				return switch (pluginDriver.getProvisioning()) {
-					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleUser(
+					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 							s,
 							pluginDriver.getHttpPluginDriverInfo()
 						)

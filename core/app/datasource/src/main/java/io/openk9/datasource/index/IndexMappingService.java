@@ -36,8 +36,6 @@ import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -76,7 +74,7 @@ import java.util.stream.Collectors;
 public class IndexMappingService {
 
 	public static final String GENERATE_DOC_TYPE =
-		"IndexMappingService#generateDocTypeFieldsFromPluginDriverSampleSystem";
+		"IndexMappingService#generateDocTypeFieldsFromPluginDriverSampleAsync";
 
 	// all the document fields that must be ignored on write
 	private static final String[] IGNORED_FIELD_PATHS = new String[]{
@@ -260,7 +258,7 @@ public class IndexMappingService {
 	 * @param httpPluginDriverInfo The information about the HTTP plugin driver.
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects.
 	 */
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleUser(
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSync(
 			Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
 
 		return generateDocTypeUni(httpPluginDriverInfo, session)
@@ -281,7 +279,7 @@ public class IndexMappingService {
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
 	 */
 	@ConsumeEvent(GENERATE_DOC_TYPE)
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSystem(
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleAsync(
 			GenerateDocTypeFromPluginSampleMessage message) {
 
 		var tenantId = message.tenantId();
