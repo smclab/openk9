@@ -295,6 +295,7 @@ public class IndexMappingService {
 					)
 					.onFailure()
 					.retry()
+					.withJitter(0.0)
 					.withBackOff(Duration.ofSeconds(5))
 					.atMost(20)
 					.flatMap(docTypes -> {
