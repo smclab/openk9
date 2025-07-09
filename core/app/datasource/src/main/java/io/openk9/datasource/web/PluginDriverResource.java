@@ -50,7 +50,7 @@ public class PluginDriverResource {
 
 	@POST
 	@Path("/documentTypes/{id}")
-	public Uni<Set<DocType>> createDocTypes(@PathParam("id") long id) {
+	public Uni<PluginDriverDocTypesDTO> createDocTypes(@PathParam("id") long id) {
 		return service.createPluginDriverDocTypes(id);
 	}
 

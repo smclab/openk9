@@ -62,6 +62,7 @@ import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -88,12 +89,15 @@ public class PluginDriverService
 		this.mapper = mapper;
 	}
 
-	public Uni<Set<DocType>> createPluginDriverDocTypes(long id) {
+	public Uni<PluginDriverDocTypesDTO> createPluginDriverDocTypes(long id) {
 		return sessionFactory.withTransaction(session -> findById(id)
 			.flatMap(pluginDriver ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 					session,
 					pluginDriver.getHttpPluginDriverInfo()
+				)
+				.map(docTypes ->
+					PluginDriverDocTypesDTO.selectedDocTypes(new ArrayList<>(docTypes))
 				)
 			)
 		);
