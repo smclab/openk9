@@ -36,6 +36,7 @@ import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -285,37 +286,33 @@ public class IndexMappingService {
 
 		var tenantId = message.tenantId();
 		var httpPluginDriverInfo = message.httpPluginDriverInfo();
-		var currentEventLoopContext = Vertx.currentContext();
 
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
 				generateDocTypeUni(httpPluginDriverInfo, s)
-			)
-			.onFailure()
-			.invoke(failure ->
-				log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
-			)
-			.onFailure()
-			.retry()
-			.withBackOff(Duration.ofSeconds(5))
-			.atMost(20)
-			.emitOn(runnable ->
-				currentEventLoopContext.runOnContext(ignored -> runnable.run())
-			)
-			.flatMap(docTypes -> {
-				log.debug("DocType size=" + docTypes.size());
-				return Uni.createFrom().item(docTypes);
-			})
-			.onItem()
-			.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
-			.onFailure()
-			.invoke((throwable) -> {
-				if (log.isDebugEnabled()) {
-					log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
-				}
-				else {
-					log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
-				}
-			});
+					.onFailure()
+					.invoke(failure ->
+						log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
+					)
+					.onFailure()
+					.retry()
+					.withBackOff(Duration.ofSeconds(5))
+					.atMost(20)
+					.flatMap(docTypes -> {
+						log.debug("DocType size=" + docTypes.size());
+						return Uni.createFrom().item(docTypes);
+					})
+					.onItem()
+					.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
+					.onFailure()
+					.invoke((throwable) -> {
+						if (log.isDebugEnabled()) {
+							log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
+						}
+						else {
+							log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
+						}
+					})
+			);
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(
