@@ -1,0 +1,59 @@
+{
+  "name": "openk9-admin-ui-2",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "admin",
+"dependencies": {
+  "@emotion/react": "^11.13.3",
+  "@emotion/styled": "^11.13.0",
+  "@mui/icons-material": "^6.0.2",
+  "@mui/material": "^6.0.2",
+  "@testing-library/jest-dom": "^5.14.1",
+  "@testing-library/react": "^13.0.0",
+  "@testing-library/user-event": "^14.3.0",
+  "@types/jest": "^28.1.6",
+  "@types/node": "^18.6.3",
+  "@types/react": "^18.0.0",
+  "@types/react-dom": "^18.0.0",
+  "i18next": "^22.5.1",
+  "keycloak-js": "25.0.6",
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-i18next": "^12.3.1",
+  "react-markdown": "^9.0.1",
+  "react-query": "^3.39.3", 
+  "react-scripts": "5.0.1",
+  "typescript": "^4.4.2",
+  "uuid": "^10.0.0",
+  "web-vitals": "^2.1.0"
+},
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject",
+    "compile-graphql": "graphql-codegen --watch --verbose",
+    "compile-openapi": "openapi --input https://k9-frontend.openk9.io/api/datasource/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@graphql-codegen/time": "^3.2.3"
+  }
+}

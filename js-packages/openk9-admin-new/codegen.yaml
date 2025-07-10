@@ -1,0 +1,14 @@
+schema:
+  - https://k9-frontend.openk9.io/api/datasource/graphql:
+      headers:
+        Authorization: 
+          ""
+
+documents: "./src/**/*.tsx"
+generates:
+  src/graphql-generated.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+      - time
