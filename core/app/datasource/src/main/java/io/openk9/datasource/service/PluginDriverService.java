@@ -89,15 +89,12 @@ public class PluginDriverService
 		this.mapper = mapper;
 	}
 
-	public Uni<PluginDriverDocTypesDTO> createPluginDriverDocTypes(long id) {
+	public Uni<Set<DocType>> createPluginDriverDocTypes(long id) {
 		return sessionFactory.withTransaction(session -> findById(id)
 			.flatMap(pluginDriver ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 					session,
 					pluginDriver.getHttpPluginDriverInfo()
-				)
-				.map(docTypes ->
-					PluginDriverDocTypesDTO.selectedDocTypes(new ArrayList<>(docTypes))
 				)
 			)
 		);
