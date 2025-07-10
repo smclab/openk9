@@ -1,0 +1,12 @@
+{
+    "translation": {
+        "version": "Version",
+        "welcome-to": "Welcome to",
+        "where-knowledge-has-no-limits": "where knowledge knows no limits!",
+        "recents-chat": "Recent Chats",
+        "logout": "Logout",
+        "login": "Login",
+        "new-chat": "New Chat",
+        "write-a-message": "Write a message..."
+    }
+}

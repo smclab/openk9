@@ -1,0 +1,27 @@
+@media screen and (max-width: 768px) {
+	.k9-generation-sideNavigation {
+		display: none !important;
+	}
+	.openk9-box-main {
+		width: 45vw;
+	}
+}
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.4);
+	border-radius: 10px;
+	height: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.55);
+	height: 5px;
+}
