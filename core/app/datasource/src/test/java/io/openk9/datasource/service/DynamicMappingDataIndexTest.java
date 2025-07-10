@@ -50,8 +50,8 @@ import static org.mockito.Mockito.times;
 @QuarkusTestResource(WireMockPluginDriver.class)
 class DynamicMappingDataIndexTest {
 
-	public static final String TENANT_ID = "public";
-	private static final Logger log = Logger.getLogger(DynamicMappingDataIndexTest.class);
+	private static final String TENANT_ID = "public";
+	private static final String SAMPLE_NAME = "sample";
 
 	@InjectSpy
 	IndexMappingService indexMappingService;
@@ -117,7 +117,7 @@ class DynamicMappingDataIndexTest {
 		assertFalse(docTypes.isEmpty());
 		assertTrue(
 			docTypes.stream().anyMatch(docType ->
-				docType.getName().equalsIgnoreCase("sample")
+				SAMPLE_NAME.equalsIgnoreCase(docType.getName())
 			)
 		);
 	}
@@ -127,7 +127,7 @@ class DynamicMappingDataIndexTest {
 	}
 
 	private static boolean isADocumentTypeList(List<String> list) {
-		return list != null && !list.isEmpty() && list.contains("sample");
+		return list != null && !list.isEmpty() && list.contains(SAMPLE_NAME);
 	}
 
 }

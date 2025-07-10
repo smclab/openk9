@@ -42,16 +42,16 @@ public class PluginDriverResource {
 	@Inject
 	PluginDriverService service;
 
-	@GET
-	@Path("/documentTypes/{id}")
-	public Uni<PluginDriverDocTypesDTO> getDocTypes(@PathParam("id") long id) {
-		return service.getDocTypes(id);
-	}
-
 	@POST
 	@Path("/documentTypes/{id}")
 	public Uni<Set<DocType>> createDocTypes(@PathParam("id") long id) {
 		return service.createPluginDriverDocTypes(id);
+	}
+
+	@GET
+	@Path("/documentTypes/{id}")
+	public Uni<PluginDriverDocTypesDTO> getDocTypes(@PathParam("id") long id) {
+		return service.getDocTypes(id);
 	}
 
 	@GET

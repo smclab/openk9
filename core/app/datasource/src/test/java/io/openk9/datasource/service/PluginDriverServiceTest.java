@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @QuarkusTest
 public class PluginDriverServiceTest {
 
+	private static final String TENANT_ID = "public";
 	private static final Logger log = Logger.getLogger(PluginDriverServiceTest.class);
 
 	@Inject
@@ -131,11 +132,10 @@ public class PluginDriverServiceTest {
 	}
 
 	private PluginDriver getInitPluginDriver() {
-		var pluginDriver = pluginDriverService.findByName(
-				"public",
+		return pluginDriverService.findByName(
+				TENANT_ID,
 				Initializer.INIT_DATASOURCE_PLUGIN
 			)
 			.await().indefinitely();
-		return pluginDriver;
 	}
 }

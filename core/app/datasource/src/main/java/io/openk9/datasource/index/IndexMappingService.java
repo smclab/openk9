@@ -99,419 +99,21 @@ public class IndexMappingService {
 		Arrays.sort(IGNORED_FIELD_PATHS);
 	}
 
-	public static boolean isIgnoredFieldPath(String fieldPath) {
-		return Arrays.binarySearch(IGNORED_FIELD_PATHS, fieldPath) >= 0;
-	}
-
-	@Inject
-	IndexService indexService;
 	@Inject
 	DocTypeService docTypeService;
 	@Inject
+	io.quarkus.qute.Template embeddingComponentMappings;
+	@Inject
 	HttpPluginDriverClient httpPluginDriverClient;
+	@Inject
+	IndexService indexService;
 	@Inject
 	IngestionPayloadMapper ingestionPayloadMapper;
 	@Inject
-	io.quarkus.qute.Template embeddingComponentMappings;
-	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	/**
-	 * Create an IndexTemplate from a dataIndex and a settings map.
-	 * The indexTemplate mappings will be created from the docTypes
-	 * associated to dataIndex.
-	 * The indexTemplate settings will be created from the settings map.
-	 *
-	 * @param dataIndexTemplate The object containing the dataIndex and the settings map
-	 *                         	used to create the dataIndex
-	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
-	 * succeeds, the result is empty. If the operation fails, the failure is
-	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
-	 * the error appropriately.
-	 */
-	public Uni<Void> createDataIndexTemplate(
-		DataIndexTemplate dataIndexTemplate) {
-
-		return indexService.createIndexTemplate(
-			createIndexTemplateRequest(dataIndexTemplate));
-	}
-
-	/**
-	 * Create or update a component template that defines an embedding mapping.
-	 *
-	 * @param session
-	 * @param embeddingComponentTemplate The object containing the name of the component
-	 *                                   template and the dimension of the {@code knnVector}.
-	 *                                   Must not be {@code null}.
-	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
-	 * succeeds, the result is empty. If the operation fails, the failure is
-	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
-	 * the error appropriately.
-	 **/
-	public Uni<Void> createEmbeddingComponentTemplate(
-		Mutiny.Session session,
-		EmbeddingComponentTemplate embeddingComponentTemplate) {
-
-		if (log.isDebugEnabled()) {
-			log.debugf(
-				"Creating a componentTemplate named %s, the vector size is %d.",
-				embeddingComponentTemplate.getName(),
-				embeddingComponentTemplate.vectorSize()
-			);
-		}
-
-		var mappings = embeddingComponentMappings.data(
-			"knnVectorDimension",
-			embeddingComponentTemplate.vectorSize()
-		).render();
-
-		var componentTemplateRequest = createComponentTemplateRequest(
-			embeddingComponentTemplate.getName(),
-			mappings
-		);
-
-		var jsonObject = (JsonObject) Json.decodeValue(mappings);
-
-		return indexService.putComponentTemplate(componentTemplateRequest)
-			.call(() -> generateDocTypeFields(
-				session,
-				jsonObject.getMap(),
-				List.of(DocType.DEFAULT_NAME)
-			).flatMap(docTypes -> session.mergeAll(docTypes.toArray())));
-	}
-
-	/**
-	 * Retrieves mappings configuration from a list of DocType identifiers.
-	 * <p>
-	 * This method fetches all DocType entities specified by the provided IDs and transforms
-	 * them into a structured mapping configuration suitable for OpenSearch index templates.
-	 * The mappings define how document fields should be stored and indexed in OpenSearch.
-	 *
-	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
-	 * @return A {@link Uni} containing a Map with MappingsKey objects as keys and their corresponding
-	 * mapping configurations as values, ready to be used in OpenSearch index templates
-	 */
-	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
-		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToMappings);
-	}
-
-	/**
-	 * Retrieves index settings configuration from a list of DocType identifiers.
-	 * <p>
-	 * This method fetches all DocType entities specified by the provided IDs and extracts
-	 * their associated settings configuration. The settings define various OpenSearch index
-	 * properties such as number of shards, replicas, analysis settings, etc.
-	 *
-	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
-	 * @return A {@link Uni} containing a Map with setting names as String keys and their
-	 * corresponding setting values as Objects, ready to be used in OpenSearch index templates
-	 */
-	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
-		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToSettings);
-	}
-
-	/**
-	 * Generates DocType and fields from provided mappings and document types.
-	 *
-	 * @param session       The Hibernate reactive session used for database operations
-	 * @param mappings      A map containing the field mappings structure
-	 * @param documentTypes List of document type names to be processed
-	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
-	 */
-	public Uni<Set<DocType>> generateDocTypeFields(
-		Mutiny.Session session,
-		Map<String, Object> mappings,
-		List<String> documentTypes) {
-
-		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
-
-		var docTypeAndFieldsGroup = IndexMappingService
-			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
-
-		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
-	}
-
-	/**
-	 * Generates DocType fields from an existing index by retrieving its mappings and document types.
-	 *
-	 * @param session The Hibernate reactive session used for database operations
-	 * @param indexName The name of the index to retrieve mappings from
-	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
-	 */
-	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
-		Mutiny.Session session, IndexName indexName) {
-
-		return indexService.getMappings(indexName)
-			.flatMap(mappings -> indexService
-				.getDocumentTypes(indexName)
-				.flatMap(documentTypes -> generateDocTypeFields(
-					session, mappings, documentTypes)));
-	}
-
-	/**
-	 * Generates DocType fields from a plugin driver's sample data for 'USER' provisioned drivers.
-	 * This method retrieves a sample from the plugin driver, extracts document types
-	 * and mappings, and then generates the corresponding DocType fields.
-	 * This operation reuses an <strong>existing Mutiny session</strong> provided as a parameter.
-	 *
-	 * @param session The active Hibernate Mutiny session to be used for the operation.
-	 * @param httpPluginDriverInfo The information about the HTTP plugin driver.
-	 * @return A {@link Uni} containing a Set of generated or updated DocType objects.
-	 */
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSync(
-			Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
-
-		return generateDocTypeUni(httpPluginDriverInfo, session)
-			.flatMap(docTypes -> {
-				log.debug("DocType size=" + docTypes.size());
-				return Uni.createFrom().item(docTypes);
-			});
-	}
-
-	/**
-	 * Generates DocType fields from a plugin driver's sample data, specifically for 'SYSTEM' provisioned drivers.
-	 * This method retrieves a sample from the plugin driver, extracts document types
-	 * and mappings, and then generates the corresponding DocType fields.
-	 * The operation includes a retry mechanism to handle transient failures during transaction processing,
-	 * utilizing a <strong>new Mutiny session</strong> for the transaction.
-	 *
-	 * @param message The message containing the tenantId and plugin driver information.
-	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
-	 */
-	@ConsumeEvent(GENERATE_DOC_TYPE)
-	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleAsync(
-			GenerateDocTypeFromPluginSampleMessage message) {
-
-		var tenantId = message.tenantId();
-		var httpPluginDriverInfo = message.httpPluginDriverInfo();
-
-		return sessionFactory.withTransaction(tenantId, (s, t) ->
-				generateDocTypeUni(httpPluginDriverInfo, s)
-					.onFailure()
-					.invoke(failure ->
-						log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
-					)
-					.onFailure()
-					.retry()
-					.withBackOff(Duration.ofSeconds(5), Duration.ofSeconds(30))
-					.atMost(20)
-					.flatMap(docTypes -> {
-						log.debug("DocType size=" + docTypes.size());
-						return Uni.createFrom().item(docTypes);
-					})
-					.onItem()
-					.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
-					.onFailure()
-					.invoke((throwable) -> {
-						if (log.isDebugEnabled()) {
-							log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
-						}
-						else {
-							log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
-						}
-					})
-			);
-	}
-
-	protected static PutComponentTemplateRequest createComponentTemplateRequest(
-		String componentTemplateName, String mappings) {
-
-		return PutComponentTemplateRequest.of(component -> component
-			.name(componentTemplateName)
-			.template(template -> template
-				.settings(settings -> settings.knn(true))
-				.mappings(mapping -> mapping
-					.withJson(new StringReader(mappings))
-				)
-			)
-		);
-	}
-
-	protected static PutComposableIndexTemplateRequest createIndexTemplateRequest(
-		DataIndexTemplate indexTemplateRequest) {
-
-		var tenantId = indexTemplateRequest.tenantId();
-		var dataIndex = indexTemplateRequest.dataIndex();
-		var indexSettings = indexTemplateRequest.settings();
-		var embeddingModel = indexTemplateRequest.embeddingModel();
-
-		Map<MappingsKey, Object> mappings =
-			IndexMappingUtils.docTypesToMappings(dataIndex.getDocTypes());
-
-		var settings = getSettings(indexSettings, dataIndex);
-
-		PutComposableIndexTemplateRequest request =
-			new PutComposableIndexTemplateRequest();
-
-		ComposableIndexTemplate composableIndexTemplate = null;
-
-		try {
-			IndexName indexName = IndexName.from(tenantId, dataIndex);
-
-			List<String> componentTemplates = new ArrayList<>();
-
-			// adds the knn component template on this indexTemplate
-			if (dataIndex.getKnnIndex() && embeddingModel != null) {
-
-				var componentTemplate = new EmbeddingComponentTemplate(
-					tenantId,
-					embeddingModel.getName(),
-					embeddingModel.getVectorSize()
-				);
-
-				componentTemplates.add(componentTemplate.getName());
-
-			}
-
-			composableIndexTemplate = new ComposableIndexTemplate(
-				List.of(indexName.toString()),
-				new Template(
-					settings, new CompressedXContent(
-					Json.encode(mappings)), null
-				),
-				componentTemplates
-				, null, null, null
-			);
-
-			request
-				.name(indexName + IndexService.TEMPLATE_SUFFIX)
-				.indexTemplate(composableIndexTemplate);
-
-			return request;
-		}
-		catch (IOException e) {
-			throw new WebApplicationException(Response
-				.status(Response.Status.INTERNAL_SERVER_ERROR)
-				.entity(JsonObject.of(
-					DataIndexService.DETAILS_FIELD, "failed creating IndexTemplate"
-				))
-				.build());
-		}
-	}
-
-	protected static Set<DocType> mergeDocTypes(
-		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
-		Collection<DocType> existingDocTypes) {
-
-		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
-
-		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
-
-		for (String docTypeName : mappedDocTypeNames) {
-
-			DocType docType =
-				existingDocTypes
-					.stream()
-					.filter(d -> d.getName().equals(docTypeName))
-					.findFirst()
-					.orElseGet(() -> {
-						DocType newDocType = new DocType();
-						newDocType.setName(docTypeName);
-						newDocType.setDescription("auto-generated");
-						newDocType.setDocTypeFields(new LinkedHashSet<>());
-						return newDocType;
-					});
-
-			List<DocTypeField> generatedFields =
-				mappedDocTypeAndFields.getOrDefault(docTypeName, List.of());
-
-			Set<DocTypeField> persistedFields = docType.getDocTypeFields();
-
-			List<DocTypeField> retainedFields = new ArrayList<>();
-
-			for (DocTypeField docTypeField : generatedFields) {
-				var fieldPath = DocTypeFieldUtils.fieldPath(docTypeName, docTypeField);
-				boolean retained = true;
-
-				// does not retain an ignored field
-				if (isIgnoredFieldPath(fieldPath)) {
-					continue;
-				}
-
-				// does not retain an existing field
-				for (DocTypeField existingField : persistedFields) {
-
-					var existingFieldPath = existingField.getPath();
-					if (Objects.equals(existingFieldPath, fieldPath)) {
-						retained = false;
-						break;
-					}
-				}
-
-				if (retained) {
-					retainedFields.add(docTypeField);
-				}
-			}
-
-			persistedFields.addAll(retainedFields);
-
-			_setDocTypeToDocTypeFields(docType, persistedFields);
-
-			docTypes.add(docType);
-		}
-
-		return docTypes;
-
-	}
-
-	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
-		List<DocTypeField> docTypeFields, List<String> documentTypes) {
-
-		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
-			.collect(Collectors.groupingBy(
-				field -> documentTypes.stream()
-					.filter(dt ->
-						field.getFieldName().startsWith(dt + ".")
-						|| field.getFieldName().equals(dt)
-					)
-					.findFirst()
-					.orElse(DocType.DEFAULT_NAME),
-				Collectors.toList()
-			));
-
-		_explodeDocTypeFirstLevel(grouped);
-
-		return grouped;
-	}
-
-	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
-		return _toDocTypeFields(_toFlatFields(mappings));
-	}
-
-	private Uni<Set<DocType>> generateDocTypeUni(HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
-		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
-			.flatMap(ingestionPayload -> {
-
-				var documentTypes =
-					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
-
-				var mappings = OpenSearchUtils.getDynamicMapping(
-					ingestionPayload,
-					ingestionPayloadMapper
-				);
-
-				return generateDocTypeFields(
-					session, mappings.getMap(), documentTypes);
-			})
-			.flatMap(docTypes ->
-				session.mergeAll(docTypes.toArray())
-					.map(unused -> docTypes)
-			);
-	}
-
-	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
-
-		var settingsBuilder = Settings.builder();
-
-		settingsMap = settingsMap != null && !settingsMap.isEmpty()
-			? settingsMap
-			: IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes());
-
-		if (!settingsMap.isEmpty()) {
-			settingsBuilder.loadFromMap(settingsMap);
-		}
-
-		return settingsBuilder.build();
+	public static boolean isIgnoredFieldPath(String fieldPath) {
+		return Arrays.binarySearch(IGNORED_FIELD_PATHS, fieldPath) >= 0;
 	}
 
 	private static void _explodeDocTypeFirstLevel(Map<String, List<DocTypeField>> grouped) {
@@ -706,6 +308,383 @@ public class IndexMappingService {
 		return root;
 	}
 
+	protected static PutComponentTemplateRequest createComponentTemplateRequest(
+		String componentTemplateName, String mappings) {
+
+		return PutComponentTemplateRequest.of(component -> component
+			.name(componentTemplateName)
+			.template(template -> template
+				.settings(settings -> settings.knn(true))
+				.mappings(mapping -> mapping
+					.withJson(new StringReader(mappings))
+				)
+			)
+		);
+	}
+
+	protected static PutComposableIndexTemplateRequest createIndexTemplateRequest(
+		DataIndexTemplate indexTemplateRequest) {
+
+		var tenantId = indexTemplateRequest.tenantId();
+		var dataIndex = indexTemplateRequest.dataIndex();
+		var indexSettings = indexTemplateRequest.settings();
+		var embeddingModel = indexTemplateRequest.embeddingModel();
+
+		Map<MappingsKey, Object> mappings =
+			IndexMappingUtils.docTypesToMappings(dataIndex.getDocTypes());
+
+		var settings = getSettings(indexSettings, dataIndex);
+
+		PutComposableIndexTemplateRequest request =
+			new PutComposableIndexTemplateRequest();
+
+		ComposableIndexTemplate composableIndexTemplate = null;
+
+		try {
+			IndexName indexName = IndexName.from(tenantId, dataIndex);
+
+			List<String> componentTemplates = new ArrayList<>();
+
+			// adds the knn component template on this indexTemplate
+			if (dataIndex.getKnnIndex() && embeddingModel != null) {
+
+				var componentTemplate = new EmbeddingComponentTemplate(
+					tenantId,
+					embeddingModel.getName(),
+					embeddingModel.getVectorSize()
+				);
+
+				componentTemplates.add(componentTemplate.getName());
+
+			}
+
+			composableIndexTemplate = new ComposableIndexTemplate(
+				List.of(indexName.toString()),
+				new Template(
+					settings, new CompressedXContent(
+					Json.encode(mappings)), null
+				),
+				componentTemplates
+				, null, null, null
+			);
+
+			request
+				.name(indexName + IndexService.TEMPLATE_SUFFIX)
+				.indexTemplate(composableIndexTemplate);
+
+			return request;
+		}
+		catch (IOException e) {
+			throw new WebApplicationException(Response
+				.status(Response.Status.INTERNAL_SERVER_ERROR)
+				.entity(JsonObject.of(
+					DataIndexService.DETAILS_FIELD, "failed creating IndexTemplate"
+				))
+				.build());
+		}
+	}
+
+	private static Settings getSettings(Map<String, Object> settingsMap, DataIndex dataIndex) {
+
+		var settingsBuilder = Settings.builder();
+
+		settingsMap = settingsMap != null && !settingsMap.isEmpty()
+			? settingsMap
+			: IndexMappingUtils.docTypesToSettings(dataIndex.getDocTypes());
+
+		if (!settingsMap.isEmpty()) {
+			settingsBuilder.loadFromMap(settingsMap);
+		}
+
+		return settingsBuilder.build();
+	}
+
+	protected static Set<DocType> mergeDocTypes(
+		Map<String, List<DocTypeField>> mappedDocTypeAndFields,
+		Collection<DocType> existingDocTypes) {
+
+		Set<String> mappedDocTypeNames = mappedDocTypeAndFields.keySet();
+
+		Set<DocType> docTypes = new LinkedHashSet<>(mappedDocTypeNames.size());
+
+		for (String docTypeName : mappedDocTypeNames) {
+
+			DocType docType =
+				existingDocTypes
+					.stream()
+					.filter(d -> d.getName().equals(docTypeName))
+					.findFirst()
+					.orElseGet(() -> {
+						DocType newDocType = new DocType();
+						newDocType.setName(docTypeName);
+						newDocType.setDescription("auto-generated");
+						newDocType.setDocTypeFields(new LinkedHashSet<>());
+						return newDocType;
+					});
+
+			List<DocTypeField> generatedFields =
+				mappedDocTypeAndFields.getOrDefault(docTypeName, List.of());
+
+			Set<DocTypeField> persistedFields = docType.getDocTypeFields();
+
+			List<DocTypeField> retainedFields = new ArrayList<>();
+
+			for (DocTypeField docTypeField : generatedFields) {
+				var fieldPath = DocTypeFieldUtils.fieldPath(docTypeName, docTypeField);
+				boolean retained = true;
+
+				// does not retain an ignored field
+				if (isIgnoredFieldPath(fieldPath)) {
+					continue;
+				}
+
+				// does not retain an existing field
+				for (DocTypeField existingField : persistedFields) {
+
+					var existingFieldPath = existingField.getPath();
+					if (Objects.equals(existingFieldPath, fieldPath)) {
+						retained = false;
+						break;
+					}
+				}
+
+				if (retained) {
+					retainedFields.add(docTypeField);
+				}
+			}
+
+			persistedFields.addAll(retainedFields);
+
+			_setDocTypeToDocTypeFields(docType, persistedFields);
+
+			docTypes.add(docType);
+		}
+
+		return docTypes;
+
+	}
+
+	protected static Map<String, List<DocTypeField>> toDocTypeAndFieldsGroup(
+		List<DocTypeField> docTypeFields, List<String> documentTypes) {
+
+		Map<String, List<DocTypeField>> grouped = docTypeFields.stream()
+			.collect(Collectors.groupingBy(
+				field -> documentTypes.stream()
+					.filter(dt ->
+						field.getFieldName().startsWith(dt + ".")
+						|| field.getFieldName().equals(dt)
+					)
+					.findFirst()
+					.orElse(DocType.DEFAULT_NAME),
+				Collectors.toList()
+			));
+
+		_explodeDocTypeFirstLevel(grouped);
+
+		return grouped;
+	}
+
+	protected static List<DocTypeField> toDocTypeFields(Map<String, Object> mappings) {
+		return _toDocTypeFields(_toFlatFields(mappings));
+	}
+
+	/**
+	 * Create an IndexTemplate from a dataIndex and a settings map.
+	 * The indexTemplate mappings will be created from the docTypes
+	 * associated to dataIndex.
+	 * The indexTemplate settings will be created from the settings map.
+	 *
+	 * @param dataIndexTemplate The object containing the dataIndex and the settings map
+	 *                         	used to create the dataIndex
+	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
+	 * succeeds, the result is empty. If the operation fails, the failure is
+	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
+	 * the error appropriately.
+	 */
+	public Uni<Void> createDataIndexTemplate(
+		DataIndexTemplate dataIndexTemplate) {
+
+		return indexService.createIndexTemplate(
+			createIndexTemplateRequest(dataIndexTemplate));
+	}
+
+	/**
+	 * Create or update a component template that defines an embedding mapping.
+	 *
+	 * @param session
+	 * @param embeddingComponentTemplate The object containing the name of the component
+	 *                                   template and the dimension of the {@code knnVector}.
+	 *                                   Must not be {@code null}.
+	 * @return A {@link Uni<Void>} representing the asynchronous operation. If the operation
+	 * succeeds, the result is empty. If the operation fails, the failure is
+	 * propagated through the {@link Uni} pipeline, allowing the caller to handle
+	 * the error appropriately.
+	 **/
+	public Uni<Void> createEmbeddingComponentTemplate(
+		Mutiny.Session session,
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		if (log.isDebugEnabled()) {
+			log.debugf(
+				"Creating a componentTemplate named %s, the vector size is %d.",
+				embeddingComponentTemplate.getName(),
+				embeddingComponentTemplate.vectorSize()
+			);
+		}
+
+		var mappings = embeddingComponentMappings.data(
+			"knnVectorDimension",
+			embeddingComponentTemplate.vectorSize()
+		).render();
+
+		var componentTemplateRequest = createComponentTemplateRequest(
+			embeddingComponentTemplate.getName(),
+			mappings
+		);
+
+		var jsonObject = (JsonObject) Json.decodeValue(mappings);
+
+		return indexService.putComponentTemplate(componentTemplateRequest)
+			.call(() -> generateDocTypeFields(
+				session,
+				jsonObject.getMap(),
+				List.of(DocType.DEFAULT_NAME)
+			).flatMap(docTypes -> session.mergeAll(docTypes.toArray())));
+	}
+
+	/**
+	 * Generates DocType and fields from provided mappings and document types.
+	 *
+	 * @param session       The Hibernate reactive session used for database operations
+	 * @param mappings      A map containing the field mappings structure
+	 * @param documentTypes List of document type names to be processed
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
+	public Uni<Set<DocType>> generateDocTypeFields(
+		Mutiny.Session session,
+		Map<String, Object> mappings,
+		List<String> documentTypes) {
+
+		var docTypeFields = IndexMappingService.toDocTypeFields(mappings);
+
+		var docTypeAndFieldsGroup = IndexMappingService
+			.toDocTypeAndFieldsGroup(docTypeFields, documentTypes);
+
+		return _refreshDocTypeSet(session, docTypeAndFieldsGroup);
+	}
+
+	/**
+	 * Generates DocType fields from an existing index by retrieving its mappings and document types.
+	 *
+	 * @param session The Hibernate reactive session used for database operations
+	 * @param indexName The name of the index to retrieve mappings from
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
+	public Uni<Set<DocType>> generateDocTypeFieldsFromIndexName(
+		Mutiny.Session session, IndexName indexName) {
+
+		return indexService.getMappings(indexName)
+			.flatMap(mappings -> indexService
+				.getDocumentTypes(indexName)
+				.flatMap(documentTypes -> generateDocTypeFields(
+					session, mappings, documentTypes)));
+	}
+
+	/**
+	 * Generates DocType fields from a plugin driver's sample data, specifically for 'SYSTEM' provisioned drivers.
+	 * This method retrieves a sample from the plugin driver, extracts document types
+	 * and mappings, and then generates the corresponding DocType fields.
+	 * The operation includes a retry mechanism to handle transient failures during transaction processing,
+	 * utilizing a <strong>new Mutiny session</strong> for the transaction.
+	 *
+	 * @param message The message containing the tenantId and plugin driver information.
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects
+	 */
+	@ConsumeEvent(GENERATE_DOC_TYPE)
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleAsync(
+			GenerateDocTypeFromPluginSampleMessage message) {
+
+		var tenantId = message.tenantId();
+		var httpPluginDriverInfo = message.httpPluginDriverInfo();
+
+		return sessionFactory.withTransaction(tenantId, (s, t) ->
+				generateDocTypeUni(httpPluginDriverInfo, s)
+					.onFailure()
+					.invoke(failure ->
+						log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
+					)
+					.onFailure()
+					.retry()
+					.withBackOff(Duration.ofSeconds(5), Duration.ofSeconds(30))
+					.atMost(20)
+					.flatMap(docTypes -> {
+						log.debug("DocType size=" + docTypes.size());
+						return Uni.createFrom().item(docTypes);
+					})
+					.onItem()
+					.invoke(() -> log.info("DocumentTypes associated with pluginDriver created/updated."))
+					.onFailure()
+					.invoke(throwable -> {
+						if (log.isDebugEnabled()) {
+							log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
+						}
+						else {
+							log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
+						}
+					})
+			);
+	}
+
+	/**
+	 * Generates DocType fields from a plugin driver's sample data for 'USER' provisioned drivers.
+	 * This method retrieves a sample from the plugin driver, extracts document types
+	 * and mappings, and then generates the corresponding DocType fields.
+	 * This operation reuses an <strong>existing Mutiny session</strong> provided as a parameter.
+	 *
+	 * @param session The active Hibernate Mutiny session to be used for the operation.
+	 * @param httpPluginDriverInfo The information about the HTTP plugin driver.
+	 * @return A {@link Uni} containing a Set of generated or updated DocType objects.
+	 */
+	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSync(
+			Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+
+		return generateDocTypeUni(httpPluginDriverInfo, session)
+			.flatMap(docTypes -> {
+				log.debug("DocType size=" + docTypes.size());
+				return Uni.createFrom().item(docTypes);
+			});
+	}
+
+	/**
+	 * Retrieves mappings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and transforms
+	 * them into a structured mapping configuration suitable for OpenSearch index templates.
+	 * The mappings define how document fields should be stored and indexed in OpenSearch.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with MappingsKey objects as keys and their corresponding
+	 * mapping configurations as values, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<MappingsKey, Object>> getMappingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToMappings);
+	}
+
+	/**
+	 * Retrieves index settings configuration from a list of DocType identifiers.
+	 * <p>
+	 * This method fetches all DocType entities specified by the provided IDs and extracts
+	 * their associated settings configuration. The settings define various OpenSearch index
+	 * properties such as number of shards, replicas, analysis settings, etc.
+	 *
+	 * @param docTypeIds A list of DocType entity IDs to retrieve and process
+	 * @return A {@link Uni} containing a Map with setting names as String keys and their
+	 * corresponding setting values as Objects, ready to be used in OpenSearch index templates
+	 */
+	public Uni<Map<String, Object>> getSettingsFromDocTypes(List<Long> docTypeIds) {
+		return docTypeService.findDocTypes(docTypeIds).map(IndexMappingUtils::docTypesToSettings);
+	}
+
 	private Uni<Set<DocType>> _refreshDocTypeSet(
 		Mutiny.Session session, Map<String, List<DocTypeField>> docTypeAndFieldsGroup) {
 
@@ -715,6 +694,27 @@ public class IndexMappingService {
 			.getDocTypesAndDocTypeFieldsByNames(session, docTypeNames)
 			.map(existingDocTypes -> mergeDocTypes(
 				docTypeAndFieldsGroup, existingDocTypes)
+			);
+	}
+
+	private Uni<Set<DocType>> generateDocTypeUni(HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
+		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.flatMap(ingestionPayload -> {
+
+				var documentTypes =
+					IngestionPayloadMapper.getDocumentTypes(ingestionPayload);
+
+				var mappings = OpenSearchUtils.getDynamicMapping(
+					ingestionPayload,
+					ingestionPayloadMapper
+				);
+
+				return generateDocTypeFields(
+					session, mappings.getMap(), documentTypes);
+			})
+			.flatMap(docTypes ->
+				session.mergeAll(docTypes.toArray())
+					.map(unused -> docTypes)
 			);
 	}
 
