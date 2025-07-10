@@ -1,10 +1,11 @@
-import { Box, Card, CardContent, Typography, IconButton, Skeleton } from "@mui/material";
+import ErrorIcon from "@mui/icons-material/Error";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Box, Card, CardContent, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
+import { useState } from "react";
+import Markdown from "react-markdown";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
-import Markdown from "react-markdown";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import React, { useState } from "react";
 
 export function MessageCard({
 	message,
@@ -26,6 +27,7 @@ export function MessageCard({
 	const sources = message.sources || [];
 	const visibleSources = sources.slice(0, sourcesToShow);
 	const collapsedSources = sources.slice(sourcesToShow);
+	const theme = useTheme();
 
 	return (
 		<>
@@ -53,16 +55,61 @@ export function MessageCard({
 						flex: 1,
 					}}
 				>
-					{isGenerateMessage?.id === message.id && isGenerateMessage?.isLoading === true ? (
-						<>
-							<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-								<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
-								<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
-								<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
-							</div>
-						</>
+					{message.status !== "ERROR" ? (
+						isGenerateMessage?.id === message.id && isGenerateMessage?.isLoading === true ? (
+							<>
+								<div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
+									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
+									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
+								</div>
+							</>
+						) : (
+							<Markdown>{message.status}</Markdown>
+						)
 					) : (
-						<Markdown>{message.answer}</Markdown>
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "stretch",
+								borderRadius: "10px",
+								overflow: "hidden",
+								width: "100%",
+							}}
+						>
+							<Box
+								sx={{
+									p: 1.5,
+									background: "linear-gradient(135deg, rgba(234, 62, 151, 0.1) 0%, rgba(234, 62, 151, 0.19) 100%)",
+									border: "2px solid #EA3E971A",
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									borderTopLeftRadius: "10px",
+									borderBottomLeftRadius: "10px",
+									minWidth: "48px",
+								}}
+							>
+								<ErrorIcon sx={{ color: "#EA3E97" }} />
+							</Box>
+							<Box
+								sx={{
+									p: 1.5,
+									border: "2px solid #EA3E971A",
+									borderLeft: "none",
+									width: "100%",
+									display: "flex",
+									alignItems: "center",
+									fontSize: "0.95rem",
+									color: "#333",
+									borderTopRightRadius: "10px",
+									borderBottomRightRadius: "10px",
+									backgroundColor: "#ffffff",
+								}}
+							>
+								{message.answer}
+							</Box>
+						</Box>
 					)}
 				</div>
 			</Box>

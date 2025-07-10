@@ -27,7 +27,7 @@ export const defaultThemeK9 = createTheme({
 			light: "#F88078",
 			dark: "#9C0E10",
 		},
-		text: { primary: "#616161" },
+		text: { primary: "#272727" },
 		background: {
 			default: "linear-gradient(#EEEEEE 100%, #888888 100%)",
 		},

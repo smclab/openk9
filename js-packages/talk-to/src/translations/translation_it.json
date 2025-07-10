@@ -1,12 +1,13 @@
 {
-    "translation": {
-        "version": "Versione",
-        "welcome-to": "Benvenuti su",
-        "where-knowledge-has-no-limits": "dove la conoscenza non ha limiti!",
-        "recents-chat": "Chat recenti",
-        "logout": "Esci",
-        "login": "Accedi",
-        "new-chat": "Nuova chat",
-        "write-a-message": "Scrivi un messaggio..."
-    }
+	"translation": {
+		"error": "Si prega di riprovare, è stato effettuato un errore ...",
+		"version": "Versione",
+		"welcome-to": "Benvenuti su",
+		"where-knowledge-has-no-limits": "dove la conoscenza non ha limiti!",
+		"recents-chat": "Chat recenti",
+		"logout": "Esci",
+		"login": "Accedi",
+		"new-chat": "Nuova chat",
+		"write-a-message": "Scrivi un messaggio..."
+	}
 }
