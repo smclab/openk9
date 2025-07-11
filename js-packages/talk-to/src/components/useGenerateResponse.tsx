@@ -4,6 +4,7 @@ import { useUser } from "./ChatInfoContext";
 import { OpenK9Client } from "./client";
 import React from "react";
 import { useChatContext } from "../context/HistoryChatContext";
+import { useTranslation } from "react-i18next";
 
 type Source = { source?: string; title?: string; url?: string };
 
@@ -26,7 +27,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	const { userInfo, loading } = useUser();
 	const client = React.useMemo(() => OpenK9Client(), []);
 	const { dispatch } = useChatContext();
-
+	const { t } = useTranslation();
 	useEffect(() => {
 		setMessages(initialMessages);
 		setIsChatting(false);
@@ -171,19 +172,21 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						}
 					}
 				} else {
-					console.error("Errore nel generare la risposta");
+					const errorData = await response.json();
+
 					setMessages((prev) =>
 						prev.map((msg) =>
 							msg.id === id
 								? {
 										...msg,
-										status: "END",
-										answer: "Errore nel generare la risposta",
+										status: "ERROR",
+										answer: errorData?.detail || t("error"),
 								  }
 								: msg,
 						),
 					);
 					setIsChatting(false);
+					setIsLoading(null);
 				}
 			} catch (error) {
 				console.error("Errore durante la richiesta", error);
