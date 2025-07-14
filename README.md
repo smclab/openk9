@@ -14,15 +14,25 @@ OpenK9 is a new Cognitive Search Engine that allows you to build next generation
 
 </div>
 
-## Getting Started
+## Quickstart
 
-You can use our docker-compose configuration to set up a search environment. For more information visit [our guide](https://www.openk9.io/docs/using-docker).
+To make Openk9 run on your machine with latest stable release, you just need [docker](https://docs.docker.com/get-started/get-docker/) installed and run:
 
-## Front-end development
+```bash
+docker compose up -d
+```
 
-This is a monorepo managed by [lerna](https://lerna.js.org/).
+After all components have been started, openk9 is runinng with initial configuration at address *demo.openk9.localhost*.
 
-To install depencies run `yarn` command in this directory.
+To accesso to admin panel go to [http://demo.openk9.local/admin](http://demo.openk9.local/admin]). Access with username *k9admin* and password *openk9*.
+
+Search frontends are available here:
+
+- [Standalone search frontend](http://demo.openk9.local) to test search on indexed data
+- [Standalone generative frontend](http://demo.openk9.local/search) to chat with your data
+
+Enjoy Openk9!
+
 
 ## License
 
