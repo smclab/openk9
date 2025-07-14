@@ -157,7 +157,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(0.1)
 					.build())
 				.type(FormFieldType.NUMBER)
 				.build())
@@ -171,7 +171,7 @@ public class QueryParserConfigs {
 		private static final String TYPE = "ENTITY";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
+				"boost": 50.0,
 				"queryCondition": "SHOULD",
 				"manageEntityName": "true"
 			}
@@ -187,23 +187,23 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("boost")
-				.value(FieldValue.builder().value(50).build())
+				.value(FieldValue.builder().value(50f).build())
 				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
 				.name("queryCondition")
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.isDefault(true)
 					.build())
-				.value(FieldValue.builder().value("MUST").build())
+				.value(FieldValue.builder().value("SHOULD").build())
 				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
 				.name("manageEntityName")
-				.value(FieldValue.builder().value("true").build())
+				.value(FieldValue.builder().value(true).build())
 				.type(FormFieldType.CHECKBOX)
 				.build()
 			)
@@ -217,14 +217,16 @@ public class QueryParserConfigs {
 		private static final String TYPE = "FILTER";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
-				"valuesQueryType": "MUST",
+				"boost": 1.0,
+				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
-				"fuzziness": "ZERO"
+				"fuzziness": "ZERO",
+				"multiMatchType": "MOST_FIELDS",
+				"tieBreaker": 0.0
 			}
 			""";
 
-		private static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
+		static final QueryParserConfigDTO DTO = QueryParserConfigDTO.builder()
 			.name(NAME)
 			.description(DESCRIPTION)
 			.type(TYPE)
@@ -235,7 +237,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -244,12 +246,12 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("valuesQueryType")
 				.value(FieldValue.builder()
-					.value("MUST")
+					.value("SHOULD")
 					.isDefault(true)
 					.build()
 				)
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.build()
 				)
 				.type(FormFieldType.SELECT)
@@ -301,7 +303,9 @@ public class QueryParserConfigs {
 		private static final String TYPE = QueryParserType.HYBRID.name();
 		private static final String JSON_CONFIG = """
 			{
-				"kNeighbors": 2
+				"kNeighbors": 2,
+				"boost": 1.0,
+				"fuzziness": "ZERO"
 			}
 			""";
 
@@ -324,7 +328,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -389,10 +393,12 @@ public class QueryParserConfigs {
 		private static final String TYPE = "TEXT";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
+				"boost": 1.0,
 				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
-				"fuzziness":"ZERO"
+				"fuzziness": "ZERO",
+				"multiMatchType": "MOST_FIELDS",
+				"tieBreaker": 0.0
 			}
 			""";
 
@@ -407,7 +413,7 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -416,12 +422,12 @@ public class QueryParserConfigs {
 			.field(FormField.builder()
 				.name("valuesQueryType")
 				.value(FieldValue.builder()
-					.value("MUST")
+					.value("SHOULD")
 					.isDefault(true)
 					.build()
 				)
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.build()
 				)
 				.type(FormFieldType.SELECT)
