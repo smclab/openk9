@@ -1,4 +1,3 @@
-import os
 from datetime import date
 
 from langchain.schema import AIMessage, HumanMessage
@@ -183,10 +182,10 @@ def delete_documents(opensearch_host, interval_in_days=180):
     """
     Delete documents from OpenSearch indices that are older than a specified number of days.
 
-    This function connects to an OpenSearch instance, retrieves all indices, and for each index,
-    it identifies documents grouped by `chat_id`. It checks the latest document for each group
-    and deletes all documents associated with that `chat_id` if the latest document is older than
-    the specified interval in days.
+    This function connects to an OpenSearch instance, retrieves all indices, and for each index
+    that contains 'chat_id' field, it identifies documents grouped by `chat_id`. It checks the
+    latest document for each group and deletes all documents associated with that `chat_id` if
+    the latest document is older than the specified interval in days.
 
     Parameters
     ----------
@@ -195,7 +194,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
     interval_in_days : int, optional
         The number of days to use as a threshold for deletion. Documents older than this
-        value will be deleted. Default is 30 days.
+        value will be deleted. Default is 180 days.
 
     Returns
     -------
@@ -213,7 +212,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
     - The function logs the number of indices found and the number of documents deleted.
     - It performs bulk deletions to optimize the deletion process.
     - Ensure that the OpenSearch client is properly configured and that the necessary permissions
-      are in place to delete documents.
+        are in place to delete documents.
 
     Examples
     --------
@@ -224,17 +223,23 @@ def delete_documents(opensearch_host, interval_in_days=180):
         hosts=[opensearch_host],
     )
 
-    interval_in_days = os.getenv("INTERVAL_IN_DAYS", 180)
-
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
-    logger.info(f"Found {len(all_indices)} indices: {all_indices}")
+    field_name = "chat_id"
+    indices_to_process = []
 
     today = date.today()
     delete_actions = []
 
     for index in all_indices:
-        logger.info(f"Processing index: {index}")
+        mapping = open_search_client.indices.get_mapping(index=index)
+        if field_name in mapping[index]["mappings"]["properties"]:
+            indices_to_process.append(index)
+
+    logger.info(f"Found {len(indices_to_process)} indices: {indices_to_process}")
+
+    for index_to_process in indices_to_process:
+        logger.info(f"Processing index: {index_to_process}")
 
         # Query to group documents by chat_id and get the latest document for each group
         query = {
@@ -261,7 +266,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
                 }
             },
         }
-        response = open_search_client.search(index=index, body=query)
+        response = open_search_client.search(index=index_to_process, body=query)
         buckets = response["aggregations"]["group_by_chat_id"]["buckets"]
 
         for bucket in buckets:
