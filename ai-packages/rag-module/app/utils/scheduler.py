@@ -8,7 +8,9 @@ scheduler = BackgroundScheduler()
 JOB_ID = "document_deletion_job"
 
 
-def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression):
+def start_document_deletion_scheduler(
+    opensearch_host, schedule, cron_expression, interval_in_days
+):
     """Configure and control the document deletion scheduler.
 
     Manages the lifecycle of a background scheduler that periodically deletes
@@ -18,7 +20,7 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
     :param str opensearch_host: OpenSearch connection string (host:port)
     :param bool schedule: True to enable scheduling, False to disable
     :param str cron_expression: Cron schedule for deletions (7-part quartz format)
-
+    :param int interval_in_days: Number of days to use as a threshold for deletion.
     **Usage Example**:
 
     .. code-block:: python
@@ -27,11 +29,12 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
         start_document_deletion_scheduler(
             "localhost:9200",
             True,
-            "0 0 0 ? * * *"
+            "0 0 0 ? * * *",
+            180
         )
 
         # Disable cleanup
-        start_document_deletion_scheduler(None, False, "")
+        start_document_deletion_scheduler(None, False, "", 180)
 
     **Cron Format**:
 
@@ -43,7 +46,7 @@ def start_document_deletion_scheduler(opensearch_host, schedule, cron_expression
     if schedule and not scheduler.running:
 
         def delete_documents_cron():
-            delete_documents(opensearch_host)
+            delete_documents(opensearch_host, interval_in_days)
 
         parser = QuartzExpressionParser(cron_expression)
         apscheduler_kwargs = parser.to_apscheduler_kwargs()
