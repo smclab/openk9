@@ -13,7 +13,7 @@ replicaCount: 1
 ## Docker Datasource image version
 ## ref: https://hub.docker.com/u/smclab
 ## @param image.registry [default: REGISTRY_NAME] Datasource image registry
-## @skip image.tag Datasourcei image tag (immutable tags are recommended)
+## @skip image.tag Datasource image tag (immutable tags are recommended)
 ## @param image.pullPolicy Datasource image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
