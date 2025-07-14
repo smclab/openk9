@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 from enum import Enum
-from typing import Annotated, Optional
+from typing import Annotated
 from urllib.parse import urlparse
 
 import uvicorn
@@ -30,6 +30,7 @@ GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
 CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
+INTERVAL_IN_DAYS = int(os.getenv("INTERVAL_IN_DAYS", 180))
 ARIZE_PHOENIX_ENABLED = bool(os.getenv("ARIZE_PHOENIX_ENABLED", False))
 ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
 ARIZE_PHOENIX_ENDPOINT = os.getenv(
@@ -61,6 +62,7 @@ async def lifespan(app: FastAPI):
         opensearch_host=OPENSEARCH_HOST,
         schedule=SCHEDULE,
         cron_expression=CRON_EXPRESSION,
+        interval_in_days=INTERVAL_IN_DAYS,
     )
 
     yield
@@ -70,6 +72,7 @@ async def lifespan(app: FastAPI):
         opensearch_host=OPENSEARCH_HOST,
         schedule=False,
         cron_expression=CRON_EXPRESSION,
+        interval_in_days=INTERVAL_IN_DAYS,
     )
 
 
