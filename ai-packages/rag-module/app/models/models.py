@@ -175,39 +175,6 @@ class ChatMessage(BaseModel):
     )
 
 
-class CommonHeaders(BaseModel):
-    """
-    A collection of common HTTP headers used across the APIs.
-
-    This model represents standard HTTP headers that are commonly used in requests,
-    particularly for authentication and request routing purposes.
-
-    Attributes:
-        authorization (Optional[str]): Bearer token for authentication.
-            Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        x_forwarded_host (Optional[str]): Original host header from the client request,
-            typically used in reverse proxy setups. Example: "example.com"
-        openk9_acl (Optional[List[str]]): Access control list for tenant resources.
-            Example: ["group:admins", "project:openk9"]
-    """
-
-    authorization: Optional[str] = Field(
-        None,
-        description="Bearer token for authentication.",
-        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
-    )
-    x_forwarded_host: Optional[str] = Field(
-        None,
-        description="Original host header from the client request, typically used in reverse proxy setups.",
-        example="example.com",
-    )
-    openk9_acl: Optional[list[str]] = Field(
-        None,
-        description="Access control list for tenant resources.",
-        example='["group:admins", "project:openk9"]',
-    )
-
-
 class CommonHeadersMinimal(BaseModel):
     """
     A minimal collection of common HTTP headers used across the APIs.
@@ -231,4 +198,27 @@ class CommonHeadersMinimal(BaseModel):
         None,
         description="Original host header from the client request, typically used in reverse proxy setups.",
         example="example.com",
+    )
+
+
+class CommonHeaders(CommonHeadersMinimal):
+    """
+    A collection of common HTTP headers used across the APIs.
+
+    This model represents standard HTTP headers that are commonly used in requests,
+    particularly for authentication and request routing purposes.
+
+    Attributes:
+        authorization (Optional[str]): Bearer token for authentication.
+            Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        x_forwarded_host (Optional[str]): Original host header from the client request,
+            typically used in reverse proxy setups. Example: "example.com"
+        openk9_acl (Optional[List[str]]): Access control list for tenant resources.
+            Example: ["group:admins", "project:openk9"]
+    """
+
+    openk9_acl: Optional[list[str]] = Field(
+        None,
+        description="Access control list for tenant resources.",
+        example='["group:admins", "project:openk9"]',
     )
