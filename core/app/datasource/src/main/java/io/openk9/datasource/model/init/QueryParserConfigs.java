@@ -390,7 +390,7 @@ public class QueryParserConfigs {
 		private static final String JSON_CONFIG = """
 			{
 				"boost": 50,
-				"valuesQueryType": "MUST",
+				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
 				"fuzziness":"ZERO"
 			}
