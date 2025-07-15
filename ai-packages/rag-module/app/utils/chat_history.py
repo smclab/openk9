@@ -225,15 +225,16 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
-    field_name = "chat_id"
+    index_field_names = {"user_id", "chat_id", "chat_sequence_number"}
     indices_to_process = []
 
     today = date.today()
     delete_actions = []
 
     for index in all_indices:
-        mapping = open_search_client.indices.get_mapping(index=index)
-        if field_name in mapping[index]["mappings"]["properties"]:
+        index_mapping = open_search_client.indices.get_mapping(index=index)
+        index_properties = set(index_mapping[index]["mappings"]["properties"])
+        if index_field_names.issubset(index_properties):
             indices_to_process.append(index)
 
     logger.info(f"Found {len(indices_to_process)} indices: {indices_to_process}")
