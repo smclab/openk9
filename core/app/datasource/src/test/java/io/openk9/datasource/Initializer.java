@@ -17,8 +17,18 @@
 
 package io.openk9.datasource;
 
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.listener.JobSchedulerService;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
@@ -39,13 +49,8 @@ import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
 import io.openk9.datasource.service.TenantInitializerService;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.Startup;
-import jakarta.inject.Inject;
-import org.jboss.logging.Logger;
 
-import java.util.stream.Collectors;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class Initializer {
@@ -102,6 +107,35 @@ public class Initializer {
 		addsSuggestionCategoriesToBucket();
 
 		addsTabsToBucket();
+
+		createJobs();
+	}
+
+	private void createJobs() {
+
+		var datasource = datasourceService.findByName("public", INIT_DATASOURCE_CONNECTION)
+			.await().indefinitely();
+
+		var scheduler1 = new Scheduler();
+		scheduler1.setScheduleId(UUID.randomUUID().toString());
+		scheduler1.setStatus(Scheduler.SchedulerStatus.FINISHED);
+		scheduler1.setDatasource(datasource);
+
+		var scheduler2 = new Scheduler();
+		scheduler2.setScheduleId(UUID.randomUUID().toString());
+		scheduler2.setStatus(Scheduler.SchedulerStatus.FINISHED);
+		scheduler2.setDatasource(datasource);
+
+		var scheduler3 = new Scheduler();
+		scheduler3.setScheduleId(UUID.randomUUID().toString());
+		scheduler3.setStatus(Scheduler.SchedulerStatus.FAILURE);
+		scheduler3.setDatasource(datasource);
+
+		CompletableFuture.allOf(
+			JobSchedulerService.persistScheduler("public", scheduler1),
+			JobSchedulerService.persistScheduler("public", scheduler2),
+			JobSchedulerService.persistScheduler("public", scheduler3)
+		).join();
 
 	}
 

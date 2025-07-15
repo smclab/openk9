@@ -17,11 +17,13 @@
 
 package io.openk9.datasource.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.Tuple;
 
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
@@ -162,6 +164,38 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
 	 * with the status {@code ALREADY_RUNNING}. Otherwise, it defaults to {@code ON_SCHEDULING}.
 	 *
+	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
+	 *         to its corresponding job status
+	 */
+	public Uni<List<DatasourceStatus>> getStatusList() {
+		return sessionFactory.withTransaction((session, transaction) -> session
+			.createQuery(
+				"""
+					SELECT a.id, a.name, b.status
+					FROM Datasource a
+					LEFT JOIN Scheduler b ON a = b.datasource
+					LEFT JOIN (
+					 SELECT sl.datasource AS datasource, MAX(sl.createDate) AS maxDate
+					 FROM Scheduler sl
+					 GROUP BY sl.datasource
+					) AS latest
+					ON b.datasource  = latest.datasource AND b.createDate = latest.maxDate
+					WHERE latest.maxDate IS NOT NULL OR b.id IS NULL
+					""", Tuple.class
+			)
+			.getResultList()
+			.map(this::mapToStatusList)
+		);
+	}
+
+	/**
+	 * Retrieves the job status for a list of datasources.
+	 *
+	 * <p>This method queries the database for active {@code Scheduler} instances associated with
+	 * the provided datasource IDs. If a datasource is found in a running state,
+	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
+	 * with the status {@code ALREADY_RUNNING}. Otherwise, it defaults to {@code ON_SCHEDULING}.
+	 *
 	 * @param datasourceIds the list of datasource IDs to check
 	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
 	 *         to its corresponding job status
@@ -264,11 +298,53 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.toList();
 	}
 
+	private List<DatasourceStatus> mapToStatusList(List<Tuple> tuples) {
+
+		List<DatasourceStatus> datasourceStatusList = new ArrayList<>();
+
+		for (Tuple tuple : tuples) {
+			Scheduler.SchedulerStatus schedulerStatus =
+				tuple.get(2, Scheduler.SchedulerStatus.class);
+
+			var status = getStatus(schedulerStatus);
+
+			var datasourceStatus = new DatasourceStatus(
+				tuple.get(0, Long.class),
+				tuple.get(1, String.class),
+				status
+			);
+
+			datasourceStatusList.add(datasourceStatus);
+		}
+
+		return datasourceStatusList;
+	}
+
+	protected static Status getStatus(Scheduler.SchedulerStatus schedulerStatus) {
+		Status status = switch (schedulerStatus) {
+
+			case RUNNING, STALE -> Status.RUNNING;
+			case ERROR, FAILURE -> Status.ERROR;
+			case FINISHED, CANCELLED -> Status.IDLE;
+			case null -> Status.IDLE;
+
+		};
+		return status;
+	}
+
 	public enum JobStatus {
 		ALREADY_RUNNING,
 		ON_SCHEDULING
 	}
 
+	public record DatasourceStatus(long id, String name, Status status) {}
+
 	public record DatasourceJobStatus(long id, JobStatus status) {}
+
+	public enum Status {
+		RUNNING,
+		ERROR,
+		IDLE
+	}
 
 }

@@ -17,9 +17,7 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.service.SchedulerService;
-import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.RoutingContext;
+import java.util.List;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,7 +26,11 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
-import java.util.List;
+import io.openk9.datasource.service.SchedulerService;
+import io.openk9.datasource.web.dto.StatusResponse;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 
 @ApplicationScoped
 @Path("/schedulers")
@@ -60,6 +62,12 @@ public class SchedulerResource {
 	public Uni<Void> rerouteScheduling(@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.rereouteScheduling(
 			routingContext.get("_tenantId"), schedulerId);
+	}
+
+	@Path("/status")
+	@GET
+	public Uni<StatusResponse> status() {
+		return schedulerService.getStatusList().map(StatusResponse::new);
 	}
 
 	@Inject
