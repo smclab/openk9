@@ -198,3 +198,5 @@ nb-configuration.xml
 .quarkus
 
 release.properties
+
+!js-packages/openk9-chabot-vite/lib/
