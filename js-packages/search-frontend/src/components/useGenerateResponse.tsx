@@ -7,7 +7,7 @@ export interface Message {
   question: string;
   answer: string;
   sendTime?: string | null;
-  status?: "END" | "CHUNK";
+  status?: "END" | "CHUNK" | "ERROR";
   sources?: Source[];
 }
 
@@ -147,18 +147,32 @@ const useGenerateResponse = ({
                 const dataStr = chunk.trim().slice(6);
                 try {
                   const data = JSON.parse(dataStr);
-                  setMessage((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          answer: prev.answer + data.chunk,
-                          status: data.type === "END" ? "END" : "CHUNK",
-                        }
-                      : prev,
-                  );
-                  if (data.type === "END") {
+                  if (data.type === "ERROR") {
                     setIsChatting(false);
                     setIsRequestLoading(false);
+                    setMessage((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            answer: data.chunk || "ERROR",
+                            status: "ERROR",
+                          }
+                        : prev,
+                    );
+                  } else {
+                    setMessage((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            answer: prev.answer + data.chunk,
+                            status: data.type === "END" ? "END" : "CHUNK",
+                          }
+                        : prev,
+                    );
+                    if (data.type === "END") {
+                      setIsChatting(false);
+                      setIsRequestLoading(false);
+                    }
                   }
                 } catch (e) {
                   console.error("Error parsing JSON", e);
@@ -168,12 +182,14 @@ const useGenerateResponse = ({
           }
         } else {
           console.error("Error generating response");
+          setIsChatting(false);
+          setIsRequestLoading(false);
           setMessage((prev) =>
             prev
               ? {
                   ...prev,
-                  status: "END",
-                  answer: "Error generating response",
+                  answer: response?.statusText || "Error",
+                  status: "ERROR",
                 }
               : prev,
           );

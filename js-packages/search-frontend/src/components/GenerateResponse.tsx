@@ -1,10 +1,12 @@
-import useGenerateResponse from "./useGenerateResponse";
-import styled, { keyframes } from "styled-components";
-import React from "react";
 import isEqual from "lodash/isEqual";
-import { recoverySearchQueryAndSort } from "./ResultList";
-import { useRange } from "./useRange";
+import React from "react";
 import Markdown from "react-markdown";
+import styled, { keyframes } from "styled-components";
+import { css } from "styled-components/macro";
+import { DeleteLogo } from "./DeleteLogo";
+import { recoverySearchQueryAndSort } from "./ResultList";
+import useGenerateResponse from "./useGenerateResponse";
+import { useRange } from "./useRange";
 
 export default function GenerateResponse({
   question,
@@ -69,6 +71,53 @@ export default function GenerateResponse({
             <Question>Generate answer</Question>
             {isChatting || loadingSearch ? (
               <SmallLoader />
+            ) : message?.status === "ERROR" ? (
+              <div
+                css={css`
+                  display: flex;
+                  align-items: stretch;
+                  border-radius: 10px;
+                  overflow: hidden;
+                  width: 100%;
+                `}
+              >
+                <div
+                  css={css`
+                    padding: 12px;
+                    background: var(--openk9-embeddable-search--primary-color);
+                    border: 2px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-top-left-radius: 10px;
+                    border-bottom-left-radius: 10px;
+                    min-width: 48px;
+                  `}
+                >
+                  <DeleteLogo colorSvg={"white"} />
+                </div>
+                <div
+                  css={css`
+                    padding: 12px;
+                    border: 2px solid
+                      var(--openk9-embeddable-search--primary-color);
+                    border-left: none;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    font-size: 0.95rem;
+                    color: #333;
+                    border-top-right-radius: 10px;
+                    border-bottom-right-radius: 10px;
+                    background-color: #ffffff;
+                    color: var(--openk9-embeddable-search--primary-color);
+                    font-weight: 700;
+                  `}
+                >
+                  {message.answer}
+                </div>
+              </div>
             ) : (
               message?.answer && (
                 <Answer>

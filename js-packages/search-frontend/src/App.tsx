@@ -25,9 +25,7 @@ export const openk9 = new OpenK9({
 
 export function App() {
   const serviceStatus = useServiceStatus();
-  if (serviceStatus === "down") {
-    return <MaintenancePage />;
-  }
+
   const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
   const [numberOfResults, setNumberOfResults] = React.useState(false);
   const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
@@ -82,6 +80,10 @@ export function App() {
       document.body.classList.remove("no-scroll");
     };
   }, [isVisibleFilters, isVisibleCalendar, isVisibleSearchMobile]);
+
+  if (serviceStatus === "down") {
+    return <MaintenancePage />;
+  }
 
   return (
     <div
@@ -380,14 +382,16 @@ export function App() {
                   }
                 `}
               >
-                {/* <button
+                <button
                   onClick={() => setIsPanelVisible(!isPanelVisible)}
                   css={css`
                     justify-self: center;
-                    border: 1px solid red;
+                    border: 1px solid
+                      var(--openk9-embeddable-search--primary-color);
                     border-radius: 20px;
-                    background: red;
-                    border: 1px solid red;
+                    background: var(--openk9-embeddable-search--primary-color);
+                    border: 1px solid
+                      var(--openk9-embeddable-search--primary-color);
                     border-radius: 20px;
                     color: white;
                     gap: 10px;
@@ -409,7 +413,7 @@ export function App() {
                       <Logo />
                     </>
                   )}
-                </button> */}
+                </button>
               </div>
             )}
           </div>
@@ -550,9 +554,9 @@ export function App() {
               onClick={() => setIsPanelVisible(!isPanelVisible)}
               css={css`
                 justify-self: center;
-                border: 1px solid red;
-                background: red;
-                border: 1px solid red;
+                border: 1px solid var(--openk9-embeddable-search--primary-color);
+                background: var(--openk9-embeddable-search--primary-color);
+                border: 1px solid var(--openk9-embeddable-search--primary-color);
                 border-radius: 8px;
                 padding: 8px;
                 color: white;
