@@ -111,7 +111,7 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "depth": 0,
     "pageCount": 0
     "follow": true,
-    "doExtractDocs**: true,
+    "doExtractDocs": true,
     "documentFileExtensions": [".pdf"],
     "customMetadata": {
       "metadataName1": "//span/text",
