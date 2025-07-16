@@ -15,6 +15,7 @@ function App() {
       <Chatbot
         initialMessage="Chiedimi pure qualcosa"
         nameChatbot="Openk9"
+        tenant="https://k9-frontend.openk9.io"
         icon={{
           buttonIcon: <Logo size={35} color="white" />,
           userIcon: <User />,

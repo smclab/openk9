@@ -104,7 +104,10 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   React.useEffect(() => {
     const currentTime = new Date();
     setWelcomeMessageTime(
-      currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      currentTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     );
   }, []);
 
@@ -358,6 +361,7 @@ const MessageList: React.FC<{
               />
               <SingleMessage
                 contentMessage={message.answer}
+                status={message.status}
                 isChatbot={true}
                 timeMessage={responseTime}
                 icon={icon.chatbotIcon}

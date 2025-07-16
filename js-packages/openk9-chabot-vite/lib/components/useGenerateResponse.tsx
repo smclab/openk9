@@ -11,7 +11,7 @@ export interface Message {
   answer: string;
   sendTime?: string | null;
   responseTime?: string | null;
-  status?: "END" | "CHUNK";
+  status?: "END" | "CHUNK" | "ERROR";
   sources?: Source[];
   chat_sequence_number: number;
   timestamp?: string;
@@ -38,7 +38,7 @@ const useGenerateResponse = ({
   } | null>(null);
   const client = React.useMemo(
     () => OpenK9Client({ callbackAuthorization }),
-    [callbackAuthorization]
+    [callbackAuthorization],
   );
 
   const generateResponse = useCallback(
@@ -84,7 +84,7 @@ const useGenerateResponse = ({
 
       const controller = new AbortController();
       setAbortControllers((prev) => new Map(prev).set(id, controller));
-      const url = `${tenant}`;
+      const url = `${tenant}/api/rag/chat-tool`;
       // const url = "/api/rag/chat-tool";
 
       const searchQuery =
@@ -138,8 +138,8 @@ const useGenerateResponse = ({
                                 ...msg,
                                 answer: msg.answer + data.chunk,
                               }
-                            : msg
-                        )
+                            : msg,
+                        ),
                       );
                       break;
 
@@ -151,15 +151,28 @@ const useGenerateResponse = ({
                                 ...msg,
                                 sources: [...(msg?.sources ?? []), data.chunk],
                               }
-                            : msg
-                        )
+                            : msg,
+                        ),
                       );
                       break;
 
                     case "START":
                       setIsLoading(null);
                       break;
-
+                    case "ERROR":
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === id
+                            ? {
+                                ...msg,
+                                answer: data.chunk,
+                                status: "ERROR",
+                              }
+                            : msg,
+                        ),
+                      );
+                      setIsChatting(false);
+                      break;
                     case "END":
                       setMessages((prev) =>
                         prev.map((msg) =>
@@ -168,8 +181,8 @@ const useGenerateResponse = ({
                                 ...msg,
                                 status: "END",
                               }
-                            : msg
-                        )
+                            : msg,
+                        ),
                       );
                       setIsChatting(false);
                       break;
@@ -177,7 +190,7 @@ const useGenerateResponse = ({
                     default:
                       console.warn(
                         "Tipo di chunk non riconosciuto:",
-                        data.type
+                        data.type,
                       );
                       break;
                   }
@@ -189,16 +202,17 @@ const useGenerateResponse = ({
           }
         } else {
           console.error("Errore nel generare la risposta");
+
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === id
                 ? {
                     ...msg,
-                    status: "END",
-                    answer: "Errore nel generare la risposta",
+                    status: "ERROR",
+                    answer: response?.statusText || "Error",
                   }
-                : msg
-            )
+                : msg,
+            ),
           );
           setIsChatting(false);
         }
@@ -215,7 +229,7 @@ const useGenerateResponse = ({
         return updated;
       });
     },
-    [messages, client, tenant, language] //loading, userInfo,
+    [messages, client, tenant, language], //loading, userInfo,
   );
 
   const cancelResponse = (id: string) => {
@@ -231,8 +245,8 @@ const useGenerateResponse = ({
                 status: "END",
                 answer: "La risposta è stata annullata",
               }
-            : msg
-        )
+            : msg,
+        ),
       );
       setAbortControllers((prev) => {
         const updated = new Map(prev);
@@ -257,8 +271,8 @@ const useGenerateResponse = ({
               status: "END",
               answer: msg.answer + "... La risposta è stata annullata",
             }
-          : msg
-      )
+          : msg,
+      ),
     );
     setAbortControllers(new Map());
     setIsChatting(false);
