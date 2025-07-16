@@ -78,13 +78,19 @@ public class BucketResource extends
 
 	@PUT
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(long bucketId, long suggestionCategoryId) {
+	public Uni<Tuple2<Bucket, SuggestionCategory>> addSuggestionCategory(
+		@PathParam("id") long bucketId,
+		@PathParam("suggestionCategoryId") long suggestionCategoryId) {
+
 		return service.addSuggestionCategory(bucketId, suggestionCategoryId);
 	}
 
 	@DELETE
 	@Path("/{id}/suggestion-categories/{suggestionCategoryId}")
-	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(long bucketId, long suggestionCategoryId) {
+	public Uni<Tuple2<Bucket, SuggestionCategory>> removeSuggestionCategory(
+		@PathParam("id") long bucketId,
+		@PathParam("suggestionCategoryId") long suggestionCategoryId) {
+
 		return service.removeSuggestionCategory(bucketId, suggestionCategoryId);
 	}
 
