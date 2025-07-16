@@ -157,15 +157,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Retrieves the job status for a list of datasources.
+	 * Asynchronously retrieves a status for every datasource in the system.
+	 * <p>
+	 * The status is determined by the most recent (latest {@code createDate})
+	 * scheduler execution for each datasource. It uses an efficient JPQL query
+	 * that implements the "greatest N per group" pattern to fetch only the
+	 * single most recent record per datasource.
+	 * <p>
+	 * Datasources that have never been executed are also included in the result set,
+	 * allowing the subsequent mapping process to assign an appropriate default status.
 	 *
-	 * <p>This method queries the database for active {@code Scheduler} instances associated with
-	 * the provided datasource IDs. If a datasource is found in a running state,
-	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
-	 * with the status {@code ALREADY_RUNNING}. Otherwise, it defaults to {@code ON_SCHEDULING}.
-	 *
-	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
-	 *         to its corresponding job status
+	 * @return A {@link Uni} that emits a list of {@link DatasourceStatus} objects,
+	 *         representing each datasource and its derived status.
+	 * @see #mapToStatusList(List)
 	 */
 	public Uni<List<DatasourceStatus>> getStatusList() {
 		return sessionFactory.withTransaction((session, transaction) -> session
@@ -298,6 +302,16 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.toList();
 	}
 
+	/**
+	 * Transforms a list of raw JPA query results into a list of DatasourceStatus DTOs.
+	 * <p>
+	 * It maps the internal {@link Scheduler.SchedulerStatus} to a simplified, client-facing
+	 * {@link Status}. Crucially, if a datasource has no scheduler history (resulting in a
+	 * null status from the query), it is explicitly assigned {@link Status#IDLE}.
+	 *
+	 * @param tuples The list of raw tuples from the database query.
+	 * @return A final, mapped list of {@link DatasourceStatus} objects.
+	 */
 	private List<DatasourceStatus> mapToStatusList(List<Tuple> tuples) {
 
 		List<DatasourceStatus> datasourceStatusList = new ArrayList<>();
