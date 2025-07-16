@@ -1,13 +1,13 @@
-# Web Parser
+# Web Connector
 
-This is a parser to crawl and extract web pages from specific sites. \
+This is a connector to crawl and extract web pages from specific sites. \
 Run container from built image and configure appropriate plugin to call it.\
-This parser is built with the Scrapy library.
+This connector is built with the Scrapy library.
 
 You can access the Scrapyd server console via port 6800. By accessing it you can, for each job, monitor its status and view its logs.\
 The container takes via environment variable INGESTION_URL, which must match the url of the Ingestion Api.\
 
-## Web Parser Api
+## Web connector Api
 
 This Rest service exposes two different endpoints:
 
@@ -86,7 +86,7 @@ This endpoint takes different arguments in JSON raw body:
 - **pageCount**: count of page limit to crawl
 - **maxLength**: maximum length of extracted content (optional, if not specified)
 - **customMetadata**: map key-value where key is the metadata added to Openk9 payload and value is xpath expression to get element/s to extract from html and ling to metadata
-- **doExtractDocs**: if follows links when parser link from sitemap
+- **doExtractDocs**: if follows links when connector link from sitemap
 - **documentFileExtensions**: extensions of files to allowed during extraction
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant

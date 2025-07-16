@@ -165,42 +165,6 @@
         "required": false,
         "info": "Custom metadata using xpath expression",
         "values": []
-      },
-      {
-        "label": "email",
-        "name": "email",
-        "type": "email",
-        "size": 4,
-        "required": false,
-        "info": "email",
-        "values": [],
-        "validator": {
-          "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-        }
-      },
-      {
-        "label": "password",
-        "name": "password",
-        "type": "password",
-        "size": 4,
-        "required": false,
-        "info": "password",
-        "values": [],
-        "validator": {
-          "regex": "^[a-zA-Z0-9]{10,12}$"
-        }
-      },
-      {
-        "label": "url",
-        "name": "url",
-        "type": "url",
-        "size": 4,
-        "required": false,
-        "info": "url",
-        "values": [],
-        "validator": {
-          "regex": "^(https?:\/\/)?(www\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(\/\\S*)?$"
-        }
       }
     ]
 }

@@ -18,7 +18,7 @@ replicaCount: 1
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
   registry: ""
-  name: smclab/openk9-web-parser
+  name: smclab/openk9-web-connector
   ## Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 

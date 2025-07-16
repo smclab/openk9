@@ -32,7 +32,7 @@ Build Web Connector image:
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
-      --context "${CI_PROJECT_DIR}/connectors/openk9-crawler" \
+      --context "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile" \
       --destination "registry.gitlab.com/openk9/openk9-web-connector:latest"
 
@@ -70,7 +70,7 @@ Build Email Connector image:
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
-      --context "${CI_PROJECT_DIR}/connectors/email-connector" \
+      --context "${CI_PROJECT_DIR}/connectors/email-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile" \
       --destination "registry.gitlab.com/openk9/openk9-email-connector:latest"
 
@@ -108,7 +108,7 @@ Build Database Connector image:
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
-      --context "${CI_PROJECT_DIR}/connectors/database-connector" \
+      --context "${CI_PROJECT_DIR}/connectors/database-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile" \
       --destination "registry.gitlab.com/openk9/openk9-wordpress-connector:latest"
 
@@ -146,7 +146,7 @@ Build YouTube Connector image:
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
-      --context "${CI_PROJECT_DIR}/connectors/youtube-connector" \
+      --context "${CI_PROJECT_DIR}/connectors/youtube-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile" \
       --destination "registry.gitlab.com/openk9/openk9-youtube-connector:latest"
 

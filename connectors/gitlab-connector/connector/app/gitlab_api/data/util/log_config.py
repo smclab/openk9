@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class LogConfig(BaseModel):
     """Logging configuration to be set for the server"""
 
-    LOGGER_NAME: str = "wordpress_logger"
+    LOGGER_NAME: str = "gitlab_logger"
     LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
     LOG_LEVEL: str = "DEBUG"
 
@@ -28,5 +28,5 @@ class LogConfig(BaseModel):
         },
     }
     loggers: Dict = {
-        "wordpress_logger": {"handlers": ["default"], "level": LOG_LEVEL},
+        "gitlab_logger": {"handlers": ["default"], "level": LOG_LEVEL},
     }

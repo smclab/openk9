@@ -1,9 +1,49 @@
 version: "3.5"
 services:
-    wordpress-parser:
-        image: wordpress-parser:latest
-        container_name: wordpress-parser
+    database-parser:
+        image: database-parser:latest
+        container_name: database-parser
         environment:
             INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
         ports:
-            - "5000:5000"
+            - "5001:5000"
+    postgres:
+        image: postgres:latest
+        container_name: postgres
+        hostname: postgres
+        environment:
+            - POSTGRES_PASSWORD=openk9
+            - POSTGRES_USER=openk9
+            - POSTGRES_DB=openk9
+    mysql:
+        image: mysql:5.7
+        container_name: mysql
+        hostname: mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: test_db
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 5050:8080
+    mariadb:
+        image: mariadb
+        hostname: mariadb
+        container_name: mariadb
+        restart: always
+        ports:
+            - 3307:3306
+        environment:
+            MARIADB_ROOT_PASSWORD: example
+    microsoft:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        hostname: microsoft
+        container_name: microsoft
+        ports:
+            - 1433:1433
+        environment:
+            ACCEPT_EULA: "Y"
+            SA_PASSWORD: "196162Dc01_"
+
+

@@ -87,7 +87,7 @@ enum PluginDriverType {
 }
 
 enum Preset {
-  LIFERAY = 0;
+  YOUTUBE = 0;
   CRAWLER = 1;
   EMAIL = 2;
   GITLAB = 3;

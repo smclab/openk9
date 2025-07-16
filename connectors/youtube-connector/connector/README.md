@@ -78,7 +78,7 @@ cd ..
 
 Build the Docker file:
 ```
-docker build -t youtube-parser -f .\connector\Dockerfile .
+docker build -t youtube-connector .
 ```
 
 **Command parameters:
@@ -87,7 +87,7 @@ docker build -t youtube-parser -f .\connector\Dockerfile .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name youtube-parser-app youtube-parser 
+docker run -p 5000:5000 --name youtube-connector-app youtube-connector 
 ```
 
 Command parameters:

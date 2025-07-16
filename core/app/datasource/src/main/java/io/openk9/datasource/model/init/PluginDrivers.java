@@ -21,14 +21,14 @@ public class PluginDrivers {
 
 	static {
 		CONFIGURATION_MAP.put(
-			Preset.LIFERAY,
+			Preset.YOUTUBE,
 			PresetConfiguration.builder()
 				.name("Liferay")
 				.description("Plugin Driver for Liferay Portal")
 				.type(PluginDriver.PluginDriverType.HTTP)
 				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
+				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.YOUTUBE))
 				.secure(false)
 				.path("/execute")
 				.build()

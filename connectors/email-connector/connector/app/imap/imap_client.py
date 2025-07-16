@@ -16,12 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import imaplib
-
+import ssl
 
 class ImapClient:
     imap = None
 
-    def __init__(self, server, port, recipient, password, use_ssl=True):
+    def __init__(self, server, port, recipient, password, use_ssl):
         # check for required param
         if not recipient:
             raise ValueError('You must provide a recipient email address')
@@ -34,7 +34,9 @@ class ImapClient:
         # instantiate our IMAP client object
         try:
             if self.use_ssl:
-                self.imap = imaplib.IMAP4_SSL(self.server, self.port)
+                ctx = ssl.create_default_context()
+                ctx.set_ciphers('DEFAULT')
+                self.imap = imaplib.IMAP4_SSL(self.server, self.port, ssl_context = ctx)
             else:
                 self.imap = imaplib.IMAP4(self.server, self.port)
         except OSError as err:

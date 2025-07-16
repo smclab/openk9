@@ -31,6 +31,7 @@ logger = logging.getLogger("uvicorn.access")
 class ImapRequest(BaseModel):
     mailServer: str
     port: str
+    useSsl: Optional[bool] = True
     username: str
     password: str
     timestamp: int
@@ -50,6 +51,7 @@ def get_data(request: ImapRequest):
 
     mail_server = request['mailServer']
     port = request['port']
+    use_ssl = request['useSsl']
     username = request["username"]
     password = request["password"]
     datasource_id = request["datasourceId"]
@@ -61,11 +63,11 @@ def get_data(request: ImapRequest):
     get_attachments = request["getAttachments"]
     additional_metadata = request["additionalMetadata"]
 
-    email_extraction_task = AsyncEmailExtraction(mail_server, port, username, password, timestamp, datasource_id,
+    email_extraction_task = AsyncEmailExtraction(mail_server, port, use_ssl, username, password, timestamp, datasource_id,
                                                  folder, schedule_id, tenant_id, index_acl, get_attachments,
                                                  additional_metadata)
 
-    thread = threading.Thread(target=email_extraction_task.extract())
+    thread = threading.Thread(target=email_extraction_task.extract)
     thread.start()
 
     return "extraction started"

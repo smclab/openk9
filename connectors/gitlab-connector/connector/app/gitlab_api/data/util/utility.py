@@ -1,11 +1,12 @@
+import hashlib
 import requests
 import logging
 from logging.config import dictConfig
 from ..util.log_config import LogConfig
 
-dictConfig(LogConfig().dict())
+dictConfig(LogConfig().model_dump())
 
-logger = logging.getLogger("wordpress_logger")
+logger = logging.getLogger("gitlab_logger")
 
 
 def post_message(url, payload, timeout=20):
@@ -53,13 +54,6 @@ def format_raw_content(model):
         .replace("..", "").replace("__", "").replace(";", "").replace(",", "").lower().strip()
 
 
-def extract_data_pagination(session: requests.Session, start_url: str):
-    response = session.get(start_url)
-    yield response.json()
-    total_pages = int(response.headers["X-WP-TotalPages"])
+def to_content_id(s: str):
+    return int(hashlib.md5(s.encode()).hexdigest(), 16)
 
-    for page_number in range(2, total_pages + 1):
-        url = start_url + f'&page={page_number}'
-        logger.info("Extracted page " + str(page_number))
-        response = session.get(url)
-        yield response.json()

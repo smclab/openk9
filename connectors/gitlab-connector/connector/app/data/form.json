@@ -1,0 +1,91 @@
+{
+  "fields": [
+    {
+      "label": "Domain",
+      "name": "domain",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "https://gitlab.com",
+      "info": "",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Access Token",
+      "name": "accessToken",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "",
+      "info": "Gitlab user access token",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+        "label": "Elements",
+        "name": "types",
+        "field": "types",
+        "type": "list",
+        "size": 4,
+        "required": true,
+        "values": [
+          {
+            "value": "User",
+            "isDefault": false
+          },
+          {
+            "value": "Project",
+            "isDefault": false
+          },
+          {
+            "value": "Project Issue",
+            "isDefault": false
+          },
+          {
+            "value": "Project Commit",
+            "isDefault": false
+          },
+          {
+            "value": "Project Branch",
+            "isDefault": false
+          },
+          {
+            "value": "Project Labels",
+            "isDefault": false
+          },
+          {
+            "value": "Project Milestone",
+            "isDefault": false
+          },
+          {
+            "value": "Project Merge Request",
+            "isDefault": false
+          }
+        ],
+        "info": "",
+        "placeholder": "string",
+        "validator": {
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+    {
+      "label": "Items Per Page",
+      "name": "itemsPerPage",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    }
+  ]
+}

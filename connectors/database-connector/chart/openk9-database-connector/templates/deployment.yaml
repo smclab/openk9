@@ -22,6 +22,7 @@ spec:
     spec:
       {{- include "common.images.renderPullSecrets" . | nindent 6 }}
       nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
       containers:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
@@ -29,6 +30,7 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
+              protocol: TCP
           env:
             - name: INGESTION_URL
               value: "{{ include "helper.ingestionURL" . }}/api/ingestion/v1/ingestion/"
