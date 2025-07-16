@@ -28,18 +28,18 @@ public class StatusResponse {
 
 	private final List<SchedulerService.DatasourceStatus> datasources;
 	private final int total;
-	private int failures;
+	private int errors;
 
 	public StatusResponse(List<SchedulerService.DatasourceStatus> datasources) {
 		this.datasources = datasources;
 		this.total = datasources.size();
-		this.failures = 0;
+		this.errors = 0;
 
 		for (SchedulerService.DatasourceStatus datasource : datasources) {
 			assert datasource.status() != null;
 
 			if (datasource.status() == SchedulerService.Status.ERROR) {
-				failures++;
+				errors++;
 			}
 
 		}

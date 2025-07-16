@@ -31,6 +31,7 @@ import io.openk9.datasource.web.dto.StatusResponse;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
+import org.jboss.resteasy.reactive.RestResponse;
 
 @ApplicationScoped
 @Path("/schedulers")
@@ -66,8 +67,18 @@ public class SchedulerResource {
 
 	@Path("/status")
 	@GET
-	public Uni<StatusResponse> status() {
-		return schedulerService.getStatusList().map(StatusResponse::new);
+	public Uni<RestResponse<StatusResponse>> status() {
+		return schedulerService.getStatusList()
+			.map(StatusResponse::new)
+			.map(statusResponse -> {
+				var status = RestResponse.Status.OK;
+
+				if (statusResponse.getErrors() > 0) {
+					status = RestResponse.Status.INTERNAL_SERVER_ERROR;
+				}
+
+				return RestResponse.status(status, statusResponse);
+			});
 	}
 
 	@Inject
