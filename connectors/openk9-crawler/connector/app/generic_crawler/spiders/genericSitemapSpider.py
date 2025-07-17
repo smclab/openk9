@@ -188,9 +188,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         if self.custom_metadata:
             for key, value in self.custom_metadata.items():
                 extracted_elements = response.xpath(value).getall()
-                if len(extracted_elements) == 1:
-                    web_item[key] = extracted_elements[0].strip()
-                elif len(extracted_elements) > 1:
+                if len(extracted_elements) > 0:
                     web_item[key] = [extracted_element.strip() for extracted_element in extracted_elements]
                 else:
                     web_item[key] = None

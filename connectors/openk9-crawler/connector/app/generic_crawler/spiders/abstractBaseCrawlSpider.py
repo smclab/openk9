@@ -83,10 +83,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		if href.startswith(('http://', 'https://')):
 			document_url = href
 			parsed_url = urlparse(document_url)
-			domain = parsed_url.netloc
+			domain = parsed_url.hostname
 		elif href.startswith('/'):
 			parsed_url = urlparse(url_request)
-			domain = parsed_url.netloc
+			domain = parsed_url.hostname
 			http_s_domain = parsed_url.scheme + "://" + domain
 			href = http_s_domain + href
 			document_url = href
