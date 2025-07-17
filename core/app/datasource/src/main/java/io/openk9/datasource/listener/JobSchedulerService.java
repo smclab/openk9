@@ -367,10 +367,11 @@ public class JobSchedulerService {
 					"select s " +
 					"from Scheduler s " +
 					"where s.datasource.id = :datasourceId " +
-					"and s.status in " + Scheduler.RUNNING_STATES,
+					"and s.status in :runningStates",
 					Scheduler.class
 				)
 				.setParameter("datasourceId", datasource.getId())
+				.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
 				.getSingleResultOrNull()
 				.flatMap(scheduler -> {
 
