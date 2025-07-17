@@ -81,7 +81,7 @@ public class StatusByDatasourcesTest {
 
 
 		var statusList =
-			schedulerService.getStatusByDatasources(datasourceIds)
+			schedulerService.getJobStatusList(datasourceIds)
 				.await()
 				.indefinitely();
 

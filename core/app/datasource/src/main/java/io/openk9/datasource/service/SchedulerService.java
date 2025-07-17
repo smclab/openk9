@@ -20,7 +20,6 @@ package io.openk9.datasource.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
@@ -167,11 +166,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * Datasources that have never been executed are also included in the result set,
 	 * allowing the subsequent mapping process to assign an appropriate default status.
 	 *
-	 * @return A {@link Uni} that emits a list of {@link DatasourceStatus} objects,
+	 * @return A {@link Uni} that emits a list of {@link DatasourceHealthStatus} objects,
 	 *         representing each datasource and its derived status.
-	 * @see #mapToStatusList(List)
+	 * @see #mapToHealthStatusList(List)
 	 */
-	public Uni<List<DatasourceStatus>> getStatusList() {
+	public Uni<List<DatasourceHealthStatus>> getHealthStatusList() {
 		return sessionFactory.withTransaction((session, transaction) -> session
 			.createQuery(
 				"""
@@ -188,7 +187,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 					""", Tuple.class
 			)
 			.getResultList()
-			.map(this::mapToStatusList)
+			.map(this::mapToHealthStatusList)
 		);
 	}
 
@@ -198,38 +197,29 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * <p>This method queries the database for active {@code Scheduler} instances associated with
 	 * the provided datasource IDs. If a datasource is found in a running state,
 	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
-	 * with the status {@code ALREADY_RUNNING}. Otherwise, it defaults to {@code ON_SCHEDULING}.
+	 * with the status {@link  JobStatus#ALREADY_RUNNING}.
+	 * Otherwise, it defaults to {@link JobStatus#ON_SCHEDULING}.
 	 *
 	 * @param datasourceIds the list of datasource IDs to check
 	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
 	 *         to its corresponding job status
 	 */
-	public Uni<List<DatasourceJobStatus>> getStatusByDatasources(List<Long> datasourceIds) {
+	public Uni<List<DatasourceJobStatus>> getJobStatusList(List<Long> datasourceIds) {
+
 		return sessionFactory.withTransaction((session, transaction) -> session
 			.createQuery(
-				"from Scheduler s " +
-					"join fetch s.datasource d " +
-					"where d.id in :datasourceIds and s.status in " + Scheduler.RUNNING_STATES,
-				Scheduler.class
+				"""
+					SELECT d.id, d.name, s.status
+					FROM Datasource d
+					LEFT JOIN d.schedulers s ON s.status IN :runningStates
+					WHERE d.id IN :datasourceIds
+					""",
+				Tuple.class
 			)
 			.setParameter("datasourceIds", datasourceIds)
+			.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
 			.getResultList()
-			.map(schedulers -> schedulers.stream()
-				.map(Scheduler::getDatasource)
-				.map(Datasource::getId)
-				.collect(Collectors.toSet()))
-			.map(ids -> datasourceIds
-				.stream()
-				.map(id -> new DatasourceJobStatus(id, JobStatus.ON_SCHEDULING))
-				.map(djs -> ids
-					.stream()
-					.filter(id -> djs.id() == id)
-					.findFirst()
-					.map(id -> new DatasourceJobStatus(djs.id(), JobStatus.ALREADY_RUNNING))
-					.orElse(djs)
-				)
-				.collect(Collectors.toList())
-			)
+			.map(this::mapToJobStatusList)
 		);
 	}
 
@@ -303,59 +293,94 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Transforms a list of raw JPA query results into a list of DatasourceStatus DTOs.
+	 * Transforms a list of raw JPA query results into a list of DatasourceHealthStatus DTOs.
 	 * <p>
 	 * It maps the internal {@link Scheduler.SchedulerStatus} to a simplified, client-facing
-	 * {@link Status}. Crucially, if a datasource has no scheduler history (resulting in a
-	 * null status from the query), it is explicitly assigned {@link Status#IDLE}.
+	 * {@link HealthStatus}. Crucially, if a datasource has no scheduler history (resulting in a
+	 * null status from the query), it is explicitly assigned {@link HealthStatus#IDLE}.
 	 *
 	 * @param tuples The list of raw tuples from the database query.
-	 * @return A final, mapped list of {@link DatasourceStatus} objects.
+	 * @return A final, mapped list of {@link DatasourceHealthStatus} objects.
 	 */
-	private List<DatasourceStatus> mapToStatusList(List<Tuple> tuples) {
+	private List<DatasourceHealthStatus> mapToHealthStatusList(List<Tuple> tuples) {
 
-		List<DatasourceStatus> datasourceStatusList = new ArrayList<>();
+		List<DatasourceHealthStatus> healthStatusList = new ArrayList<>();
 
 		for (Tuple tuple : tuples) {
 			Scheduler.SchedulerStatus schedulerStatus =
 				tuple.get(2, Scheduler.SchedulerStatus.class);
 
-			var status = getStatus(schedulerStatus);
+			var status = getHealthStatus(schedulerStatus);
 
-			var datasourceStatus = new DatasourceStatus(
+			var datasourceStatus = new DatasourceHealthStatus(
 				tuple.get(0, Long.class),
 				tuple.get(1, String.class),
 				status
 			);
 
-			datasourceStatusList.add(datasourceStatus);
+			healthStatusList.add(datasourceStatus);
 		}
 
-		return datasourceStatusList;
+		return healthStatusList;
 	}
 
-	protected static Status getStatus(Scheduler.SchedulerStatus schedulerStatus) {
-		Status status = switch (schedulerStatus) {
+	/**
+	 * Transforms a list of raw JPA query results into a list of {@link DatasourceJobStatus} DTOs.
+	 * <p>
+	 * This method iterates through each {@link jakarta.persistence.Tuple} and extracts the raw
+	 * datasource and scheduler data. It delegates the mapping of the internal
+	 * {@link Scheduler.SchedulerStatus} to a simplified, client-facing {@link JobStatus}
+	 * by calling the {@code getJobStatus} helper method.
+	 *
+	 * @param tuples The list of raw tuples from the database query, conforming to the expected structure.
+	 * @return A final, mapped list of {@link DatasourceJobStatus} objects.
+	 */
+	private List<DatasourceJobStatus> mapToJobStatusList(List<Tuple> tuples) {
 
-			case RUNNING, STALE -> Status.RUNNING;
-			case ERROR, FAILURE -> Status.ERROR;
-			case FINISHED, CANCELLED -> Status.IDLE;
-			case null -> Status.IDLE;
+		List<DatasourceJobStatus> jobStatusList = new ArrayList<>();
+
+		for (Tuple tuple : tuples) {
+			var schedulerId = tuple.get(2, Scheduler.SchedulerStatus.class);
+			var jobStatus = getJobStatus(schedulerId);
+
+			var datasourceJobStatus = new DatasourceJobStatus(
+				tuple.get(0, Long.class),
+				tuple.get(1, String.class),
+				jobStatus
+			);
+
+			jobStatusList.add(datasourceJobStatus);
+		}
+
+		return jobStatusList;
+	}
+
+
+	protected static JobStatus getJobStatus(Scheduler.SchedulerStatus schedulerStatus) {
+		return schedulerStatus == null ? JobStatus.ON_SCHEDULING : JobStatus.ALREADY_RUNNING;
+	}
+
+	protected static HealthStatus getHealthStatus(Scheduler.SchedulerStatus schedulerStatus) {
+		return switch (schedulerStatus) {
+
+			case RUNNING, STALE -> HealthStatus.RUNNING;
+			case ERROR, FAILURE -> HealthStatus.ERROR;
+			case FINISHED, CANCELLED -> HealthStatus.IDLE;
+			case null -> HealthStatus.IDLE;
 
 		};
-		return status;
 	}
+
+	public record DatasourceHealthStatus(long id, String name, HealthStatus status) {}
+
+	public record DatasourceJobStatus(long id, String name, JobStatus status) {}
 
 	public enum JobStatus {
 		ALREADY_RUNNING,
 		ON_SCHEDULING
 	}
 
-	public record DatasourceStatus(long id, String name, Status status) {}
-
-	public record DatasourceJobStatus(long id, JobStatus status) {}
-
-	public enum Status {
+	public enum HealthStatus {
 		RUNNING,
 		ERROR,
 		IDLE

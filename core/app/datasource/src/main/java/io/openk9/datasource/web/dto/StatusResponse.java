@@ -26,19 +26,19 @@ import lombok.Getter;
 @Getter
 public class StatusResponse {
 
-	private final List<SchedulerService.DatasourceStatus> datasources;
+	private final List<SchedulerService.DatasourceHealthStatus> datasources;
 	private final int total;
 	private int errors;
 
-	public StatusResponse(List<SchedulerService.DatasourceStatus> datasources) {
+	public StatusResponse(List<SchedulerService.DatasourceHealthStatus> datasources) {
 		this.datasources = datasources;
 		this.total = datasources.size();
 		this.errors = 0;
 
-		for (SchedulerService.DatasourceStatus datasource : datasources) {
+		for (SchedulerService.DatasourceHealthStatus datasource : datasources) {
 			assert datasource.status() != null;
 
-			if (datasource.status() == SchedulerService.Status.ERROR) {
+			if (datasource.status() == SchedulerService.HealthStatus.ERROR) {
 				errors++;
 			}
 

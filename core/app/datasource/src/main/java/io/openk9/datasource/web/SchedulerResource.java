@@ -68,7 +68,7 @@ public class SchedulerResource {
 	@Path("/status")
 	@GET
 	public Uni<RestResponse<StatusResponse>> status() {
-		return schedulerService.getStatusList()
+		return schedulerService.getHealthStatusList()
 			.map(StatusResponse::new)
 			.map(statusResponse -> {
 				var status = RestResponse.Status.OK;

@@ -17,12 +17,7 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.listener.SchedulerInitializer;
-import io.openk9.datasource.service.SchedulerService;
-import io.openk9.datasource.web.dto.TriggerResourceDTO;
-import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
-import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.RoutingContext;
+import java.util.List;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.inject.Instance;
@@ -32,7 +27,13 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
 
-import java.util.List;
+import io.openk9.datasource.listener.SchedulerInitializer;
+import io.openk9.datasource.service.SchedulerService;
+import io.openk9.datasource.web.dto.TriggerResourceDTO;
+import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 
 @Deprecated
 @Path("/v1/trigger")
@@ -54,7 +55,7 @@ public class TriggerResource {
 				.build();
 
 		return schedulerService
-			.getStatusByDatasources(datasourceIds)
+			.getJobStatusList(datasourceIds)
 			.call(() -> schedulerInitializer
 				.get()
 				.triggerJobs(tenantId, triggerWithDateResourceDTO)

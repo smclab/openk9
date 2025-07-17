@@ -17,11 +17,8 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.listener.SchedulerInitializer;
-import io.openk9.datasource.service.SchedulerService;
-import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
-import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.RoutingContext;
+import java.time.OffsetDateTime;
+import java.util.List;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.enterprise.inject.Instance;
@@ -30,12 +27,16 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.MediaType;
+
+import io.openk9.datasource.listener.SchedulerInitializer;
+import io.openk9.datasource.service.SchedulerService;
+import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.RoutingContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Path("/v2/trigger")
 @RolesAllowed("k9-admin")
@@ -68,7 +69,7 @@ public class TriggerWithDateResource {
 		String tenantId = routingContext.get("_tenantId");
 
 		return schedulerService
-			.getStatusByDatasources(datasourceIds)
+			.getJobStatusList(datasourceIds)
 			.onItem()
 			.transform(datasourceJobStatuses ->
 				datasourceJobStatuses.stream().findFirst().orElse(null))

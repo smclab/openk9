@@ -44,12 +44,12 @@ class SchedulerServiceTest {
 			.get();
 
 
-		var statusList = schedulerService.getStatusList()
+		var statusList = schedulerService.getHealthStatusList()
 			.await().indefinitely();
 
 		assertEquals(
 			statusList.getFirst().status(),
-			SchedulerService.getStatus(newest.getStatus())
+			SchedulerService.getHealthStatus(newest.getStatus())
 		);
 	}
 }
