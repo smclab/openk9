@@ -26,7 +26,7 @@ helm upgrade -i Rag-module openk9/openk9-Rag-module
 
 The command deploys Openk9 Rag Module on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-# Parameters
+## Parameters
 
 ### Configure Image
 
@@ -274,7 +274,7 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
 
-### Advanced logging
+## Advanced logging
 
 In case you want to configure Openk9 Datasource logging you can set up following parameters:
 
@@ -286,7 +286,7 @@ log:
 ```
 
 
-### Known issues
+## Known issues
 
 No Known issues
 
