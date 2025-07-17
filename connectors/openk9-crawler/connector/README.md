@@ -169,3 +169,48 @@ Follows an example of Curl call:
 ```
 curl --location --request POST 'http://localhost:500/sample'
 ```
+
+
+# Quickstart
+
+## How to run
+
+## Docker
+
+### Using Dockerfile
+
+Using the command line go in the gitlab-datasource folder\
+From this folder:
+```
+cd ..
+```
+
+Build the Docker file:
+```
+docker build -t web-connector .
+```
+
+**Command parameters:
+- **-t**: Set built image name
+- **-f**: Specify the path to the Dockerfile**
+
+Run the built Docker image:
+```
+docker run -p 5000:5000 --name web-connector-app web-connector 
+```
+
+Command parameters:
+- **-p**: Exposed port to make api calls
+- **-name**: Set docker container name
+
+## Kubernetes/Openshift
+
+To run Web Connector in Kubernetes/Openshift Helm Chart is available under [chart folder](../chart).
+
+# Docs and resources
+
+To read more go on [official site connector section](https://staging-site.openk9.io/plugins/)
+
+# Migration Guides
+
+#### TO-DO: Add wiki links
