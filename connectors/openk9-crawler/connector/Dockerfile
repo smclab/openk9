@@ -29,8 +29,6 @@ RUN chmod g+rw /app
 
 WORKDIR /app
 
-RUN mkdir logs
-
 ENTRYPOINT ["/bin/bash"]
 
 CMD ["/etc/docker-entrypoint.sh"]
