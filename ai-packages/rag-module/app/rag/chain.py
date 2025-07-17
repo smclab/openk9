@@ -7,7 +7,11 @@ from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
 from app.rag.retriever import OpenSearchRetriever
-from app.utils.chat_history import get_chat_history_from_frontend, save_chat_message
+from app.utils.chat_history import (
+    get_chat_history,
+    get_chat_history_from_frontend,
+    save_chat_message,
+)
 from app.utils.llm import (
     generate_conversation_title,
     initialize_language_model,
@@ -301,21 +305,38 @@ def get_chat_chain_tool(
         llm = initialize_language_model(configuration)
         parser = StrOutputParser()
 
-        if reformulate and chat_history:
+        search_query = search_text
+
+        if reformulate:
+            retrieved_chat_history = (
+                chat_history
+                if chat_history
+                else get_chat_history(
+                    open_search_client=OpenSearch(
+                        hosts=[opensearch_host],
+                    ),
+                    user_id=user_id,
+                    chat_id=chat_id,
+                )
+            )
+
             rephrase_prompt_template = (
-                "Here is the chat history: {chat_history}, and the user's latest question: {input}"
+                "Here is the chat history: {retrieved_chat_history}, and the user's latest question: {input}"
                 + rephrase_prompt_template
             )
             rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
             rephrase_chain = rephrase_prompt | llm | parser
-            search_text = rephrase_chain.invoke(
-                {"input": search_text, "chat_history": chat_history},
+            search_query = rephrase_chain.invoke(
+                {
+                    "input": search_text,
+                    "retrieved_chat_history": retrieved_chat_history,
+                },
             )
 
         rag_tool.description = rag_tool_description
         tools = [rag_tool]
         llm_with_tools = llm.bind_tools(tools)
-        llm_with_tools_response = llm_with_tools.invoke(search_text)
+        llm_with_tools_response = llm_with_tools.invoke(search_query)
 
         if llm_with_tools_response.tool_calls:
             yield from stream_rag_conversation(
