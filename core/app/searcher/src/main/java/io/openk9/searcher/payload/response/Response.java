@@ -20,6 +20,7 @@ package io.openk9.searcher.payload.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -27,7 +28,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Response {
+	@Schema(description = "List of results")
 	private Object result;
+	@Schema(description = "Number of results obtained")
 	long total;
 
 	public static final Response EMPTY = new Response(List.of(), 0);

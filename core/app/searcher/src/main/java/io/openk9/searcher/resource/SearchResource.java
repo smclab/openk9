@@ -208,7 +208,7 @@ public class SearchResource {
 					content = {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
+									schema = @Schema(implementation = SuggestionsResponse.class),
 									example = SearchRequestExamples.SUGGESTIONS_RESPONSE
 							)
 					}
@@ -224,16 +224,12 @@ public class SearchResource {
 							schema = @Schema(implementation = SearchRequest.class),
 							examples = {
 									@ExampleObject(
-											name = "text search",
-											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
+											name = "suggestions for a specific suggestion category",
+											value = SearchRequestExamples.SEARCH_REQUEST_FOR_SUGGESTIONS
 									),
 									@ExampleObject(
-											name = "hybrid search",
-											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
-									),
-									@ExampleObject(
-											name = "knn search",
-											value = SearchRequestExamples.KNN_SEARCH_REQUEST
+											name = "suggestions for a specific suggestion category and string filter",
+											value = SearchRequestExamples.SEARCH_REQUEST_FOR_SUGGESTIONS_WITH_PREFIX_FILTER
 									)
 							}
 					)
@@ -266,7 +262,7 @@ public class SearchResource {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = Response.class),
-									example = SearchRequestExamples.SUGGESTIONS_RESPONSE
+									example = SearchRequestExamples.SEARCH_RESPONSE
 							)
 					}
 			),
@@ -281,12 +277,16 @@ public class SearchResource {
 							schema = @Schema(implementation = SearchRequest.class),
 							examples = {
 									@ExampleObject(
-											name = "suggestions for a specific suggestion category",
-											value = SearchRequestExamples.SEARCH_REQUEST_FOR_SUGGESTIONS
+											name = "text search",
+											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
 									),
 									@ExampleObject(
-											name = "suggestions for a specific suggestion category and string filter",
-											value = SearchRequestExamples.SEARCH_REQUEST_FOR_SUGGESTIONS_WITH_PREFIX_FILTER
+											name = "hybrid search",
+											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "knn search",
+											value = SearchRequestExamples.KNN_SEARCH_REQUEST
 									)
 							}
 					)
@@ -376,7 +376,7 @@ public class SearchResource {
 					content = {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
+									schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisResponse.class),
 									example = QueryAnalysisRequestExamples.QUERY_ANALYSIS_RESPONSE
 							)
 					}
@@ -389,7 +389,7 @@ public class SearchResource {
 			content = {
 					@Content(
 							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = SearchRequest.class),
+							schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisRequest.class),
 							examples = {
 									@ExampleObject(
 											name = "simple query analysis request",
