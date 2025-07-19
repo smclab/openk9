@@ -9,7 +9,46 @@ import json
 import logging
 import os
 import requests
+import os
+import tldextract
+import socket
 
+log_level = os.environ.get("INPUT_LOG_LEVEL")
+if log_level is None:
+    log_level = "INFO"
+
+logger = logging.getLogger(__name__)
+logger.setLevel(log_level)
+formatter = logging.Formatter("%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s")
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+
+logger = logging.getLogger(__name__)
+
+def has_internet(host="8.8.8.8", port=53, timeout=1):
+    """Quick check for internet access (Google DNS)."""
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except Exception:
+        return False
+
+# Set this from the environment (or fallback)
+cache_dir = os.environ.get("TLDEXTRACT_CACHE", "/app")
+
+if has_internet():
+    # Allow auto-update if internet is available
+    extractor = tldextract.TLDExtract(cache_dir=cache_dir)
+    logger.info("update")
+else:
+    # Prevent any online calls
+    extractor = tldextract.TLDExtract(cache_dir=cache_dir, suffix_list_urls=[])
+    logger.info("no update")
+
+result = extractor("https://example.co.uk")
 
 def post_message(url, payload, timeout=30):
     '''Pass the body as json instead of data'''
@@ -29,20 +68,6 @@ app = FastAPI()
 ingestion_url = os.environ.get("INGESTION_URL")
 if ingestion_url is None:
     ingestion_url = "http://ingestion:8080/api/ingestion/v1/ingestion/"
-
-log_level = os.environ.get("INPUT_LOG_LEVEL")
-if log_level is None:
-    log_level = "INFO"
-
-logger = logging.getLogger(__name__)
-logger.setLevel(log_level)
-formatter = logging.Formatter("%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s")
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-
-logger = logging.getLogger(__name__)
 
 
 class BaseRequest(ABC, BaseModel):
