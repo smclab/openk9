@@ -17,9 +17,7 @@
 
 package io.openk9.datasource;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.RAGConfiguration;
@@ -35,6 +33,7 @@ import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
+import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -42,9 +41,11 @@ import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
-
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntitiesUtils {
 
@@ -232,6 +233,17 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
+	public static Autocorrection getAutocorrection(
+			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
+			String name) {
+
+		return sessionFactory.withTransaction(
+				session -> autocorrectionService.findByName(session, name)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	public static Bucket getBucket(
 		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {
 
@@ -294,6 +306,35 @@ public class EntitiesUtils {
 
 		return sessionFactory.withTransaction(
 				session -> tabService.findByName(session, name)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static void removeAutocorrection(
+			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
+			Autocorrection autocorrection) {
+
+		removeAutocorrection(sessionFactory, autocorrectionService, autocorrection.getId());
+	}
+
+	public static void removeAutocorrection(
+			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
+			String name) {
+
+		var autocorrection =
+			EntitiesUtils.getAutocorrection(sessionFactory, autocorrectionService, name);
+
+		removeAutocorrection(sessionFactory, autocorrectionService, autocorrection.getId());
+	}
+
+	public static void removeAutocorrection(
+			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
+			long id) {
+
+		sessionFactory.withTransaction(
+				session ->
+					autocorrectionService.deleteById(session, id)
 			)
 			.await()
 			.indefinitely();
