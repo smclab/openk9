@@ -162,6 +162,44 @@ Build YouTube Connector image:
     when: never
 
 ###############################################################
+#                  BUILD GITLAB CONNECTOR                     #
+###############################################################
+Build GitLab Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "gitlab-connector"
+  script:
+  - |
+    echo "=== Building GitLab Connector ==="
+    cd connectors/gitlab-connector
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-gitlab-connector
+    echo "VERSION=latest" > version-gitlab-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
 #               CONTAINER SCANNING WEB CONNECTOR              #
 ###############################################################
 Container Scanning Web Connector:
@@ -224,3 +262,19 @@ Container Scanning YouTube Connector:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/youtube-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING GITLAB CONNECTOR             #
+###############################################################
+Container Scanning GitLab Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build GitLab Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-gitlab-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/**/*
