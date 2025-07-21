@@ -35,8 +35,7 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets:
-    - docker-registry-secret
-
+  - docker-registry-secret
 
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
@@ -80,10 +79,29 @@ service:
 
 ## Quarkus configuration
 quarkus:
-## - add rel 1.6.0
+  ## - add rel 1.6.0
   HttpCors: true
   HttpCorsOrigin: "/https://.*.openk9.local/,"
+  LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
+
+## Entity Manager configuration
+entity:
+  uniqueEntities: "date,organization,loc,email,document,bank,person"
+  minHops: "1"
+  maxHops: "2"
+  scoreThreshold: "0.8"
+
+## Hazelcast configuration  
+hazelcast:
+  network:
+    join:
+      kubernetes:
+        serviceName: "openk9-entity-manager"
+
+## Java Debug configuration
+debug:
+  enabled: true
 
 ## Opensearch configuration
 opensearch:
@@ -93,7 +111,6 @@ opensearch:
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "password"
   keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
-
 
 # Neo4j configuration
 neo4j:
@@ -110,7 +127,6 @@ openk9:
   datasource:
     host: "openk9-datasource"
     port: 8080
-
 
 ## Opentelemetry configuration
 otel:
@@ -150,7 +166,7 @@ rbac:
   ##       - list
   ##
   rules: []
-  
+
 ## @param podAnnotations Entity Manager Pod annotations. Evaluated as a template
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 ##
@@ -164,9 +180,7 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Entity Manager pod's Security Context fsGroup
 ##
-podSecurityContext: {}
-  # fsGroup: 2000
-
+podSecurityContext: {} # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -176,12 +190,10 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
 ##
 hostAliases: []
-
 
 ## Configure the ingress resource that allows you to access the
 ## Entity Manager installation. Set up the URL
@@ -193,7 +205,7 @@ ingress:
   enabled: false
   ## @param ingress.enabled Enable ingress resource for Entity Manager console
   ##
-  host: openk9.local   #-TBMD
+  host: openk9.local #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.
   ## For a full list of possible ingress annotations, please see
   ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
@@ -209,12 +221,12 @@ ingress:
   ## @param ingress.paths Paths for the default host.
   ##
   paths:
-    - /api/entity-manager
+  - /api/entity-manager
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 # In OpenShift use Route instead of Ingress
 route:
@@ -224,7 +236,7 @@ route:
   path: /api/entity-manager
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
 ## Example:
@@ -240,7 +252,7 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
-    
+
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -382,14 +394,14 @@ metrics:
     ##
     additionalLabels: {}
     ## @param metrics.prometheusRule.rules Prometheus Rule definitions
-      # - alert: minio cluster nodes offline
-      #   annotations:
-      #     summary: "minio cluster nodes offline"
-      #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
-      #   for: 10m
-      #   expr: minio_cluster_nodes_offline_total > 0
-      #   labels:
-      #     severity: critical
-      #     group: PaaS
+    # - alert: minio cluster nodes offline
+    #   annotations:
+    #     summary: "minio cluster nodes offline"
+    #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
+    #   for: 10m
+    #   expr: minio_cluster_nodes_offline_total > 0
+    #   labels:
+    #     severity: critical
+    #     group: PaaS
     ##
     rules: []

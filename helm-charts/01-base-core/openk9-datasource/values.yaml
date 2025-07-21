@@ -17,7 +17,7 @@ replicaCount: 1
 ## @param image.pullPolicy Datasource image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: ""  #-TBMD
+  registry: "" #-TBMD
   name: smclab/openk9-datasource
   ## Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -35,8 +35,8 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets:
-    - docker-registry-secret
-  
+  - docker-registry-secret
+
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
 commonAnnotations:
@@ -86,18 +86,42 @@ quarkus:
   ReactiveIdleTimeout: "PT30M"
   ReactiveMaxSize: "70"
   PekkoClusterBootstrapServiceName: "datasource"
-## - add rel 1.6.0
+  ## - add rel 1.6.0
   HttpCors: true
   HttpCorsOrigin: "/https://.*.openk9.local/,"
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
   LogLevelHibernate: "INFO"
 
+## Datasource configuration
+datasource:
+  aclQueryExtraParamsEnabled: true
+
+## Java Debug configuration
+debug:
+  enabled: false
+
+## GraphQL configuration
+graphql:
+  uiAlwaysInclude: true
+
+## RabbitMQ messaging configuration
+messaging:
+  incoming:
+    events:
+      routingKeys: "noop"
+
+## Hibernate ORM configuration
+hibernate:
+  orm:
+    databaseGeneration: "none"
+    logSql: false
+
 ## Scheduling configuration
 scheduling:
   PurgeCron: "0 */10 * ? * *"
-  PurgeMaxAge : "2d"
-  Timeout : "500s"
+  PurgeMaxAge: "2d"
+  Timeout: "500s"
   WorkersPerNode: '2'
   ConsumerMaxRetries: '2'
   ConsumerTimeout: '10m'
@@ -109,8 +133,8 @@ pipeline:
 ## Database configuration
 database:
 
-  type: "postgresql" 
-  
+  type: "postgresql"
+
   # ---- Parameters PostgreSQL ----
   postgresql:
     reactiveUrl: "postgresql://postgresql/openk9"
@@ -131,7 +155,6 @@ database:
     keyPasswordSecret: "oracle-user-password"
     keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
 
-  
 ## Opensearch configuration
 opensearch:
   host: "opensearch-cluster-master-headless"
@@ -149,17 +172,18 @@ rabbitmq:
   passwordSecretName: "rabbitmq-password"
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"
- 
-## Keycloak configuration
+
+## Keycloak realm configuration
 keycloak:
-  host: "keycloak.openk9.local"  #-TBMD
+  host: "keycloak.openk9.local" #-TBMD
   clientId: "openk9"
+  realm:
+    master: "master"
 
 ## Openk9 Tenant Manager configuration
 openk9:
   tenantManager:
     host: "openk9-tenant-manager"
-
 
 ## Search Page Configuration
 search:
@@ -198,23 +222,23 @@ rbac:
   ## @param rbac.rules Custom RBAC rules to set
   ## e.g:
   rules:
-    - apiGroups:
-        - ""
-      resources:
-        - pods
-      verbs:
-        - get
-        - list
-        - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - get
+    - list
+    - watch
   ##
   ##
   name: "pod-reader"
   ## rules: []
 
 
-## @param podAnnotations Datasource Pod annotations. Evaluated as a template
-## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-##
+  ## @param podAnnotations Datasource Pod annotations. Evaluated as a template
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+  ##
 podAnnotations: {}
 
 ## Datasource pods' Security Context
@@ -225,9 +249,7 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Datasource pod's Security Context fsGroup
 ##
-podSecurityContext: {}
-  # fsGroup: 2000
-
+podSecurityContext: {} # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -236,7 +258,6 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
 
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
@@ -253,7 +274,7 @@ ingress:
   enabled: false
   ## @param ingress.enabled Enable ingress resource for Datasource console
   ##
-  host: openk9.local   #-TBMD
+  host: openk9.local #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.
   ## For a full list of possible ingress annotations, please see
   ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
@@ -269,12 +290,12 @@ ingress:
   ## @param ingress.paths Paths for the default host.
   ##
   paths:
-    - /api/datasource
+  - /api/datasource
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 # In OpenShift use Route instead of Ingress
 route:
@@ -284,7 +305,7 @@ route:
   path: /api/datasource
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
 ## Example:
@@ -443,14 +464,14 @@ metrics:
     ##
     additionalLabels: {}
     ## @param metrics.prometheusRule.rules Prometheus Rule definitions
-      # - alert: minio cluster nodes offline
-      #   annotations:
-      #     summary: "minio cluster nodes offline"
-      #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
-      #   for: 10m
-      #   expr: minio_cluster_nodes_offline_total > 0
-      #   labels:
-      #     severity: critical
-      #     group: PaaS
+    # - alert: minio cluster nodes offline
+    #   annotations:
+    #     summary: "minio cluster nodes offline"
+    #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
+    #   for: 10m
+    #   expr: minio_cluster_nodes_offline_total > 0
+    #   labels:
+    #     severity: critical
+    #     group: PaaS
     ##
     rules: []
