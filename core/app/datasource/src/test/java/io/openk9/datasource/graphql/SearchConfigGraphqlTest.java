@@ -891,11 +891,13 @@ public class SearchConfigGraphqlTest {
 
 		var query = document(
 			operation(
-				field("queryParserConfigFormConfigurations")
+				field(QUERY_PARSER_CONFIG_FORM_CONFIGURATIONS)
 			)
 		);
 
 		var response = graphQLClient.executeSync(query);
+
+		log.debug(String.format("Response:\n%s", response));
 
 		Assertions.assertFalse(response.hasError());
 		Assertions.assertTrue(response.hasData());
