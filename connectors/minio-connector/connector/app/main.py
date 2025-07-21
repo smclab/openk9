@@ -51,7 +51,6 @@ class MinioRequest(BaseModel):
     tenantId: str
     prefix: Optional[str] = None
     additionalMetadata: Optional[dict] = {}
-    columns: Optional[list] = []
 
 
 @app.exception_handler(RequestValidationError)

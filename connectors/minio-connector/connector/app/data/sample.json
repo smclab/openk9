@@ -4,35 +4,23 @@
    "contentId":3062252989527342,
    "rawContent":"Video title A video description",
    "datasourcePayload":{
-      "title": "Video title",
-      "description": "A video description",
-      "categories": ["video", "test"],
-      "commentCount": 10,
-      "duration": 30,
-      "thumbnail": "https://thumbnail-url/thumbnail.png",
-      "viewCount": 100,
-      "likeCount": 33,
-      "tags": ["videos", "testing"],
-      "channelId": 12399123,
-      "subtitles": {
-         "it": "<?xml version='1.0' encoding='utf-8' ?><transcript><text start='0.28' dur='9.2 79'>Martino aveva un segreto era un buon</text><text start='5.12' dur='7.04'>segreto leggero e facile da portare in</text><text start='9.559' dur='5.841'>giro gli sarebbe piaciuto farlo</text><text start='12. 16' dur='5.92'>conoscere a qualcuno ma in questo modo</text><text start='15.4' dur='5.879'>non sarebbe più stato un</text><text start='18.08' dur='7.279'>segreto non lo poteva vedere nascosto</text><text star t='21.279' dur='7.24'>dov&amp;#39;era ma Martino sapeva che lì dentro</text><text start='25.359' dur='6.441'>si trovava al sicuro da quando aveva</text><text start='28.519' dur='6.121'>quel segreto si sentiva </text><text start='31.8' dur='6.96'>diverso più importante</text><text start='34.64' dur='7.84'>Forse adesso faceva tutto in un modo</text><text start='38.76' dur='7.4'>nuovo si muoveva parlava ascoltava com e</text><text start='42.48' dur='6.64'>uno che alla fine della giornata può</text><text start='46.16' dur='6.84'>mettersi in un angolo e pensare a</text><text start='49.12' dur='6.959'>qualcosa di speciale</t ext><text start='53' dur='3.079'>[Musica]</text><text start='58.85' dur='2.809'>[Musica]</text></transcript>"
+      "file":{
+         "name":"metadata.object_name",
+         "contentType":"metadata.content_type",
+         "size":"metadata.size",
+         "type":"file_type"
       },
-      "ageLimit": 0,
-      "liveStatus": "not_live",
-      "webpageUrl": "https://www.youtube.com/watch?v=rn3cSifO97A",
-      "heatmap": [{"start_time": 0.0, "end_time": 0.37, "value": 1.0}, {"start_time": 0.37, "end_time": 0.74, "value": 0.9129649167966967}, {"start_time": 0.74, "end_time": 1.11, "value": 0.7310798421208182}, {"start_time": 1.11, "end_time": 1.48, "value": 0.5240104611906827}, {"start_time": 1.48, "end_time": 1.85, "value": 0.4387643496434901}, {"start_time": 1.85, "end_time": 2.22, "value": 0.3756919925890851}, {"start_time": 2.22, "end_time": 2.59, "value": 0.3235697628104698}, {"start_time": 2.59, "end_time": 2.96, "value": 0.29991536133506635}, {"start_time": 2.96, "end_time": 3.33, "value": 0.2840788474311265}, {"start_time": 3.33, "end_time": 3.7, "value": 0.2653316214925006}, {"start_time": 3.7, "end_time": 4.07, "value": 0.25528601036214543}, {"start_time": 4.07, "end_time": 4.44, "value": 0.24008806022798415}, {"start_time": 4.44, "end_time": 4.81, "value": 0.23537394347323606}, {"start_time": 4.81, "end_time": 5.18, "value": 0.23259816072448156}, {"start_time": 5.18, "end_time": 5.55, "value": 0.22354220757553128}, {"start_time": 5.55, "end_time": 5.92, "value": 0.2180760487408542}, {"start_time": 5.92, "end_time": 6.29, "value": 0.21572451862421385}, {"start_time": 6.29, "end_time":6.66, "value": 0.20866469794377832}, {"start_time": 6.66, "end_time": 7.03, "value": 0.20586759663267348}, {"start_time": 7.03, "end_time": 7.4, "value": 0.20414602341281318}, {"start_time": 7.4, "end_time":7.77, "value": 0.2005525877291944}, {"start_time": 7.77, "end_time": 8.14, "value": 0.19963357231309314}, {"start_time": 8.14, "end_time": 8.51, "value": 0.1980312373876207}, {"start_time": 8.51, "end_time":8.88, "value": 0.2022024590763051}, {"start_time": 8.88, "end_time": 9.25, "value": 0.2009188432786413}, {"start_time": 9.25, "end_time": 9.62, "value": 0.1970792510272634}, {"start_time": 9.62, "end_time": 9.99, "value": 0.19607847031767572}, {"start_time": 9.99, "end_time": 10.36, "value": 0.19118778025302618}, {"start_time": 10.36, "end_time": 10.73, "value": 0.18554736534348573}, {"start_time": 10.73, "end_time": 11.1, "value": 0.1837552819717525}, {"start_time": 11.1, "end_time": 11.47, "value": 0.1782234460754248}, {"start_time": 11.47, "end_time": 11.84, "value": 0.17493416404223247}, {"start_time": 11.84, "end_time": 12.21, "value": 0.1741931784837709}, {"start_time": 12.21, "end_time": 12.58, "value": 0.16971912727896757}, {"start_time": 12.58, "end_time": 12.95, "value": 0.16795160659863795}, {"start_time": 12.95, "end_time": 13.32, "value": 0.16743751145376176}, {"start_time": 13.32, "end_time": 13.69, "value": 0.16415240044363796}, {"start_time": 13.69, "end_time": 14.06, "value": 0.16276358217524547}, {"start_time": 14.06, "end_time": 14.43, "value": 0.16142051274717614}, {"start_time": 14.43, "end_time": 14.8, "value": 0.1570948969982405}, {"start_time": 14.8, "end_time": 15.17, "value": 0.1537901888003661}, {"start_time": 15.17, "end_time": 15.54, "value": 0.15000720329063266}, {"start_time": 15.54, "end_time": 15.91, "value": 0.14168429089429913}, {"start_time": 15.91, "end_time": 16.28, "value": 0.13551938638556885}, {"start_time": 16.28, "end_time": 16.65, "value": 0.12523715245446831}, {"start_time": 16.65, "end_time": 17.02, "value": 0.12031296179183973}, {"start_time": 17.02, "end_time": 17.39, "value": 0.11521252885288656}, {"start_time": 17.39, "end_time": 17.76, "value": 0.11001986995941793}, {"start_time": 17.76, "end_time": 18.13, "value": 0.10994068672783108}, {"start_time": 18.13, "end_time": 18.5, "value": 0.10624621959655217}, {"start_time": 18.5, "end_time": 18.87, "value": 0.10538314885494161}, {"start_time": 18.87, "end_time": 19.24, "value": 0.10778307608052008}, {"start_time": 19.24, "end_time": 19.61, "value": 0.11170681706713785}, {"start_time": 19.61, "end_time": 19.98, "value": 0.11312867248650177}, {"start_time": 19.98, "end_time": 20.35, "value": 0.11539128698439534}, {"start_time": 20.35, "end_time": 20.72, "value": 0.1143944124710147}, {"start_time": 20.72, "end_time": 21.09, "value": 0.11604282727038717}, {"start_time": 21.09, "end_time": 21.46, "value": 0.11832272172099324}, {"start_time": 21.46, "end_time": 21.83, "value": 0.11907853758369853}, {"start_time": 21.83, "end_time": 22.2, "value": 0.1199109546160911}, {"start_time": 22.2, "end_time": 22.57, "value": 0.11986388164146045}, {"start_time": 22.57, "end_time": 22.94, "value": 0.11952073223567895}, {"start_time": 22.94, "end_time": 23.31, "value": 0.11870168895979187}, {"start_time": 23.31, "end_time": 23.68, "value": 0.11619298410085455}, {"start_time": 23.68, "end_time": 24.05, "value": 0.11481634786809079}, {"start_time": 24.05, "end_time": 24.42, "value": 0.11114021999697038}, {"start_time": 24.42, "end_time": 24.79, "value": 0.1074067571103364}, {"start_time": 24.79, "end_time": 25.16, "value": 0.10439263018623685}, {"start_time": 25.16, "end_time": 25.53, "value": 0.09806677715243328}, {"start_time": 25.53, "end_time": 25.9, "value": 0.09538633207381678}, {"start_time": 25.9, "end_time": 26.27, "value": 0.09316344160514739}, {"start_time": 26.27, "end_time": 26.64, "value": 0.09005305011689457}, {"start_time": 26.64, "end_time": 27.01, "value": 0.08814742222829558}, {"start_time": 27.01, "end_time": 27.38, "value": 0.08457543752045787}, {"start_time": 27.38, "end_time": 27.75, "value": 0.07628847537057223}, {"start_time": 27.75, "end_time": 28.12, "value": 0.07246156170518839}, {"start_time": 28.12, "end_time": 28.49, "value": 0.06837233703349424}, {"start_time": 28.49, "end_time": 28.86, "value": 0.06247921109137268}, {"start_time": 28.86, "end_time": 29.23, "value": 0.0586167444198332}, {"start_time": 29.23, "end_time": 29.6, "value": 0.0534378234198046}, {"start_time": 29.6, "end_time": 29.97, "value": 0.04890051169846178}, {"start_time": 29.97, "end_time": 30.34, "value": 0.04520574663696369}, {"start_time": 30.34, "end_time": 30.71, "value": 0.039666594898587204}, {"start_time": 30.71, "end_time": 31.08, "value": 0.036231327057996025}, {"start_time": 31.08, "end_time": 31.45, "value": 0.03284448942970065}, {"start_time": 31.45, "end_time": 31.82, "value": 0.029750119966568258}, {"start_time": 31.82, "end_time": 32.19, "value": 0.029434148417447643}, {"start_time": 32.19, "end_time": 32.56, "value": 0.026520887424219795}, {"start_time": 32.56, "end_time": 32.93, "value": 0.025585353432632813}, {"start_time": 32.93, "end_time": 33.3, "value": 0.02644024764489472}, {"start_time": 33.3, "end_time": 33.67, "value": 0.023142424945419182}, {"start_time": 33.67, "end_time": 34.04, "value": 0.02233298164326127}, {"start_time": 34.04, "end_time": 34.41, "value": 0.02251826113623435}, {"start_time": 34.41, "end_time": 34.78, "value": 0.020273323831345544}, {"start_time": 34.78, "end_time": 35.15, "value": 0.020615281516250306}, {"start_time": 35.15, "end_time": 35.52, "value": 0.02035578429534339}, {"start_time": 35.52, "end_time": 35.89, "value": 0.01684785458462966}, {"start_time": 35.89, "end_time": 36.26, "value": 0.015286203685754328}, {"start_time": 36.26, "end_time": 36.63, "value": 0.006588594383763783}, {"start_time": 36.63, "end_time": 37.0, "value": 0.0}],
-      "channelFollowerCount": 7980,
-      "uploaderId": "@cittanuovatv",
-      "uploadTime": 1720908021,
-      "availability": "public"
+      "document":{
+         "title":"title"
+      }
    },
    "resources":{
-      "binaries": [
+      "binaries":[
          {
-            "id": 102103123,
-            "name": "Video title",
-            "contentType": "audio/mp4",
-            "data": "<base64-string>"
+            "id":102103123,
+            "name":"Video title",
+            "contentType":"audio/mp4",
+            "data":"<base64-string>"
          }
       ]
    },
