@@ -31,6 +31,7 @@ public class PresetPluginDrivers {
 		CONNECTOR_MAP.put(Preset.GITLAB, "openk9-gitlab-connector");
 		CONNECTOR_MAP.put(Preset.SITEMAP, "openk9-web-connector");
 		CONNECTOR_MAP.put(Preset.DATABASE, "openk9-database-connector");
+		CONNECTOR_MAP.put(Preset.MINIO, "openk9-minio-connector");
 	}
 
 	public static String getPluginDriver(Preset preset) {

@@ -9,5 +9,6 @@ export enum Preset {
     GITLAB = 'GITLAB',
     SITEMAP = 'SITEMAP',
     DATABASE = 'DATABASE',
+    MINIO = 'MINIO',
     UNRECOGNIZED = 'UNRECOGNIZED',
 }

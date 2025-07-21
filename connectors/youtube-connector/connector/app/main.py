@@ -28,7 +28,7 @@ class YoutubeRequest(BaseModel):
 	tenantId: str
 
 
-@app.post('/getData')
+@app.post('/execute')
 def get_data(request: YoutubeRequest):
 	request = request.dict()
 
