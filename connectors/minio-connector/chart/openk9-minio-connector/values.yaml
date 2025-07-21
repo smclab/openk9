@@ -1,20 +1,20 @@
 # Copyright Smc Treviso, S.r.l All Rights Reserved.
 # SPDX-License-Identifier: APACHE-2.0
 
-# Default values for openk9-gitlab-connector.
+# Default values for openk9-Minio-connector.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-## @param replicaCount Number of Gitlab Connector replicas to deploy
+## @param replicaCount Number of Minio Connector replicas to deploy
 ##
 replicaCount: 1
 
-## @section Gitlab Connector Image parameters
-## Docker Gitlab Connector image version
+## @section Minio Connector Image parameters
+## Docker Minio Connector image version
 ## ref: https://hub.docker.com/u/smclab
-## @param image.registry [default: REGISTRY_NAME] Gitlab Connector image registry
-## @skip image.tag Gitlab Connector image tag (immutable tags are recommended)
-## @param image.pullPolicy Gitlab Connector image pull policy
+## @param image.registry [default: REGISTRY_NAME] Minio Connector image registry
+## @skip image.tag Minio Connector image tag (immutable tags are recommended)
+## @param image.pullPolicy Minio Connector image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
   registry: ""
@@ -68,11 +68,11 @@ openk9:
     port: 8080
 
 
-## Gitlab Connector pods ServiceAccount
+## Minio Connector pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
 serviceAccount:
-  ## @param serviceAccount.create Enable creation of ServiceAccount for Gitlab Connector pods
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Minio Connector pods
   ##
   create: false
   ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
@@ -150,7 +150,7 @@ tolerations: []
 ##
 affinity: {}
 
-## Configure Gitlab Connector containers' extra options for startup probe
+## Configure Minio Connector containers' extra options for startup probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param startupProbe.enabled Enable startupProbe
 ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
@@ -167,7 +167,7 @@ startupProbe:
   successThreshold: 1
   failureThreshold: 5
 
-## Configure Gitlab Connector containers' extra options for liveness probe
+## Configure Minio Connector containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
 ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
@@ -184,7 +184,7 @@ livenessProbe:
   successThreshold: 1
   failureThreshold: 5
 
-## Configure Gitlab Connector containers' extra options for readiness probe
+## Configure Minio Connector containers' extra options for readiness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param readinessProbe.enabled Enable readinessProbe
 ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
