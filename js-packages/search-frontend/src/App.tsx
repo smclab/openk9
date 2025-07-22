@@ -494,6 +494,22 @@ export function App() {
           </h2>
         </div>
         <div
+          ref={(element) =>
+            openk9.updateConfiguration({
+              removeFiltersConfigurable: {
+                element,
+                itemsRemove: [
+                  "filters",
+                  "calendar",
+                  "sort",
+                  "search",
+                  "language",
+                ],
+              },
+            })
+          }
+        ></div>
+        <div
           css={css`
             padding: 16px;
           `}

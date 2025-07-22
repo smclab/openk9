@@ -36,7 +36,10 @@ import i18next from "i18next";
 import { ActiveFilter } from "../components/ActiveFilters";
 import { FiltersMobileMemo } from "../components/FiltersMobile";
 import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
-import { DataRangePicker } from "../components/DateRangePicker";
+import {
+  DataRangePicker,
+  resetFilterCalendar,
+} from "../components/DateRangePicker";
 import { SearchMobile } from "../components/SearchMobile";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
@@ -349,11 +352,50 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <RemoveFilters
-            onConfigurationChange={onConfigurationChange}
-            selectionsDispatch={selectionsDispatch}
+            reset={{
+              filters: () => {
+                onConfigurationChange({ filterTokens: [] });
+                selectionsDispatch({ type: "reset-filters" });
+              },
+            }}
           />
         </I18nextProvider>,
         configuration.removeFilters,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <RemoveFilters
+            itemsRemove={configuration?.removeFiltersConfigurable?.itemsRemove}
+            reset={{
+              calendar: () => {
+                setDateRange({
+                  startDate: undefined,
+                  endDate: undefined,
+                  keywordKey: undefined,
+                });
+                resetFilterCalendar && resetFilterCalendar();
+              },
+              filters: () => {
+                onConfigurationChange({ filterTokens: [] });
+                selectionsDispatch({ type: "reset-filters" });
+              },
+              search: () => {
+                selectionsDispatch({
+                  type: "reset-search",
+                });
+              },
+              sort: () => {
+                resetSort();
+              },
+              language: () => {
+                setLanguageSelect(activeLanguage);
+              },
+            }}
+          />
+        </I18nextProvider>,
+        configuration.removeFiltersConfigurable
+          ? configuration.removeFiltersConfigurable.element
+          : null,
       )}
       {renderPortal(
         useGenerativeApi ? (

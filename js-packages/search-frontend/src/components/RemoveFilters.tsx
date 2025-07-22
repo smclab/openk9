@@ -2,27 +2,54 @@ import { t } from "i18next";
 import { CreateLabel } from "./Filters";
 import React from "react";
 import { DeleteLogo } from "./DeleteLogo";
-import { ConfigurationUpdateFunction } from "../embeddable/entry";
+import {
+  ConfigurationUpdateFunction,
+  resetFiltersType,
+} from "../embeddable/entry";
 import { css } from "styled-components/macro";
 import { CircleDelete } from "../svgElement/CircleDelete";
 import { SelectionsAction } from "./useSelections";
 
+function handleReset(
+  itemsRemove?: resetFiltersType,
+  reset?: {
+    calendar?(): void;
+    filters?(): void;
+    sort?(): void;
+    search?(): void;
+    language?(): void;
+  },
+) {
+  if (!reset) return;
+  const items =
+    itemsRemove && itemsRemove.length > 0 ? itemsRemove : ["filters"];
+  items.forEach((item) => {
+    if (item === "calendar" && reset.calendar) reset.calendar();
+    if (item === "filters" && reset.filters) reset.filters();
+    if (item === "sort" && reset.sort) reset.sort();
+    if (item === "search" && reset.search) reset.search();
+    if (item === "language" && reset.language) reset.language();
+  });
+}
+
 export function RemoveFilters({
-  onConfigurationChange,
-  selectionsDispatch,
+  itemsRemove,
+  reset,
 }: {
-  onConfigurationChange: ConfigurationUpdateFunction;
-  selectionsDispatch: React.Dispatch<SelectionsAction>;
+  itemsRemove?: resetFiltersType;
+  reset?: {
+    calendar?(): void;
+    filters?(): void;
+    sort?(): void;
+    search?(): void;
+    language?(): void;
+  };
 }) {
   return (
     <div className="openk9-remove-filters-container">
       <button
         className="openk9-remove-filters-button btn"
-        onClick={() => {
-          onConfigurationChange({ filterTokens: [] });
-          selectionsDispatch({type:"reset-filters"})
-        }}
-        
+        onClick={() => handleReset(itemsRemove, reset)}
         css={css`
           display: flex;
           justify-content: center;

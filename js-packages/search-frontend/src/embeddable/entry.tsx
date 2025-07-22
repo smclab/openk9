@@ -354,6 +354,15 @@ type searchWithSuggestionsProps =
   | null
   | undefined;
 
+type RemoveFiltersProps = {
+  element: Element | string | null;
+  itemsRemove?: resetFiltersType;
+};
+
+export type resetFiltersType = Array<
+  "filters" | "calendar" | "sort" | "search" | "language"
+>;
+
 export type TemplatesProps = Array<{
   source: string;
   Template: React.FC<any>;
@@ -444,6 +453,7 @@ export type Configuration = {
   filtersMobile: FiltersHorizontalMobileConfiguration | null;
   filtersMobileLiveChange: FiltersLiveMobileConfiguration | null;
   filtersMobileLiveChangeBasic: Element | string | null;
+  removeFiltersConfigurable: RemoveFiltersProps | null;
   resultList: ResultListProps | null;
   resultListPagination: ResulListPaginationProps | null;
   resultsDisplayMode: ResultsDisplayMode;
@@ -503,6 +513,7 @@ const defaultConfiguration: Configuration = {
   numberResultOfFilters: null,
   queryStringValues: null,
   removeFilters: null,
+  removeFiltersConfigurable: null,
   resultList: null,
   resultListPagination: null,
   results: null,
