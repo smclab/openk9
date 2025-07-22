@@ -24,6 +24,7 @@ This endpoint takes different arguments in JSON raw body:
 - **depth**: depth to search contents (optional, if not specified )
 - **follow**: boolean to set if follow links from crawled pages (optional, if not specified )
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified )
+- **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page (optional, if not specified )
 - **pageCount**: count of page limit to crawl (optional, if not specified )
 - **maxLength**: maximum length of extracted content (optional, if not specified )
@@ -49,6 +50,7 @@ curl -X 'POST' \
   "allowedPaths": [],
   "excludedPaths": [],
   "bodyTag": "body",
+  "excludedBodyTags": [],
   "titleTag": "title::text",
   "pageCount": 0,
   "depth": 0,
@@ -82,6 +84,7 @@ This endpoint takes different arguments in JSON raw body:
 - **depth**: depth to search contents
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified get all body page)
+- **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl
 - **maxLength**: maximum length of extracted content (optional, if not specified)
@@ -107,6 +110,7 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "datasourceId": 1,
     "timestamp": 0,
     "bodyTag": "div#main-content",
+    "excludedBodyTags": [],
     "titleTag": "title::text",
     "depth": 0,
     "pageCount": 0
