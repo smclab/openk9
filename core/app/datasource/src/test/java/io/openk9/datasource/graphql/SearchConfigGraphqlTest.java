@@ -17,6 +17,30 @@
 
 package io.openk9.datasource.graphql;
 
+import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.service.SearchConfigService;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.InputObject;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
 import static io.smallrye.graphql.client.core.Document.document;
@@ -28,29 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import jakarta.inject.Inject;
-
-import io.openk9.datasource.EntitiesUtils;
-import io.openk9.datasource.model.QueryParserConfig;
-import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
-import io.openk9.datasource.service.SearchConfigService;
-
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.InputObject;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class SearchConfigGraphqlTest {
@@ -69,6 +70,7 @@ public class SearchConfigGraphqlTest {
 	private static final String NAME = "name";
 	private static final String PATCH = "patch";
 	private static final String QUERY_PARSERS = "queryParsers";
+	private static final String QUERY_PARSER_CONFIG_FORM_CONFIGURATIONS = "queryParserConfigFormConfigurations";
 	private static final String QUERY_PARSER_ONE_NAME = ENTITY_NAME_PREFIX + "Query parser 1";
 	private static final String QUERY_PARSER_TWO_NAME = ENTITY_NAME_PREFIX + "Query parser 2";
 	private static final String QUERY_PARSER_THREE_NAME = ENTITY_NAME_PREFIX + "Query parser 3";
@@ -901,6 +903,58 @@ public class SearchConfigGraphqlTest {
 
 		Assertions.assertFalse(response.hasError());
 		Assertions.assertTrue(response.hasData());
+	}
+
+	@Test
+	void should_return_all_form_templates_with_labels() throws ExecutionException, InterruptedException {
+
+		var query = document(
+			operation(
+				field(QUERY_PARSER_CONFIG_FORM_CONFIGURATIONS)
+			)
+		);
+
+		var response = graphQLClient.executeSync(query);
+
+		log.debug(String.format("Response:\n%s", response));
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var searchConfigResponse =
+			response.getData().getString(QUERY_PARSER_CONFIG_FORM_CONFIGURATIONS);
+		assertNotNull(searchConfigResponse);
+
+		JsonArray templateArray = new JsonArray(searchConfigResponse);
+		assertNotNull(templateArray);
+
+		for (Object obj : templateArray) {
+
+			JsonObject template = (JsonObject) obj;
+			assertNotNull(template);
+
+			JsonObject form = template.getJsonObject("form");
+			assertNotNull(form);
+
+			JsonArray fields = form.getJsonArray("fields");
+			assertNotNull(fields);
+
+			var labelCount = 0;
+
+			for (Object fieldObj : fields) {
+				JsonObject field = (JsonObject) fieldObj;
+
+				assertNotNull(field);
+
+				String name = field.getString("name");
+				String label = field.getString("label");
+				assertNotNull(name);
+				assertNotNull(label);
+				labelCount++;
+			}
+			// A "label" must be present for every field in each template
+			assertEquals(fields.size(), labelCount);
+		}
 	}
 
 	@AfterEach

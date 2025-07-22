@@ -17,9 +17,6 @@
 
 package io.openk9.datasource.model.init;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
@@ -27,6 +24,9 @@ import io.openk9.datasource.model.form.FieldValue;
 import io.openk9.datasource.model.form.FormField;
 import io.openk9.datasource.model.form.FormFieldType;
 import io.openk9.datasource.model.form.FormTemplate;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Configuration registry for query parser types and their associated DTOs and form templates.
