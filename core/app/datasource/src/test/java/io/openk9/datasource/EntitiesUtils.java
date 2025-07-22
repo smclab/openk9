@@ -25,6 +25,7 @@ import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
@@ -48,6 +49,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EntitiesUtils {
+
+	public static void createAutocorrection(
+			Mutiny.SessionFactory sessionFactory,
+			AutocorrectionService service,
+			AutocorrectionDTO dto) {
+
+		sessionFactory.withTransaction(session ->
+			service.create(dto)
+		)
+		.await()
+		.indefinitely();
+	}
 
 	/**
 	 * Cleans the state of the given {@link Bucket} by resetting its configurable values.
@@ -239,6 +252,9 @@ public class EntitiesUtils {
 
 		return sessionFactory.withTransaction(
 				session -> autocorrectionService.findByName(session, name)
+					.call(autocorrection ->
+						Mutiny.fetch(autocorrection.getAutocorrectionDocTypeField())
+					)
 			)
 			.await()
 			.indefinitely();

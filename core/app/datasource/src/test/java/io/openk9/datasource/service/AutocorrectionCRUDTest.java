@@ -24,27 +24,37 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SortType;
 import io.openk9.datasource.model.SuggestMode;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class AutocorrectionCRUDTest {
 
-	public static final int MAX_EDITS = 2;
-	public static final int MIN_WORD_LENGTH = 3;
-	public static final int PREFIX_LENGTH = 3;
 	private static final Logger log = Logger.getLogger(AutocorrectionCRUDTest.class);
+	private static final int MAX_EDITS = 2;
+	private static final int MAX_EDITS_UPDATED = 1;
+	private static final int MIN_WORD_LENGTH = 3;
+	private static final int MIN_WORD_LENGTH_UPDATED = 4;
+	private static final int PREFIX_LENGTH = 3;
+	private static final int PREFIX_LENGTH_UPDATED = 4;
 	private static final String ENTITY_NAME_PREFIX = "AutocorrectionCRUDTest - ";
 	private static final String AUTOCORRECTION_NAME_ONE = ENTITY_NAME_PREFIX + "Autocorrection 1";
+	private static final String AUTOCORRECTION_NAME_TWO = ENTITY_NAME_PREFIX + "Autocorrection 2";
 
 	@Inject
 	AutocorrectionService autocorrectionService;
@@ -55,35 +65,40 @@ public class AutocorrectionCRUDTest {
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	@Test
-	void should_create_empty_autocorrection_one() {
+	@BeforeEach
+	void setup() {
 		var docTypeFields = getAllDocTypeFields();
 
-		docTypeFields.forEach(docTypeField ->
-			System.out.println(
-				String.format(
-					"Field name: %s, type: %s.",
-					docTypeField.getName(),
-					docTypeField.getFieldType().name()
-				)
-			)
-		);
-
-		Long sampleTextDocTypeFieldId = docTypeFields.stream()
+		var docTypeFieldId = docTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
 			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
-			.map(DocTypeField::getId)
+			.map(K9Entity::getId)
 			.findFirst()
 			.orElse(0L);
 
-		log.debug(String.format("DocTypeField from sample, of type TEXT, with id: %d", sampleTextDocTypeFieldId));
-
-		AutocorrectionDTO dto = AutocorrectionDTO.builder()
-			.name(AUTOCORRECTION_NAME_ONE)
-//			.autocorrectionDocTypeFieldId(sampleTextDocTypeFieldId)
+		AutocorrectionDTO autocorrectionDTOTwo = AutocorrectionDTO.builder()
+			.name(AUTOCORRECTION_NAME_TWO)
+			.autocorrectionDocTypeFieldId(docTypeFieldId)
+			.maxEdit(MAX_EDITS)
+			.minWordLength(MIN_WORD_LENGTH)
+			.prefixLength(PREFIX_LENGTH)
 			.build();
 
-		createAutocorrection(dto);
+		EntitiesUtils.createAutocorrection(
+			sessionFactory,
+			autocorrectionService,
+			autocorrectionDTOTwo
+		);
+
+	}
+
+	@Test
+	void should_create_empty_autocorrection_one() {
+		AutocorrectionDTO dto = AutocorrectionDTO.builder()
+			.name(AUTOCORRECTION_NAME_ONE)
+			.build();
+
+		EntitiesUtils.createAutocorrection(sessionFactory, autocorrectionService, dto);
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
@@ -93,6 +108,7 @@ public class AutocorrectionCRUDTest {
 			);
 
 		log.debug(String.format("Autocorrection: %s", autocorrection.toString()));
+
 		assertNull(autocorrection.getAutocorrectionDocTypeField());
 		assertEquals(AUTOCORRECTION_NAME_ONE, autocorrection.getName());
 		assertEquals(SortType.SCORE, autocorrection.getSort());
@@ -113,7 +129,7 @@ public class AutocorrectionCRUDTest {
 		var docTypeFields = getAllDocTypeFields();
 
 		docTypeFields.forEach(docTypeField ->
-			System.out.println(
+			log.debug(
 				String.format(
 					"Field name: %s, type: %s.",
 					docTypeField.getName(),
@@ -122,16 +138,15 @@ public class AutocorrectionCRUDTest {
 			)
 		);
 
-		Long sampleTextDocTypeFieldId = docTypeFields.stream()
+		var sampleTextDocTypeField = docTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
 			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
-			.map(DocTypeField::getId)
-			.findFirst()
-			.orElse(0L);
+			.findFirst();
 
-		log.debug(String.format("DocTypeField from sample, of type TEXT, with id: %d", sampleTextDocTypeFieldId));
+		assertTrue(sampleTextDocTypeField.isPresent());
+		var sampleTextDocTypeFieldId = sampleTextDocTypeField.get().getId();
 
-		AutocorrectionDTO dto = AutocorrectionDTO.builder()
+		var dto = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_ONE)
 			.autocorrectionDocTypeFieldId(sampleTextDocTypeFieldId)
 			.prefixLength(PREFIX_LENGTH)
@@ -139,7 +154,14 @@ public class AutocorrectionCRUDTest {
 			.maxEdit(MAX_EDITS)
 			.build();
 
-		createAutocorrection(dto);
+		log.debug(
+			String.format(
+				"DocTypeField from sample, of type TEXT, with id: %d",
+				sampleTextDocTypeFieldId
+			)
+		);
+
+		EntitiesUtils.createAutocorrection(sessionFactory, autocorrectionService, dto);
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
@@ -169,12 +191,179 @@ public class AutocorrectionCRUDTest {
 		);
 	}
 
-	private Autocorrection createAutocorrection(AutocorrectionDTO dto) {
-		return sessionFactory.withTransaction(
-			session -> autocorrectionService.create(dto)
-		)
+	@Test
+	void should_patch_autocorrection_two() {
+		Autocorrection autocorrectionTwo = EntitiesUtils.getAutocorrection(
+			sessionFactory,
+			autocorrectionService,
+			AUTOCORRECTION_NAME_TWO
+		);
+
+		// Initial check
+		assertEquals(MAX_EDITS, autocorrectionTwo.getMaxEdit());
+		assertEquals(MIN_WORD_LENGTH, autocorrectionTwo.getMinWordLength());
+		assertEquals(PREFIX_LENGTH, autocorrectionTwo.getPrefixLength());
+		assertNotNull(autocorrectionTwo.getAutocorrectionDocTypeField());
+
+		log.debug(
+			String.format(
+				"Initial DocTypeField with id: %d",
+				autocorrectionTwo.getAutocorrectionDocTypeField().getId()
+			)
+		);
+
+		var docTypeFields = getAllDocTypeFields();
+
+		var docTypeField = docTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.filter(field -> !Objects.equals(field.getId(), autocorrectionTwo.getAutocorrectionDocTypeField().getId()))
+			.findFirst();
+
+		assertTrue(docTypeField.isPresent());
+		var docTypeFieldId = docTypeField.get().getId();
+
+		assertNotEquals(autocorrectionTwo.getAutocorrectionDocTypeField().getId(), docTypeFieldId);
+
+		var dto = AutocorrectionDTO.builder()
+			.name(AUTOCORRECTION_NAME_TWO)
+			.autocorrectionDocTypeFieldId(docTypeFieldId)
+			.sort(SortType.FREQUENCY)
+			.suggestMode(SuggestMode.ALWAYS)
+			.maxEdit(MAX_EDITS_UPDATED)
+			.minWordLength(MIN_WORD_LENGTH_UPDATED)
+			.prefixLength(PREFIX_LENGTH_UPDATED)
+			.build();
+
+		log.debug(
+			String.format(
+				"Patch with DocTypeField from sample, of type TEXT, with id: %d",
+				docTypeFieldId
+			)
+		);
+
+		patchAutocorrection(autocorrectionTwo.getId(), dto);
+
+		Autocorrection newAutocorrection =
+			EntitiesUtils.getAutocorrection(
+				sessionFactory,
+				autocorrectionService,
+				AUTOCORRECTION_NAME_TWO
+			);
+
+		log.debug(String.format("Autocorrection: %s", newAutocorrection.toString()));
+
+		assertEquals(AUTOCORRECTION_NAME_TWO, newAutocorrection.getName());
+		assertEquals(PREFIX_LENGTH_UPDATED, newAutocorrection.getPrefixLength());
+		assertEquals(MIN_WORD_LENGTH_UPDATED, newAutocorrection.getMinWordLength());
+		assertEquals(MAX_EDITS_UPDATED, newAutocorrection.getMaxEdit());
+		assertEquals(SortType.FREQUENCY, newAutocorrection.getSort());
+		assertEquals(SuggestMode.ALWAYS, newAutocorrection.getSuggestMode());
+		assertNotNull(newAutocorrection.getAutocorrectionDocTypeField());
+		assertEquals(
+			docTypeFieldId,
+			newAutocorrection.getAutocorrectionDocTypeField().getId()
+		);
+	}
+
+	@Test
+	void should_update_autocorrection_two() {
+		Autocorrection autocorrectionTwo = EntitiesUtils.getAutocorrection(
+			sessionFactory,
+			autocorrectionService,
+			AUTOCORRECTION_NAME_TWO
+		);
+
+		// Initial check
+		assertEquals(MAX_EDITS, autocorrectionTwo.getMaxEdit());
+		assertEquals(MIN_WORD_LENGTH, autocorrectionTwo.getMinWordLength());
+		assertEquals(PREFIX_LENGTH, autocorrectionTwo.getPrefixLength());
+		assertNotNull(autocorrectionTwo.getAutocorrectionDocTypeField());
+
+		log.debug(
+			String.format(
+				"Initial DocTypeField with id: %d",
+				autocorrectionTwo.getAutocorrectionDocTypeField().getId()
+			)
+		);
+
+		var docTypeFields = getAllDocTypeFields();
+
+		var docTypeField = docTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.filter(field -> !Objects.equals(field.getId(), autocorrectionTwo.getAutocorrectionDocTypeField().getId()))
+			.findFirst();
+
+		assertTrue(docTypeField.isPresent());
+		var docTypeFieldId = docTypeField.get().getId();
+
+		assertNotEquals(autocorrectionTwo.getAutocorrectionDocTypeField().getId(), docTypeFieldId);
+
+		var dto = AutocorrectionDTO.builder()
+			.name(AUTOCORRECTION_NAME_TWO)
+			.autocorrectionDocTypeFieldId(docTypeFieldId)
+			.sort(SortType.FREQUENCY)
+			.suggestMode(SuggestMode.ALWAYS)
+			.maxEdit(MAX_EDITS_UPDATED)
+			.minWordLength(MIN_WORD_LENGTH_UPDATED)
+			.prefixLength(PREFIX_LENGTH_UPDATED)
+			.build();
+
+		log.debug(
+			String.format(
+				"Update with DocTypeField from sample, of type TEXT, with id: %d",
+				docTypeFieldId
+			)
+		);
+
+		updateAutocorrection(autocorrectionTwo.getId(), dto);
+
+		Autocorrection newAutocorrection =
+			EntitiesUtils.getAutocorrection(
+				sessionFactory,
+				autocorrectionService,
+				AUTOCORRECTION_NAME_TWO
+			);
+
+		log.debug(String.format("Autocorrection: %s", newAutocorrection.toString()));
+
+		assertEquals(AUTOCORRECTION_NAME_TWO, newAutocorrection.getName());
+		assertEquals(PREFIX_LENGTH_UPDATED, newAutocorrection.getPrefixLength());
+		assertEquals(MIN_WORD_LENGTH_UPDATED, newAutocorrection.getMinWordLength());
+		assertEquals(MAX_EDITS_UPDATED, newAutocorrection.getMaxEdit());
+		assertEquals(SortType.FREQUENCY, newAutocorrection.getSort());
+		assertEquals(SuggestMode.ALWAYS, newAutocorrection.getSuggestMode());
+		assertNotNull(newAutocorrection.getAutocorrectionDocTypeField());
+		assertEquals(
+			docTypeFieldId,
+			newAutocorrection.getAutocorrectionDocTypeField().getId()
+		);
+	}
+
+	@AfterEach
+	void tearDown() {
+		EntitiesUtils.removeAutocorrection(
+			sessionFactory,
+			autocorrectionService,
+			AUTOCORRECTION_NAME_TWO
+		);
+	}
+
+	private void patchAutocorrection(long id, AutocorrectionDTO dto) {
+		sessionFactory.withTransaction(session ->
+				autocorrectionService.patch(id, dto)
+			)
 			.await()
 			.indefinitely();
+	}
+
+	private void updateAutocorrection(long id, AutocorrectionDTO dto) {
+		sessionFactory.withTransaction(session ->
+			autocorrectionService.update(id, dto)
+		)
+		.await()
+		.indefinitely();
 	}
 
 	private List<DocTypeField> getAllDocTypeFields() {

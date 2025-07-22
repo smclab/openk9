@@ -49,7 +49,7 @@ public class AutocorrectionDTO extends K9EntityDTO{
 		- 'score' (Default): Orders by similarity score (edit distance), then by document frequency, and finally by the term itself.
 		- 'frequency': Orders by document frequency, then by similarity score, and finally by the term itself.
 	""")
-	private SortType sortType;
+	private SortType sort;
 
 	@Nullable
 	@Description("""

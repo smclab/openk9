@@ -30,6 +30,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
 public class AutocorrectionService extends BaseK9EntityService<Autocorrection, AutocorrectionDTO>{
 
 	@Inject
+	AutocorrectionService autocorrectionService;
+
+	@Inject
 	DocTypeFieldService docTypeFieldService;
 
 	AutocorrectionService(AutocorrectionMapper mapper) {
@@ -62,6 +65,46 @@ public class AutocorrectionService extends BaseK9EntityService<Autocorrection, A
 						)
 			);
 		}
+	}
+
+	public Uni<Autocorrection> patch(long autocorrectionId, AutocorrectionDTO dto) {
+		return sessionFactory.withTransaction(session ->
+			findById(autocorrectionId)
+				.flatMap(autocorrection -> {
+					var newStateAutocorrection = mapper.patch(autocorrection, dto);
+
+					if (dto.getAutocorrectionDocTypeFieldId() != null) {
+						DocTypeField docTypeField =
+							session.getReference(
+								DocTypeField.class,
+								dto.getAutocorrectionDocTypeFieldId()
+							);
+
+						newStateAutocorrection.setAutocorrectionDocTypeField(docTypeField);
+					}
+					return session.merge(newStateAutocorrection)
+						.map(ignore -> newStateAutocorrection);
+				})
+		);
+	}
+
+	public Uni<Autocorrection> update(long autocorrectionId, AutocorrectionDTO dto) {
+		return sessionFactory.withTransaction(session ->
+			findById(autocorrectionId)
+				.flatMap(autocorrection -> {
+					var newStateAutocorrection = mapper.update(autocorrection, dto);
+					var docTypeFieldId = dto.getAutocorrectionDocTypeFieldId();
+
+					DocTypeField docTypeField = null;
+
+					if (docTypeFieldId != null) {
+						docTypeField = session.getReference(DocTypeField.class, docTypeFieldId);
+					}
+
+					newStateAutocorrection.setAutocorrectionDocTypeField(docTypeField);
+					return session.merge(newStateAutocorrection);
+				})
+		);
 	}
 
 	private Uni<Autocorrection> createTransient(Mutiny.Session session, AutocorrectionDTO dto) {
