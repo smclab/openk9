@@ -39,6 +39,15 @@ public class AutocorrectionService extends BaseK9EntityService<Autocorrection, A
 		this.mapper = mapper;
 	}
 
+	public Uni<DocTypeField> getAutocorrectionDocTypeField(long autocorrectionId) {
+		return sessionFactory.withTransaction(session ->
+			findById(session, autocorrectionId)
+				.flatMap(autocorrection ->
+					session.fetch(autocorrection.getAutocorrectionDocTypeField())
+				)
+		);
+	}
+
 	@Override
 	public Class<Autocorrection> getEntityClass() {
 		return Autocorrection.class;
