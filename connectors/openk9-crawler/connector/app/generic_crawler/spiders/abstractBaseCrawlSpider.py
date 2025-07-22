@@ -24,7 +24,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 
 	crawled_ids = []
 
-	def __init__(self, ingestion_url, body_tag, title_tag, allowed_domains, excluded_paths,
+	def __init__(self, ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
 				 allowed_paths, max_length, document_file_extensions, custom_metadata, additional_metadata,
 				 do_extract_docs, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
@@ -34,6 +34,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.ingestion_url = ingestion_url
 
 		self.body_tag = body_tag
+		self.excluded_bodyTags = excluded_bodyTags
 		self.title_tag = title_tag
 
 		self.allowed_domains = ast.literal_eval(allowed_domains)
@@ -98,7 +99,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			return
 
 		if not document_url:
-			logger.warning(f"Document Url: Could not parse document with href: {href}, extracted url: {document_url}")
+			logger.warning(f"scrapy: Could not parse document with href: {href}, extracted url: {document_url}")
 			return
 
 		response = requests.get(document_url, headers=headers, allow_redirects=True, timeout=5)

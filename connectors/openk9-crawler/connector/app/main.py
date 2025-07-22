@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 class BaseRequest(ABC, BaseModel):
     bodyTag: Optional[str] = "body"
     titleTag: Optional[str] = "title::text"
+    excludedBodyTags: Optional[list] = []
     allowedDomains: Optional[list] = []
     excludedPaths: Optional[list] = []
     allowedPaths: Optional[list] = []
@@ -92,6 +93,7 @@ def set_up_sitemap_endpoint(request):
 
     sitemap_urls = request['sitemapUrls']
     body_tag = request["bodyTag"]
+    excluded_bodyTags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
     datasource_id = request['datasourceId']
     schedule_id = request['scheduleId']
@@ -114,6 +116,7 @@ def set_up_sitemap_endpoint(request):
         "sitemap_urls": json.dumps(sitemap_urls),
         "allowed_domains": json.dumps(allowed_domains),
         "body_tag": body_tag,
+        "excluded_bodyTags": json.dumps(excluded_bodyTags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,
@@ -145,6 +148,7 @@ def set_up_crawl_endpoint(request):
 
     start_urls = request['startUrls']
     body_tag = request["bodyTag"]
+    excluded_bodyTags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
     datasource_id = request['datasourceId']
     schedule_id = request['scheduleId']
@@ -170,6 +174,7 @@ def set_up_crawl_endpoint(request):
         "allowed_paths": json.dumps(allowed_paths),
         "excluded_paths": json.dumps(excluded_paths),
         "body_tag": body_tag,
+        "excluded_bodyTags": json.dumps(excluded_bodyTags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,
