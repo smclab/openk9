@@ -45,6 +45,7 @@
     "remove-data-start": "remove start date",
     "remove-data-end": "remove end date",
     "remove-filters": "Remove Filters",
+    "removeFilters": "Remove all filters",
     "remove-text": "Remove Text",
     "remove-text-description": "the button is used to delete everything you have written in the search",
     "result-view": "View",

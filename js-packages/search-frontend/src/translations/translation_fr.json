@@ -45,6 +45,7 @@
     "remove-data-start": "effacer le filtre de date de début",
     "remove-data-end": "effacer le filtre de date de fin",
     "remove-filters": "Supprimer les filtres",
+    "removeFilters": "Supprimer tous les filtres",
     "result-view": "Montre-moi",
     "search-filters": "Filtres de recherche...",
     "search-on-website": "rechercher sur le site",

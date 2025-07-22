@@ -498,16 +498,16 @@ export function App() {
             openk9.updateConfiguration({
               removeFiltersConfigurable: {
                 element,
-                itemsRemove: [
-                  "filters",
-                  "calendar",
-                  "sort",
-                  "search",
-                  "language",
-                ],
+                itemsRemove: ["filters", "calendar"],
               },
             })
           }
+          css={css`
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-inline: 16px;
+          }`}
         ></div>
         <div
           css={css`
