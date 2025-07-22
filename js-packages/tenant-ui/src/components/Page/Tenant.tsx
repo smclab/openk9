@@ -99,11 +99,14 @@ export function Tenant() {
               onChange={(e) => setSelectedConnector(e.target.value as Preset)}
               variant="outlined"
             >
-              {Object.values(Preset).map((preset) => (
-                <MenuItem key={preset} value={preset}>
-                  {preset}
-                </MenuItem>
-              ))}
+              {Object.values(Preset).map(
+                (preset) =>
+                  preset !== Preset.UNRECOGNIZED && (
+                    <MenuItem key={preset} value={preset}>
+                      {preset}
+                    </MenuItem>
+                  )
+              )}
             </TextField>
           </Box>
         </ModalConfirm>
