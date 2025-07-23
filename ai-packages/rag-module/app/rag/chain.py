@@ -368,7 +368,7 @@ def get_chat_chain_tool(
             prompt_no_rag = (
                 "### QUESTION: {question}. Here is the chat history: {retrieved_chat_history}."
                 + prompt_no_rag
-                if chat_sequence_number > 1
+                if retrieved_chat_history
                 else "### QUESTION: {question}." + prompt_no_rag
             )
 
