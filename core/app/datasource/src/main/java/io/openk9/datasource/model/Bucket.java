@@ -211,6 +211,11 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private RAGConfiguration ragConfigurationSimpleGenerate;
 
+	@OneToOne
+	@JoinColumn(name = "autocorrection_id")
+	@JsonIgnore
+	private Autocorrection autocorrection;
+
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
 

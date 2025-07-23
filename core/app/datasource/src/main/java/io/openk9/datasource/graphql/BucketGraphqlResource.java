@@ -19,6 +19,8 @@ package io.openk9.datasource.graphql;
 
 import java.util.List;
 import java.util.Set;
+
+import io.openk9.datasource.model.Autocorrection;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Context;
@@ -62,6 +64,10 @@ import org.eclipse.microprofile.graphql.Source;
 @ApplicationScoped
 @CircuitBreaker
 public class BucketGraphqlResource {
+
+	public Uni<Autocorrection> autocorrection(@Source Bucket bucket) {
+		return bucketService.getAutocorrection(bucket.getId());
+	}
 
 	@Mutation
 	public Uni<Tuple2<Bucket, Datasource>> addDatasourceToBucket(@Id long bucketId, @Id long datasourceId) {

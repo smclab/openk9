@@ -42,4 +42,5 @@ public class BucketWithListsDTO extends BucketDTO {
 	private Long ragConfigurationChat;
 	private Long ragConfigurationChatTool;
 	private Long ragConfigurationSimpleGenerate;
+	private Long autocorrection;
 }

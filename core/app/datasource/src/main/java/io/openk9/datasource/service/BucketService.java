@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+
+import io.openk9.datasource.model.Autocorrection;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -426,6 +428,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 								setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
 						}
 
+						//Autocorrection
+						if (bucketWithListsDTO.getAutocorrection() != null) {
+							var autocorrection =
+								s.getReference(
+									Autocorrection.class,
+									bucketWithListsDTO.getAutocorrection()
+								);
+
+							bucket.setAutocorrection(autocorrection);
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -571,6 +584,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 			return s.createQuery(criteriaQuery).getResultList();
 		});
+	}
+
+	public Uni<Autocorrection> getAutocorrection(Long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getAutocorrection())));
 	}
 
 	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
@@ -937,6 +955,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//Autocorrection
+						if (bucketWithListsDTO.getAutocorrection() != null) {
+							var autocorrection =
+								s.getReference(
+									Autocorrection.class,
+									bucketWithListsDTO.getAutocorrection()
+								);
+
+							bucket.setAutocorrection(autocorrection);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1271,6 +1301,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						bucket.setRagConfigurationSimpleGenerate(ragConfigurationSimpleGenerate);
+
+						//Autocorrection
+						Autocorrection autocorrection = null;
+
+						if (bucketWithListsDTO.getAutocorrection() != null) {
+							autocorrection =
+								s.getReference(
+									Autocorrection.class,
+									bucketWithListsDTO.getAutocorrection()
+								);
+						}
+
+						bucket.setAutocorrection(autocorrection);
 
 						builder.add(s.persist(bucket));
 
