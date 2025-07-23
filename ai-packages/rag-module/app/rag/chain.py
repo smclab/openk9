@@ -308,30 +308,34 @@ def get_chat_chain_tool(
         search_query = search_text
 
         if reformulate:
-            retrieved_chat_history = (
-                chat_history
-                if chat_history
-                else get_chat_history(
-                    open_search_client=OpenSearch(
-                        hosts=[opensearch_host],
-                    ),
-                    user_id=user_id,
-                    chat_id=chat_id,
-                )
-            )
+            input_data = {"input": search_text}
 
-            rephrase_prompt_template = (
-                "Here is the chat history: {retrieved_chat_history}, and the user's latest question: {input}"
-                + rephrase_prompt_template
-            )
+            if chat_sequence_number > 1:
+                retrieved_chat_history = (
+                    get_chat_history(
+                        open_search_client=OpenSearch(
+                            hosts=[opensearch_host],
+                        ),
+                        user_id=user_id,
+                        chat_id=chat_id,
+                    )
+                    if user_id and chat_id
+                    else chat_history
+                )
+
+                rephrase_prompt_template = (
+                    "Here is the chat history: {retrieved_chat_history}, and the user's latest question: {input}"
+                    + rephrase_prompt_template
+                )
+                input_data["retrieved_chat_history"] = retrieved_chat_history
+            else:
+                rephrase_prompt_template = (
+                    "### QUESTION: {input}." + rephrase_prompt_template
+                )
+
             rephrase_prompt = PromptTemplate.from_template(rephrase_prompt_template)
             rephrase_chain = rephrase_prompt | llm | parser
-            search_query = rephrase_chain.invoke(
-                {
-                    "input": search_text,
-                    "retrieved_chat_history": retrieved_chat_history,
-                },
-            )
+            search_query = rephrase_chain.invoke(input_data)
 
         rag_tool.description = rag_tool_description
         tools = [rag_tool]
@@ -363,17 +367,30 @@ def get_chat_chain_tool(
             )
 
         else:
-            prompt_no_rag = (
-                "### QUESTION: {question}. Here is the chat history: {history}"
-                + prompt_no_rag
-                if chat_history
-                else "### QUESTION: {question}." + prompt_no_rag
-            )
+            input_data = {"question": search_text}
+
+            if chat_sequence_number > 1:
+                retrieved_chat_history = (
+                    get_chat_history(
+                        open_search_client=OpenSearch(
+                            hosts=[opensearch_host],
+                        ),
+                        user_id=user_id,
+                        chat_id=chat_id,
+                    )
+                    if user_id and chat_id
+                    else chat_history
+                )
+
+                prompt_no_rag = (
+                    "### QUESTION: {question}. Here is the chat history: {retrieved_chat_history}"
+                    + prompt_no_rag
+                )
+                input_data["retrieved_chat_history"] = retrieved_chat_history
+            else:
+                prompt_no_rag = "### QUESTION: {question}." + prompt_no_rag
 
             prompt = ChatPromptTemplate.from_template(prompt_no_rag)
-            input_data = {"question": search_text}
-            if chat_history:
-                input_data["history"] = get_chat_history_from_frontend(chat_history)
 
             chain = prompt | llm | parser
             result = chain.stream(input_data)
