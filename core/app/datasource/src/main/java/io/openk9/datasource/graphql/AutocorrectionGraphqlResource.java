@@ -63,8 +63,8 @@ public class AutocorrectionGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Autocorrection> deleteAutocorrection(@Id long autocorrectionId) {
-		return autocorrectionService.deleteById(autocorrectionId);
+	public Uni<Autocorrection> deleteAutocorrection(@Id long id) {
+		return autocorrectionService.deleteById(id);
 	}
 
 	@Query

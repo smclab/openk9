@@ -46,8 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AutocorrectionCRUDTest {
 
 	private static final Logger log = Logger.getLogger(AutocorrectionCRUDTest.class);
-	private static final int MAX_EDITS = 2;
-	private static final int MAX_EDITS_UPDATED = 1;
+	private static final int MAX_EDIT = 2;
+	private static final int MAX_EDIT_UPDATED = 1;
 	private static final int MIN_WORD_LENGTH = 3;
 	private static final int MIN_WORD_LENGTH_UPDATED = 4;
 	private static final int PREFIX_LENGTH = 3;
@@ -79,7 +79,7 @@ public class AutocorrectionCRUDTest {
 		AutocorrectionDTO autocorrectionDTOTwo = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_TWO)
 			.autocorrectionDocTypeFieldId(docTypeFieldId)
-			.maxEdit(MAX_EDITS)
+			.maxEdit(MAX_EDIT)
 			.minWordLength(MIN_WORD_LENGTH)
 			.prefixLength(PREFIX_LENGTH)
 			.build();
@@ -151,7 +151,7 @@ public class AutocorrectionCRUDTest {
 			.autocorrectionDocTypeFieldId(sampleTextDocTypeFieldId)
 			.prefixLength(PREFIX_LENGTH)
 			.minWordLength(MIN_WORD_LENGTH)
-			.maxEdit(MAX_EDITS)
+			.maxEdit(MAX_EDIT)
 			.build();
 
 		log.debug(
@@ -177,7 +177,7 @@ public class AutocorrectionCRUDTest {
 		assertEquals(SuggestMode.MISSING, autocorrection.getSuggestMode());
 		assertEquals(PREFIX_LENGTH, autocorrection.getPrefixLength());
 		assertEquals(MIN_WORD_LENGTH, autocorrection.getMinWordLength());
-		assertEquals(MAX_EDITS, autocorrection.getMaxEdit());
+		assertEquals(MAX_EDIT, autocorrection.getMaxEdit());
 		assertNotNull(autocorrection.getAutocorrectionDocTypeField());
 		assertEquals(
 			sampleTextDocTypeFieldId,
@@ -200,7 +200,7 @@ public class AutocorrectionCRUDTest {
 		);
 
 		// Initial check
-		assertEquals(MAX_EDITS, autocorrectionTwo.getMaxEdit());
+		assertEquals(MAX_EDIT, autocorrectionTwo.getMaxEdit());
 		assertEquals(MIN_WORD_LENGTH, autocorrectionTwo.getMinWordLength());
 		assertEquals(PREFIX_LENGTH, autocorrectionTwo.getPrefixLength());
 		assertNotNull(autocorrectionTwo.getAutocorrectionDocTypeField());
@@ -230,7 +230,7 @@ public class AutocorrectionCRUDTest {
 			.autocorrectionDocTypeFieldId(docTypeFieldId)
 			.sort(SortType.FREQUENCY)
 			.suggestMode(SuggestMode.ALWAYS)
-			.maxEdit(MAX_EDITS_UPDATED)
+			.maxEdit(MAX_EDIT_UPDATED)
 			.minWordLength(MIN_WORD_LENGTH_UPDATED)
 			.prefixLength(PREFIX_LENGTH_UPDATED)
 			.build();
@@ -256,7 +256,7 @@ public class AutocorrectionCRUDTest {
 		assertEquals(AUTOCORRECTION_NAME_TWO, newAutocorrection.getName());
 		assertEquals(PREFIX_LENGTH_UPDATED, newAutocorrection.getPrefixLength());
 		assertEquals(MIN_WORD_LENGTH_UPDATED, newAutocorrection.getMinWordLength());
-		assertEquals(MAX_EDITS_UPDATED, newAutocorrection.getMaxEdit());
+		assertEquals(MAX_EDIT_UPDATED, newAutocorrection.getMaxEdit());
 		assertEquals(SortType.FREQUENCY, newAutocorrection.getSort());
 		assertEquals(SuggestMode.ALWAYS, newAutocorrection.getSuggestMode());
 		assertNotNull(newAutocorrection.getAutocorrectionDocTypeField());
@@ -275,7 +275,7 @@ public class AutocorrectionCRUDTest {
 		);
 
 		// Initial check
-		assertEquals(MAX_EDITS, autocorrectionTwo.getMaxEdit());
+		assertEquals(MAX_EDIT, autocorrectionTwo.getMaxEdit());
 		assertEquals(MIN_WORD_LENGTH, autocorrectionTwo.getMinWordLength());
 		assertEquals(PREFIX_LENGTH, autocorrectionTwo.getPrefixLength());
 		assertNotNull(autocorrectionTwo.getAutocorrectionDocTypeField());
@@ -305,7 +305,7 @@ public class AutocorrectionCRUDTest {
 			.autocorrectionDocTypeFieldId(docTypeFieldId)
 			.sort(SortType.FREQUENCY)
 			.suggestMode(SuggestMode.ALWAYS)
-			.maxEdit(MAX_EDITS_UPDATED)
+			.maxEdit(MAX_EDIT_UPDATED)
 			.minWordLength(MIN_WORD_LENGTH_UPDATED)
 			.prefixLength(PREFIX_LENGTH_UPDATED)
 			.build();
@@ -331,7 +331,7 @@ public class AutocorrectionCRUDTest {
 		assertEquals(AUTOCORRECTION_NAME_TWO, newAutocorrection.getName());
 		assertEquals(PREFIX_LENGTH_UPDATED, newAutocorrection.getPrefixLength());
 		assertEquals(MIN_WORD_LENGTH_UPDATED, newAutocorrection.getMinWordLength());
-		assertEquals(MAX_EDITS_UPDATED, newAutocorrection.getMaxEdit());
+		assertEquals(MAX_EDIT_UPDATED, newAutocorrection.getMaxEdit());
 		assertEquals(SortType.FREQUENCY, newAutocorrection.getSort());
 		assertEquals(SuggestMode.ALWAYS, newAutocorrection.getSuggestMode());
 		assertNotNull(newAutocorrection.getAutocorrectionDocTypeField());
