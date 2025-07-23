@@ -17,27 +17,12 @@
 
 package io.openk9.datasource.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-
-import io.openk9.datasource.model.Autocorrection;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.ws.rs.NotFoundException;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
+import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
@@ -61,11 +46,24 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.ws.rs.NotFoundException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
@@ -220,6 +218,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						})
 				)
 			));
+	}
+
+	public Uni<Tuple2<Bucket, Autocorrection>> bindAutocorrection(long bucketId, long autocorrectionId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> autocorrectionService.findById(s, autocorrectionId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(autocorrection -> {
+					bucket.setAutocorrection(autocorrection);
+					return persist(s, bucket).map(t -> Tuple2.of(t, autocorrection));
+				})
+			)
+		);
 	}
 
 	public Uni<Tuple2<Bucket, Language>> bindLanguage(long bucketId, long languageId) {
@@ -1078,6 +1091,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
+	public Uni<Tuple2<Bucket, Autocorrection>> unbindAutocorrection(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setAutocorrection(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			})
+		);
+	}
+
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -1361,6 +1385,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 		return s.createQuery(criteriaQuery).getResultList();
 	}
+
+	@Inject
+	AutocorrectionService autocorrectionService;
 
 	@Inject
 	DatasourceService datasourceService;

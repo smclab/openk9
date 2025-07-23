@@ -17,18 +17,11 @@
 
 package io.openk9.datasource.graphql;
 
-import java.util.List;
-import java.util.Set;
-
-import io.openk9.datasource.model.Autocorrection;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Context;
-
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.response.CatResponse;
+import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Language;
@@ -45,11 +38,13 @@ import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.LanguageService;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
-
 import io.smallrye.graphql.api.Subscription;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Context;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
@@ -60,14 +55,13 @@ import org.eclipse.microprofile.graphql.NonNull;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import java.util.List;
+import java.util.Set;
+
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
 public class BucketGraphqlResource {
-
-	public Uni<Autocorrection> autocorrection(@Source Bucket bucket) {
-		return bucketService.getAutocorrection(bucket.getId());
-	}
 
 	@Mutation
 	public Uni<Tuple2<Bucket, Datasource>> addDatasourceToBucket(@Id long bucketId, @Id long datasourceId) {
@@ -94,6 +88,16 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(
 		@Id long id, @Id long tabId) {
 		return bucketService.addTabToBucket(id, tabId);
+	}
+
+	public Uni<Autocorrection> autocorrection(@Source Bucket bucket) {
+		return bucketService.getAutocorrection(bucket.getId());
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Autocorrection>> bindAutocorrectionToBucket(
+		@Id long bucketId, @Id long autocorrectionId) {
+		return bucketService.bindAutocorrection(bucketId, autocorrectionId);
 	}
 
 	@Mutation
@@ -380,14 +384,17 @@ public class BucketGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<Bucket, Language>> unbindLanguageFromBucket(
-		@Id long bucketId) {
+	public Uni<Tuple2<Bucket, Autocorrection>> unbindAutocorrectionFromBucket(@Id long bucketId) {
+		return bucketService.unbindAutocorrection(bucketId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<Bucket, Language>> unbindLanguageFromBucket(@Id long bucketId) {
 		return bucketService.unbindLanguage(bucketId);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysisFromBucket(
-		@Id long bucketId) {
+	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysisFromBucket(@Id long bucketId) {
 		return bucketService.unbindQueryAnalysis(bucketId);
 	}
 
@@ -408,13 +415,12 @@ public class BucketGraphqlResource {
 		""")
 	@Mutation
 	public Uni<Tuple2<Bucket, RAGConfiguration>> unbindRAGConfigurationFromBucket(
-		@Id long bucketId, @NonNull RAGType ragType) {
+			@Id long bucketId, @NonNull RAGType ragType) {
 		return bucketService.unbindRAGConfiguration(bucketId, ragType);
 	}
 
 	@Mutation
-	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfigFromBucket(
-		@Id long bucketId) {
+	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfigFromBucket(@Id long bucketId) {
 		return bucketService.unbindSearchConfig(bucketId);
 	}
 
