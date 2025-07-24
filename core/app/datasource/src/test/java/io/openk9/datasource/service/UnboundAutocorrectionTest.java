@@ -118,7 +118,6 @@ public class UnboundAutocorrectionTest {
 		assertTrue(unboundAutocorrections.contains(autocorrectionTwo));
 	}
 
-	@Disabled
 	@Test
 	void should_retrieve_all_autocorrections_except_the_one_associated_with_bucket_one() {
 
