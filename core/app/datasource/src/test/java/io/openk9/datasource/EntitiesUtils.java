@@ -53,6 +53,18 @@ public class EntitiesUtils {
 	public static void createAutocorrection(
 			Mutiny.SessionFactory sessionFactory,
 			AutocorrectionService service,
+			String name) {
+
+		AutocorrectionDTO dto = AutocorrectionDTO.builder()
+			.name(name)
+			.build();
+
+		createAutocorrection(sessionFactory, service, dto);
+	}
+
+	public static void createAutocorrection(
+			Mutiny.SessionFactory sessionFactory,
+			AutocorrectionService service,
 			AutocorrectionDTO dto) {
 
 		sessionFactory.withTransaction(session ->

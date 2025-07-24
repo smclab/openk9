@@ -21,7 +21,6 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.model.Autocorrection;
-import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.service.AutocorrectionService;
@@ -37,6 +36,7 @@ import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.graphql.Source;
 
+import java.util.List;
 import java.util.Set;
 
 @GraphQLApi
@@ -87,15 +87,23 @@ public class AutocorrectionGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
-	private Uni<Response<Autocorrection>> createAutocorrection(AutocorrectionDTO autocorrectionDTO) {
+	@Query
+	public Uni<List<Autocorrection>> getUnboundAutocorrectionByBucket(long bucketId) {
+		return autocorrectionService.findUnboundAutocorrectionByBucket(bucketId);
+	}
+
+	private Uni<Response<Autocorrection>> createAutocorrection(
+			AutocorrectionDTO autocorrectionDTO) {
 		return autocorrectionService.getValidator().create(autocorrectionDTO);
 	}
 
-	private Uni<Response<Autocorrection>> patchAutocorrection(Long id, AutocorrectionDTO autocorrectionDTO) {
+	private Uni<Response<Autocorrection>> patchAutocorrection(
+			Long id, AutocorrectionDTO autocorrectionDTO) {
 		return autocorrectionService.getValidator().patch(id, autocorrectionDTO);
 	}
 
-	private Uni<Response<Autocorrection>> updateAutocorrection(Long id, AutocorrectionDTO autocorrectionDTO) {
+	private Uni<Response<Autocorrection>> updateAutocorrection(
+			Long id, AutocorrectionDTO autocorrectionDTO) {
 		return autocorrectionService.getValidator().update(id, autocorrectionDTO);
 	}
 }

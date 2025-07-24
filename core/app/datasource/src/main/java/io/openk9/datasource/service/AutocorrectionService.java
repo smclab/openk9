@@ -19,24 +19,54 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.AutocorrectionMapper;
 import io.openk9.datasource.model.Autocorrection;
+import io.openk9.datasource.model.Autocorrection_;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import java.util.List;
 
 @ApplicationScoped
 public class AutocorrectionService extends BaseK9EntityService<Autocorrection, AutocorrectionDTO>{
 
-	@Inject
-	AutocorrectionService autocorrectionService;
-
-	@Inject
-	DocTypeFieldService docTypeFieldService;
-
 	AutocorrectionService(AutocorrectionMapper mapper) {
 		this.mapper = mapper;
+	}
+
+	public Uni<List<Autocorrection>> findUnboundAutocorrectionByBucket(long bucketId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Autocorrection> query = cb.createQuery(Autocorrection.class);
+			Root<Autocorrection> rootAutocorrection = query.from(Autocorrection.class);
+
+			Subquery<Long> subquery = query.subquery(Long.class);
+			Root<Bucket> subRootBucket = subquery.from(Bucket.class);
+
+			var associatedAutocorrectionPath = subRootBucket.get(Bucket_.autocorrection);
+
+			subquery.select(associatedAutocorrectionPath.get(Autocorrection_.id));
+
+			subquery.where(
+				cb.and(
+					cb.equal(subRootBucket.get(Bucket_.id), bucketId),
+					cb.isNotNull(associatedAutocorrectionPath)
+				)
+			);
+
+			query.select(rootAutocorrection);
+			query.where(cb.not(rootAutocorrection.get(Autocorrection_.id).in(subquery)));
+
+			return s.createQuery(query).getResultList();
+		});
 	}
 
 	public Uni<DocTypeField> getAutocorrectionDocTypeField(long autocorrectionId) {
