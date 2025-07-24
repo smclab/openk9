@@ -211,7 +211,7 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private RAGConfiguration ragConfigurationSimpleGenerate;
 
-	@OneToOne
+	@ManyToOne
 	@JoinColumn(name = "autocorrection_id")
 	@JsonIgnore
 	private Autocorrection autocorrection;
