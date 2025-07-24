@@ -1,5 +1,6 @@
 import base64
 import json
+import hashlib
 import xmltodict
 import yaml
 import csv
@@ -59,7 +60,18 @@ def format_raw_content(model):
         .replace("..", "").replace("__", "").replace(";", "").replace(",", "").lower().strip()
 
 
-def handle_response_content(response: requests.Response):
+def hash_string(string: str) -> int:
+    return int(hashlib.md5(string.encode('utf-8')).hexdigest(), 16)
+
+class HandleResponseContentReturnObject:
+    def __init__(self, raw_content: str, content_id: int, binary: dict | None, datasource_payload: dict, dict_item = dict | list):
+        self.raw_content = raw_content
+        self.content_id = content_id
+        self.binary = binary
+        self.datasource_payload = datasource_payload
+        self.dict_item = dict_item
+
+def handle_response_content(response: requests.Response) -> HandleResponseContentReturnObject:
     class ResponseContentTypes:
         JSON = 'json'
         XML = ['application/xml', 'text/xml']
@@ -71,24 +83,47 @@ def handle_response_content(response: requests.Response):
         IMAGE = 'image/'
         PDF = 'application/pdf'
 
-        def handle_response_content(response: requests.Response):
+        def handle_response_content(response: requests.Response) -> HandleResponseContentReturnObject:
             content_type = response.headers['content-type']
 
-            if ResponseContentTypes.JSON in content_type:
-                return response.json()
-            elif content_type in ResponseContentTypes.XML:
-                return xmltodict.parse(response.content)
-            elif content_type == ResponseContentTypes.TEXT_PLAIN or content_type == ResponseContentTypes.TEXT_HTML:
-                return response.content
-            elif content_type == ResponseContentTypes.YAML:
-                return yaml.safe_load(response.content)
-            elif content_type == ResponseContentTypes.CSV:
-                csv_reader = csv.DictReader(response.content.splitlines(), delimiter=',')
-                return { [ row for row in csv_reader ] }
-            elif content_type == ResponseContentTypes.BINARY or content_type == ResponseContentTypes.PDF or ResponseContentTypes.IMAGE in content_type:
-                return base64.b64encode(response.content)
+            if content_type:
+                raw_content_elements = [str(content_type or ''), str(response.headers['content-length'] or ''), str(response.headers['date'] or ''), str(response.headers['server'] or '')]
+                raw_content = format_raw_content(''.join(raw_content_elements))
+                content_id = hash_string(response.url)
+
+                binary = None
+                datasource_payload = {
+                    'requestUrl': response.url,
+                    'contentType': content_type
+                }
+                dict_item = {}
+
+                if ResponseContentTypes.JSON in content_type:
+                    dict_item = response.json()
+                elif content_type in ResponseContentTypes.XML:
+                    dict_item = dict(xmltodict.parse(response.content))
+                elif content_type == ResponseContentTypes.TEXT_PLAIN or content_type == ResponseContentTypes.TEXT_HTML:
+                    dict_item = {response.text}
+                elif content_type == ResponseContentTypes.YAML:
+                    dict_item = yaml.safe_load(response.content)
+                elif content_type == ResponseContentTypes.CSV:
+                    csv_reader = csv.DictReader(response.content.splitlines(), delimiter=',')
+                    dict_item = [ row for row in csv_reader ]
+                elif content_type == ResponseContentTypes.BINARY or content_type == ResponseContentTypes.PDF or ResponseContentTypes.IMAGE in content_type:
+                    binary = {
+                        "id": content_id,
+                        "name": response.url,
+                        "contentType": content_type,
+                        "data": base64.b64encode(response.content),
+                        "resourceId": None
+                    }
+                    dict_item = {}
+                else:
+                    raise NotImplementedError(f'Error parsing content-type: {content_type}')
+                
+                return HandleResponseContentReturnObject(raw_content, content_id, binary, datasource_payload, dict_item)
             
-            raise NotImplementedError(f'Error parsing content-type: {content_type}')
+            raise NotImplementedError('Missing content-type in response')
 
 
     return ResponseContentTypes.handle_response_content(response)

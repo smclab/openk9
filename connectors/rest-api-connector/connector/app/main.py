@@ -21,7 +21,7 @@ app = FastAPI()
 
 class RestApiRequest(BaseModel):
 	requestList: List[RequestModel]
-	auth = Optional[AuthModel] = None
+	globalAuth = Optional[AuthModel] = None
 	timestamp: int
 	datasourceId: int
 	scheduleId: str
@@ -33,7 +33,7 @@ def get_data(request: RestApiRequest):
 	request = request.dict()
 
 	request_list = request['requestList']
-	auth = request['auth']
+	auth = request['globalAuth']
 	timestamp = request['timestamp']
 	datasource_id = request['datasourceId']
 	schedule_id = request['scheduleId']

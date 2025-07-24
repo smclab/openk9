@@ -14,7 +14,41 @@ class AuthModel(BaseModel):
     password: str
 
 
+class IntParamModel(BaseModel):
+    paramName: str
+    paramValue: int
+
+
+class StrParamModel(BaseModel):
+    paramName: str
+    paramValue: str
+
+
+class PageBasedPaginationModel(BaseModel):
+    pageParam: IntParamModel
+    itemsPerPageParam: IntParamModel
+
+
+class OffsetBasedPaginationModel(BaseModel):
+    offsetParam: IntParamModel
+    limitParam: IntParamModel
+
+
+class CursorBasedPaginationModel(BaseModel):
+    cursorParam: StrParamModel
+    limitParam: IntParamModel
+
+
+class PaginationModel(BaseModel):
+    nextInResponse: Optional[list[str]] = None
+    pageBasedPagination: Optional[PageBasedPaginationModel] = None
+    offsetBasedPagination: Optional[OffsetBasedPaginationModel] = None
+    cursorBasedPagination: Optional[CursorBasedPaginationModel] = None
+
+
 class RequestModel(BaseModel):
-    requestMethod: RequestMethod
+    requestMethod: Optional[RequestMethod] = RequestMethod.GET
     requestUrl: str
-    auth: Optional[AuthModel] = None
+    requestItemList: Optional[str] = None
+    requestPagination: Optional[PaginationModel] = None
+    requestAuth: Optional[AuthModel] = None

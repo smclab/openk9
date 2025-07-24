@@ -4,7 +4,7 @@ import logging
 import os
 import base64
 import requests
-
+from typing import Union
 from logging.config import dictConfig
 from datetime import datetime
 from .util.utility import format_raw_content, post_message, handle_response_content
@@ -31,53 +31,41 @@ class DataExtraction(threading.Thread):
 
 		self.status_logger = logging.getLogger("rest_api_logger")
 
-	def manage_data(self, response: requests.Response):
+	def manage_data(self, response: requests.Response) -> Union[int, bool]:
+		count = 0
+		end_timestamp = datetime.utcnow().timestamp() * 1000
+
 		try:
-			end_timestamp = datetime.utcnow().timestamp() * 1000
+			# Checks for successful responses or raise HTTPError
+			response.raise_for_status()
 
 			data = handle_response_content(response)
 			if not data:
 				raise Exception(f'{response.request} returned null content on handle_response_content')
 
-			binary = None
-			if isinstance(data, dict):
-				datasource_payload = data
-			elif isinstance(data, str):
-				datasource_payload = json.loads(data)
-			elif isinstance(data, bytes):
-				datasource_payload = {}
-				binary = {
-					"id": 0,
-					"name": "",
-					"contentType": response.headers['content-type'],
-					"data": data,
-					"resourceId": None
-				}
-			
-			raw_content_elements = []
-			raw_content = format_raw_content(''.join(raw_content_elements))
-
-			content_id = None
+			if isinstance(data.dict_item, list):
+				#TODO: Check if can do post_message for every item
+				data.datasource_payload.update({'items': data.dict_item})
+			else:
+				data.datasource_payload.update(data.dict_item)
 
 			payload = {
 				"datasourceId": self.datasource_id,
 				"scheduleId": self.schedule_id,
 				"tenantId": self.tenant_id,
-				"contentId": content_id,
+				"contentId": data.content_id,
 				"parsingDate": int(end_timestamp),
-				"rawContent": raw_content,
-				"datasourcePayload": datasource_payload,
+				"rawContent": data.raw_content,
+				"datasourcePayload": data.datasource_payload,
 				"resources": {
-					"binaries": [] if not binary else [binary]
+					"binaries": [] if not data.binary else [data.binary]
 				}
 			}
 			try:
-				self.status_logger.info(datasource_payload)
+				self.status_logger.info(data.datasource_payload)
 				post_message(ingestion_url, payload, 10)
-				return 1
 			except requests.RequestException:
 				self.status_logger.error("Problems during posting")
-				return 0
 		except Exception as e:
 			payload = {
 				"datasourceId": self.datasource_id,
@@ -95,17 +83,22 @@ class DataExtraction(threading.Thread):
 				"type": "HALT"
 			}
 			post_message(ingestion_url, payload, 10)
-			return 0
+			return count, False
+		return count, True
 
 	def extract_recent(self):
 		extraction_count = 0
 		for request in self.request_list:
+			count = 0
+			self.status_logger.info('Extracting request: ' + request.requestUrl + ' using method: ' + request.requestMethod)
 			auth = None
-			if request.auth:
-				auth = (request.auth.username, request.auth.password)
+			if request.requestAuth:
+				auth = (request.requestAuth.username, request.requestAuth.password)
 			elif self.auth:
 				auth = (self.auth.username, self.auth.password)
 			response = requests.request(method=request.requestMethod, url=request.requestUrl, auth=auth)
-			self.manage_data(response)
+			count, is_clean_finish = self.manage_data(response)
+			extraction_count += count
+			self.status_logger.info('Extracted: ' + str(count) + ' elements from request: ' + request.requestUrl + ' extraction ended ' + 'without errors' if is_clean_finish else 'with halting error')
 
 		self.status_logger.info('Extracted: ' + str(extraction_count) + ' elements')
