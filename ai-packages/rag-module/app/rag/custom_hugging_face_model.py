@@ -1,17 +1,31 @@
-from typing import Iterator, List
-import requests
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
+from typing import Any, Iterator, List, Optional
+
+import requests
 from langchain_core.callbacks import (
     CallbackManagerForLLMRun,
 )
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessageChunk, BaseMessage, AIMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 
-from typing import Any, Optional
-
-
-_FIELD_SEPARATOR = ':'
+_FIELD_SEPARATOR = ":"
 
 
 class CustomChatHuggingFaceModel(BaseChatModel):
@@ -41,11 +55,11 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         Args:
             messages: the prompt composed of a list of messages.
             stop: a list of strings on which the model should stop generating.
-                  If generation stops due to a stop token, the stop token itself
-                  SHOULD BE INCLUDED as part of the output. This is not enforced
-                  across models right now, but it's a good practice to follow since
-                  it makes it much easier to parse the output of the model
-                  downstream and understand why generation stopped.
+                If generation stops due to a stop token, the stop token itself
+                SHOULD BE INCLUDED as part of the output. This is not enforced
+                across models right now, but it's a good practice to follow since
+                it makes it much easier to parse the output of the model
+                downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
         """
         # Replace this with actual logic to generate a response from a list
@@ -65,11 +79,11 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         return ChatResult(generations=[generation])
 
     def _stream(
-            self,
-            messages: List[BaseMessage],
-            stop: Optional[List[str]] = None,
-            run_manager: Optional[CallbackManagerForLLMRun] = None,
-            **kwargs: Any,
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
         """Stream the output of the model.
 
@@ -81,20 +95,18 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         Args:
             messages: the prompt composed of a list of messages.
             stop: a list of strings on which the model should stop generating.
-                  If generation stops due to a stop token, the stop token itself
-                  SHOULD BE INCLUDED as part of the output. This is not enforced
-                  across models right now, but it's a good practice to follow since
-                  it makes it much easier to parse the output of the model
-                  downstream and understand why generation stopped.
+                If generation stops due to a stop token, the stop token itself
+                SHOULD BE INCLUDED as part of the output. This is not enforced
+                across models right now, but it's a good practice to follow since
+                it makes it much easier to parse the output of the model
+                downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
         """
 
         last_message = messages[-1]
         tokens = last_message.content
 
-        body = {
-            "input_str": tokens
-        }
+        body = {"input_str": tokens}
 
         import time
 
@@ -103,8 +115,11 @@ class CustomChatHuggingFaceModel(BaseChatModel):
         for token in responses:
             token = token.decode("utf-8")
 
-            chunk = ChatGenerationChunk(message=AIMessageChunk(content=token,
-                                                               response_metadata={"time_in_sec": str(time.time())}))
+            chunk = ChatGenerationChunk(
+                message=AIMessageChunk(
+                    content=token, response_metadata={"time_in_sec": str(time.time())}
+                )
+            )
 
             if run_manager:
                 # This is optional in newer versions of LangChain
@@ -115,7 +130,9 @@ class CustomChatHuggingFaceModel(BaseChatModel):
 
         # Let's add some other information (e.g., response metadata)
         chunk = ChatGenerationChunk(
-            message=AIMessageChunk(content="", response_metadata={"time_in_sec": str(3)})
+            message=AIMessageChunk(
+                content="", response_metadata={"time_in_sec": str(3)}
+            )
         )
         if run_manager:
             # This is optional in newer versions of LangChain
