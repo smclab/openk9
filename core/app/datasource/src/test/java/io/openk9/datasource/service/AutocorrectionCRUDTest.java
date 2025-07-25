@@ -102,9 +102,9 @@ public class AutocorrectionCRUDTest {
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
-				sessionFactory,
+				AUTOCORRECTION_NAME_ONE,
 				autocorrectionService,
-				AUTOCORRECTION_NAME_ONE
+				sessionFactory
 			);
 
 		log.debug(String.format("Autocorrection: %s", autocorrection.toString()));
@@ -117,10 +117,10 @@ public class AutocorrectionCRUDTest {
 		assertNull(autocorrection.getMinWordLength());
 		assertNull(autocorrection.getMaxEdit());
 
-		EntitiesUtils.removeAutocorrection(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			AUTOCORRECTION_NAME_ONE,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_ONE
+			sessionFactory
 		);
 	}
 
@@ -165,9 +165,9 @@ public class AutocorrectionCRUDTest {
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
-				sessionFactory,
+				AUTOCORRECTION_NAME_ONE,
 				autocorrectionService,
-				AUTOCORRECTION_NAME_ONE
+				sessionFactory
 			);
 
 		log.debug(String.format("Autocorrection: %s", autocorrection.toString()));
@@ -184,19 +184,19 @@ public class AutocorrectionCRUDTest {
 			autocorrection.getAutocorrectionDocTypeField().getId()
 		);
 
-		EntitiesUtils.removeAutocorrection(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			AUTOCORRECTION_NAME_ONE,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_ONE
+			sessionFactory
 		);
 	}
 
 	@Test
 	void should_patch_autocorrection_two() {
 		Autocorrection autocorrectionTwo = EntitiesUtils.getAutocorrection(
-			sessionFactory,
+			AUTOCORRECTION_NAME_TWO,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_TWO
+			sessionFactory
 		);
 
 		// Initial check
@@ -246,9 +246,9 @@ public class AutocorrectionCRUDTest {
 
 		Autocorrection newAutocorrection =
 			EntitiesUtils.getAutocorrection(
-				sessionFactory,
+				AUTOCORRECTION_NAME_TWO,
 				autocorrectionService,
-				AUTOCORRECTION_NAME_TWO
+				sessionFactory
 			);
 
 		log.debug(String.format("Autocorrection: %s", newAutocorrection.toString()));
@@ -269,9 +269,9 @@ public class AutocorrectionCRUDTest {
 	@Test
 	void should_update_autocorrection_two() {
 		Autocorrection autocorrectionTwo = EntitiesUtils.getAutocorrection(
-			sessionFactory,
+			AUTOCORRECTION_NAME_TWO,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_TWO
+			sessionFactory
 		);
 
 		// Initial check
@@ -321,9 +321,9 @@ public class AutocorrectionCRUDTest {
 
 		Autocorrection newAutocorrection =
 			EntitiesUtils.getAutocorrection(
-				sessionFactory,
+				AUTOCORRECTION_NAME_TWO,
 				autocorrectionService,
-				AUTOCORRECTION_NAME_TWO
+				sessionFactory
 			);
 
 		log.debug(String.format("Autocorrection: %s", newAutocorrection.toString()));
@@ -343,10 +343,10 @@ public class AutocorrectionCRUDTest {
 
 	@AfterEach
 	void tearDown() {
-		EntitiesUtils.removeAutocorrection(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			AUTOCORRECTION_NAME_TWO,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_TWO
+			sessionFactory
 		);
 	}
 

@@ -109,9 +109,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_ONE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_ONE_NAME
+				sessionFactory
 			);
 
 		Set<QueryParserConfig> queryParserConfigs = searchConfig.getQueryParserConfigs();
@@ -135,7 +135,11 @@ public class SearchConfigServiceTest {
 		assertTrue(queryParserExpectedNames.containsAll(queryParserActualNames));
 
 		// removes entity
-		EntitiesUtils.removeSearchConfig(sessionFactory, searchConfigService, searchConfig.getName());
+		EntitiesUtils.removeSearchConfig(
+			searchConfig.getName(),
+			searchConfigService,
+			sessionFactory
+		);
 	}
 
 	@Test
@@ -153,7 +157,11 @@ public class SearchConfigServiceTest {
 			.indefinitely();
 
 		SearchConfig searchConfig =
-			EntitiesUtils.getSearchConfig(sessionFactory, searchConfigService, SEARCH_CONFIG_ONE_NAME);
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_ONE_NAME,
+				searchConfigService,
+				sessionFactory
+			);
 
 		log.debug(
 			String.format(
@@ -166,7 +174,7 @@ public class SearchConfigServiceTest {
 		assertEquals(0, searchConfig.getQueryParserConfigs().size());
 
 		// removes entity
-		EntitiesUtils.removeSearchConfig(sessionFactory, searchConfigService,searchConfig);
+		EntitiesUtils.removeSearchConfig(searchConfig, searchConfigService, sessionFactory);
 	}
 
 	@Test
@@ -177,9 +185,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(0, searchConfig.getQueryParserConfigs().size());
@@ -203,9 +211,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigPatched =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var patchedParserExpectedNames = queryParserDTOList.stream()
@@ -231,9 +239,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -265,9 +273,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigPatched =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var patchedParserExpectedNames = queryParserDTOList.stream()
@@ -292,9 +300,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -327,9 +335,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigPatched =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		// check patched searchConfiguration
@@ -346,9 +354,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -379,9 +387,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigPatched =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var patchedParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -410,9 +418,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(0, searchConfig.getQueryParserConfigs().size());
@@ -436,9 +444,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigUpdated =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var updatedParserExpectedNames = queryParserDTOList.stream()
@@ -464,9 +472,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -498,9 +506,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigUpdated =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var updatedParserExpectedNames = queryParserDTOList.stream()
@@ -525,9 +533,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -560,9 +568,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigUpdated =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		// check updated searchConfiguration
@@ -579,9 +587,9 @@ public class SearchConfigServiceTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -612,9 +620,9 @@ public class SearchConfigServiceTest {
 
 		SearchConfig searchConfigUpdated =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_THREE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_THREE_NAME
+				sessionFactory
 			);
 
 		// check updated searchConfiguration
@@ -628,15 +636,15 @@ public class SearchConfigServiceTest {
 	void tearDown() {
 		// removes searchConfigTwo with no queryParsers
 		EntitiesUtils.removeSearchConfig(
-			sessionFactory,
+			SEARCH_CONFIG_TWO_NAME,
 			searchConfigService,
-			SEARCH_CONFIG_TWO_NAME
+			sessionFactory
 		);
 		// removes searchConfigThree with 3 queryParsers
 		EntitiesUtils.removeSearchConfig(
-			sessionFactory,
+			SEARCH_CONFIG_THREE_NAME,
 			searchConfigService,
-			SEARCH_CONFIG_THREE_NAME
+			sessionFactory
 		);
 	}
 }

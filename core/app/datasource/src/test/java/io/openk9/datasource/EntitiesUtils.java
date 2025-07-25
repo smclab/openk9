@@ -28,13 +28,16 @@ import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.AutocorrectionService;
+import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -211,56 +214,39 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
-	public static void createSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory, SuggestionCategoryService suggestionCategoryService,
-		String name) {
+	// Create methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY createEntity(
+			DTO dto,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
 
-		SuggestionCategoryDTO dto = SuggestionCategoryDTO.builder()
-			.name(name)
-			.priority(0f)
-			.multiSelect(false)
-			.build();
-
-		createSuggestionCategory(sessionFactory, suggestionCategoryService, dto);
-	}
-
-	public static void createSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory, SuggestionCategoryService suggestionCategoryService,
-		SuggestionCategoryDTO dto) {
-
-		sessionFactory.withTransaction(
-				session -> suggestionCategoryService.create(session, dto)
+		return sessionFactory.withTransaction(
+				session -> service.create(session, dto)
 			)
 			.await()
 			.indefinitely();
 	}
 
-	public static void createTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService,
-		String name) {
+	// Get methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
+			String name,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
 
-		TabDTO dto = TabDTO.builder()
-			.name(name)
-			.priority(0)
-			.build();
-
-		createTab(sessionFactory, tabService, dto);
-	}
-
-	public static void createTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService,
-		TabDTO dto) {
-
-		sessionFactory.withTransaction(
-				session -> tabService.create(session, dto)
+		return sessionFactory.withTransaction(
+			session -> service.findByName(session, name)
 			)
 			.await()
 			.indefinitely();
 	}
 
+	// Custom retrieval methods for entities needing eager fetching
 	public static Autocorrection getAutocorrection(
-			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
-			String name) {
+			String name,
+			AutocorrectionService autocorrectionService,
+			Mutiny.SessionFactory sessionFactory) {
 
 		return sessionFactory.withTransaction(
 				session -> autocorrectionService.findByName(session, name)
@@ -272,30 +258,24 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
-	public static Bucket getBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {
+	public static SearchConfig getSearchConfig(
+			String name,
+			SearchConfigService searchConfigService,
+			Mutiny.SessionFactory sessionFactory) {
 
 		return sessionFactory.withTransaction(
-				session -> bucketService.findByName(session, name)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static Datasource getDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService,
-		String name) {
-
-		return sessionFactory.withTransaction(
-				session -> datasourceService.findByName(session, name)
+				session -> searchConfigService.findByName(session, name)
+					.call(searchConfig ->
+						Mutiny.fetch(searchConfig.getQueryParserConfigs()))
 			)
 			.await()
 			.indefinitely();
 	}
 
 	public static RAGConfiguration getRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		String name) {
+			String name,
+			RAGConfigurationService ragConfigurationService,
+			Mutiny.SessionFactory sessionFactory) {
 
 		return sessionFactory.withTransaction(
 				session -> ragConfigurationService.findByName(session, name)
@@ -304,181 +284,63 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
-	public static SearchConfig getSearchConfig(
-		Mutiny.SessionFactory sessionFactory, SearchConfigService searchConfigService,
-		String name) {
+	// Remove methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+			ENTITY entity,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
 
-		return sessionFactory.withTransaction(
-				session -> searchConfigService.findByName(session, name)
-				.call(searchConfig ->
-					Mutiny.fetch(searchConfig.getQueryParserConfigs()))
-			)
+		removeEntity(entity.getId(), service, sessionFactory);
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+			String name,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
+
+		var entity = getEntity(name, service, sessionFactory);
+
+		removeEntity(entity.getId(), service, sessionFactory);
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+			long id,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(session -> service.deleteById(session, id))
 			.await()
 			.indefinitely();
 	}
 
-	public static SuggestionCategory getSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory, SuggestionCategoryService suggestionCategoryService,
-		String name) {
+	// Custom remove methods for the SearchConfig entity
+	public static void removeSearchConfig(
+			SearchConfig searchConfig,
+			SearchConfigService searchConfigService,
+			Mutiny.SessionFactory sessionFactory) {
 
-		return sessionFactory.withTransaction(
-				session -> suggestionCategoryService.findByName(session, name)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static Tab getTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService,
-		String name) {
-
-		return sessionFactory.withTransaction(
-				session -> tabService.findByName(session, name)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeAutocorrection(
-			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
-			Autocorrection autocorrection) {
-
-		removeAutocorrection(sessionFactory, autocorrectionService, autocorrection.getId());
-	}
-
-	public static void removeAutocorrection(
-			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
-			String name) {
-
-		var autocorrection =
-			EntitiesUtils.getAutocorrection(sessionFactory, autocorrectionService, name);
-
-		removeAutocorrection(sessionFactory, autocorrectionService, autocorrection.getId());
-	}
-
-	public static void removeAutocorrection(
-			Mutiny.SessionFactory sessionFactory, AutocorrectionService autocorrectionService,
-			long id) {
-
-		sessionFactory.withTransaction(
-				session ->
-					autocorrectionService.deleteById(session, id)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, Bucket bucket) {
-
-		removeBucket(sessionFactory, bucketService, bucket.getId());
-	}
-
-	public static void removeBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {
-
-		var bucket = EntitiesUtils.getBucket(sessionFactory, bucketService, name);
-
-		removeBucket(sessionFactory, bucketService, bucket.getId());
-	}
-
-	public static void removeBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, long id) {
-
-		sessionFactory.withTransaction(
-				session ->
-					bucketService.deleteById(session, id)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService,
-		Datasource datasource) {
-
-		removeDatasource(sessionFactory, datasourceService, datasource.getId());
-	}
-
-	public static void removeDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService, String name) {
-
-		var datasource = getDatasource(sessionFactory, datasourceService, name);
-
-		removeDatasource(sessionFactory, datasourceService, datasource.getId());
-	}
-
-	public static void removeDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService, long id) {
-
-		sessionFactory.withTransaction(
-				session -> datasourceService.deleteById(session, id)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeQueryParserConfig(
-		SearchConfigService searchConfigService,
-		long id, long queryParserId) {
-
-			searchConfigService.removeQueryParserConfig(id, queryParserId)
-				.await()
-				.indefinitely();
-	}
-
-	public static void removeRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		RAGConfiguration ragConfiguration) {
-
-		removeRAGConfiguration(sessionFactory, ragConfigurationService, ragConfiguration.getId());
-	}
-
-	public static void removeRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		String name) {
-
-		var ragConfiguration = getRAGConfiguration(sessionFactory, ragConfigurationService, name);
-
-		removeRAGConfiguration(sessionFactory, ragConfigurationService, ragConfiguration.getId());
-	}
-
-	public static void removeRAGConfiguration(
-		Mutiny.SessionFactory sessionFactory, RAGConfigurationService ragConfigurationService,
-		long id) {
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.deleteById(session, id)
-			)
-			.await()
-			.indefinitely();
+		removeSearchConfig(searchConfig.getId(), searchConfigService, sessionFactory);
 	}
 
 	public static void removeSearchConfig(
-		Mutiny.SessionFactory sessionFactory,
-		SearchConfigService searchConfigService,
-		SearchConfig searchConfig) {
-
-		removeSearchConfig(
-			sessionFactory, searchConfigService, searchConfig.getId());
-	}
-
-	public static void removeSearchConfig(
-		Mutiny.SessionFactory sessionFactory,
-		SearchConfigService searchConfigService,
-		String name) {
+			String name,
+			SearchConfigService searchConfigService,
+			Mutiny.SessionFactory sessionFactory) {
 
 		var searchConfig =
-			getSearchConfig(sessionFactory, searchConfigService, name);
+			getSearchConfig(name, searchConfigService, sessionFactory);
 
 		removeSearchConfig(
-			sessionFactory, searchConfigService, searchConfig.getId());
+			searchConfig.getId(), searchConfigService, sessionFactory);
 	}
 
 	public static void removeSearchConfig(
-		Mutiny.SessionFactory sessionFactory,
-		SearchConfigService searchConfigService,
-		long id) {
+			long id,
+			SearchConfigService searchConfigService,
+			Mutiny.SessionFactory sessionFactory) {
 
 		sessionFactory.withTransaction(
 				session -> {
@@ -490,63 +352,6 @@ public class EntitiesUtils {
 						.usingConcurrencyOf(1)
 						.with(ignored -> Uni.createFrom().voidItem());
 				})
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory,
-		SuggestionCategoryService suggestionCategoryService,
-		SuggestionCategory suggestionCategory) {
-
-		removeSuggestionCategory(
-			sessionFactory, suggestionCategoryService, suggestionCategory.getId());
-	}
-
-	public static void removeSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory,
-		SuggestionCategoryService suggestionCategoryService,
-		String name) {
-
-		var suggestionCategory =
-			getSuggestionCategory(sessionFactory, suggestionCategoryService, name);
-
-		removeSuggestionCategory(
-			sessionFactory, suggestionCategoryService, suggestionCategory.getId());
-	}
-
-	public static void removeSuggestionCategory(
-		Mutiny.SessionFactory sessionFactory,
-		SuggestionCategoryService suggestionCategoryService,
-		long id) {
-
-		sessionFactory.withTransaction(
-				session -> suggestionCategoryService.deleteById(session, id)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void removeTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService, Tab tab) {
-
-		removeTab(sessionFactory, tabService, tab.getId());
-	}
-
-	public static void removeTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService, String name) {
-
-		var tab = getTab(sessionFactory, tabService, name);
-
-		removeTab(sessionFactory, tabService, tab.getId());
-	}
-
-	public static void removeTab(
-		Mutiny.SessionFactory sessionFactory, TabService tabService, long id) {
-
-		sessionFactory.withTransaction(
-				session -> tabService.deleteById(session, id)
-			)
 			.await()
 			.indefinitely();
 	}

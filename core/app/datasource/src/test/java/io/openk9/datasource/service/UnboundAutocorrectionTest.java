@@ -73,11 +73,11 @@ public class UnboundAutocorrectionTest {
 
 	@Test
 	void should_bind_and_unbind_autocorrection_to_bucket_one() {
-		var bucket = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
+		var bucket = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
 		var autocorrectionOne =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
 		var autocorrectionTwo =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
 
 		// Initial check
 		assertNull(bucket.getAutocorrection());
@@ -85,30 +85,30 @@ public class UnboundAutocorrectionTest {
 		// bind autocorrection
 		bindAutocorrectionToBucket(bucket, autocorrectionOne);
 
-		bucket = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
+		bucket = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
 		assertEquals(autocorrectionOne.getId(), bucket.getAutocorrection().getId());
 
 		// override bind autocorrection
 		bindAutocorrectionToBucket(bucket, autocorrectionTwo);
 
-		bucket = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
+		bucket = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
 		assertEquals(autocorrectionTwo.getId(), bucket.getAutocorrection().getId());
 
 		// unbind autocorrection
 		unbindAutocorrectionToBucket(bucket);
 
-		bucket = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
+		bucket = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
 		assertNull(bucket.getAutocorrection());
 	}
 
 	@Test
 	void should_retrieve_all_autocorrections_from_empty_bucket() {
 
-		var bucket = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
+		var bucket = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
 		var autocorrectionOne =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
 		var autocorrectionTwo =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
 
 		List<Autocorrection> unboundAutocorrections = getUnboundAutocorrections(bucket.getId());
 
@@ -121,14 +121,14 @@ public class UnboundAutocorrectionTest {
 	@Test
 	void should_retrieve_all_autocorrections_except_the_one_associated_with_bucket_one() {
 
-		var bucketOne = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
-		var bucketTwo = EntitiesUtils.getBucket(sf, bucketService, BUCKET_TWO);
+		var bucketOne = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO, bucketService, sf);
 		var autocorrectionOne =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
 		var autocorrectionTwo =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
 		var autocorrectionThree =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_THREE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_THREE, autocorrectionService, sf);
 
 		bindAutocorrectionToBucket(bucketOne, autocorrectionOne);
 
@@ -148,14 +148,14 @@ public class UnboundAutocorrectionTest {
 	@Test
 	void should_retrieve_all_autocorrection_from_missing_bucket() {
 
-		var bucketOne = EntitiesUtils.getBucket(sf, bucketService, BUCKET_ONE);
-		var bucketTwo = EntitiesUtils.getBucket(sf, bucketService, BUCKET_TWO);
+		var bucketOne = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sf);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO, bucketService, sf);
 		var autocorrectionOne =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
 		var autocorrectionTwo =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
 		var autocorrectionThree =
-			EntitiesUtils.getAutocorrection(sf, autocorrectionService, AUTOCORRECTION_THREE);
+			EntitiesUtils.getAutocorrection(AUTOCORRECTION_THREE, autocorrectionService, sf);
 
 		bindAutocorrectionToBucket(bucketOne, autocorrectionOne);
 
@@ -172,12 +172,12 @@ public class UnboundAutocorrectionTest {
 	}
 	@AfterEach
 	void tearDown() {
-		EntitiesUtils.removeBucket(sf, bucketService, BUCKET_ONE);
-		EntitiesUtils.removeBucket(sf, bucketService, BUCKET_TWO);
+		EntitiesUtils.removeEntity(BUCKET_ONE, bucketService, sf);
+		EntitiesUtils.removeEntity(BUCKET_TWO, bucketService, sf);
 
-		EntitiesUtils.removeAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
-		EntitiesUtils.removeAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
-		EntitiesUtils.removeAutocorrection(sf, autocorrectionService, AUTOCORRECTION_THREE);
+		EntitiesUtils.removeEntity(AUTOCORRECTION_ONE, autocorrectionService, sf);
+		EntitiesUtils.removeEntity(AUTOCORRECTION_TWO, autocorrectionService, sf);
+		EntitiesUtils.removeEntity(AUTOCORRECTION_THREE, autocorrectionService, sf);
 	}
 
 	private void bindAutocorrectionToBucket(Bucket bucket, Autocorrection autocorrection) {

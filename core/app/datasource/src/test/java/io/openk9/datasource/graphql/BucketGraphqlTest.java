@@ -129,11 +129,11 @@ public class BucketGraphqlTest {
 
 		// Retrieves RAGConfigurations one
 		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+			EntitiesUtils.getEntity(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		// Creates Bucket two
 		BucketWithListsDTO dtoBucketTwo = BucketWithListsDTO.builder()
@@ -156,11 +156,11 @@ public class BucketGraphqlTest {
 
 		// Retrieves RAGConfigurations one
 		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+			EntitiesUtils.getEntity(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -235,7 +235,7 @@ public class BucketGraphqlTest {
 			assertFalse(jsonObject.isNull(ENTITY));
 			assertTrue(jsonObject.isNull(FIELD_VALIDATORS));
 
-			var created = EntitiesUtils.getBucket(sessionFactory, bucketService,BUCKET_ONE_NAME);
+			var created = EntitiesUtils.getEntity(BUCKET_ONE_NAME, bucketService, sessionFactory);
 
 			// RAGConfiguration created bucket check
 			assertEquals(
@@ -248,7 +248,7 @@ public class BucketGraphqlTest {
 
 			// Removes bucketOne
 			EntitiesUtils.cleanBucket(bucketService, created);
-			EntitiesUtils.removeBucket(sessionFactory, bucketService, BUCKET_ONE_NAME);
+			EntitiesUtils.removeEntity( BUCKET_ONE_NAME, bucketService, sessionFactory);
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -261,24 +261,24 @@ public class BucketGraphqlTest {
 
 		// Retrieves RAGConfigurations one
 		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+			EntitiesUtils.getEntity(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+			EntitiesUtils.getEntity(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		// Retrieve ragConfigurations two
 		var ragConfigurationChatTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TWO);
+			EntitiesUtils.getEntity(
+				RAG_CHAT_TWO, ragService, sessionFactory);
 		var ragConfigurationChatToolTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
+			EntitiesUtils.getEntity(
+				RAG_CHAT_TOOL_TWO, ragService, sessionFactory);
 		var ragConfigurationSimpleTwo =
-			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+			EntitiesUtils.getEntity(
+				RAG_SIMPLE_GENERATE_TWO, ragService, sessionFactory);
 
-		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
 
 		// RAGConfiguration initial check
 		assertEquals(ragConfigurationChatOne.getId(), bucketTwo.getRagConfigurationChat().getId());
@@ -370,7 +370,7 @@ public class BucketGraphqlTest {
 			assertTrue(jsonObject.isNull(FIELD_VALIDATORS));
 
 			var patched =
-				EntitiesUtils.getBucket(sessionFactory, bucketService, bucketTwo.getName());
+				EntitiesUtils.getEntity(bucketTwo.getName(), bucketService, sessionFactory);
 
 			// RAGConfiguration patched bucketTwo check
 			assertEquals(
@@ -390,16 +390,16 @@ public class BucketGraphqlTest {
 	@AfterEach
 	void tearDown() {
 		// Removes Bucket two
-		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
 		EntitiesUtils.cleanBucket(bucketService, bucketTwo);
-		EntitiesUtils.removeBucket(sessionFactory, bucketService, bucketTwo.getName());
+		EntitiesUtils.removeEntity(bucketTwo.getName(), bucketService, sessionFactory);
 
 		// Removes RAGConfigurations
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TWO);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+		EntitiesUtils.removeEntity(RAG_CHAT_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TWO, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TOOL_TWO, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_SIMPLE_GENERATE_TWO, ragService, sessionFactory);
 	}
 }

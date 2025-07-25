@@ -122,9 +122,9 @@ public class AutocorrectionGraphqlTest {
 	@Test
 	void should_retrieve_autocorrection_two() throws ExecutionException, InterruptedException {
 		var autocorrectionTwo = EntitiesUtils.getAutocorrection(
-			sessionFactory,
+			AUTOCORRECTION_NAME_TWO,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_TWO
+			sessionFactory
 		);
 
 		var query = document(
@@ -244,9 +244,9 @@ public class AutocorrectionGraphqlTest {
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
-				sessionFactory,
+				AUTOCORRECTION_NAME_ONE,
 				autocorrectionService,
-				AUTOCORRECTION_NAME_ONE
+				sessionFactory
 			);
 
 		log.debug(String.format("Autocorrection: %s", autocorrection.toString()));
@@ -263,19 +263,19 @@ public class AutocorrectionGraphqlTest {
 			autocorrection.getAutocorrectionDocTypeField().getId()
 		);
 
-		EntitiesUtils.removeAutocorrection(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			AUTOCORRECTION_NAME_ONE,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_ONE
+			sessionFactory
 		);
 	}
 
 	@AfterEach
 	void tearDown() {
-		EntitiesUtils.removeAutocorrection(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			AUTOCORRECTION_NAME_TWO,
 			autocorrectionService,
-			AUTOCORRECTION_NAME_TWO
+			sessionFactory
 		);
 	}
 

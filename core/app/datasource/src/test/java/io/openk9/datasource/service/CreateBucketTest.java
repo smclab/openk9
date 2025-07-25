@@ -107,11 +107,11 @@ public class CreateBucketTest {
 
 		// Retrieves RAGConfigurations one
 		var ragConfigurationChatOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
+			EntitiesUtils.getRAGConfiguration(RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+			EntitiesUtils.getRAGConfiguration(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
-			EntitiesUtils.getRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+			EntitiesUtils.getRAGConfiguration(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		// Creates Bucket two
 		BucketWithListsDTO dtoBucketTwo = BucketWithListsDTO.builder()
@@ -137,13 +137,13 @@ public class CreateBucketTest {
 
 		var ragConfigurationChat =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_ONE);
+				RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatTool =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+				RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimple =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+				RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		var datasourceIds = datasourceService.findAll()
 			.await().indefinitely()
@@ -206,7 +206,7 @@ public class CreateBucketTest {
 
 		// Removes bucketOne
 		EntitiesUtils.cleanBucket(bucketService, bucket);
-		EntitiesUtils.removeBucket(sessionFactory, bucketService, bucket.getName());
+		EntitiesUtils.removeEntity(bucket.getName(), bucketService, sessionFactory);
 	}
 
 	@Test
@@ -215,24 +215,24 @@ public class CreateBucketTest {
 		// Retrieve ragConfigurations one
 		var ragConfigurationChatOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_ONE);
+				RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+				RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+				RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		// Retrieve ragConfigurations two
 		var ragConfigurationChatTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TWO);
+				RAG_CHAT_TWO, ragService, sessionFactory);
 		var ragConfigurationChatToolTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
+				RAG_CHAT_TOOL_TWO, ragService, sessionFactory);
 		var ragConfigurationSimpleTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+				RAG_SIMPLE_GENERATE_TWO, ragService, sessionFactory);
 
 		var bucketTwo = getBucketAndFetch(BUCKET_TWO_NAME);
 
@@ -278,26 +278,26 @@ public class CreateBucketTest {
 		// Retrieve ragConfigurations one
 		var ragConfigurationChatOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_ONE);
+				RAG_CHAT_ONE, ragService, sessionFactory);
 		var ragConfigurationChatToolOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
+				RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
 		var ragConfigurationSimpleOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
+				RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
 
 		// Retrieve ragConfigurations two
 		var ragConfigurationChatTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TWO);
+				RAG_CHAT_TWO, ragService, sessionFactory);
 		var ragConfigurationChatToolTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
+				RAG_CHAT_TOOL_TWO, ragService, sessionFactory);
 		var ragConfigurationSimpleTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+				RAG_SIMPLE_GENERATE_TWO, ragService, sessionFactory);
 
-		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
 
 		// RAGConfiguration initial check
 		assertEquals(ragConfigurationChatOne.getId(), bucketTwo.getRagConfigurationChat().getId());
@@ -348,17 +348,17 @@ public class CreateBucketTest {
 	@AfterEach
 	void tearDown() {
 		// Removes Bucket two
-		var bucketTwo = EntitiesUtils.getBucket(sessionFactory, bucketService, BUCKET_TWO_NAME);
+		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
 		EntitiesUtils.cleanBucket(bucketService, bucketTwo);
-		EntitiesUtils.removeBucket(sessionFactory, bucketService, bucketTwo.getName());
+		EntitiesUtils.removeEntity(bucketTwo.getName(), bucketService, sessionFactory);
 
 		// Removes RAGConfigurations
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TWO);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_CHAT_TOOL_TWO);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_ONE);
-		EntitiesUtils.removeRAGConfiguration(sessionFactory, ragService, RAG_SIMPLE_GENERATE_TWO);
+		EntitiesUtils.removeEntity(RAG_CHAT_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TWO, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TOOL_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_CHAT_TOOL_TWO, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_SIMPLE_GENERATE_ONE, ragService, sessionFactory);
+		EntitiesUtils.removeEntity(RAG_SIMPLE_GENERATE_TWO, ragService, sessionFactory);
 	}
 
 	private Bucket getBucketAndFetch(String bucketName) {

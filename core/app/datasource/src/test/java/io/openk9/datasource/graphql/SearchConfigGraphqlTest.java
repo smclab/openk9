@@ -192,9 +192,9 @@ public class SearchConfigGraphqlTest {
 
 		var searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_ONE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_ONE_NAME
+				sessionFactory
 			);
 
 		var queryParserConfigs = searchConfig.getQueryParserConfigs();
@@ -218,7 +218,11 @@ public class SearchConfigGraphqlTest {
 		assertTrue(queryParserExpectedNames.containsAll(queryParserActualNames));
 
 		// removes entity
-		EntitiesUtils.removeSearchConfig(sessionFactory, searchConfigService, searchConfig.getName());
+		EntitiesUtils.removeSearchConfig(
+			searchConfig.getName(),
+			searchConfigService,
+			sessionFactory
+		);
 	}
 
 	@Test
@@ -272,9 +276,9 @@ public class SearchConfigGraphqlTest {
 
 		var searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_ONE_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_ONE_NAME
+				sessionFactory
 			);
 
 		var queryParserConfigs = searchConfig.getQueryParserConfigs();
@@ -290,7 +294,11 @@ public class SearchConfigGraphqlTest {
 		assertEquals(0, queryParserConfigs.size());
 
 		// removes entity
-		EntitiesUtils.removeSearchConfig(sessionFactory, searchConfigService, searchConfig.getName());
+		EntitiesUtils.removeSearchConfig(
+			searchConfig.getName(),
+			searchConfigService,
+			sessionFactory
+		);
 	}
 
 	@Test
@@ -302,9 +310,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -370,9 +378,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -405,9 +413,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -473,9 +481,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -503,9 +511,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -567,9 +575,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -602,9 +610,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -670,9 +678,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -705,9 +713,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -773,9 +781,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -803,9 +811,9 @@ public class SearchConfigGraphqlTest {
 		// check initial state
 		SearchConfig searchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				SEARCH_CONFIG_TWO_NAME,
 				searchConfigService,
-				SEARCH_CONFIG_TWO_NAME
+				sessionFactory
 			);
 
 		var initialParserExpectedNames = PARSER_CONFIG_DTO_LIST.stream()
@@ -867,9 +875,9 @@ public class SearchConfigGraphqlTest {
 
 		var actualSearchConfig =
 			EntitiesUtils.getSearchConfig(
-				sessionFactory,
+				searchConfig.getName(),
 				searchConfigService,
-				searchConfig.getName()
+				sessionFactory
 			);
 
 		var queryParserConfigs = actualSearchConfig.getQueryParserConfigs();
@@ -961,9 +969,9 @@ public class SearchConfigGraphqlTest {
 	void tearDown() {
 		// removes searchConfigTwo with 3 queryParsers
 		EntitiesUtils.removeSearchConfig(
-			sessionFactory,
+			SEARCH_CONFIG_TWO_NAME,
 			searchConfigService,
-			SEARCH_CONFIG_TWO_NAME
+			sessionFactory
 		);
 	}
 }

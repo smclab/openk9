@@ -200,9 +200,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_ONE_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_ONE_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
@@ -215,10 +215,10 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(ragConfigurationOne.getReformulate());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationOne.getJsonConfig());
 
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_CONFIGURATION_ONE_NAME,
 			ragConfigurationService,
-			RAG_CONFIGURATION_ONE_NAME
+			sessionFactory
 		);
 	}
 
@@ -272,9 +272,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationOne =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_ONE_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_ONE_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
@@ -287,10 +287,10 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
 		assertNull(ragConfigurationOne.getJsonConfig());
 
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_CONFIGURATION_ONE_NAME,
 			ragConfigurationService,
-			RAG_CONFIGURATION_ONE_NAME
+			sessionFactory
 		);
 	}
 
@@ -300,9 +300,9 @@ public class RAGConfigurationGraphqlTest {
 		// check initial state
 		var initialRagConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
@@ -371,9 +371,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
@@ -394,9 +394,9 @@ public class RAGConfigurationGraphqlTest {
 		// check initial state
 		var initialRagConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
@@ -458,9 +458,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
@@ -480,9 +480,9 @@ public class RAGConfigurationGraphqlTest {
 		// check initial state
 		var initialRagConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
@@ -551,9 +551,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
@@ -574,9 +574,9 @@ public class RAGConfigurationGraphqlTest {
 		// check initial state
 		var initialRagConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, initialRagConfigurationTwo.getName());
@@ -638,9 +638,9 @@ public class RAGConfigurationGraphqlTest {
 
 		var ragConfigurationTwo =
 			EntitiesUtils.getRAGConfiguration(
-				sessionFactory,
+				RAG_CONFIGURATION_TWO_NAME,
 				ragConfigurationService,
-				RAG_CONFIGURATION_TWO_NAME
+				sessionFactory
 			);
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
@@ -656,10 +656,10 @@ public class RAGConfigurationGraphqlTest {
 
 	@AfterEach
 	void tearDown() {
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_CONFIGURATION_TWO_NAME,
 			ragConfigurationService,
-			RAG_CONFIGURATION_TWO_NAME
+			sessionFactory
 		);
 	}
 }
