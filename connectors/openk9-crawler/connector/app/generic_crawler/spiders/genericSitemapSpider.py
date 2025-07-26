@@ -38,11 +38,11 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
     payload = {}
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, title_tag, replace_rule, datasource_id, schedule_id,
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, datasource_id, schedule_id,
                 ingestion_url, timestamp, additional_metadata, max_length, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, custom_metadata, do_extract_docs, *a, **kw):
 
-        super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, title_tag, allowed_domains,
+        super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains,
                                                    excluded_paths, allowed_paths, max_length, document_file_extensions,
                                                    custom_metadata, additional_metadata, do_extract_docs, datasource_id,
                                                    schedule_id, timestamp, tenant_id, *a, **kw)
@@ -161,17 +161,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
         url = response.url
         title = get_title(response, self.title_tag)
-        content = get_content(response, self.max_length, self.body_tag)
-
-        hrefs = response.css('a::attr(href)').getall()
-        try:
-            self.try_parse_documents(hrefs, response.request.url)
-        except Exception as e:
-            logger.error(e)
+        content = get_content(response, self.max_length, self.body_tag, self.excluded_bodyTags)
 
         web_item_fields = ['url', 'title', 'content', 'favicon']
-
-        self.logger.info("custome metadata" + str(self.custom_metadata))
 
         for key, value in self.custom_metadata.items():
             web_item_fields.append(key)
@@ -185,19 +177,28 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         except Exception as e:
             logger.error("Something goes wrong getting favicon")
 
+        extracted_custom_metadata = {}
+
         if self.custom_metadata:
             for key, value in self.custom_metadata.items():
                 extracted_elements = response.xpath(value).getall()
                 if len(extracted_elements) > 0:
-                    web_item[key] = [extracted_element.strip() for extracted_element in extracted_elements]
+                    extracted_elements_list = [extracted_element.strip() for extracted_element in extracted_elements]
+                    web_item[key] = extracted_elements_list
+                    extracted_custom_metadata[key] = extracted_elements_list
                 else:
                     web_item[key] = None
+                    extracted_custom_metadata[key] = None
+
+        anchors = response.css('a')
+        try:
+            self.try_parse_documents(anchors, response.request.url, extracted_custom_metadata)
+        except Exception as e:
+            logger.error(e)
 
         datasource_payload = {
             "web": dict(web_item)
         }
-
-        self.logger.info(datasource_payload)
 
         payload = Payload()
 

@@ -29,6 +29,7 @@ class DocumentItem(scrapy.Item):
     url = scrapy.Field()
     mimeType = scrapy.Field()
     extension = scrapy.Field()
+    title = scrapy.Field()
 
 
 class Payload(scrapy.Item):

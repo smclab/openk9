@@ -32,10 +32,10 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     allowed_types = []
     type_mapping = []
 
-    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, title_tag, follow,
+    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_bodyTags, title_tag, follow,
                  max_length, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions,
                  custom_metadata, additional_metadata, do_extract_docs, timestamp, *a, **kw):
-        super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, title_tag, allowed_domains, excluded_paths,
+        super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
                                                  allowed_paths, max_length, document_file_extensions, custom_metadata,
                                                  additional_metadata, do_extract_docs, datasource_id, schedule_id,
                                                  timestamp, tenant_id, *a, **kw)
@@ -83,14 +83,7 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
             url = response.url
             title = get_title(response, self.title_tag)
-            content = get_content(response, self.max_length, self.body_tag)
-
-            hrefs = response.css('a::attr(href)').getall()
-
-            try:
-                self.try_parse_documents(hrefs, response.request.url)
-            except Exception as e:
-                logger.error(e)
+            content = get_content(response, self.max_length, self.body_tag, self.excluded_bodyTags)
 
             web_item_fields = ['url', 'title', 'content', 'favicon']
 
@@ -106,17 +99,29 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
             except Exception as e:
                 logger.error("Something goes wrong getting favicon")
 
+            extracted_custom_metadata = {}
+
             if self.custom_metadata:
                 for key, value in self.custom_metadata.items():
                     extracted_elements = response.xpath(value).getall()
                     if len(extracted_elements) > 0:
-                        web_item[key] = [extracted_element.strip() for extracted_element in extracted_elements]
+                        extracted_elements_list = [extracted_element.strip() for extracted_element in extracted_elements]
+                        web_item[key] = extracted_elements_list
+                        extracted_custom_metadata[key] = extracted_elements_list
                     else:
                         web_item[key] = None
+                        extracted_custom_metadata[key] = None
 
             datasource_payload = {
                 "web": dict(web_item)
             }
+
+            anchors = response.css('a')
+
+            try:
+                self.try_parse_documents(anchors, response.request.url, extracted_custom_metadata)
+            except Exception as e:
+                logger.error(e)
 
             for key, value in self.additional_metadata.items():
                 datasource_payload[key] = value
