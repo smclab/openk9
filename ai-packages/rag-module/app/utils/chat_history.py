@@ -133,8 +133,8 @@ def save_chat_message(
     .. note::
         - Creates index with mappings if not exists (user_id as index name)
         - Source documents require specific structure:
-            - metadata: dict with title, url
-            - citations: list of citation texts
+            - metadata (optional): dict with metadata (title, url, etc.)
+            - citations (optional): list of citation texts
         - Index mapping enforces:
             - timestamp as date type
             - Other fields use dynamic mapping
