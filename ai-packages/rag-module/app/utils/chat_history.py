@@ -141,15 +141,10 @@ def save_chat_message(
         - Message structure includes conversation data and processed sources
     """
     documents = []
-
     for source in sources:
-        document_title = source["metadata"]["title"]
-        document_url = source["metadata"]["url"]
-        document_citations = source["citations"]
         document = {
-            "title": document_title,
-            "url": document_url,
-            "citations": document_citations,
+            **source.get("metadata", {}),
+            "citations": source.get("citations", []),
         }
         documents.append(document)
 
