@@ -1,8 +1,19 @@
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import SuggestedPrompts from "./SuggestedPrompts";
 
-export const InitialConversation: React.FC = () => {
+interface InitialConversationProps {
+	handleSearch: (message: string) => void;
+}
+
+export const InitialConversation: React.FC<InitialConversationProps> = ({ handleSearch }) => {
 	const { t } = useTranslation();
+	const suggestedPrompts = [
+		"Natural language conversation",
+		"Personalized recommendations",
+		"Seamless integrations",
+		"Resolve a problem",
+	];
 	return (
 		<Box
 			bgcolor="white"
@@ -12,7 +23,6 @@ export const InitialConversation: React.FC = () => {
 			alignItems="center"
 			p={2}
 			boxSizing="border-box"
-			mt="15%"
 		>
 			<Box display="flex" alignItems="center" mt={1}>
 				<Typography variant="h5">
@@ -28,28 +38,12 @@ export const InitialConversation: React.FC = () => {
 			<Typography variant="h5" gutterBottom align="center">
 				{t("where-knowledge-has-no-limits")}
 			</Typography>
-			{/* <Box mt={3}>
-        <Suggestions
-          Icon={GroupIcon}
-          name="Natural language conversation"
-          onAction={() => console.log("Clicked Natural language conversation")}
-        />
-        <Suggestions
-          Icon={GroupIcon}
-          name="Knowledge base"
-          onAction={() => console.log("Clicked Knowledge base")}
-        />
-        <Suggestions
-          Icon={GroupIcon}
-          name="Personalized recommendations"
-          onAction={() => console.log("Clicked Personalized recommendations")}
-        />
-        <Suggestions
-          Icon={GroupIcon}
-          name="Seamless integrations"
-          onAction={() => console.log("Clicked Seamless integrations")}
-        />
-      </Box> */}
+			<Box mt={3}>
+				<SuggestedPrompts
+					suggestedPrompts={suggestedPrompts}
+					handleSuggestedPrompt={(prompt) => handleSearch(prompt)}
+				/>
+			</Box>
 		</Box>
 	);
 };

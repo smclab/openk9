@@ -5,6 +5,7 @@ import { OpenK9Client } from "./client";
 import React from "react";
 import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
+import { keycloak } from "./keycloak";
 
 type Source = { source?: string; title?: string; url?: string };
 
@@ -34,7 +35,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	}, [initialMessages]);
 
 	const generateResponse = useCallback(
-		async (query: string, chatId: string, userId: string | null | undefined) => {
+		async (query: string, chatId: string) => {
 			const id = uuidv4();
 			setIsLoading({ id, isLoading: true });
 
@@ -42,6 +43,17 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				return;
 			}
 			const timestamp = "" + Date.now();
+			const nonLoggedUserId = `anonymous_${uuidv4()}_${timestamp}`;
+
+			const chatHistory = messages.map((msg) => ({
+				question: msg.question,
+				answer: msg.answer,
+				title: "",
+				sources: msg.sources || [],
+				chat_id: keycloak.authenticated ? chatId : nonLoggedUserId,
+				timestamp: msg.timestamp || "",
+				chat_sequence_number: msg.chat_sequence_number,
+			}));
 
 			setMessages((prevMessages) => {
 				const chat_sequence_number = (prevMessages[prevMessages.length - 1]?.chat_sequence_number || 0) + 1;
@@ -66,13 +78,19 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 
 			const url = "/api/rag/chat";
 
-			const searchQuery = {
-				searchText: query,
-				chatId,
-				userId: userId || timestamp,
-				chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
-				timestamp,
-			};
+			const searchQuery = keycloak.authenticated
+				? {
+						searchText: query,
+						chatId,
+						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
+						timestamp,
+				  }
+				: {
+						searchText: query,
+						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
+						timestamp,
+						chatHistory,
+				  };
 
 			try {
 				const response = await client.GenerateResponse({ controller, searchQuery: searchQuery, url });
@@ -173,7 +191,6 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 					}
 				} else {
 					const errorData = await response.json();
-
 					setMessages((prev) =>
 						prev.map((msg) =>
 							msg.id === id
@@ -186,7 +203,6 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						),
 					);
 					setIsChatting(false);
-					setIsLoading(null);
 				}
 			} catch (error) {
 				console.error("Errore durante la richiesta", error);

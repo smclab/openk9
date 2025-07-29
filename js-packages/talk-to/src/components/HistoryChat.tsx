@@ -7,10 +7,17 @@ import {
 	ListItemText,
 	Typography,
 	IconButton,
+	Tooltip,
 	Menu,
 	MenuItem,
 	Box,
 	TextField,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	Button,
 } from "@mui/material";
 import { OpenK9Client } from "./client";
 import { useTranslation } from "react-i18next";
@@ -50,6 +57,10 @@ export function HistoryChat({
 	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
 	const [editingChatId, setEditingChatId] = React.useState<string | null>(null);
 	const [newTitle, setNewTitle] = React.useState("");
+
+	// Stato per il dialog di conferma eliminazione
+	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+	const [chatToDelete, setChatToDelete] = React.useState<string | null>(null);
 
 	React.useEffect(() => {
 		const fetchData = async () => {
@@ -119,6 +130,32 @@ export function HistoryChat({
 			console.error("Errore durante la rinomina:", error);
 		}
 	};
+
+	// Gestione del dialog di conferma eliminazione
+	const handleDeleteClick = (chatId: string) => {
+		setChatToDelete(chatId);
+		setDeleteDialogOpen(true);
+		handleMenuClose();
+	};
+
+	const handleConfirmDelete = async () => {
+		if (chatToDelete) {
+			await handleDeleteChat(chatToDelete);
+		}
+		setDeleteDialogOpen(false);
+		setChatToDelete(null);
+	};
+
+	const handleCancelDelete = () => {
+		setDeleteDialogOpen(false);
+		setChatToDelete(null);
+	};
+
+	// Trova il titolo della chat da eliminare per mostrarlo nel dialog
+	const chatToDeleteTitle =
+		chatHistory?.find((chat) => chat.chat_id === chatToDelete)?.title ||
+		chatHistory?.find((chat) => chat.chat_id === chatToDelete)?.question ||
+		"questa chat";
 
 	if (loading) return null;
 
@@ -222,8 +259,6 @@ export function HistoryChat({
 													WebkitBoxOrient: "vertical",
 													overflow: "hidden",
 													textOverflow: "ellipsis",
-													// lineHeight: '1.2',
-													// maxHeight: '2.4em'
 												},
 											}}
 										>
@@ -279,14 +314,45 @@ export function HistoryChat({
 				</MenuItem>
 				<MenuItem
 					onClick={() => {
-						selectedChatId && handleDeleteChat(selectedChatId);
-						handleMenuClose();
+						selectedChatId && handleDeleteClick(selectedChatId);
+						// handleMenuClose();
 					}}
 				>
 					<DeleteOutline sx={{ fontSize: "16px", mr: 1 }} />
 					Elimina
 				</MenuItem>
 			</Menu>
+			<Dialog
+				open={deleteDialogOpen}
+				onClose={handleCancelDelete}
+				aria-labelledby="delete-dialog-title"
+				aria-describedby="delete-dialog-description"
+			>
+				<DialogTitle id="delete-dialog-title">Conferma eliminazione</DialogTitle>
+				<DialogContent>
+					<DialogContentText id="delete-dialog-description">
+						Sei sicuro di voler eliminare <b>{chatToDeleteTitle}</b>? Questa azione non può essere annullata.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						variant="contained"
+						sx={{ margin: "10px", borderRadius: "10px" }}
+						onClick={handleCancelDelete}
+						color="primary"
+					>
+						Annulla
+					</Button>
+					<Button
+						sx={{ margin: "10px", borderRadius: "10px" }}
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+					>
+						Elimina
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</div>
 	);
 }

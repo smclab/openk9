@@ -1,5 +1,3 @@
-import React from "react";
-
 export function Logo({ size = 26, color = "#C0272B" }) {
 	return (
 		<svg className="openk9-logo" min-width={size} width={size} min-height={size} viewBox="0 0 97 94">

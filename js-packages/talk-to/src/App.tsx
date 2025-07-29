@@ -20,12 +20,13 @@ import ChangeLanguage from "./components/changeLanguage";
 import { useTranslation } from "react-i18next";
 import { v4 as uuidv4 } from "uuid";
 import { keycloak } from "./components/keycloak";
+import Sidebar from "./components/Sidebar";
 
 function App() {
 	const [chatId, setChatId] = React.useState<chatId>({ id: null, isNew: true });
 	const [userId, setUserId] = React.useState<string | undefined | null>();
 	const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
-	const [authenticated, setAuthenticated] = React.useState(false);
+	// const [authenticated, setAuthenticated] = React.useState(false);
 	const { initialMessages } = useChatData(userId || "", chatId);
 	const isLoadingChat = !chatId?.isNew && initialMessages.isLoadingChat;
 	const { t } = useTranslation();
@@ -43,7 +44,7 @@ function App() {
 	const isNewChat = messages.length === 0;
 	const client = OpenK9Client();
 	const handleSearch = (query: string) => {
-		chatId?.id && generateResponse(query, chatId?.id || "", userId);
+		chatId?.id && generateResponse(query, chatId?.id || "");
 	};
 
 	React.useEffect(() => {
@@ -52,9 +53,9 @@ function App() {
 		}
 	}, [messages]);
 
-	React.useEffect(() => {
-		client.authInit.then(setAuthenticated);
-	}, [client]);
+	// React.useEffect(() => {
+	// 	client.authInit.then(setAuthenticated);
+	// }, [client]);
 
 	React.useEffect(() => {
 		async function fetchUserProfile() {
@@ -80,7 +81,6 @@ function App() {
 	return (
 		<MuiThemeProvider theme={defaultThemeK9}>
 			<Box display="flex" height="100vh">
-				{/* sideNavigation */}
 				<Box
 					className="k9-generation-sideNavigation"
 					display="flex"
@@ -90,7 +90,6 @@ function App() {
 					p={2}
 					alignItems="flex-start"
 					position="relative"
-					gap={2}
 					sx={{
 						fontSize: 20,
 						color: "#1e1c21",
@@ -98,148 +97,108 @@ function App() {
 						overflow: "hidden",
 						paddingRight: 0,
 					}}
-					// flexGrow={1}
 				>
-					<Box
-						display={"flex"}
-						justifyContent={"space-between"}
-						alignItems={"center"}
-						flexDirection={"column"}
-						height={"100vh"}
-						width={"100%"}
-						sx={{
-							background: "white",
-							overflow: "hidden",
-							borderRadius: "10px",
-							position: "relative",
-						}}
-					>
-						<Box sx={{ paddingInline: "10px", marginTop: "10px" }}>
-							<Box display="flex" alignItems="center" mb={1} sx={{ justifyContent: "center" }}>
-								<Logo size={45} />
-								<Typography variant="h6" ml={1}>
-									Open
-								</Typography>
-								<Typography variant="h5" fontWeight={700}>
-									K9
-								</Typography>
-							</Box>
-							<Box
-								display="flex"
-								sx={{ justifyContent: "center", gap: "10px", flexDirection: "column", alignItems: "center" }}
-							>
-								<Typography variant="body2">{t("version")} 1.6.03</Typography>
-								<ChangeLanguage />
-							</Box>
-							<Box sx={{ display: "flex" }} mt={2}>
-								{authenticated && <HistoryChat setChatId={setChatId} userId={userId} />}
-							</Box>
-						</Box>
-						<Box
-							display="flex"
-							zIndex={3}
-							height={"9vh"}
-							paddingTop={"5px"}
-							borderTop={"1px solid #616161"}
-							width={"100%"}
-							sx={{ justifyContent: "center", flexDirection: "column", alignItems: "center" }}
-						>
-							<Login authenticated={authenticated} setAuthenticated={setAuthenticated} />
-						</Box>
-						<Box position="absolute" left={0} bottom={10}>
-							<Graphic />
-						</Box>
-						<Box position="absolute" left={75} bottom={45}>
-							<GraphicThree />
-						</Box>
-						<Box position="absolute" left={80} bottom={0}>
-							<GraphicTwo />
-						</Box>
-					</Box>
+					<Sidebar setChatId={setChatId} />
 				</Box>
+
 				<Box
 					display="flex"
 					flexDirection="column"
 					flexGrow={1}
 					p={2}
 					sx={{
-						background:
-							"linear-gradient(227deg, rgba(175, 175, 175, 0.8), rgba(23, 204, 23, 0) 57%), " +
-							"linear-gradient(269deg, rgba(59, 59, 70, 0.97), rgba(0, 0, 255, 0) 70.71%), " +
-							"linear-gradient(112deg, #EFEFEF, rgba(0, 0, 255, 0) 70.71%), " +
-							"linear-gradient(52deg, #EFEFEF, rgba(0, 0, 255, 0) 70.71%)",
+						background: "#EEEEEE",
 					}}
 				>
 					<CssBaseline />
-					<Box
-						component="header"
-						p={2}
-						bgcolor="background.paper"
-						display="flex"
-						justifyContent="flex-end"
-						alignItems="center"
-						padding={0}
-						sx={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
-						zIndex={2}
-					>
-						{!isNewChat && (
-							<Button
-								variant="contained"
-								sx={{ margin: "10px", borderRadius: "10px" }}
-								onClick={() => {
-									const timestamp = String(Date.now());
-									const newId = keycloak.authenticated
-										? `${userId}_${timestamp}`
-										: `anonymous_${uuidv4()}_${timestamp}`;
-									setChatId({ id: newId, isNew: true });
+					<Box display={"flex"} flexDirection={"column"} flex={1} gap={"14px"}>
+						{/* main content */}
+						<Box
+							component="main"
+							flex={1}
+							bgcolor="white"
+							display="flex"
+							flexDirection="column"
+							alignItems="center"
+							justifyContent="center"
+							p={2}
+							boxSizing="border-box"
+							zIndex={2}
+							width="100%"
+							border={"1px solid rgba(0, 0, 0, 0.12)"}
+							borderRadius={"10px"}
+						>
+							<Box
+								component="header"
+								width={"100%"}
+								p={2}
+								bgcolor="background.paper"
+								display="flex"
+								justifyContent="flex-end"
+								alignItems="center"
+								padding={0}
+								sx={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+								zIndex={2}
+							>
+								{!isNewChat && (
+									<Button
+										variant="contained"
+										sx={{ margin: "10px", borderRadius: "10px" }}
+										onClick={() => {
+											const timestamp = String(Date.now());
+											const newId = keycloak.authenticated
+												? `${userId}_${timestamp}`
+												: `anonymous_${uuidv4()}_${timestamp}`;
+											setChatId({ id: newId, isNew: true });
+										}}
+									>
+										{t("new-chat")}
+									</Button>
+								)}
+							</Box>
+							<div
+								className="openk9-box-main"
+								style={{
+									display: "flex",
+									flexDirection: "column",
+									gap: "50px",
+									padding: messages.length !== 0 ? "30px 50px" : "unset",
+									width: "100%",
+									overflowY: "auto",
+									maxHeight: "69vh",
+									justifyContent: "flex-start",
 								}}
 							>
-								{t("new-chat")}
-							</Button>
-						)}
-					</Box>
-					{/* main content */}
-					<Box
-						component="main"
-						flex={1}
-						bgcolor="white"
-						display="flex"
-						flexDirection="column"
-						alignItems="center"
-						p={2}
-						boxSizing="border-box"
-						zIndex={2}
-						width={"100%"}
-						sx={{
-							borderTopLeftRadius: isNewChat ? "10px" : "unset",
-							borderTopRightRadius: isNewChat ? "10px" : "unset",
-						}}
-					>
-						<div
-							className="openk9-box-main"
-							style={{
-								display: "flex",
-								flexDirection: "column",
-								gap: "50px",
-								padding: messages.length !== 0 ? "30px 50px" : "unset",
-								width: "100%",
-								overflowY: "auto",
-								maxHeight: "71vh",
-								justifyContent: "flex-start",
+								{!isNewChat
+									? messages.map((message, index) => (
+											<React.Fragment key={index}>
+												<MessageCard message={message} isGenerateMessage={isGenerateMessage} />
+												{index === messages.length - 1 && <div ref={messagesEndRef} />}
+											</React.Fragment>
+									  ))
+									: !isLoadingChat && <InitialConversation handleSearch={handleSearch} />}
+								{isLoadingChat && <Loading />}
+							</div>
+						</Box>
+						{/* Search Area */}
+						<Box
+							height="12vh"
+							width="100%"
+							display="flex"
+							alignItems="center"
+							justifyContent="center"
+							overflow={"hidden"}
+							sx={{
+								background: "white",
+								borderRadius: "10px",
+								border: "1px solid rgba(0, 0, 0, 0.12)",
+								padding: "0 16px",
+								boxSizing: "border-box",
 							}}
 						>
-							{!isNewChat
-								? messages.map((message, index) => (
-										<React.Fragment key={index}>
-											<MessageCard message={message} isGenerateMessage={isGenerateMessage} />
-											{index === messages.length - 1 && <div ref={messagesEndRef} />}
-										</React.Fragment>
-								  ))
-								: !isLoadingChat && <InitialConversation />}
-							{isLoadingChat && <Loading />}
-						</div>
+							<Search handleSearch={handleSearch} cancelAllResponses={cancelAllResponses} isChatting={isChatting} />
+						</Box>
 					</Box>
-					<Search handleSearch={handleSearch} cancelAllResponses={cancelAllResponses} isChatting={isChatting} />
 				</Box>
 			</Box>
 		</MuiThemeProvider>
