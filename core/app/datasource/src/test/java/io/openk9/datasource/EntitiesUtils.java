@@ -19,19 +19,13 @@ package io.openk9.datasource;
 
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.SuggestionCategory;
-import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
-import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
-import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
-import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
@@ -39,12 +33,8 @@ import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.DatasourceConnectionObjects;
-import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
-import io.openk9.datasource.service.SuggestionCategoryService;
-import io.openk9.datasource.service.TabService;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -52,30 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EntitiesUtils {
-
-	public static void createAutocorrection(
-			Mutiny.SessionFactory sessionFactory,
-			AutocorrectionService service,
-			String name) {
-
-		AutocorrectionDTO dto = AutocorrectionDTO.builder()
-			.name(name)
-			.build();
-
-		createAutocorrection(sessionFactory, service, dto);
-	}
-
-	public static void createAutocorrection(
-			Mutiny.SessionFactory sessionFactory,
-			AutocorrectionService service,
-			AutocorrectionDTO dto) {
-
-		sessionFactory.withTransaction(session ->
-			service.create(dto)
-		)
-		.await()
-		.indefinitely();
-	}
 
 	/**
 	 * Cleans the state of the given {@link Bucket} by resetting its configurable values.
@@ -100,7 +66,7 @@ public class EntitiesUtils {
 	 * <h3>Error Handling</h3>
 	 * Any exception raised during the update is propagated as a runtime exception.
 	 */
-	public static void cleanBucket(BucketService bucketService, Bucket bucket) {
+	public static void cleanBucket(Bucket bucket, BucketService bucketService) {
 		bucketService.update(bucket.getId(), BucketWithListsDTO.builder()
 			.name(bucket.getName())
 			.refreshOnDate(false)
@@ -112,8 +78,35 @@ public class EntitiesUtils {
 		).await().indefinitely();
 	}
 
+	// Create methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
+		DTO dto,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(
+				session -> service.create(dto)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
+		ENTITY entity,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(
+				session -> service.create(entity)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	public static void createBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {
+		String name, BucketService bucketService, Mutiny.SessionFactory sessionFactory) {
 
 		BucketDTO dto = BucketDTO.builder()
 			.name(name)
@@ -124,45 +117,27 @@ public class EntitiesUtils {
 			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
-		createBucket(sessionFactory, bucketService, dto);
+		createEntity(dto, bucketService, sessionFactory);
 	}
 
-	public static void createBucket(
-		Mutiny.SessionFactory sessionFactory, BucketService bucketService, BucketDTO dto) {
+	/**
+	 * Creates and persists an {@link Autocorrection} entity with the given name.
+	 * Other fields of the entity will be set to their default values or null.
+	 *
+	 * @param name The name for the new Autocorrection entity.
+	 * @param service The {@link AutocorrectionService} used to interact with autocorrection-related operations.
+	 * @param sessionFactory The Hibernate reactive {@link Mutiny.SessionFactory} for database interactions.
+	 */
+	public static void createDefaultAutocorrection(
+			String name,
+			AutocorrectionService service,
+			Mutiny.SessionFactory sessionFactory) {
 
-		sessionFactory.withTransaction(
-				(s, transaction) ->
-					bucketService.create(dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	public static void createDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService,
-		String name) {
-
-		DatasourceDTO dto = DatasourceDTO.builder()
+		AutocorrectionDTO dto = AutocorrectionDTO.builder()
 			.name(name)
-			.scheduling(DatasourceConnectionObjects.SCHEDULING)
-			.schedulable(false)
-			.reindexing(DatasourceConnectionObjects.REINDEXING)
-			.reindexable(false)
 			.build();
 
-		createDatasource(sessionFactory, datasourceService, dto);
-	}
-
-	public static void createDatasource(
-		Mutiny.SessionFactory sessionFactory, DatasourceService datasourceService,
-		DatasourceDTO dto) {
-
-		sessionFactory.withTransaction(
-				(s,transaction) ->
-					datasourceService.create(dto)
-			)
-			.await()
-			.indefinitely();
+		createEntity(dto, service, sessionFactory);
 	}
 
 	public static void createRAGConfiguration(
@@ -210,20 +185,6 @@ public class EntitiesUtils {
 			.build();
 
 		searchConfigService.create(dto)
-			.await()
-			.indefinitely();
-	}
-
-	// Create methods
-	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
-		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY createEntity(
-			DTO dto,
-			SERVICE service,
-			Mutiny.SessionFactory sessionFactory) {
-
-		return sessionFactory.withTransaction(
-				session -> service.create(session, dto)
-			)
 			.await()
 			.indefinitely();
 	}

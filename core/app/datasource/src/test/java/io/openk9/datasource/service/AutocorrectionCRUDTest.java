@@ -84,10 +84,10 @@ public class AutocorrectionCRUDTest {
 			.prefixLength(PREFIX_LENGTH)
 			.build();
 
-		EntitiesUtils.createAutocorrection(
-			sessionFactory,
+		EntitiesUtils.createEntity(
+			autocorrectionDTOTwo,
 			autocorrectionService,
-			autocorrectionDTOTwo
+			sessionFactory
 		);
 
 	}
@@ -98,7 +98,7 @@ public class AutocorrectionCRUDTest {
 			.name(AUTOCORRECTION_NAME_ONE)
 			.build();
 
-		EntitiesUtils.createAutocorrection(sessionFactory, autocorrectionService, dto);
+		EntitiesUtils.createEntity(dto, autocorrectionService, sessionFactory);
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
@@ -161,7 +161,7 @@ public class AutocorrectionCRUDTest {
 			)
 		);
 
-		EntitiesUtils.createAutocorrection(sessionFactory, autocorrectionService, dto);
+		EntitiesUtils.createEntity(dto, autocorrectionService, sessionFactory);
 
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(

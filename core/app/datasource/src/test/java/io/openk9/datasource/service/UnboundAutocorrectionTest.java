@@ -25,7 +25,6 @@ import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -60,13 +59,13 @@ public class UnboundAutocorrectionTest {
 	@BeforeEach
 	void setup() {
 		// Create bucketOne and bucketTwo
-		EntitiesUtils.createBucket(sf, bucketService, BUCKET_ONE);
-		EntitiesUtils.createBucket(sf, bucketService, BUCKET_TWO);
+		EntitiesUtils.createBucket(BUCKET_ONE, bucketService, sf);
+		EntitiesUtils.createBucket(BUCKET_TWO, bucketService, sf);
 
 		// Create Autocorrection one, two and three
-		EntitiesUtils.createAutocorrection(sf, autocorrectionService, AUTOCORRECTION_ONE);
-		EntitiesUtils.createAutocorrection(sf, autocorrectionService, AUTOCORRECTION_TWO);
-		EntitiesUtils.createAutocorrection(sf, autocorrectionService, AUTOCORRECTION_THREE);
+		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
+		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
+		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_THREE, autocorrectionService, sf);
 
 		allAutocorrectionCount = 3;
 	}

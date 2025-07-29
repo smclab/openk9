@@ -17,26 +17,25 @@
 
 package io.openk9.datasource.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.util.K9Entity;
-
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class CreateBucketTest {
@@ -129,7 +128,7 @@ public class CreateBucketTest {
 			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
 			.build();
 
-		EntitiesUtils.createBucket(sessionFactory, bucketService, dtoBucketTwo);
+		EntitiesUtils.createEntity(dtoBucketTwo, bucketService, sessionFactory);
 	}
 
 	@Test
@@ -205,7 +204,7 @@ public class CreateBucketTest {
 			ragConfigurationSimple.getId(), bucket.getRagConfigurationSimpleGenerate().getId());
 
 		// Removes bucketOne
-		EntitiesUtils.cleanBucket(bucketService, bucket);
+		EntitiesUtils.cleanBucket(bucket, bucketService);
 		EntitiesUtils.removeEntity(bucket.getName(), bucketService, sessionFactory);
 	}
 
@@ -349,7 +348,7 @@ public class CreateBucketTest {
 	void tearDown() {
 		// Removes Bucket two
 		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
-		EntitiesUtils.cleanBucket(bucketService, bucketTwo);
+		EntitiesUtils.cleanBucket(bucketTwo, bucketService);
 		EntitiesUtils.removeEntity(bucketTwo.getName(), bucketService, sessionFactory);
 
 		// Removes RAGConfigurations

@@ -112,10 +112,10 @@ public class AutocorrectionGraphqlTest {
 			.prefixLength(PREFIX_LENGTH_VALUE)
 			.build();
 
-		EntitiesUtils.createAutocorrection(
-			sessionFactory,
+		EntitiesUtils.createEntity(
+			autocorrectionDTOTwo,
 			autocorrectionService,
-			autocorrectionDTOTwo
+			sessionFactory
 		);
 	}
 

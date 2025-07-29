@@ -17,21 +17,6 @@
 
 package io.openk9.datasource.graphql;
 
-import static io.smallrye.graphql.client.core.Argument.arg;
-import static io.smallrye.graphql.client.core.Argument.args;
-import static io.smallrye.graphql.client.core.Document.document;
-import static io.smallrye.graphql.client.core.Field.field;
-import static io.smallrye.graphql.client.core.InputObject.inputObject;
-import static io.smallrye.graphql.client.core.InputObjectField.prop;
-import static io.smallrye.graphql.client.core.Operation.operation;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGType;
@@ -42,15 +27,29 @@ import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
-
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static io.smallrye.graphql.client.core.Argument.arg;
+import static io.smallrye.graphql.client.core.Argument.args;
+import static io.smallrye.graphql.client.core.Document.document;
+import static io.smallrye.graphql.client.core.Field.field;
+import static io.smallrye.graphql.client.core.InputObject.inputObject;
+import static io.smallrye.graphql.client.core.InputObjectField.prop;
+import static io.smallrye.graphql.client.core.Operation.operation;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class BucketGraphqlTest {
@@ -148,7 +147,7 @@ public class BucketGraphqlTest {
 			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
 			.build();
 
-		EntitiesUtils.createBucket(sessionFactory, bucketService, dtoBucketTwo);
+		EntitiesUtils.createEntity(dtoBucketTwo, bucketService, sessionFactory);
 	}
 
 	@Test
@@ -247,7 +246,7 @@ public class BucketGraphqlTest {
 				created.getRagConfigurationSimpleGenerate().getId());
 
 			// Removes bucketOne
-			EntitiesUtils.cleanBucket(bucketService, created);
+			EntitiesUtils.cleanBucket(created, bucketService);
 			EntitiesUtils.removeEntity( BUCKET_ONE_NAME, bucketService, sessionFactory);
 		}
 		catch (Exception e) {
@@ -391,7 +390,7 @@ public class BucketGraphqlTest {
 	void tearDown() {
 		// Removes Bucket two
 		var bucketTwo = EntitiesUtils.getEntity(BUCKET_TWO_NAME, bucketService, sessionFactory);
-		EntitiesUtils.cleanBucket(bucketService, bucketTwo);
+		EntitiesUtils.cleanBucket(bucketTwo, bucketService);
 		EntitiesUtils.removeEntity(bucketTwo.getName(), bucketService, sessionFactory);
 
 		// Removes RAGConfigurations
