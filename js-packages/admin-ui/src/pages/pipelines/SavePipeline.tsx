@@ -77,7 +77,7 @@ export function SavePipeline() {
   const handleEditClick = async () => {
     const confirmed = await openConfirmModal();
     if (confirmed) {
-      navigate(`/enrich-item/${pipelineId}`);
+      navigate(`/pipeline/${pipelineId}/mode/edit`);
     }
   };
 
@@ -147,6 +147,10 @@ export function SavePipeline() {
   const [verifyData, setVerifyData] = React.useState(mode);
 
   React.useEffect(() => {
+    setVerifyData(mode);
+  }, [mode]);
+
+  React.useEffect(() => {
     let pipelineValues: KeyValue = {
       pipelineId: pipelineId,
       name: "",
@@ -204,15 +208,6 @@ export function SavePipeline() {
   }
 
   return (
-    // <CreatePipeline
-    //   pipelineId={pipelineId}
-    //   disabled={verifyData === "view"}
-    //   pipelineData={pipelineData}
-    //   setPipelineData={setPipelineData}
-    //   verifyData={verifyData || "edit"}
-    //   setVerifyData={setVerifyData}
-    //   createOrUpdatePipelineMutate={createOrUpdatePipelineMutate}
-    // />
     <>
       {open && !modalDataLost && (
         <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="lg">
