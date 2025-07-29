@@ -4,31 +4,31 @@ import { useTranslation } from "react-i18next";
 export const InitialConversation: React.FC = () => {
 	const { t } = useTranslation();
 	return (
-	<Box
-		bgcolor="white"
-		display="flex"
-		flexDirection="column"
-		justifyContent="center"
-		alignItems="center"
-		p={2}
-		boxSizing="border-box"
-		mt="15%"
-	>
-		<Box display="flex" alignItems="center" mt={1}>
-			<Typography variant="h5">
-				<Box component="span" mr={1}>
-					{t('welcome-to')}
-				</Box>
-				Open
+		<Box
+			bgcolor="white"
+			display="flex"
+			flexDirection="column"
+			justifyContent="center"
+			alignItems="center"
+			p={2}
+			boxSizing="border-box"
+			mt="15%"
+		>
+			<Box display="flex" alignItems="center" mt={1}>
+				<Typography variant="h5">
+					<Box component="span" mr={1}>
+						{t("welcome-to")}
+					</Box>
+					Open
+				</Typography>
+				<Typography variant="h5" fontWeight={700}>
+					K9
+				</Typography>
+			</Box>
+			<Typography variant="h5" gutterBottom align="center">
+				{t("where-knowledge-has-no-limits")}
 			</Typography>
-			<Typography variant="h5" fontWeight={700}>
-				K9
-			</Typography>
-		</Box>
-		<Typography variant="h5" gutterBottom align="center">
-			{t('where-knowledge-has-no-limits')}
-		</Typography>
-		{/* <Box mt={3}>
+			{/* <Box mt={3}>
         <Suggestions
           Icon={GroupIcon}
           name="Natural language conversation"
@@ -50,5 +50,6 @@ export const InitialConversation: React.FC = () => {
           onAction={() => console.log("Clicked Seamless integrations")}
         />
       </Box> */}
-	</Box>
-)};
+		</Box>
+	);
+};

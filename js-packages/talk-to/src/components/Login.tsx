@@ -31,16 +31,16 @@ export function Login({
 	};
 
 	return (
-		<Box sx={{marginRight:'10px'}}>
+		<Box sx={{ marginRight: "10px" }}>
 			{authenticated ? (
 				<LabelButton onClick={handleLogout}>
 					<LogoutIcon />
-					<span style={{ marginLeft: "10px" }}>{t('logout')}</span>
+					<span style={{ marginLeft: "10px" }}>{t("logout")}</span>
 				</LabelButton>
 			) : (
 				<LabelButton onClick={handleLogin}>
 					<LoginIcon />
-					<span style={{ marginLeft: "10px" }}>{t('login')}</span>
+					<span style={{ marginLeft: "10px" }}>{t("login")}</span>
 				</LabelButton>
 			)}
 		</Box>

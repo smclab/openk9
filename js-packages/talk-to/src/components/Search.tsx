@@ -15,7 +15,7 @@ export default function Search({
 }) {
 	const [search, setSearch] = React.useState("");
 	const { t } = useTranslation();
-	
+
 	return (
 		<Box
 			component="footer"
@@ -41,7 +41,7 @@ export default function Search({
 					variant="outlined"
 					value={search}
 					onChange={(event) => setSearch(event.currentTarget.value)}
-					placeholder={t('write-a-message')!}
+					placeholder={t("write-a-message")!}
 				/>
 				<Button variant="contained" type="submit" value="Submit" disabled={!isChatting && search === ""}>
 					{isChatting ? <StopCircleIcon /> : <ArrowUpwardIcon />}

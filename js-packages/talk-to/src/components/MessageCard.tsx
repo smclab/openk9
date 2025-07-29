@@ -1,11 +1,11 @@
-import ErrorIcon from "@mui/icons-material/Error";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Box, Card, CardContent, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
-import { useState } from "react";
-import Markdown from "react-markdown";
+import { Box, Card, CardContent, Typography, IconButton, Skeleton } from "@mui/material";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
+import Markdown from "react-markdown";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ErrorIcon from "@mui/icons-material/Error";
+import React, { useState } from "react";
 
 export function MessageCard({
 	message,
@@ -27,7 +27,6 @@ export function MessageCard({
 	const sources = message.sources || [];
 	const visibleSources = sources.slice(0, sourcesToShow);
 	const collapsedSources = sources.slice(sourcesToShow);
-	const theme = useTheme();
 
 	return (
 		<>

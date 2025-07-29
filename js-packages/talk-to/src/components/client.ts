@@ -50,10 +50,9 @@ export function OpenK9Client() {
 			}
 		},
 		async getInitialMessages(
-			userId: string,
 			chatId: string,
 		): Promise<{ chat_id: string; messages: [{ question: string; answer: string; chat_sequence_number: string }] }> {
-			const response = await authFetch(`api/rag/getChat/${userId}/${chatId}`);
+			const response = await authFetch(`/api/rag/chat/${chatId}`);
 			if (!response.ok) throw new Error("Network response was not ok");
 			const data = await response.json();
 			return data || [];
@@ -65,7 +64,8 @@ export function OpenK9Client() {
 			return data;
 		},
 		async getHistoryChat(searchQuery: jsonObjPost): Promise<{ result: ChatHistory[] }> {
-			const response = await authFetch(`/api/rag/user_chats`, {
+			console.log("Calling getHistoryChat with URL:", "/api/rag/user-chats");
+			const response = await authFetch(`/api/rag/user-chats`, {
 				method: "POST",
 				headers: {
 					accept: "application/json",
@@ -75,6 +75,7 @@ export function OpenK9Client() {
 			});
 
 			if (!response.ok) {
+				console.error("Response not ok:", response.status, response.statusText);
 				throw new Error("Network response was not ok");
 			}
 			const result = await response.json();
@@ -88,7 +89,18 @@ export function OpenK9Client() {
 			url: string;
 			searchQuery: {
 				searchText: string;
-				chatId: string;
+				chatId?: string;
+				chatSequenceNumber: number;
+				timestamp: string;
+				chatHistory?: Array<{
+					question: string;
+					answer: string;
+					title: string;
+					sources: Array<any>;
+					chat_id: string;
+					timestamp: string;
+					chat_sequence_number: number;
+				}>;
 			};
 			controller: AbortController;
 		}) {
@@ -101,6 +113,36 @@ export function OpenK9Client() {
 				body: JSON.stringify(searchQuery),
 				signal: controller.signal,
 			});
+
+			return response;
+		},
+		async deleteChat(chatId: string) {
+			const response = await authFetch(`/api/rag/chat/${chatId}`, {
+				method: "DELETE",
+				headers: {
+					accept: "application/json",
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error("Errore durante l'eliminazione della chat");
+			}
+
+			return response;
+		},
+		async renameChat(chatId: string, newTitle: string) {
+			const response = await authFetch(`/api/rag/chat/${chatId}`, {
+				method: "PATCH",
+				headers: {
+					accept: "application/json",
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ newTitle }),
+			});
+
+			if (!response.ok) {
+				throw new Error("Errore durante la rinomina della chat");
+			}
 
 			return response;
 		},

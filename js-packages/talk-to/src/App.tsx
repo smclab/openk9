@@ -18,6 +18,8 @@ import { useQuery } from "react-query";
 import { getUserProfile } from "./components/authentication";
 import ChangeLanguage from "./components/changeLanguage";
 import { useTranslation } from "react-i18next";
+import { v4 as uuidv4 } from "uuid";
+import { keycloak } from "./components/keycloak";
 
 function App() {
 	const [chatId, setChatId] = React.useState<chatId>({ id: null, isNew: true });
@@ -184,7 +186,13 @@ function App() {
 							<Button
 								variant="contained"
 								sx={{ margin: "10px", borderRadius: "10px" }}
-								onClick={() => setChatId({ id: userId + "_" + String(Date.now()), isNew: true })}
+								onClick={() => {
+									const timestamp = String(Date.now());
+									const newId = keycloak.authenticated
+										? `${userId}_${timestamp}`
+										: `anonymous_${uuidv4()}_${timestamp}`;
+									setChatId({ id: newId, isNew: true });
+								}}
 							>
 								{t("new-chat")}
 							</Button>
@@ -257,7 +265,7 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 			if (chatId?.isNew) {
 				return [];
 			}
-			return (await client.getInitialMessages(userId, chatId?.id || "")).messages;
+			return (await client.getInitialMessages(chatId?.id || "")).messages;
 		},
 		{
 			enabled: !!chatId?.id,
